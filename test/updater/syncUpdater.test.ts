@@ -158,6 +158,16 @@ describe('SyncUpdater', () => {
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
     });
+
+    it('should cancel the update when flushed', () => {
+      const engine = new MockRenderingEngine();
+      const updater = new SyncUpdater(engine);
+
+      updater.scheduleUpdate();
+      updater.flush();
+
+      expect(updater.isScheduled()).toBe(false);
+    });
   });
 
   describe('.waitForUpdate()', () => {

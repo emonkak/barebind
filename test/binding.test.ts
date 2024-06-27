@@ -7,6 +7,7 @@ import {
   NodeBinding,
   PropertyBinding,
   directiveTag,
+  ensureDirective,
   isDirective,
   mount,
   resolveBinding,
@@ -600,7 +601,7 @@ describe('EventBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should unbind the active event listener function', () => {
+    it('should unregister the active event listener function', () => {
       const listener = () => {};
       const element = document.createElement('div');
       const part = {
@@ -624,20 +625,10 @@ describe('EventBinding', () => {
       expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
       expect(removeEventListenerSpy).toHaveBeenCalledOnce();
       expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-
-      binding.disconnect();
-
-      expect(
-        addEventListenerSpy,
-        'Do nothing if the event listener is already unbinded.',
-      ).toHaveBeenCalledOnce();
-      expect(
-        removeEventListenerSpy,
-        'Do nothing if the event listener is already unbinded.',
-      ).toHaveBeenCalledOnce();
+      expect(binding.value).toBe(null);
     });
 
-    it('should unbind the active event listener object', () => {
+    it('should unregister the active event listener object', () => {
       const listener = { handleEvent: () => {}, capture: true };
       const element = document.createElement('div');
       const part = {
@@ -669,17 +660,53 @@ describe('EventBinding', () => {
         binding,
         listener,
       );
+      expect(binding.value).toBe(null);
+    });
 
+    it('should cancel register an event listener function', () => {
+      const listener = () => {};
+      const element = document.createElement('div');
+      const part = {
+        type: PartType.Event,
+        node: element,
+        name: 'hello',
+      } as const;
+      const binding = new EventBinding(listener, part);
+      const engine = new MockRenderingEngine();
+      const updater = new SyncUpdater(engine);
+
+      const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
+
+      binding.connect(updater);
       binding.disconnect();
+      updater.flush();
 
-      expect(
-        addEventListenerSpy,
-        'Do nothing if the event listener is already unbinded.',
-      ).toHaveBeenCalledOnce();
-      expect(
-        removeEventListenerSpy,
-        'Do nothing if the event listener is already unbinded.',
-      ).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).not.toHaveBeenCalled();
+      expect(removeEventListenerSpy).not.toHaveBeenCalledOnce();
+    });
+
+    it('should cancel register an event listener object', () => {
+      const listener = { handleEvent: () => {}, capture: true };
+      const element = document.createElement('div');
+      const part = {
+        type: PartType.Event,
+        node: element,
+        name: 'hello',
+      } as const;
+      const binding = new EventBinding(listener, part);
+      const engine = new MockRenderingEngine();
+      const updater = new SyncUpdater(engine);
+
+      const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
+
+      binding.connect(updater);
+      binding.disconnect();
+      updater.flush();
+
+      expect(addEventListenerSpy).not.toHaveBeenCalled();
+      expect(removeEventListenerSpy).not.toHaveBeenCalledOnce();
     });
   });
 });
@@ -1234,6 +1261,18 @@ describe('ElementBinding', () => {
 
       expect(disconnects).toBe(2);
     });
+  });
+});
+
+describe('ensureDirective', () => {
+  it('should throw an error if the value is not instance of the expected class', () => {
+    expect(() => ensureDirective(MockDirective, null)).toThrow(
+      'A value must be a instance of "MockDirective", but got "null".',
+    );
+  });
+
+  it('should do nothing if the value is instance of the expected class', () => {
+    ensureDirective(MockDirective, new MockDirective());
   });
 });
 

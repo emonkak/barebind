@@ -69,10 +69,7 @@ export class RefBinding implements Binding<RefDirective>, Effect {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueuePassiveEffect(this);
-      this._dirty = true;
-    }
+    this._requestEffect(updater);
   }
 
   bind(newValue: RefDirective, updater: Updater): void {
@@ -90,7 +87,7 @@ export class RefBinding implements Binding<RefDirective>, Effect {
     const { ref } = this._pendingDirective;
     if (ref !== null) {
       this._pendingDirective = new RefDirective(null);
-      this.connect(updater);
+      this._requestEffect(updater);
     }
   }
 
@@ -118,5 +115,12 @@ export class RefBinding implements Binding<RefDirective>, Effect {
 
     this._memoizedRef = this._pendingDirective.ref;
     this._dirty = false;
+  }
+
+  private _requestEffect(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueuePassiveEffect(this);
+      this._dirty = true;
+    }
   }
 }

@@ -27,26 +27,26 @@ const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
 export function component<TProps, TData, TContext>(
-  type: Component<TProps, TData, TContext>,
+  component: Component<TProps, TData, TContext>,
   props: TProps,
 ): ComponentDirective<TProps, TData, TContext> {
-  return new ComponentDirective(type, props);
+  return new ComponentDirective(component, props);
 }
 
 export class ComponentDirective<TProps, TData, TContext>
   implements Directive<TContext>
 {
-  private readonly _type: Component<TProps, TData, TContext>;
+  private readonly _component: Component<TProps, TData, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(type: Component<TProps, TData, TContext>, props: TProps) {
-    this._type = type;
+  constructor(component: Component<TProps, TData, TContext>, props: TProps) {
+    this._component = component;
     this._props = props;
   }
 
-  get type(): Component<TProps, TData, TContext> {
-    return this._type;
+  get component(): Component<TProps, TData, TContext> {
+    return this._component;
   }
 
   get props(): TProps {
@@ -76,13 +76,13 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private readonly _parent: Block<TContext> | null;
 
-  private _memoizedType: Component<TProps, TData, TContext> | null = null;
-
-  private _memoizedTemplate: Template<TData, TContext> | null = null;
-
   private _pendingFragment: TemplateFragment<TData, TContext> | null = null;
 
   private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
+
+  private _memoizedComponent: Component<TProps, TData, TContext> | null = null;
+
+  private _memoizedTemplate: Template<TData, TContext> | null = null;
 
   private _cachedFragments: WeakMap<
     Template<TData, TContext>,
@@ -98,11 +98,15 @@ export class ComponentBinding<TProps, TData, TContext>
   constructor(
     directive: ComponentDirective<TProps, TData, TContext>,
     part: ChildNodePart,
-    parent: Block<TContext> | null = null,
+    parent: Block<TContext> | null,
   ) {
     this._directive = directive;
     this._part = part;
     this._parent = parent;
+  }
+
+  get value(): ComponentDirective<TProps, TData, TContext> {
+    return this._directive;
   }
 
   get part(): ChildNodePart {
@@ -129,10 +133,6 @@ export class ComponentBinding<TProps, TData, TContext>
     return !!(this._flags & FLAG_UPDATING || this._flags & FLAG_UNMOUNTING);
   }
 
-  get value(): ComponentDirective<TProps, TData, TContext> {
-    return this._directive;
-  }
-
   shouldUpdate(): boolean {
     if (!this.dirty) {
       return false;
@@ -144,72 +144,6 @@ export class ComponentBinding<TProps, TData, TContext>
       }
     }
     return true;
-  }
-
-  update(context: UpdateContext<TContext>, updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_UPDATING)) {
-      return;
-    }
-
-    const { type, props } = this._directive;
-
-    if (this._memoizedType !== null && type !== this._memoizedType) {
-      this._cleanHooks();
-    }
-
-    const { template, data } = context.renderComponent(
-      type,
-      props,
-      this._hooks,
-      this,
-      updater,
-    );
-
-    if (this._pendingFragment !== null) {
-      if (this._memoizedTemplate !== template) {
-        // First, unbind of the current fragment.
-        this._pendingFragment.unbind(updater);
-
-        // We need to mount child nodes before hydration.
-        this._requestMutation(updater);
-
-        let nextFragment: TemplateFragment<TData, TContext>;
-
-        if (this._cachedFragments !== null) {
-          const cachedFragment = this._cachedFragments.get(template);
-          if (cachedFragment !== undefined) {
-            cachedFragment.bind(data, updater);
-            nextFragment = cachedFragment;
-          } else {
-            nextFragment = template.hydrate(data, updater);
-          }
-        } else {
-          // It is rare that different templates are returned, so we defer
-          // creating fragment caches.
-          this._cachedFragments = new WeakMap();
-          nextFragment = template.hydrate(data, updater);
-        }
-
-        // Remember the previous fragment for future renderings.
-        this._cachedFragments.set(
-          this._memoizedTemplate!,
-          this._pendingFragment,
-        );
-
-        this._pendingFragment = nextFragment;
-      } else {
-        this._pendingFragment.bind(data, updater);
-      }
-    } else {
-      // Child nodes must be mounted before hydration.
-      this._requestMutation(updater);
-
-      this._pendingFragment = template.hydrate(data, updater);
-    }
-
-    this._memoizedType = this._directive.type;
-    this._memoizedTemplate = template;
-    this._flags &= ~FLAG_UPDATING;
   }
 
   requestUpdate(priority: TaskPriority, updater: Updater): void {
@@ -226,14 +160,79 @@ export class ComponentBinding<TProps, TData, TContext>
     this._flags &= ~FLAG_UNMOUNTING;
   }
 
-  connect(updater: Updater): void {
+  update(context: UpdateContext<TContext>, updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_UPDATING)) {
-      this._priority = this._parent?.priority ?? updater.getCurrentPriority();
-      this._flags |= FLAG_UPDATING;
-      updater.enqueueBlock(this);
+      return;
     }
 
-    this._flags &= ~FLAG_UNMOUNTING;
+    const { component, props } = this._directive;
+
+    if (
+      this._memoizedComponent !== null &&
+      this._memoizedComponent !== component
+    ) {
+      // The component has been changed, so we need to clean hooks.
+      this._cleanHooks();
+    }
+
+    const { template, data } = context.renderComponent(
+      component,
+      props,
+      this._hooks,
+      this,
+      updater,
+    );
+
+    if (this._pendingFragment !== null) {
+      if (this._memoizedTemplate!.isSameTemplate(template)) {
+        this._pendingFragment.attach(data, updater);
+      } else {
+        // The template has been changed, so first, we detach data from the current
+        // fragment.
+        this._pendingFragment.detach(updater);
+
+        // Next, unmount the old fragment and mount the new fragment.
+        this._requestMutation(updater);
+
+        let newFragment: TemplateFragment<TData, TContext>;
+
+        // Finally, rehydrate the template.
+        if (this._cachedFragments !== null) {
+          const cachedFragment = this._cachedFragments.get(template);
+          if (cachedFragment !== undefined) {
+            cachedFragment.attach(data, updater);
+            newFragment = cachedFragment;
+          } else {
+            newFragment = template.hydrate(data, updater);
+          }
+        } else {
+          // It is rare that different templates are returned, so we defer
+          // creating fragment caches.
+          this._cachedFragments = new WeakMap();
+          newFragment = template.hydrate(data, updater);
+        }
+
+        // Remember the previous fragment for future renderings.
+        this._cachedFragments.set(
+          this._memoizedTemplate!,
+          this._pendingFragment,
+        );
+
+        this._pendingFragment = newFragment;
+      }
+    } else {
+      // Mount the new fragment before the template hydration.
+      this._requestMutation(updater);
+      this._pendingFragment = template.hydrate(data, updater);
+    }
+
+    this._memoizedComponent = component;
+    this._memoizedTemplate = template;
+    this._flags &= ~FLAG_UPDATING;
+  }
+
+  connect(updater: Updater): void {
+    this._forceUpdate(updater);
   }
 
   bind(
@@ -244,43 +243,33 @@ export class ComponentBinding<TProps, TData, TContext>
       ensureDirective(ComponentDirective, newValue);
     }
     this._directive = newValue;
-    this.connect(updater);
+    this._forceUpdate(updater);
   }
 
   unbind(updater: Updater): void {
-    this._pendingFragment?.unbind(updater);
-
-    if (this._memoizedFragment !== this._pendingFragment) {
-      this._memoizedFragment?.unbind(updater);
-    }
-
+    this._pendingFragment?.detach(updater);
     this._cleanHooks();
     this._requestMutation(updater);
 
-    this._pendingFragment = null;
     this._flags |= FLAG_UNMOUNTING;
     this._flags &= ~FLAG_UPDATING;
   }
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
-
-    if (this._memoizedFragment !== this._pendingFragment) {
-      this._memoizedFragment?.disconnect();
-    }
-
     this._cleanHooks();
-
-    this._pendingFragment = null;
   }
 
   commit(): void {
     if (this._flags & FLAG_UNMOUNTING) {
       this._memoizedFragment?.unmount(this._part);
+      this._memoizedFragment = null;
     } else {
-      this._memoizedFragment?.unmount(this._part);
-      this._pendingFragment?.mount(this._part);
-      this._memoizedFragment = this._pendingFragment;
+      if (this._memoizedFragment !== this._pendingFragment) {
+        this._memoizedFragment?.unmount(this._part);
+        this._pendingFragment?.mount(this._part);
+        this._memoizedFragment = this._pendingFragment;
+      }
     }
 
     this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
@@ -288,13 +277,25 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _cleanHooks(): void {
     const hooks = this._hooks;
-    this._hooks = [];
+
     for (let i = 0, l = hooks.length; i < l; i++) {
       const hook = hooks[i]!;
       if (hook.type === HookType.Effect) {
         hook.cleanup?.();
       }
     }
+
+    hooks.length = 0;
+  }
+
+  private _forceUpdate(updater: Updater<TContext>): void {
+    if (!(this._flags & FLAG_UPDATING)) {
+      this._priority = this._parent?.priority ?? updater.getCurrentPriority();
+      this._flags |= FLAG_UPDATING;
+      updater.enqueueBlock(this);
+    }
+
+    this._flags &= ~FLAG_UNMOUNTING;
   }
 
   private _requestMutation(updater: Updater<TContext>): void {

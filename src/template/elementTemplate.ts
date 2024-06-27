@@ -86,7 +86,7 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
     return this._elementBinding.endNode;
   }
 
-  bind(
+  attach(
     newData: ElementData<TElementValue, TChildNodeValue>,
     updater: Updater<unknown>,
   ): void {
@@ -94,7 +94,7 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
     this._childNodeBinding.bind(newData.childNodeValue, updater);
   }
 
-  unbind(updater: Updater): void {
+  detach(updater: Updater): void {
     this._elementBinding.unbind(updater);
     this._childNodeBinding.unbind(updater);
   }

@@ -4,7 +4,7 @@ import { RenderingContext } from '../src/renderingContext.js';
 import { RenderingEngine } from '../src/renderingEngine.js';
 import { type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockBlock, MockTemplate, MockTemplateResult } from './mocks.js';
+import { MockBlock, MockTemplate } from './mocks.js';
 
 describe('RenderingEngine', () => {
   describe('.flushEffects()', () => {
@@ -103,12 +103,11 @@ describe('RenderingEngine', () => {
       const engine = new RenderingEngine();
       const template = new MockTemplate();
       const props = {
-        data: ['foo'],
+        data: {},
       };
       const component = vi.fn().mockImplementation((props, context) => {
         context.useEffect(() => {});
-
-        return new MockTemplateResult(template, props.data);
+        return { template, data: props.data };
       });
       const hooks: Hook[] = [];
       const block = new MockBlock();

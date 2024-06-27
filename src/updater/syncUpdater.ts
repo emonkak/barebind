@@ -67,15 +67,13 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
       return;
     }
 
-    this._isScheduled = true;
-
     queueMicrotask(() => {
-      try {
+      if (this._isScheduled) {
         this.flush();
-      } finally {
-        this._isScheduled = false;
       }
     });
+
+    this._isScheduled = true;
   }
 
   waitForUpdate(): Promise<void> {
@@ -83,47 +81,51 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   }
 
   flush(): void {
-    do {
-      while (this._pendingBlocks.length > 0) {
-        const pendingBlocks = this._pendingBlocks;
-        this._pendingBlocks = [];
+    try {
+      do {
+        while (this._pendingBlocks.length > 0) {
+          const pendingBlocks = this._pendingBlocks;
+          this._pendingBlocks = [];
 
-        for (let i = 0, l = pendingBlocks.length; i < l; i++) {
-          const block = pendingBlocks[i]!;
-          if (!block.shouldUpdate()) {
-            continue;
-          }
-          this._currentBlock = block;
-          try {
-            block.update(this._context, this);
-          } finally {
-            this._currentBlock = null;
+          for (let i = 0, l = pendingBlocks.length; i < l; i++) {
+            const block = pendingBlocks[i]!;
+            if (!block.shouldUpdate()) {
+              continue;
+            }
+            this._currentBlock = block;
+            try {
+              block.update(this._context, this);
+            } finally {
+              this._currentBlock = null;
+            }
           }
         }
-      }
 
-      if (this._pendingMutationEffects.length > 0) {
-        const pendingMutationEffects = this._pendingMutationEffects;
-        this._pendingMutationEffects = [];
-        this._context.flushEffects(pendingMutationEffects, 'mutation');
-      }
+        if (this._pendingMutationEffects.length > 0) {
+          const pendingMutationEffects = this._pendingMutationEffects;
+          this._pendingMutationEffects = [];
+          this._context.flushEffects(pendingMutationEffects, 'mutation');
+        }
 
-      if (this._pendingLayoutEffects.length > 0) {
-        const pendingLayoutEffects = this._pendingLayoutEffects;
-        this._pendingLayoutEffects = [];
-        this._context.flushEffects(pendingLayoutEffects, 'layout');
-      }
+        if (this._pendingLayoutEffects.length > 0) {
+          const pendingLayoutEffects = this._pendingLayoutEffects;
+          this._pendingLayoutEffects = [];
+          this._context.flushEffects(pendingLayoutEffects, 'layout');
+        }
 
-      if (this._pendingPassiveEffects.length > 0) {
-        const pendingPassiveEffects = this._pendingPassiveEffects;
-        this._pendingPassiveEffects = [];
-        this._context.flushEffects(pendingPassiveEffects, 'passive');
-      }
-    } while (
-      this._pendingBlocks.length > 0 ||
-      this._pendingMutationEffects.length > 0 ||
-      this._pendingLayoutEffects.length > 0 ||
-      this._pendingPassiveEffects.length > 0
-    );
+        if (this._pendingPassiveEffects.length > 0) {
+          const pendingPassiveEffects = this._pendingPassiveEffects;
+          this._pendingPassiveEffects = [];
+          this._context.flushEffects(pendingPassiveEffects, 'passive');
+        }
+      } while (
+        this._pendingBlocks.length > 0 ||
+        this._pendingMutationEffects.length > 0 ||
+        this._pendingLayoutEffects.length > 0 ||
+        this._pendingPassiveEffects.length > 0
+      );
+    } finally {
+      this._isScheduled = false;
+    }
   }
 }

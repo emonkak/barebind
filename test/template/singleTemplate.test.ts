@@ -121,7 +121,7 @@ describe('SingleTemplateFragment', () => {
     });
   });
 
-  describe('.bind()', () => {
+  describe('.attach()', () => {
     it('should bind a value to the binding', () => {
       const binding = new NodeBinding('foo', {
         type: PartType.Node,
@@ -131,14 +131,14 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater(new MockRenderingEngine());
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      fragment.bind('bar', updater);
+      fragment.attach('bar', updater);
 
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledWith('bar', updater);
     });
   });
 
-  describe('.unbind()', () => {
+  describe('.detach()', () => {
     it('should unbind the value from the binding', () => {
       const binding = new NodeBinding('foo', {
         type: PartType.Node,
@@ -148,7 +148,7 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater(new MockRenderingEngine());
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      fragment.unbind(updater);
+      fragment.detach(updater);
 
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(updater);

@@ -110,7 +110,7 @@ describe('ElementTemplateFragment', () => {
     });
   });
 
-  describe('.bind()', () => {
+  describe('.attach()', () => {
     it('should bind a value to the bindings', () => {
       const elementBinding = new ElementBinding(
         { class: 'foo' },
@@ -131,7 +131,7 @@ describe('ElementTemplateFragment', () => {
       const elementBindingBindSpy = vi.spyOn(elementBinding, 'bind');
       const childNodeBindingBindSpy = vi.spyOn(childNodeBinding, 'bind');
 
-      fragment.bind(
+      fragment.attach(
         { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
         updater,
       );
@@ -146,7 +146,7 @@ describe('ElementTemplateFragment', () => {
     });
   });
 
-  describe('.unbind()', () => {
+  describe('.detach()', () => {
     it('should unbind the value from the bindings', () => {
       const elementBinding = new ElementBinding(
         { class: 'foo' },
@@ -167,7 +167,7 @@ describe('ElementTemplateFragment', () => {
       const elementBindingUnbindSpy = vi.spyOn(elementBinding, 'unbind');
       const childNodeBindingUnbindSpy = vi.spyOn(childNodeBinding, 'unbind');
 
-      fragment.unbind(updater);
+      fragment.detach(updater);
 
       expect(elementBindingUnbindSpy).toHaveBeenCalledOnce();
       expect(childNodeBindingUnbindSpy).toHaveBeenCalledOnce();

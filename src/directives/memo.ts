@@ -8,67 +8,71 @@ import {
 import type { Part, Updater } from '../types.js';
 import { dependenciesAreChanged } from '../utils.js';
 
-export function memo(value: unknown, dependencies?: unknown[]): MemoDirective {
-  return new MemoDirective(value, dependencies);
+export function memo<T>(
+  factory: () => T,
+  dependencies?: unknown[],
+): MemoDirective<T> {
+  return new MemoDirective(factory, dependencies);
 }
 
-export class MemoDirective implements Directive {
-  private readonly _value: unknown;
+export class MemoDirective<T> implements Directive {
+  private readonly _factory: () => T;
 
   private readonly _dependencies: unknown[] | undefined;
 
-  constructor(value: unknown, dependencies: unknown[] | undefined) {
-    this._value = value;
+  constructor(factory: () => T, dependencies: unknown[] | undefined) {
+    this._factory = factory;
     this._dependencies = dependencies;
   }
 
-  get value(): unknown {
-    return this._value;
+  get factory(): () => T {
+    return this._factory;
   }
 
   get dependencies(): unknown[] | undefined {
     return this._dependencies;
   }
 
-  [directiveTag](part: Part, updater: Updater): MemoBinding {
+  [directiveTag](part: Part, updater: Updater): MemoBinding<T> {
     return new MemoBinding(this, part, updater);
   }
 }
 
-export class MemoBinding implements Binding<unknown> {
-  private _directive: MemoDirective;
+export class MemoBinding<T> implements Binding<MemoDirective<T>> {
+  private _directive: MemoDirective<T>;
 
-  private _binding: Binding<unknown>;
+  private readonly _binding: Binding<T>;
 
-  private readonly _part: Part;
-
-  constructor(directive: MemoDirective, part: Part, updater: Updater) {
+  constructor(directive: MemoDirective<T>, part: Part, updater: Updater) {
     this._directive = directive;
-    this._binding = resolveBinding(directive, part, updater);
-    this._part = part;
+    this._binding = resolveBinding(directive.factory(), part, updater);
   }
 
-  get value(): MemoDirective {
+  get value(): MemoDirective<T> {
     return this._directive;
   }
 
   get part(): Part {
-    return this._part;
+    return this._binding.part;
   }
 
   get startNode(): ChildNode {
-    return this._part.node;
+    return this._binding.startNode;
   }
 
   get endNode(): ChildNode {
-    return this._part.node;
+    return this._binding.endNode;
+  }
+
+  get binding(): Binding<T> {
+    return this._binding;
   }
 
   connect(updater: Updater): void {
     this._binding.connect(updater);
   }
 
-  bind(newValue: MemoDirective, updater: Updater): void {
+  bind(newValue: MemoDirective<T>, updater: Updater): void {
     DEBUG: {
       ensureDirective(MemoDirective, newValue);
     }
@@ -76,17 +80,17 @@ export class MemoBinding implements Binding<unknown> {
     const newDependencies = newValue.dependencies;
     if (dependenciesAreChanged(oldDependencies, newDependencies)) {
       this._directive = newValue;
-      this._binding.bind(newValue.value, updater);
+      this._binding.bind(newValue.factory(), updater);
     }
   }
 
   unbind(updater: Updater): void {
-    this._directive = new MemoDirective(this._directive.value, undefined);
+    this._directive = new MemoDirective(this._directive.factory, undefined);
     this._binding.unbind(updater);
   }
 
   disconnect(): void {
-    this._directive = new MemoDirective(this._directive.value, undefined);
+    this._directive = new MemoDirective(this._directive.factory, undefined);
     this._binding.disconnect();
   }
 }

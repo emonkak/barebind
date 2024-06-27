@@ -15,59 +15,54 @@ import {
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 
-export function list<TItem>(
+export function keyedList<TItem, TKey, TValue>(
   items: TItem[],
-): ListDirective<TItem, TItem, number>;
-export function list<TItem, TValue>(
-  items: TItem[],
-  valueSelector: Selector<TItem, TValue>,
-): ListDirective<TItem, TValue, number>;
-export function list<TItem, TValue, TKey>(
-  items: TItem[],
-  valueSelector: Selector<TItem, TValue>,
   keySelector: Selector<TItem, TKey>,
-): ListDirective<TItem, TValue, number>;
-export function list<TItem, TValue, TKey>(
-  items: TItem[],
-  valueSelector: Selector<TItem, TValue> = (item: any, _index: any) => item,
-  keySelector: Selector<TItem, TKey> = (_item: any, index: any) => index,
-): ListDirective<TItem, TValue, TKey> {
-  return new ListDirective(items, valueSelector, keySelector);
+  valueSelector: Selector<TItem, TValue>,
+): ListDirective<TItem, TKey, TValue> {
+  return new ListDirective(items, keySelector, valueSelector);
 }
 
-export class ListDirective<TItem, TValue, TKey> implements Directive {
-  private readonly _items: TItem[];
+export function indexedList<TItem, TValue>(
+  items: TItem[],
+  valueSelector: Selector<TItem, TValue>,
+): ListDirective<TItem, number, TValue> {
+  return new ListDirective(items, indexSelector, valueSelector);
+}
 
-  private readonly _valueSelector: Selector<TItem, TValue>;
+export class ListDirective<TItem, TKey, TValue> implements Directive {
+  private readonly _items: TItem[];
 
   private readonly _keySelector: Selector<TItem, TKey>;
 
+  private readonly _valueSelector: Selector<TItem, TValue>;
+
   constructor(
     items: TItem[],
-    valueSelector: Selector<TItem, TValue>,
     keySelector: Selector<TItem, TKey>,
+    valueSelector: Selector<TItem, TValue>,
   ) {
     this._items = items;
-    this._valueSelector = valueSelector;
     this._keySelector = keySelector;
+    this._valueSelector = valueSelector;
   }
 
   get items(): TItem[] {
     return this._items;
   }
 
-  get valueSelector(): (item: TItem, index: number) => TValue {
-    return this._valueSelector;
+  get keySelector(): Selector<TItem, TKey> {
+    return this._keySelector;
   }
 
-  get keySelector(): (item: TItem, index: number) => TKey {
-    return this._keySelector;
+  get valueSelector(): Selector<TItem, TValue> {
+    return this._valueSelector;
   }
 
   [directiveTag](
     part: Part,
     _updater: Updater,
-  ): ListBinding<TItem, TValue, TKey> {
+  ): ListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error('ListDirective must be used in ChildNodePart.');
     }
@@ -75,26 +70,30 @@ export class ListDirective<TItem, TValue, TKey> implements Directive {
   }
 }
 
-export class ListBinding<TItem, TValue, TKey>
-  implements Binding<ListDirective<TItem, TValue, TKey>>
+export class ListBinding<TItem, TKey, TValue>
+  implements Binding<ListDirective<TItem, TKey, TValue>>, Effect
 {
-  private _directive: ListDirective<TItem, TValue, TKey>;
+  private _directive: ListDirective<TItem, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
-  private _bindings: Binding<TValue>[] = [];
+  private _pendingBindings: Binding<TValue>[] = [];
 
-  private _keys: TKey[] = [];
+  private _memoizedBindings: Binding<TValue>[] = [];
+
+  private _memoizedKeys: TKey[] = [];
+
+  private _dirty = false;
 
   constructor(
-    directive: ListDirective<TItem, TValue, TKey>,
+    directive: ListDirective<TItem, TKey, TValue>,
     part: ChildNodePart,
   ) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): ListDirective<TItem, TValue, TKey> {
+  get value(): ListDirective<TItem, TKey, TValue> {
     return this._directive;
   }
 
@@ -103,85 +102,83 @@ export class ListBinding<TItem, TValue, TKey>
   }
 
   get startNode(): ChildNode {
-    return this._bindings[0]?.startNode ?? this._part.node;
+    return this._memoizedBindings[0]?.startNode ?? this._part.node;
   }
 
   get endNode(): ChildNode {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
-    if (this._bindings.length > 0) {
-      this._reconcileItems(updater);
-    } else {
-      this._initializeItems(updater);
-    }
+  get bindings(): Binding<TValue>[] {
+    return this._pendingBindings;
   }
 
-  bind(newValue: ListDirective<TItem, TValue, TKey>, updater: Updater): void {
+  connect(updater: Updater): void {
+    this._updateItems(updater);
+  }
+
+  bind(newValue: ListDirective<TItem, TKey, TValue>, updater: Updater): void {
     DEBUG: {
       ensureDirective(ListDirective, newValue);
     }
     const oldValue = this._directive;
-    if (
-      oldValue.items !== newValue.items ||
-      oldValue.keySelector !== newValue.keySelector ||
-      oldValue.valueSelector !== newValue.valueSelector
-    ) {
+    if (oldValue.items !== newValue.items) {
       this._directive = newValue;
-      this.connect(updater);
+      this._updateItems(updater);
     }
   }
 
   unbind(updater: Updater): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      removeItem(this._bindings[i]!, updater);
-    }
+    const { keySelector, valueSelector } = this._directive;
+    this._directive = new ListDirective([], keySelector, valueSelector);
+    this._clearItems(updater);
   }
 
   disconnect(): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.disconnect();
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      this._pendingBindings[i]!.disconnect();
     }
   }
 
-  private _initializeItems(updater: Updater): void {
-    const { items, keySelector, valueSelector } = this._directive;
-    const bindings = new Array<Binding<TValue>>(items.length);
-    const keys = items.map(keySelector);
-    const values = items.map(valueSelector);
+  commit(): void {
+    this._memoizedBindings = this._pendingBindings;
+    this._dirty = false;
+  }
 
-    for (let i = 0, l = bindings.length; i < l; i++) {
-      bindings[i] = addItem(values[i]!, this._part, updater);
+  private _clearItems(updater: Updater): void {
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      removeItem(this._pendingBindings[i]!, updater);
     }
-
-    this._bindings = bindings;
-    this._keys = keys;
+    this._pendingBindings = [];
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 
   private _reconcileItems(updater: Updater): void {
     const { items, keySelector, valueSelector } = this._directive;
-    const oldBindings: (Binding<TValue> | undefined)[] = this._bindings;
-    const oldKeys = this._keys;
+    const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
+    const oldKeys = this._memoizedKeys;
     const newKeys = items.map(keySelector);
     const newValues = items.map(valueSelector);
 
-    // Head and tail pointers to old parts and new values.
+    // Head and tail pointers to old bindings and new bindings.
     let oldHead = 0;
-    let oldTail = oldBindings.length - 1;
     let newHead = 0;
+    let oldTail = oldBindings.length - 1;
     let newTail = newBindings.length - 1;
 
-    let newKeyToIndexMap: Map<TKey, number> | undefined;
-    let oldKeyToIndexMap: Map<TKey, number> | undefined;
+    let oldKeyToIndexMap: Map<TKey, number> | null = null;
+    let newKeyToIndexMap: Map<TKey, number> | null = null;
 
     while (oldHead <= oldTail && newHead <= newTail) {
-      if (oldBindings[oldHead] === undefined) {
-        // `null` means old part at head has already been used below; skip
+      if (oldBindings[oldHead] === null) {
+        // `null` means old binding at head has already been used below; skip
         oldHead++;
-      } else if (oldBindings[oldTail] === undefined) {
-        // `null` means old part at tail has already been used below; skip
+      } else if (oldBindings[oldTail] === null) {
+        // `null` means old binding at tail has already been used below; skip
         oldTail--;
       } else if (oldKeys[oldHead] === newKeys[newHead]) {
         // Old head matches new head; update in place
@@ -199,7 +196,7 @@ export class ListBinding<TItem, TValue, TKey>
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newTail] = oldBindings[oldHead]!);
         binding.bind(newValues[newTail]!, updater);
-        reorderItem(
+        moveItem(
           binding,
           newBindings[newTail + 1] ?? null,
           this._part,
@@ -211,11 +208,11 @@ export class ListBinding<TItem, TValue, TKey>
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newHead] = oldBindings[oldTail]!);
         binding.bind(newValues[newHead]!, updater);
-        reorderItem(binding, oldBindings[oldHead] ?? null, this._part, updater);
+        moveItem(binding, oldBindings[oldHead]!, this._part, updater);
         oldTail--;
         newHead++;
       } else {
-        if (newKeyToIndexMap === undefined) {
+        if (newKeyToIndexMap === null) {
           // Lazily generate key-to-index maps, used for removals and moves
           // below.
           newKeyToIndexMap = generateIndexMap(newKeys, newHead, newTail);
@@ -231,25 +228,22 @@ export class ListBinding<TItem, TValue, TKey>
           oldTail--;
         } else {
           // Any mismatches at this point are due to additions or moves; see if
-          // we have an old part we can reuse and move into place.
+          // we have an old binding we can reuse and move into place.
           const oldIndex = oldKeyToIndexMap!.get(newKeys[newHead]!);
-          if (oldIndex !== undefined) {
-            // Reuse old part.
+          if (oldIndex !== undefined && oldBindings[oldIndex] !== null) {
+            // Reuse the old binding.
             const binding = (newBindings[newHead] = oldBindings[oldIndex]!);
             binding.bind(newValues[newHead]!, updater);
-            reorderItem(
-              binding,
-              oldBindings[oldHead] ?? null,
-              this._part,
-              updater,
-            );
-            // This marks the old part as having been used, so that it will be
-            // skipped in the first two checks above.
-            oldBindings[oldIndex] = undefined;
+            moveItem(binding, oldBindings[oldHead]!, this._part, updater);
+            // This marks the old binding as having been used, so that it will
+            // be skipped in the first two checks above.
+            oldBindings[oldIndex] = null;
           } else {
-            // No old part for this value; create a new one and insert it.
-            newBindings[newHead] = addItem(
+            // No old binding for this value; create a new one and insert it.
+            newBindings[newHead] = insertItem(
+              newKeys[newHead]!,
               newValues[newHead]!,
+              oldBindings[oldHead]!,
               this._part,
               updater,
             );
@@ -259,94 +253,145 @@ export class ListBinding<TItem, TValue, TKey>
       }
     }
 
-    // Add parts for any remaining new values.
+    // Add bindings for any remaining new values.
     while (newHead <= newTail) {
       // For all remaining additions, we insert before last new tail, since old
       // pointers are no longer valid.
-      newBindings[newHead] = addItem(newValues[newHead]!, this._part, updater);
+      newBindings[newHead] = insertItem(
+        newKeys[newHead]!,
+        newValues[newHead]!,
+        newBindings[newTail + 1] ?? null,
+        this._part,
+        updater,
+      );
       newHead++;
     }
 
-    // Remove any remaining unused old parts.
+    // Remove any remaining unused old bindings.
     while (oldHead <= oldTail) {
-      const oldBinding = oldBindings[oldHead];
-      if (oldBinding !== undefined) {
+      const oldBinding = oldBindings[oldHead]!;
+      if (oldBinding !== null) {
         removeItem(oldBinding, updater);
       }
       oldHead++;
     }
 
-    this._bindings = newBindings;
-    this._keys = newKeys;
+    this._pendingBindings = newBindings;
+    this._memoizedKeys = newKeys;
+  }
+
+  private _replaceItems(updater: Updater): void {
+    const { items, keySelector, valueSelector } = this._directive;
+    const oldBindings = this._pendingBindings;
+    const newBindings = new Array<Binding<TValue>>(items.length);
+    const newKeys = new Array<TKey>(items.length);
+
+    for (
+      let i = 0, l = Math.min(oldBindings.length, items.length);
+      i < l;
+      i++
+    ) {
+      const item = items[i]!;
+      const key = keySelector(item, i);
+      const value = valueSelector(item, i);
+      const binding = this._pendingBindings[i]!;
+      binding.bind(value, updater);
+      newKeys[i] = key;
+      newBindings[i] = binding;
+    }
+
+    for (let i = oldBindings.length, l = items.length; i < l; i++) {
+      const item = items[i]!;
+      const key = keySelector(item, i);
+      const value = valueSelector(item, i);
+      newKeys[i] = key;
+      newBindings[i] = insertItem(key, value, null, this._part, updater);
+    }
+
+    for (let i = items.length, l = oldBindings.length; i < l; i++) {
+      removeItem(oldBindings[i]!, updater);
+    }
+
+    this._pendingBindings = newBindings;
+    this._memoizedKeys = newKeys;
+  }
+
+  private _updateItems(updater: Updater): void {
+    if (
+      this._directive.keySelector === indexSelector ||
+      this._pendingBindings.length === 0
+    ) {
+      // Update items based on indexes. That is a fastpass of _reconcileItems().
+      this._replaceItems(updater);
+    } else {
+      this._reconcileItems(updater);
+    }
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 }
 
-class MountPart implements Effect {
+class InsertItem<T> implements Effect {
   private _part: Part;
 
-  private _listPart: Part;
+  private _referenceBinding: Binding<T> | null;
 
-  constructor(part: Part, listPart: Part) {
+  private _containerPart: Part;
+
+  constructor(
+    part: Part,
+    referenceBinding: Binding<T> | null,
+    containerPart: Part,
+  ) {
     this._part = part;
-    this._listPart = listPart;
+    this._referenceBinding = referenceBinding;
+    this._containerPart = containerPart;
   }
 
   commit(): void {
-    const referenceNode = this._listPart.node;
+    const referenceNode =
+      this._referenceBinding?.startNode ?? this._containerPart.node;
     referenceNode.before(this._part.node);
   }
 }
 
-class ReorderItem<T> implements Effect {
+class MoveItem<T> implements Effect {
   private _binding: Binding<T>;
 
   private _referenceBinding: Binding<T> | null;
 
-  private _listPart: Part;
+  private _containerPart: Part;
 
   constructor(
     binding: Binding<T>,
     referenceBinding: Binding<T> | null,
-    listPart: Part,
+    containerPart: Part,
   ) {
     this._binding = binding;
     this._referenceBinding = referenceBinding;
-    this._listPart = listPart;
+    this._containerPart = containerPart;
   }
 
   commit(): void {
     const { startNode, endNode } = this._binding;
     const referenceNode =
-      this._referenceBinding?.startNode ?? this._listPart.node;
-    moveNodes(startNode, endNode, referenceNode);
+      this._referenceBinding?.startNode ?? this._containerPart.node;
+    reorderNodes(startNode, endNode, referenceNode);
   }
 }
 
-class UnmountPart implements Effect {
-  private _itemPart: Part;
+class RemoveItem implements Effect {
+  private _part: Part;
 
   constructor(part: Part) {
-    this._itemPart = part;
+    this._part = part;
   }
 
   commit(): void {
-    this._itemPart.node.remove();
+    this._part.node.remove();
   }
-}
-
-function addItem<T>(value: T, listPart: Part, updater: Updater): Binding<T> {
-  const part = {
-    type: PartType.ChildNode,
-    node: document.createComment(''),
-  } as const;
-
-  updater.enqueueMutationEffect(new MountPart(part, listPart));
-
-  const binding = resolveBinding(value, part, updater);
-
-  binding.connect(updater);
-
-  return binding;
 }
 
 function generateIndexMap<T>(
@@ -361,7 +406,52 @@ function generateIndexMap<T>(
   return map;
 }
 
-function moveNodes(
+function indexSelector<TItem>(_item: TItem, index: number): number {
+  return index;
+}
+
+function insertItem<TKey, TValue>(
+  key: TKey,
+  value: TValue,
+  referenceBinding: Binding<TValue> | null,
+  containerPart: Part,
+  updater: Updater,
+): Binding<TValue> {
+  const part = {
+    type: PartType.ChildNode,
+    node: document.createComment(''),
+  } as const;
+  const binding = resolveBinding(value, part, updater);
+
+  DEBUG: {
+    part.node.nodeValue = String(key);
+  }
+
+  updater.enqueueMutationEffect(
+    new InsertItem(part, referenceBinding, containerPart),
+  );
+  binding.connect(updater);
+
+  return binding;
+}
+
+function moveItem<T>(
+  binding: Binding<T>,
+  referenceBinding: Binding<T> | null,
+  containerPart: Part,
+  updater: Updater,
+): void {
+  updater.enqueueMutationEffect(
+    new MoveItem(binding, referenceBinding, containerPart),
+  );
+}
+
+function removeItem<T>(binding: Binding<T>, updater: Updater): void {
+  binding.unbind(updater);
+  updater.enqueueMutationEffect(new RemoveItem(binding.part));
+}
+
+function reorderNodes(
   startNode: Node,
   endNode: Node,
   referenceNode: ChildNode,
@@ -373,27 +463,11 @@ function moveNodes(
 
   do {
     targetNodes.push(currentNode);
-  } while (
-    currentNode !== endNode &&
-    (currentNode = currentNode.nextSibling) !== null
-  );
+    if (currentNode === endNode) {
+      break;
+    }
+    currentNode = currentNode.nextSibling;
+  } while (currentNode !== null);
 
   referenceNode.before(...targetNodes);
-}
-
-function removeItem<T>(binding: Binding<T>, updater: Updater): void {
-  binding.unbind(updater);
-
-  updater.enqueueMutationEffect(new UnmountPart(binding.part));
-}
-
-function reorderItem<T>(
-  binding: Binding<T>,
-  referenceBinding: Binding<T> | null,
-  listPart: Part,
-  updater: Updater,
-): void {
-  updater.enqueueMutationEffect(
-    new ReorderItem(binding, referenceBinding, listPart),
-  );
 }

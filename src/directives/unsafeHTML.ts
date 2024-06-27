@@ -65,10 +65,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: UnsafeHTMLDirective, updater: Updater): void {
@@ -78,7 +75,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
     const oldValue = this._directive;
     if (oldValue.unsafeContent !== newValue.unsafeContent) {
       this._directive = newValue;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
@@ -101,17 +98,22 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
 
     if (unsafeContent !== '') {
       const template = document.createElement('template');
-      template.innerHTML = unsafeContent;
-
-      const fragment = template.content;
-      this._childNodes = [...fragment.childNodes];
-
       const reference = this._part.node;
-      reference.before(fragment);
+
+      template.innerHTML = unsafeContent;
+      this._childNodes = [...template.content.childNodes];
+      reference.before(template.content);
     } else {
       this._childNodes = [];
     }
 
     this._dirty = false;
+  }
+
+  private _requestMutation(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 }

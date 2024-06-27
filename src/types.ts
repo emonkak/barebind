@@ -27,8 +27,8 @@ export interface Block<TContext = unknown> {
   get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
   shouldUpdate(): boolean;
-  update(context: UpdateContext<TContext>, updater: Updater<TContext>): void;
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
+  update(context: UpdateContext<TContext>, updater: Updater<TContext>): void;
 }
 
 export type Component<TProps, TData, TContext> = (
@@ -47,8 +47,8 @@ export interface Template<TData, TContext = unknown> {
 export interface TemplateFragment<TData, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
-  bind(data: TData, updater: Updater<TContext>): void;
-  unbind(updater: Updater): void;
+  attach(data: TData, updater: Updater<TContext>): void;
+  detach(updater: Updater): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
   disconnect(): void;

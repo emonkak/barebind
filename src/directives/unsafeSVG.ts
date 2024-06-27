@@ -65,10 +65,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: UnsafeSVGDirective, updater: Updater): void {
@@ -78,7 +75,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
     const oldValue = this._directive;
     if (oldValue.unsafeContent !== newValue.unsafeContent) {
       this._directive = newValue;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
@@ -101,17 +98,22 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
 
     if (unsafeContent !== '') {
       const template = document.createElement('template');
-      template.innerHTML = '<svg>' + unsafeContent + '</svg>';
-
-      const fragment = template.content;
-      this._childNodes = [...fragment.firstChild!.childNodes];
-
       const reference = this._part.node;
+
+      template.innerHTML = '<svg>' + unsafeContent + '</svg>';
+      this._childNodes = [...template.content.firstChild!.childNodes];
       reference.before(...this._childNodes);
     } else {
       this._childNodes = [];
     }
 
     this._dirty = false;
+  }
+
+  private _requestMutation(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 }

@@ -61,10 +61,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: unknown, updater: Updater): void {
@@ -73,14 +70,14 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
   unbind(updater: Updater): void {
     if (this._value !== null) {
       this._value = null;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
@@ -101,6 +98,13 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     }
 
     this._dirty = false;
+  }
+
+  private _requestMutation(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 }
 
@@ -136,25 +140,23 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: unknown, updater: Updater): void {
     ensureEventListener(newValue);
     if (this._memoizedListener !== newValue) {
       this._pendingListener = newValue;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
   unbind(updater: Updater): void {
-    this._pendingListener = null;
     if (this._memoizedListener !== null) {
-      this.connect(updater);
+      this._requestMutation(updater);
     }
+
+    this._pendingListener = null;
   }
 
   disconnect(): void {
@@ -175,6 +177,8 @@ export class EventBinding implements Binding<unknown>, Effect {
 
       this._memoizedListener = null;
     }
+
+    this._pendingListener = null;
   }
 
   commit(): void {
@@ -225,6 +229,13 @@ export class EventBinding implements Binding<unknown>, Effect {
       listener.handleEvent(event);
     }
   }
+
+  private _requestMutation(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
+  }
 }
 
 export class NodeBinding implements Binding<unknown>, Effect {
@@ -259,10 +270,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: unknown, updater: Updater): void {
@@ -271,14 +279,14 @@ export class NodeBinding implements Binding<unknown>, Effect {
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
   unbind(updater: Updater): void {
     if (this._value !== null) {
       this._value = null;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
@@ -290,6 +298,13 @@ export class NodeBinding implements Binding<unknown>, Effect {
         ? this._value
         : this._value?.toString() ?? null;
     this._dirty = false;
+  }
+
+  private _requestMutation(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 }
 
@@ -325,10 +340,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
   }
 
   connect(updater: Updater): void {
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: unknown, updater: Updater): void {
@@ -337,7 +349,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
-      this.connect(updater);
+      this._requestMutation(updater);
     }
   }
 
@@ -349,6 +361,13 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     const { node, name } = this._part;
     (node as any)[name] = this._value;
     this._dirty = false;
+  }
+
+  private _requestMutation(updater: Updater): void {
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
   }
 }
 
@@ -382,6 +401,31 @@ export class ElementBinding implements Binding<unknown> {
   }
 
   connect(updater: Updater): void {
+    this._updateProps(updater);
+  }
+
+  bind(newValue: unknown, updater: Updater): void {
+    ensureSpreadProps(newValue);
+    if (this._props !== newValue) {
+      this._props = newValue;
+      this._updateProps(updater);
+    }
+  }
+
+  unbind(updater: Updater): void {
+    this._props = {};
+    for (const binding of this._bindings.values()) {
+      binding.unbind(updater);
+    }
+  }
+
+  disconnect(): void {
+    for (const binding of this._bindings.values()) {
+      binding.disconnect();
+    }
+  }
+
+  private _updateProps(updater: Updater): void {
     for (const [name, binding] of this._bindings.entries()) {
       if (
         !Object.hasOwn(this._props, name) ||
@@ -408,27 +452,6 @@ export class ElementBinding implements Binding<unknown> {
         binding.connect(updater);
         this._bindings.set(name, binding);
       }
-    }
-  }
-
-  bind(newValue: unknown, updater: Updater): void {
-    ensureSpreadProps(newValue);
-    if (this._props !== newValue) {
-      this._props = newValue;
-      this.connect(updater);
-    }
-  }
-
-  unbind(updater: Updater): void {
-    this._props = {};
-    for (const binding of this._bindings.values()) {
-      binding.unbind(updater);
-    }
-  }
-
-  disconnect(): void {
-    for (const binding of this._bindings.values()) {
-      binding.disconnect();
     }
   }
 }

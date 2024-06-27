@@ -34,12 +34,9 @@ export class DynamicBinding implements Binding<unknown> {
 
   private _binding: Binding<unknown>;
 
-  private readonly _part: Part;
-
   constructor(directive: DynamicDirective, part: Part, updater: Updater) {
     this._directive = directive;
-    this._binding = resolveBinding(directive, part, updater);
-    this._part = part;
+    this._binding = resolveBinding(directive.value, part, updater);
   }
 
   get value(): DynamicDirective {
@@ -47,15 +44,19 @@ export class DynamicBinding implements Binding<unknown> {
   }
 
   get part(): Part {
-    return this._part;
+    return this._binding.part;
   }
 
   get startNode(): ChildNode {
-    return this._part.node;
+    return this._binding.startNode;
   }
 
   get endNode(): ChildNode {
-    return this._part.node;
+    return this._binding.endNode;
+  }
+
+  get binding(): Binding<unknown> {
+    return this._binding;
   }
 
   connect(updater: Updater): void {

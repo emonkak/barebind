@@ -6,11 +6,11 @@ import {
 } from '@emonkak/ebit';
 import {
   type TemplateDirective,
-  component,
+  keyedList,
   choice,
   classMap,
+  component,
   condition,
-  list,
   ref,
   styleMap,
   unless,
@@ -35,8 +35,9 @@ function App(_props: {}, context: RenderingContext) {
 
   const itemsList = context.useMemo(
     () =>
-      list(
+      keyedList(
         items,
+        (item) => item,
         (item, index) =>
           component(Item, {
             title: item,
@@ -64,7 +65,6 @@ function App(_props: {}, context: RenderingContext) {
               setItems(newItems);
             },
           }),
-        (item) => item,
       ),
     [items],
   );

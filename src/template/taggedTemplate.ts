@@ -226,7 +226,7 @@ export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
     return this._bindings;
   }
 
-  bind(newData: unknown[], updater: Updater): void {
+  attach(newData: unknown[], updater: Updater): void {
     if (newData.length !== this._bindings.length) {
       throw new Error(
         `The number of new data must be ${this._bindings.length}, but got ${newData.length}.`,
@@ -238,7 +238,7 @@ export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
     }
   }
 
-  unbind(updater: Updater): void {
+  detach(updater: Updater): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       const part = binding.part;
@@ -291,7 +291,7 @@ export function isValidMarker(marker: string): boolean {
   return MARKER_REGEXP.test(marker);
 }
 
-export function ensureValidMarker(marker: string): void {
+function ensureValidMarker(marker: string): void {
   if (!isValidMarker(marker)) {
     throw new Error(`The marker is in an invalid format: ${marker}`);
   }

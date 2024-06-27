@@ -3,8 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { directiveTag } from '../../src/binding.js';
 import {
   StyleMapBinding,
-  StyleMapDirective,
-  styleMap as styleMapFunction,
+  styleMap as styleMapDirective,
 } from '../../src/directives/styleMap.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -13,26 +12,17 @@ import { MockRenderingEngine } from '../mocks.js';
 describe('styleMap()', () => {
   it('should construct a new StyleMapDirective', () => {
     const styleMap = { display: 'none' };
-    const directive = styleMapFunction(styleMap);
+    const directive = styleMapDirective(styleMap);
 
     expect(directive.styleMap).toBe(styleMap);
   });
 });
 
 describe('StyleMapDirective', () => {
-  describe('.constructor()', () => {
-    it('should construct a new StyleMapDirective', () => {
-      const styleMap = { display: 'none' };
-      const directive = new StyleMapDirective(styleMap);
-
-      expect(directive.styleMap).toBe(styleMap);
-    });
-  });
-
   describe('[directiveTag]()', () => {
     it('should return a new instance of ClassMapBinding', () => {
       const styleMap = { display: 'none' };
-      const directive = new StyleMapDirective(styleMap);
+      const directive = styleMapDirective(styleMap);
       const updater = new SyncUpdater(new MockRenderingEngine());
       const part = {
         type: PartType.Attribute,
@@ -43,11 +33,13 @@ describe('StyleMapDirective', () => {
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
+      expect(binding.startNode).toBe(part.node);
+      expect(binding.endNode).toBe(part.node);
     });
 
     it('should throw an error if the part does not indicate "style" attribute', () => {
       const styleMap = { display: 'none' };
-      const directive = new StyleMapDirective(styleMap);
+      const directive = styleMapDirective(styleMap);
       const updater = new SyncUpdater(new MockRenderingEngine());
       const part = {
         type: PartType.Attribute,
@@ -63,26 +55,9 @@ describe('StyleMapDirective', () => {
 });
 
 describe('StyleMapBinding', () => {
-  describe('.constructor()', () => {
-    it('should construct a new ClassMapBinding', () => {
-      const directive = new StyleMapDirective({ display: 'component' });
-      const part = {
-        type: PartType.Attribute,
-        name: 'style',
-        node: document.createElement('div'),
-      } as const;
-      const binding = new StyleMapBinding(directive, part);
-
-      expect(binding.value).toBe(directive);
-      expect(binding.part).toBe(part);
-      expect(binding.startNode).toBe(part.node);
-      expect(binding.endNode).toBe(part.node);
-    });
-  });
-
   describe('.connect()', () => {
     it('should set styles to the element', () => {
-      const directive = new StyleMapDirective({
+      const directive = styleMapDirective({
         '--my-css-property': '1',
         color: 'black',
         margin: '10px',
@@ -111,7 +86,7 @@ describe('StyleMapBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const directive = new StyleMapDirective({
+      const directive = styleMapDirective({
         color: 'black',
       });
       const part = {
@@ -136,51 +111,57 @@ describe('StyleMapBinding', () => {
 
   describe('.bind()', () => {
     it('should remove gone styles from the element', () => {
-      const directive = new StyleMapDirective({
+      const directive1 = styleMapDirective({
         padding: '8px',
         margin: '8px',
+      });
+      const directive2 = styleMapDirective({
+        padding: '0',
       });
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const binding = new StyleMapBinding(directive, part);
+      const binding = new StyleMapBinding(directive1, part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
       binding.connect(updater);
       updater.flush();
 
-      binding.bind(new StyleMapDirective({ padding: '0' }), updater);
+      binding.bind(directive2, updater);
       updater.flush();
 
+      expect(binding.value).toBe(directive2);
       expect(part.node.style).toHaveLength(4);
       expect(part.node.style.getPropertyValue('padding')).toBe('0px');
     });
 
-    it('should skip update if the styles are the same as the previous one', () => {
-      const directive = new StyleMapDirective({
+    it('should skip an update if the styles are the same as previous ones', () => {
+      const directive1 = styleMapDirective({
         color: 'black',
       });
+      const directive2 = styleMapDirective(directive1.styleMap);
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const binding = new StyleMapBinding(directive, part);
+      const binding = new StyleMapBinding(directive1, part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
       binding.connect(updater);
       updater.flush();
 
-      binding.bind(directive, updater);
+      binding.bind(directive2, updater);
 
+      expect(binding.value).toBe(directive1);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
 
     it('should throw an error if the new value is not StyleMapDirective', () => {
-      const directive = new StyleMapDirective({
+      const directive = styleMapDirective({
         color: 'black',
       });
       const part = {
@@ -201,7 +182,7 @@ describe('StyleMapBinding', () => {
 
   describe('.unbind()', () => {
     it('should remove all styles from the element', () => {
-      const directive = new StyleMapDirective({
+      const directive = styleMapDirective({
         '--my-css-property': '1',
         color: 'black',
         margin: '10px',
@@ -225,8 +206,8 @@ describe('StyleMapBinding', () => {
       expect(part.node.style).toHaveLength(0);
     });
 
-    it('should skip updater if the current styles are empty', () => {
-      const directive = new StyleMapDirective({});
+    it('should skip an update if the current styles are empty', () => {
+      const directive = styleMapDirective({});
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -244,7 +225,7 @@ describe('StyleMapBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = new StyleMapDirective({ display: 'component' });
+      const directive = styleMapDirective({ display: 'component' });
       const part = {
         type: PartType.Attribute,
         name: 'style',

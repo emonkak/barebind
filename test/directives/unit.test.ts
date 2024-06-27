@@ -6,6 +6,12 @@ import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockRenderingEngine } from '../mocks.js';
 
+describe('unit', () => {
+  it('should be the same as UnitDirective.instance', () => {
+    expect(unit).toBe(UnitDirective.instance);
+  });
+});
+
 describe('UnitDirective', () => {
   describe('.constructor()', () => {
     it('should be forbidden from being called directly', () => {
@@ -22,30 +28,17 @@ describe('UnitDirective', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = UnitDirective.instance[directiveTag](part, updater);
+      const binding = unit[directiveTag](part, updater);
 
-      expect(binding.value).toBe(UnitDirective.instance);
-      expect(binding.part).toBe(part);
-    });
-  });
-});
-
-describe('UnitBinding', () => {
-  describe('.constructor()', () => {
-    it('should construct a new UnitBinding', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new UnitBinding(part);
-
-      expect(binding.value).toBe(UnitDirective.instance);
+      expect(binding.value).toBe(unit);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
   });
+});
 
+describe('UnitBinding', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
       const part = {
@@ -71,7 +64,7 @@ describe('UnitBinding', () => {
       const binding = new UnitBinding(part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
-      binding.bind(UnitDirective.instance, updater);
+      binding.bind(unit, updater);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -117,11 +110,5 @@ describe('UnitBinding', () => {
 
       binding.disconnect();
     });
-  });
-});
-
-describe('unit', () => {
-  it('should be the same as UnitDirective.instance', () => {
-    expect(unit).toBe(UnitDirective.instance);
   });
 });

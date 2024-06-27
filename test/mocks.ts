@@ -73,7 +73,7 @@ export class MockBlock<TContext> implements Block<TContext> {
   }
 
   get priority(): TaskPriority {
-    return 'user-visible';
+    return 'background';
   }
 
   shouldUpdate(): boolean {
@@ -115,7 +115,11 @@ export class MockScheduler implements Scheduler {
   }
 }
 
-export class MockRenderingContext {}
+export type MockRenderingContext = {
+  hooks: Hook[];
+  block: Block<MockRenderingContext>;
+  updater: Updater<MockRenderingContext>;
+};
 
 export class MockRenderingEngine
   implements UpdateContext<MockRenderingContext>
@@ -129,31 +133,35 @@ export class MockRenderingEngine
   renderComponent<TProps, TData>(
     component: Component<TProps, TData, MockRenderingContext>,
     props: TProps,
-    _hooks: Hook[],
-    _block: Block<MockRenderingContext>,
-    _updater: Updater<MockRenderingContext>,
+    hooks: Hook[],
+    block: Block<MockRenderingContext>,
+    updater: Updater<MockRenderingContext>,
   ): TemplateResult<TData, MockRenderingContext> {
-    return component(props, new MockRenderingContext());
+    return component(props, { hooks, block, updater });
   }
 }
 
-export class MockTemplate<TData, TContext>
-  implements Template<TData, TContext>
-{
+export class MockTemplate<TContext> implements Template<{}, TContext> {
+  private _id: number;
+
+  constructor(id = 0) {
+    this._id = id;
+  }
+
   hydrate(
-    _data: TData,
+    _data: {},
     _updater: Updater<TContext>,
-  ): MockTemplateFragment<TData, TContext> {
+  ): MockTemplateFragment<TContext> {
     return new MockTemplateFragment();
   }
 
-  isSameTemplate(other: Template<TData, TContext>): boolean {
-    return this === other;
+  isSameTemplate(other: Template<{}, TContext>): boolean {
+    return other instanceof MockTemplate && other._id === this._id;
   }
 }
 
-export class MockTemplateFragment<TData, TContext>
-  implements TemplateFragment<TData, TContext>
+export class MockTemplateFragment<TContext>
+  implements TemplateFragment<{}, TContext>
 {
   get startNode(): ChildNode | null {
     return null;
@@ -163,33 +171,13 @@ export class MockTemplateFragment<TData, TContext>
     return null;
   }
 
-  bind(_data: TData, _updater: Updater<TContext>): void {}
+  attach(_data: {}, _updater: Updater<TContext>): void {}
 
-  unbind(_updater: Updater): void {}
+  detach(_updater: Updater): void {}
 
   mount(_part: ChildNodePart): void {}
 
   unmount(_part: ChildNodePart): void {}
 
   disconnect(): void {}
-}
-
-export class MockTemplateResult<TData, TContext>
-  implements TemplateResult<TData, TContext>
-{
-  private _template: Template<TData, TContext>;
-
-  private _data: TData;
-
-  constructor(template: Template<TData, TContext>, data: TData) {
-    this._template = template;
-    this._data = data;
-  }
-
-  get template(): Template<TData, TContext> {
-    return this._template;
-  }
-  get data(): TData {
-    return this._data;
-  }
 }

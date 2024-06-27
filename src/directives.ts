@@ -22,7 +22,12 @@ export {
   DynamicDirective,
   dynamic,
 } from './directives/dynamic.js';
-export { ListBinding, ListDirective, list } from './directives/list.js';
+export {
+  keyedList,
+  ListBinding,
+  ListDirective,
+  indexedList,
+} from './directives/list.js';
 export {
   MemoBinding,
   MemoDirective,

@@ -8,7 +8,7 @@ import {
 import type { Part, Updater } from '../types.js';
 import { UnitDirective } from './unit.js';
 
-type FunctionOrValue<T> = (() => T) | T extends Function ? never : T;
+type FunctionOrValue<T> = T extends Function ? () => T : (() => T) | T;
 
 export function condition<TTrue, TFalse>(
   condition: boolean,
@@ -63,9 +63,9 @@ export class ConditionDirective<TTrue, TFalse> implements Directive {
 
   [directiveTag](
     part: Part,
-    _updater: Updater,
+    updater: Updater,
   ): ConditionBinding<TTrue, TFalse> {
-    return new ConditionBinding<TTrue, TFalse>(this, part);
+    return new ConditionBinding<TTrue, TFalse>(this, part, updater);
   }
 }
 
@@ -74,15 +74,32 @@ export class ConditionBinding<TTrue, TFalse>
 {
   private _directive: ConditionDirective<TTrue, TFalse>;
 
-  private readonly _part: Part;
-
   private _trueBinding: Binding<TTrue> | null = null;
 
   private _falseBinding: Binding<TFalse> | null = null;
 
-  constructor(directive: ConditionDirective<TTrue, TFalse>, part: Part) {
+  constructor(
+    directive: ConditionDirective<TTrue, TFalse>,
+    part: Part,
+    updater: Updater,
+  ) {
+    const { condition, trueCase, falseCase } = directive;
     this._directive = directive;
-    this._part = part;
+    if (condition) {
+      this._trueBinding = resolveBinding(
+        evalFunctionOrValue(trueCase),
+        part,
+        updater,
+      );
+      this._falseBinding = null;
+    } else {
+      this._trueBinding = null;
+      this._falseBinding = resolveBinding(
+        evalFunctionOrValue(falseCase),
+        part,
+        updater,
+      );
+    }
   }
 
   get value(): ConditionDirective<TTrue, TFalse> {
@@ -90,37 +107,23 @@ export class ConditionBinding<TTrue, TFalse>
   }
 
   get part(): Part {
-    return this._part;
+    return this.currentBinding.part;
   }
 
   get startNode(): ChildNode {
-    return this.currentBinding?.startNode ?? this._part.node;
+    return this.currentBinding.startNode;
   }
 
   get endNode(): ChildNode {
-    return this.currentBinding?.endNode ?? this._part.node;
+    return this.currentBinding.endNode;
   }
 
-  get currentBinding(): Binding<TTrue> | Binding<TFalse> | null {
-    return this._directive.condition ? this._trueBinding : this._falseBinding;
+  get currentBinding(): Binding<TTrue | TFalse> {
+    return this._directive.condition ? this._trueBinding! : this._falseBinding!;
   }
 
   connect(updater: Updater): void {
-    const { condition, trueCase, falseCase } = this._directive;
-
-    if (condition) {
-      if (this._trueBinding === null) {
-        const value = typeof trueCase === 'function' ? trueCase() : trueCase;
-        this._trueBinding = resolveBinding(value, this._part, updater);
-      }
-      this._trueBinding.connect(updater);
-    } else {
-      if (this._falseBinding === null) {
-        const value = typeof falseCase === 'function' ? falseCase() : trueCase;
-        this._falseBinding = resolveBinding(value, this._part, updater);
-      }
-      this._falseBinding.connect(updater);
-    }
+    this.currentBinding.connect(updater);
   }
 
   bind(newValue: ConditionDirective<TTrue, TFalse>, updater: Updater): void {
@@ -129,49 +132,56 @@ export class ConditionBinding<TTrue, TFalse>
     }
 
     const oldValue = this._directive;
+    const { condition, trueCase, falseCase } = newValue;
 
-    if (
-      oldValue.condition !== newValue.condition ||
-      oldValue.falseCase !== newValue.falseCase ||
-      oldValue.trueCase !== newValue.trueCase
-    ) {
-      const { condition, trueCase, falseCase } = newValue;
-
+    if (oldValue.condition === condition) {
       if (condition) {
-        const value = typeof trueCase === 'function' ? trueCase() : trueCase;
+        this._trueBinding!.bind(evalFunctionOrValue(trueCase), updater);
+      } else {
+        this._falseBinding!.bind(evalFunctionOrValue(falseCase), updater);
+      }
+    } else {
+      if (condition) {
+        this._falseBinding!.unbind(updater);
         if (this._trueBinding !== null) {
-          if (oldValue.condition !== condition) {
-            this._falseBinding?.unbind(updater);
-          }
-          this._trueBinding.bind(value, updater);
+          this._trueBinding.bind(evalFunctionOrValue(trueCase), updater);
         } else {
-          this._falseBinding?.unbind(updater);
-          this._trueBinding = resolveBinding(value, this._part, updater);
+          this._trueBinding = resolveBinding(
+            evalFunctionOrValue(trueCase),
+            this._falseBinding!.part,
+            updater,
+          );
           this._trueBinding.connect(updater);
         }
       } else {
-        const value = typeof falseCase === 'function' ? falseCase() : falseCase;
+        this._trueBinding!.unbind(updater);
         if (this._falseBinding !== null) {
-          if (oldValue.condition !== condition) {
-            this._trueBinding?.unbind(updater);
-          }
-          this._falseBinding.bind(value, updater);
+          this._falseBinding.bind(evalFunctionOrValue(falseCase), updater);
         } else {
-          this._trueBinding?.unbind(updater);
-          this._falseBinding = resolveBinding(value, this._part, updater);
+          this._falseBinding = resolveBinding(
+            evalFunctionOrValue(falseCase),
+            this._trueBinding!.part,
+            updater,
+          );
           this._falseBinding.connect(updater);
         }
       }
-
-      this._directive = newValue;
     }
+
+    this._directive = newValue;
   }
 
   unbind(updater: Updater): void {
-    this.currentBinding?.unbind(updater);
+    this.currentBinding.unbind(updater);
   }
 
   disconnect(): void {
-    this.currentBinding?.disconnect();
+    this.currentBinding.disconnect();
   }
+}
+
+function evalFunctionOrValue<T>(functionOrValue: FunctionOrValue<T>): T {
+  return typeof functionOrValue === 'function'
+    ? functionOrValue()
+    : functionOrValue;
 }
