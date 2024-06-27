@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
-import { MockComponent, MockRenderingEngine, MockScheduler } from '../mocks.js';
+import { MockBlock, MockRenderingEngine, MockScheduler } from '../mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -69,20 +69,20 @@ describe('ConcurrentUpdater', () => {
   });
 
   describe('.isPending()', () => {
-    it('should return true if there is a pending component', () => {
+    it('should return true if there is a pending block', () => {
       const engine = new MockRenderingEngine();
       const updater = new ConcurrentUpdater(engine);
 
-      updater.enqueueComponent(new MockComponent());
+      updater.enqueueBlock(new MockBlock());
 
       expect(updater.isPending()).toBe(true);
     });
 
-    it('should return true if there is a component scheduled in rendering pipelines', () => {
+    it('should return true if there is a block scheduled in rendering pipelines', () => {
       const engine = new MockRenderingEngine();
       const updater = new ConcurrentUpdater(engine);
 
-      updater.enqueueComponent(new MockComponent());
+      updater.enqueueBlock(new MockBlock());
       updater.scheduleUpdate();
 
       expect(updater.isPending()).toBe(true);
@@ -128,7 +128,7 @@ describe('ConcurrentUpdater', () => {
       const engine = new MockRenderingEngine();
       const updater = new ConcurrentUpdater(engine);
 
-      updater.enqueueComponent(new MockComponent());
+      updater.enqueueBlock(new MockBlock());
       expect(updater.isScheduled()).toBe(false);
 
       updater.scheduleUpdate();
@@ -141,24 +141,24 @@ describe('ConcurrentUpdater', () => {
 
   describe('.scheduleUpdate()', () => {
     it.each(TASK_PRIORITIES)(
-      'should update the component according to its priority',
+      'should update the block according to its priority',
       async (priority) => {
         const engine = new MockRenderingEngine();
         const scheduler = new MockScheduler();
         const updater = new ConcurrentUpdater(engine, { scheduler });
 
-        const component = new MockComponent();
+        const block = new MockBlock();
         const prioritySpy = vi
-          .spyOn(component, 'priority', 'get')
+          .spyOn(block, 'priority', 'get')
           .mockReturnValue(priority);
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
         const updateSpy = vi
-          .spyOn(component, 'update')
+          .spyOn(block, 'update')
           .mockImplementation((_context, updater) => {
-            expect(updater.getCurrentComponent()).toBe(component);
+            expect(updater.getCurrentBlock()).toBe(block);
           });
 
-        updater.enqueueComponent(component);
+        updater.enqueueBlock(block);
         updater.scheduleUpdate();
 
         await updater.waitForUpdate();
@@ -177,23 +177,23 @@ describe('ConcurrentUpdater', () => {
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater(engine, { scheduler });
 
-      const component = new MockComponent();
+      const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
       const updateSpy = vi
-        .spyOn(component, 'update')
+        .spyOn(block, 'update')
         .mockImplementation((_context, updater) => {
-          expect(updater.getCurrentComponent()).toBe(component);
+          expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);
           updater.enqueuePassiveEffect(passiveEffect);
           updater.scheduleUpdate();
         });
 
-      updater.enqueueComponent(component);
+      updater.enqueueBlock(block);
       updater.scheduleUpdate();
 
       await updater.waitForUpdate();
@@ -248,18 +248,18 @@ describe('ConcurrentUpdater', () => {
       });
     });
 
-    it('should not update the component on a microtask if shouldUpdate() returns false', async () => {
+    it('should not update the block on a microtask if shouldUpdate() returns false', async () => {
       const engine = new MockRenderingEngine();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater(engine, { scheduler });
 
-      const component = new MockComponent();
-      const updateSpy = vi.spyOn(component, 'update');
+      const block = new MockBlock();
+      const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
-        .spyOn(component, 'shouldUpdate')
+        .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
 
-      updater.enqueueComponent(component);
+      updater.enqueueBlock(block);
       updater.scheduleUpdate();
 
       await updater.waitForUpdate();
@@ -286,13 +286,13 @@ describe('ConcurrentUpdater', () => {
         });
       const yieldToMainSpy = vi.spyOn(scheduler, 'yieldToMain');
 
-      const component1 = new MockComponent();
-      const component2 = new MockComponent();
-      const update1Spy = vi.spyOn(component1, 'update');
-      const update2Spy = vi.spyOn(component1, 'update');
+      const block1 = new MockBlock();
+      const block2 = new MockBlock();
+      const update1Spy = vi.spyOn(block1, 'update');
+      const update2Spy = vi.spyOn(block1, 'update');
 
-      updater.enqueueComponent(component1);
-      updater.enqueueComponent(component2);
+      updater.enqueueBlock(block1);
+      updater.enqueueBlock(block2);
       updater.scheduleUpdate();
 
       await updater.waitForUpdate();

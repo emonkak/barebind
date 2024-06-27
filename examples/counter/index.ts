@@ -6,7 +6,7 @@ import {
 } from '@emonkak/ebit';
 import {
   type TemplateDirective,
-  block,
+  component,
   choice,
   classMap,
   condition,
@@ -38,7 +38,7 @@ function App(_props: {}, context: RenderingContext) {
       list(
         items,
         (item, index) =>
-          block(Item, {
+          component(Item, {
             title: item,
             onUp: () => {
               if (index > 0) {
@@ -82,7 +82,7 @@ function App(_props: {}, context: RenderingContext) {
 
   return context.html`
     <div ${{ class: 'root' }}>
-      <${block(Counter, { count$: counterSignal })} />
+      <${component(Counter, { count$: counterSignal })} />
       <p>COUNT by Signal: <strong>${counterSignal}</strong></p>
       <ul><${itemsList}></ul>
       <p>
@@ -98,13 +98,13 @@ function App(_props: {}, context: RenderingContext) {
         context.html`<span>Hello World!</span>`,
       )} />
     </div>
-    <svg width="100" height="100" viewBox="0 0 100 100"><${block(Circle, {
+    <svg width="100" height="100" viewBox="0 0 100 100"><${component(Circle, {
       cx: 50,
       cy: 50,
       r: 50,
       fill: 'red',
     })} /><${unsafeSVG('<circle cx="10" cy="10" r="10" fill="blue" />')} /></svg>
-    <${block(SingleText<string>, { value: 'Hello' })} />
+    <${component(SingleText<string>, { value: 'Hello' })} />
   `;
 }
 
@@ -205,4 +205,4 @@ function shuffle<T>(elements: T[]): T[] {
 
 const updater = new ConcurrentUpdater(new RenderingEngine());
 
-mount(block(App, {}), document.body, updater);
+mount(component(App, {}), document.body, updater);

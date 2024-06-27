@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockComponent, MockRenderingEngine } from '../mocks.js';
+import { MockBlock, MockRenderingEngine } from '../mocks.js';
 
 describe('SyncUpdater', () => {
   describe('.getCurrentPriority()', () => {
@@ -14,11 +14,11 @@ describe('SyncUpdater', () => {
   });
 
   describe('.isPending()', () => {
-    it('should return true if there is a pending component', () => {
+    it('should return true if there is a pending block', () => {
       const engine = new MockRenderingEngine();
       const updater = new SyncUpdater(engine);
 
-      updater.enqueueComponent(new MockComponent());
+      updater.enqueueBlock(new MockBlock());
       expect(updater.isPending()).toBe(true);
     });
 
@@ -83,25 +83,25 @@ describe('SyncUpdater', () => {
       await updater.waitForUpdate();
     });
 
-    it('should update the component on a microtask', async () => {
+    it('should update the block on a microtask', async () => {
       const engine = new MockRenderingEngine();
       const updater = new SyncUpdater(engine);
 
-      const component = new MockComponent();
+      const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
       const updateSpy = vi
-        .spyOn(component, 'update')
+        .spyOn(block, 'update')
         .mockImplementation((_context, updater) => {
-          expect(updater.getCurrentComponent()).toBe(component);
+          expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);
           updater.enqueuePassiveEffect(passiveEffect);
         });
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueComponent(component);
+      updater.enqueueBlock(block);
       updater.scheduleUpdate();
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
@@ -114,18 +114,18 @@ describe('SyncUpdater', () => {
       expect(updateSpy).toHaveBeenCalledOnce();
     });
 
-    it('should not update the component on a microtask if shouldUpdate() returns false ', async () => {
+    it('should not update the block on a microtask if shouldUpdate() returns false ', async () => {
       const engine = new MockRenderingEngine();
       const updater = new SyncUpdater(engine);
 
-      const component = new MockComponent();
-      const updateSpy = vi.spyOn(component, 'update');
+      const block = new MockBlock();
+      const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
-        .spyOn(component, 'shouldUpdate')
+        .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueComponent(component);
+      updater.enqueueBlock(block);
       updater.scheduleUpdate();
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();

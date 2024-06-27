@@ -1,10 +1,10 @@
 export interface Updater<TContext = unknown> {
-  getCurrentComponent(): Component<TContext> | null;
+  getCurrentBlock(): Block<TContext> | null;
   getCurrentPriority(): TaskPriority;
   isPending(): boolean;
   isScheduled(): boolean;
   waitForUpdate(): Promise<void>;
-  enqueueComponent(component: Component<TContext>): void;
+  enqueueBlock(block: Block<TContext>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
@@ -13,25 +13,25 @@ export interface Updater<TContext = unknown> {
 
 export interface UpdateContext<TContext> {
   flushEffects(effects: Effect[], mode: EffectMode): void;
-  renderBlock<TProps, TData>(
-    block: Block<TProps, TData, TContext>,
+  renderComponent<TProps, TData>(
+    component: Component<TProps, TData, TContext>,
     props: TProps,
     hooks: Hook[],
-    component: Component<TContext>,
+    block: Block<TContext>,
     updater: Updater<TContext>,
   ): TemplateResult<TData, TContext>;
 }
 
-export interface Component<TContext = unknown> {
+export interface Block<TContext = unknown> {
   get dirty(): boolean;
-  get parent(): Component<TContext> | null;
+  get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
   shouldUpdate(): boolean;
   update(context: UpdateContext<TContext>, updater: Updater<TContext>): void;
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
 }
 
-export type Block<TProps, TData, TContext> = (
+export type Component<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
 ) => TemplateResult<TData, TContext>;

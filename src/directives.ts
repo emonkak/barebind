@@ -1,4 +1,8 @@
-export { BlockBinding, BlockDirective, block } from './directives/block.js';
+export {
+  ComponentBinding,
+  ComponentDirective,
+  component,
+} from './directives/component.js';
 export { ChoiceBinding, ChoiceDirective, choice } from './directives/choice.js';
 export {
   type ClassMap,

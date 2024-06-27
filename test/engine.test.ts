@@ -4,7 +4,7 @@ import { RenderingContext } from '../src/renderingContext.js';
 import { RenderingEngine } from '../src/renderingEngine.js';
 import { type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockComponent, MockTemplate, MockTemplateResult } from './mocks.js';
+import { MockBlock, MockTemplate, MockTemplateResult } from './mocks.js';
 
 describe('RenderingEngine', () => {
   describe('.flushEffects()', () => {
@@ -69,62 +69,65 @@ describe('RenderingEngine', () => {
   describe('.getVariable()', () => {
     it('should get a variable from global variables', () => {
       const engine = new RenderingEngine({ foo: 123 });
-      const component = new MockComponent();
+      const block = new MockBlock();
 
-      expect(engine.getVariable(component, 'foo')).toBe(123);
+      expect(engine.getVariable(block, 'foo')).toBe(123);
     });
 
-    it('should get a variable from the component', () => {
+    it('should get a variable from the block', () => {
       const engine = new RenderingEngine({ foo: 123 });
-      const component = new MockComponent();
+      const block = new MockBlock();
 
-      engine.setVariable(component, 'foo', 456);
+      engine.setVariable(block, 'foo', 456);
 
-      expect(engine.getVariable(component, 'foo')).toBe(456);
+      expect(engine.getVariable(block, 'foo')).toBe(456);
 
-      engine.setVariable(component, 'foo', 789);
+      engine.setVariable(block, 'foo', 789);
 
-      expect(engine.getVariable(component, 'foo')).toBe(789);
+      expect(engine.getVariable(block, 'foo')).toBe(789);
     });
 
     it('should get a variable from the parent', () => {
       const engine = new RenderingEngine({ foo: 123 });
-      const parent = new MockComponent();
-      const component = new MockComponent(parent);
+      const parent = new MockBlock();
+      const block = new MockBlock(parent);
 
       engine.setVariable(parent, 'foo', 456);
 
-      expect(engine.getVariable(component, 'foo')).toBe(456);
+      expect(engine.getVariable(block, 'foo')).toBe(456);
     });
   });
 
-  describe('renderBlock', () => {
-    it('should return the block', () => {
+  describe('.renderComponent()', () => {
+    it('should return the component', () => {
       const engine = new RenderingEngine();
       const template = new MockTemplate();
       const props = {
         data: ['foo'],
       };
-      const block = vi.fn().mockImplementation((props, context) => {
+      const component = vi.fn().mockImplementation((props, context) => {
         context.useEffect(() => {});
 
         return new MockTemplateResult(template, props.data);
       });
       const hooks: Hook[] = [];
-      const component = new MockComponent();
+      const block = new MockBlock();
       const updater = new SyncUpdater(engine);
-      const result = engine.renderBlock(
-        block,
+      const result = engine.renderComponent(
+        component,
         props,
         hooks,
-        component,
+        block,
         updater,
       );
 
       expect(result.template).toBe(template);
       expect(result.data).toEqual(props.data);
-      expect(block).toHaveBeenCalledOnce();
-      expect(block).toHaveBeenCalledWith(props, expect.any(RenderingContext));
+      expect(component).toHaveBeenCalledOnce();
+      expect(component).toHaveBeenCalledWith(
+        props,
+        expect.any(RenderingContext),
+      );
       expect(hooks).toEqual([
         expect.objectContaining({ type: HookType.Effect }),
         { type: HookType.Finalizer },

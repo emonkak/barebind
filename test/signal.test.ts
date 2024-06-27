@@ -12,7 +12,7 @@ import {
 } from '../src/signal.js';
 import { type Hook, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockComponent } from './mocks.js';
+import { MockBlock } from './mocks.js';
 
 describe('SignalBinding', () => {
   describe('.constructor', () => {
@@ -364,13 +364,13 @@ describe('AtomSignal', () => {
   describe('[usableTag]()', () => {
     it('should should subscribe the signal and return a signal value', () => {
       const signal = new AtomSignal('foo');
-      const component = new MockComponent();
+      const block = new MockBlock();
       const hooks: Hook[] = [];
       const engine = new RenderingEngine();
       const updater = new SyncUpdater(engine);
-      const context = new RenderingContext(hooks, component, engine, updater);
+      const context = new RenderingContext(hooks, block, engine, updater);
 
-      const requestUpdateSpy = vi.spyOn(component, 'requestUpdate');
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const value = signal[usableTag](context);
 
       updater.flush();

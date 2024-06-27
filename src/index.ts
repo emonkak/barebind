@@ -40,7 +40,7 @@ export {
   type AttributePart,
   type ChildNodePart,
   type Cleanup,
-  type Component,
+  type Block,
   type Effect,
   type EffectCallback,
   type ElementPart,

@@ -1,5 +1,5 @@
 import type {
-  Component,
+  Block,
   Effect,
   TaskPriority,
   UpdateContext,
@@ -9,9 +9,9 @@ import type {
 export class SyncUpdater<TContext> implements Updater<TContext> {
   private readonly _context: UpdateContext<TContext>;
 
-  private _currentComponent: Component<TContext> | null = null;
+  private _currentBlock: Block<TContext> | null = null;
 
-  private _pendingComponents: Component<TContext>[] = [];
+  private _pendingBlocks: Block<TContext>[] = [];
 
   private _pendingMutationEffects: Effect[] = [];
 
@@ -25,16 +25,16 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     this._context = context;
   }
 
-  getCurrentComponent(): Component<TContext> | null {
-    return this._currentComponent;
+  getCurrentBlock(): Block<TContext> | null {
+    return this._currentBlock;
   }
 
   getCurrentPriority(): TaskPriority {
     return 'user-blocking';
   }
 
-  enqueueComponent(component: Component<TContext>): void {
-    this._pendingComponents.push(component);
+  enqueueBlock(block: Block<TContext>): void {
+    this._pendingBlocks.push(block);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
@@ -51,7 +51,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
 
   isPending(): boolean {
     return (
-      this._pendingComponents.length > 0 ||
+      this._pendingBlocks.length > 0 ||
       this._pendingLayoutEffects.length > 0 ||
       this._pendingMutationEffects.length > 0 ||
       this._pendingPassiveEffects.length > 0
@@ -84,20 +84,20 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
 
   flush(): void {
     do {
-      while (this._pendingComponents.length > 0) {
-        const pendingComponents = this._pendingComponents;
-        this._pendingComponents = [];
+      while (this._pendingBlocks.length > 0) {
+        const pendingBlocks = this._pendingBlocks;
+        this._pendingBlocks = [];
 
-        for (let i = 0, l = pendingComponents.length; i < l; i++) {
-          const component = pendingComponents[i]!;
-          if (!component.shouldUpdate()) {
+        for (let i = 0, l = pendingBlocks.length; i < l; i++) {
+          const block = pendingBlocks[i]!;
+          if (!block.shouldUpdate()) {
             continue;
           }
-          this._currentComponent = component;
+          this._currentBlock = block;
           try {
-            component.update(this._context, this);
+            block.update(this._context, this);
           } finally {
-            this._currentComponent = null;
+            this._currentBlock = null;
           }
         }
       }
@@ -120,7 +120,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
         this._context.flushEffects(pendingPassiveEffects, 'passive');
       }
     } while (
-      this._pendingComponents.length > 0 ||
+      this._pendingBlocks.length > 0 ||
       this._pendingMutationEffects.length > 0 ||
       this._pendingLayoutEffects.length > 0 ||
       this._pendingPassiveEffects.length > 0

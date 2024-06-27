@@ -18,10 +18,8 @@ export class RenderingEngine implements UpdateContext<RenderingContext> {
 
   private readonly _marker: string = getMarker();
 
-  private readonly _namespaces: WeakMap<
-    Component<RenderingContext>,
-    Variables
-  > = new WeakMap();
+  private readonly _namespaces: WeakMap<Block<RenderingContext>, Variables> =
+    new WeakMap();
 
   private readonly _cachedTemplates: WeakMap<
     ReadonlyArray<string>,
@@ -66,11 +64,8 @@ export class RenderingEngine implements UpdateContext<RenderingContext> {
     return template;
   }
 
-  getVariable(
-    component: Component<RenderingContext>,
-    key: PropertyKey,
-  ): unknown {
-    let current: Component<RenderingContext> | null = component;
+  getVariable(block: Block<RenderingContext>, key: PropertyKey): unknown {
+    let current: Block<RenderingContext> | null = block;
     do {
       const value = this._namespaces.get(current)?.[key];
       if (value !== undefined) {
@@ -80,29 +75,29 @@ export class RenderingEngine implements UpdateContext<RenderingContext> {
     return this._globalVariables[key];
   }
 
-  renderBlock<TProps, TData>(
-    block: Block<TProps, TData, RenderingContext>,
+  renderComponent<TProps, TData>(
+    component: Component<TProps, TData, RenderingContext>,
     props: TProps,
     hooks: Hook[],
-    component: Component<RenderingContext>,
+    block: Block<RenderingContext>,
     updater: Updater<RenderingContext>,
   ): TemplateResult<TData, RenderingContext> {
-    const context = new RenderingContext(hooks, component, this, updater);
-    const result = block(props, context);
+    const context = new RenderingContext(hooks, block, this, updater);
+    const result = component(props, context);
     context.finalize();
     return result;
   }
 
   setVariable(
-    component: Component<RenderingContext>,
+    block: Block<RenderingContext>,
     key: PropertyKey,
     value: unknown,
   ): void {
-    const variables = this._namespaces.get(component);
+    const variables = this._namespaces.get(block);
     if (variables !== undefined) {
       variables[key] = value;
     } else {
-      this._namespaces.set(component, { [key]: value });
+      this._namespaces.set(block, { [key]: value });
     }
   }
 }

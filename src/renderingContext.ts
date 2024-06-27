@@ -17,7 +17,7 @@ import {
   type RefObject,
   type TaskPriority,
 } from './types.js';
-import type { Component, Effect, Updater } from './types.js';
+import type { Block, Effect, Updater } from './types.js';
 import { dependenciesAreChanged } from './utils.js';
 
 export const usableTag = Symbol('Usable');
@@ -43,7 +43,7 @@ export interface UsableObject<TResult, TContext> {
 export class RenderingContext {
   private readonly _hooks: Hook[];
 
-  private readonly _component: Component<RenderingContext>;
+  private readonly _block: Block<RenderingContext>;
 
   private readonly _engine: RenderingEngine;
 
@@ -53,12 +53,12 @@ export class RenderingContext {
 
   constructor(
     hooks: Hook[],
-    component: Component<RenderingContext>,
+    block: Block<RenderingContext>,
     engine: RenderingEngine,
     updater: Updater<RenderingContext>,
   ) {
     this._hooks = hooks;
-    this._component = component;
+    this._block = block;
     this._engine = engine;
     this._updater = updater;
   }
@@ -94,7 +94,7 @@ export class RenderingContext {
   }
 
   getContextValue<T>(key: PropertyKey): T | undefined {
-    return this._engine.getVariable(this._component, key) as T | undefined;
+    return this._engine.getVariable(this._block, key) as T | undefined;
   }
 
   html(
@@ -106,14 +106,14 @@ export class RenderingContext {
   }
 
   requestUpdate(): void {
-    this._component.requestUpdate(
+    this._block.requestUpdate(
       this._updater.getCurrentPriority(),
       this._updater,
     );
   }
 
   setContextValue(key: PropertyKey, value: unknown): void {
-    this._engine.setVariable(this._component, key, value);
+    this._engine.setVariable(this._block, key, value);
   }
 
   svg(
@@ -268,7 +268,7 @@ export class RenderingContext {
           const nextState = reducer(hook.state, action);
           if (!Object.is(hook.state, nextState)) {
             hook.state = nextState;
-            this._component.requestUpdate(
+            this._block.requestUpdate(
               priority ?? this._updater.getCurrentPriority(),
               this._updater,
             );
@@ -306,7 +306,7 @@ export class RenderingContext {
     this.useEffect(
       () =>
         subscribe(() => {
-          this._component.requestUpdate(
+          this._block.requestUpdate(
             priority ?? this._updater.getCurrentPriority(),
             this._updater,
           );

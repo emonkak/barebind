@@ -6,8 +6,8 @@ import {
 } from '../binding.js';
 import { comparePriorities } from '../scheduler.js';
 import {
+  type Block,
   type ChildNodePart,
-  type Component,
   type Effect,
   type Part,
   PartType,
@@ -51,7 +51,7 @@ export class TemplateDirective<TData, TContext = unknown>
     if (part.type !== PartType.ChildNode) {
       throw new Error('TemplateDirective must be used in ChildNodePart.');
     }
-    return new TemplateBinding(this, part, updater.getCurrentComponent());
+    return new TemplateBinding(this, part, updater.getCurrentBlock());
   }
 }
 
@@ -59,13 +59,13 @@ export class TemplateBinding<TData, TContext>
   implements
     Binding<TemplateDirective<TData, TContext>, TContext>,
     Effect,
-    Component<TContext>
+    Block<TContext>
 {
   private _directive: TemplateDirective<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: Component<TContext> | null;
+  private readonly _parent: Block<TContext> | null;
 
   private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
 
@@ -80,7 +80,7 @@ export class TemplateBinding<TData, TContext>
   constructor(
     directive: TemplateDirective<TData, TContext>,
     part: ChildNodePart,
-    parent: Component<TContext> | null = null,
+    parent: Block<TContext> | null = null,
   ) {
     this._directive = directive;
     this._part = part;
@@ -103,7 +103,7 @@ export class TemplateBinding<TData, TContext>
     return this._directive;
   }
 
-  get parent(): Component<TContext> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 
@@ -119,7 +119,7 @@ export class TemplateBinding<TData, TContext>
     if (!this.dirty) {
       return false;
     }
-    let current: Component<TContext> | null = this;
+    let current: Block<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.dirty) {
         return false;
@@ -160,7 +160,7 @@ export class TemplateBinding<TData, TContext>
     ) {
       this._priority = priority;
       this._flags |= FLAG_UPDATING;
-      updater.enqueueComponent(this);
+      updater.enqueueBlock(this);
       updater.scheduleUpdate();
     }
 
@@ -171,7 +171,7 @@ export class TemplateBinding<TData, TContext>
     if (!(this._flags & FLAG_UPDATING)) {
       this._priority = this._parent?.priority ?? updater.getCurrentPriority();
       this._flags |= FLAG_UPDATING;
-      updater.enqueueComponent(this);
+      updater.enqueueBlock(this);
     }
 
     this._flags &= ~FLAG_UNMOUNTING;

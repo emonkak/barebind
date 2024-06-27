@@ -65,7 +65,7 @@ describe('StyleMapDirective', () => {
 describe('StyleMapBinding', () => {
   describe('.constructor()', () => {
     it('should construct a new ClassMapBinding', () => {
-      const directive = new StyleMapDirective({ display: 'block' });
+      const directive = new StyleMapDirective({ display: 'component' });
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -244,7 +244,7 @@ describe('StyleMapBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = new StyleMapDirective({ display: 'block' });
+      const directive = new StyleMapDirective({ display: 'component' });
       const part = {
         type: PartType.Attribute,
         name: 'style',

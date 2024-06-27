@@ -425,16 +425,16 @@ function parseChildren(rootNode: Node, marker: string): Hole[] {
         break;
       }
       case Node.TEXT_NODE: {
-        const components = (currentNode as Text).data.split(marker);
+        const blocks = (currentNode as Text).data.split(marker);
 
-        if (components.length > 1) {
-          const tailIndex = components.length - 1;
+        if (blocks.length > 1) {
+          const tailIndex = blocks.length - 1;
 
           for (let i = 0; i < tailIndex; i++) {
-            const component = components[i]!;
+            const block = blocks[i]!;
 
-            if (component !== '') {
-              const text = document.createTextNode(component);
+            if (block !== '') {
+              const text = document.createTextNode(block);
               currentNode.before(text);
               index++;
             }
@@ -448,11 +448,11 @@ function parseChildren(rootNode: Node, marker: string): Hole[] {
             index++;
           }
 
-          const tailComponent = components[tailIndex]!;
+          const tailBlock = blocks[tailIndex]!;
 
-          if (tailComponent !== '') {
+          if (tailBlock !== '') {
             // Reuse the current node.
-            (currentNode as Text).data = tailComponent;
+            (currentNode as Text).data = tailBlock;
           } else {
             walker.currentNode = currentNode.previousSibling!;
             (currentNode as Text).remove();

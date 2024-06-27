@@ -57,10 +57,10 @@ export class MockBinding implements Binding<MockDirective> {
   disconnect(): void {}
 }
 
-export class MockComponent<TContext> implements Component<TContext> {
-  private _parent: Component<TContext> | null;
+export class MockBlock<TContext> implements Block<TContext> {
+  private _parent: Block<TContext> | null;
 
-  constructor(parent: Component<TContext> | null = null) {
+  constructor(parent: Block<TContext> | null = null) {
     this._parent = parent;
   }
 
@@ -68,7 +68,7 @@ export class MockComponent<TContext> implements Component<TContext> {
     return false;
   }
 
-  get parent(): Component<TContext> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 
@@ -126,14 +126,14 @@ export class MockRenderingEngine
     }
   }
 
-  renderBlock<TProps, TData>(
-    block: Block<TProps, TData, MockRenderingContext>,
+  renderComponent<TProps, TData>(
+    component: Component<TProps, TData, MockRenderingContext>,
     props: TProps,
     _hooks: Hook[],
-    _component: Component<MockRenderingContext>,
+    _block: Block<MockRenderingContext>,
     _updater: Updater<MockRenderingContext>,
   ): TemplateResult<TData, MockRenderingContext> {
-    return block(props, new MockRenderingContext());
+    return component(props, new MockRenderingContext());
   }
 }
 

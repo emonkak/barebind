@@ -26,26 +26,26 @@ const FLAG_UPDATING = 1 << 0;
 const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
-export function block<TProps, TData, TContext>(
-  type: Block<TProps, TData, TContext>,
+export function component<TProps, TData, TContext>(
+  type: Component<TProps, TData, TContext>,
   props: TProps,
-): BlockDirective<TProps, TData, TContext> {
-  return new BlockDirective(type, props);
+): ComponentDirective<TProps, TData, TContext> {
+  return new ComponentDirective(type, props);
 }
 
-export class BlockDirective<TProps, TData, TContext>
+export class ComponentDirective<TProps, TData, TContext>
   implements Directive<TContext>
 {
-  private readonly _type: Block<TProps, TData, TContext>;
+  private readonly _type: Component<TProps, TData, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(type: Block<TProps, TData, TContext>, props: TProps) {
+  constructor(type: Component<TProps, TData, TContext>, props: TProps) {
     this._type = type;
     this._props = props;
   }
 
-  get type(): Block<TProps, TData, TContext> {
+  get type(): Component<TProps, TData, TContext> {
     return this._type;
   }
 
@@ -56,27 +56,27 @@ export class BlockDirective<TProps, TData, TContext>
   [directiveTag](
     part: Part,
     updater: Updater<TContext>,
-  ): BlockBinding<TProps, TData, TContext> {
+  ): ComponentBinding<TProps, TData, TContext> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('BlockDirective must be used in ChildNodePart.');
+      throw new Error('ComponentDirective must be used in ChildNodePart.');
     }
-    return new BlockBinding(this, part, updater.getCurrentComponent());
+    return new ComponentBinding(this, part, updater.getCurrentBlock());
   }
 }
 
-export class BlockBinding<TProps, TData, TContext>
+export class ComponentBinding<TProps, TData, TContext>
   implements
-    Binding<BlockDirective<TProps, TData, TContext>, TContext>,
+    Binding<ComponentDirective<TProps, TData, TContext>, TContext>,
     Effect,
-    Component<TContext>
+    Block<TContext>
 {
-  private _directive: BlockDirective<TProps, TData, TContext>;
+  private _directive: ComponentDirective<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: Component<TContext> | null;
+  private readonly _parent: Block<TContext> | null;
 
-  private _memoizedType: Block<TProps, TData, TContext> | null = null;
+  private _memoizedType: Component<TProps, TData, TContext> | null = null;
 
   private _memoizedTemplate: Template<TData, TContext> | null = null;
 
@@ -96,9 +96,9 @@ export class BlockBinding<TProps, TData, TContext>
   private _flags = FLAG_NONE;
 
   constructor(
-    directive: BlockDirective<TProps, TData, TContext>,
+    directive: ComponentDirective<TProps, TData, TContext>,
     part: ChildNodePart,
-    parent: Component<TContext> | null = null,
+    parent: Block<TContext> | null = null,
   ) {
     this._directive = directive;
     this._part = part;
@@ -117,7 +117,7 @@ export class BlockBinding<TProps, TData, TContext>
     return this._part.node;
   }
 
-  get parent(): Component<TContext> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 
@@ -129,7 +129,7 @@ export class BlockBinding<TProps, TData, TContext>
     return !!(this._flags & FLAG_UPDATING || this._flags & FLAG_UNMOUNTING);
   }
 
-  get value(): BlockDirective<TProps, TData, TContext> {
+  get value(): ComponentDirective<TProps, TData, TContext> {
     return this._directive;
   }
 
@@ -137,7 +137,7 @@ export class BlockBinding<TProps, TData, TContext>
     if (!this.dirty) {
       return false;
     }
-    let current: Component<TContext> | null = this;
+    let current: Block<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.dirty) {
         return false;
@@ -157,7 +157,7 @@ export class BlockBinding<TProps, TData, TContext>
       this._cleanHooks();
     }
 
-    const { template, data } = context.renderBlock(
+    const { template, data } = context.renderComponent(
       type,
       props,
       this._hooks,
@@ -219,7 +219,7 @@ export class BlockBinding<TProps, TData, TContext>
     ) {
       this._priority = priority;
       this._flags |= FLAG_UPDATING;
-      updater.enqueueComponent(this);
+      updater.enqueueBlock(this);
       updater.scheduleUpdate();
     }
 
@@ -230,18 +230,18 @@ export class BlockBinding<TProps, TData, TContext>
     if (!(this._flags & FLAG_UPDATING)) {
       this._priority = this._parent?.priority ?? updater.getCurrentPriority();
       this._flags |= FLAG_UPDATING;
-      updater.enqueueComponent(this);
+      updater.enqueueBlock(this);
     }
 
     this._flags &= ~FLAG_UNMOUNTING;
   }
 
   bind(
-    newValue: BlockDirective<TProps, TData, TContext>,
+    newValue: ComponentDirective<TProps, TData, TContext>,
     updater: Updater,
   ): void {
     DEBUG: {
-      ensureDirective(BlockDirective, newValue);
+      ensureDirective(ComponentDirective, newValue);
     }
     this._directive = newValue;
     this.connect(updater);
