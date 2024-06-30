@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "allowUnusedLabels": true,
     "exactOptionalPropertyTypes": true,
     "isolatedModules": true,
     "lib": ["dom", "dom.iterable", "esnext"],
