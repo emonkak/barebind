@@ -5,7 +5,9 @@ import {
   mount,
 } from '@emonkak/ebiten';
 import {
+  type Signal,
   type TemplateDirective,
+  atom,
   choice,
   classMap,
   component,
@@ -18,9 +20,8 @@ import {
   unsafeSVG,
   when,
 } from '@emonkak/ebiten/directives.js';
-import { AtomSignal, type Signal } from '@emonkak/ebiten/signal.js';
 
-const counterSignal = new AtomSignal(0);
+const counterSignal = atom(0);
 
 function App(_props: {}, context: RenderingContext) {
   const [items, setItems] = context.useState([

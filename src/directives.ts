@@ -35,6 +35,19 @@ export {
 } from './directives/memo.js';
 export { RefBinding, RefDirective, ref } from './directives/ref.js';
 export {
+  type Subscriber,
+  type Subscription,
+  AtomSignal,
+  ComputedSignal,
+  ProjectedSignal,
+  ScannedSignal,
+  Signal,
+  SignalBinding,
+  atom,
+  compute,
+  map,
+} from './directives/signal.js';
+export {
   type StyleMap,
   StyleMapDirective,
   StyleMapBinding,

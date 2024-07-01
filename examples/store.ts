@@ -1,4 +1,9 @@
-import { AtomSignal, ComputedSignal, Signal } from '../src/signal.js';
+import {
+  type AtomSignal,
+  type ComputedSignal,
+  atom,
+  map,
+} from '../src/directives.js';
 
 enum Visibility {
   ALL,
@@ -28,11 +33,11 @@ class TodoStore {
   >;
 
   constructor({ todos, visibility }: TodoState) {
-    this.todos = new AtomSignal(todos);
+    this.todos = atom(todos);
 
-    this.visibility = new AtomSignal(visibility);
+    this.visibility = atom(visibility);
 
-    this.visibleTodos = ComputedSignal.compose(
+    this.visibleTodos = map(
       (todos, visibility) => {
         switch (visibility) {
           case Visibility.ALL:

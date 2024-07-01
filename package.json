@@ -10,10 +10,6 @@
     "./directives.js": {
       "import": "./lib/directives.js",
       "types": "./lib/directives.d.ts"
-    },
-    "./signal.js": {
-      "import": "./lib/signal.js",
-      "types": "./lib/signal.d.ts"
     }
   },
   "type": "module",

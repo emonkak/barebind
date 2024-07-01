@@ -1,5 +1,5 @@
+import { AtomSignal } from '../directives/signal.js';
 import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
-import { AtomSignal } from '../signal.js';
 import type {
   Block,
   Effect,

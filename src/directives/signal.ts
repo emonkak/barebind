@@ -4,14 +4,14 @@ import {
   directiveTag,
   ensureDirective,
   resolveBinding,
-} from './binding.js';
-import { LinkedList } from './linkedList.js';
+} from '../binding.js';
+import { LinkedList } from '../linkedList.js';
 import {
   type RenderingContext,
   type UsableObject,
   usableTag,
-} from './renderingContext.js';
-import type { Part, Updater } from './types.js';
+} from '../renderingContext.js';
+import type { Part, Updater } from '../types.js';
 
 export type Subscriber = () => void;
 
@@ -24,6 +24,29 @@ type UnwrapSignals<TValue> = TValue extends any[]
         : never;
     }
   : never;
+
+export function atom<TValue>(value: TValue): AtomSignal<TValue> {
+  return new AtomSignal(value);
+}
+
+export function compute<TResult, const TDependencies extends Signal<any>[]>(
+  producer: (...dependencies: TDependencies) => TResult,
+  dependencies: TDependencies,
+): ComputedSignal<TResult, TDependencies> {
+  return new ComputedSignal(producer, dependencies);
+}
+
+export function map<TResult, const TDependencies extends Signal<any>[]>(
+  producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+  dependencies: TDependencies,
+): ComputedSignal<TResult, TDependencies> {
+  return new ComputedSignal((...dependencies) => {
+    const values = dependencies.map(
+      (dependency) => dependency.value,
+    ) as UnwrapSignals<TDependencies>;
+    return producer(...values);
+  }, dependencies);
+}
 
 export abstract class Signal<TValue>
   implements Directive, UsableObject<TValue, RenderingContext>
@@ -68,79 +91,6 @@ export abstract class Signal<TValue>
       [this],
     );
     return this.value;
-  }
-}
-
-export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
-  private _signal: Signal<TValue>;
-
-  private readonly _binding: Binding<TValue>;
-
-  private _subscription: Subscription | null = null;
-
-  constructor(signal: Signal<TValue>, part: Part, updater: Updater) {
-    this._signal = signal;
-    this._binding = resolveBinding(signal.value, part, updater);
-  }
-
-  get value(): Signal<TValue> {
-    return this._signal;
-  }
-
-  get part(): Part {
-    return this._binding.part;
-  }
-
-  get startNode(): ChildNode {
-    return this._binding.startNode;
-  }
-
-  get endNode(): ChildNode {
-    return this._binding.endNode;
-  }
-
-  get binding(): Binding<TValue> {
-    return this._binding;
-  }
-
-  connect(updater: Updater): void {
-    this._binding.connect(updater);
-    this._subscription ??= this._subscribeSignal(this._signal, updater);
-  }
-
-  bind(newValue: Signal<TValue>, updater: Updater) {
-    DEBUG: {
-      ensureDirective(Signal, newValue);
-    }
-    if (this._signal !== newValue) {
-      this._signal = newValue;
-      this._subscription?.();
-      this._subscription = null;
-    }
-    this._binding.bind(newValue.value, updater);
-    this._subscription ??= this._subscribeSignal(newValue, updater);
-  }
-
-  unbind(updater: Updater): void {
-    this._binding.unbind(updater);
-    this._subscription?.();
-    this._subscription = null;
-  }
-
-  disconnect(): void {
-    this._binding.disconnect();
-    this._subscription?.();
-    this._subscription = null;
-  }
-
-  private _subscribeSignal(
-    signal: Signal<TValue>,
-    updater: Updater,
-  ): Subscription {
-    return signal.subscribe(() => {
-      this._binding.bind(signal.value, updater);
-      updater.scheduleUpdate();
-    });
   }
 }
 
@@ -197,7 +147,7 @@ export class ComputedSignal<
   TResult,
   const TDependencies extends Signal<any>[],
 > extends Signal<TResult> {
-  private readonly _factory: (...signals: TDependencies) => TResult;
+  private readonly _producer: (...signals: TDependencies) => TResult;
 
   private readonly _dependencies: TDependencies;
 
@@ -205,33 +155,21 @@ export class ComputedSignal<
 
   private _memoizedVersion = -1; // -1 is indicated an uninitialized signal.
 
-  static compose<TResult, const TDependencies extends Signal<any>[]>(
-    factory: (...signals: UnwrapSignals<TDependencies>) => TResult,
-    dependencies: TDependencies,
-  ): ComputedSignal<TResult, TDependencies> {
-    return new ComputedSignal((...dependencies) => {
-      const values = dependencies.map(
-        (dependency) => dependency.value,
-      ) as UnwrapSignals<TDependencies>;
-      return factory(...values);
-    }, dependencies);
-  }
-
   constructor(
-    factory: (...signals: TDependencies) => TResult,
+    producer: (...dependencies: TDependencies) => TResult,
     dependencies: TDependencies,
   ) {
     super();
-    this._factory = factory;
+    this._producer = producer;
     this._dependencies = dependencies;
   }
 
   get value(): TResult {
     const { version } = this;
     if (this._memoizedVersion < version) {
-      const factory = this._factory;
+      const producer = this._producer;
       this._memoizedVersion = version;
-      this._memoizedValue = factory(...this._dependencies);
+      this._memoizedValue = producer(...this._dependencies);
     }
     return this._memoizedValue!;
   }
@@ -322,5 +260,78 @@ export class ScannedSignal<TValue, TResult> extends Signal<TResult> {
 
   subscribe(subscriber: Subscriber): Subscription {
     return this._signal.subscribe(subscriber);
+  }
+}
+
+export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
+  private _signal: Signal<TValue>;
+
+  private readonly _binding: Binding<TValue>;
+
+  private _subscription: Subscription | null = null;
+
+  constructor(signal: Signal<TValue>, part: Part, updater: Updater) {
+    this._signal = signal;
+    this._binding = resolveBinding(signal.value, part, updater);
+  }
+
+  get value(): Signal<TValue> {
+    return this._signal;
+  }
+
+  get part(): Part {
+    return this._binding.part;
+  }
+
+  get startNode(): ChildNode {
+    return this._binding.startNode;
+  }
+
+  get endNode(): ChildNode {
+    return this._binding.endNode;
+  }
+
+  get binding(): Binding<TValue> {
+    return this._binding;
+  }
+
+  connect(updater: Updater): void {
+    this._binding.connect(updater);
+    this._subscription ??= this._subscribeSignal(this._signal, updater);
+  }
+
+  bind(newValue: Signal<TValue>, updater: Updater) {
+    DEBUG: {
+      ensureDirective(Signal, newValue);
+    }
+    if (this._signal !== newValue) {
+      this._signal = newValue;
+      this._subscription?.();
+      this._subscription = null;
+    }
+    this._binding.bind(newValue.value, updater);
+    this._subscription ??= this._subscribeSignal(newValue, updater);
+  }
+
+  unbind(updater: Updater): void {
+    this._binding.unbind(updater);
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  disconnect(): void {
+    this._binding.disconnect();
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  private _subscribeSignal(
+    signal: Signal<TValue>,
+    updater: Updater,
+  ): Subscription {
+    return signal.subscribe(() => {
+      this._binding.bind(signal.value, updater);
+      updater.scheduleUpdate();
+    });
   }
 }
