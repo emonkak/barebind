@@ -3,22 +3,22 @@ import {
   type RenderingContext,
   RenderingEngine,
   mount,
-} from '@emonkak/ebit';
+} from '@emonkak/ebiten';
 import {
   type TemplateDirective,
-  keyedList,
   choice,
   classMap,
   component,
   condition,
+  keyedList,
   ref,
   styleMap,
   unless,
   unsafeHTML,
   unsafeSVG,
   when,
-} from '@emonkak/ebit/directives.js';
-import { AtomSignal, type Signal } from '@emonkak/ebit/signal.js';
+} from '@emonkak/ebiten/directives.js';
+import { AtomSignal, type Signal } from '@emonkak/ebiten/signal.js';
 
 const counterSignal = new AtomSignal(0);
 
