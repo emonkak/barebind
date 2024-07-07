@@ -328,13 +328,8 @@ class InvokeEffectHook implements Effect {
   }
 
   commit(): void {
-    if (this._hook.cleanup !== undefined) {
-      this._hook.cleanup();
-      this._hook.cleanup = undefined;
-    }
-
     const callback = this._callback;
-
+    this._hook.cleanup?.();
     this._hook.cleanup = callback();
   }
 }
