@@ -23,10 +23,10 @@ export {
   dynamic,
 } from './directives/dynamic.js';
 export {
-  keyedList,
-  ListBinding,
-  ListDirective,
+  IndexedListBinding,
+  KeyedListDirective,
   indexedList,
+  keyedList,
 } from './directives/list.js';
 export {
   MemoBinding,

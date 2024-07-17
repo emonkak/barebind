@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { directiveTag } from '../../src/binding.js';
 import {
-  ListBinding,
+  KeyedListBinding,
+  IndexedListBinding,
   indexedList,
   keyedList,
 } from '../../src/directives/list.js';
@@ -11,6 +12,17 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { text } from '../directives.js';
 import { MockRenderingEngine } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
+
+describe('indxedList()', () => {
+  it('should construst a new ListDirective used indexes as keys', () => {
+    const items = ['foo', 'bar', 'baz'];
+    const valueSelector = (item: string) => item;
+    const directive = indexedList(items, valueSelector);
+
+    expect(directive.items).toBe(items);
+    expect(directive.valueSelector).toBe(valueSelector);
+  });
+});
 
 describe('keyedList()', () => {
   it('should construst a new ListDirective', () => {
@@ -25,21 +37,262 @@ describe('keyedList()', () => {
   });
 });
 
-describe('indxedList()', () => {
-  it('should construst a new ListDirective used indexes as keys', () => {
-    const items = ['foo', 'bar', 'baz'];
-    const valueSelector = (item: string) => item;
-    const directive = indexedList(items, valueSelector);
+describe('IndexedListDirective', () => {
+  describe('[directiveTag]()', () => {
+    it('should return an instance of IndexedListBinding', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = directive[directiveTag](part, updater);
 
-    expect(directive.items).toBe(items);
-    expect(directive.valueSelector).toBe(valueSelector);
-    expect(directive.keySelector('bar', 1)).toBe(1);
+      expect(binding.value).toBe(directive);
+      expect(binding.part).toBe(part);
+      expect(binding.startNode).toBe(part.node);
+      expect(binding.endNode).toBe(part.node);
+      expect(binding.bindings).toEqual([]);
+    });
+
+    it('should throw an error if the part is not a ChildNodePart', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+      );
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+
+      expect(() => directive[directiveTag](part, updater)).toThrow(
+        'IndexedListDirective must be used in ChildNodePart.',
+      );
+    });
   });
 });
 
-describe('ListDirective', () => {
+describe('IndexedListBinding', () => {
+  describe('.connect()', () => {
+    it('should connect new bindings from items', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => text(item),
+      );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive, part);
+
+      container.appendChild(part.node);
+      binding.connect(updater);
+      updater.flush();
+
+      expect(binding.startNode.nodeValue).toBe('foo');
+      expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
+        'foo',
+        'bar',
+        'baz',
+      ]);
+      expect(container.innerHTML).toBe(
+        'foo<!--0-->bar<!--1-->baz<!--2--><!---->',
+      );
+    });
+
+    it('should not enqueue self as a mutation effect if already scheduled', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => text(item),
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive, part);
+      const commitSpy = vi.spyOn(binding, 'commit');
+
+      binding.connect(updater);
+      binding.connect(updater);
+      updater.flush();
+
+      expect(commitSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.bind()', () => {
+    it('should update with longer list than last time', () => {
+      const directive1 = indexedList(['foo', 'bar', 'baz'], (item) =>
+        text(item),
+      );
+      const directive2 = indexedList(['qux', 'baz', 'bar', 'foo'], (item) =>
+        text(item),
+      );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive1, part);
+
+      container.appendChild(part.node);
+      binding.connect(updater);
+      updater.flush();
+
+      binding.bind(directive2, updater);
+      updater.flush();
+
+      expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
+        directive2.items,
+      );
+      expect(container.innerHTML).toBe(
+        'qux<!--0-->baz<!--1-->bar<!--2-->foo<!--3--><!---->',
+      );
+    });
+
+    it('should update with shoter list than last time', () => {
+      const directive1 = indexedList(['foo', 'bar', 'baz'], (item) =>
+        text(item),
+      );
+      const directive2 = indexedList(['bar', 'foo'], (item) => text(item));
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive1, part);
+
+      container.appendChild(part.node);
+      binding.connect(updater);
+      updater.flush();
+
+      binding.bind(directive2, updater);
+      updater.flush();
+
+      expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
+        directive2.items,
+      );
+      expect(container.innerHTML).toBe('bar<!--0-->foo<!--1--><!---->');
+    });
+
+    it('should do nothing if the items is the same as previous ones', () => {
+      const items = ['foo', 'bar', 'baz'];
+      const directive1 = indexedList(
+        items,
+        (item) => item,
+      );
+      const directive2 = indexedList(
+        items,
+        (item) => item,
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive1, part);
+
+      binding.connect(updater);
+      updater.flush();
+
+      binding.bind(directive2, updater);
+
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
+    });
+  });
+
+  describe('.unbind()', () => {
+    it('should unbind current bindings', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+      );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive, part);
+
+      container.appendChild(part.node);
+      binding.connect(updater);
+      updater.flush();
+
+      binding.unbind(updater);
+      updater.flush();
+
+      expect(binding.bindings).toHaveLength(0);
+      expect(container.innerHTML).toBe('<!---->');
+    });
+
+    it('should not enqueue self as a mutation effect if already scheduled', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive, part);
+      const commitSpy = vi.spyOn(binding, 'commit');
+
+      binding.unbind(updater);
+      binding.unbind(updater);
+      updater.flush();
+
+      expect(commitSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.disconnect()', () => {
+    it('should disconnect current bindings', () => {
+      const directive = indexedList(
+        ['foo', 'bar', 'baz'],
+        (item) => text(item),
+      );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const updater = new SyncUpdater(new MockRenderingEngine());
+      const binding = new IndexedListBinding(directive, part);
+
+      container.appendChild(part.node);
+      binding.connect(updater);
+      updater.flush();
+
+      const disconnectSpies = binding.bindings.map((binding) =>
+        vi.spyOn(binding, 'disconnect'),
+      );
+
+      binding.disconnect();
+
+      expect(disconnectSpies).toHaveLength(3);
+      disconnectSpies.forEach((spy) => {
+        expect(spy).toHaveBeenCalledOnce();
+      });
+      expect(container.innerHTML).toBe('foo<!--0-->bar<!--1-->baz<!--2--><!---->');
+    });
+  });
+});
+
+describe('KeyedListDirective', () => {
   describe('[directiveTag]()', () => {
-    it('should return an instance of ListBinding', () => {
+    it('should return an instance of KeyedListBinding', () => {
       const directive = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
@@ -72,13 +325,13 @@ describe('ListDirective', () => {
       const updater = new SyncUpdater(new MockRenderingEngine());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'ListDirective must be used in ChildNodePart.',
+        'KeyedListDirective must be used in ChildNodePart.',
       );
     });
   });
 });
 
-describe('ListBinding', () => {
+describe('KeyedListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
       const directive = keyedList(
@@ -92,7 +345,7 @@ describe('ListBinding', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive, part);
+      const binding = new KeyedListBinding(directive, part);
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -120,7 +373,7 @@ describe('ListBinding', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive, part);
+      const binding = new KeyedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.connect(updater);
@@ -132,62 +385,6 @@ describe('ListBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should add an item to indexed list', () => {
-      const directive1 = indexedList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
-      );
-      const directive2 = indexedList(['qux', 'baz', 'bar', 'foo'], (item) =>
-        text(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive1, part);
-
-      container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
-
-      binding.bind(directive2, updater);
-      updater.flush();
-
-      expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
-        directive2.items,
-      );
-      expect(container.innerHTML).toBe(
-        'qux<!--0-->baz<!--1-->bar<!--2-->foo<!--3--><!---->',
-      );
-    });
-
-    it('should add an item to indexed list', () => {
-      const directive1 = indexedList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
-      );
-      const directive2 = indexedList(['bar', 'foo'], (item) => text(item));
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive1, part);
-
-      container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
-
-      binding.bind(directive2, updater);
-      updater.flush();
-
-      expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
-        directive2.items,
-      );
-      expect(container.innerHTML).toBe('bar<!--0-->foo<!--1--><!---->');
-    });
-
     it('should update items according to keys', () => {
       const source = ['foo', 'bar', 'baz', 'qux'];
 
@@ -209,7 +406,7 @@ describe('ListBinding', () => {
             node: document.createComment(''),
           } as const;
           const updater = new SyncUpdater(new MockRenderingEngine());
-          const binding = new ListBinding(directive1, part);
+          const binding = new KeyedListBinding(directive1, part);
 
           container.appendChild(part.node);
           binding.connect(updater);
@@ -255,7 +452,7 @@ describe('ListBinding', () => {
               node: document.createComment(''),
             } as const;
             const updater = new SyncUpdater(new MockRenderingEngine());
-            const binding = new ListBinding(directive1, part);
+            const binding = new KeyedListBinding(directive1, part);
 
             container.appendChild(part.node);
             binding.connect(updater);
@@ -297,7 +494,7 @@ describe('ListBinding', () => {
             node: document.createComment(''),
           } as const;
           const updater = new SyncUpdater(new MockRenderingEngine());
-          const binding = new ListBinding(directive1, part);
+          const binding = new KeyedListBinding(directive1, part);
 
           container.appendChild(part.node);
           binding.connect(updater);
@@ -334,7 +531,7 @@ describe('ListBinding', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive1, part);
+      const binding = new KeyedListBinding(directive1, part);
 
       binding.connect(updater);
       updater.flush();
@@ -359,7 +556,7 @@ describe('ListBinding', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive, part);
+      const binding = new KeyedListBinding(directive, part);
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -383,7 +580,7 @@ describe('ListBinding', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive, part);
+      const binding = new KeyedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.unbind(updater);
@@ -399,7 +596,7 @@ describe('ListBinding', () => {
       const directive = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
-        (item) => item,
+        (item) => text(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -407,7 +604,7 @@ describe('ListBinding', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = new ListBinding(directive, part);
+      const binding = new KeyedListBinding(directive, part);
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -423,7 +620,7 @@ describe('ListBinding', () => {
       disconnectSpies.forEach((spy) => {
         expect(spy).toHaveBeenCalledOnce();
       });
-      expect(container.innerHTML).toBe('<!--foo--><!--bar--><!--baz--><!---->');
+      expect(container.innerHTML).toBe('foo<!--foo-->bar<!--bar-->baz<!--baz--><!---->');
     });
   });
 });
