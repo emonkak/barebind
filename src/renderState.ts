@@ -1,4 +1,4 @@
-import { RenderingContext } from './renderingContext.js';
+import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import type {
   Block,
@@ -11,14 +11,14 @@ import type {
   Updater,
 } from './types.js';
 
-export type Variables = { [key: PropertyKey]: unknown };
+type Namespace = Map<unknown, unknown>;
 
-export class RenderingEngine implements UpdateContext<RenderingContext> {
-  private readonly _globalVariables: Variables;
-
+export class RenderState implements UpdateContext<RenderContext> {
   private readonly _marker: string = getMarker();
 
-  private readonly _namespaces: WeakMap<Block<RenderingContext>, Variables> =
+  private readonly _defaultNamespace: Namespace;
+
+  private readonly _blockNamespaces: WeakMap<Block<RenderContext>, Namespace> =
     new WeakMap();
 
   private readonly _cachedTemplates: WeakMap<
@@ -26,8 +26,8 @@ export class RenderingEngine implements UpdateContext<RenderingContext> {
     TaggedTemplate
   > = new WeakMap();
 
-  constructor(globalVariables: Variables = {}) {
-    this._globalVariables = globalVariables;
+  constructor(defaultValues: Iterable<[unknown, unknown]> = []) {
+    this._defaultNamespace = new Map(defaultValues);
   }
 
   flushEffects(effects: Effect[], mode: EffectMode): void {
@@ -64,40 +64,42 @@ export class RenderingEngine implements UpdateContext<RenderingContext> {
     return template;
   }
 
-  getVariable(block: Block<RenderingContext>, key: PropertyKey): unknown {
-    let current: Block<RenderingContext> | null = block;
+  getScopedValue(block: Block<RenderContext>, key: unknown): unknown {
+    let current: Block<RenderContext> | null = block;
     do {
-      const value = this._namespaces.get(current)?.[key];
+      const value = this._blockNamespaces.get(current)?.get(key);
       if (value !== undefined) {
         return value;
       }
     } while ((current = current.parent));
-    return this._globalVariables[key];
+    return this._defaultNamespace.get(key);
   }
 
   renderComponent<TProps, TData>(
-    component: Component<TProps, TData, RenderingContext>,
+    component: Component<TProps, TData, RenderContext>,
     props: TProps,
     hooks: Hook[],
-    block: Block<RenderingContext>,
-    updater: Updater<RenderingContext>,
-  ): TemplateResult<TData, RenderingContext> {
-    const context = new RenderingContext(hooks, block, this, updater);
+    block: Block<RenderContext>,
+    updater: Updater<RenderContext>,
+  ): TemplateResult<TData, RenderContext> {
+    const context = new RenderContext(hooks, block, this, updater);
     const result = component(props, context);
     context.finalize();
     return result;
   }
 
-  setVariable(
-    block: Block<RenderingContext>,
-    key: PropertyKey,
+  setScopedValue(
+    block: Block<RenderContext>,
+    key: unknown,
     value: unknown,
   ): void {
-    const variables = this._namespaces.get(block);
+    const variables = this._blockNamespaces.get(block);
     if (variables !== undefined) {
-      variables[key] = value;
+      variables.set(key, value);
     } else {
-      this._namespaces.set(block, { [key]: value });
+      const namespace = new Map();
+      namespace.set(key, value);
+      this._blockNamespaces.set(block, namespace);
     }
   }
 }

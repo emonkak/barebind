@@ -4,7 +4,7 @@ import { NodeBinding, directiveTag } from '../../src/binding.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockRenderingEngine } from '../mocks.js';
+import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('dynamic()', () => {
   it('should construct a new DynamicDirective', () => {
@@ -22,7 +22,7 @@ describe('DynamicDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -44,7 +44,7 @@ describe('DynamicDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -70,7 +70,7 @@ describe('DynamicBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(directive, part, updater);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -87,7 +87,7 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(dynamic('foo'), part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -110,7 +110,7 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(
         dynamic(new MockDirective()),
         part,
@@ -136,7 +136,7 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(
         dynamic(new MockDirective()),
         part,
@@ -162,7 +162,7 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(dynamic('foo'), part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -198,7 +198,7 @@ describe('DynamicBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(directive, part, updater);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -216,7 +216,7 @@ describe('DynamicBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new DynamicBinding(directive, part, updater);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

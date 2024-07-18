@@ -10,7 +10,7 @@ import {
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { text } from '../directives.js';
-import { MockRenderingEngine } from '../mocks.js';
+import { MockUpdateContext } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('indxedList()', () => {
@@ -45,7 +45,7 @@ describe('IndexedListDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
 
       expect(binding.value).toBe(directive);
@@ -61,7 +61,7 @@ describe('IndexedListDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
         'IndexedListDirective must be used in ChildNodePart.',
@@ -81,7 +81,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive, part);
 
       container.appendChild(part.node);
@@ -107,7 +107,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -132,7 +132,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive1, part);
 
       container.appendChild(part.node);
@@ -160,7 +160,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive1, part);
 
       container.appendChild(part.node);
@@ -184,7 +184,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive1, part);
 
       binding.connect(updater);
@@ -205,7 +205,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive, part);
 
       container.appendChild(part.node);
@@ -225,7 +225,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -247,7 +247,7 @@ describe('IndexedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new IndexedListBinding(directive, part);
 
       container.appendChild(part.node);
@@ -283,7 +283,7 @@ describe('KeyedListDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
 
       expect(binding.value).toBe(directive);
@@ -303,7 +303,7 @@ describe('KeyedListDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
         'KeyedListDirective must be used in ChildNodePart.',
@@ -325,7 +325,7 @@ describe('KeyedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new KeyedListBinding(directive, part);
 
       container.appendChild(part.node);
@@ -353,7 +353,7 @@ describe('KeyedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new KeyedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -386,7 +386,7 @@ describe('KeyedListBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
           } as const;
-          const updater = new SyncUpdater(new MockRenderingEngine());
+          const updater = new SyncUpdater(new MockUpdateContext());
           const binding = new KeyedListBinding(directive1, part);
 
           container.appendChild(part.node);
@@ -432,7 +432,7 @@ describe('KeyedListBinding', () => {
               type: PartType.ChildNode,
               node: document.createComment(''),
             } as const;
-            const updater = new SyncUpdater(new MockRenderingEngine());
+            const updater = new SyncUpdater(new MockUpdateContext());
             const binding = new KeyedListBinding(directive1, part);
 
             container.appendChild(part.node);
@@ -474,7 +474,7 @@ describe('KeyedListBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
           } as const;
-          const updater = new SyncUpdater(new MockRenderingEngine());
+          const updater = new SyncUpdater(new MockUpdateContext());
           const binding = new KeyedListBinding(directive1, part);
 
           container.appendChild(part.node);
@@ -511,7 +511,7 @@ describe('KeyedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new KeyedListBinding(directive1, part);
 
       binding.connect(updater);
@@ -536,7 +536,7 @@ describe('KeyedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new KeyedListBinding(directive, part);
 
       container.appendChild(part.node);
@@ -560,7 +560,7 @@ describe('KeyedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new KeyedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -584,7 +584,7 @@ describe('KeyedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new KeyedListBinding(directive, part);
 
       container.appendChild(part.node);

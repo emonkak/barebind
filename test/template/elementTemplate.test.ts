@@ -7,12 +7,12 @@ import {
 } from '../../src/template/elementTemplate.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockRenderingEngine } from '../mocks.js';
+import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('ElementTemplate', () => {
   describe('.hydrate()', () => {
     it('should hydrate SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new ElementTemplate('div').hydrate(
         {
           elementValue: { class: 'foo' },
@@ -43,7 +43,7 @@ describe('ElementTemplate', () => {
     });
 
     it('should hydrate SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const elementDirective = new MockDirective();
       const childNodeDirective = new MockDirective();
       const fragment = new ElementTemplate('div').hydrate(
@@ -127,7 +127,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const elementBindingBindSpy = vi.spyOn(elementBinding, 'bind');
       const childNodeBindingBindSpy = vi.spyOn(childNodeBinding, 'bind');
 
@@ -163,7 +163,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const elementBindingUnbindSpy = vi.spyOn(elementBinding, 'unbind');
       const childNodeBindingUnbindSpy = vi.spyOn(childNodeBinding, 'unbind');
 
@@ -196,7 +196,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       elementBinding.connect(updater);
       childNodeBinding.connect(updater);
@@ -235,7 +235,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       elementBinding.connect(updater);
       childNodeBinding.connect(updater);

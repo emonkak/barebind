@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockRenderingEngine } from '../mocks.js';
+import { MockBlock, MockUpdateContext } from '../mocks.js';
 
 describe('SyncUpdater', () => {
   describe('.getCurrentPriority()', () => {
     it('should return "user-blocking"', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(updater.getCurrentPriority()).toBe('user-blocking');
     });
@@ -15,40 +14,35 @@ describe('SyncUpdater', () => {
 
   describe('.isPending()', () => {
     it('should return true if there is a pending block', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       updater.enqueueBlock(new MockBlock());
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return true if there is a pending mutation effect', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       updater.enqueueMutationEffect({ commit() {} });
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return true if there is a pending layout effect', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       updater.enqueueLayoutEffect({ commit() {} });
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return true if there is a pending passive effect', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       updater.enqueuePassiveEffect({ commit() {} });
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return false if there are no pending tasks', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(updater.isPending()).toBe(false);
     });
@@ -56,8 +50,7 @@ describe('SyncUpdater', () => {
 
   describe('.isScheduled()', () => {
     it('should return whether an update is scheduled', async () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(updater.isScheduled()).toBe(false);
 
@@ -71,8 +64,7 @@ describe('SyncUpdater', () => {
 
   describe('.scheduleUpdate()', () => {
     it('should do nothing if already scheduled', async () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
       updater.scheduleUpdate();
@@ -84,8 +76,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should update the block on a microtask', async () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
@@ -115,8 +106,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should not update the block on a microtask if shouldUpdate() returns false ', async () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const block = new MockBlock();
       const updateSpy = vi.spyOn(block, 'update');
@@ -137,8 +127,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should commit effects on a microtask', async () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
@@ -160,8 +149,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should cancel the update when flushed', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       updater.scheduleUpdate();
       updater.flush();
@@ -172,8 +160,7 @@ describe('SyncUpdater', () => {
 
   describe('.waitForUpdate()', () => {
     it('should returns a resolved Promise if not scheduled', () => {
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(
         Promise.race([

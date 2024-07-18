@@ -11,13 +11,10 @@ export {
   type Usable,
   type UsableCallback,
   type UsableObject,
-  RenderingContext,
+  RenderContext,
   usableTag,
-} from './renderingContext.js';
-export {
-  type Variables,
-  RenderingEngine,
-} from './renderingEngine.js';
+} from './renderContext.js';
+export { RenderState } from './renderState.js';
 export {
   type Scheduler,
   getDefaultScheduler,

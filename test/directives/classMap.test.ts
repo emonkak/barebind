@@ -7,7 +7,7 @@ import {
 } from '../../src/directives/classMap.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderingEngine } from '../mocks.js';
+import { MockUpdateContext } from '../mocks.js';
 
 describe('classMap()', () => {
   it('should construct a classMapDirective', () => {
@@ -23,7 +23,7 @@ describe('ClassMapDirective', () => {
     it('should return a new instance of ClassMapBinding', () => {
       const classMap = { foo: true };
       const directive = classMapDirective(classMap);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const part = {
         type: PartType.Attribute,
         name: 'class',
@@ -40,7 +40,7 @@ describe('ClassMapDirective', () => {
     it('should throw an error if the part does not indicate "class" attribute', () => {
       const classMap = { foo: true };
       const directive = classMapDirective(classMap);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const part = {
         type: PartType.Attribute,
         name: 'className',
@@ -68,7 +68,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -90,7 +90,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -121,7 +121,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -147,7 +147,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -169,7 +169,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => {
         binding.bind(null as any, updater);
@@ -192,7 +192,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -211,7 +211,7 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.unbind(updater);
 

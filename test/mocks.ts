@@ -115,15 +115,13 @@ export class MockScheduler implements Scheduler {
   }
 }
 
-export type MockRenderingContext = {
+export type MockRenderContext = {
   hooks: Hook[];
-  block: Block<MockRenderingContext>;
-  updater: Updater<MockRenderingContext>;
+  block: Block<MockRenderContext>;
+  updater: Updater<MockRenderContext>;
 };
 
-export class MockRenderingEngine
-  implements UpdateContext<MockRenderingContext>
-{
+export class MockUpdateContext implements UpdateContext<MockRenderContext> {
   flushEffects(effects: Effect[], mode: EffectMode): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(mode);
@@ -131,12 +129,12 @@ export class MockRenderingEngine
   }
 
   renderComponent<TProps, TData>(
-    component: Component<TProps, TData, MockRenderingContext>,
+    component: Component<TProps, TData, MockRenderContext>,
     props: TProps,
     hooks: Hook[],
-    block: Block<MockRenderingContext>,
-    updater: Updater<MockRenderingContext>,
-  ): TemplateResult<TData, MockRenderingContext> {
+    block: Block<MockRenderContext>,
+    updater: Updater<MockRenderContext>,
+  ): TemplateResult<TData, MockRenderContext> {
     return component(props, { hooks, block, updater });
   }
 }

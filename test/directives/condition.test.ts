@@ -10,7 +10,7 @@ import {
 } from '../../src/directives/condition.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockRenderingEngine } from '../mocks.js';
+import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('condition()', () => {
   it('should construct a new ConditionDirective', () => {
@@ -61,7 +61,7 @@ describe('ConditionDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
@@ -90,7 +90,7 @@ describe('ConditionDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
@@ -121,7 +121,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive, part, updater);
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
@@ -144,7 +144,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive, part, updater);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
@@ -175,7 +175,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive, part, updater);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
@@ -211,7 +211,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -249,7 +249,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -287,7 +287,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -328,7 +328,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -360,7 +360,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive, part, updater);
 
       expect(() => {
@@ -382,7 +382,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive, part, updater);
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -404,7 +404,7 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new ConditionBinding(directive, part, updater);
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 

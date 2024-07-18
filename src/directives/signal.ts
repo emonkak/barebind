@@ -7,10 +7,10 @@ import {
 } from '../binding.js';
 import { LinkedList } from '../linkedList.js';
 import {
-  type RenderingContext,
+  type RenderContext,
   type UsableObject,
   usableTag,
-} from '../renderingContext.js';
+} from '../renderContext.js';
 import type { Part, Updater } from '../types.js';
 
 export type Subscriber = () => void;
@@ -18,7 +18,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 export abstract class Signal<TValue>
-  implements Directive, UsableObject<TValue, RenderingContext>
+  implements Directive, UsableObject<TValue, RenderContext>
 {
   abstract get value(): TValue;
 
@@ -51,7 +51,7 @@ export abstract class Signal<TValue>
     return new SignalBinding(this, part, updater);
   }
 
-  [usableTag](context: RenderingContext): TValue {
+  [usableTag](context: RenderContext): TValue {
     context.useEffect(
       () =>
         this.subscribe(() => {

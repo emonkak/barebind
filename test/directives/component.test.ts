@@ -8,10 +8,10 @@ import { HookType, PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  type MockRenderingContext,
-  MockRenderingEngine,
+  type MockRenderContext,
   MockTemplate,
   MockTemplateFragment,
+  MockUpdateContext,
 } from '../mocks.js';
 
 describe('component()', () => {
@@ -36,7 +36,7 @@ describe('ComponentDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const parent = new MockBlock();
 
       vi.spyOn(updater, 'getCurrentBlock').mockReturnValue(parent);
@@ -61,7 +61,7 @@ describe('ComponentDirective', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
         'ComponentDirective must be used in ChildNodePart.',
@@ -98,7 +98,7 @@ describe('ComponentBinding', () => {
       } as const;
       const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.requestUpdate('user-blocking', updater);
 
@@ -116,7 +116,7 @@ describe('ComponentBinding', () => {
       } as const;
       const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       vi.spyOn(parent, 'dirty', 'get').mockReturnValue(true);
 
@@ -136,12 +136,12 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       const hydrateSpy = vi.spyOn(template, 'hydrate');
 
-      binding.update(engine, updater);
+      binding.update(state, updater);
 
       expect(hydrateSpy).not.toHaveBeenCalled();
       expect(updater.isPending()).toBe(false);
@@ -159,8 +159,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
@@ -180,8 +180,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
@@ -203,8 +203,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
@@ -226,8 +226,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
 
       const hydrateSpy = vi
@@ -259,8 +259,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       binding.requestUpdate('user-blocking', updater);
 
@@ -282,8 +282,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -314,8 +314,8 @@ describe('ComponentBinding', () => {
       } as const;
       const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
@@ -342,8 +342,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       const getCurrentPrioritySpy = vi
         .spyOn(updater, 'getCurrentPriority')
@@ -370,8 +370,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
@@ -393,8 +393,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
 
       const hydrateSpy = vi
@@ -426,8 +426,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       binding.bind(directive, updater);
 
@@ -458,8 +458,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive1, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -504,8 +504,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive1, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment1 = new MockTemplateFragment();
       const fragment2 = new MockTemplateFragment();
       const startNode1 = document.createComment('');
@@ -574,8 +574,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive1, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment1 = new MockTemplateFragment();
       const fragment2 = new MockTemplateFragment();
       const fragment3 = new MockTemplateFragment();
@@ -656,8 +656,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive1, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment1 = new MockTemplateFragment();
       const fragment2 = new MockTemplateFragment();
       const startNode1 = document.createComment('');
@@ -711,7 +711,7 @@ describe('ComponentBinding', () => {
     it('should clean hooks if the component has been changed', () => {
       const cleanup = vi.fn();
       const directive1 = componentDirective(
-        (_props, { hooks }: MockRenderingContext) => {
+        (_props, { hooks }: MockRenderContext) => {
           hooks.push({
             type: HookType.Effect,
             cleanup,
@@ -725,7 +725,7 @@ describe('ComponentBinding', () => {
         {},
       );
       const directive2 = componentDirective(
-        (_props, { hooks }: MockRenderingContext) => {
+        (_props, { hooks }: MockRenderContext) => {
           hooks.push({
             type: HookType.Effect,
             cleanup,
@@ -743,7 +743,7 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive1, part, null);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -768,8 +768,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive1, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -777,10 +777,10 @@ describe('ComponentBinding', () => {
       );
 
       binding.connect(updater);
-      binding.update(engine, updater);
+      binding.update(state, updater);
 
       binding.bind(directive2, updater);
-      binding.update(engine, updater);
+      binding.update(state, updater);
 
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
@@ -800,8 +800,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -837,8 +837,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
 
       const hydrateSpy = vi
@@ -873,8 +873,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
 
       binding.unbind(updater);
 
@@ -896,8 +896,8 @@ describe('ComponentBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new ComponentBinding(directive, part, null);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
       const fragment = new MockTemplateFragment();
 
       const hydrateSpy = vi

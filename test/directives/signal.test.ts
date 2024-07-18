@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding, directiveTag } from '../../src/binding.js';
 import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
-import { RenderingContext, usableTag } from '../../src/renderingContext.js';
-import { RenderingEngine } from '../../src/renderingEngine.js';
+import { RenderContext, usableTag } from '../../src/renderContext.js';
+import { RenderState } from '../../src/renderState.js';
 import { type Hook, PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock } from '.././mocks.js';
@@ -42,7 +42,7 @@ describe('Signal', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = signal[directiveTag](part, updater);
 
       expect(binding.part).toBe(part);
@@ -61,9 +61,9 @@ describe('Signal', () => {
       const signal = new Atom('foo');
       const block = new MockBlock();
       const hooks: Hook[] = [];
-      const engine = new RenderingEngine();
-      const updater = new SyncUpdater(engine);
-      const context = new RenderingContext(hooks, block, engine, updater);
+      const state = new RenderState();
+      const updater = new SyncUpdater(state);
+      const context = new RenderContext(hooks, block, state, updater);
 
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const value = signal[usableTag](context);
@@ -381,7 +381,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = new SignalBinding(signal, part, updater);
 
       expect(binding.part).toBe(part);
@@ -402,7 +402,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = new SignalBinding(signal, part, updater);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -429,7 +429,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = new SignalBinding(signal, part, updater);
 
       const unsubscribeSpy = vi.fn();
@@ -457,7 +457,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = new SignalBinding(signal1, part, updater);
 
       const unsubscribe1Spy = vi.fn();
@@ -485,7 +485,7 @@ describe('SignalBinding', () => {
 
     it('should throw the error if the value is not a signal', () => {
       expect(() => {
-        const updater = new SyncUpdater(new RenderingEngine());
+        const updater = new SyncUpdater(new RenderState());
         const binding = new SignalBinding(
           new Atom('foo'),
           {
@@ -507,7 +507,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = new SignalBinding(signal, part, updater);
 
       const unsubscribeSpy = vi.fn();
@@ -537,7 +537,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderingEngine());
+      const updater = new SyncUpdater(new RenderState());
       const binding = new SignalBinding(signal, part, updater);
 
       const unsubscribeSpy = vi.fn();

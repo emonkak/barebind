@@ -14,7 +14,7 @@ import {
 } from '../src/binding.js';
 import { type Part, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockRenderingEngine } from './mocks.js';
+import { MockBinding, MockDirective, MockUpdateContext } from './mocks.js';
 
 describe('AttributeBinding', () => {
   describe('.constructor()', () => {
@@ -43,8 +43,7 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -77,8 +76,7 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding(obj1, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -101,8 +99,7 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(true, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -125,8 +122,7 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(null, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       element.toggleAttribute('contenteditable', true);
       binding.connect(updater);
@@ -144,8 +140,7 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(undefined, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       element.toggleAttribute('contenteditable', true);
       binding.connect(updater);
@@ -163,8 +158,7 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.bind('foo', updater);
 
@@ -181,8 +175,7 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(undefined, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -203,8 +196,7 @@ describe('AttributeBinding', () => {
           node: document.createElement('div'),
           name: 'class',
         });
-        const engine = new MockRenderingEngine();
-        const updater = new SyncUpdater(engine);
+        const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind(new MockDirective(), updater);
       }).toThrow('A value must not be a directive,');
     });
@@ -219,8 +211,7 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(true, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       element.toggleAttribute('contenteditable', true);
       binding.unbind(updater);
@@ -238,8 +229,7 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(undefined, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -324,8 +314,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
 
@@ -364,8 +353,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -413,8 +401,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -441,8 +428,7 @@ describe('EventBinding', () => {
       const listener = vi.fn();
       const event = new CustomEvent('hello');
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -472,8 +458,7 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -494,8 +479,7 @@ describe('EventBinding', () => {
           node: document.createElement('div'),
           name: 'hello',
         });
-        const engine = new MockRenderingEngine();
-        const updater = new SyncUpdater(engine);
+        const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind({}, updater);
       }).toThrow(
         'A value of EventBinding must be EventListener, EventListenerObject or null.',
@@ -506,8 +490,7 @@ describe('EventBinding', () => {
           node: document.createElement('div'),
           name: 'hello',
         });
-        const engine = new MockRenderingEngine();
-        const updater = new SyncUpdater(engine);
+        const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind(undefined, updater);
       }).toThrow(
         'A value of EventBinding must be EventListener, EventListenerObject or null.',
@@ -526,8 +509,7 @@ describe('EventBinding', () => {
       } as const;
       const event = new CustomEvent('hello');
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -558,8 +540,7 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
 
@@ -586,8 +567,7 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -610,8 +590,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -637,8 +616,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -672,8 +650,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -695,8 +672,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -737,8 +713,7 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -766,8 +741,7 @@ describe('NodeBinding', () => {
         type: PartType.Node,
         node,
       } as const;
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new NodeBinding('foo', part);
 
       binding.bind('foo', updater);
@@ -784,8 +758,7 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding(undefined, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -804,8 +777,7 @@ describe('NodeBinding', () => {
           type: PartType.Node,
           node: document.createElement('div'),
         });
-        const engine = new MockRenderingEngine();
-        const updater = new SyncUpdater(engine);
+        const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind(new MockDirective(), updater);
       }).toThrow('A value must not be a directive,');
     });
@@ -819,8 +791,7 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -842,8 +813,7 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding(undefined, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -898,8 +868,7 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -921,8 +890,7 @@ describe('PropertyBinding', () => {
         node: element,
         name: 'className',
       } as const;
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = new PropertyBinding('foo', part);
 
       binding.bind('foo', updater);
@@ -940,8 +908,7 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding(undefined, part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -961,8 +928,7 @@ describe('PropertyBinding', () => {
           node: document.createElement('div'),
           name: 'className',
         });
-        const engine = new MockRenderingEngine();
-        const updater = new SyncUpdater(engine);
+        const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind(new MockDirective(), updater);
       }).toThrow('A value must not be a directive,');
     });
@@ -978,8 +944,7 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.unbind(updater);
       updater.flush();
@@ -998,8 +963,7 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding('foo', part);
-      const engine = new MockRenderingEngine();
-      const updater = new SyncUpdater(engine);
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.disconnect();
       updater.flush();
@@ -1046,8 +1010,7 @@ describe('ElementBinding', () => {
             node: document.createElement('div'),
           },
         );
-        const engine = new MockRenderingEngine();
-        const updater = new SyncUpdater(engine);
+        const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind(null, updater);
       }).toThrow('A value of ElementBinding must be an object,');
     });
@@ -1065,7 +1028,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1085,7 +1048,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1106,7 +1069,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1133,7 +1096,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1157,7 +1120,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1190,7 +1153,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1215,7 +1178,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1252,7 +1215,7 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
       updater.flush();
@@ -1284,8 +1247,7 @@ describe('resolveBinding()', () => {
     } as const;
     const directive = new MockDirective();
     const directiveSpy = vi.spyOn(directive, directiveTag);
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const binding = resolveBinding(directive, part, updater);
 
     expect(binding).toBeInstanceOf(MockBinding);
@@ -1300,8 +1262,7 @@ describe('resolveBinding()', () => {
       node: element,
       name: 'class',
     } as const;
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const binding = resolveBinding('foo', part, updater);
 
     expect(binding).toBeInstanceOf(AttributeBinding);
@@ -1318,8 +1279,7 @@ describe('resolveBinding()', () => {
       node: element,
       name: 'hello',
     } as const;
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const binding = resolveBinding(listener, part, updater);
 
     expect(binding).toBeInstanceOf(EventBinding);
@@ -1335,8 +1295,7 @@ describe('resolveBinding()', () => {
       node: element,
       name: 'className',
     } as const;
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const binding = resolveBinding('foo', part, updater);
 
     expect(binding).toBeInstanceOf(PropertyBinding);
@@ -1351,8 +1310,7 @@ describe('resolveBinding()', () => {
       type: PartType.Node,
       node,
     } as const;
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const binding = resolveBinding('foo', part, updater);
 
     expect(binding).toBeInstanceOf(NodeBinding);
@@ -1367,8 +1325,7 @@ describe('resolveBinding()', () => {
       type: PartType.ChildNode,
       node,
     } as const;
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const binding = resolveBinding('foo', part, updater);
 
     expect(binding).toBeInstanceOf(NodeBinding);
@@ -1383,8 +1340,7 @@ describe('resolveBinding()', () => {
       type: PartType.Element,
       node: element,
     } as const;
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const props = {
       class: 'foo',
       title: 'bar',
@@ -1414,8 +1370,7 @@ describe('mount()', () => {
   it('should mount element inside the container', async () => {
     const directive = new MockDirective();
     const container = document.createElement('div');
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const directiveSpy = vi.spyOn(directive, directiveTag);
     const isScheduledSpy = vi.spyOn(updater, 'isScheduled');
     const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
@@ -1433,8 +1388,7 @@ describe('mount()', () => {
   it('should not schedule update if it is already scheduled', () => {
     const directive = new MockDirective();
     const container = document.createElement('div');
-    const engine = new MockRenderingEngine();
-    const updater = new SyncUpdater(engine);
+    const updater = new SyncUpdater(new MockUpdateContext());
     const directiveSpy = vi.spyOn(directive, directiveTag);
     const isScheduledSpy = vi
       .spyOn(updater, 'isScheduled')

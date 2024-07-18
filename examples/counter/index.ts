@@ -1,7 +1,7 @@
 import {
   ConcurrentUpdater,
-  type RenderingContext,
-  RenderingEngine,
+  type RenderContext,
+  RenderState,
   mount,
 } from '@emonkak/ebiten';
 import {
@@ -23,7 +23,7 @@ import {
 
 const counterSignal = new Atom(0);
 
-function App(_props: {}, context: RenderingContext) {
+function App(_props: {}, context: RenderContext) {
   const [items, setItems] = context.useState([
     'foo',
     'bar',
@@ -116,7 +116,7 @@ interface CircleProps {
   fill: string;
 }
 
-function Circle({ cx, cy, r, fill }: CircleProps, context: RenderingContext) {
+function Circle({ cx, cy, r, fill }: CircleProps, context: RenderContext) {
   return context.svg`
     <circle cx=${cx} cy=${cy} r=${r} fill=${fill} />
   `;
@@ -131,7 +131,7 @@ interface ItemProps {
 
 function Item(
   { title, onUp, onDown, onDelete }: ItemProps,
-  context: RenderingContext,
+  context: RenderContext,
 ) {
   const state = context.getContextValue('state');
 
@@ -149,7 +149,7 @@ interface CounterProps {
   count$: Signal<number>;
 }
 
-function Counter({ count$ }: CounterProps, context: RenderingContext) {
+function Counter({ count$ }: CounterProps, context: RenderContext) {
   const countLabelRef = context.useRef<Element | null>(null);
 
   const count = context.use(count$);
@@ -185,8 +185,8 @@ function Counter({ count$ }: CounterProps, context: RenderingContext) {
 
 function SingleText<T>(
   { value }: { value: T },
-  context: RenderingContext,
-): TemplateDirective<T, RenderingContext> {
+  context: RenderContext,
+): TemplateDirective<T, RenderContext> {
   return context.text(value);
 }
 
@@ -204,6 +204,6 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const updater = new ConcurrentUpdater(new RenderingEngine());
+const updater = new ConcurrentUpdater(new RenderState());
 
 mount(component(App, {}), document.body, updater);

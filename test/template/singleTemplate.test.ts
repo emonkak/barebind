@@ -8,7 +8,7 @@ import {
 } from '../../src/template/singleTemplate.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockRenderingEngine } from '../mocks.js';
+import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('ChildNodeTemplate', () => {
   describe('.constructor()', () => {
@@ -21,7 +21,7 @@ describe('ChildNodeTemplate', () => {
 
   describe('.hydrate()', () => {
     it('should hydrate SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = ChildNodeTemplate.instance.hydrate('foo', updater);
 
       updater.flush();
@@ -35,7 +35,7 @@ describe('ChildNodeTemplate', () => {
     });
 
     it('should hydrate SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const directive = new MockDirective();
       const fragment = ChildNodeTemplate.instance.hydrate(directive, updater);
 
@@ -68,7 +68,7 @@ describe('TextTemplate', () => {
 
   describe('.hydrate()', () => {
     it('should hydrate SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = TextTemplate.instance.hydrate('foo', updater);
 
       updater.flush();
@@ -83,7 +83,7 @@ describe('TextTemplate', () => {
     });
 
     it('should hydrate SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const directive = new MockDirective();
       const fragment = TextTemplate.instance.hydrate(directive, updater);
 
@@ -128,7 +128,7 @@ describe('SingleTemplateFragment', () => {
         node: document.createTextNode(''),
       });
       const fragment = new SingleTemplateFragment(binding);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const bindSpy = vi.spyOn(binding, 'bind');
 
       fragment.attach('bar', updater);
@@ -145,7 +145,7 @@ describe('SingleTemplateFragment', () => {
         node: document.createTextNode(''),
       });
       const fragment = new SingleTemplateFragment(binding);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
       fragment.detach(updater);

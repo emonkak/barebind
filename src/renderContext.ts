@@ -1,5 +1,5 @@
 import { TemplateDirective } from './directives/template.js';
-import type { RenderingEngine } from './renderingEngine.js';
+import type { RenderState } from './renderState.js';
 import {
   type ElementData,
   ElementTemplate,
@@ -40,30 +40,30 @@ export interface UsableObject<TResult, TContext> {
   [usableTag](context: TContext): TResult;
 }
 
-export class RenderingContext {
+export class RenderContext {
   private readonly _hooks: Hook[];
 
-  private readonly _block: Block<RenderingContext>;
+  private readonly _block: Block<RenderContext>;
 
-  private readonly _engine: RenderingEngine;
+  private readonly _state: RenderState;
 
-  private readonly _updater: Updater<RenderingContext>;
+  private readonly _updater: Updater<RenderContext>;
 
   private _hookIndex = 0;
 
   constructor(
     hooks: Hook[],
-    block: Block<RenderingContext>,
-    engine: RenderingEngine,
-    updater: Updater<RenderingContext>,
+    block: Block<RenderContext>,
+    state: RenderState,
+    updater: Updater<RenderContext>,
   ) {
     this._hooks = hooks;
     this._block = block;
-    this._engine = engine;
+    this._state = state;
     this._updater = updater;
   }
 
-  childNode<T>(value: T): TemplateDirective<T, RenderingContext> {
+  childNode<T>(value: T): TemplateDirective<T, RenderContext> {
     const template = ChildNodeTemplate.instance;
     return new TemplateDirective(template, value);
   }
@@ -74,7 +74,7 @@ export class RenderingContext {
     childNodeValue: TChildNodeValue,
   ): TemplateDirective<
     ElementData<TElementValue, TChildNodeValue>,
-    RenderingContext
+    RenderContext
   > {
     const template = new ElementTemplate<TElementValue, TChildNodeValue>(type);
     return new TemplateDirective(template, { elementValue, childNodeValue });
@@ -93,15 +93,15 @@ export class RenderingContext {
     }
   }
 
-  getContextValue<T>(key: PropertyKey): T | undefined {
-    return this._engine.getVariable(this._block, key) as T | undefined;
+  getContextValue<T>(key: unknown): T | undefined {
+    return this._state.getScopedValue(this._block, key) as T | undefined;
   }
 
   html(
     tokens: ReadonlyArray<string>,
     ...data: unknown[]
-  ): TemplateDirective<unknown[], RenderingContext> {
-    const template = this._engine.getHTMLTemplate(tokens, data);
+  ): TemplateDirective<unknown[], RenderContext> {
+    const template = this._state.getHTMLTemplate(tokens, data);
     return new TemplateDirective(template, data);
   }
 
@@ -112,24 +112,24 @@ export class RenderingContext {
     );
   }
 
-  setContextValue(key: PropertyKey, value: unknown): void {
-    this._engine.setVariable(this._block, key, value);
+  setContextValue(key: unknown, value: unknown): void {
+    this._state.setScopedValue(this._block, key, value);
   }
 
   svg(
     tokens: ReadonlyArray<string>,
     ...data: unknown[]
-  ): TemplateDirective<unknown[], RenderingContext> {
-    const template = this._engine.getSVGTemplate(tokens, data);
+  ): TemplateDirective<unknown[], RenderContext> {
+    const template = this._state.getSVGTemplate(tokens, data);
     return new TemplateDirective(template, data);
   }
 
-  text<T>(value: T): TemplateDirective<T, RenderingContext> {
+  text<T>(value: T): TemplateDirective<T, RenderContext> {
     const template = TextTemplate.instance;
     return new TemplateDirective(template, value);
   }
 
-  use<TResult>(usable: Usable<TResult, RenderingContext>): TResult {
+  use<TResult>(usable: Usable<TResult, RenderContext>): TResult {
     return typeof usable === 'function'
       ? usable(this)
       : usable[usableTag](this);

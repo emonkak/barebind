@@ -8,7 +8,7 @@ import {
 } from '../../src/directives/noValue.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderingEngine } from '../mocks.js';
+import { MockUpdateContext } from '../mocks.js';
 
 describe('noValue', () => {
   it('should be the same as NoValueDirective.instance', () => {
@@ -31,7 +31,7 @@ describe('NoValueDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
       const binding = noValue[directiveTag](part, updater);
 
       expect(binding.value).toBe(noValue);
@@ -50,7 +50,7 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.connect(updater);
 
@@ -66,7 +66,7 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.bind(noValue, updater);
 
@@ -80,7 +80,7 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => binding.bind(null as any, updater)).toThrow(
         'A value must be a instance of "NoValueDirective", but got "null".',
@@ -95,7 +95,7 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderingEngine());
+      const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.unbind(updater);
 
