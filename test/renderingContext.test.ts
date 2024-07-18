@@ -632,6 +632,27 @@ describe('Context', () => {
       );
       expect(message).toEqual(['foo', 'bar', 'baz']);
     });
+
+    it('should always return the same state and the dispatcher', () => {
+      const hooks: Hook[] = [];
+      const block = new MockBlock();
+      const engine = new RenderingEngine();
+      const updater = new SyncUpdater(engine);
+
+      let context = new RenderingContext(hooks, block, engine, updater);
+      const [message1, addMessage1] = context.useReducer<string[], string>(
+        (messages, message) => [...messages, message],
+        () => ['foo', 'bar'],
+      );
+
+      context = new RenderingContext(hooks, block, engine, updater);
+      const [message2, addMessage2] = context.useReducer<string[], string>(
+        (messages, message) => [...messages, message],
+        () => ['foo', 'bar'],
+      );
+      expect(message1).toBe(message2);
+      expect(addMessage1).toBe(addMessage2);
+    });
   });
 
   describe('.useRef()', () => {
