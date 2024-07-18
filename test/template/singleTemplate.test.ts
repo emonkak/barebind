@@ -20,7 +20,7 @@ describe('ChildNodeTemplate', () => {
   });
 
   describe('.hydrate()', () => {
-    it('should hydrate SingleTemplateFragment initialized with NodeBinding', () => {
+    it('should hydrate SingleTemplateFragment initialized with a non-directive value', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = ChildNodeTemplate.instance.hydrate('foo', updater);
 

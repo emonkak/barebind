@@ -87,11 +87,11 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
   }
 
   attach(
-    newData: ElementData<TElementValue, TChildNodeValue>,
+    data: ElementData<TElementValue, TChildNodeValue>,
     updater: Updater<unknown>,
   ): void {
-    this._elementBinding.bind(newData.elementValue, updater);
-    this._childNodeBinding.bind(newData.childNodeValue, updater);
+    this._elementBinding.bind(data.elementValue, updater);
+    this._childNodeBinding.bind(data.childNodeValue, updater);
   }
 
   detach(updater: Updater): void {

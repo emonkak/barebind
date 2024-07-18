@@ -226,15 +226,15 @@ export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
     return this._bindings;
   }
 
-  attach(newData: unknown[], updater: Updater): void {
-    if (newData.length !== this._bindings.length) {
+  attach(data: unknown[], updater: Updater): void {
+    if (data.length !== this._bindings.length) {
       throw new Error(
-        `The number of new data must be ${this._bindings.length}, but got ${newData.length}.`,
+        `The number of new data must be ${this._bindings.length}, but got ${data.length}.`,
       );
     }
 
     for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.bind(newData[i]!, updater);
+      this._bindings[i]!.bind(data[i]!, updater);
     }
   }
 

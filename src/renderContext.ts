@@ -4,6 +4,7 @@ import {
   type ElementData,
   ElementTemplate,
 } from './template/elementTemplate.js';
+import { EmptyTemplate } from './template/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
 import {
   type Cleanup,
@@ -78,6 +79,11 @@ export class RenderContext {
   > {
     const template = new ElementTemplate<TElementValue, TChildNodeValue>(type);
     return new TemplateDirective(template, { elementValue, childNodeValue });
+  }
+
+  empty(): TemplateDirective<null, RenderContext> {
+    const template = EmptyTemplate.instance;
+    return new TemplateDirective(template, null);
   }
 
   /**

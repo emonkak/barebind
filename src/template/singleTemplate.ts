@@ -76,8 +76,8 @@ export class SingleTemplateFragment<T> implements TemplateFragment<T> {
     return this._binding.endNode;
   }
 
-  attach(newData: T, updater: Updater<unknown>): void {
-    this._binding.bind(newData, updater);
+  attach(data: T, updater: Updater<unknown>): void {
+    this._binding.bind(data, updater);
   }
 
   detach(updater: Updater): void {

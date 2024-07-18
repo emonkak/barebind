@@ -40,6 +40,8 @@ describe('ElementTemplate', () => {
         node: expect.any(Comment),
       });
       expect(fragment.childNodeBinding.part.node.nodeValue).toBe('bar');
+      expect(fragment.startNode).toBe(fragment.elementBinding.startNode);
+      expect(fragment.endNode).toBe(fragment.elementBinding.endNode);
     });
 
     it('should hydrate SingleTemplateFragment by a directive', () => {
@@ -85,31 +87,6 @@ describe('ElementTemplate', () => {
 });
 
 describe('ElementTemplateFragment', () => {
-  describe('.constructor()', () => {
-    it('should construct a new SingleTemplateFragment', () => {
-      const elementBinding = new ElementBinding(
-        { class: 'foo' },
-        {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        },
-      );
-      const childNodeBinding = new NodeBinding('bar', {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      });
-      const fragment = new ElementTemplateFragment(
-        elementBinding,
-        childNodeBinding,
-      );
-
-      expect(fragment.elementBinding).toBe(elementBinding);
-      expect(fragment.childNodeBinding).toBe(childNodeBinding);
-      expect(fragment.startNode).toBe(elementBinding.startNode);
-      expect(fragment.endNode).toBe(elementBinding.endNode);
-    });
-  });
-
   describe('.attach()', () => {
     it('should bind a value to the bindings', () => {
       const elementBinding = new ElementBinding(

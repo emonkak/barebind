@@ -5,6 +5,7 @@ import { RenderState } from '../src/renderState.js';
 import { ElementTemplate } from '../src/template/elementTemplate.js';
 import { TaggedTemplate } from '../src/template/taggedTemplate.js';
 
+import { EmptyTemplate } from '../src/template/emptyTemplate.js';
 import {
   ChildNodeTemplate,
   TextTemplate,
@@ -48,6 +49,21 @@ describe('Context', () => {
         elementValue: { class: 'foo', id: 'bar' },
         childNodeValue: 'baz',
       });
+    });
+  });
+
+  describe('.empty()', () => {
+    it('should return TemplateDirective with EmptyTemplate set as a template', () => {
+      const hooks: Hook[] = [];
+      const block = new MockBlock();
+      const state = new RenderState();
+      const updater = new SyncUpdater(state);
+
+      const context = new RenderContext(hooks, block, state, updater);
+      const directive = context.empty();
+
+      expect(directive.template).toBe(EmptyTemplate.instance);
+      expect(directive.data).toEqual(null);
     });
   });
 
