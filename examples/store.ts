@@ -1,9 +1,4 @@
-import {
-  type AtomSignal,
-  type ComputedSignal,
-  atom,
-  map,
-} from '../src/directives.js';
+import { type Atom, type Computed, atom, map } from '../src/directives.js';
 
 enum Visibility {
   ALL,
@@ -23,13 +18,13 @@ interface TodoState {
 }
 
 class TodoStore {
-  public readonly todos: AtomSignal<Todo[]>;
+  public readonly todos: Atom<Todo[]>;
 
-  public readonly visibility: AtomSignal<Visibility>;
+  public readonly visibility: Atom<Visibility>;
 
-  public readonly visibleTodos: ComputedSignal<
+  public readonly visibleTodos: Computed<
     Todo[],
-    [AtomSignal<Todo[]>, AtomSignal<Visibility>]
+    [Atom<Todo[]>, Atom<Visibility>]
   >;
 
   constructor({ todos, visibility }: TodoState) {

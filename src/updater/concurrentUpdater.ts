@@ -1,4 +1,4 @@
-import { AtomSignal } from '../directives/signal.js';
+import { Atom } from '../directives/signal.js';
 import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
 import type {
   Block,
@@ -10,7 +10,7 @@ import type {
 
 export interface ConcurrentUpdaterOptions {
   scheduler?: Scheduler;
-  taskCount?: AtomSignal<number>;
+  taskCount?: Atom<number>;
 }
 
 export class ConcurrentUpdater<TContext> implements Updater<TContext> {
@@ -18,7 +18,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _scheduler: Scheduler;
 
-  private readonly _taskCount = new AtomSignal(0);
+  private readonly _taskCount = new Atom(0);
 
   private _currentBlock: Block<TContext> | null = null;
 
@@ -34,7 +34,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     context: UpdateContext<TContext>,
     {
       scheduler = getDefaultScheduler(),
-      taskCount = new AtomSignal(0),
+      taskCount = new Atom(0),
     }: ConcurrentUpdaterOptions = {},
   ) {
     this._context = context;

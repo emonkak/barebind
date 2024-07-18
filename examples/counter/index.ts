@@ -5,9 +5,9 @@ import {
   mount,
 } from '@emonkak/ebiten';
 import {
+  Atom,
   type Signal,
   type TemplateDirective,
-  atom,
   choice,
   classMap,
   component,
@@ -21,7 +21,7 @@ import {
   when,
 } from '@emonkak/ebiten/directives.js';
 
-const counterSignal = atom(0);
+const counterSignal = new Atom(0);
 
 function App(_props: {}, context: RenderingContext) {
   const [items, setItems] = context.useState([

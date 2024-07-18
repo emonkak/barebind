@@ -37,15 +37,12 @@ export { RefBinding, RefDirective, ref } from './directives/ref.js';
 export {
   type Subscriber,
   type Subscription,
-  AtomSignal,
-  ComputedSignal,
-  ProjectedSignal,
-  ScannedSignal,
+  Atom,
+  Computed,
+  Projected,
+  Scanned,
   Signal,
   SignalBinding,
-  atom,
-  compute,
-  map,
 } from './directives/signal.js';
 export {
   type StyleMap,

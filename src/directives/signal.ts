@@ -17,37 +17,6 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-type UnwrapSignals<TValue> = TValue extends any[]
-  ? {
-      [P in keyof TValue]: TValue[P] extends Signal<infer Value>
-        ? Value
-        : never;
-    }
-  : never;
-
-export function atom<TValue>(value: TValue): AtomSignal<TValue> {
-  return new AtomSignal(value);
-}
-
-export function compute<TResult, const TDependencies extends Signal<any>[]>(
-  producer: (...dependencies: TDependencies) => TResult,
-  dependencies: TDependencies,
-): ComputedSignal<TResult, TDependencies> {
-  return new ComputedSignal(producer, dependencies);
-}
-
-export function map<TResult, const TDependencies extends Signal<any>[]>(
-  producer: (...values: UnwrapSignals<TDependencies>) => TResult,
-  dependencies: TDependencies,
-): ComputedSignal<TResult, TDependencies> {
-  return new ComputedSignal((...dependencies) => {
-    const values = dependencies.map(
-      (dependency) => dependency.value,
-    ) as UnwrapSignals<TDependencies>;
-    return producer(...values);
-  }, dependencies);
-}
-
 export abstract class Signal<TValue>
   implements Directive, UsableObject<TValue, RenderingContext>
 {
@@ -59,15 +28,15 @@ export abstract class Signal<TValue>
 
   map<TResult>(
     selector: (value: TValue) => TResult,
-  ): ProjectedSignal<TValue, TResult> {
-    return new ProjectedSignal(this, selector);
+  ): Projected<TValue, TResult> {
+    return new Projected(this, selector);
   }
 
   scan<TResult>(
     accumulator: (result: TResult, value: TValue) => TResult,
     seed: TResult,
-  ): ScannedSignal<TValue, TResult> {
-    return new ScannedSignal(this, accumulator, seed);
+  ): Scanned<TValue, TResult> {
+    return new Scanned(this, accumulator, seed);
   }
 
   toJSON(): TValue {
@@ -94,7 +63,7 @@ export abstract class Signal<TValue>
   }
 }
 
-export class AtomSignal<TValue> extends Signal<TValue> {
+export class Atom<TValue> extends Signal<TValue> {
   private _value: TValue;
 
   private _version = 0;
@@ -143,7 +112,7 @@ export class AtomSignal<TValue> extends Signal<TValue> {
   }
 }
 
-export class ComputedSignal<
+export class Computed<
   TResult,
   const TDependencies extends Signal<any>[],
 > extends Signal<TResult> {
@@ -195,7 +164,7 @@ export class ComputedSignal<
   }
 }
 
-export class ProjectedSignal<TValue, TResult> extends Signal<TResult> {
+export class Projected<TValue, TResult> extends Signal<TResult> {
   private readonly _signal: Signal<TValue>;
 
   private readonly _selector: (value: TValue) => TResult;
@@ -220,7 +189,7 @@ export class ProjectedSignal<TValue, TResult> extends Signal<TResult> {
   }
 }
 
-export class ScannedSignal<TValue, TResult> extends Signal<TResult> {
+export class Scanned<TValue, TResult> extends Signal<TResult> {
   private readonly _signal: Signal<TValue>;
 
   private readonly _accumulator: (result: TResult, value: TValue) => TResult;
