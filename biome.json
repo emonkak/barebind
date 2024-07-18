@@ -28,6 +28,7 @@
         "noAssignInExpressions": "off",
         "noConfusingLabels": "off",
         "noConfusingVoidType": "off",
+        "noEmptyInterface": "off",
         "noExplicitAny": "off"
       }
     }

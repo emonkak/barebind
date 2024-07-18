@@ -812,7 +812,10 @@ describe('Context', () => {
       expect(context.useSyncEnternalStore(subscribe, getSnapshot)).toBe('foo');
 
       updater.flush();
-      subscribers.forEach((f) => f());
+
+      for (const subscriber of subscribers) {
+        subscriber();
+      }
 
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith('user-blocking', updater);
@@ -843,7 +846,10 @@ describe('Context', () => {
       ).toBe('foo');
 
       updater.flush();
-      subscribers.forEach((f) => f());
+
+      for (const subscriber of subscribers) {
+        subscriber();
+      }
 
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith('user-blocking', updater);
@@ -855,7 +861,10 @@ describe('Context', () => {
       ).toBe('foo');
 
       updater.flush();
-      subscribers.forEach((f) => f());
+
+      for (const subscriber of subscribers) {
+        subscriber();
+      }
 
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith('background', updater);

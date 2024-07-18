@@ -20,8 +20,8 @@
     "build:all": "pnpm run --include-workspace-root --recursive --parallel build",
     "clean": "tsc --build --clean",
     "clean:all": "pnpm run --include-workspace-root --recursive --parallel clean",
+    "lint": "npx biome lint",
     "test": "vitest run",
-    "coverage": "vitest run --coverage",
     "watch": "tsc --build --watch --preserveWatchOutput",
     "watch:all": "pnpm run --include-workspace-root --recursive --parallel watch"
   },

@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { directiveTag } from '../../src/binding.js';
 import {
-  KeyedListBinding,
   IndexedListBinding,
+  KeyedListBinding,
   indexedList,
   keyedList,
 } from '../../src/directives/list.js';
@@ -40,10 +40,7 @@ describe('keyedList()', () => {
 describe('IndexedListDirective', () => {
   describe('[directiveTag]()', () => {
     it('should return an instance of IndexedListBinding', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-      );
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -59,10 +56,7 @@ describe('IndexedListDirective', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-      );
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -79,9 +73,8 @@ describe('IndexedListDirective', () => {
 describe('IndexedListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => text(item),
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) =>
+        text(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -107,9 +100,8 @@ describe('IndexedListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => text(item),
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) =>
+        text(item),
       );
       const part = {
         type: PartType.ChildNode,
@@ -186,14 +178,8 @@ describe('IndexedListBinding', () => {
 
     it('should do nothing if the items is the same as previous ones', () => {
       const items = ['foo', 'bar', 'baz'];
-      const directive1 = indexedList(
-        items,
-        (item) => item,
-      );
-      const directive2 = indexedList(
-        items,
-        (item) => item,
-      );
+      const directive1 = indexedList(items, (item) => item);
+      const directive2 = indexedList(items, (item) => item);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -213,10 +199,7 @@ describe('IndexedListBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-      );
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) => item);
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -237,10 +220,7 @@ describe('IndexedListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-      );
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -259,9 +239,8 @@ describe('IndexedListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const directive = indexedList(
-        ['foo', 'bar', 'baz'],
-        (item) => text(item),
+      const directive = indexedList(['foo', 'bar', 'baz'], (item) =>
+        text(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -282,10 +261,12 @@ describe('IndexedListBinding', () => {
       binding.disconnect();
 
       expect(disconnectSpies).toHaveLength(3);
-      disconnectSpies.forEach((spy) => {
-        expect(spy).toHaveBeenCalledOnce();
-      });
-      expect(container.innerHTML).toBe('foo<!--0-->bar<!--1-->baz<!--2--><!---->');
+      for (const disconnectSpy of disconnectSpies) {
+        expect(disconnectSpy).toHaveBeenCalledOnce();
+      }
+      expect(container.innerHTML).toBe(
+        'foo<!--0-->bar<!--1-->baz<!--2--><!---->',
+      );
     });
   });
 });
@@ -617,10 +598,12 @@ describe('KeyedListBinding', () => {
       binding.disconnect();
 
       expect(disconnectSpies).toHaveLength(3);
-      disconnectSpies.forEach((spy) => {
-        expect(spy).toHaveBeenCalledOnce();
-      });
-      expect(container.innerHTML).toBe('foo<!--foo-->bar<!--bar-->baz<!--baz--><!---->');
+      for (const disconnectSpy of disconnectSpies) {
+        expect(disconnectSpy).toHaveBeenCalledOnce();
+      }
+      expect(container.innerHTML).toBe(
+        'foo<!--foo-->bar<!--bar-->baz<!--baz--><!---->',
+      );
     });
   });
 });

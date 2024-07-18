@@ -35,10 +35,7 @@ export class IndexedListDirective<TItem, TValue> implements Directive {
 
   private readonly _valueSelector: Selector<TItem, TValue>;
 
-  constructor(
-    items: TItem[],
-    valueSelector: Selector<TItem, TValue>,
-  ) {
+  constructor(items: TItem[], valueSelector: Selector<TItem, TValue>) {
     this._items = items;
     this._valueSelector = valueSelector;
   }
@@ -271,7 +268,10 @@ export class KeyedListBinding<TItem, TKey, TValue>
     this._updateItems(updater);
   }
 
-  bind(newValue: KeyedListDirective<TItem, TKey, TValue>, updater: Updater): void {
+  bind(
+    newValue: KeyedListDirective<TItem, TKey, TValue>,
+    updater: Updater,
+  ): void {
     DEBUG: {
       ensureDirective(KeyedListDirective, newValue);
     }
@@ -454,9 +454,7 @@ export class KeyedListBinding<TItem, TKey, TValue>
   }
 
   private _updateItems(updater: Updater): void {
-    if (
-      this._pendingBindings.length === 0
-    ) {
+    if (this._pendingBindings.length === 0) {
       this._insertItems(updater);
     } else {
       this._reconcileItems(updater);
