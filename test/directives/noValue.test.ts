@@ -1,36 +1,40 @@
 import { describe, expect, it } from 'vitest';
 
 import { directiveTag } from '../../src/binding.js';
-import { UnitBinding, UnitDirective, unit } from '../../src/directives/unit.js';
+import {
+  NoValueBinding,
+  NoValueDirective,
+  noValue,
+} from '../../src/directives/noValue.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockRenderingEngine } from '../mocks.js';
 
-describe('unit', () => {
-  it('should be the same as UnitDirective.instance', () => {
-    expect(unit).toBe(UnitDirective.instance);
+describe('noValue', () => {
+  it('should be the same as NoValueDirective.instance', () => {
+    expect(noValue).toBe(NoValueDirective.instance);
   });
 });
 
-describe('UnitDirective', () => {
+describe('NoValueDirective', () => {
   describe('.constructor()', () => {
     it('should be forbidden from being called directly', () => {
-      expect(() => new (UnitDirective as any)()).toThrow(
-        'UnitDirective constructor cannot be called directly.',
+      expect(() => new (NoValueDirective as any)()).toThrow(
+        'NoValueDirective constructor cannot be called directly.',
       );
     });
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new instance of UnitBinding', () => {
+    it('should return a new instance of NoValueBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderingEngine());
-      const binding = unit[directiveTag](part, updater);
+      const binding = noValue[directiveTag](part, updater);
 
-      expect(binding.value).toBe(unit);
+      expect(binding.value).toBe(noValue);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -38,14 +42,14 @@ describe('UnitDirective', () => {
   });
 });
 
-describe('UnitBinding', () => {
+describe('NoValueBinding', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnitBinding(part);
+      const binding = new NoValueBinding(part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
       binding.connect(updater);
@@ -61,25 +65,25 @@ describe('UnitBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnitBinding(part);
+      const binding = new NoValueBinding(part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
-      binding.bind(unit, updater);
+      binding.bind(noValue, updater);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should throw an error if the new value is not UnitDirective', () => {
+    it('should throw an error if the new value is not NoValueDirective', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnitBinding(part);
+      const binding = new NoValueBinding(part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
       expect(() => binding.bind(null as any, updater)).toThrow(
-        'A value must be a instance of "UnitDirective", but got "null".',
+        'A value must be a instance of "NoValueDirective", but got "null".',
       );
     });
   });
@@ -90,7 +94,7 @@ describe('UnitBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnitBinding(part);
+      const binding = new NoValueBinding(part);
       const updater = new SyncUpdater(new MockRenderingEngine());
 
       binding.unbind(updater);
@@ -106,7 +110,7 @@ describe('UnitBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnitBinding(part);
+      const binding = new NoValueBinding(part);
 
       binding.disconnect();
     });

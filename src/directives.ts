@@ -51,7 +51,11 @@ export {
   styleMap,
 } from './directives/styleMap.js';
 export { TemplateBinding, TemplateDirective } from './directives/template.js';
-export { unit, UnitBinding, UnitDirective } from './directives/unit.js';
+export {
+  noValue,
+  NoValueBinding,
+  NoValueDirective,
+} from './directives/noValue.js';
 export {
   UnsafeHTMLBinding,
   UnsafeHTMLDirective,

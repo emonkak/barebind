@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding, directiveTag } from '../../src/binding.js';
-import { UnitDirective } from '../../src/directives.js';
+import { NoValueDirective } from '../../src/directives.js';
 import {
   ConditionBinding,
   condition as conditionDirective,
@@ -33,7 +33,7 @@ describe('when()', () => {
 
     expect(directive.condition).toBe(condition);
     expect(directive.trueCase).toBe(trueCase);
-    expect(directive.falseCase).toBe(UnitDirective.instance);
+    expect(directive.falseCase).toBe(NoValueDirective.instance);
   });
 });
 
@@ -44,7 +44,7 @@ describe('unless()', () => {
     const directive = unless(condition, falseCase);
 
     expect(directive.condition).toBe(condition);
-    expect(directive.trueCase).toBe(UnitDirective.instance);
+    expect(directive.trueCase).toBe(NoValueDirective.instance);
     expect(directive.falseCase).toBe(falseCase);
   });
 });

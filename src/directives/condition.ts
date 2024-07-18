@@ -6,7 +6,7 @@ import {
   resolveBinding,
 } from '../binding.js';
 import type { Part, Updater } from '../types.js';
-import { UnitDirective } from './unit.js';
+import { NoValueDirective } from './noValue.js';
 
 type FunctionOrValue<T> = T extends Function ? () => T : (() => T) | T;
 
@@ -21,15 +21,19 @@ export function condition<TTrue, TFalse>(
 export function when<TTrue>(
   condition: boolean,
   trueCase: FunctionOrValue<TTrue>,
-): ConditionDirective<TTrue, UnitDirective> {
-  return new ConditionDirective(condition, trueCase, UnitDirective.instance);
+): ConditionDirective<TTrue, NoValueDirective> {
+  return new ConditionDirective(condition, trueCase, NoValueDirective.instance);
 }
 
 export function unless<TFalse>(
   condition: boolean,
   falseCase: FunctionOrValue<TFalse>,
-): ConditionDirective<UnitDirective, TFalse> {
-  return new ConditionDirective(condition, UnitDirective.instance, falseCase);
+): ConditionDirective<NoValueDirective, TFalse> {
+  return new ConditionDirective(
+    condition,
+    NoValueDirective.instance,
+    falseCase,
+  );
 }
 
 export class ConditionDirective<TTrue, TFalse> implements Directive {
