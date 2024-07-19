@@ -33,6 +33,15 @@ importers:
         specifier: ../../
         version: link:../..
 
+  examples/todomvc:
+    dependencies:
+      '@emonkak/ebiten':
+        specifier: ../../
+        version: link:../..
+      todomvc-app-css:
+        specifier: ^2.0.0
+        version: 2.4.3
+
 packages:
 
   '@ampproject/remapping@2.3.0':
@@ -1576,6 +1585,10 @@ packages:
 
   to-fast-properties@2.0.0:
     resolution: {integrity: sha512-/OaKK0xYrs3DmxRYqL/yDc+FxFUVYhDlXMhRmv3z915w2HF1tnN1omB354j8VUGO/hbRzyD6Y3sA7v7GS/ceog==}
+    engines: {node: '>=4'}
+
+  todomvc-app-css@2.4.3:
+    resolution: {integrity: sha512-mSnWZaKBWj9aQcFRsGguY/a8O8NR8GmecD48yU1rzwNemgZa/INLpIsxxMiToFGVth+uEKBrQ7IhWkaXZxwq5Q==}
     engines: {node: '>=4'}
 
   totalist@3.0.1:
@@ -3365,6 +3378,8 @@ snapshots:
   tinyspy@2.2.1: {}
 
   to-fast-properties@2.0.0: {}
+
+  todomvc-app-css@2.4.3: {}
 
   totalist@3.0.1: {}
 
