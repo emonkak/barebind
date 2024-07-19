@@ -10,7 +10,7 @@ import { dependenciesAreChanged } from '../utils.js';
 
 export function memo<T>(
   factory: () => T,
-  dependencies?: unknown[],
+  dependencies: unknown[] | undefined,
 ): MemoDirective<T> {
   return new MemoDirective(factory, dependencies);
 }
