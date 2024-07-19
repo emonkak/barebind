@@ -12,7 +12,7 @@ import {
   classMap,
   component,
   condition,
-  keyedList,
+  orderedList,
   ref,
   styleMap,
   unless,
@@ -36,7 +36,7 @@ function App(_props: {}, context: RenderContext) {
 
   const itemsList = context.useMemo(
     () =>
-      keyedList(
+      orderedList(
         items,
         (item) => item,
         (item, index) =>

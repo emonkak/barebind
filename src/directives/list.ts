@@ -15,173 +15,22 @@ import {
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 
-export function indexedList<TItem, TValue>(
-  items: TItem[],
-  valueSelector: Selector<TItem, TValue>,
-): IndexedListDirective<TItem, TValue> {
-  return new IndexedListDirective(items, valueSelector);
-}
-
-export function keyedList<TItem, TKey, TValue>(
+export function orderedList<TItem, TKey, TValue>(
   items: TItem[],
   keySelector: Selector<TItem, TKey>,
   valueSelector: Selector<TItem, TValue>,
-): KeyedListDirective<TItem, TKey, TValue> {
-  return new KeyedListDirective(items, keySelector, valueSelector);
+): OrderedListDirective<TItem, TKey, TValue> {
+  return new OrderedListDirective(items, keySelector, valueSelector);
 }
 
-export class IndexedListDirective<TItem, TValue> implements Directive {
-  private readonly _items: TItem[];
-
-  private readonly _valueSelector: Selector<TItem, TValue>;
-
-  constructor(items: TItem[], valueSelector: Selector<TItem, TValue>) {
-    this._items = items;
-    this._valueSelector = valueSelector;
-  }
-
-  get items(): TItem[] {
-    return this._items;
-  }
-
-  get valueSelector(): Selector<TItem, TValue> {
-    return this._valueSelector;
-  }
-
-  [directiveTag](
-    part: Part,
-    _updater: Updater,
-  ): IndexedListBinding<TItem, TValue> {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error('IndexedListDirective must be used in ChildNodePart.');
-    }
-    return new IndexedListBinding(this, part);
-  }
+export function inPlaceList<TItem, TValue>(
+  items: TItem[],
+  valueSelector: Selector<TItem, TValue>,
+): InPlaceListDirective<TItem, TValue> {
+  return new InPlaceListDirective(items, valueSelector);
 }
 
-export class IndexedListBinding<TItem, TValue>
-  implements Binding<IndexedListDirective<TItem, TValue>>, Effect
-{
-  private _directive: IndexedListDirective<TItem, TValue>;
-
-  private readonly _part: ChildNodePart;
-
-  private _pendingBindings: Binding<TValue>[] = [];
-
-  private _memoizedBindings: Binding<TValue>[] = [];
-
-  private _dirty = false;
-
-  constructor(
-    directive: IndexedListDirective<TItem, TValue>,
-    part: ChildNodePart,
-  ) {
-    this._directive = directive;
-    this._part = part;
-  }
-
-  get value(): IndexedListDirective<TItem, TValue> {
-    return this._directive;
-  }
-
-  get part(): ChildNodePart {
-    return this._part;
-  }
-
-  get startNode(): ChildNode {
-    return this._memoizedBindings[0]?.startNode ?? this._part.node;
-  }
-
-  get endNode(): ChildNode {
-    return this._part.node;
-  }
-
-  get bindings(): Binding<TValue>[] {
-    return this._pendingBindings;
-  }
-
-  connect(updater: Updater): void {
-    this._updateItems(updater);
-  }
-
-  bind(newValue: IndexedListDirective<TItem, TValue>, updater: Updater): void {
-    DEBUG: {
-      ensureDirective(IndexedListDirective, newValue);
-    }
-    const oldValue = this._directive;
-    if (oldValue.items !== newValue.items) {
-      this._directive = newValue;
-      this._updateItems(updater);
-    }
-  }
-
-  unbind(updater: Updater): void {
-    const { valueSelector } = this._directive;
-    this._directive = new IndexedListDirective([], valueSelector);
-    this._clearItems(updater);
-  }
-
-  disconnect(): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      this._pendingBindings[i]!.disconnect();
-    }
-  }
-
-  commit(): void {
-    this._memoizedBindings = this._pendingBindings;
-    this._dirty = false;
-  }
-
-  private _clearItems(updater: Updater): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      removeItem(this._pendingBindings[i]!, updater);
-    }
-
-    this._pendingBindings = [];
-
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
-  }
-
-  private _updateItems(updater: Updater): void {
-    const { items, valueSelector } = this._directive;
-    const oldBindings = this._pendingBindings;
-    const newBindings = new Array<Binding<TValue>>(items.length);
-
-    for (
-      let i = 0, l = Math.min(oldBindings.length, items.length);
-      i < l;
-      i++
-    ) {
-      const item = items[i]!;
-      const value = valueSelector(item, i);
-      const binding = this._pendingBindings[i]!;
-      binding.bind(value, updater);
-      newBindings[i] = binding;
-    }
-
-    for (let i = oldBindings.length, l = items.length; i < l; i++) {
-      const item = items[i]!;
-      const value = valueSelector(item, i);
-      newBindings[i] = insertItem(i, value, null, this._part, updater);
-    }
-
-    for (let i = items.length, l = oldBindings.length; i < l; i++) {
-      removeItem(oldBindings[i]!, updater);
-    }
-
-    this._pendingBindings = newBindings;
-
-    if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
-      this._dirty = true;
-    }
-  }
-}
-
-export class KeyedListDirective<TItem, TKey, TValue> implements Directive {
+export class OrderedListDirective<TItem, TKey, TValue> implements Directive {
   private readonly _items: TItem[];
 
   private readonly _keySelector: Selector<TItem, TKey>;
@@ -213,18 +62,18 @@ export class KeyedListDirective<TItem, TKey, TValue> implements Directive {
   [directiveTag](
     part: Part,
     _updater: Updater,
-  ): KeyedListBinding<TItem, TKey, TValue> {
+  ): OrderedListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('KeyedListDirective must be used in ChildNodePart.');
+      throw new Error('OrderedListDirective must be used in ChildNodePart.');
     }
-    return new KeyedListBinding(this, part);
+    return new OrderedListBinding(this, part);
   }
 }
 
-export class KeyedListBinding<TItem, TKey, TValue>
-  implements Binding<KeyedListDirective<TItem, TKey, TValue>>, Effect
+export class OrderedListBinding<TItem, TKey, TValue>
+  implements Binding<OrderedListDirective<TItem, TKey, TValue>>, Effect
 {
-  private _directive: KeyedListDirective<TItem, TKey, TValue>;
+  private _directive: OrderedListDirective<TItem, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -237,14 +86,14 @@ export class KeyedListBinding<TItem, TKey, TValue>
   private _dirty = false;
 
   constructor(
-    directive: KeyedListDirective<TItem, TKey, TValue>,
+    directive: OrderedListDirective<TItem, TKey, TValue>,
     part: ChildNodePart,
   ) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): KeyedListDirective<TItem, TKey, TValue> {
+  get value(): OrderedListDirective<TItem, TKey, TValue> {
     return this._directive;
   }
 
@@ -269,11 +118,11 @@ export class KeyedListBinding<TItem, TKey, TValue>
   }
 
   bind(
-    newValue: KeyedListDirective<TItem, TKey, TValue>,
+    newValue: OrderedListDirective<TItem, TKey, TValue>,
     updater: Updater,
   ): void {
     DEBUG: {
-      ensureDirective(KeyedListDirective, newValue);
+      ensureDirective(OrderedListDirective, newValue);
     }
     const oldValue = this._directive;
     if (oldValue.items !== newValue.items) {
@@ -284,7 +133,7 @@ export class KeyedListBinding<TItem, TKey, TValue>
 
   unbind(updater: Updater): void {
     const { keySelector, valueSelector } = this._directive;
-    this._directive = new KeyedListDirective([], keySelector, valueSelector);
+    this._directive = new OrderedListDirective([], keySelector, valueSelector);
     this._clearItems(updater);
   }
 
@@ -459,6 +308,157 @@ export class KeyedListBinding<TItem, TKey, TValue>
     } else {
       this._reconcileItems(updater);
     }
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
+  }
+}
+
+export class InPlaceListDirective<TItem, TValue> implements Directive {
+  private readonly _items: TItem[];
+
+  private readonly _valueSelector: Selector<TItem, TValue>;
+
+  constructor(items: TItem[], valueSelector: Selector<TItem, TValue>) {
+    this._items = items;
+    this._valueSelector = valueSelector;
+  }
+
+  get items(): TItem[] {
+    return this._items;
+  }
+
+  get valueSelector(): Selector<TItem, TValue> {
+    return this._valueSelector;
+  }
+
+  [directiveTag](
+    part: Part,
+    _updater: Updater,
+  ): InPlaceListBinding<TItem, TValue> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error('InPlaceListDirective must be used in ChildNodePart.');
+    }
+    return new InPlaceListBinding(this, part);
+  }
+}
+
+export class InPlaceListBinding<TItem, TValue>
+  implements Binding<InPlaceListDirective<TItem, TValue>>, Effect
+{
+  private _directive: InPlaceListDirective<TItem, TValue>;
+
+  private readonly _part: ChildNodePart;
+
+  private _pendingBindings: Binding<TValue>[] = [];
+
+  private _memoizedBindings: Binding<TValue>[] = [];
+
+  private _dirty = false;
+
+  constructor(
+    directive: InPlaceListDirective<TItem, TValue>,
+    part: ChildNodePart,
+  ) {
+    this._directive = directive;
+    this._part = part;
+  }
+
+  get value(): InPlaceListDirective<TItem, TValue> {
+    return this._directive;
+  }
+
+  get part(): ChildNodePart {
+    return this._part;
+  }
+
+  get startNode(): ChildNode {
+    return this._memoizedBindings[0]?.startNode ?? this._part.node;
+  }
+
+  get endNode(): ChildNode {
+    return this._part.node;
+  }
+
+  get bindings(): Binding<TValue>[] {
+    return this._pendingBindings;
+  }
+
+  connect(updater: Updater): void {
+    this._updateItems(updater);
+  }
+
+  bind(newValue: InPlaceListDirective<TItem, TValue>, updater: Updater): void {
+    DEBUG: {
+      ensureDirective(InPlaceListDirective, newValue);
+    }
+    const oldValue = this._directive;
+    if (oldValue.items !== newValue.items) {
+      this._directive = newValue;
+      this._updateItems(updater);
+    }
+  }
+
+  unbind(updater: Updater): void {
+    const { valueSelector } = this._directive;
+    this._directive = new InPlaceListDirective([], valueSelector);
+    this._clearItems(updater);
+  }
+
+  disconnect(): void {
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      this._pendingBindings[i]!.disconnect();
+    }
+  }
+
+  commit(): void {
+    this._memoizedBindings = this._pendingBindings;
+    this._dirty = false;
+  }
+
+  private _clearItems(updater: Updater): void {
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      removeItem(this._pendingBindings[i]!, updater);
+    }
+
+    this._pendingBindings = [];
+
+    if (!this._dirty) {
+      updater.enqueueMutationEffect(this);
+      this._dirty = true;
+    }
+  }
+
+  private _updateItems(updater: Updater): void {
+    const { items, valueSelector } = this._directive;
+    const oldBindings = this._pendingBindings;
+    const newBindings = new Array<Binding<TValue>>(items.length);
+
+    for (
+      let i = 0, l = Math.min(oldBindings.length, items.length);
+      i < l;
+      i++
+    ) {
+      const item = items[i]!;
+      const value = valueSelector(item, i);
+      const binding = this._pendingBindings[i]!;
+      binding.bind(value, updater);
+      newBindings[i] = binding;
+    }
+
+    for (let i = oldBindings.length, l = items.length; i < l; i++) {
+      const item = items[i]!;
+      const value = valueSelector(item, i);
+      newBindings[i] = insertItem(i, value, null, this._part, updater);
+    }
+
+    for (let i = items.length, l = oldBindings.length; i < l; i++) {
+      removeItem(oldBindings[i]!, updater);
+    }
+
+    this._pendingBindings = newBindings;
+
     if (!this._dirty) {
       updater.enqueueMutationEffect(this);
       this._dirty = true;
