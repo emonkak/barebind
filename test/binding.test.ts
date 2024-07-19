@@ -288,17 +288,45 @@ describe('EventBinding', () => {
           },
         );
       }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject or null.',
+        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
       );
       expect(() => {
-        new EventBinding(undefined, {
-          type: PartType.Event,
-          node: document.createElement('div'),
-          name: 'hello',
-        });
+        new EventBinding(
+          {},
+          {
+            type: PartType.Event,
+            node: document.createElement('div'),
+            name: 'hello',
+          },
+        );
       }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject or null.',
+        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
       );
+    });
+  });
+
+  describe('.connect()', () => {
+    it('should do nothing if the update is already scheduled', () => {
+      const listener = () => {};
+      const element = document.createElement('div');
+      const part = {
+        type: PartType.Event,
+        node: element,
+        name: 'click',
+      } as const;
+      const binding = new EventBinding(listener, part);
+      const updater = new SyncUpdater(new MockUpdateContext());
+
+      const enqueueMutationEffectSpy = vi.spyOn(
+        updater,
+        'enqueueMutationEffect',
+      );
+
+      binding.connect(updater);
+      binding.connect(updater);
+
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
     });
   });
 
@@ -418,61 +446,62 @@ describe('EventBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should unbind the active event listener when null is passed', () => {
+    it('should do nothing if the new and current listeners are a pair of null and undefined', () => {
       const element = document.createElement('div');
       const part = {
         type: PartType.Event,
         node: element,
         name: 'hello',
       } as const;
-      const listener = vi.fn();
-      const event = new CustomEvent('hello');
-      const binding = new EventBinding(listener, part);
+      const binding = new EventBinding(null, part);
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
-      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
-
       binding.connect(updater);
-      updater.flush();
-      element.dispatchEvent(event);
 
-      binding.bind(null, updater);
-      updater.flush();
-      element.dispatchEvent(event);
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
 
-      expect(addEventListenerSpy).toHaveBeenCalledOnce();
-      expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-      expect(listener).toHaveBeenCalledOnce();
-      expect(listener).toHaveBeenCalledWith(event);
+      binding.bind(undefined, updater);
+
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should do nothing if the update is already scheduled', () => {
-      const listener = () => {};
-      const element = document.createElement('div');
-      const part = {
-        type: PartType.Event,
-        node: element,
-        name: 'click',
-      } as const;
-      const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+    it.each([[null], [undefined]])(
+      'should unbind the active event listener when null or undefined is passed',
+      (noListener) => {
+        const element = document.createElement('div');
+        const part = {
+          type: PartType.Event,
+          node: element,
+          name: 'hello',
+        } as const;
+        const listener = vi.fn();
+        const event = new CustomEvent('hello');
+        const binding = new EventBinding(listener, part);
+        const updater = new SyncUpdater(new MockUpdateContext());
 
-      const enqueueMutationEffectSpy = vi.spyOn(
-        updater,
-        'enqueueMutationEffect',
-      );
+        const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
+        const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      binding.connect(updater);
+        binding.connect(updater);
+        updater.flush();
+        element.dispatchEvent(event);
 
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
-    });
+        binding.bind(noListener, updater);
+        updater.flush();
+        element.dispatchEvent(event);
 
-    it('should throw the error if the value other than an event listner or null is assigned', () => {
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+        expect(listener).toHaveBeenCalledOnce();
+        expect(listener).toHaveBeenCalledWith(event);
+      },
+    );
+
+    it('should throw the error if the value other than an event listner is assigned', () => {
       expect(() => {
         const binding = new EventBinding(null, {
           type: PartType.Event,
@@ -482,18 +511,7 @@ describe('EventBinding', () => {
         const updater = new SyncUpdater(new MockUpdateContext());
         binding.bind({}, updater);
       }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject or null.',
-      );
-      expect(() => {
-        const binding = new EventBinding(null, {
-          type: PartType.Event,
-          node: document.createElement('div'),
-          name: 'hello',
-        });
-        const updater = new SyncUpdater(new MockUpdateContext());
-        binding.bind(undefined, updater);
-      }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject or null.',
+        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
       );
     });
   });
