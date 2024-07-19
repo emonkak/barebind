@@ -125,6 +125,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       for (let i = 0, l = pendingBlocks.length; i < l; i++) {
         const block = pendingBlocks[i]!;
         if (!block.shouldUpdate()) {
+          block.cancelUpdate();
           continue;
         }
 

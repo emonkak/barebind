@@ -242,7 +242,7 @@ describe('ConcurrentUpdater', () => {
       });
     });
 
-    it('should not update the block on a microtask if shouldUpdate() returns false', async () => {
+    it('should cancel the update of the block if shouldUpdate() returns false', async () => {
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater(new MockUpdateContext(), {
         scheduler,
@@ -253,6 +253,7 @@ describe('ConcurrentUpdater', () => {
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
+      const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
 
       updater.enqueueBlock(block);
       updater.scheduleUpdate();
@@ -261,6 +262,7 @@ describe('ConcurrentUpdater', () => {
 
       expect(updateSpy).not.toHaveBeenCalled();
       expect(shouldUpdateSpy).toHaveBeenCalledOnce();
+      expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {

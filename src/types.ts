@@ -27,6 +27,7 @@ export interface Block<TContext = unknown> {
   get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
   shouldUpdate(): boolean;
+  cancelUpdate(): void;
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
   update(context: UpdateContext<TContext>, updater: Updater<TContext>): void;
 }

@@ -126,8 +126,8 @@ describe('ComponentBinding', () => {
     });
   });
 
-  describe('.update()', () => {
-    it('should abort the update if an update is not requested', () => {
+  describe('.cancelUpdate()', () => {
+    it('should cancel the scheduled update', () => {
       const template = new MockTemplate();
       const data = {};
       const directive = componentDirective(() => ({ template, data }), {});
@@ -139,13 +139,11 @@ describe('ComponentBinding', () => {
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
-      const hydrateSpy = vi.spyOn(template, 'hydrate');
+      binding.requestUpdate('user-visible', updater);
+      binding.cancelUpdate();
 
-      binding.update(state, updater);
-
-      expect(hydrateSpy).not.toHaveBeenCalled();
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-visible');
     });
   });
 
@@ -166,6 +164,8 @@ describe('ComponentBinding', () => {
 
       binding.requestUpdate('user-visible', updater);
 
+      expect(binding.dirty).toBe(true);
+      expect(binding.priority).toBe('user-visible');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
@@ -188,6 +188,8 @@ describe('ComponentBinding', () => {
       binding.requestUpdate('user-visible', updater);
       binding.requestUpdate('user-blocking', updater);
 
+      expect(binding.dirty).toBe(true);
+      expect(binding.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(2, binding);
@@ -212,6 +214,8 @@ describe('ComponentBinding', () => {
       binding.requestUpdate('user-blocking', updater);
       binding.requestUpdate('user-blocking', updater);
 
+      expect(binding.dirty).toBe(true);
+      expect(binding.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
@@ -243,14 +247,18 @@ describe('ComponentBinding', () => {
       binding.requestUpdate('user-blocking', updater);
       updater.flush();
 
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-blocking');
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(data, updater);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(unmountSpy).not.toHaveBeenCalled();
     });
+  });
 
-    it('should mark itself as dirty', () => {
+  describe('.update()', () => {
+    it('should abort the update if an update is not requested', () => {
       const template = new MockTemplate();
       const data = {};
       const directive = componentDirective(() => ({ template, data }), {});
@@ -262,13 +270,13 @@ describe('ComponentBinding', () => {
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
-      binding.requestUpdate('user-blocking', updater);
+      const hydrateSpy = vi.spyOn(template, 'hydrate');
 
-      expect(binding.dirty).toBe(true);
+      binding.update(state, updater);
 
-      updater.flush();
-
-      expect(binding.dirty).toBe(false);
+      expect(hydrateSpy).not.toHaveBeenCalled();
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
     });
   });
 

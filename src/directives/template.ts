@@ -73,9 +73,9 @@ export class TemplateBinding<TData, TContext>
 
   private _memoizedTemplate: Template<TData, TContext> | null = null;
 
-  private _priority: TaskPriority = 'background';
-
   private _flags = FLAG_NONE;
+
+  private _priority: TaskPriority = 'background';
 
   constructor(
     directive: TemplateDirective<TData, TContext>,
@@ -128,13 +128,17 @@ export class TemplateBinding<TData, TContext>
     return true;
   }
 
+  cancelUpdate(): void {
+    this._flags &= ~FLAG_UPDATING;
+  }
+
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void {
     if (
       !(this._flags & FLAG_UPDATING) ||
       comparePriorities(priority, this._priority) > 0
     ) {
-      this._priority = priority;
       this._flags |= FLAG_UPDATING;
+      this._priority = priority;
       updater.enqueueBlock(this);
       updater.scheduleUpdate();
     }
@@ -220,8 +224,8 @@ export class TemplateBinding<TData, TContext>
 
   private _forceUpdate(updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_UPDATING)) {
-      this._priority = this._parent?.priority ?? updater.getCurrentPriority();
       this._flags |= FLAG_UPDATING;
+      this._priority = this._parent?.priority ?? updater.getCurrentPriority();
       updater.enqueueBlock(this);
     }
 

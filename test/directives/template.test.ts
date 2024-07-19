@@ -110,6 +110,25 @@ describe('TemplateBinding', () => {
     });
   });
 
+  describe('.cancelUpdate()', () => {
+    it('should cancel the scheduled update', () => {
+      const directive = new TemplateDirective(new MockTemplate(), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateBinding(directive, part, null);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
+
+      binding.requestUpdate('user-visible', updater);
+      binding.cancelUpdate();
+
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-visible');
+    });
+  });
+
   describe('.requestUpdate()', () => {
     it('should schdule the update', () => {
       const directive = new TemplateDirective(new MockTemplate(), {});
@@ -124,6 +143,8 @@ describe('TemplateBinding', () => {
 
       binding.requestUpdate('user-visible', updater);
 
+      expect(binding.dirty).toBe(true);
+      expect(binding.priority).toBe('user-visible');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
@@ -143,6 +164,8 @@ describe('TemplateBinding', () => {
       binding.requestUpdate('user-visible', updater);
       binding.requestUpdate('user-blocking', updater);
 
+      expect(binding.dirty).toBe(true);
+      expect(binding.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(2, binding);
@@ -164,6 +187,8 @@ describe('TemplateBinding', () => {
       binding.requestUpdate('user-blocking', updater);
       binding.requestUpdate('user-blocking', updater);
 
+      expect(binding.dirty).toBe(true);
+      expect(binding.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
@@ -192,6 +217,8 @@ describe('TemplateBinding', () => {
       binding.requestUpdate('user-blocking', updater);
       updater.flush();
 
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-blocking');
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
       expect(mountSpy).toHaveBeenCalledOnce();

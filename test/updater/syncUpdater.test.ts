@@ -105,7 +105,7 @@ describe('SyncUpdater', () => {
       expect(updateSpy).toHaveBeenCalledOnce();
     });
 
-    it('should not update the block on a microtask if shouldUpdate() returns false ', async () => {
+    it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       const block = new MockBlock();
@@ -113,6 +113,7 @@ describe('SyncUpdater', () => {
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
+      const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
       updater.enqueueBlock(block);
@@ -124,6 +125,7 @@ describe('SyncUpdater', () => {
 
       expect(updateSpy).not.toHaveBeenCalled();
       expect(shouldUpdateSpy).toHaveBeenCalledOnce();
+      expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
     it('should commit effects on a microtask', async () => {

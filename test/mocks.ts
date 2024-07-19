@@ -76,6 +76,8 @@ export class MockBlock<TContext> implements Block<TContext> {
     return 'background';
   }
 
+  cancelUpdate(): void {}
+
   shouldUpdate(): boolean {
     return true;
   }
