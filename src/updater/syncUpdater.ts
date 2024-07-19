@@ -1,9 +1,10 @@
-import type {
-  Block,
-  Effect,
-  TaskPriority,
-  UpdateContext,
-  Updater,
+import {
+  type Block,
+  type Effect,
+  EffectPhase,
+  type TaskPriority,
+  type UpdateContext,
+  type Updater,
 } from '../types.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
@@ -105,19 +106,25 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
         if (this._pendingMutationEffects.length > 0) {
           const pendingMutationEffects = this._pendingMutationEffects;
           this._pendingMutationEffects = [];
-          this._context.flushEffects(pendingMutationEffects, 'mutation');
+          this._context.flushEffects(
+            pendingMutationEffects,
+            EffectPhase.Mutation,
+          );
         }
 
         if (this._pendingLayoutEffects.length > 0) {
           const pendingLayoutEffects = this._pendingLayoutEffects;
           this._pendingLayoutEffects = [];
-          this._context.flushEffects(pendingLayoutEffects, 'layout');
+          this._context.flushEffects(pendingLayoutEffects, EffectPhase.Layout);
         }
 
         if (this._pendingPassiveEffects.length > 0) {
           const pendingPassiveEffects = this._pendingPassiveEffects;
           this._pendingPassiveEffects = [];
-          this._context.flushEffects(pendingPassiveEffects, 'passive');
+          this._context.flushEffects(
+            pendingPassiveEffects,
+            EffectPhase.Passive,
+          );
         }
       } while (
         this._pendingBlocks.length > 0 ||

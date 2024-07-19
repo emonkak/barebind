@@ -12,7 +12,7 @@ export interface Updater<TContext = unknown> {
 }
 
 export interface UpdateContext<TContext> {
-  flushEffects(effects: Effect[], mode: EffectMode): void;
+  flushEffects(effects: Effect[], phase: EffectPhase): void;
   renderComponent<TProps, TData>(
     component: Component<TProps, TData, TContext>,
     props: TProps,
@@ -61,10 +61,14 @@ export interface TemplateResult<TData, TContext> {
 }
 
 export interface Effect {
-  commit(mode: EffectMode): void;
+  commit(phase: EffectPhase): void;
 }
 
-export type EffectMode = 'mutation' | 'layout' | 'passive';
+export enum EffectPhase {
+  Mutation,
+  Layout,
+  Passive,
+}
 
 export type Part =
   | AttributePart

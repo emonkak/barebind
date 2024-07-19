@@ -1,11 +1,12 @@
 import { Atom } from '../directives/signal.js';
 import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
-import type {
-  Block,
-  Effect,
-  TaskPriority,
-  UpdateContext,
-  Updater,
+import {
+  type Block,
+  type Effect,
+  EffectPhase,
+  type TaskPriority,
+  type UpdateContext,
+  type Updater,
 } from '../types.js';
 
 export interface ConcurrentUpdaterOptions {
@@ -189,8 +190,14 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            this._context.flushEffects(pendingMutationEffects, 'mutation');
-            this._context.flushEffects(pendingLayoutEffects, 'layout');
+            this._context.flushEffects(
+              pendingMutationEffects,
+              EffectPhase.Mutation,
+            );
+            this._context.flushEffects(
+              pendingLayoutEffects,
+              EffectPhase.Layout,
+            );
           } finally {
             this._taskCount.value--;
           }
@@ -210,7 +217,10 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            this._context.flushEffects(pendingPassiveEffects, 'passive');
+            this._context.flushEffects(
+              pendingPassiveEffects,
+              EffectPhase.Passive,
+            );
           } finally {
             this._taskCount.value--;
           }

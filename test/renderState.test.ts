@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { RenderContext } from '../src/renderContext.js';
 import { RenderState } from '../src/renderState.js';
-import { type Hook, HookType, PartType } from '../src/types.js';
+import { EffectPhase, type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, MockTemplate } from './mocks.js';
 
@@ -16,12 +16,12 @@ describe('RenderState', () => {
       const effect2 = {
         commit: vi.fn(),
       };
-      state.flushEffects([effect1, effect2], 'passive');
+      state.flushEffects([effect1, effect2], EffectPhase.Passive);
 
       expect(effect1.commit).toHaveBeenCalledOnce();
-      expect(effect1.commit).toHaveBeenCalledWith('passive');
+      expect(effect1.commit).toHaveBeenCalledWith(EffectPhase.Passive);
       expect(effect2.commit).toHaveBeenCalledOnce();
-      expect(effect2.commit).toHaveBeenCalledWith('passive');
+      expect(effect2.commit).toHaveBeenCalledWith(EffectPhase.Passive);
     });
   });
 

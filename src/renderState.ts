@@ -4,7 +4,7 @@ import type {
   Block,
   Component,
   Effect,
-  EffectMode,
+  EffectPhase,
   Hook,
   TemplateResult,
   UpdateContext,
@@ -30,9 +30,9 @@ export class RenderState implements UpdateContext<RenderContext> {
     this._defaultNamespace = new Map(defaultValues);
   }
 
-  flushEffects(effects: Effect[], mode: EffectMode): void {
+  flushEffects(effects: Effect[], phase: EffectPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(mode);
+      effects[i]!.commit(phase);
     }
   }
 

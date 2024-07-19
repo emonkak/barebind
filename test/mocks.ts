@@ -9,7 +9,7 @@ import type {
   ChildNodePart,
   Component,
   Effect,
-  EffectMode,
+  EffectPhase,
   Hook,
   Part,
   TaskPriority,
@@ -124,9 +124,9 @@ export type MockRenderContext = {
 };
 
 export class MockUpdateContext implements UpdateContext<MockRenderContext> {
-  flushEffects(effects: Effect[], mode: EffectMode): void {
+  flushEffects(effects: Effect[], phase: EffectPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(mode);
+      effects[i]!.commit(phase);
     }
   }
 
