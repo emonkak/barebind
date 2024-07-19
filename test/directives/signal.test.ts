@@ -100,11 +100,11 @@ describe('Atom', () => {
     });
   });
 
-  describe('.forceUpdate()', () => {
+  describe('.notifyUpdate()', () => {
     it('should increment the version', () => {
       const signal = new Atom(1);
 
-      signal.forceUpdate();
+      signal.notifyUpdate();
 
       expect(1).toBe(signal.value);
       expect(1).toBe(signal.version);

@@ -81,14 +81,14 @@ export class Atom<TValue> extends Signal<TValue> {
 
   set value(newValue: TValue) {
     this._value = newValue;
-    this.forceUpdate();
+    this.notifyUpdate();
   }
 
   get version(): number {
     return this._version;
   }
 
-  forceUpdate() {
+  notifyUpdate(): void {
     this._version += 1;
     for (
       let node = this._subscribers.front();
