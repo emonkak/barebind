@@ -45,7 +45,7 @@ describe('TemplateDirective', () => {
       expect(binding.endNode).toBe(part.node);
       expect(binding.dirty).toBe(false);
       expect(binding.parent).toBe(parent);
-      expect(binding.priority).toBe('background');
+      expect(binding.priority).toBe('user-blocking');
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
@@ -315,31 +315,6 @@ describe('TemplateBinding', () => {
       updater.flush();
 
       expect(getPrioritySpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
-      expect(binding.priority).toBe('user-visible');
-    });
-
-    it('should enqueue the binding as a block with the current priority', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
-
-      const getCurrentPrioritySpy = vi
-        .spyOn(updater, 'getCurrentPriority')
-        .mockReturnValue('user-visible');
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      binding.connect(updater);
-      updater.flush();
-
-      expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();

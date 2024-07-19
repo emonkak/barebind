@@ -75,7 +75,7 @@ export class TemplateBinding<TData, TContext>
 
   private _flags = FLAG_NONE;
 
-  private _priority: TaskPriority = 'background';
+  private _priority: TaskPriority = 'user-blocking';
 
   constructor(
     directive: TemplateDirective<TData, TContext>,
@@ -225,7 +225,9 @@ export class TemplateBinding<TData, TContext>
   private _forceUpdate(updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_UPDATING)) {
       this._flags |= FLAG_UPDATING;
-      this._priority = this._parent?.priority ?? updater.getCurrentPriority();
+      if (this._parent !== null) {
+        this._priority = this._parent.priority;
+      }
       updater.enqueueBlock(this);
     }
 
