@@ -3,8 +3,8 @@ export {
   type Directive,
   directiveTag,
   isDirective,
-  mount,
 } from './binding.js';
+export { mount } from './mount.js';
 export {
   type InitialState,
   type NewState,

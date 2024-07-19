@@ -9,7 +9,6 @@ import {
   directiveTag,
   ensureDirective,
   isDirective,
-  mount,
   resolveBinding,
 } from '../src/binding.js';
 import { type Part, PartType } from '../src/types.js';
@@ -1381,42 +1380,5 @@ describe('isDirective()', () => {
     expect(isDirective('')).toBe(false);
     expect(isDirective({})).toBe(false);
     expect(isDirective({ [directiveTag]: () => {} })).toBe(true);
-  });
-});
-
-describe('mount()', () => {
-  it('should mount element inside the container', async () => {
-    const directive = new MockDirective();
-    const container = document.createElement('div');
-    const updater = new SyncUpdater(new MockUpdateContext());
-    const directiveSpy = vi.spyOn(directive, directiveTag);
-    const isScheduledSpy = vi.spyOn(updater, 'isScheduled');
-    const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-    expect(mount(directive, container, updater)).toBeInstanceOf(MockBinding);
-    expect(directiveSpy).toHaveBeenCalledOnce();
-    expect(isScheduledSpy).toHaveBeenCalledOnce();
-    expect(scheduleUpdateSpy).toHaveBeenCalled();
-
-    await updater.waitForUpdate();
-
-    expect(container.innerHTML).toBe('<!---->');
-  });
-
-  it('should not schedule update if it is already scheduled', () => {
-    const directive = new MockDirective();
-    const container = document.createElement('div');
-    const updater = new SyncUpdater(new MockUpdateContext());
-    const directiveSpy = vi.spyOn(directive, directiveTag);
-    const isScheduledSpy = vi
-      .spyOn(updater, 'isScheduled')
-      .mockReturnValue(true);
-    const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-    expect(mount(directive, container, updater)).toBeInstanceOf(MockBinding);
-    expect(container.innerHTML).toBe('');
-    expect(directiveSpy).toHaveBeenCalledOnce();
-    expect(isScheduledSpy).toHaveBeenCalledOnce();
-    expect(scheduleUpdateSpy).not.toHaveBeenCalled();
   });
 });

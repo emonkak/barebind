@@ -478,33 +478,6 @@ export function isDirective(value: unknown): value is Directive<unknown> {
   return value !== null && typeof value === 'object' && directiveTag in value;
 }
 
-export function mount<TValue, TContext>(
-  value: TValue,
-  container: ChildNode,
-  updater: Updater<TContext>,
-): Binding<TValue> {
-  const part = {
-    type: PartType.ChildNode,
-    node: document.createComment(''),
-  } as const;
-
-  updater.enqueueMutationEffect({
-    commit() {
-      container.appendChild(part.node);
-    },
-  });
-
-  const binding = resolveBinding(value, part, updater);
-
-  binding.connect(updater);
-
-  if (!updater.isScheduled()) {
-    updater.scheduleUpdate();
-  }
-
-  return binding;
-}
-
 export function resolveBinding<TValue, TContext>(
   value: TValue,
   part: Part,
