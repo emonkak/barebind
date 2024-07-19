@@ -136,9 +136,7 @@ export class RenderContext {
   }
 
   use<TResult>(usable: Usable<TResult, RenderContext>): TResult {
-    return typeof usable === 'function'
-      ? usable(this)
-      : usable[usableTag](this);
+    return usableTag in usable ? usable[usableTag](this) : usable(this);
   }
 
   useCallback<TCallback extends Function>(

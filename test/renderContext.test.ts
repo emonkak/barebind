@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RenderContext, usableTag } from '../src/renderContext.js';
+import {
+  RenderContext,
+  type UsableObject,
+  usableTag,
+} from '../src/renderContext.js';
 import { RenderState } from '../src/renderState.js';
 import { ElementTemplate } from '../src/template/elementTemplate.js';
 import { TaggedTemplate } from '../src/template/taggedTemplate.js';
@@ -244,11 +248,12 @@ describe('Context', () => {
       const updater = new SyncUpdater(state);
 
       const context = new RenderContext(hooks, block, state, updater);
-      const usable = { [usableTag]: vi.fn(() => 'foo') };
+      const usable = new MockUsableObject('foo');
+      const usableSpy = vi.spyOn(usable, usableTag);
 
       expect(context.use(usable)).toBe('foo');
-      expect(usable[usableTag]).toHaveBeenCalledOnce();
-      expect(usable[usableTag]).toHaveBeenCalledWith(context);
+      expect(usableSpy).toHaveBeenCalledOnce();
+      expect(usableSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -908,3 +913,15 @@ describe('Context', () => {
     });
   });
 });
+
+class MockUsableObject<T> implements UsableObject<T, unknown> {
+  private _returnValue: T;
+
+  constructor(returnValue: T) {
+    this._returnValue = returnValue;
+  }
+
+  [usableTag](): T {
+    return this._returnValue;
+  }
+}
