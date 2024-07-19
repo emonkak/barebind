@@ -1,15 +1,13 @@
 import {
+  type AttributePart,
   type Binding,
   type Directive,
-  directiveTag,
-  ensureDirective,
-} from '../binding.js';
-import {
-  type AttributePart,
   type Effect,
   type Part,
   PartType,
   type Updater,
+  directiveTag,
+  ensureDirective,
 } from '../types.js';
 import { shallowEqual } from '../utils.js';
 

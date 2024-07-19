@@ -1,15 +1,17 @@
 import {
   type Binding,
   type Directive,
+  type Part,
+  type Updater,
   directiveTag,
   ensureDirective,
-} from '../binding.js';
-import type { Part, Updater } from '../types.js';
+} from '../types.js';
 
 export class NoValueDirective implements Directive {
   static instance: NoValueDirective = new NoValueDirective();
 
-  private constructor() {
+  /** @internal */
+  constructor() {
     if (NoValueDirective.instance !== undefined) {
       throw new Error(
         'NoValueDirective constructor cannot be called directly.',

@@ -6,7 +6,6 @@ import {
   EventBinding,
   NodeBinding,
   PropertyBinding,
-  directiveTag,
 } from '../../src/binding.js';
 import {
   TaggedTemplate,
@@ -14,7 +13,12 @@ import {
   getMarker,
   isValidMarker,
 } from '../../src/template/taggedTemplate.js';
-import { type Part, PartType, type Template } from '../../src/types.js';
+import {
+  type Part,
+  PartType,
+  type Template,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 

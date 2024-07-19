@@ -1,5 +1,6 @@
-import { type Binding, resolveBinding } from '../binding.js';
+import { resolveBinding } from '../binding.js';
 import {
+  type Binding,
   type ChildNodePart,
   PartType,
   type Template,

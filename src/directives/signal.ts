@@ -1,17 +1,18 @@
-import {
-  type Binding,
-  type Directive,
-  directiveTag,
-  ensureDirective,
-  resolveBinding,
-} from '../binding.js';
+import { resolveBinding } from '../binding.js';
 import { LinkedList } from '../linkedList.js';
 import {
   type RenderContext,
   type UsableObject,
   usableTag,
 } from '../renderContext.js';
-import type { Part, Updater } from '../types.js';
+import {
+  type Binding,
+  type Directive,
+  type Part,
+  type Updater,
+  directiveTag,
+  ensureDirective,
+} from '../types.js';
 
 export type Subscriber = () => void;
 
@@ -269,7 +270,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     this._subscription ??= this._subscribeSignal(this._signal, updater);
   }
 
-  bind(newValue: Signal<TValue>, updater: Updater) {
+  bind(newValue: Signal<TValue>, updater: Updater): void {
     DEBUG: {
       ensureDirective(Signal, newValue);
     }

@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { directiveTag } from '../../src/binding.js';
 import {
   NoValueBinding,
   NoValueDirective,
   noValue,
 } from '../../src/directives/noValue.js';
-import { PartType } from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateContext } from '../mocks.js';
 

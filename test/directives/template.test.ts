@@ -1,10 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { directiveTag } from '../../src/binding.js';
 import {
   TemplateBinding,
   TemplateDirective,
 } from '../../src/directives/template.js';
-import { PartType } from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,

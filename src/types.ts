@@ -1,3 +1,23 @@
+export const directiveTag = Symbol('Directive');
+
+export interface Binding<TValue, TContext = unknown> {
+  get value(): TValue;
+  get part(): Part;
+  get startNode(): ChildNode;
+  get endNode(): ChildNode;
+  connect(updater: Updater<TContext>): void;
+  bind(newValue: TValue, updater: Updater<TContext>): void;
+  unbind(updater: Updater<TContext>): void;
+  disconnect(): void;
+}
+
+export interface Directive<TContext = unknown> {
+  [directiveTag](
+    part: Part,
+    updater: Updater<TContext>,
+  ): Binding<ThisType<this>>;
+}
+
 export interface Updater<TContext = unknown> {
   getCurrentBlock(): Block<TContext> | null;
   getCurrentPriority(): TaskPriority;
@@ -169,3 +189,36 @@ export interface RefObject<T> {
 
 // Reexport TaskPriority in Scheduler API.
 export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
+
+export function ensureDirective<
+  TExpectedClass extends abstract new (
+    ...args: any[]
+  ) => Directive,
+>(
+  expectedClass: TExpectedClass,
+  actualValue: unknown,
+): asserts actualValue is TExpectedClass {
+  if (!(actualValue instanceof expectedClass)) {
+    throw new Error(
+      'A value must be a instance of "' +
+        expectedClass.name +
+        '", but got "' +
+        actualValue +
+        '". Consider using choice(), condition() or dynamic() directive instead.',
+    );
+  }
+}
+
+export function ensureNonDirective(value: unknown): void {
+  if (isDirective(value)) {
+    throw new Error(
+      'A value must not be a directive, but got "' +
+        value +
+        '". Consider using choice(), condition() or dynamic() directive instead.',
+    );
+  }
+}
+
+export function isDirective(value: unknown): value is Directive<unknown> {
+  return value !== null && typeof value === 'object' && directiveTag in value;
+}

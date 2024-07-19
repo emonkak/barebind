@@ -1,11 +1,12 @@
+import { resolveBinding } from '../binding.js';
 import {
   type Binding,
   type Directive,
+  type Part,
+  type Updater,
   directiveTag,
   ensureDirective,
-  resolveBinding,
-} from '../binding.js';
-import type { Part, Updater } from '../types.js';
+} from '../types.js';
 import { NoValueDirective } from './noValue.js';
 
 type FunctionOrValue<T> = T extends Function ? () => T : (() => T) | T;

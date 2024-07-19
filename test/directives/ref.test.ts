@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { directiveTag } from '../../src/binding.js';
 import { RefBinding, ref as refDirective } from '../../src/directives/ref.js';
-import { PartType } from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateContext } from '../mocks.js';
 

@@ -1,5 +1,6 @@
 import {
   type AttributePart,
+  type Binding,
   type Effect,
   type ElementPart,
   type EventPart,
@@ -7,27 +8,10 @@ import {
   PartType,
   type PropertyPart,
   type Updater,
+  directiveTag,
+  ensureNonDirective,
+  isDirective,
 } from './types.js';
-
-export const directiveTag = Symbol('Directive');
-
-export interface Binding<TValue, TContext = unknown> {
-  get value(): TValue;
-  get part(): Part;
-  get startNode(): ChildNode;
-  get endNode(): ChildNode;
-  connect(updater: Updater<TContext>): void;
-  bind(newValue: TValue, updater: Updater<TContext>): void;
-  unbind(updater: Updater<TContext>): void;
-  disconnect(): void;
-}
-
-export interface Directive<TContext = unknown> {
-  [directiveTag](
-    part: Part,
-    updater: Updater<TContext>,
-  ): Binding<ThisType<this>>;
-}
 
 export class AttributeBinding implements Binding<unknown>, Effect {
   private _value: unknown;
@@ -459,25 +443,6 @@ export class ElementBinding implements Binding<unknown> {
   }
 }
 
-export function ensureDirective<TExpectedClass extends Function>(
-  expectedClass: TExpectedClass,
-  actualValue: unknown,
-): asserts actualValue is TExpectedClass {
-  if (!(actualValue instanceof expectedClass)) {
-    throw new Error(
-      'A value must be a instance of "' +
-        expectedClass.name +
-        '", but got "' +
-        actualValue +
-        '". Consider using choice(), condition() or dynamic() directive instead.',
-    );
-  }
-}
-
-export function isDirective(value: unknown): value is Directive<unknown> {
-  return value !== null && typeof value === 'object' && directiveTag in value;
-}
-
 export function resolveBinding<TValue, TContext>(
   value: TValue,
   part: Part,
@@ -516,16 +481,6 @@ function ensureEventListener(
   if (!(value == null || isEventListener(value))) {
     throw new Error(
       'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
-    );
-  }
-}
-
-function ensureNonDirective(value: unknown): void {
-  if (isDirective(value)) {
-    throw new Error(
-      'A value must not be a directive, but got "' +
-        value +
-        '". Consider using choice(), condition() or dynamic() directive instead.',
     );
   }
 }

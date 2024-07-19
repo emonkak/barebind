@@ -6,12 +6,9 @@ import {
   EventBinding,
   NodeBinding,
   PropertyBinding,
-  directiveTag,
-  ensureDirective,
-  isDirective,
   resolveBinding,
 } from '../src/binding.js';
-import { type Part, PartType } from '../src/types.js';
+import { type Part, PartType, directiveTag } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from './mocks.js';
 
@@ -1244,18 +1241,6 @@ describe('ElementBinding', () => {
   });
 });
 
-describe('ensureDirective', () => {
-  it('should throw an error if the value is not instance of the expected class', () => {
-    expect(() => ensureDirective(MockDirective, null)).toThrow(
-      'A value must be a instance of "MockDirective", but got "null".',
-    );
-  });
-
-  it('should do nothing if the value is instance of the expected class', () => {
-    ensureDirective(MockDirective, new MockDirective());
-  });
-});
-
 describe('resolveBinding()', () => {
   it('should perform the value if it is a directive', () => {
     const part = {
@@ -1371,14 +1356,5 @@ describe('resolveBinding()', () => {
     expect(binding.value).toBe(props);
     expect(updater.isPending()).toBe(false);
     expect(updater.isScheduled()).toBe(false);
-  });
-});
-
-describe('isDirective()', () => {
-  it('should return true if the value is directive', () => {
-    expect(isDirective(null)).toBe(false);
-    expect(isDirective('')).toBe(false);
-    expect(isDirective({})).toBe(false);
-    expect(isDirective({ [directiveTag]: () => {} })).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NodeBinding, directiveTag } from '../../src/binding.js';
+import { NodeBinding } from '../../src/binding.js';
 import { NoValueDirective } from '../../src/directives.js';
 import {
   ConditionBinding,
@@ -8,7 +8,7 @@ import {
   unless,
   when,
 } from '../../src/directives/condition.js';
-import { PartType } from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 

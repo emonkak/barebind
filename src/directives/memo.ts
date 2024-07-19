@@ -1,11 +1,12 @@
+import { resolveBinding } from '../binding.js';
 import {
   type Binding,
   type Directive,
+  type Part,
+  type Updater,
   directiveTag,
   ensureDirective,
-  resolveBinding,
-} from '../binding.js';
-import type { Part, Updater } from '../types.js';
+} from '../types.js';
 import { dependenciesAreChanged } from '../utils.js';
 
 export function memo<T>(

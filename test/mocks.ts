@@ -1,23 +1,25 @@
-import { type Binding, type Directive, directiveTag } from '../src/binding.js';
 import type {
   RequestCallbackOptions,
   Scheduler,
   YieldToMainOptions,
 } from '../src/scheduler.js';
-import type {
-  Block,
-  ChildNodePart,
-  Component,
-  Effect,
-  EffectPhase,
-  Hook,
-  Part,
-  TaskPriority,
-  Template,
-  TemplateFragment,
-  TemplateResult,
-  UpdateContext,
-  Updater,
+import {
+  type Binding,
+  type Block,
+  type ChildNodePart,
+  type Component,
+  type Directive,
+  type Effect,
+  type EffectPhase,
+  type Hook,
+  type Part,
+  type TaskPriority,
+  type Template,
+  type TemplateFragment,
+  type TemplateResult,
+  type UpdateContext,
+  type Updater,
+  directiveTag,
 } from '../src/types.js';
 
 export class MockBinding implements Binding<MockDirective> {

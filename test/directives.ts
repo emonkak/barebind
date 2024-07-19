@@ -1,5 +1,11 @@
-import { type Binding, type Directive, directiveTag } from '../src/binding.js';
-import type { Effect, Part, Updater } from '../src/types.js';
+import {
+  type Binding,
+  type Directive,
+  type Effect,
+  type Part,
+  type Updater,
+  directiveTag,
+} from '../src/types.js';
 
 export function text(content: string): TextDirective {
   return new TextDirective(content);

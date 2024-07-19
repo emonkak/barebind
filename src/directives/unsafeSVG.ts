@@ -1,14 +1,12 @@
 import {
   type Binding,
-  type Directive,
-  directiveTag,
-  ensureDirective,
-} from '../binding.js';
-import {
   type ChildNodePart,
+  type Directive,
   type Part,
   PartType,
   type Updater,
+  directiveTag,
+  ensureDirective,
 } from '../types.js';
 
 export function unsafeSVG(content: string): UnsafeSVGDirective {

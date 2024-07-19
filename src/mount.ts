@@ -1,5 +1,11 @@
-import { type Binding, resolveBinding } from './binding.js';
-import { type Effect, type Part, PartType, type Updater } from './types.js';
+import { resolveBinding } from './binding.js';
+import {
+  type Binding,
+  type Effect,
+  type Part,
+  PartType,
+  type Updater,
+} from './types.js';
 
 export function mount<TValue, TContext>(
   value: TValue,

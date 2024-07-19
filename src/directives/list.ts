@@ -1,16 +1,14 @@
+import { resolveBinding } from '../binding.js';
 import {
   type Binding,
-  type Directive,
-  directiveTag,
-  ensureDirective,
-  resolveBinding,
-} from '../binding.js';
-import {
   type ChildNodePart,
+  type Directive,
   type Effect,
   type Part,
   PartType,
   type Updater,
+  directiveTag,
+  ensureDirective,
 } from '../types.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;

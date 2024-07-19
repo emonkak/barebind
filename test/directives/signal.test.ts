@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NodeBinding, directiveTag } from '../../src/binding.js';
+import { NodeBinding } from '../../src/binding.js';
 import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
 import { RenderContext, usableTag } from '../../src/renderContext.js';
 import { RenderState } from '../../src/renderState.js';
-import { type Hook, PartType } from '../../src/types.js';
+import { type Hook, PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock } from '.././mocks.js';
 

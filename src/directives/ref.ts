@@ -1,16 +1,14 @@
 import {
+  type AttributePart,
   type Binding,
   type Directive,
-  directiveTag,
-  ensureDirective,
-} from '../binding.js';
-import {
-  type AttributePart,
   type Effect,
   type Part,
   PartType,
   type Ref,
   type Updater,
+  directiveTag,
+  ensureDirective,
 } from '../types.js';
 
 type ElementRef = Ref<Element | null>;

@@ -1,9 +1,3 @@
-export {
-  type Binding,
-  type Directive,
-  directiveTag,
-  isDirective,
-} from './binding.js';
 export { mount } from './mount.js';
 export {
   type InitialState,
@@ -33,24 +27,5 @@ export {
   ConcurrentUpdater,
 } from './updater/concurrentUpdater.js';
 export { SyncUpdater } from './updater/syncUpdater.js';
-export {
-  type AttributePart,
-  type ChildNodePart,
-  type Cleanup,
-  type Block,
-  type Effect,
-  type EffectCallback,
-  type ElementPart,
-  type EventPart,
-  type NodePart,
-  type Part,
-  type PropertyPart,
-  type Ref,
-  type RefCallback,
-  type RefObject,
-  type UpdateContext,
-  type Template,
-  type TemplateFragment,
-  type Updater,
-  PartType,
-} from './types.js';
+
+export * from './types.js';

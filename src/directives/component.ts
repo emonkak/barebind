@@ -1,14 +1,10 @@
-import {
-  type Binding,
-  type Directive,
-  directiveTag,
-  ensureDirective,
-} from '../binding.js';
 import { comparePriorities } from '../scheduler.js';
 import {
+  type Binding,
   type Block,
   type ChildNodePart,
   type Component,
+  type Directive,
   type Effect,
   type Hook,
   HookType,
@@ -19,6 +15,8 @@ import {
   type TemplateFragment,
   type UpdateContext,
   type Updater,
+  directiveTag,
+  ensureDirective,
 } from '../types.js';
 
 const FLAG_NONE = 0;
