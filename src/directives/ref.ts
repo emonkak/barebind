@@ -119,7 +119,7 @@ export class RefBinding implements Binding<RefDirective>, Effect {
 
   private _requestEffect(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueuePassiveEffect(this);
+      updater.enqueueLayoutEffect(this);
       this._dirty = true;
     }
   }

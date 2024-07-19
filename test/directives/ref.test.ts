@@ -96,13 +96,13 @@ describe('RefBinding', () => {
       } as const;
       const binding = new RefBinding(directive, part);
       const updater = new SyncUpdater(new MockUpdateContext());
-      const enqueuePassiveEffectSpy = vi.spyOn(updater, 'enqueuePassiveEffect');
+      const enqueueLayoutEffectSpy = vi.spyOn(updater, 'enqueueLayoutEffect');
 
       binding.connect(updater);
       binding.connect(updater);
 
-      expect(enqueuePassiveEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueuePassiveEffectSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueLayoutEffectSpy).toHaveBeenCalledOnce();
+      expect(enqueueLayoutEffectSpy).toHaveBeenCalledWith(binding);
     });
   });
 
