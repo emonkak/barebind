@@ -124,11 +124,8 @@ export class OrderedListBinding<TItem, TKey, TValue>
     DEBUG: {
       ensureDirective(OrderedListDirective, newValue);
     }
-    const oldValue = this._directive;
-    if (oldValue.items !== newValue.items) {
-      this._directive = newValue;
-      this._updateItems(updater);
-    }
+    this._directive = newValue;
+    this._updateItems(updater);
   }
 
   unbind(updater: Updater): void {

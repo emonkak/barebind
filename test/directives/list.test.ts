@@ -260,34 +260,6 @@ describe('OrderedListBinding', () => {
         }
       }
     });
-
-    it('should do nothing if the items is the same as previous ones', () => {
-      const items = ['foo', 'bar', 'baz'];
-      const directive1 = orderedList(
-        items,
-        (item) => item,
-        (item) => item,
-      );
-      const directive2 = orderedList(
-        items,
-        (item) => item,
-        (item) => item,
-      );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
-      const binding = new OrderedListBinding(directive1, part);
-
-      binding.connect(updater);
-      updater.flush();
-
-      binding.bind(directive2, updater);
-
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
   });
 
   describe('.unbind()', () => {
