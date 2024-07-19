@@ -477,6 +477,50 @@ describe('TemplateBinding', () => {
       expect(binding.endNode).toBe(part.node);
     });
 
+    it('should remount the fragment if it is unmounted', () => {
+      const directive = new TemplateDirective(new MockTemplate(), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateBinding(directive, part, null);
+      const updater = new SyncUpdater(new MockUpdateContext());
+      const fragment = new MockTemplateFragment();
+      const startNode = document.createComment('');
+
+      const hydrateSpy = vi
+        .spyOn(directive.template, 'hydrate')
+        .mockReturnValue(fragment);
+      const attachSpy = vi.spyOn(fragment, 'attach');
+      const detachSpy = vi.spyOn(fragment, 'detach');
+      const mountSpy = vi.spyOn(fragment, 'mount');
+      const unmountSpy = vi.spyOn(fragment, 'unmount');
+      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
+
+      binding.connect(updater);
+      updater.flush();
+
+      binding.unbind(updater);
+      updater.flush();
+
+      binding.bind(directive, updater);
+      updater.flush();
+
+      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(attachSpy).toHaveBeenCalledOnce();
+      expect(attachSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(detachSpy).toHaveBeenCalledOnce();
+      expect(detachSpy).toHaveBeenCalledWith(updater);
+      expect(mountSpy).toHaveBeenCalledTimes(2);
+      expect(mountSpy).toHaveBeenNthCalledWith(1, part);
+      expect(mountSpy).toHaveBeenNthCalledWith(2, part);
+      expect(unmountSpy).toHaveBeenCalledOnce();
+      expect(unmountSpy).toHaveBeenCalledWith(part);
+      expect(binding.startNode).toBe(startNode);
+      expect(binding.endNode).toBe(part.node);
+    });
+
     it('should request the mutation only once', () => {
       const directive1 = new TemplateDirective(new MockTemplate(1), {});
       const directive2 = new TemplateDirective(new MockTemplate(2), {});

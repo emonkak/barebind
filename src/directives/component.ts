@@ -185,6 +185,11 @@ export class ComponentBinding<TProps, TData, TContext>
 
     if (this._pendingFragment !== null) {
       if (this._memoizedTemplate!.isSameTemplate(template)) {
+        // If fragment is changed, we must remount it.
+        if (this._memoizedFragment !== this._pendingFragment) {
+          this._requestMutation(updater);
+        }
+
         this._pendingFragment.attach(data, updater);
       } else {
         // The template has been changed, so first, we detach data from the current

@@ -638,6 +638,53 @@ describe('ComponentBinding', () => {
       expect(binding.endNode).toBe(part.node);
     });
 
+    it('should remount the fragment if it is unmounted', () => {
+      const template = new MockTemplate();
+      const data = {};
+      const directive = componentDirective(() => ({ template, data }), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new ComponentBinding(directive, part, null);
+      const state = new MockUpdateContext();
+      const updater = new SyncUpdater(state);
+      const fragment = new MockTemplateFragment();
+      const startNode = document.createComment('');
+
+      const hydrateSpy = vi
+        .spyOn(template, 'hydrate')
+        .mockReturnValue(fragment);
+      const attachSpy = vi.spyOn(fragment, 'attach');
+      const detachSpy = vi.spyOn(fragment, 'detach');
+      const mountSpy = vi.spyOn(fragment, 'mount');
+      const unmountSpy = vi.spyOn(fragment, 'unmount');
+      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
+
+      binding.connect(updater);
+      updater.flush();
+
+      binding.unbind(updater);
+      updater.flush();
+
+      binding.bind(directive, updater);
+      updater.flush();
+
+      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(hydrateSpy).toHaveBeenCalledWith(data, updater);
+      expect(attachSpy).toHaveBeenCalledOnce();
+      expect(attachSpy).toHaveBeenCalledWith(data, updater);
+      expect(detachSpy).toHaveBeenCalledOnce();
+      expect(detachSpy).toHaveBeenCalledWith(updater);
+      expect(mountSpy).toHaveBeenCalledTimes(2);
+      expect(mountSpy).toHaveBeenNthCalledWith(1, part);
+      expect(mountSpy).toHaveBeenNthCalledWith(2, part);
+      expect(unmountSpy).toHaveBeenCalledOnce();
+      expect(unmountSpy).toHaveBeenCalledWith(part);
+      expect(binding.startNode).toBe(startNode);
+      expect(binding.endNode).toBe(part.node);
+    });
+
     it('should reuse the cached fragment', () => {
       const template1 = new MockTemplate(1);
       const template2 = new MockTemplate(2);
