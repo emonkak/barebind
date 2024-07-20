@@ -319,66 +319,6 @@ describe('Projected', () => {
   });
 });
 
-describe('Scanned', () => {
-  describe('.value', () => {
-    it('should apply the accumulator to each values', () => {
-      const signal = new Atom(1);
-      const scannedSignal = signal.scan((result, n) => result + n, 0);
-
-      expect(scannedSignal.value).toBe(1);
-      expect(scannedSignal.version).toBe(0);
-
-      signal.value++;
-
-      expect(scannedSignal.value).toBe(3);
-      expect(scannedSignal.version).toBe(1);
-
-      signal.value++;
-
-      expect(scannedSignal.value).toBe(6);
-      expect(scannedSignal.version).toBe(2);
-    });
-  });
-
-  describe('.subscribe()', () => {
-    it('should invoke the callback on update', () => {
-      const signal = new Atom(1);
-      const scannedSignal = signal.scan((result, n) => result + n, 0);
-      const callback = vi.fn();
-
-      scannedSignal.subscribe(callback);
-      expect(callback).toHaveBeenCalledTimes(0);
-
-      signal.value++;
-      expect(callback).toHaveBeenCalledTimes(1);
-
-      signal.value++;
-      expect(callback).toHaveBeenCalledTimes(2);
-
-      signal.value++;
-      expect(callback).toHaveBeenCalledTimes(3);
-    });
-
-    it('should not invoke the unsubscribed callback', () => {
-      const signal = new Atom(1);
-      const scannedSignal = signal.scan((result, n) => result + n, 0);
-      const callback = vi.fn();
-
-      scannedSignal.subscribe(callback)();
-      expect(callback).not.toHaveBeenCalled();
-
-      signal.value++;
-      expect(callback).not.toHaveBeenCalled();
-
-      signal.value++;
-      expect(callback).not.toHaveBeenCalled();
-
-      signal.value++;
-      expect(callback).not.toHaveBeenCalled();
-    });
-  });
-});
-
 describe('SignalBinding', () => {
   describe('.constructor', () => {
     it('should construct a new SignalBinding', () => {

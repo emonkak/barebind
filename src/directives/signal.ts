@@ -39,13 +39,6 @@ export abstract class Signal<TValue>
     return new Projected(this, selector);
   }
 
-  scan<TResult>(
-    accumulator: (result: TResult, value: TValue) => TResult,
-    seed: TResult,
-  ): Scanned<TValue, TResult> {
-    return new Scanned(this, accumulator, seed);
-  }
-
   toJSON(): TValue {
     return this.value;
   }
@@ -185,49 +178,6 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
   get value(): TResult {
     const selector = this._selector;
     return selector(this._signal.value)!;
-  }
-
-  get version(): number {
-    return this._signal.version;
-  }
-
-  subscribe(subscriber: Subscriber): Subscription {
-    return this._signal.subscribe(subscriber);
-  }
-}
-
-export class Scanned<TValue, TResult> extends Signal<TResult> {
-  private readonly _signal: Signal<TValue>;
-
-  private readonly _accumulator: (result: TResult, value: TValue) => TResult;
-
-  private _memoizedResult: TResult;
-
-  private _memoizedVersion: number;
-
-  constructor(
-    signal: Signal<TValue>,
-    accumulator: (result: TResult, value: TValue) => TResult,
-    seed: TResult,
-  ) {
-    super();
-    this._signal = signal;
-    this._accumulator = accumulator;
-    this._memoizedResult = accumulator(seed, signal.value);
-    this._memoizedVersion = signal.version;
-  }
-
-  get value(): TResult {
-    const { version } = this._signal;
-    if (this._memoizedVersion < version) {
-      const accumulator = this._accumulator;
-      this._memoizedResult = accumulator(
-        this._memoizedResult,
-        this._signal.value,
-      );
-      this._memoizedVersion = version;
-    }
-    return this._memoizedResult;
   }
 
   get version(): number {
