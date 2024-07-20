@@ -14,14 +14,14 @@ export function unsafeHTML(content: string): UnsafeHTML {
 }
 
 export class UnsafeHTML implements Directive {
-  private readonly _unsafeContent: string;
+  private readonly _content: string;
 
-  constructor(unsafeContent: string) {
-    this._unsafeContent = unsafeContent;
+  constructor(content: string) {
+    this._content = content;
   }
 
-  get unsafeContent(): string {
-    return this._unsafeContent;
+  get content(): string {
+    return this._content;
   }
 
   [directiveTag](part: Part, _updater: Updater): UnsafeHTMLBinding {
@@ -71,15 +71,15 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
       ensureDirective(UnsafeHTML, newValue);
     }
     const oldValue = this._directive;
-    if (oldValue.unsafeContent !== newValue.unsafeContent) {
+    if (oldValue.content !== newValue.content) {
       this._directive = newValue;
       this._requestMutation(updater);
     }
   }
 
   unbind(updater: Updater): void {
-    const { unsafeContent } = this._directive;
-    if (unsafeContent !== '') {
+    const { content } = this._directive;
+    if (content !== '') {
       this._directive = new UnsafeHTML('');
       this.connect(updater);
     }
@@ -88,17 +88,17 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
   disconnect(): void {}
 
   commit(): void {
-    const { unsafeContent } = this._directive;
+    const { content } = this._directive;
 
     for (let i = 0, l = this._childNodes.length; i < l; i++) {
       this._childNodes[i]!.remove();
     }
 
-    if (unsafeContent !== '') {
+    if (content !== '') {
       const template = document.createElement('template');
       const reference = this._part.node;
 
-      template.innerHTML = unsafeContent;
+      template.innerHTML = content;
       this._childNodes = [...template.content.childNodes];
       reference.before(template.content);
     } else {

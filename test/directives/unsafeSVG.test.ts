@@ -8,10 +8,10 @@ import { UnsafeSVGBinding, unsafeSVG } from '../../src/directives/unsafeSVG.js';
 
 describe('unsafeSVG()', () => {
   it('should construct a new UnsafeSVG', () => {
-    const unsafeContent = '<circle cx="0" cy="0" r="10" />';
-    const directive = unsafeSVG(unsafeContent);
+    const content = '<circle cx="0" cy="0" r="10" />';
+    const directive = unsafeSVG(content);
 
-    expect(directive.unsafeContent).toBe(unsafeContent);
+    expect(directive.content).toBe(content);
   });
 });
 
@@ -186,7 +186,7 @@ describe('UnsafeSVGBinding', () => {
 
     it('should skip an update if the styles are the same as the previous one', () => {
       const directive1 = unsafeSVG('<circle cx="0" cy="0" r="10" />');
-      const directive2 = unsafeSVG(directive1.unsafeContent);
+      const directive2 = unsafeSVG(directive1.content);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

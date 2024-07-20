@@ -11,10 +11,10 @@ import {
 
 describe('unsafeHTML()', () => {
   it('should construct a new UnsafeHTML', () => {
-    const unsafeContent = '<span>foo</span>bar';
-    const directive = unsafeHTML(unsafeContent);
+    const content = '<span>foo</span>bar';
+    const directive = unsafeHTML(content);
 
-    expect(directive.unsafeContent).toBe(unsafeContent);
+    expect(directive.content).toBe(content);
   });
 });
 
@@ -164,7 +164,7 @@ describe('UnsafeHTMLBinding', () => {
 
     it('should skip an update if the styles are the same as the previous one', () => {
       const directive1 = unsafeHTML('<span>foo</span>bar');
-      const directive2 = unsafeHTML(directive1.unsafeContent);
+      const directive2 = unsafeHTML(directive1.content);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
