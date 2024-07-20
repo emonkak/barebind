@@ -1,5 +1,5 @@
-import type { RenderContext } from '@emonkak/ebiten';
-import { ref } from '@emonkak/ebiten/directives.js';
+import type { RenderContext } from '@emonkak/ebit';
+import { ref } from '@emonkak/ebit/directives.js';
 
 export interface TodoInputProps {
   defaultValue?: string;

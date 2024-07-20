@@ -1,5 +1,5 @@
-import { ConcurrentUpdater, RenderState, mount } from '@emonkak/ebiten';
-import { component } from '@emonkak/ebiten/directives.js';
+import { ConcurrentUpdater, RenderState, mount } from '@emonkak/ebit';
+import { component } from '@emonkak/ebit/directives.js';
 
 import { App } from './App.js';
 import { AppState } from './state.js';

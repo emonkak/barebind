@@ -29,13 +29,13 @@ importers:
 
   examples/counter:
     dependencies:
-      '@emonkak/ebiten':
+      '@emonkak/ebit':
         specifier: ../../
         version: link:../..
 
   examples/todomvc:
     dependencies:
-      '@emonkak/ebiten':
+      '@emonkak/ebit':
         specifier: ../../
         version: link:../..
       todomvc-app-css:

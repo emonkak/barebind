@@ -1,5 +1,5 @@
-import { type RenderContext, usableTag } from '@emonkak/ebiten';
-import { Atom, Computed, type Signal } from '@emonkak/ebiten/directives.js';
+import { type RenderContext, usableTag } from '@emonkak/ebit';
+import { Atom, Computed, type Signal } from '@emonkak/ebit/directives.js';
 
 export interface Todo {
   id: string;

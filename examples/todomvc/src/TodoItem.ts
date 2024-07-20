@@ -1,10 +1,10 @@
-import type { RenderContext } from '@emonkak/ebiten';
+import type { RenderContext } from '@emonkak/ebit';
 import {
   type Atom,
   classMap,
   component,
   condition,
-} from '@emonkak/ebiten/directives.js';
+} from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
 import { AppState, type Todo } from './state.js';

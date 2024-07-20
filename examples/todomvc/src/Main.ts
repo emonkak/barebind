@@ -1,10 +1,10 @@
-import type { RenderContext } from '@emonkak/ebiten';
+import type { RenderContext } from '@emonkak/ebit';
 import {
   component,
   memo,
   orderedList,
   when,
-} from '@emonkak/ebiten/directives.js';
+} from '@emonkak/ebit/directives.js';
 
 import { TodoItem } from './TodoItem.js';
 import { AppState } from './state.js';

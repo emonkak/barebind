@@ -4,7 +4,7 @@ import {
   RenderState,
   type TemplateResult,
   mount,
-} from '@emonkak/ebiten';
+} from '@emonkak/ebit';
 import {
   Atom,
   type Signal,
@@ -19,7 +19,7 @@ import {
   unsafeHTML,
   unsafeSVG,
   when,
-} from '@emonkak/ebiten/directives.js';
+} from '@emonkak/ebit/directives.js';
 
 const counterSignal = new Atom(0);
 

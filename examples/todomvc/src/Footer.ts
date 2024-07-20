@@ -1,5 +1,5 @@
-import type { RenderContext } from '@emonkak/ebiten';
-import { classMap } from '@emonkak/ebiten/directives.js';
+import type { RenderContext } from '@emonkak/ebit';
+import { classMap } from '@emonkak/ebit/directives.js';
 
 import { AppState, TodoFilter } from './state.js';
 

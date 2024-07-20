@@ -1,5 +1,5 @@
-import type { RenderContext } from '@emonkak/ebiten';
-import { component } from '@emonkak/ebiten/directives.js';
+import type { RenderContext } from '@emonkak/ebit';
+import { component } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
 import { AppState } from './state.js';
