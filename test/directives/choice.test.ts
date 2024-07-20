@@ -20,8 +20,8 @@ describe('choice()', () => {
 describe('Choice', () => {
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
-      expect(choice('foo', (key) => key)[hintTag]).toBe('Choice(foo)');
-      expect(choice('bar', (key) => key)[hintTag]).toBe('Choice(bar)');
+      expect(choice('foo', (key) => key)[hintTag]).toBe('Choice(foo, foo)');
+      expect(choice('bar', (key) => key)[hintTag]).toBe('Choice(bar, bar)');
     });
   });
 

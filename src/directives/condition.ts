@@ -67,6 +67,8 @@ export class Condition<TTrue, TFalse> implements Directive {
   get [hintTag](): string {
     return (
       'Condition(' +
+      this._condition +
+      ', ' +
       nameOf(
         this._condition
           ? evalBranch(this._trueBranch)

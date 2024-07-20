@@ -36,7 +36,13 @@ export class Choice<TKey, TValue> implements Directive {
   }
 
   get [hintTag](): string {
-    return 'Choice(' + nameOf(this._factory(this._key)) + ')';
+    return (
+      'Choice(' +
+      nameOf(this._key) +
+      ', ' +
+      nameOf(this._factory(this._key)) +
+      ')'
+    );
   }
 
   [directiveTag](part: Part, updater: Updater): ChoiceBinding<TKey, TValue> {

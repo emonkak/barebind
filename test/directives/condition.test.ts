@@ -58,14 +58,14 @@ describe('Condition', () => {
           () => 'foo',
           () => 'bar',
         )[hintTag],
-      ).toBe('Condition(foo)');
+      ).toBe('Condition(true, foo)');
       expect(
         conditionDirective(
           false,
           () => 'foo',
           () => 'bar',
         )[hintTag],
-      ).toBe('Condition(bar)');
+      ).toBe('Condition(false, bar)');
     });
   });
 
