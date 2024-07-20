@@ -11,14 +11,12 @@ import type {
   Updater,
 } from './types.js';
 
-type Namespace = Map<unknown, unknown>;
+type Scope = Map<unknown, unknown>;
 
 export class RenderState implements UpdateContext<RenderContext> {
-  private readonly _marker: string = getMarker();
+  private readonly _rootScope: Scope;
 
-  private readonly _defaultNamespace: Namespace;
-
-  private readonly _blockNamespaces: WeakMap<Block<RenderContext>, Namespace> =
+  private readonly _blockScopes: WeakMap<Block<RenderContext>, Scope> =
     new WeakMap();
 
   private readonly _cachedTemplates: WeakMap<
@@ -26,8 +24,10 @@ export class RenderState implements UpdateContext<RenderContext> {
     TaggedTemplate
   > = new WeakMap();
 
-  constructor(defaultValues: Iterable<[unknown, unknown]> = []) {
-    this._defaultNamespace = new Map(defaultValues);
+  private readonly _marker: string = getMarker();
+
+  constructor(constants: Iterable<[unknown, unknown]> = []) {
+    this._rootScope = new Map(constants);
   }
 
   flushEffects(effects: Effect[], phase: EffectPhase): void {
@@ -67,12 +67,12 @@ export class RenderState implements UpdateContext<RenderContext> {
   getScopedValue(block: Block<RenderContext>, key: unknown): unknown {
     let current: Block<RenderContext> | null = block;
     do {
-      const value = this._blockNamespaces.get(current)?.get(key);
+      const value = this._blockScopes.get(current)?.get(key);
       if (value !== undefined) {
         return value;
       }
     } while ((current = current.parent));
-    return this._defaultNamespace.get(key);
+    return this._rootScope.get(key);
   }
 
   renderComponent<TProps, TData>(
@@ -93,13 +93,13 @@ export class RenderState implements UpdateContext<RenderContext> {
     key: unknown,
     value: unknown,
   ): void {
-    const variables = this._blockNamespaces.get(block);
+    const variables = this._blockScopes.get(block);
     if (variables !== undefined) {
       variables.set(key, value);
     } else {
-      const namespace = new Map();
-      namespace.set(key, value);
-      this._blockNamespaces.set(block, namespace);
+      const scope = new Map();
+      scope.set(key, value);
+      this._blockScopes.set(block, scope);
     }
   }
 }
