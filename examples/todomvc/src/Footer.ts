@@ -59,11 +59,12 @@ export function Footer(_props: FooterProps, context: RenderContext) {
         </li>
       </ul>
       <button
+        type="button"
         class="clear-completed"
         disabled=${activeTodos.length === todos.length}
         @click=${handleRemoveCompletedTodos}
       >
-          Clear completed
+        Clear completed
       </button>
     </footer>
   `;
