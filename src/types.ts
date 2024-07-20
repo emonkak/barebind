@@ -192,6 +192,15 @@ export interface RefObject<T> {
 // Reexport TaskPriority in Scheduler API.
 export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
 
+export function comparePriorities(
+  first: TaskPriority,
+  second: TaskPriority,
+): number {
+  return first === second
+    ? 0
+    : getPriorityNumber(second) - getPriorityNumber(first);
+}
+
 export function ensureDirective<
   TExpectedClass extends abstract new (
     ...args: any[]
@@ -240,4 +249,15 @@ export function nameOf(value: unknown): string {
     return 'undefined';
   }
   return value.toString();
+}
+
+function getPriorityNumber(priority: TaskPriority): number {
+  switch (priority) {
+    case 'user-blocking':
+      return 0;
+    case 'user-visible':
+      return 1;
+    case 'background':
+      return 2;
+  }
 }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  comparePriorities,
   directiveTag,
   ensureDirective,
   ensureNonDirective,
@@ -9,6 +10,22 @@ import {
   nameOf,
 } from '../src/types.js';
 import { MockDirective } from './mocks.js';
+
+describe('comparePriorities()', () => {
+  it('should returns a negative number, zero, or a number integer as the first priority is less than, equal to, or greater than the second', () => {
+    expect(comparePriorities('user-blocking', 'user-blocking')).toBe(0);
+    expect(comparePriorities('user-blocking', 'user-visible')).toBeGreaterThan(
+      0,
+    );
+    expect(comparePriorities('user-blocking', 'background')).toBeGreaterThan(0);
+    expect(comparePriorities('user-visible', 'user-blocking')).toBeLessThan(0);
+    expect(comparePriorities('user-visible', 'user-visible')).toBe(0);
+    expect(comparePriorities('user-visible', 'background')).toBeGreaterThan(0);
+    expect(comparePriorities('background', 'user-blocking')).toBeLessThan(0);
+    expect(comparePriorities('background', 'user-visible')).toBeLessThan(0);
+    expect(comparePriorities('background', 'background')).toBe(0);
+  });
+});
 
 describe('ensureDirective', () => {
   it('should throw an error if the value is not instance of the expected class', () => {

@@ -1,4 +1,3 @@
-import { comparePriorities } from '../scheduler.js';
 import {
   type Binding,
   type Block,
@@ -15,6 +14,7 @@ import {
   type TemplateFragment,
   type UpdateContext,
   type Updater,
+  comparePriorities,
   directiveTag,
   ensureDirective,
   hintTag,

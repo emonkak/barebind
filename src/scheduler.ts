@@ -87,23 +87,3 @@ export function getDefaultScheduler(): Scheduler {
     yieldToMain,
   };
 }
-
-export function comparePriorities(
-  first: TaskPriority,
-  second: TaskPriority,
-): number {
-  return first === second
-    ? 0
-    : getPriorityNumber(second) - getPriorityNumber(first);
-}
-
-function getPriorityNumber(priority: TaskPriority): number {
-  switch (priority) {
-    case 'user-blocking':
-      return 0;
-    case 'user-visible':
-      return 1;
-    case 'background':
-      return 2;
-  }
-}

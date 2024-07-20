@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { comparePriorities, getDefaultScheduler } from '../src/scheduler.js';
+import { getDefaultScheduler } from '../src/scheduler.js';
 
 describe('getCurrentTime()', () => {
   afterEach(() => {
@@ -321,21 +321,5 @@ describe('yieldToMain()', () => {
       expect(scheduler.yieldToMain()).resolves.toBeUndefined();
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
     });
-  });
-});
-
-describe('comparePriorities()', () => {
-  it('should returns a negative number, zero, or a number integer as the first priority is less than, equal to, or greater than the second', () => {
-    expect(comparePriorities('user-blocking', 'user-blocking')).toBe(0);
-    expect(comparePriorities('user-blocking', 'user-visible')).toBeGreaterThan(
-      0,
-    );
-    expect(comparePriorities('user-blocking', 'background')).toBeGreaterThan(0);
-    expect(comparePriorities('user-visible', 'user-blocking')).toBeLessThan(0);
-    expect(comparePriorities('user-visible', 'user-visible')).toBe(0);
-    expect(comparePriorities('user-visible', 'background')).toBeGreaterThan(0);
-    expect(comparePriorities('background', 'user-blocking')).toBeLessThan(0);
-    expect(comparePriorities('background', 'user-visible')).toBeLessThan(0);
-    expect(comparePriorities('background', 'background')).toBe(0);
   });
 });
