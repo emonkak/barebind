@@ -56,8 +56,9 @@ export interface PropertyHole {
 //   case, the tag is treated as a comment.
 //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
 // - A marker is lowercase to match attribute names.
-const MARKER_REGEXP =
-  /^\?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\?$/;
+const MARKER_REGEXP = /^\?[0-9a-z]{14}\?$/;
+
+const RANDOM_STRING_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
 export class TaggedTemplate implements Template<unknown[]> {
   static parseHTML(
@@ -293,10 +294,8 @@ export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
   }
 }
 
-export function getMarker(
-  uuid: ReturnType<typeof crypto.randomUUID> = getUUID(),
-): string {
-  return '?' + uuid + '?';
+export function getMarker(): string {
+  return '?' + getRandomString(14) + '?';
 }
 
 export function isValidMarker(marker: string): boolean {
@@ -309,20 +308,11 @@ function ensureValidMarker(marker: string): void {
   }
 }
 
-function getUUID(): ReturnType<typeof crypto.randomUUID> {
-  if (typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  } else {
-    const s = [...crypto.getRandomValues(new Uint8Array(16))]
-      .map((byte) => byte.toString(16).padStart(2, '0'))
-      .join('');
-    const p1 = s.slice(0, 8);
-    const p2 = s.slice(8, 12);
-    const p3 = s.slice(12, 16);
-    const p4 = s.slice(16, 20);
-    const p5 = s.slice(20, 32);
-    return `${p1}-${p2}-${p3}-${p4}-${p5}`;
-  }
+function getRandomString(length: number): string {
+  return Array.from(
+    crypto.getRandomValues(new Uint8Array(length)),
+    (byte) => RANDOM_STRING_CHARACTERS[byte % RANDOM_STRING_CHARACTERS.length],
+  ).join('');
 }
 
 function parseAttribtues(
