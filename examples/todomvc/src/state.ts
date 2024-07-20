@@ -21,7 +21,7 @@ export class AppState {
 
   static [usableTag](context: RenderContext): AppState {
     const state = context.getContextValue<AppState>(AppState);
-    if (state === undefined || !(state instanceof AppState)) {
+    if (!(state instanceof AppState)) {
       throw new Error(
         'The context value for AppState could not be found, please ensure the state is set by context.setContextValue(AppState, ...).',
       );
