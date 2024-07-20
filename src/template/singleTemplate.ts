@@ -6,6 +6,7 @@ import {
   type Template,
   type TemplateFragment,
   type Updater,
+  nameOf,
 } from '../types.js';
 
 export class ChildNodeTemplate<T> implements Template<T> {
@@ -24,6 +25,9 @@ export class ChildNodeTemplate<T> implements Template<T> {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+    DEBUG: {
+      part.node.nodeValue = nameOf(data);
+    }
     const binding = resolveBinding(data, part, updater);
     binding.connect(updater);
     return new SingleTemplateFragment(binding);

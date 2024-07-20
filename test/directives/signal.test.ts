@@ -4,7 +4,7 @@ import { NodeBinding } from '../../src/binding.js';
 import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
 import { RenderContext, usableTag } from '../../src/renderContext.js';
 import { RenderState } from '../../src/renderState.js';
-import { type Hook, PartType, directiveTag } from '../../src/types.js';
+import { type Hook, PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock } from '.././mocks.js';
 
@@ -32,6 +32,12 @@ describe('Signal', () => {
       const signal = new Atom('foo');
 
       expect('foo').toBe(signal.valueOf());
+    });
+  });
+
+  describe('[hintTag]', () => {
+    it('should return a hint string', () => {
+      expect(new Atom('foo')[hintTag]).toBe('Signal(foo)');
     });
   });
 

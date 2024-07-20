@@ -38,12 +38,12 @@ export class RenderState implements UpdateContext<RenderContext> {
 
   getHTMLTemplate(
     tokens: ReadonlyArray<string>,
-    _data: unknown[],
+    data: unknown[],
   ): TaggedTemplate {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
-      template = TaggedTemplate.parseHTML(tokens, this._marker);
+      template = TaggedTemplate.parseHTML(tokens, data, this._marker);
       this._cachedTemplates.set(tokens, template);
     }
 
@@ -52,12 +52,12 @@ export class RenderState implements UpdateContext<RenderContext> {
 
   getSVGTemplate(
     tokens: ReadonlyArray<string>,
-    _data: unknown[],
+    data: unknown[],
   ): TaggedTemplate {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
-      template = TaggedTemplate.parseSVG(tokens, this._marker);
+      template = TaggedTemplate.parseSVG(tokens, data, this._marker);
       this._cachedTemplates.set(tokens, template);
     }
 

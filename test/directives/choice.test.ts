@@ -6,7 +6,7 @@ import {
   ChoiceDirective,
   choice,
 } from '../../src/directives/choice.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import { PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
@@ -22,6 +22,13 @@ describe('choice()', () => {
 });
 
 describe('ChoiceDirective', () => {
+  describe('[hintTag]', () => {
+    it('should return a hint string', () => {
+      expect(choice('foo', (key) => key)[hintTag]).toBe('ChoiceDirective(foo)');
+      expect(choice('bar', (key) => key)[hintTag]).toBe('ChoiceDirective(bar)');
+    });
+  });
+
   describe('[directiveTag]()', () => {
     it('should return an instance of ChoiceDirective from a non-directive value', () => {
       const factory = vi.fn((key: 'foo' | 'bar') => key);

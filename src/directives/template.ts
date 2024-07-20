@@ -15,6 +15,8 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
+  hintTag,
+  nameOf,
 } from '../types.js';
 
 const FLAG_NONE = 0;
@@ -40,6 +42,10 @@ export class TemplateDirective<TData, TContext = unknown>
 
   get data(): TData {
     return this._data;
+  }
+
+  get [hintTag](): string {
+    return 'TemplateDirective(' + nameOf(this._template) + ')';
   }
 
   [directiveTag](

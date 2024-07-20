@@ -6,7 +6,9 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
+  hintTag,
   isDirective,
+  nameOf,
 } from '../types.js';
 
 export function dynamic(value: unknown): DynamicDirective {
@@ -22,6 +24,10 @@ export class DynamicDirective implements Directive {
 
   get value(): unknown {
     return this._value;
+  }
+
+  get [hintTag](): string {
+    return 'DynamicDirective(' + nameOf(this._value) + ')';
   }
 
   [directiveTag](part: Part, updater: Updater): DynamicBinding {

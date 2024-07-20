@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import { PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
@@ -18,6 +18,12 @@ describe('memo()', () => {
 });
 
 describe('MemoDirective', () => {
+  describe('[hintTag]', () => {
+    it('should return a hint string', () => {
+      expect(memo(() => 'foo', [])[hintTag]).toBe('MemoDirective(foo)');
+    });
+  });
+
   describe('[directiveTag]()', () => {
     it('should return an instance of MemoBinding from the non-directive value', () => {
       const factory = vi.fn(() => 'foo');

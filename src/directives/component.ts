@@ -17,6 +17,8 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
+  hintTag,
+  nameOf,
 } from '../types.js';
 
 const FLAG_NONE = 0;
@@ -49,6 +51,10 @@ export class ComponentDirective<TProps, TData, TContext>
 
   get props(): TProps {
     return this._props;
+  }
+
+  get [hintTag](): string {
+    return 'ComponentDirective(' + nameOf(this._component) + ')';
   }
 
   [directiveTag](

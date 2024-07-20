@@ -22,7 +22,7 @@ describe('RefDirective', () => {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
-      };
+      } as const;
       const updater = new SyncUpdater(new MockUpdateContext());
       const binding = directive[directiveTag](part, updater);
 

@@ -12,6 +12,8 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
+  hintTag,
+  nameOf,
 } from '../types.js';
 
 export type Subscriber = () => void;
@@ -24,6 +26,10 @@ export abstract class Signal<TValue>
   abstract get value(): TValue;
 
   abstract get version(): number;
+
+  get [hintTag](): string {
+    return 'Signal(' + nameOf(this.value) + ')';
+  }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
 

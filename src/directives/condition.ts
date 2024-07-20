@@ -6,64 +6,82 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
+  hintTag,
+  nameOf,
 } from '../types.js';
 import { NoValueDirective } from './noValue.js';
 
-type FunctionOrValue<T> = T extends Function ? () => T : (() => T) | T;
+type Branch<T> = T extends Function ? () => T : (() => T) | T;
 
 export function condition<TTrue, TFalse>(
   condition: boolean,
-  trueCase: FunctionOrValue<TTrue>,
-  falseCase: FunctionOrValue<TFalse>,
+  trueBranch: Branch<TTrue>,
+  falseBranch: Branch<TFalse>,
 ): ConditionDirective<TTrue, TFalse> {
-  return new ConditionDirective(condition, trueCase, falseCase);
+  return new ConditionDirective(condition, trueBranch, falseBranch);
 }
 
 export function when<TTrue>(
   condition: boolean,
-  trueCase: FunctionOrValue<TTrue>,
+  trueBranch: Branch<TTrue>,
 ): ConditionDirective<TTrue, NoValueDirective> {
-  return new ConditionDirective(condition, trueCase, NoValueDirective.instance);
+  return new ConditionDirective(
+    condition,
+    trueBranch,
+    NoValueDirective.instance,
+  );
 }
 
 export function unless<TFalse>(
   condition: boolean,
-  falseCase: FunctionOrValue<TFalse>,
+  falseBranch: Branch<TFalse>,
 ): ConditionDirective<NoValueDirective, TFalse> {
   return new ConditionDirective(
     condition,
     NoValueDirective.instance,
-    falseCase,
+    falseBranch,
   );
 }
 
 export class ConditionDirective<TTrue, TFalse> implements Directive {
   private readonly _condition: boolean;
 
-  private readonly _trueCase: FunctionOrValue<TTrue>;
+  private readonly _trueBranch: Branch<TTrue>;
 
-  private readonly _falseCase: FunctionOrValue<TFalse>;
+  private readonly _falseBranch: Branch<TFalse>;
 
   constructor(
     condition: boolean,
-    trueCase: FunctionOrValue<TTrue>,
-    falseCase: FunctionOrValue<TFalse>,
+    trueBranch: Branch<TTrue>,
+    falseBranch: Branch<TFalse>,
   ) {
     this._condition = condition;
-    this._trueCase = trueCase;
-    this._falseCase = falseCase;
+    this._trueBranch = trueBranch;
+    this._falseBranch = falseBranch;
   }
 
   get condition(): boolean {
     return this._condition;
   }
 
-  get trueCase(): FunctionOrValue<TTrue> {
-    return this._trueCase;
+  get trueBranch(): Branch<TTrue> {
+    return this._trueBranch;
   }
 
-  get falseCase(): FunctionOrValue<TFalse> {
-    return this._falseCase;
+  get falseBranch(): Branch<TFalse> {
+    return this._falseBranch;
+  }
+
+  get [hintTag](): string {
+    return (
+      'ConditionDirective(' +
+      nameOf(
+        this._condition
+          ? evalBranch(this._trueBranch)
+          : evalBranch(this._falseBranch),
+      ) +
+      ')'
+    );
   }
 
   [directiveTag](
@@ -88,19 +106,15 @@ export class ConditionBinding<TTrue, TFalse>
     part: Part,
     updater: Updater,
   ) {
-    const { condition, trueCase, falseCase } = directive;
+    const { condition, trueBranch, falseBranch } = directive;
     this._directive = directive;
     if (condition) {
-      this._trueBinding = resolveBinding(
-        evalFunctionOrValue(trueCase),
-        part,
-        updater,
-      );
+      this._trueBinding = resolveBinding(evalBranch(trueBranch), part, updater);
       this._falseBinding = null;
     } else {
       this._trueBinding = null;
       this._falseBinding = resolveBinding(
-        evalFunctionOrValue(falseCase),
+        evalBranch(falseBranch),
         part,
         updater,
       );
@@ -137,22 +151,22 @@ export class ConditionBinding<TTrue, TFalse>
     }
 
     const oldValue = this._directive;
-    const { condition, trueCase, falseCase } = newValue;
+    const { condition, trueBranch, falseBranch } = newValue;
 
     if (oldValue.condition === condition) {
       if (condition) {
-        this._trueBinding!.bind(evalFunctionOrValue(trueCase), updater);
+        this._trueBinding!.bind(evalBranch(trueBranch), updater);
       } else {
-        this._falseBinding!.bind(evalFunctionOrValue(falseCase), updater);
+        this._falseBinding!.bind(evalBranch(falseBranch), updater);
       }
     } else {
       if (condition) {
         this._falseBinding!.unbind(updater);
         if (this._trueBinding !== null) {
-          this._trueBinding.bind(evalFunctionOrValue(trueCase), updater);
+          this._trueBinding.bind(evalBranch(trueBranch), updater);
         } else {
           this._trueBinding = resolveBinding(
-            evalFunctionOrValue(trueCase),
+            evalBranch(trueBranch),
             this._falseBinding!.part,
             updater,
           );
@@ -161,10 +175,10 @@ export class ConditionBinding<TTrue, TFalse>
       } else {
         this._trueBinding!.unbind(updater);
         if (this._falseBinding !== null) {
-          this._falseBinding.bind(evalFunctionOrValue(falseCase), updater);
+          this._falseBinding.bind(evalBranch(falseBranch), updater);
         } else {
           this._falseBinding = resolveBinding(
-            evalFunctionOrValue(falseCase),
+            evalBranch(falseBranch),
             this._trueBinding!.part,
             updater,
           );
@@ -185,8 +199,6 @@ export class ConditionBinding<TTrue, TFalse>
   }
 }
 
-function evalFunctionOrValue<T>(functionOrValue: FunctionOrValue<T>): T {
-  return typeof functionOrValue === 'function'
-    ? functionOrValue()
-    : functionOrValue;
+function evalBranch<T>(branch: Branch<T>): T {
+  return typeof branch === 'function' ? branch() : branch;
 }

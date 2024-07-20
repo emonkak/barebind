@@ -6,6 +6,7 @@ import {
   type Template,
   type TemplateFragment,
   type Updater,
+  nameOf,
 } from '../types.js';
 
 export interface ElementData<TElementValue, TChildNodeValue> {
@@ -35,6 +36,9 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+    DEBUG: {
+      childNodePart.node.data = nameOf(data.elementValue);
+    }
     const elementBinding = resolveBinding(elementValue, elementPart, updater);
     const childNodeBinding = resolveBinding(
       childNodeValue,

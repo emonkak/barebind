@@ -77,10 +77,10 @@ describe('TaggedTemplate', () => {
       ]);
       expect(template.element.innerHTML).toBe(
         `
-        <!---->
-        <!---->
-        <!---->
-        <!---->
+        <!--0-->
+        <!--1-->
+        <!--2-->
+        <!--3-->
       `.trim(),
       );
     });
@@ -160,10 +160,10 @@ describe('TaggedTemplate', () => {
       ]);
       expect(template.element.innerHTML).toBe(
         `
-        <!---->
-        <!---->
-        <!---->
-        <!---->
+        <!--0-->
+        <!--1-->
+        <!--2-->
+        <!--3-->
       `.trim(),
       );
     });
@@ -187,10 +187,10 @@ describe('TaggedTemplate', () => {
 
     it('should throw an error if passed a marker in an invalid format', () => {
       expect(() => {
-        TaggedTemplate.parseHTML([], 'INVALID_MARKER');
+        TaggedTemplate.parseHTML([], [], 'INVALID_MARKER');
       }).toThrow('The marker is in an invalid format:');
       expect(() => {
-        TaggedTemplate.parseHTML([], MARKER.toUpperCase());
+        TaggedTemplate.parseHTML([], [], MARKER.toUpperCase());
       }).toThrow('The marker is in an invalid format:');
     });
 
@@ -294,22 +294,16 @@ describe('TaggedTemplate', () => {
 
     it('should throw an error when it is passed a marker in an invalid format', () => {
       expect(() => {
-        TaggedTemplate.parseSVG([], 'INVALID_MARKER');
+        TaggedTemplate.parseSVG([], [], 'INVALID_MARKER');
       }).toThrow('The marker is in an invalid format:');
       expect(() => {
-        TaggedTemplate.parseSVG([], MARKER.toUpperCase());
+        TaggedTemplate.parseSVG([], [], MARKER.toUpperCase());
       }).toThrow('The marker is in an invalid format:');
     });
   });
 
   describe('.hydrate()', () => {
     it('should hydrate a TaggedTemplateFragment', () => {
-      const template = html`
-        <div class=${0}>
-          <!-- ${1} -->
-          <input type="text" .value=${2} @onchange=${3} ${4}><span>${5}</span>
-        </div>
-      `;
       const values = [
         'foo',
         'bar',
@@ -318,6 +312,12 @@ describe('TaggedTemplate', () => {
         { class: 'qux' },
         new MockDirective(),
       ];
+      const template = html`
+        <div class=${values[0]}>
+          <!-- ${values[1]} -->
+          <input type="text" .value=${values[2]} @onchange=${values[3]} ${values[4]}><span>${values[5]}</span>
+        </div>
+      `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
 
@@ -354,7 +354,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.childNodes.map(nodeToString)).toEqual([
         `
         <div>
-          <!---->
+          <!--bar-->
           <input type="text"><span></span>
         </div>`.trim(),
       ]);
@@ -397,10 +397,10 @@ describe('TaggedTemplate', () => {
     });
 
     it('should throw an error if the number of holes and values do not match', () => {
-      const template = html`
-        <div class=${0} class=${1}></div>
-      `;
       const values = ['foo', 'bar'];
+      const template = html`
+        <div class=${values[0]} class=${values[1]}></div>
+      `;
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => {
@@ -430,34 +430,36 @@ describe('TaggedTemplate', () => {
 describe('TaggedTemplateFragment', () => {
   describe('.attach()', () => {
     it('should bind values corresponding to bindings in the fragment', () => {
-      const template = html`
-        <div class="${0}">${1} ${2}</div>
-      `;
       const values = ['foo', 'bar', 'baz'];
+      const template = html`
+        <div class="${values[0]}">${values[1]}</div><!--${values[2]}-->
+      `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
 
       updater.flush();
 
       expect(fragment.childNodes.map(nodeToString)).toEqual([
-        '<div class="foo">bar baz</div>',
+        '<div class="foo">bar</div>',
+        '<!--baz-->',
       ]);
 
       fragment.attach(['bar', 'baz', 'qux'], updater);
       updater.flush();
 
       expect(fragment.childNodes.map(nodeToString)).toEqual([
-        '<div class="bar">baz qux</div>',
+        '<div class="bar">baz</div>',
+        '<!--qux-->',
       ]);
     });
   });
 
   describe('.detach()', () => {
     it('should unbind bindings in the fragment', () => {
-      const template = html`
-        ${0}<div class=${2}>${3}</div><!--${4}-->
-      `;
       const values = ['foo', 'bar', 'baz', 'qux'];
+      const template = html`
+        ${values[0]}<div class=${values[1]}>${values[2]}</div><!--${values[3]}-->
+      `;
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -473,7 +475,7 @@ describe('TaggedTemplateFragment', () => {
       expect(fragment.childNodes.map(nodeToString)).toEqual([
         'foo',
         '<div class="bar">baz</div>',
-        'qux',
+        '<!--qux-->',
       ]);
       expect(container.innerHTML).toBe(
         'foo<div class="bar">baz</div><!--qux--><!---->',
@@ -492,7 +494,7 @@ describe('TaggedTemplateFragment', () => {
       expect(fragment.childNodes.map(nodeToString)).toEqual([
         '',
         '<div class="bar">baz</div>',
-        '',
+        '<!---->',
       ]);
       expect(container.innerHTML).toBe(
         '<div class="bar">baz</div><!----><!---->',
@@ -506,11 +508,12 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should throw an error if the number of binding and values do not match', () => {
+      const values = [0];
       const template = html`
-        <p>Count: ${0}</p>
+        <p>Count: ${values[0]}</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate([0], updater);
+      const fragment = template.hydrate(values, updater);
 
       expect(() => {
         fragment.attach([], updater);
@@ -520,11 +523,12 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect bindings in the fragment', () => {
-      let disconnects = 0;
-      const template = html`
-        <p>Count: ${0}</p>
-      `;
       const directive = new MockDirective();
+      const values = [directive];
+      const template = html`
+        <div>${values[0]}</div>
+      `;
+      let disconnects = 0;
       vi.spyOn(directive, directiveTag).mockImplementation(function (
         this: MockDirective,
         part: Part,
@@ -535,7 +539,6 @@ describe('TaggedTemplateFragment', () => {
         });
         return binding;
       });
-      const values = [directive];
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
 
@@ -549,10 +552,10 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.mount()', () => {
     it('should mount child nodes at the part', () => {
-      const template = html`
-        <p>Hello, ${0}!</p>
-      `;
       const values = ['World'];
+      const template = html`
+        <p>Hello, ${values[0]}!</p>
+      `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
 
@@ -575,10 +578,10 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should not mount child nodes if the part is not mounted', () => {
-      const template = html`
-        <p>Hello, ${0}!</p>
-      `;
       const values = ['World'];
+      const template = html`
+        <p>Hello, ${values[0]}!</p>
+      `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
 
@@ -618,20 +621,22 @@ describe('getMarker()', () => {
 
 function html(
   tokens: TemplateStringsArray,
-  ..._values: unknown[]
+  ...values: unknown[]
 ): TaggedTemplate {
-  return TaggedTemplate.parseHTML(tokens, MARKER);
+  return TaggedTemplate.parseHTML(tokens, values, MARKER);
 }
 
 function svg(
   tokens: TemplateStringsArray,
-  ..._values: unknown[]
+  ...values: unknown[]
 ): TaggedTemplate {
-  return TaggedTemplate.parseSVG(tokens, MARKER);
+  return TaggedTemplate.parseSVG(tokens, values, MARKER);
 }
 
 function nodeToString(node: Node): string {
   return node.nodeType === Node.ELEMENT_NODE
     ? (node as Element).outerHTML
-    : node.nodeValue ?? '';
+    : node.nodeType === Node.COMMENT_NODE
+      ? '<!--' + node.nodeValue + '-->'
+      : node.nodeValue ?? '';
 }

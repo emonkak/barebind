@@ -1,5 +1,7 @@
 export const directiveTag = Symbol('Directive');
 
+export const hintTag = Symbol('Hint');
+
 export interface Binding<TValue, TContext = unknown> {
   get value(): TValue;
   get part(): Part;
@@ -115,7 +117,7 @@ export interface AttributePart {
 
 export interface ChildNodePart {
   type: PartType.ChildNode;
-  node: ChildNode;
+  node: Comment;
 }
 
 export interface ElementPart {
@@ -203,7 +205,7 @@ export function ensureDirective<
       'A value must be a instance of "' +
         expectedClass.name +
         '", but got "' +
-        actualValue +
+        nameOf(actualValue) +
         '". Consider using choice(), condition() or dynamic() directive instead.',
     );
   }
@@ -213,7 +215,7 @@ export function ensureNonDirective(value: unknown): void {
   if (isDirective(value)) {
     throw new Error(
       'A value must not be a directive, but got "' +
-        value +
+        nameOf(value) +
         '". Consider using choice(), condition() or dynamic() directive instead.',
     );
   }
@@ -221,4 +223,21 @@ export function ensureNonDirective(value: unknown): void {
 
 export function isDirective(value: unknown): value is Directive<unknown> {
   return value !== null && typeof value === 'object' && directiveTag in value;
+}
+
+export function nameOf(value: unknown): string {
+  if (typeof value === 'object') {
+    return value === null
+      ? 'null'
+      : hintTag in value
+        ? (value[hintTag] as string)
+        : value.constructor.name;
+  }
+  if (typeof value === 'function') {
+    return value.name !== '' ? value.name : 'Function';
+  }
+  if (typeof value === 'undefined') {
+    return 'undefined';
+  }
+  return value.toString();
 }

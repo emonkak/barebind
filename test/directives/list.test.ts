@@ -104,7 +104,7 @@ describe('OrderedListBinding', () => {
         'baz',
       ]);
       expect(container.innerHTML).toBe(
-        'foo<!--foo-->bar<!--bar-->baz<!--baz--><!---->',
+        'foo<!--TextDirective@foo-->bar<!--TextDirective@bar-->baz<!--TextDirective@baz--><!---->',
       );
     });
 
@@ -165,8 +165,9 @@ describe('OrderedListBinding', () => {
             binding.bindings.map((binding) => binding.value.content),
           ).toEqual(directive2.items);
           expect(container.innerHTML).toBe(
-            items2.map((item) => item + '<!--' + item + '-->').join('') +
-              '<!---->',
+            items2
+              .map((item) => item + '<!--TextDirective@' + item + '-->')
+              .join('') + '<!---->',
           );
         }
       }
@@ -211,8 +212,9 @@ describe('OrderedListBinding', () => {
               binding.bindings.map((binding) => binding.value.content),
             ).toEqual(directive2.items);
             expect(container.innerHTML).toBe(
-              items2!.map((item) => item + '<!--' + item + '-->').join('') +
-                '<!---->',
+              items2!
+                .map((item) => item + '<!--TextDirective@' + item + '-->')
+                .join('') + '<!---->',
             );
           }
         }
@@ -253,8 +255,9 @@ describe('OrderedListBinding', () => {
             binding.bindings.map((binding) => binding.value.content),
           ).toEqual(directive2.items);
           expect(container.innerHTML).toBe(
-            items2.map((item) => item + '<!--' + item + '-->').join('') +
-              '<!---->',
+            items2
+              .map((item) => item + '<!--TextDirective@' + item + '-->')
+              .join('') + '<!---->',
           );
         }
       }
@@ -339,7 +342,7 @@ describe('OrderedListBinding', () => {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
       expect(container.innerHTML).toBe(
-        'foo<!--foo-->bar<!--bar-->baz<!--baz--><!---->',
+        'foo<!--TextDirective@foo-->bar<!--TextDirective@bar-->baz<!--TextDirective@baz--><!---->',
       );
     });
   });
@@ -403,7 +406,7 @@ describe('InPlaceListBinding', () => {
         'baz',
       ]);
       expect(container.innerHTML).toBe(
-        'foo<!--0-->bar<!--1-->baz<!--2--><!---->',
+        'foo<!--TextDirective@0-->bar<!--TextDirective@1-->baz<!--TextDirective@2--><!---->',
       );
     });
 
@@ -454,7 +457,7 @@ describe('InPlaceListBinding', () => {
         directive2.items,
       );
       expect(container.innerHTML).toBe(
-        'qux<!--0-->baz<!--1-->bar<!--2-->foo<!--3--><!---->',
+        'qux<!--TextDirective@0-->baz<!--TextDirective@1-->bar<!--TextDirective@2-->foo<!--TextDirective@3--><!---->',
       );
     });
 
@@ -481,7 +484,9 @@ describe('InPlaceListBinding', () => {
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
         directive2.items,
       );
-      expect(container.innerHTML).toBe('bar<!--0-->foo<!--1--><!---->');
+      expect(container.innerHTML).toBe(
+        'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
+      );
     });
 
     it('should do nothing if the items is the same as previous ones', () => {
@@ -573,7 +578,7 @@ describe('InPlaceListBinding', () => {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
       expect(container.innerHTML).toBe(
-        'foo<!--0-->bar<!--1-->baz<!--2--><!---->',
+        'foo<!--TextDirective@0-->bar<!--TextDirective@1-->baz<!--TextDirective@2--><!---->',
       );
     });
   });

@@ -7,6 +7,7 @@ import {
   type Template,
   type TemplateFragment,
   type Updater,
+  nameOf,
 } from '../types.js';
 
 export type Hole =
@@ -61,6 +62,7 @@ const MARKER_REGEXP =
 export class TaggedTemplate implements Template<unknown[]> {
   static parseHTML(
     tokens: ReadonlyArray<string>,
+    values: ReadonlyArray<unknown>,
     marker: string,
   ): TaggedTemplate {
     DEBUG: {
@@ -68,12 +70,13 @@ export class TaggedTemplate implements Template<unknown[]> {
     }
     const template = document.createElement('template');
     template.innerHTML = tokens.join(marker).trim();
-    const holes = parseChildren(template.content, marker);
+    const holes = parseChildren(template.content, values, marker);
     return new TaggedTemplate(template, holes);
   }
 
   static parseSVG(
     tokens: ReadonlyArray<string>,
+    values: ReadonlyArray<unknown>,
     marker: string,
   ): TaggedTemplate {
     DEBUG: {
@@ -84,7 +87,7 @@ export class TaggedTemplate implements Template<unknown[]> {
     template.content.replaceChildren(
       ...template.content.firstChild!.childNodes,
     );
-    const holes = parseChildren(template.content, marker);
+    const holes = parseChildren(template.content, values, marker);
     return new TaggedTemplate(template, holes);
   }
 
@@ -235,7 +238,15 @@ export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
     }
 
     for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.bind(data[i]!, updater);
+      const binding = this._bindings[i]!;
+
+      DEBUG: {
+        if (binding.part.type === PartType.ChildNode) {
+          binding.part.node.data = nameOf(data[i]);
+        }
+      }
+
+      binding.bind(data[i]!, updater);
     }
   }
 
@@ -379,7 +390,11 @@ function parseAttribtues(
   }
 }
 
-function parseChildren(rootNode: Node, marker: string): Hole[] {
+function parseChildren(
+  rootNode: Node,
+  values: ReadonlyArray<unknown>,
+  marker: string,
+): Hole[] {
   const walker = document.createTreeWalker(
     rootNode,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
@@ -408,7 +423,11 @@ function parseChildren(rootNode: Node, marker: string): Hole[] {
         if (
           trimTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
-          (currentNode as Comment).data = '';
+          let hint = '';
+          DEBUG: {
+            hint = nameOf(values[holes.length]);
+          }
+          (currentNode as Comment).data = hint;
           holes.push({
             type: PartType.ChildNode,
             index,

@@ -9,6 +9,7 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
+  nameOf,
 } from '../types.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
@@ -548,7 +549,7 @@ function insertItem<TKey, TValue>(
   const binding = resolveBinding(value, part, updater);
 
   DEBUG: {
-    part.node.nodeValue = String(key);
+    part.node.data = nameOf(value) + '@' + nameOf(key);
   }
 
   updater.enqueueMutationEffect(

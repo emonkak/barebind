@@ -21,7 +21,7 @@ describe('mount()', () => {
 
     await updater.waitForUpdate();
 
-    expect(container.innerHTML).toBe('<!---->');
+    expect(container.innerHTML).toBe('<!--MockDirective-->');
   });
 
   it('should not schedule update if it is already scheduled', () => {

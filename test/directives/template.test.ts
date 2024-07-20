@@ -3,7 +3,7 @@ import {
   TemplateBinding,
   TemplateDirective,
 } from '../../src/directives/template.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import { PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -21,6 +21,13 @@ describe('TemplateDirective', () => {
 
       expect(directive.template).toBe(template);
       expect(directive.data).toBe(data);
+    });
+  });
+
+  describe('[hintTag]', () => {
+    it('should return a hint string', () => {
+      const directive = new TemplateDirective(new MockTemplate(), {});
+      expect(directive[hintTag]).toBe('TemplateDirective(MockTemplate)');
     });
   });
 

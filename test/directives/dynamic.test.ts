@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import { PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
@@ -15,6 +15,15 @@ describe('dynamic()', () => {
 });
 
 describe('DynamicDirective', () => {
+  describe('[hintTag]', () => {
+    it('should return a hint string', () => {
+      expect(dynamic('foo')[hintTag]).toBe('DynamicDirective(foo)');
+      expect(dynamic(new MockDirective())[hintTag]).toBe(
+        'DynamicDirective(MockDirective)',
+      );
+    });
+  });
+
   describe('[directiveTag]()', () => {
     it('should return an instance of DynamicBinding from the non-directive value', () => {
       const directive = dynamic('foo');

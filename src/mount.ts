@@ -5,6 +5,7 @@ import {
   type Part,
   PartType,
   type Updater,
+  nameOf,
 } from './types.js';
 
 export function mount<TValue, TContext>(
@@ -16,6 +17,10 @@ export function mount<TValue, TContext>(
     type: PartType.ChildNode,
     node: document.createComment(''),
   } as const;
+
+  DEBUG: {
+    part.node.data = nameOf(value);
+  }
 
   updater.enqueueMutationEffect(new MountPart(part, container));
 

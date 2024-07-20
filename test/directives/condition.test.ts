@@ -8,48 +8,67 @@ import {
   unless,
   when,
 } from '../../src/directives/condition.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import { PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('condition()', () => {
   it('should construct a new ConditionDirective', () => {
     const condition = true;
-    const trueCase = () => 'foo';
-    const falseCase = () => 'bar';
-    const directive = conditionDirective(condition, trueCase, falseCase);
+    const trueBranch = () => 'foo';
+    const falseBranch = () => 'bar';
+    const directive = conditionDirective(condition, trueBranch, falseBranch);
 
     expect(directive.condition).toBe(condition);
-    expect(directive.trueCase).toBe(trueCase);
-    expect(directive.falseCase).toBe(falseCase);
+    expect(directive.trueBranch).toBe(trueBranch);
+    expect(directive.falseBranch).toBe(falseBranch);
   });
 });
 
 describe('when()', () => {
   it('should construct a new ConditionDirective without false case', () => {
     const condition = true;
-    const trueCase = () => 'foo';
-    const directive = when(condition, trueCase);
+    const trueBranch = () => 'foo';
+    const directive = when(condition, trueBranch);
 
     expect(directive.condition).toBe(condition);
-    expect(directive.trueCase).toBe(trueCase);
-    expect(directive.falseCase).toBe(NoValueDirective.instance);
+    expect(directive.trueBranch).toBe(trueBranch);
+    expect(directive.falseBranch).toBe(NoValueDirective.instance);
   });
 });
 
 describe('unless()', () => {
   it('should construct a new ConditionDirective without true case', () => {
     const condition = true;
-    const falseCase = () => 'bar';
-    const directive = unless(condition, falseCase);
+    const falseBranch = () => 'bar';
+    const directive = unless(condition, falseBranch);
 
     expect(directive.condition).toBe(condition);
-    expect(directive.trueCase).toBe(NoValueDirective.instance);
-    expect(directive.falseCase).toBe(falseCase);
+    expect(directive.trueBranch).toBe(NoValueDirective.instance);
+    expect(directive.falseBranch).toBe(falseBranch);
   });
 });
 
 describe('ConditionDirective', () => {
+  describe('[hintTag]', () => {
+    it('should return a hint string', () => {
+      expect(
+        conditionDirective(
+          true,
+          () => 'foo',
+          () => 'bar',
+        )[hintTag],
+      ).toBe('ConditionDirective(foo)');
+      expect(
+        conditionDirective(
+          false,
+          () => 'foo',
+          () => 'bar',
+        )[hintTag],
+      ).toBe('ConditionDirective(bar)');
+    });
+  });
+
   describe('[directiveTag]()', () => {
     it('should return an instance of ConditionBinding from a non-directive value', () => {
       const directive = conditionDirective(
