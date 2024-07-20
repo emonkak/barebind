@@ -1,27 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  StyleMapBinding,
-  styleMap as styleMapDirective,
-} from '../../src/directives/styleMap.js';
+import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateContext } from '../mocks.js';
 
 describe('styleMap()', () => {
-  it('should construct a new StyleMapDirective', () => {
-    const styleMap = { display: 'none' };
-    const directive = styleMapDirective(styleMap);
+  it('should construct a new StyleMap', () => {
+    const styleDeclaration = { display: 'none' };
+    const directive = styleMap(styleDeclaration);
 
-    expect(directive.styleMap).toBe(styleMap);
+    expect(directive.styleDeclaration).toBe(styleDeclaration);
   });
 });
 
-describe('StyleMapDirective', () => {
+describe('StyleMap', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new instance of ClassMapBinding', () => {
-      const styleMap = { display: 'none' };
-      const directive = styleMapDirective(styleMap);
+    it('should return a new instance of StyleMapBinding', () => {
+      const styleDeclaration = { display: 'none' };
+      const directive = styleMap(styleDeclaration);
       const updater = new SyncUpdater(new MockUpdateContext());
       const part = {
         type: PartType.Attribute,
@@ -37,8 +34,8 @@ describe('StyleMapDirective', () => {
     });
 
     it('should throw an error if the part does not indicate "style" attribute', () => {
-      const styleMap = { display: 'none' };
-      const directive = styleMapDirective(styleMap);
+      const styleDeclaration = { display: 'none' };
+      const directive = styleMap(styleDeclaration);
       const updater = new SyncUpdater(new MockUpdateContext());
       const part = {
         type: PartType.Attribute,
@@ -47,7 +44,7 @@ describe('StyleMapDirective', () => {
       } as const;
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'StyleDirective must be used in the "style" attribute.',
+        'StyleMap directive must be used in the "style" attribute.',
       );
     });
   });
@@ -56,7 +53,7 @@ describe('StyleMapDirective', () => {
 describe('StyleMapBinding', () => {
   describe('.connect()', () => {
     it('should set styles to the element', () => {
-      const directive = styleMapDirective({
+      const directive = styleMap({
         '--my-css-property': '1',
         color: 'black',
         margin: '10px',
@@ -85,7 +82,7 @@ describe('StyleMapBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const directive = styleMapDirective({
+      const directive = styleMap({
         color: 'black',
       });
       const part = {
@@ -110,11 +107,11 @@ describe('StyleMapBinding', () => {
 
   describe('.bind()', () => {
     it('should remove gone styles from the element', () => {
-      const directive1 = styleMapDirective({
+      const directive1 = styleMap({
         padding: '8px',
         margin: '8px',
       });
-      const directive2 = styleMapDirective({
+      const directive2 = styleMap({
         padding: '0',
       });
       const part = {
@@ -137,10 +134,10 @@ describe('StyleMapBinding', () => {
     });
 
     it('should skip an update if the styles are the same as previous ones', () => {
-      const directive1 = styleMapDirective({
+      const directive1 = styleMap({
         color: 'black',
       });
-      const directive2 = styleMapDirective(directive1.styleMap);
+      const directive2 = styleMap(directive1.styleDeclaration);
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -159,8 +156,8 @@ describe('StyleMapBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should throw an error if the new value is not StyleMapDirective', () => {
-      const directive = styleMapDirective({
+    it('should throw an error if the new value is not StyleMap', () => {
+      const directive = styleMap({
         color: 'black',
       });
       const part = {
@@ -174,14 +171,14 @@ describe('StyleMapBinding', () => {
       expect(() => {
         binding.bind(null as any, updater);
       }).toThrow(
-        'A value must be a instance of "StyleMapDirective", but got "null".',
+        'A value must be a instance of StyleMap directive, but got "null".',
       );
     });
   });
 
   describe('.unbind()', () => {
     it('should remove all styles from the element', () => {
-      const directive = styleMapDirective({
+      const directive = styleMap({
         '--my-css-property': '1',
         color: 'black',
         margin: '10px',
@@ -206,7 +203,7 @@ describe('StyleMapBinding', () => {
     });
 
     it('should skip an update if the current styles are empty', () => {
-      const directive = styleMapDirective({});
+      const directive = styleMap({});
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -224,7 +221,7 @@ describe('StyleMapBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = styleMapDirective({ display: 'component' });
+      const directive = styleMap({ display: 'component' });
       const part = {
         type: PartType.Attribute,
         name: 'style',

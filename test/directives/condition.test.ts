@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
-import { NoValueDirective } from '../../src/directives.js';
+import { NoValue } from '../../src/directives.js';
 import {
   ConditionBinding,
   condition as conditionDirective,
@@ -13,7 +13,7 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('condition()', () => {
-  it('should construct a new ConditionDirective', () => {
+  it('should construct a new Condition', () => {
     const condition = true;
     const trueBranch = () => 'foo';
     const falseBranch = () => 'bar';
@@ -26,30 +26,30 @@ describe('condition()', () => {
 });
 
 describe('when()', () => {
-  it('should construct a new ConditionDirective without false case', () => {
+  it('should construct a new Condition without false case', () => {
     const condition = true;
     const trueBranch = () => 'foo';
     const directive = when(condition, trueBranch);
 
     expect(directive.condition).toBe(condition);
     expect(directive.trueBranch).toBe(trueBranch);
-    expect(directive.falseBranch).toBe(NoValueDirective.instance);
+    expect(directive.falseBranch).toBe(NoValue.instance);
   });
 });
 
 describe('unless()', () => {
-  it('should construct a new ConditionDirective without true case', () => {
+  it('should construct a new Condition without true case', () => {
     const condition = true;
     const falseBranch = () => 'bar';
     const directive = unless(condition, falseBranch);
 
     expect(directive.condition).toBe(condition);
-    expect(directive.trueBranch).toBe(NoValueDirective.instance);
+    expect(directive.trueBranch).toBe(NoValue.instance);
     expect(directive.falseBranch).toBe(falseBranch);
   });
 });
 
-describe('ConditionDirective', () => {
+describe('Condition', () => {
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
       expect(
@@ -58,14 +58,14 @@ describe('ConditionDirective', () => {
           () => 'foo',
           () => 'bar',
         )[hintTag],
-      ).toBe('ConditionDirective(foo)');
+      ).toBe('Condition(foo)');
       expect(
         conditionDirective(
           false,
           () => 'foo',
           () => 'bar',
         )[hintTag],
-      ).toBe('ConditionDirective(bar)');
+      ).toBe('Condition(bar)');
     });
   });
 
@@ -369,7 +369,7 @@ describe('ConditionBinding', () => {
       expect(unbindSpy).toHaveBeenCalledWith(updater);
     });
 
-    it('should throw an error if the new value is not MemoDirective', () => {
+    it('should throw an error if the new value is not Condition directive', () => {
       const directive = conditionDirective(
         true,
         () => 'foo',
@@ -385,7 +385,7 @@ describe('ConditionBinding', () => {
       expect(() => {
         binding.bind(null as any, updater);
       }).toThrow(
-        'A value must be a instance of "ConditionDirective", but got "null".',
+        'A value must be a instance of Condition directive, but got "null".',
       );
     });
   });

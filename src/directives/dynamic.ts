@@ -11,11 +11,11 @@ import {
   nameOf,
 } from '../types.js';
 
-export function dynamic(value: unknown): DynamicDirective {
-  return new DynamicDirective(value);
+export function dynamic(value: unknown): Dynamic {
+  return new Dynamic(value);
 }
 
-export class DynamicDirective implements Directive {
+export class Dynamic implements Directive {
   private readonly _value: unknown;
 
   constructor(value: unknown) {
@@ -27,7 +27,7 @@ export class DynamicDirective implements Directive {
   }
 
   get [hintTag](): string {
-    return 'DynamicDirective(' + nameOf(this._value) + ')';
+    return 'Dynamic(' + nameOf(this._value) + ')';
   }
 
   [directiveTag](part: Part, updater: Updater): DynamicBinding {
@@ -36,16 +36,16 @@ export class DynamicDirective implements Directive {
 }
 
 export class DynamicBinding implements Binding<unknown> {
-  private _directive: DynamicDirective;
+  private _directive: Dynamic;
 
   private _binding: Binding<unknown>;
 
-  constructor(directive: DynamicDirective, part: Part, updater: Updater) {
+  constructor(directive: Dynamic, part: Part, updater: Updater) {
     this._directive = directive;
     this._binding = resolveBinding(directive.value, part, updater);
   }
 
-  get value(): DynamicDirective {
+  get value(): Dynamic {
     return this._directive;
   }
 
@@ -69,9 +69,9 @@ export class DynamicBinding implements Binding<unknown> {
     this._binding.connect(updater);
   }
 
-  bind(newValue: DynamicDirective, updater: Updater): void {
+  bind(newValue: Dynamic, updater: Updater): void {
     DEBUG: {
-      ensureDirective(DynamicDirective, newValue);
+      ensureDirective(Dynamic, newValue);
     }
     const oldDynamic = this._binding.value;
     const newDynamic = newValue.value;

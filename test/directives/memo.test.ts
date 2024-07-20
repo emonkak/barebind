@@ -7,7 +7,7 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('memo()', () => {
-  it('should construct a new MemoDirective', () => {
+  it('should construct a new Memo', () => {
     const factory = () => new MockDirective();
     const dependencies = ['foo'];
     const directive = memo(factory, dependencies);
@@ -17,10 +17,10 @@ describe('memo()', () => {
   });
 });
 
-describe('MemoDirective', () => {
+describe('Memo', () => {
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
-      expect(memo(() => 'foo', [])[hintTag]).toBe('MemoDirective(foo)');
+      expect(memo(() => 'foo', [])[hintTag]).toBe('Memo(foo)');
     });
   });
 
@@ -137,7 +137,7 @@ describe('MemoBinding', () => {
       expect(bindSpy).not.toHaveBeenCalled();
     });
 
-    it('should throw an error if the new value is not MemoDirective', () => {
+    it('should throw an error if the new value is not Memo directive', () => {
       const directive = memo(() => new MockDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
@@ -149,7 +149,7 @@ describe('MemoBinding', () => {
       expect(() => {
         binding.bind(null as any, updater);
       }).toThrow(
-        'A value must be a instance of "MemoDirective", but got "null".',
+        'A value must be a instance of Memo directive, but got "null".',
       );
     });
   });

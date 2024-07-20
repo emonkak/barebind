@@ -20,7 +20,7 @@ import { MockBlock } from './mocks.js';
 
 describe('Context', () => {
   describe('.childNode()', () => {
-    it('should return TemplateDirective with ChildNodeTemplate set as a template', () => {
+    it('should return Fragment with ChildNodeTemplate set as a template', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const state = new RenderState();
@@ -35,7 +35,7 @@ describe('Context', () => {
   });
 
   describe('.element()', () => {
-    it('should return TemplateDirective with ElementTemplate set as a template', () => {
+    it('should return Fragment with ElementTemplate set as a template', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const state = new RenderState();
@@ -57,7 +57,7 @@ describe('Context', () => {
   });
 
   describe('.empty()', () => {
-    it('should return TemplateDirective with EmptyTemplate set as a template', () => {
+    it('should return Fragment with EmptyTemplate set as a template', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const state = new RenderState();
@@ -154,7 +154,7 @@ describe('Context', () => {
   });
 
   describe('.html()', () => {
-    it('should return TemplateDirective with an HTML-formatted TaggedTemplate set as a template', () => {
+    it('should return Fragment with an HTML-formatted TaggedTemplate set as a template', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const state = new RenderState();
@@ -191,7 +191,7 @@ describe('Context', () => {
   });
 
   describe('.svg()', () => {
-    it('should return TemplateDirective with an SVG-hormatted TaggedTemplate set as a template', () => {
+    it('should return Fragment with an SVG-hormatted TaggedTemplate set as a template', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const state = new RenderState();
@@ -212,7 +212,7 @@ describe('Context', () => {
   });
 
   describe('.text()', () => {
-    it('should return TemplateDirective with TextTemplate set as a template', () => {
+    it('should return FragmenFragment TextTemplate set as a template', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const state = new RenderState();

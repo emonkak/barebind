@@ -13,11 +13,11 @@ import {
 export function choice<TKey, TValue>(
   key: TKey,
   factory: (key: TKey) => TValue,
-): ChoiceDirective<TKey, TValue> {
-  return new ChoiceDirective(key, factory);
+): Choice<TKey, TValue> {
+  return new Choice(key, factory);
 }
 
-export class ChoiceDirective<TKey, TValue> implements Directive {
+export class Choice<TKey, TValue> implements Directive {
   private readonly _key: TKey;
 
   private readonly _factory: (key: TKey) => TValue;
@@ -36,7 +36,7 @@ export class ChoiceDirective<TKey, TValue> implements Directive {
   }
 
   get [hintTag](): string {
-    return 'ChoiceDirective(' + nameOf(this._factory(this._key)) + ')';
+    return 'Choice(' + nameOf(this._factory(this._key)) + ')';
   }
 
   [directiveTag](part: Part, updater: Updater): ChoiceBinding<TKey, TValue> {
@@ -45,26 +45,22 @@ export class ChoiceDirective<TKey, TValue> implements Directive {
 }
 
 export class ChoiceBinding<TKey, TValue>
-  implements Binding<ChoiceDirective<TKey, TValue>>
+  implements Binding<Choice<TKey, TValue>>
 {
-  private _directive: ChoiceDirective<TKey, TValue>;
+  private _directive: Choice<TKey, TValue>;
 
   private _binding: Binding<TValue>;
 
   private _cachedBindings: Map<TKey, Binding<TValue>> = new Map();
 
-  constructor(
-    directive: ChoiceDirective<TKey, TValue>,
-    part: Part,
-    updater: Updater,
-  ) {
+  constructor(directive: Choice<TKey, TValue>, part: Part, updater: Updater) {
     const { key, factory } = directive;
     const value = factory(key);
     this._directive = directive;
     this._binding = resolveBinding(value, part, updater);
   }
 
-  get value(): ChoiceDirective<TKey, TValue> {
+  get value(): Choice<TKey, TValue> {
     return this._directive;
   }
 
@@ -88,9 +84,9 @@ export class ChoiceBinding<TKey, TValue>
     this._binding.connect(updater);
   }
 
-  bind(newValue: ChoiceDirective<TKey, TValue>, updater: Updater): void {
+  bind(newValue: Choice<TKey, TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(ChoiceDirective, newValue);
+      ensureDirective(Choice, newValue);
     }
 
     const oldValue = this._directive;

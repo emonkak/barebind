@@ -14,7 +14,7 @@ import { shallowEqual } from '../utils.js';
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTERS_PATTERN = /[A-Z]/g;
 
-export type StyleMap = {
+export type StyleDeclaration = {
   [P in JSStyleProperties]?: string;
 };
 
@@ -26,44 +26,46 @@ type ExtractStringProperties<T> = {
   [P in keyof T]: P extends string ? (T[P] extends string ? P : never) : never;
 }[keyof T];
 
-export function styleMap(styleMap: StyleMap): StyleMapDirective {
-  return new StyleMapDirective(styleMap);
+export function styleMap(styleDeclaration: StyleDeclaration): StyleMap {
+  return new StyleMap(styleDeclaration);
 }
 
-export class StyleMapDirective implements Directive {
-  private readonly _styleMap: StyleMap;
+export class StyleMap implements Directive {
+  private readonly _styleDeclaration: StyleDeclaration;
 
-  constructor(styleMap: StyleMap) {
-    this._styleMap = styleMap;
+  constructor(styleDeclaration: StyleDeclaration) {
+    this._styleDeclaration = styleDeclaration;
   }
 
-  get styleMap(): StyleMap {
-    return this._styleMap;
+  get styleDeclaration(): StyleDeclaration {
+    return this._styleDeclaration;
   }
 
   [directiveTag](part: Part, _updater: Updater): StyleMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
-      throw new Error('StyleDirective must be used in the "style" attribute.');
+      throw new Error(
+        'StyleMap directive must be used in the "style" attribute.',
+      );
     }
     return new StyleMapBinding(this, part);
   }
 }
 
-export class StyleMapBinding implements Binding<StyleMapDirective>, Effect {
-  private _directive: StyleMapDirective;
+export class StyleMapBinding implements Binding<StyleMap>, Effect {
+  private _directive: StyleMap;
 
   private readonly _part: AttributePart;
 
-  private _memoizedStyleMap: StyleMap = {};
+  private _memoizedStyleDeclaration: StyleDeclaration = {};
 
   private _dirty = false;
 
-  constructor(directive: StyleMapDirective, part: AttributePart) {
+  constructor(directive: StyleMap, part: AttributePart) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): StyleMapDirective {
+  get value(): StyleMap {
     return this._directive;
   }
 
@@ -83,21 +85,21 @@ export class StyleMapBinding implements Binding<StyleMapDirective>, Effect {
     this._requestMutation(updater);
   }
 
-  bind(newValue: StyleMapDirective, updater: Updater): void {
+  bind(newValue: StyleMap, updater: Updater): void {
     DEBUG: {
-      ensureDirective(StyleMapDirective, newValue);
+      ensureDirective(StyleMap, newValue);
     }
     const oldValue = this._directive;
-    if (!shallowEqual(newValue.styleMap, oldValue.styleMap)) {
+    if (!shallowEqual(newValue.styleDeclaration, oldValue.styleDeclaration)) {
       this._directive = newValue;
       this._requestMutation(updater);
     }
   }
 
   unbind(updater: Updater): void {
-    const { styleMap } = this._directive;
-    if (Object.keys(styleMap).length > 0) {
-      this._directive = new StyleMapDirective({});
+    const { styleDeclaration } = this._directive;
+    if (Object.keys(styleDeclaration).length > 0) {
+      this._directive = new StyleMap({});
       this._requestMutation(updater);
     }
   }
@@ -109,23 +111,23 @@ export class StyleMapBinding implements Binding<StyleMapDirective>, Effect {
       | HTMLElement
       | MathMLElement
       | SVGElement;
-    const oldStyleMap = this._memoizedStyleMap;
-    const newStyleMap = this._directive.styleMap;
+    const oldStyleDeclaration = this._memoizedStyleDeclaration;
+    const newStyleDeclaration = this._directive.styleDeclaration;
 
-    for (const newProperty in newStyleMap) {
+    for (const newProperty in newStyleDeclaration) {
       const cssProperty = toCSSProperty(newProperty);
-      const cssValue = newStyleMap[newProperty as JSStyleProperties]!;
+      const cssValue = newStyleDeclaration[newProperty as JSStyleProperties]!;
       style.setProperty(cssProperty, cssValue);
     }
 
-    for (const oldProperty in oldStyleMap) {
-      if (!Object.hasOwn(newStyleMap, oldProperty)) {
+    for (const oldProperty in oldStyleDeclaration) {
+      if (!Object.hasOwn(newStyleDeclaration, oldProperty)) {
         const cssProperty = toCSSProperty(oldProperty);
         style.removeProperty(cssProperty);
       }
     }
 
-    this._memoizedStyleMap = newStyleMap;
+    this._memoizedStyleDeclaration = newStyleDeclaration;
     this._dirty = false;
   }
 

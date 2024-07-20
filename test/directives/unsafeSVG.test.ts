@@ -7,7 +7,7 @@ import { MockUpdateContext } from '../mocks.js';
 import { UnsafeSVGBinding, unsafeSVG } from '../../src/directives/unsafeSVG.js';
 
 describe('unsafeSVG()', () => {
-  it('should construct a new UnsafeSVGDirective', () => {
+  it('should construct a new UnsafeSVG', () => {
     const unsafeContent = '<circle cx="0" cy="0" r="10" />';
     const directive = unsafeSVG(unsafeContent);
 
@@ -15,7 +15,7 @@ describe('unsafeSVG()', () => {
   });
 });
 
-describe('UnsafeSVGDirective', () => {
+describe('UnsafeSVG', () => {
   describe('[directiveTag]()', () => {
     it('should return a new instance of ClassMapBinding', () => {
       const directive = unsafeSVG('<circle cx="0" cy="0" r="10" />');
@@ -41,7 +41,7 @@ describe('UnsafeSVGDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'UnsafeSVGDirective must be used in ChildNodePart.',
+        'UnsafeSVG directive must be used in ChildNodePart.',
       );
     });
   });
@@ -204,7 +204,7 @@ describe('UnsafeSVGBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should throw an error if the new value is not UnsafeSVGDirective', () => {
+    it('should throw an error if the new value is not UnsafeSVG directive', () => {
       const directive = unsafeSVG('<circle x="0" y="0" r="10" />');
       const part = {
         type: PartType.ChildNode,
@@ -214,7 +214,7 @@ describe('UnsafeSVGBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => binding.bind(null as any, updater)).toThrow(
-        'A value must be a instance of "UnsafeSVGDirective", but got "null".',
+        'A value must be a instance of UnsafeSVG directive, but got "null".',
       );
     });
   });

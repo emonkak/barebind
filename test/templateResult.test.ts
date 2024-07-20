@@ -1,23 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  TemplateBinding,
-  TemplateDirective,
-} from '../../src/directives/template.js';
-import { PartType, directiveTag, hintTag } from '../../src/types.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+  TemplateResult,
+  TemplateResultBinding,
+} from '../src/templateResult.js';
+import { PartType, directiveTag, hintTag } from '../src/types.js';
+import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockTemplate,
   MockTemplateFragment,
   MockUpdateContext,
-} from '../mocks.js';
+} from './mocks.js';
 
-describe('TemplateDirective', () => {
+describe('Fragment', () => {
   describe('.constructor()', () => {
-    it('should construct a new TemplateDirective', () => {
+    it('should construct a new Fragment', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = new TemplateDirective(template, data);
+      const directive = new TemplateResult(template, data);
 
       expect(directive.template).toBe(template);
       expect(directive.data).toBe(data);
@@ -26,14 +26,14 @@ describe('TemplateDirective', () => {
 
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
-      expect(directive[hintTag]).toBe('TemplateDirective(MockTemplate)');
+      const directive = new TemplateResult(new MockTemplate(), {});
+      expect(directive[hintTag]).toBe('TemplateResult(MockTemplate)');
     });
   });
 
   describe('[directiveTag]()', () => {
     it('should return an instance of TemplateBinding', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -55,7 +55,7 @@ describe('TemplateDirective', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -63,7 +63,7 @@ describe('TemplateDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'TemplateDirective must be used in ChildNodePart.',
+        'TemplateResult directive must be used in ChildNodePart.',
       );
     });
   });
@@ -72,25 +72,25 @@ describe('TemplateDirective', () => {
 describe('TemplateBinding', () => {
   describe('.shouldUpdate()', () => {
     it('should return false after initialization', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const parent = new MockBlock();
-      const binding = new TemplateBinding(directive, part, parent);
+      const binding = new TemplateResultBinding(directive, part, parent);
 
       expect(binding.shouldUpdate()).toBe(false);
     });
 
     it('should return true after an update is requested', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const parent = new MockBlock();
-      const binding = new TemplateBinding(directive, part, parent);
+      const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.requestUpdate('user-blocking', updater);
@@ -99,13 +99,13 @@ describe('TemplateBinding', () => {
     });
 
     it('should return false if there is a dirty parent', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const parent = new MockBlock();
-      const binding = new TemplateBinding(directive, part, parent);
+      const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       vi.spyOn(parent, 'dirty', 'get').mockReturnValue(true);
@@ -118,12 +118,12 @@ describe('TemplateBinding', () => {
 
   describe('.cancelUpdate()', () => {
     it('should cancel the scheduled update', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
@@ -137,12 +137,12 @@ describe('TemplateBinding', () => {
 
   describe('.requestUpdate()', () => {
     it('should schdule the update', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
@@ -157,12 +157,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should reschedule the update if given higher priority', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
@@ -179,12 +179,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should do nothing if an update is already scheduled', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
@@ -201,12 +201,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should cancel the unmount in progress', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
@@ -233,12 +233,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should mark itself as dirty', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.requestUpdate('user-blocking', updater);
@@ -253,12 +253,12 @@ describe('TemplateBinding', () => {
 
   describe('.update()', () => {
     it('should abort the update if an update is not requested', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
@@ -274,12 +274,12 @@ describe('TemplateBinding', () => {
 
   describe('.connect()', () => {
     it('should hydrate the template and mount its fragment', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
@@ -302,13 +302,13 @@ describe('TemplateBinding', () => {
     });
 
     it('should enqueue the binding as a block with the parent priority', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const parent = new MockBlock();
-      const binding = new TemplateBinding(directive, part, parent);
+      const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       const getPrioritySpy = vi
@@ -328,12 +328,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should do nothing if an update is already scheduled', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
@@ -348,12 +348,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should cancel the unmount in progress', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
@@ -378,12 +378,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should mark itself as dirty', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.bind(directive, updater);
@@ -398,13 +398,13 @@ describe('TemplateBinding', () => {
 
   describe('.bind()', () => {
     it('should attach data to the current fragment if that is a hydrated from the same template', () => {
-      const directive1 = new TemplateDirective(new MockTemplate(), {});
-      const directive2 = new TemplateDirective(new MockTemplate(), {});
+      const directive1 = new TemplateResult(new MockTemplate(), {});
+      const directive2 = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive1, part, null);
+      const binding = new TemplateResultBinding(directive1, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
@@ -433,13 +433,13 @@ describe('TemplateBinding', () => {
     });
 
     it('should detach data from the current fragment if that is a hydrated from a different template', () => {
-      const directive1 = new TemplateDirective(new MockTemplate(1), {});
-      const directive2 = new TemplateDirective(new MockTemplate(2), {});
+      const directive1 = new TemplateResult(new MockTemplate(1), {});
+      const directive2 = new TemplateResult(new MockTemplate(2), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive1, part, null);
+      const binding = new TemplateResultBinding(directive1, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment1 = new MockTemplateFragment();
       const fragment2 = new MockTemplateFragment();
@@ -486,12 +486,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should remount the fragment if it is unmounted', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
@@ -530,13 +530,13 @@ describe('TemplateBinding', () => {
     });
 
     it('should request the mutation only once', () => {
-      const directive1 = new TemplateDirective(new MockTemplate(1), {});
-      const directive2 = new TemplateDirective(new MockTemplate(2), {});
+      const directive1 = new TemplateResult(new MockTemplate(1), {});
+      const directive2 = new TemplateResult(new MockTemplate(2), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive1, part, null);
+      const binding = new TemplateResultBinding(directive1, part, null);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
@@ -561,12 +561,12 @@ describe('TemplateBinding', () => {
 
   describe('.unbind()', () => {
     it('should detach data from the current fragment', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
@@ -595,12 +595,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should cancel the update in progress', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
@@ -628,12 +628,12 @@ describe('TemplateBinding', () => {
     });
 
     it('should mark itself as dirty', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       binding.unbind(updater);
@@ -648,12 +648,12 @@ describe('TemplateBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the current fragment', () => {
-      const directive = new TemplateDirective(new MockTemplate(), {});
+      const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 

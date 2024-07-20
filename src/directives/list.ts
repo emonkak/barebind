@@ -18,18 +18,18 @@ export function orderedList<TItem, TKey, TValue>(
   items: TItem[],
   keySelector: Selector<TItem, TKey>,
   valueSelector: Selector<TItem, TValue>,
-): OrderedListDirective<TItem, TKey, TValue> {
-  return new OrderedListDirective(items, keySelector, valueSelector);
+): OrderedList<TItem, TKey, TValue> {
+  return new OrderedList(items, keySelector, valueSelector);
 }
 
 export function inPlaceList<TItem, TValue>(
   items: TItem[],
   valueSelector: Selector<TItem, TValue>,
-): InPlaceListDirective<TItem, TValue> {
-  return new InPlaceListDirective(items, valueSelector);
+): InPlaceList<TItem, TValue> {
+  return new InPlaceList(items, valueSelector);
 }
 
-export class OrderedListDirective<TItem, TKey, TValue> implements Directive {
+export class OrderedList<TItem, TKey, TValue> implements Directive {
   private readonly _items: TItem[];
 
   private readonly _keySelector: Selector<TItem, TKey>;
@@ -63,16 +63,16 @@ export class OrderedListDirective<TItem, TKey, TValue> implements Directive {
     _updater: Updater,
   ): OrderedListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('OrderedListDirective must be used in ChildNodePart.');
+      throw new Error('OrderedList directive must be used in ChildNodePart.');
     }
     return new OrderedListBinding(this, part);
   }
 }
 
 export class OrderedListBinding<TItem, TKey, TValue>
-  implements Binding<OrderedListDirective<TItem, TKey, TValue>>, Effect
+  implements Binding<OrderedList<TItem, TKey, TValue>>, Effect
 {
-  private _directive: OrderedListDirective<TItem, TKey, TValue>;
+  private _directive: OrderedList<TItem, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -85,14 +85,14 @@ export class OrderedListBinding<TItem, TKey, TValue>
   private _dirty = false;
 
   constructor(
-    directive: OrderedListDirective<TItem, TKey, TValue>,
+    directive: OrderedList<TItem, TKey, TValue>,
     part: ChildNodePart,
   ) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): OrderedListDirective<TItem, TKey, TValue> {
+  get value(): OrderedList<TItem, TKey, TValue> {
     return this._directive;
   }
 
@@ -116,12 +116,9 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._updateItems(updater);
   }
 
-  bind(
-    newValue: OrderedListDirective<TItem, TKey, TValue>,
-    updater: Updater,
-  ): void {
+  bind(newValue: OrderedList<TItem, TKey, TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(OrderedListDirective, newValue);
+      ensureDirective(OrderedList, newValue);
     }
     this._directive = newValue;
     this._updateItems(updater);
@@ -129,7 +126,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
 
   unbind(updater: Updater): void {
     const { keySelector, valueSelector } = this._directive;
-    this._directive = new OrderedListDirective([], keySelector, valueSelector);
+    this._directive = new OrderedList([], keySelector, valueSelector);
     this._clearItems(updater);
   }
 
@@ -311,7 +308,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
   }
 }
 
-export class InPlaceListDirective<TItem, TValue> implements Directive {
+export class InPlaceList<TItem, TValue> implements Directive {
   private readonly _items: TItem[];
 
   private readonly _valueSelector: Selector<TItem, TValue>;
@@ -334,16 +331,16 @@ export class InPlaceListDirective<TItem, TValue> implements Directive {
     _updater: Updater,
   ): InPlaceListBinding<TItem, TValue> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('InPlaceListDirective must be used in ChildNodePart.');
+      throw new Error('InPlaceList directive must be used in ChildNodePart.');
     }
     return new InPlaceListBinding(this, part);
   }
 }
 
 export class InPlaceListBinding<TItem, TValue>
-  implements Binding<InPlaceListDirective<TItem, TValue>>, Effect
+  implements Binding<InPlaceList<TItem, TValue>>, Effect
 {
-  private _directive: InPlaceListDirective<TItem, TValue>;
+  private _directive: InPlaceList<TItem, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -353,15 +350,12 @@ export class InPlaceListBinding<TItem, TValue>
 
   private _dirty = false;
 
-  constructor(
-    directive: InPlaceListDirective<TItem, TValue>,
-    part: ChildNodePart,
-  ) {
+  constructor(directive: InPlaceList<TItem, TValue>, part: ChildNodePart) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): InPlaceListDirective<TItem, TValue> {
+  get value(): InPlaceList<TItem, TValue> {
     return this._directive;
   }
 
@@ -385,9 +379,9 @@ export class InPlaceListBinding<TItem, TValue>
     this._updateItems(updater);
   }
 
-  bind(newValue: InPlaceListDirective<TItem, TValue>, updater: Updater): void {
+  bind(newValue: InPlaceList<TItem, TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(InPlaceListDirective, newValue);
+      ensureDirective(InPlaceList, newValue);
     }
     const oldValue = this._directive;
     if (oldValue.items !== newValue.items) {
@@ -398,7 +392,7 @@ export class InPlaceListBinding<TItem, TValue>
 
   unbind(updater: Updater): void {
     const { valueSelector } = this._directive;
-    this._directive = new InPlaceListDirective([], valueSelector);
+    this._directive = new InPlaceList([], valueSelector);
     this._clearItems(updater);
   }
 

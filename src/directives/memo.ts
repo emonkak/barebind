@@ -14,11 +14,11 @@ import { dependenciesAreChanged } from '../utils.js';
 export function memo<T>(
   factory: () => T,
   dependencies: unknown[] | undefined,
-): MemoDirective<T> {
-  return new MemoDirective(factory, dependencies);
+): Memo<T> {
+  return new Memo(factory, dependencies);
 }
 
-export class MemoDirective<T> implements Directive {
+export class Memo<T> implements Directive {
   private readonly _factory: () => T;
 
   private readonly _dependencies: unknown[] | undefined;
@@ -37,7 +37,7 @@ export class MemoDirective<T> implements Directive {
   }
 
   get [hintTag](): string {
-    return 'MemoDirective(' + nameOf(this._factory()) + ')';
+    return 'Memo(' + nameOf(this._factory()) + ')';
   }
 
   [directiveTag](part: Part, updater: Updater): MemoBinding<T> {
@@ -45,17 +45,17 @@ export class MemoDirective<T> implements Directive {
   }
 }
 
-export class MemoBinding<T> implements Binding<MemoDirective<T>> {
-  private _directive: MemoDirective<T>;
+export class MemoBinding<T> implements Binding<Memo<T>> {
+  private _directive: Memo<T>;
 
   private readonly _binding: Binding<T>;
 
-  constructor(directive: MemoDirective<T>, part: Part, updater: Updater) {
+  constructor(directive: Memo<T>, part: Part, updater: Updater) {
     this._directive = directive;
     this._binding = resolveBinding(directive.factory(), part, updater);
   }
 
-  get value(): MemoDirective<T> {
+  get value(): Memo<T> {
     return this._directive;
   }
 
@@ -79,9 +79,9 @@ export class MemoBinding<T> implements Binding<MemoDirective<T>> {
     this._binding.connect(updater);
   }
 
-  bind(newValue: MemoDirective<T>, updater: Updater): void {
+  bind(newValue: Memo<T>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(MemoDirective, newValue);
+      ensureDirective(Memo, newValue);
     }
     const oldDependencies = this._directive.dependencies;
     const newDependencies = newValue.dependencies;
@@ -92,12 +92,12 @@ export class MemoBinding<T> implements Binding<MemoDirective<T>> {
   }
 
   unbind(updater: Updater): void {
-    this._directive = new MemoDirective(this._directive.factory, undefined);
+    this._directive = new Memo(this._directive.factory, undefined);
     this._binding.unbind(updater);
   }
 
   disconnect(): void {
-    this._directive = new MemoDirective(this._directive.factory, undefined);
+    this._directive = new Memo(this._directive.factory, undefined);
     this._binding.disconnect();
   }
 }

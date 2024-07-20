@@ -13,7 +13,7 @@ import { MockUpdateContext } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('orderedList()', () => {
-  it('should construst a new OrderedListDirective', () => {
+  it('should construst a new OrderedList', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
     const keySelector = (item: string) => item;
@@ -26,7 +26,7 @@ describe('orderedList()', () => {
 });
 
 describe('inPlaceList()', () => {
-  it('should construst a new OrderedListDirective used indexes as keys', () => {
+  it('should construst a new OrderedList used indexes as keys', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
     const directive = inPlaceList(items, valueSelector);
@@ -36,7 +36,7 @@ describe('inPlaceList()', () => {
   });
 });
 
-describe('OrderedListDirective', () => {
+describe('OrderedList', () => {
   describe('[directiveTag]()', () => {
     it('should return an instance of OrderedListBinding', () => {
       const directive = orderedList(
@@ -71,7 +71,7 @@ describe('OrderedListDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'OrderedListDirective must be used in ChildNodePart.',
+        'OrderedList directive must be used in ChildNodePart.',
       );
     });
   });
@@ -348,7 +348,7 @@ describe('OrderedListBinding', () => {
   });
 });
 
-describe('InPlaceListDirective', () => {
+describe('InPlaceList', () => {
   describe('[directiveTag]()', () => {
     it('should return an instance of InPlaceListBinding', () => {
       const directive = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
@@ -375,7 +375,7 @@ describe('InPlaceListDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'InPlaceListDirective must be used in ChildNodePart.',
+        'InPlaceList directive must be used in ChildNodePart.',
       );
     });
   });

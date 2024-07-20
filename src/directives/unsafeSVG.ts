@@ -9,11 +9,11 @@ import {
   ensureDirective,
 } from '../types.js';
 
-export function unsafeSVG(content: string): UnsafeSVGDirective {
-  return new UnsafeSVGDirective(content);
+export function unsafeSVG(content: string): UnsafeSVG {
+  return new UnsafeSVG(content);
 }
 
-export class UnsafeSVGDirective implements Directive {
+export class UnsafeSVG implements Directive {
   private readonly _unsafeContent: string;
 
   constructor(unsafeContent: string) {
@@ -26,14 +26,14 @@ export class UnsafeSVGDirective implements Directive {
 
   [directiveTag](part: Part, _updater: Updater): UnsafeSVGBinding {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('UnsafeSVGDirective must be used in ChildNodePart.');
+      throw new Error('UnsafeSVG directive must be used in ChildNodePart.');
     }
     return new UnsafeSVGBinding(this, part);
   }
 }
 
-export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
-  private _directive: UnsafeSVGDirective;
+export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
+  private _directive: UnsafeSVG;
 
   private readonly _part: ChildNodePart;
 
@@ -41,12 +41,12 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
 
   private _dirty = false;
 
-  constructor(directive: UnsafeSVGDirective, part: ChildNodePart) {
+  constructor(directive: UnsafeSVG, part: ChildNodePart) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): UnsafeSVGDirective {
+  get value(): UnsafeSVG {
     return this._directive;
   }
 
@@ -66,9 +66,9 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
     this._requestMutation(updater);
   }
 
-  bind(newValue: UnsafeSVGDirective, updater: Updater): void {
+  bind(newValue: UnsafeSVG, updater: Updater): void {
     DEBUG: {
-      ensureDirective(UnsafeSVGDirective, newValue);
+      ensureDirective(UnsafeSVG, newValue);
     }
     const oldValue = this._directive;
     if (oldValue.unsafeContent !== newValue.unsafeContent) {
@@ -80,7 +80,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVGDirective> {
   unbind(updater: Updater): void {
     const { unsafeContent } = this._directive;
     if (unsafeContent !== '') {
-      this._directive = new UnsafeSVGDirective('');
+      this._directive = new UnsafeSVG('');
       this.connect(updater);
     }
   }

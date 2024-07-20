@@ -13,7 +13,7 @@ import { MockDirective } from './mocks.js';
 describe('ensureDirective', () => {
   it('should throw an error if the value is not instance of the expected class', () => {
     expect(() => ensureDirective(MockDirective, null)).toThrow(
-      'A value must be a instance of "MockDirective", but got "null".',
+      'A value must be a instance of MockDirective directive, but got "null".',
     );
   });
 

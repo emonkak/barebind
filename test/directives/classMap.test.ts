@@ -1,27 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  ClassMapBinding,
-  classMap as classMapDirective,
-} from '../../src/directives/classMap.js';
+import { ClassMapBinding, classMap } from '../../src/directives/classMap.js';
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateContext } from '../mocks.js';
 
 describe('classMap()', () => {
-  it('should construct a classMapDirective', () => {
-    const classMap = { foo: true };
-    const directive = classMapDirective(classMap);
+  it('should construct a ClassMap', () => {
+    const classDeclaration = { foo: true };
+    const directive = classMap(classDeclaration);
 
-    expect(directive.classMap).toBe(classMap);
+    expect(directive.classDeclaration).toBe(classDeclaration);
   });
 });
 
 describe('ClassMapDirective', () => {
   describe('[directiveTag]()', () => {
     it('should return a new instance of ClassMapBinding', () => {
-      const classMap = { foo: true };
-      const directive = classMapDirective(classMap);
+      const classDeclaration = { foo: true };
+      const directive = classMap(classDeclaration);
       const updater = new SyncUpdater(new MockUpdateContext());
       const part = {
         type: PartType.Attribute,
@@ -37,8 +34,8 @@ describe('ClassMapDirective', () => {
     });
 
     it('should throw an error if the part does not indicate "class" attribute', () => {
-      const classMap = { foo: true };
-      const directive = classMapDirective(classMap);
+      const classDeclaration = { foo: true };
+      const directive = classMap(classDeclaration);
       const updater = new SyncUpdater(new MockUpdateContext());
       const part = {
         type: PartType.Attribute,
@@ -47,7 +44,7 @@ describe('ClassMapDirective', () => {
       } as const;
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'ClassMapDirective must be used in the "class" attribute.',
+        'ClassMap directive must be used in the "class" attribute.',
       );
     });
   });
@@ -56,7 +53,7 @@ describe('ClassMapDirective', () => {
 describe('ClassMapBinding', () => {
   describe('.connect()', () => {
     it('should add properties whose values are true as classes to the element', () => {
-      const directive = classMapDirective({
+      const directive = classMap({
         foo: true,
         bar: false,
         baz: true,
@@ -78,7 +75,7 @@ describe('ClassMapBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const directive = classMapDirective({
+      const directive = classMap({
         foo: true,
         bar: false,
         baz: true,
@@ -105,12 +102,12 @@ describe('ClassMapBinding', () => {
 
   describe('.bind()', () => {
     it('should remove classes whose values are false from the element', () => {
-      const directive1 = classMapDirective({
+      const directive1 = classMap({
         foo: true,
         bar: false,
         baz: true,
       });
-      const directive2 = classMapDirective({
+      const directive2 = classMap({
         foo: false,
         bar: true,
       });
@@ -134,12 +131,12 @@ describe('ClassMapBinding', () => {
     });
 
     it('should skip an update if the classes are the same as previous ones', () => {
-      const directive1 = classMapDirective({
+      const directive1 = classMap({
         foo: true,
         bar: false,
         baz: true,
       });
-      const directive2 = classMapDirective(directive1.classMap);
+      const directive2 = classMap(directive1.classDeclaration);
       const part = {
         type: PartType.Attribute,
         name: 'class',
@@ -158,8 +155,8 @@ describe('ClassMapBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should throw an error if the new value is not ClassMapDirective', () => {
-      const directive = classMapDirective({
+    it('should throw an error if the new value is not ClassMap', () => {
+      const directive = classMap({
         foo: true,
       });
       const part = {
@@ -173,14 +170,14 @@ describe('ClassMapBinding', () => {
       expect(() => {
         binding.bind(null as any, updater);
       }).toThrow(
-        'A value must be a instance of "ClassMapDirective", but got "null".',
+        'A value must be a instance of ClassMap directive, but got "null".',
       );
     });
   });
 
   describe('.unbind()', () => {
     it('should remove all classes from the element', () => {
-      const directive = classMapDirective({
+      const directive = classMap({
         foo: true,
         bar: false,
         baz: true,
@@ -203,7 +200,7 @@ describe('ClassMapBinding', () => {
     });
 
     it('should skip an update if the current properties are empty', () => {
-      const directive = classMapDirective({});
+      const directive = classMap({});
       const part = {
         type: PartType.Attribute,
         name: 'class',
@@ -221,7 +218,7 @@ describe('ClassMapBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = classMapDirective({
+      const directive = classMap({
         foo: true,
       });
       const part = {

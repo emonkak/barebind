@@ -1,39 +1,42 @@
 export {
   ComponentBinding,
-  ComponentDirective,
+  Component,
   component,
 } from './directives/component.js';
-export { ChoiceBinding, ChoiceDirective, choice } from './directives/choice.js';
 export {
-  type ClassMap,
+  ChoiceBinding,
+  Choice,
+  choice,
+} from './directives/choice.js';
+export {
+  type ClassDeclaration,
   ClassMapBinding,
-  ClassMapDirective,
   classMap,
 } from './directives/classMap.js';
 export {
   ConditionBinding,
-  ConditionDirective,
+  Condition,
   condition,
   unless,
   when,
 } from './directives/condition.js';
 export {
   DynamicBinding,
-  DynamicDirective,
+  Dynamic,
   dynamic,
 } from './directives/dynamic.js';
 export {
   InPlaceListBinding,
-  OrderedListDirective,
+  OrderedList,
   inPlaceList,
   orderedList,
 } from './directives/list.js';
 export {
   MemoBinding,
-  MemoDirective,
+  Memo,
   memo,
 } from './directives/memo.js';
-export { RefBinding, RefDirective, ref } from './directives/ref.js';
+export { RefBinding, Ref, ref } from './directives/ref.js';
 export {
   type Subscriber,
   type Subscription,
@@ -45,24 +48,23 @@ export {
   SignalBinding,
 } from './directives/signal.js';
 export {
-  type StyleMap,
-  StyleMapDirective,
+  type StyleDeclaration,
+  StyleMap,
   StyleMapBinding,
   styleMap,
 } from './directives/styleMap.js';
-export { TemplateBinding, TemplateDirective } from './directives/template.js';
 export {
   noValue,
   NoValueBinding,
-  NoValueDirective,
+  NoValue,
 } from './directives/noValue.js';
 export {
   UnsafeHTMLBinding,
-  UnsafeHTMLDirective,
+  UnsafeHTML,
   unsafeHTML,
 } from './directives/unsafeHTML.js';
 export {
   UnsafeSVGBinding,
-  UnsafeSVGDirective,
+  UnsafeSVG,
   unsafeSVG,
 } from './directives/unsafeSVG.js';

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  NoValue,
   NoValueBinding,
-  NoValueDirective,
   noValue,
 } from '../../src/directives/noValue.js';
 import { PartType, directiveTag } from '../../src/types.js';
@@ -10,16 +10,16 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateContext } from '../mocks.js';
 
 describe('noValue', () => {
-  it('should be the same as NoValueDirective.instance', () => {
-    expect(noValue).toBe(NoValueDirective.instance);
+  it('should be the same as NoValue.instance', () => {
+    expect(noValue).toBe(NoValue.instance);
   });
 });
 
-describe('NoValueDirective', () => {
+describe('NoValue', () => {
   describe('.constructor()', () => {
     it('should be forbidden from being called directly', () => {
-      expect(() => new (NoValueDirective as any)()).toThrow(
-        'NoValueDirective constructor cannot be called directly.',
+      expect(() => new (NoValue as any)()).toThrow(
+        'NoValue constructor cannot be called directly.',
       );
     });
   });
@@ -73,7 +73,7 @@ describe('NoValueBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should throw an error if the new value is not NoValueDirective', () => {
+    it('should throw an error if the new value is not NoValue', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -82,7 +82,7 @@ describe('NoValueBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => binding.bind(null as any, updater)).toThrow(
-        'A value must be a instance of "NoValueDirective", but got "null".',
+        'A value must be a instance of NoValue directive, but got "null".',
       );
     });
   });

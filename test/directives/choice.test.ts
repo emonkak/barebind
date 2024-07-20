@@ -1,17 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
-import {
-  ChoiceBinding,
-  ChoiceDirective,
-  choice,
-} from '../../src/directives/choice.js';
+import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
 import { PartType, directiveTag, hintTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('choice()', () => {
-  it('should construct a new ChoiceDirective', () => {
+  it('should construct a new Choice', () => {
     const key = 'foo';
     const factory = () => new MockDirective();
     const directive = choice(key, factory);
@@ -21,16 +17,16 @@ describe('choice()', () => {
   });
 });
 
-describe('ChoiceDirective', () => {
+describe('Choice', () => {
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
-      expect(choice('foo', (key) => key)[hintTag]).toBe('ChoiceDirective(foo)');
-      expect(choice('bar', (key) => key)[hintTag]).toBe('ChoiceDirective(bar)');
+      expect(choice('foo', (key) => key)[hintTag]).toBe('Choice(foo)');
+      expect(choice('bar', (key) => key)[hintTag]).toBe('Choice(bar)');
     });
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of ChoiceDirective from a non-directive value', () => {
+    it('should return an instance of Choice from a non-directive value', () => {
       const factory = vi.fn((key: 'foo' | 'bar') => key);
       const directive = choice('foo', factory);
       const part = {
@@ -56,7 +52,7 @@ describe('ChoiceDirective', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return an instance of ChoiceDirective from a directive', () => {
+    it('should return an instance of Choice from a directive', () => {
       const fooDirective = new MockDirective();
       const barDirective = new MockDirective();
       const factory = vi.fn((key: 'foo' | 'bar') => {
@@ -127,7 +123,7 @@ describe('ChoiceBinding', () => {
             return barDirective;
         }
       });
-      const directive = new ChoiceDirective<'foo' | 'bar', MockDirective>(
+      const directive = new Choice<'foo' | 'bar', MockDirective>(
         'foo',
         factory,
       );
@@ -168,11 +164,11 @@ describe('ChoiceBinding', () => {
             return barDirective;
         }
       });
-      const directive1 = new ChoiceDirective<'foo' | 'bar', MockDirective>(
+      const directive1 = new Choice<'foo' | 'bar', MockDirective>(
         'foo',
         factory,
       );
-      const directive2 = new ChoiceDirective<'foo' | 'bar', MockDirective>(
+      const directive2 = new Choice<'foo' | 'bar', MockDirective>(
         'bar',
         factory,
       );
@@ -215,11 +211,11 @@ describe('ChoiceBinding', () => {
             return barDirective;
         }
       });
-      const directive1 = new ChoiceDirective<'foo' | 'bar', MockDirective>(
+      const directive1 = new Choice<'foo' | 'bar', MockDirective>(
         'foo',
         factory,
       );
-      const directive2 = new ChoiceDirective<'foo' | 'bar', MockDirective>(
+      const directive2 = new Choice<'foo' | 'bar', MockDirective>(
         'bar',
         factory,
       );
@@ -253,7 +249,7 @@ describe('ChoiceBinding', () => {
       expect(unbindSpy).toHaveBeenCalledWith(updater);
     });
 
-    it('should throw an error if the new value is not ChoiceDirective', () => {
+    it('should throw an error if the new value is not Choice directive', () => {
       const directive = choice('foo', () => new MockDirective());
       const part = {
         type: PartType.ChildNode,
@@ -265,7 +261,7 @@ describe('ChoiceBinding', () => {
       expect(() => {
         binding.bind(null as any, updater);
       }).toThrow(
-        'A value must be a instance of "ChoiceDirective", but got "null".',
+        'A value must be a instance of Choice directive, but got "null".',
       );
     });
   });

@@ -7,19 +7,19 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('dynamic()', () => {
-  it('should construct a new DynamicDirective', () => {
+  it('should construct a new Dynamic', () => {
     const directive = dynamic('foo');
 
     expect(directive.value).toBe('foo');
   });
 });
 
-describe('DynamicDirective', () => {
+describe('Dynamic', () => {
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
-      expect(dynamic('foo')[hintTag]).toBe('DynamicDirective(foo)');
+      expect(dynamic('foo')[hintTag]).toBe('Dynamic(foo)');
       expect(dynamic(new MockDirective())[hintTag]).toBe(
-        'DynamicDirective(MockDirective)',
+        'Dynamic(MockDirective)',
       );
     });
   });

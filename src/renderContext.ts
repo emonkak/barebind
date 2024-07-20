@@ -1,4 +1,3 @@
-import { TemplateDirective } from './directives/template.js';
 import type { RenderState } from './renderState.js';
 import {
   type ElementData,
@@ -6,6 +5,7 @@ import {
 } from './template/elementTemplate.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
+import { TemplateResult } from './templateResult.js';
 import {
   type Cleanup,
   type EffectCallback,
@@ -64,26 +64,26 @@ export class RenderContext {
     this._updater = updater;
   }
 
-  childNode<T>(value: T): TemplateDirective<T, RenderContext> {
+  childNode<T>(value: T): TemplateResult<T, RenderContext> {
     const template = ChildNodeTemplate.instance;
-    return new TemplateDirective(template, value);
+    return new TemplateResult(template, value);
   }
 
   element<TElementValue, TChildNodeValue>(
     type: string,
     elementValue: TElementValue,
     childNodeValue: TChildNodeValue,
-  ): TemplateDirective<
+  ): TemplateResult<
     ElementData<TElementValue, TChildNodeValue>,
     RenderContext
   > {
     const template = new ElementTemplate<TElementValue, TChildNodeValue>(type);
-    return new TemplateDirective(template, { elementValue, childNodeValue });
+    return new TemplateResult(template, { elementValue, childNodeValue });
   }
 
-  empty(): TemplateDirective<null, RenderContext> {
+  empty(): TemplateResult<null, RenderContext> {
     const template = EmptyTemplate.instance;
-    return new TemplateDirective(template, null);
+    return new TemplateResult(template, null);
   }
 
   /**
@@ -106,9 +106,9 @@ export class RenderContext {
   html(
     tokens: ReadonlyArray<string>,
     ...data: unknown[]
-  ): TemplateDirective<unknown[], RenderContext> {
+  ): TemplateResult<unknown[], RenderContext> {
     const template = this._state.getHTMLTemplate(tokens, data);
-    return new TemplateDirective(template, data);
+    return new TemplateResult(template, data);
   }
 
   requestUpdate(): void {
@@ -125,14 +125,14 @@ export class RenderContext {
   svg(
     tokens: ReadonlyArray<string>,
     ...data: unknown[]
-  ): TemplateDirective<unknown[], RenderContext> {
+  ): TemplateResult<unknown[], RenderContext> {
     const template = this._state.getSVGTemplate(tokens, data);
-    return new TemplateDirective(template, data);
+    return new TemplateResult(template, data);
   }
 
-  text<T>(value: T): TemplateDirective<T, RenderContext> {
+  text<T>(value: T): TemplateResult<T, RenderContext> {
     const template = TextTemplate.instance;
-    return new TemplateDirective(template, value);
+    return new TemplateResult(template, value);
   }
 
   use<TResult>(usable: Usable<TResult, RenderContext>): TResult {

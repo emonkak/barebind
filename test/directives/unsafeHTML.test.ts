@@ -10,7 +10,7 @@ import {
 } from '../../src/directives/unsafeHTML.js';
 
 describe('unsafeHTML()', () => {
-  it('should construct a new UnsafeHTMLDirective', () => {
+  it('should construct a new UnsafeHTML', () => {
     const unsafeContent = '<span>foo</span>bar';
     const directive = unsafeHTML(unsafeContent);
 
@@ -18,7 +18,7 @@ describe('unsafeHTML()', () => {
   });
 });
 
-describe('UnsafeHTMLDirective', () => {
+describe('UnsafeHTML', () => {
   describe('[directiveTag]()', () => {
     it('should return a new instance of ClassMapBinding', () => {
       const directive = unsafeHTML('<span>foo</span>bar');
@@ -44,7 +44,7 @@ describe('UnsafeHTMLDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'UnsafeHTMLDirective must be used in ChildNodePart.',
+        'UnsafeHTML directive must be used in ChildNodePart.',
       );
     });
   });
@@ -182,7 +182,7 @@ describe('UnsafeHTMLBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should throw an error if the new value is not UnsafeHTMLDirective', () => {
+    it('should throw an error if the new value is not UnsafeHTML directive', () => {
       const directive = unsafeHTML('<span>foo</span>bar');
       const part = {
         type: PartType.ChildNode,
@@ -192,7 +192,7 @@ describe('UnsafeHTMLBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => binding.bind(null as any, updater)).toThrow(
-        'A value must be a instance of "UnsafeHTMLDirective", but got "null".',
+        'A value must be a instance of UnsafeHTML directive, but got "null".',
       );
     });
   });

@@ -14,7 +14,7 @@ import {
 } from '../mocks.js';
 
 describe('component()', () => {
-  it('should construct a new ComponentDirective', () => {
+  it('should construct a new Component', () => {
     const component = () => ({ template: new MockTemplate(), data: {} });
     const props = {};
     const directive = componentDirective(component, props);
@@ -24,13 +24,13 @@ describe('component()', () => {
   });
 });
 
-describe('ComponentDirective', () => {
+describe('Component', () => {
   describe('[hintTag]', () => {
     it('should return a hint string', () => {
       const directive = componentDirective(function foo() {
         return { template: new MockTemplate(), data: {} };
       }, {});
-      expect(directive[hintTag]).toBe('ComponentDirective(foo)');
+      expect(directive[hintTag]).toBe('Component(foo)');
     });
   });
 
@@ -72,7 +72,7 @@ describe('ComponentDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'ComponentDirective must be used in ChildNodePart.',
+        'Component directive must be used in ChildNodePart.',
       );
     });
   });

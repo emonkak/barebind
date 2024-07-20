@@ -11,46 +11,46 @@ import {
 } from '../types.js';
 import { shallowEqual } from '../utils.js';
 
-export type ClassMap = { [key: string]: boolean };
+export type ClassDeclaration = { [key: string]: boolean };
 
-export function classMap(classMap: ClassMap): ClassMapDirective {
-  return new ClassMapDirective(classMap);
+export function classMap(classDeclaration: ClassDeclaration): ClassMap {
+  return new ClassMap(classDeclaration);
 }
 
-export class ClassMapDirective implements Directive {
-  private readonly _classMap: ClassMap;
+export class ClassMap implements Directive {
+  private readonly _classDeclaration: ClassDeclaration;
 
-  constructor(classMap: ClassMap) {
-    this._classMap = classMap;
+  constructor(classDeclaration: ClassDeclaration) {
+    this._classDeclaration = classDeclaration;
   }
 
-  get classMap(): ClassMap {
-    return this._classMap;
+  get classDeclaration(): ClassDeclaration {
+    return this._classDeclaration;
   }
 
   [directiveTag](part: Part, _updater: Updater): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
-        'ClassMapDirective must be used in the "class" attribute.',
+        'ClassMap directive must be used in the "class" attribute.',
       );
     }
     return new ClassMapBinding(this, part);
   }
 }
 
-export class ClassMapBinding implements Effect, Binding<ClassMapDirective> {
-  private _directive: ClassMapDirective;
+export class ClassMapBinding implements Effect, Binding<ClassMap> {
+  private _directive: ClassMap;
 
   private readonly _part: AttributePart;
 
   private _dirty = false;
 
-  constructor(directive: ClassMapDirective, part: AttributePart) {
+  constructor(directive: ClassMap, part: AttributePart) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): ClassMapDirective {
+  get value(): ClassMap {
     return this._directive;
   }
 
@@ -70,21 +70,21 @@ export class ClassMapBinding implements Effect, Binding<ClassMapDirective> {
     this._requestMutation(updater);
   }
 
-  bind(newValue: ClassMapDirective, updater: Updater): void {
+  bind(newValue: ClassMap, updater: Updater): void {
     DEBUG: {
-      ensureDirective(ClassMapDirective, newValue);
+      ensureDirective(ClassMap, newValue);
     }
     const oldValue = this._directive;
-    if (!shallowEqual(oldValue.classMap, newValue.classMap)) {
+    if (!shallowEqual(oldValue.classDeclaration, newValue.classDeclaration)) {
       this._directive = newValue;
       this.connect(updater);
     }
   }
 
   unbind(updater: Updater): void {
-    const { classMap } = this._directive;
-    if (Object.keys(classMap).length > 0) {
-      this._directive = new ClassMapDirective({});
+    const { classDeclaration } = this._directive;
+    if (Object.keys(classDeclaration).length > 0) {
+      this._directive = new ClassMap({});
       this._requestMutation(updater);
     }
   }
@@ -93,16 +93,16 @@ export class ClassMapBinding implements Effect, Binding<ClassMapDirective> {
 
   commit(): void {
     const { classList } = this._part.node;
-    const { classMap } = this._directive;
+    const { classDeclaration } = this._directive;
 
-    for (const className in classMap) {
-      const enabled = classMap[className];
+    for (const className in classDeclaration) {
+      const enabled = classDeclaration[className];
       classList.toggle(className, enabled);
     }
 
     for (let i = classList.length - 1; i >= 0; i--) {
       const className = classList[i]!;
-      if (!Object.hasOwn(classMap, className)) {
+      if (!Object.hasOwn(classDeclaration, className)) {
         classList.remove(className);
       }
     }

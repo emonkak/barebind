@@ -502,7 +502,9 @@ describe('SignalBinding', () => {
           updater,
         );
         binding.bind(null as any, updater);
-      }).toThrow('A value must be a instance of "Signal",');
+      }).toThrow(
+        'A value must be a instance of Signal directive, but got "null".',
+      );
     });
   });
 

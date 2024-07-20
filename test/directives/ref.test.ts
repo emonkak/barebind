@@ -1,23 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RefBinding, ref as refDirective } from '../../src/directives/ref.js';
+import { RefBinding, ref } from '../../src/directives/ref.js';
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateContext } from '../mocks.js';
 
 describe('ref()', () => {
-  it('should construct a new RefDirective', () => {
-    const ref = () => {};
-    const directive = refDirective(ref);
+  it('should construct a new Ref', () => {
+    const refFunction = () => {};
+    const directive = ref(refFunction);
 
-    expect(directive.ref).toBe(ref);
+    expect(directive.ref).toBe(refFunction);
   });
 });
 
-describe('RefDirective', () => {
+describe('Ref', () => {
   describe('[directiveTag]()', () => {
     it('should return a new instance of RefBinding', () => {
-      const directive = refDirective(() => {});
+      const directive = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -33,7 +33,7 @@ describe('RefDirective', () => {
     });
 
     it('should throw an error if the part does not indicate "ref" attribute', () => {
-      const directive = refDirective(() => {});
+      const directive = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'data-ref',
@@ -42,7 +42,7 @@ describe('RefDirective', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'RefDirective must be used in "ref" attribute',
+        'Ref directive must be used in "ref" attribute',
       );
     });
   });
@@ -51,8 +51,8 @@ describe('RefDirective', () => {
 describe('RefBinding', () => {
   describe('.connect()', () => {
     it('should call a RefCallback with the element', () => {
-      const ref = vi.fn();
-      const directive = refDirective(ref);
+      const refFunction = vi.fn();
+      const directive = ref(refFunction);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -64,13 +64,13 @@ describe('RefBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      expect(ref).toHaveBeenCalledOnce();
-      expect(ref).toHaveBeenCalledWith(part.node);
+      expect(refFunction).toHaveBeenCalledOnce();
+      expect(refFunction).toHaveBeenCalledWith(part.node);
     });
 
     it('should assign the element to a RefObject', () => {
-      const ref = { current: null };
-      const directive = refDirective(ref);
+      const refObject = { current: null };
+      const directive = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -82,12 +82,12 @@ describe('RefBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      expect(ref.current).toBe(part.node);
+      expect(refObject.current).toBe(part.node);
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const ref = { current: null };
-      const directive = refDirective(ref);
+      const refObject = { current: null };
+      const directive = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -107,10 +107,10 @@ describe('RefBinding', () => {
 
   describe('.bind()', () => {
     it('should call a new RefCallback with the element and call a old RefCallback with null', () => {
-      const ref1 = vi.fn();
-      const ref2 = vi.fn();
-      const directive1 = refDirective(ref1);
-      const directive2 = refDirective(ref2);
+      const refFunction1 = vi.fn();
+      const refFunction2 = vi.fn();
+      const directive1 = ref(refFunction1);
+      const directive2 = ref(refFunction2);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -126,17 +126,17 @@ describe('RefBinding', () => {
       updater.flush();
 
       expect(binding.value).toBe(directive2);
-      expect(ref1).toHaveBeenCalledTimes(2);
-      expect(ref1).toHaveBeenCalledWith(null);
-      expect(ref2).toHaveBeenCalledOnce();
-      expect(ref2).toHaveBeenCalledWith(part.node);
+      expect(refFunction1).toHaveBeenCalledTimes(2);
+      expect(refFunction1).toHaveBeenCalledWith(null);
+      expect(refFunction2).toHaveBeenCalledOnce();
+      expect(refFunction2).toHaveBeenCalledWith(part.node);
     });
 
     it('should assign the element to a new RefObject and unassign the element from a old RefObject', () => {
-      const ref1 = { current: null };
-      const ref2 = { current: null };
-      const directive1 = refDirective(ref1);
-      const directive2 = refDirective(ref2);
+      const refObject1 = { current: null };
+      const refObject2 = { current: null };
+      const directive1 = ref(refObject1);
+      const directive2 = ref(refObject2);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -152,14 +152,14 @@ describe('RefBinding', () => {
       updater.flush();
 
       expect(binding.value).toBe(directive2);
-      expect(ref1.current).toBe(null);
-      expect(ref2.current).toBe(part.node);
+      expect(refObject1.current).toBe(null);
+      expect(refObject2.current).toBe(part.node);
     });
 
     it('should skip an update if a ref is the same as the previous one', () => {
-      const ref = { current: null };
-      const directive1 = refDirective(ref);
-      const directive2 = refDirective(ref);
+      const refObject = { current: null };
+      const directive1 = ref(refObject);
+      const directive2 = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -179,9 +179,9 @@ describe('RefBinding', () => {
     });
 
     it('should call the current RefCallback with null if the new ref is null', () => {
-      const ref = vi.fn();
-      const directive1 = refDirective(ref);
-      const directive2 = refDirective(null);
+      const refFunction = vi.fn();
+      const directive1 = ref(refFunction);
+      const directive2 = ref(null);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -197,14 +197,14 @@ describe('RefBinding', () => {
       updater.flush();
 
       expect(binding.value).toBe(directive2);
-      expect(ref).toHaveBeenCalledTimes(2);
-      expect(ref).toHaveBeenCalledWith(null);
+      expect(refFunction).toHaveBeenCalledTimes(2);
+      expect(refFunction).toHaveBeenCalledWith(null);
     });
 
     it('should unassign the element from the current RefObject if the new ref is null', () => {
-      const ref = { current: null };
-      const directive1 = refDirective(ref);
-      const directive2 = refDirective(null);
+      const refObject = { current: null };
+      const directive1 = ref(refObject);
+      const directive2 = ref(null);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -220,11 +220,11 @@ describe('RefBinding', () => {
       updater.flush();
 
       expect(binding.value).toBe(directive2);
-      expect(ref.current).toBe(null);
+      expect(refObject.current).toBe(null);
     });
 
-    it('should throw an error if the new value is not RefDirective', () => {
-      const directive = refDirective(() => {});
+    it('should throw an error if the new value is not Ref directive', () => {
+      const directive = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -236,15 +236,15 @@ describe('RefBinding', () => {
       expect(() => {
         binding.bind(null as any, updater);
       }).toThrow(
-        'A value must be a instance of "RefDirective", but got "null".',
+        'A value must be a instance of Ref directive, but got "null".',
       );
     });
   });
 
   describe('.unbind()', () => {
     it('should call a old RefCallback with null', () => {
-      const ref = vi.fn();
-      const directive = refDirective(ref);
+      const refFunction = vi.fn();
+      const directive = ref(refFunction);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -259,13 +259,13 @@ describe('RefBinding', () => {
       binding.unbind(updater);
       updater.flush();
 
-      expect(ref).toHaveBeenCalledTimes(2);
-      expect(ref).toHaveBeenCalledWith(null);
+      expect(refFunction).toHaveBeenCalledTimes(2);
+      expect(refFunction).toHaveBeenCalledWith(null);
     });
 
     it('should unassign the element from a old RefObject', () => {
-      const ref = { current: null };
-      const directive = refDirective(ref);
+      const refObject = { current: null };
+      const directive = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -280,11 +280,11 @@ describe('RefBinding', () => {
       binding.unbind(updater);
       updater.flush();
 
-      expect(ref.current).toBe(null);
+      expect(refObject.current).toBe(null);
     });
 
     it('should do nothing if there is no ref', () => {
-      const directive = refDirective(null);
+      const directive = ref(null);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -302,7 +302,7 @@ describe('RefBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = refDirective(() => {});
+      const directive = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'ref',

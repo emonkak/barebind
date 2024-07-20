@@ -3,7 +3,7 @@ import {
   type Binding,
   type Block,
   type ChildNodePart,
-  type Component,
+  type ComponentFunction,
   type Directive,
   type Effect,
   type Hook,
@@ -27,25 +27,26 @@ const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
 export function component<TProps, TData, TContext>(
-  component: Component<TProps, TData, TContext>,
+  component: ComponentFunction<TProps, TData, TContext>,
   props: TProps,
-): ComponentDirective<TProps, TData, TContext> {
-  return new ComponentDirective(component, props);
+): Component<TProps, TData, TContext> {
+  return new Component(component, props);
 }
 
-export class ComponentDirective<TProps, TData, TContext>
-  implements Directive<TContext>
-{
-  private readonly _component: Component<TProps, TData, TContext>;
+export class Component<TProps, TData, TContext> implements Directive<TContext> {
+  private readonly _component: ComponentFunction<TProps, TData, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(component: Component<TProps, TData, TContext>, props: TProps) {
+  constructor(
+    component: ComponentFunction<TProps, TData, TContext>,
+    props: TProps,
+  ) {
     this._component = component;
     this._props = props;
   }
 
-  get component(): Component<TProps, TData, TContext> {
+  get component(): ComponentFunction<TProps, TData, TContext> {
     return this._component;
   }
 
@@ -54,7 +55,7 @@ export class ComponentDirective<TProps, TData, TContext>
   }
 
   get [hintTag](): string {
-    return 'ComponentDirective(' + nameOf(this._component) + ')';
+    return 'Component(' + nameOf(this._component) + ')';
   }
 
   [directiveTag](
@@ -62,7 +63,7 @@ export class ComponentDirective<TProps, TData, TContext>
     updater: Updater<TContext>,
   ): ComponentBinding<TProps, TData, TContext> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('ComponentDirective must be used in ChildNodePart.');
+      throw new Error('Component directive must be used in ChildNodePart.');
     }
     return new ComponentBinding(this, part, updater.getCurrentBlock());
   }
@@ -70,11 +71,11 @@ export class ComponentDirective<TProps, TData, TContext>
 
 export class ComponentBinding<TProps, TData, TContext>
   implements
-    Binding<ComponentDirective<TProps, TData, TContext>, TContext>,
+    Binding<Component<TProps, TData, TContext>, TContext>,
     Effect,
     Block<TContext>
 {
-  private _directive: ComponentDirective<TProps, TData, TContext>;
+  private _directive: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -84,7 +85,11 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
 
-  private _memoizedComponent: Component<TProps, TData, TContext> | null = null;
+  private _memoizedComponent: ComponentFunction<
+    TProps,
+    TData,
+    TContext
+  > | null = null;
 
   private _memoizedTemplate: Template<TData, TContext> | null = null;
 
@@ -100,7 +105,7 @@ export class ComponentBinding<TProps, TData, TContext>
   private _priority: TaskPriority = 'user-blocking';
 
   constructor(
-    directive: ComponentDirective<TProps, TData, TContext>,
+    directive: Component<TProps, TData, TContext>,
     part: ChildNodePart,
     parent: Block<TContext> | null,
   ) {
@@ -109,7 +114,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._parent = parent;
   }
 
-  get value(): ComponentDirective<TProps, TData, TContext> {
+  get value(): Component<TProps, TData, TContext> {
     return this._directive;
   }
 
@@ -248,12 +253,9 @@ export class ComponentBinding<TProps, TData, TContext>
     this._forceUpdate(updater);
   }
 
-  bind(
-    newValue: ComponentDirective<TProps, TData, TContext>,
-    updater: Updater,
-  ): void {
+  bind(newValue: Component<TProps, TData, TContext>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(ComponentDirective, newValue);
+      ensureDirective(Component, newValue);
     }
     this._directive = newValue;
     this._forceUpdate(updater);

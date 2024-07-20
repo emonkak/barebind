@@ -9,11 +9,11 @@ import {
   ensureDirective,
 } from '../types.js';
 
-export function unsafeHTML(content: string): UnsafeHTMLDirective {
-  return new UnsafeHTMLDirective(content);
+export function unsafeHTML(content: string): UnsafeHTML {
+  return new UnsafeHTML(content);
 }
 
-export class UnsafeHTMLDirective implements Directive {
+export class UnsafeHTML implements Directive {
   private readonly _unsafeContent: string;
 
   constructor(unsafeContent: string) {
@@ -26,14 +26,14 @@ export class UnsafeHTMLDirective implements Directive {
 
   [directiveTag](part: Part, _updater: Updater): UnsafeHTMLBinding {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('UnsafeHTMLDirective must be used in ChildNodePart.');
+      throw new Error('UnsafeHTML directive must be used in ChildNodePart.');
     }
     return new UnsafeHTMLBinding(this, part);
   }
 }
 
-export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
-  private _directive: UnsafeHTMLDirective;
+export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
+  private _directive: UnsafeHTML;
 
   private readonly _part: ChildNodePart;
 
@@ -41,12 +41,12 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
 
   private _dirty = false;
 
-  constructor(_value: UnsafeHTMLDirective, part: ChildNodePart) {
+  constructor(_value: UnsafeHTML, part: ChildNodePart) {
     this._directive = _value;
     this._part = part;
   }
 
-  get value(): UnsafeHTMLDirective {
+  get value(): UnsafeHTML {
     return this._directive;
   }
 
@@ -66,9 +66,9 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
     this._requestMutation(updater);
   }
 
-  bind(newValue: UnsafeHTMLDirective, updater: Updater): void {
+  bind(newValue: UnsafeHTML, updater: Updater): void {
     DEBUG: {
-      ensureDirective(UnsafeHTMLDirective, newValue);
+      ensureDirective(UnsafeHTML, newValue);
     }
     const oldValue = this._directive;
     if (oldValue.unsafeContent !== newValue.unsafeContent) {
@@ -80,7 +80,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTMLDirective> {
   unbind(updater: Updater): void {
     const { unsafeContent } = this._directive;
     if (unsafeContent !== '') {
-      this._directive = new UnsafeHTMLDirective('');
+      this._directive = new UnsafeHTML('');
       this.connect(updater);
     }
   }

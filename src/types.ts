@@ -36,12 +36,12 @@ export interface Updater<TContext = unknown> {
 export interface UpdateContext<TContext> {
   flushEffects(effects: Effect[], phase: EffectPhase): void;
   renderComponent<TProps, TData>(
-    component: Component<TProps, TData, TContext>,
+    component: ComponentFunction<TProps, TData, TContext>,
     props: TProps,
     hooks: Hook[],
     block: Block<TContext>,
     updater: Updater<TContext>,
-  ): TemplateResult<TData, TContext>;
+  ): TemplateResultInterface<TData, TContext>;
 }
 
 export interface Block<TContext = unknown> {
@@ -54,10 +54,10 @@ export interface Block<TContext = unknown> {
   update(context: UpdateContext<TContext>, updater: Updater<TContext>): void;
 }
 
-export type Component<TProps, TData, TContext> = (
+export type ComponentFunction<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
-) => TemplateResult<TData, TContext>;
+) => TemplateResultInterface<TData, TContext>;
 
 export interface Template<TData, TContext = unknown> {
   hydrate(
@@ -77,7 +77,7 @@ export interface TemplateFragment<TData, TContext = unknown> {
   disconnect(): void;
 }
 
-export interface TemplateResult<TData, TContext> {
+export interface TemplateResultInterface<TData, TContext> {
   get template(): Template<TData, TContext>;
   get data(): TData;
 }
@@ -181,7 +181,7 @@ export type Cleanup = () => void;
 
 export type EffectCallback = () => Cleanup | void;
 
-export type Ref<T> = RefCallback<T> | RefObject<T>;
+export type RefValue<T> = RefCallback<T> | RefObject<T>;
 
 export type RefCallback<T> = (value: T) => void;
 
@@ -202,9 +202,9 @@ export function ensureDirective<
 ): asserts actualValue is TExpectedClass {
   if (!(actualValue instanceof expectedClass)) {
     throw new Error(
-      'A value must be a instance of "' +
+      'A value must be a instance of ' +
         expectedClass.name +
-        '", but got "' +
+        ' directive, but got "' +
         nameOf(actualValue) +
         '". Consider using choice(), condition() or dynamic() directive instead.',
     );

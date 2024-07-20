@@ -5,19 +5,19 @@ import {
   type Effect,
   type Part,
   PartType,
-  type Ref,
+  type RefValue,
   type Updater,
   directiveTag,
   ensureDirective,
 } from '../types.js';
 
-type ElementRef = Ref<Element | null>;
+type ElementRef = RefValue<Element | null>;
 
-export function ref(ref: ElementRef | null): RefDirective {
-  return new RefDirective(ref);
+export function ref(ref: ElementRef | null): Ref {
+  return new Ref(ref);
 }
 
-export class RefDirective implements Directive {
+export class Ref implements Directive {
   private readonly _ref: ElementRef | null;
 
   constructor(ref: ElementRef | null) {
@@ -30,14 +30,14 @@ export class RefDirective implements Directive {
 
   [directiveTag](part: Part, _updater: Updater): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
-      throw new Error('RefDirective must be used in "ref" attribute.');
+      throw new Error('Ref directive must be used in "ref" attribute.');
     }
     return new RefBinding(this, part);
   }
 }
 
-export class RefBinding implements Binding<RefDirective>, Effect {
-  private _pendingDirective: RefDirective;
+export class RefBinding implements Binding<Ref>, Effect {
+  private _pendingDirective: Ref;
 
   private readonly _part: AttributePart;
 
@@ -45,12 +45,12 @@ export class RefBinding implements Binding<RefDirective>, Effect {
 
   private _dirty = false;
 
-  constructor(directive: RefDirective, part: AttributePart) {
+  constructor(directive: Ref, part: AttributePart) {
     this._pendingDirective = directive;
     this._part = part;
   }
 
-  get value(): RefDirective {
+  get value(): Ref {
     return this._pendingDirective;
   }
 
@@ -70,9 +70,9 @@ export class RefBinding implements Binding<RefDirective>, Effect {
     this._requestEffect(updater);
   }
 
-  bind(newValue: RefDirective, updater: Updater): void {
+  bind(newValue: Ref, updater: Updater): void {
     DEBUG: {
-      ensureDirective(RefDirective, newValue);
+      ensureDirective(Ref, newValue);
     }
     const oldValue = this._pendingDirective;
     if (oldValue.ref !== newValue.ref) {
@@ -84,7 +84,7 @@ export class RefBinding implements Binding<RefDirective>, Effect {
   unbind(updater: Updater): void {
     const { ref } = this._pendingDirective;
     if (ref !== null) {
-      this._pendingDirective = new RefDirective(null);
+      this._pendingDirective = new Ref(null);
       this._requestEffect(updater);
     }
   }

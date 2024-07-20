@@ -7,15 +7,13 @@ import {
   ensureDirective,
 } from '../types.js';
 
-export class NoValueDirective implements Directive {
-  static instance: NoValueDirective = new NoValueDirective();
+export class NoValue implements Directive {
+  static instance: NoValue = new NoValue();
 
   /** @internal */
   constructor() {
-    if (NoValueDirective.instance !== undefined) {
-      throw new Error(
-        'NoValueDirective constructor cannot be called directly.',
-      );
+    if (NoValue.instance !== undefined) {
+      throw new Error('NoValue constructor cannot be called directly.');
     }
   }
 
@@ -24,15 +22,15 @@ export class NoValueDirective implements Directive {
   }
 }
 
-export class NoValueBinding implements Binding<NoValueDirective> {
+export class NoValueBinding implements Binding<NoValue> {
   private readonly _part: Part;
 
   constructor(part: Part) {
     this._part = part;
   }
 
-  get value(): NoValueDirective {
-    return NoValueDirective.instance;
+  get value(): NoValue {
+    return NoValue.instance;
   }
 
   get part(): Part {
@@ -49,9 +47,9 @@ export class NoValueBinding implements Binding<NoValueDirective> {
 
   connect(_updater: Updater): void {}
 
-  bind(newValue: NoValueDirective, _updater: Updater): void {
+  bind(newValue: NoValue, _updater: Updater): void {
     DEBUG: {
-      ensureDirective(NoValueDirective, newValue);
+      ensureDirective(NoValue, newValue);
     }
   }
 
@@ -60,4 +58,4 @@ export class NoValueBinding implements Binding<NoValueDirective> {
   disconnect(): void {}
 }
 
-export const noValue = NoValueDirective.instance;
+export const noValue = NoValue.instance;

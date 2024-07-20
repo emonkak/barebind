@@ -9,7 +9,7 @@ import {
   hintTag,
   nameOf,
 } from '../types.js';
-import { NoValueDirective } from './noValue.js';
+import { NoValue } from './noValue.js';
 
 type Branch<T> = T extends Function ? () => T : (() => T) | T;
 
@@ -17,33 +17,25 @@ export function condition<TTrue, TFalse>(
   condition: boolean,
   trueBranch: Branch<TTrue>,
   falseBranch: Branch<TFalse>,
-): ConditionDirective<TTrue, TFalse> {
-  return new ConditionDirective(condition, trueBranch, falseBranch);
+): Condition<TTrue, TFalse> {
+  return new Condition(condition, trueBranch, falseBranch);
 }
 
 export function when<TTrue>(
   condition: boolean,
   trueBranch: Branch<TTrue>,
-): ConditionDirective<TTrue, NoValueDirective> {
-  return new ConditionDirective(
-    condition,
-    trueBranch,
-    NoValueDirective.instance,
-  );
+): Condition<TTrue, NoValue> {
+  return new Condition(condition, trueBranch, NoValue.instance);
 }
 
 export function unless<TFalse>(
   condition: boolean,
   falseBranch: Branch<TFalse>,
-): ConditionDirective<NoValueDirective, TFalse> {
-  return new ConditionDirective(
-    condition,
-    NoValueDirective.instance,
-    falseBranch,
-  );
+): Condition<NoValue, TFalse> {
+  return new Condition(condition, NoValue.instance, falseBranch);
 }
 
-export class ConditionDirective<TTrue, TFalse> implements Directive {
+export class Condition<TTrue, TFalse> implements Directive {
   private readonly _condition: boolean;
 
   private readonly _trueBranch: Branch<TTrue>;
@@ -74,7 +66,7 @@ export class ConditionDirective<TTrue, TFalse> implements Directive {
 
   get [hintTag](): string {
     return (
-      'ConditionDirective(' +
+      'Condition(' +
       nameOf(
         this._condition
           ? evalBranch(this._trueBranch)
@@ -93,16 +85,16 @@ export class ConditionDirective<TTrue, TFalse> implements Directive {
 }
 
 export class ConditionBinding<TTrue, TFalse>
-  implements Binding<ConditionDirective<TTrue, TFalse>>
+  implements Binding<Condition<TTrue, TFalse>>
 {
-  private _directive: ConditionDirective<TTrue, TFalse>;
+  private _directive: Condition<TTrue, TFalse>;
 
   private _trueBinding: Binding<TTrue> | null = null;
 
   private _falseBinding: Binding<TFalse> | null = null;
 
   constructor(
-    directive: ConditionDirective<TTrue, TFalse>,
+    directive: Condition<TTrue, TFalse>,
     part: Part,
     updater: Updater,
   ) {
@@ -121,7 +113,7 @@ export class ConditionBinding<TTrue, TFalse>
     }
   }
 
-  get value(): ConditionDirective<TTrue, TFalse> {
+  get value(): Condition<TTrue, TFalse> {
     return this._directive;
   }
 
@@ -145,9 +137,9 @@ export class ConditionBinding<TTrue, TFalse>
     this.currentBinding.connect(updater);
   }
 
-  bind(newValue: ConditionDirective<TTrue, TFalse>, updater: Updater): void {
+  bind(newValue: Condition<TTrue, TFalse>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(ConditionDirective, newValue);
+      ensureDirective(Condition, newValue);
     }
 
     const oldValue = this._directive;

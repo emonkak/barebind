@@ -2,11 +2,11 @@ import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import type {
   Block,
-  Component,
+  ComponentFunction,
   Effect,
   EffectPhase,
   Hook,
-  TemplateResult,
+  TemplateResultInterface,
   UpdateContext,
   Updater,
 } from './types.js';
@@ -76,12 +76,12 @@ export class RenderState implements UpdateContext<RenderContext> {
   }
 
   renderComponent<TProps, TData>(
-    component: Component<TProps, TData, RenderContext>,
+    component: ComponentFunction<TProps, TData, RenderContext>,
     props: TProps,
     hooks: Hook[],
     block: Block<RenderContext>,
     updater: Updater<RenderContext>,
-  ): TemplateResult<TData, RenderContext> {
+  ): TemplateResultInterface<TData, RenderContext> {
     const context = new RenderContext(hooks, block, this, updater);
     const result = component(props, context);
     context.finalize();

@@ -2,12 +2,12 @@ import {
   ConcurrentUpdater,
   type RenderContext,
   RenderState,
+  type TemplateResult,
   mount,
 } from '@emonkak/ebiten';
 import {
   Atom,
   type Signal,
-  type TemplateDirective,
   choice,
   classMap,
   component,
@@ -186,7 +186,7 @@ function Counter({ count$ }: CounterProps, context: RenderContext) {
 function SingleText<T>(
   { value }: { value: T },
   context: RenderContext,
-): TemplateDirective<T, RenderContext> {
+): TemplateResult<T, RenderContext> {
   return context.text(value);
 }
 

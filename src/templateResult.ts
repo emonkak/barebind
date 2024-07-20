@@ -1,4 +1,4 @@
-import { comparePriorities } from '../scheduler.js';
+import { comparePriorities } from './scheduler.js';
 import {
   type Binding,
   type Block,
@@ -10,22 +10,22 @@ import {
   type TaskPriority,
   type Template,
   type TemplateFragment,
-  type TemplateResult,
+  type TemplateResultInterface,
   type UpdateContext,
   type Updater,
   directiveTag,
   ensureDirective,
   hintTag,
   nameOf,
-} from '../types.js';
+} from './types.js';
 
 const FLAG_NONE = 0;
 const FLAG_UPDATING = 1 << 0;
 const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
-export class TemplateDirective<TData, TContext = unknown>
-  implements Directive<TContext>, TemplateResult<TData, TContext>
+export class TemplateResult<TData, TContext = unknown>
+  implements Directive<TContext>, TemplateResultInterface<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;
 
@@ -45,27 +45,29 @@ export class TemplateDirective<TData, TContext = unknown>
   }
 
   get [hintTag](): string {
-    return 'TemplateDirective(' + nameOf(this._template) + ')';
+    return 'TemplateResult(' + nameOf(this._template) + ')';
   }
 
   [directiveTag](
     part: Part,
     updater: Updater<TContext>,
-  ): TemplateBinding<TData, TContext> {
+  ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('TemplateDirective must be used in ChildNodePart.');
+      throw new Error(
+        'TemplateResult directive must be used in ChildNodePart.',
+      );
     }
-    return new TemplateBinding(this, part, updater.getCurrentBlock());
+    return new TemplateResultBinding(this, part, updater.getCurrentBlock());
   }
 }
 
-export class TemplateBinding<TData, TContext>
+export class TemplateResultBinding<TData, TContext>
   implements
-    Binding<TemplateDirective<TData, TContext>, TContext>,
+    Binding<TemplateResult<TData, TContext>, TContext>,
     Effect,
     Block<TContext>
 {
-  private _directive: TemplateDirective<TData, TContext>;
+  private _directive: TemplateResult<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -82,7 +84,7 @@ export class TemplateBinding<TData, TContext>
   private _priority: TaskPriority = 'user-blocking';
 
   constructor(
-    directive: TemplateDirective<TData, TContext>,
+    directive: TemplateResult<TData, TContext>,
     part: ChildNodePart,
     parent: Block<TContext> | null,
   ) {
@@ -91,7 +93,7 @@ export class TemplateBinding<TData, TContext>
     this._parent = parent;
   }
 
-  get value(): TemplateDirective<TData, TContext> {
+  get value(): TemplateResult<TData, TContext> {
     return this._directive;
   }
 
@@ -190,9 +192,9 @@ export class TemplateBinding<TData, TContext>
     this._forceUpdate(updater);
   }
 
-  bind(newValue: TemplateDirective<TData, TContext>, updater: Updater): void {
+  bind(newValue: TemplateResult<TData, TContext>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(TemplateDirective, newValue);
+      ensureDirective(TemplateResult, newValue);
     }
     this._directive = newValue;
     this._forceUpdate(updater);

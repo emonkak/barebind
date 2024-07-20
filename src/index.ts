@@ -23,6 +23,10 @@ export {
   SingleTemplateFragment,
 } from './template/singleTemplate.js';
 export {
+  TemplateResult,
+  TemplateResultBinding,
+} from './templateResult.js';
+export {
   type ConcurrentUpdaterOptions,
   ConcurrentUpdater,
 } from './updater/concurrentUpdater.js';

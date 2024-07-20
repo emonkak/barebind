@@ -7,7 +7,7 @@ import {
   type Binding,
   type Block,
   type ChildNodePart,
-  type Component,
+  type ComponentFunction,
   type Directive,
   type Effect,
   type EffectPhase,
@@ -16,7 +16,7 @@ import {
   type TaskPriority,
   type Template,
   type TemplateFragment,
-  type TemplateResult,
+  type TemplateResultInterface,
   type UpdateContext,
   type Updater,
   directiveTag,
@@ -133,12 +133,12 @@ export class MockUpdateContext implements UpdateContext<MockRenderContext> {
   }
 
   renderComponent<TProps, TData>(
-    component: Component<TProps, TData, MockRenderContext>,
+    component: ComponentFunction<TProps, TData, MockRenderContext>,
     props: TProps,
     hooks: Hook[],
     block: Block<MockRenderContext>,
     updater: Updater<MockRenderContext>,
-  ): TemplateResult<TData, MockRenderContext> {
+  ): TemplateResultInterface<TData, MockRenderContext> {
     return component(props, { hooks, block, updater });
   }
 }
