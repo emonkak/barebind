@@ -22,18 +22,20 @@ import {
   directiveTag,
 } from '../src/types.js';
 
-export class MockBinding implements Binding<MockDirective> {
-  private _value: MockDirective;
+export class MockBinding implements Binding<MockDirective>, Effect {
+  private _directive: MockDirective;
 
   private readonly _part: Part;
 
+  private _text: Text = document.createTextNode('');
+
   constructor(value: MockDirective, part: Part) {
-    this._value = value;
+    this._directive = value;
     this._part = part;
   }
 
   get value(): MockDirective {
-    return this._value;
+    return this._directive;
   }
 
   get part(): Part {
@@ -41,22 +43,40 @@ export class MockBinding implements Binding<MockDirective> {
   }
 
   get startNode(): ChildNode {
-    return this._part.node;
+    return this._text.parentNode !== null ? this._text : this._part.node;
   }
 
   get endNode(): ChildNode {
     return this._part.node;
   }
 
-  bind(newValue: MockDirective, _updater: Updater): void {
-    this._value = newValue;
+  bind(newValue: MockDirective, updater: Updater): void {
+    this._directive = newValue;
+    updater.enqueueMutationEffect(this);
   }
 
-  connect(_updater: Updater): void {}
+  connect(updater: Updater): void {
+    updater.enqueueMutationEffect(this);
+  }
 
-  unbind(_updater: Updater): void {}
+  unbind(updater: Updater): void {
+    this._directive = new MockDirective(null);
+    updater.enqueueMutationEffect(this);
+  }
 
   disconnect(): void {}
+
+  commit() {
+    const { content } = this._directive;
+
+    this._text.nodeValue = content;
+
+    if (content !== null) {
+      this._part.node.before(this._text);
+    } else {
+      this._text.remove();
+    }
+  }
 }
 
 export class MockBlock<TContext> implements Block<TContext> {
@@ -93,7 +113,17 @@ export class MockBlock<TContext> implements Block<TContext> {
 }
 
 export class MockDirective implements Directive {
-  [directiveTag](part: Part, _updater: Updater): MockBinding {
+  private _content: string | null;
+
+  constructor(content: string | null = null) {
+    this._content = content;
+  }
+
+  get content(): string | null {
+    return this._content;
+  }
+
+  [directiveTag](part: Part, _updater: Updater<unknown>): MockBinding {
     return new MockBinding(this, part);
   }
 }
@@ -119,11 +149,11 @@ export class MockScheduler implements Scheduler {
   }
 }
 
-export type MockRenderContext = {
+export interface MockRenderContext {
   hooks: Hook[];
   block: Block<MockRenderContext>;
   updater: Updater<MockRenderContext>;
-};
+}
 
 export class MockUpdateContext implements UpdateContext<MockRenderContext> {
   flushEffects(effects: Effect[], phase: EffectPhase): void {

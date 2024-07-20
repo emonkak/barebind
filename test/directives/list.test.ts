@@ -8,8 +8,7 @@ import {
 } from '../../src/directives/list.js';
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { text } from '../directives.js';
-import { MockUpdateContext } from '../mocks.js';
+import { MockDirective, MockUpdateContext } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('orderedList()', () => {
@@ -83,7 +82,7 @@ describe('OrderedListBinding', () => {
       const directive = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
-        (item) => text(item),
+        (item) => new MockDirective(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -104,7 +103,7 @@ describe('OrderedListBinding', () => {
         'baz',
       ]);
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@foo-->bar<!--TextDirective@bar-->baz<!--TextDirective@baz--><!---->',
+        'foo<!--MockDirective@foo-->bar<!--MockDirective@bar-->baz<!--MockDirective@baz--><!---->',
       );
     });
 
@@ -112,7 +111,7 @@ describe('OrderedListBinding', () => {
       const directive = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
-        (item) => text(item),
+        (item) => new MockDirective(item),
       );
       const part = {
         type: PartType.ChildNode,
@@ -139,12 +138,12 @@ describe('OrderedListBinding', () => {
           const directive1 = orderedList(
             items1,
             (item) => item,
-            (item) => text(item),
+            (item) => new MockDirective(item),
           );
           const directive2 = orderedList(
             items2,
             (item) => item,
-            (item) => text(item),
+            (item) => new MockDirective(item),
           );
           const container = document.createElement('div');
           const part = {
@@ -166,7 +165,7 @@ describe('OrderedListBinding', () => {
           ).toEqual(directive2.items);
           expect(container.innerHTML).toBe(
             items2
-              .map((item) => item + '<!--TextDirective@' + item + '-->')
+              .map((item) => item + '<!--MockDirective@' + item + '-->')
               .join('') + '<!---->',
           );
         }
@@ -186,12 +185,12 @@ describe('OrderedListBinding', () => {
             const directive1 = orderedList(
               items1!,
               (item) => item,
-              (item) => text(item),
+              (item) => new MockDirective(item),
             );
             const directive2 = orderedList(
               items2!,
               (item) => item,
-              (item) => text(item),
+              (item) => new MockDirective(item),
             );
             const container = document.createElement('div');
             const part = {
@@ -213,7 +212,7 @@ describe('OrderedListBinding', () => {
             ).toEqual(directive2.items);
             expect(container.innerHTML).toBe(
               items2!
-                .map((item) => item + '<!--TextDirective@' + item + '-->')
+                .map((item) => item + '<!--MockDirective@' + item + '-->')
                 .join('') + '<!---->',
             );
           }
@@ -229,12 +228,12 @@ describe('OrderedListBinding', () => {
           const directive1 = orderedList(
             items1,
             (item) => item,
-            (item) => text(item),
+            (item) => new MockDirective(item),
           );
           const directive2 = orderedList(
             items2,
             (item) => item,
-            (item) => text(item),
+            (item) => new MockDirective(item),
           );
           const container = document.createElement('div');
           const part = {
@@ -256,7 +255,7 @@ describe('OrderedListBinding', () => {
           ).toEqual(directive2.items);
           expect(container.innerHTML).toBe(
             items2
-              .map((item) => item + '<!--TextDirective@' + item + '-->')
+              .map((item) => item + '<!--MockDirective@' + item + '-->')
               .join('') + '<!---->',
           );
         }
@@ -317,7 +316,7 @@ describe('OrderedListBinding', () => {
       const directive = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
-        (item) => text(item),
+        (item) => new MockDirective(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -342,7 +341,7 @@ describe('OrderedListBinding', () => {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@foo-->bar<!--TextDirective@bar-->baz<!--TextDirective@baz--><!---->',
+        'foo<!--MockDirective@foo-->bar<!--MockDirective@bar-->baz<!--MockDirective@baz--><!---->',
       );
     });
   });
@@ -384,8 +383,9 @@ describe('InPlaceList', () => {
 describe('InPlaceListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
+      const directive = inPlaceList(
+        ['foo', 'bar', 'baz'],
+        (item) => new MockDirective(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -406,13 +406,14 @@ describe('InPlaceListBinding', () => {
         'baz',
       ]);
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@0-->bar<!--TextDirective@1-->baz<!--TextDirective@2--><!---->',
+        'foo<!--MockDirective@0-->bar<!--MockDirective@1-->baz<!--MockDirective@2--><!---->',
       );
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
+      const directive = inPlaceList(
+        ['foo', 'bar', 'baz'],
+        (item) => new MockDirective(item),
       );
       const part = {
         type: PartType.ChildNode,
@@ -432,11 +433,13 @@ describe('InPlaceListBinding', () => {
 
   describe('.bind()', () => {
     it('should update with longer list than last time', () => {
-      const directive1 = inPlaceList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
+      const directive1 = inPlaceList(
+        ['foo', 'bar', 'baz'],
+        (item) => new MockDirective(item),
       );
-      const directive2 = inPlaceList(['qux', 'baz', 'bar', 'foo'], (item) =>
-        text(item),
+      const directive2 = inPlaceList(
+        ['qux', 'baz', 'bar', 'foo'],
+        (item) => new MockDirective(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -457,15 +460,19 @@ describe('InPlaceListBinding', () => {
         directive2.items,
       );
       expect(container.innerHTML).toBe(
-        'qux<!--TextDirective@0-->baz<!--TextDirective@1-->bar<!--TextDirective@2-->foo<!--TextDirective@3--><!---->',
+        'qux<!--MockDirective@0-->baz<!--MockDirective@1-->bar<!--MockDirective@2-->foo<!--MockDirective@3--><!---->',
       );
     });
 
     it('should update with shoter list than last time', () => {
-      const directive1 = inPlaceList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
+      const directive1 = inPlaceList(
+        ['foo', 'bar', 'baz'],
+        (item) => new MockDirective(item),
       );
-      const directive2 = inPlaceList(['bar', 'foo'], (item) => text(item));
+      const directive2 = inPlaceList(
+        ['bar', 'foo'],
+        (item) => new MockDirective(item),
+      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -485,7 +492,7 @@ describe('InPlaceListBinding', () => {
         directive2.items,
       );
       expect(container.innerHTML).toBe(
-        'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
+        'bar<!--MockDirective@0-->foo<!--MockDirective@1--><!---->',
       );
     });
 
@@ -552,8 +559,9 @@ describe('InPlaceListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) =>
-        text(item),
+      const directive = inPlaceList(
+        ['foo', 'bar', 'baz'],
+        (item) => new MockDirective(item),
       );
       const container = document.createElement('div');
       const part = {
@@ -578,7 +586,7 @@ describe('InPlaceListBinding', () => {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@0-->bar<!--TextDirective@1-->baz<!--TextDirective@2--><!---->',
+        'foo<!--MockDirective@0-->bar<!--MockDirective@1-->baz<!--MockDirective@2--><!---->',
       );
     });
   });
