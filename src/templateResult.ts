@@ -1,6 +1,5 @@
 import {
   type Binding,
-  type Block,
   type ChildNodePart,
   type Directive,
   type Effect,
@@ -10,6 +9,7 @@ import {
   type Template,
   type TemplateFragment,
   type TemplateResultInterface,
+  type UnitOfWork,
   type UpdateContext,
   type Updater,
   comparePriorities,
@@ -20,7 +20,7 @@ import {
 } from './types.js';
 
 const FLAG_NONE = 0;
-const FLAG_UPDATING = 1 << 0;
+const FLAG_WORKING = 1 << 0;
 const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
@@ -57,7 +57,11 @@ export class TemplateResult<TData, TContext = unknown>
         'TemplateResult directive must be used in ChildNodePart.',
       );
     }
-    return new TemplateResultBinding(this, part, updater.getCurrentBlock());
+    return new TemplateResultBinding(
+      this,
+      part,
+      updater.getCurrentUnitOfWork(),
+    );
   }
 }
 
@@ -65,13 +69,13 @@ export class TemplateResultBinding<TData, TContext>
   implements
     Binding<TemplateResult<TData, TContext>, TContext>,
     Effect,
-    Block<TContext>
+    UnitOfWork<TContext>
 {
   private _directive: TemplateResult<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: Block<TContext> | null;
+  private readonly _parent: UnitOfWork<TContext> | null;
 
   private _pendingFragment: TemplateFragment<TData, TContext> | null = null;
 
@@ -86,7 +90,7 @@ export class TemplateResultBinding<TData, TContext>
   constructor(
     directive: TemplateResult<TData, TContext>,
     part: ChildNodePart,
-    parent: Block<TContext> | null,
+    parent: UnitOfWork<TContext> | null,
   ) {
     this._directive = directive;
     this._part = part;
@@ -109,7 +113,7 @@ export class TemplateResultBinding<TData, TContext>
     return this._part.node;
   }
 
-  get parent(): Block<TContext> | null {
+  get parent(): UnitOfWork<TContext> | null {
     return this._parent;
   }
 
@@ -118,14 +122,14 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   get dirty(): boolean {
-    return (this._flags & (FLAG_UPDATING | FLAG_MUTATING)) !== 0;
+    return (this._flags & (FLAG_WORKING | FLAG_MUTATING)) !== 0;
   }
 
-  shouldUpdate(): boolean {
+  shouldPerformWork(): boolean {
     if (!this.dirty) {
       return false;
     }
-    let current: Block<TContext> | null = this;
+    let current: UnitOfWork<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.dirty) {
         return false;
@@ -134,26 +138,29 @@ export class TemplateResultBinding<TData, TContext>
     return true;
   }
 
-  cancelUpdate(): void {
-    this._flags &= ~FLAG_UPDATING;
+  cancelWork(): void {
+    this._flags &= ~FLAG_WORKING;
   }
 
-  requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void {
+  requestWork(priority: TaskPriority, updater: Updater<TContext>): void {
     if (
-      !(this._flags & FLAG_UPDATING) ||
+      !(this._flags & FLAG_WORKING) ||
       comparePriorities(priority, this._priority) > 0
     ) {
-      this._flags |= FLAG_UPDATING;
+      this._flags |= FLAG_WORKING;
       this._priority = priority;
-      updater.enqueueBlock(this);
+      updater.enqueueUnitOfWork(this);
       updater.scheduleUpdate();
     }
 
     this._flags &= ~FLAG_UNMOUNTING;
   }
 
-  update(_context: UpdateContext<TContext>, updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_UPDATING)) {
+  performWork(
+    _context: UpdateContext<TContext>,
+    updater: Updater<TContext>,
+  ): void {
+    if (!(this._flags & FLAG_WORKING)) {
       return;
     }
 
@@ -185,11 +192,11 @@ export class TemplateResultBinding<TData, TContext>
     }
 
     this._memoizedTemplate = template;
-    this._flags &= ~FLAG_UPDATING;
+    this._flags &= ~FLAG_WORKING;
   }
 
   connect(updater: Updater<TContext>): void {
-    this._forceUpdate(updater);
+    this._forceWork(updater);
   }
 
   bind(newValue: TemplateResult<TData, TContext>, updater: Updater): void {
@@ -197,7 +204,7 @@ export class TemplateResultBinding<TData, TContext>
       ensureDirective(TemplateResult, newValue);
     }
     this._directive = newValue;
-    this._forceUpdate(updater);
+    this._forceWork(updater);
   }
 
   unbind(updater: Updater<TContext>): void {
@@ -206,7 +213,7 @@ export class TemplateResultBinding<TData, TContext>
     this._requestMutation(updater);
 
     this._flags |= FLAG_UNMOUNTING;
-    this._flags &= ~FLAG_UPDATING;
+    this._flags &= ~FLAG_WORKING;
   }
 
   disconnect(): void {
@@ -228,13 +235,13 @@ export class TemplateResultBinding<TData, TContext>
     this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
   }
 
-  private _forceUpdate(updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_UPDATING)) {
-      this._flags |= FLAG_UPDATING;
+  private _forceWork(updater: Updater<TContext>): void {
+    if (!(this._flags & FLAG_WORKING)) {
+      this._flags |= FLAG_WORKING;
       if (this._parent !== null) {
         this._priority = this._parent.priority;
       }
-      updater.enqueueBlock(this);
+      updater.enqueueUnitOfWork(this);
     }
 
     this._flags &= ~FLAG_UNMOUNTING;

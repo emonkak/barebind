@@ -4,7 +4,7 @@ import { RenderContext } from '../src/renderContext.js';
 import { RenderState } from '../src/renderState.js';
 import { EffectPhase, type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockBlock, MockTemplate } from './mocks.js';
+import { MockTemplate, MockUnitOfWork } from './mocks.js';
 
 describe('RenderState', () => {
   describe('.flushEffects()', () => {
@@ -68,33 +68,33 @@ describe('RenderState', () => {
 
   describe('.getScopedValue()', () => {
     it('should get a scoped value from shared variables', () => {
-      const state = new RenderState([['foo', 123]]);
-      const block = new MockBlock();
+      const state = new RenderState(new Map([['foo', 123]]));
+      const unitOfWork = new MockUnitOfWork();
 
-      expect(state.getScopedValue(block, 'foo')).toBe(123);
+      expect(state.getScopedValue(unitOfWork, 'foo')).toBe(123);
     });
 
-    it('should get a scoped value from the block', () => {
-      const state = new RenderState([['foo', 123]]);
-      const block = new MockBlock();
+    it('should get a scoped value from the unit of work', () => {
+      const state = new RenderState(new Map([['foo', 123]]));
+      const unitOfWork = new MockUnitOfWork();
 
-      state.setScopedValue(block, 'foo', 456);
+      state.setScopedValue(unitOfWork, 'foo', 456);
 
-      expect(state.getScopedValue(block, 'foo')).toBe(456);
+      expect(state.getScopedValue(unitOfWork, 'foo')).toBe(456);
 
-      state.setScopedValue(block, 'foo', 789);
+      state.setScopedValue(unitOfWork, 'foo', 789);
 
-      expect(state.getScopedValue(block, 'foo')).toBe(789);
+      expect(state.getScopedValue(unitOfWork, 'foo')).toBe(789);
     });
 
     it('should get a scoped value from the parent', () => {
-      const state = new RenderState([['foo', 123]]);
-      const parent = new MockBlock();
-      const block = new MockBlock(parent);
+      const state = new RenderState(new Map([['foo', 123]]));
+      const parent = new MockUnitOfWork();
+      const unitOfWork = new MockUnitOfWork(parent);
 
       state.setScopedValue(parent, 'foo', 456);
 
-      expect(state.getScopedValue(block, 'foo')).toBe(456);
+      expect(state.getScopedValue(unitOfWork, 'foo')).toBe(456);
     });
   });
 
@@ -110,13 +110,13 @@ describe('RenderState', () => {
         return { template, data: props.data };
       });
       const hooks: Hook[] = [];
-      const block = new MockBlock();
+      const unitOfWork = new MockUnitOfWork();
       const updater = new SyncUpdater(state);
       const result = state.renderComponent(
         component,
         props,
         hooks,
-        block,
+        unitOfWork,
         updater,
       );
 

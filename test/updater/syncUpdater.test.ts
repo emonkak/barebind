@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateContext } from '../mocks.js';
+import { MockUnitOfWork, MockUpdateContext } from '../mocks.js';
 
 describe('SyncUpdater', () => {
   describe('.getCurrentPriority()', () => {
@@ -13,10 +13,10 @@ describe('SyncUpdater', () => {
   });
 
   describe('.isPending()', () => {
-    it('should return true if there is a pending block', () => {
+    it('should return true if there is a pending unit of work', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      updater.enqueueBlock(new MockBlock());
+      updater.enqueueUnitOfWork(new MockUnitOfWork());
       expect(updater.isPending()).toBe(true);
     });
 
@@ -75,24 +75,24 @@ describe('SyncUpdater', () => {
       await updater.waitForUpdate();
     });
 
-    it('should update the block on a microtask', async () => {
+    it('should update the unit of work on a microtask', async () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      const block = new MockBlock();
+      const unitOfWork = new MockUnitOfWork();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
-      const updateSpy = vi
-        .spyOn(block, 'update')
+      const performWorkSpy = vi
+        .spyOn(unitOfWork, 'performWork')
         .mockImplementation((_context, updater) => {
-          expect(updater.getCurrentBlock()).toBe(block);
+          expect(updater.getCurrentUnitOfWork()).toBe(unitOfWork);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);
           updater.enqueuePassiveEffect(passiveEffect);
         });
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueBlock(block);
+      updater.enqueueUnitOfWork(unitOfWork);
       updater.scheduleUpdate();
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
@@ -102,30 +102,30 @@ describe('SyncUpdater', () => {
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
-      expect(updateSpy).toHaveBeenCalledOnce();
+      expect(performWorkSpy).toHaveBeenCalledOnce();
     });
 
-    it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
+    it('should cancel the update of the unit of work if shouldPerformWork() returns false ', async () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      const block = new MockBlock();
-      const updateSpy = vi.spyOn(block, 'update');
-      const shouldUpdateSpy = vi
-        .spyOn(block, 'shouldUpdate')
+      const unitOfWork = new MockUnitOfWork();
+      const performWorkSpy = vi.spyOn(unitOfWork, 'performWork');
+      const shouldPerformWorkSpy = vi
+        .spyOn(unitOfWork, 'shouldPerformWork')
         .mockReturnValue(false);
-      const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
+      const cancelWorkSpy = vi.spyOn(unitOfWork, 'cancelWork');
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueBlock(block);
+      updater.enqueueUnitOfWork(unitOfWork);
       updater.scheduleUpdate();
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
       await updater.waitForUpdate();
 
-      expect(updateSpy).not.toHaveBeenCalled();
-      expect(shouldUpdateSpy).toHaveBeenCalledOnce();
-      expect(cancelUpdateSpy).toHaveBeenCalledOnce();
+      expect(performWorkSpy).not.toHaveBeenCalled();
+      expect(shouldPerformWorkSpy).toHaveBeenCalledOnce();
+      expect(cancelWorkSpy).toHaveBeenCalledOnce();
     });
 
     it('should commit effects on a microtask', async () => {

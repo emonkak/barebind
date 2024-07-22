@@ -1,23 +1,23 @@
 import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import type {
-  Block,
   ComponentFunction,
   Effect,
   EffectPhase,
   Hook,
   TemplateResultInterface,
+  UnitOfWork,
   UpdateContext,
   Updater,
 } from './types.js';
 
-type Scope = Map<unknown, unknown>;
-
 export class RenderState implements UpdateContext<RenderContext> {
-  private readonly _rootScope: Scope;
+  private readonly _globalNamespace: Map<unknown, unknown>;
 
-  private readonly _blockScopes: WeakMap<Block<RenderContext>, Scope> =
-    new WeakMap();
+  private readonly _localNamespaces: WeakMap<
+    UnitOfWork<RenderContext>,
+    Map<unknown, unknown>
+  > = new WeakMap();
 
   private readonly _cachedTemplates: WeakMap<
     ReadonlyArray<string>,
@@ -26,8 +26,8 @@ export class RenderState implements UpdateContext<RenderContext> {
 
   private readonly _marker: string = getMarker();
 
-  constructor(constants: Iterable<[unknown, unknown]> = []) {
-    this._rootScope = new Map(constants);
+  constructor(globalNamespace: Map<unknown, unknown> = new Map()) {
+    this._globalNamespace = new Map(globalNamespace);
   }
 
   flushEffects(effects: Effect[], phase: EffectPhase): void {
@@ -64,42 +64,42 @@ export class RenderState implements UpdateContext<RenderContext> {
     return template;
   }
 
-  getScopedValue(block: Block<RenderContext>, key: unknown): unknown {
-    let current: Block<RenderContext> | null = block;
+  getScopedValue(unitOfWork: UnitOfWork<RenderContext>, key: unknown): unknown {
+    let current: UnitOfWork<RenderContext> | null = unitOfWork;
     do {
-      const value = this._blockScopes.get(current)?.get(key);
+      const value = this._localNamespaces.get(current)?.get(key);
       if (value !== undefined) {
         return value;
       }
     } while ((current = current.parent));
-    return this._rootScope.get(key);
+    return this._globalNamespace.get(key);
   }
 
   renderComponent<TProps, TData>(
     component: ComponentFunction<TProps, TData, RenderContext>,
     props: TProps,
     hooks: Hook[],
-    block: Block<RenderContext>,
+    unitOfWork: UnitOfWork<RenderContext>,
     updater: Updater<RenderContext>,
   ): TemplateResultInterface<TData, RenderContext> {
-    const context = new RenderContext(hooks, block, this, updater);
+    const context = new RenderContext(hooks, unitOfWork, this, updater);
     const result = component(props, context);
     context.finalize();
     return result;
   }
 
   setScopedValue(
-    block: Block<RenderContext>,
+    unitOfWork: UnitOfWork<RenderContext>,
     key: unknown,
     value: unknown,
   ): void {
-    const variables = this._blockScopes.get(block);
+    const variables = this._localNamespaces.get(unitOfWork);
     if (variables !== undefined) {
       variables.set(key, value);
     } else {
-      const scope = new Map();
-      scope.set(key, value);
-      this._blockScopes.set(block, scope);
+      const namespace = new Map();
+      namespace.set(key, value);
+      this._localNamespaces.set(unitOfWork, namespace);
     }
   }
 }

@@ -21,12 +21,12 @@ export interface Directive<TContext = unknown> {
 }
 
 export interface Updater<TContext = unknown> {
-  getCurrentBlock(): Block<TContext> | null;
+  getCurrentUnitOfWork(): UnitOfWork<TContext> | null;
   getCurrentPriority(): TaskPriority;
   isPending(): boolean;
   isScheduled(): boolean;
   waitForUpdate(): Promise<void>;
-  enqueueBlock(block: Block<TContext>): void;
+  enqueueUnitOfWork(unitOfWork: UnitOfWork<TContext>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
@@ -39,19 +39,22 @@ export interface UpdateContext<TContext> {
     component: ComponentFunction<TProps, TData, TContext>,
     props: TProps,
     hooks: Hook[],
-    block: Block<TContext>,
+    unitOfWork: UnitOfWork<TContext>,
     updater: Updater<TContext>,
   ): TemplateResultInterface<TData, TContext>;
 }
 
-export interface Block<TContext = unknown> {
+export interface UnitOfWork<TContext> {
   get dirty(): boolean;
-  get parent(): Block<TContext> | null;
+  get parent(): UnitOfWork<TContext> | null;
   get priority(): TaskPriority;
-  shouldUpdate(): boolean;
-  cancelUpdate(): void;
-  requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
-  update(context: UpdateContext<TContext>, updater: Updater<TContext>): void;
+  shouldPerformWork(): boolean;
+  cancelWork(): void;
+  requestWork(priority: TaskPriority, updater: Updater<TContext>): void;
+  performWork(
+    context: UpdateContext<TContext>,
+    updater: Updater<TContext>,
+  ): void;
 }
 
 export type ComponentFunction<TProps, TData, TContext> = (
