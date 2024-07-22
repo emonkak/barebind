@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
-import { PartType, directiveTag, hintTag } from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
@@ -18,10 +18,10 @@ describe('choice()', () => {
 });
 
 describe('Choice', () => {
-  describe('[hintTag]', () => {
-    it('should return a hint string', () => {
-      expect(choice('foo', (key) => key)[hintTag]).toBe('Choice(foo, foo)');
-      expect(choice('bar', (key) => key)[hintTag]).toBe('Choice(bar, bar)');
+  describe('[nameTag]', () => {
+    it('should return a string represented itself', () => {
+      expect(choice('foo', (key) => key)[nameTag]).toBe('Choice(foo, foo)');
+      expect(choice('bar', (key) => key)[nameTag]).toBe('Choice(bar, bar)');
     });
   });
 

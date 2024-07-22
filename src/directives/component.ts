@@ -17,8 +17,8 @@ import {
   comparePriorities,
   directiveTag,
   ensureDirective,
-  hintTag,
   nameOf,
+  nameTag,
 } from '../types.js';
 
 const FLAG_NONE = 0;
@@ -54,7 +54,7 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
     return this._props;
   }
 
-  get [hintTag](): string {
+  get [nameTag](): string {
     return 'Component(' + nameOf(this._component) + ')';
   }
 

@@ -3,7 +3,7 @@ import {
   ComponentBinding,
   component as componentDirective,
 } from '../../src/directives/component.js';
-import { HookType, PartType, directiveTag, hintTag } from '../../src/types.js';
+import { HookType, PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -25,12 +25,12 @@ describe('component()', () => {
 });
 
 describe('Component', () => {
-  describe('[hintTag]', () => {
-    it('should return a hint string', () => {
+  describe('[nameTag]', () => {
+    it('should return a string represented itself', () => {
       const directive = componentDirective(function foo() {
         return { template: new MockTemplate(), data: {} };
       }, {});
-      expect(directive[hintTag]).toBe('Component(foo)');
+      expect(directive[nameTag]).toBe('Component(foo)');
     });
   });
 

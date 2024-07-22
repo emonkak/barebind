@@ -6,8 +6,8 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
-  hintTag,
   nameOf,
+  nameTag,
 } from '../types.js';
 
 export function choice<TKey, TValue>(
@@ -35,7 +35,7 @@ export class Choice<TKey, TValue> implements Directive {
     return this._factory;
   }
 
-  get [hintTag](): string {
+  get [nameTag](): string {
     return (
       'Choice(' +
       nameOf(this._key) +

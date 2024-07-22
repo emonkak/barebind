@@ -1,6 +1,6 @@
 export const directiveTag = Symbol('Directive');
 
-export const hintTag = Symbol('Hint');
+export const nameTag = Symbol('Name');
 
 export interface Binding<TValue, TContext = unknown> {
   get value(): TValue;
@@ -238,8 +238,8 @@ export function nameOf(value: unknown): string {
   if (typeof value === 'object') {
     return value === null
       ? 'null'
-      : hintTag in value
-        ? (value[hintTag] as string)
+      : nameTag in value
+        ? (value[nameTag] as string)
         : value.constructor.name;
   }
   if (typeof value === 'function') {

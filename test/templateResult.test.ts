@@ -3,7 +3,7 @@ import {
   TemplateResult,
   TemplateResultBinding,
 } from '../src/templateResult.js';
-import { PartType, directiveTag, hintTag } from '../src/types.js';
+import { PartType, directiveTag, nameTag } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -24,10 +24,10 @@ describe('Fragment', () => {
     });
   });
 
-  describe('[hintTag]', () => {
-    it('should return a hint string', () => {
+  describe('[nameTag]', () => {
+    it('should return a string represented itself', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
-      expect(directive[hintTag]).toBe('TemplateResult(MockTemplate)');
+      expect(directive[nameTag]).toBe('TemplateResult(MockTemplate)');
     });
   });
 

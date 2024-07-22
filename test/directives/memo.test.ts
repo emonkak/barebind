@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
-import { PartType, directiveTag, hintTag } from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
@@ -18,9 +18,9 @@ describe('memo()', () => {
 });
 
 describe('Memo', () => {
-  describe('[hintTag]', () => {
-    it('should return a hint string', () => {
-      expect(memo(() => 'foo', [])[hintTag]).toBe('Memo(foo)');
+  describe('[nameTag]', () => {
+    it('should return a string represented itself', () => {
+      expect(memo(() => 'foo', [])[nameTag]).toBe('Memo(foo)');
     });
   });
 

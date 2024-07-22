@@ -6,8 +6,8 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
-  hintTag,
   nameOf,
+  nameTag,
 } from '../types.js';
 import { dependenciesAreChanged } from '../utils.js';
 
@@ -36,7 +36,7 @@ export class Memo<T> implements Directive {
     return this._dependencies;
   }
 
-  get [hintTag](): string {
+  get [nameTag](): string {
     return 'Memo(' + nameOf(this._factory()) + ')';
   }
 

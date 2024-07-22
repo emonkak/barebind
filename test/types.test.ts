@@ -5,9 +5,9 @@ import {
   directiveTag,
   ensureDirective,
   ensureNonDirective,
-  hintTag,
   isDirective,
   nameOf,
+  nameTag,
 } from '../src/types.js';
 import { MockDirective } from './mocks.js';
 
@@ -80,6 +80,6 @@ describe('nameOf()', () => {
     expect(nameOf(true)).toBe('true');
     expect(nameOf(undefined)).toBe('undefined');
     expect(nameOf({})).toBe('Object');
-    expect(nameOf({ [hintTag]: 'foo' })).toBe('foo');
+    expect(nameOf({ [nameTag]: 'foo' })).toBe('foo');
   });
 });

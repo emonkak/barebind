@@ -6,8 +6,8 @@ import {
   type Updater,
   directiveTag,
   ensureDirective,
-  hintTag,
   nameOf,
+  nameTag,
 } from '../types.js';
 import { NoValue } from './noValue.js';
 
@@ -64,7 +64,7 @@ export class Condition<TTrue, TFalse> implements Directive {
     return this._falseBranch;
   }
 
-  get [hintTag](): string {
+  get [nameTag](): string {
     return (
       'Condition(' +
       this._condition +

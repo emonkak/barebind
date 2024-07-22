@@ -15,8 +15,8 @@ import {
   comparePriorities,
   directiveTag,
   ensureDirective,
-  hintTag,
   nameOf,
+  nameTag,
 } from './types.js';
 
 const FLAG_NONE = 0;
@@ -44,7 +44,7 @@ export class TemplateResult<TData, TContext = unknown>
     return this._data;
   }
 
-  get [hintTag](): string {
+  get [nameTag](): string {
     return 'TemplateResult(' + nameOf(this._template) + ')';
   }
 

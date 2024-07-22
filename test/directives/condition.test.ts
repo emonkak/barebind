@@ -8,7 +8,7 @@ import {
   unless,
   when,
 } from '../../src/directives/condition.js';
-import { PartType, directiveTag, hintTag } from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
@@ -50,21 +50,21 @@ describe('unless()', () => {
 });
 
 describe('Condition', () => {
-  describe('[hintTag]', () => {
-    it('should return a hint string', () => {
+  describe('[nameTag]', () => {
+    it('should return a string represented itself', () => {
       expect(
         conditionDirective(
           true,
           () => 'foo',
           () => 'bar',
-        )[hintTag],
+        )[nameTag],
       ).toBe('Condition(true, foo)');
       expect(
         conditionDirective(
           false,
           () => 'foo',
           () => 'bar',
-        )[hintTag],
+        )[nameTag],
       ).toBe('Condition(false, bar)');
     });
   });
