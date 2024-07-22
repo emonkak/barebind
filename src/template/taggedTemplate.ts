@@ -435,13 +435,13 @@ function parseChildren(
         break;
       }
       case Node.TEXT_NODE: {
-        const blocks = (currentNode as Text).data.split(marker);
+        const components = (currentNode as Text).data.split(marker);
 
-        if (blocks.length > 1) {
-          const tailIndex = blocks.length - 1;
+        if (components.length > 1) {
+          const tailCompoent = components.length - 1;
 
-          for (let i = 0; i < tailIndex; i++) {
-            const block = blocks[i]!;
+          for (let i = 0; i < tailCompoent; i++) {
+            const block = components[i]!;
 
             if (block !== '') {
               const text = document.createTextNode(block);
@@ -458,11 +458,11 @@ function parseChildren(
             index++;
           }
 
-          const tailBlock = blocks[tailIndex]!;
+          const tailComponent = components[tailCompoent]!;
 
-          if (tailBlock !== '') {
+          if (tailComponent !== '') {
             // Reuse the current node.
-            (currentNode as Text).data = tailBlock;
+            (currentNode as Text).data = tailComponent;
           } else {
             walker.currentNode = currentNode.previousSibling!;
             (currentNode as Text).remove();
