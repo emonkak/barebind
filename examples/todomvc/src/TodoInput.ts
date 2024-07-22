@@ -25,7 +25,7 @@ export function TodoInput(
   }, []);
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') {
+    if (event.key === 'Enter' && !event.isComposing) {
       const target = event.currentTarget as HTMLInputElement;
       const value = target.value.trim();
       target.value = '';
