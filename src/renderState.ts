@@ -65,13 +65,13 @@ export class RenderState implements UpdateContext<RenderContext> {
   }
 
   getScopedValue(unitOfWork: UnitOfWork<RenderContext>, key: unknown): unknown {
-    let current: UnitOfWork<RenderContext> | null = unitOfWork;
+    let scope: UnitOfWork<RenderContext> | null = unitOfWork;
     do {
-      const value = this._localNamespaces.get(current)?.get(key);
+      const value = this._localNamespaces.get(scope)?.get(key);
       if (value !== undefined) {
         return value;
       }
-    } while ((current = current.parent));
+    } while ((scope = scope.parent));
     return this._globalNamespace.get(key);
   }
 
