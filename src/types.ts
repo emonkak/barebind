@@ -149,7 +149,7 @@ export type Hook =
   | EffectHook
   | MemoHook<any>
   | ReducerHook<any, any>
-  | FinilizerHook;
+  | FinalizerHook;
 
 export enum HookType {
   Effect,
@@ -176,7 +176,7 @@ export interface ReducerHook<TState, TAction> {
   state: TState;
 }
 
-export interface FinilizerHook {
+export interface FinalizerHook {
   type: HookType.Finalizer;
 }
 

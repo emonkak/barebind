@@ -10,7 +10,7 @@ import {
   type Cleanup,
   type EffectCallback,
   type EffectHook,
-  type FinilizerHook,
+  type FinalizerHook,
   type Hook,
   HookType,
   type MemoHook,
@@ -93,7 +93,7 @@ export class RenderContext {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<FinilizerHook>(HookType.Finalizer, currentHook);
+      ensureHookType<FinalizerHook>(HookType.Finalizer, currentHook);
     } else {
       this._hooks.push({ type: HookType.Finalizer });
     }
