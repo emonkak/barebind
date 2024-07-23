@@ -6,7 +6,7 @@ import type {
 } from '../types.js';
 
 export class EmptyTemplate implements Template<null> {
-  static instance: EmptyTemplate = new EmptyTemplate();
+  static readonly instance: EmptyTemplate = new EmptyTemplate();
 
   private constructor() {
     if (EmptyTemplate.instance !== undefined) {

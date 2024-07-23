@@ -8,7 +8,7 @@ import {
 } from '../types.js';
 
 export class NoValue implements Directive {
-  static instance: NoValue = new NoValue();
+  static readonly instance: NoValue = new NoValue();
 
   /** @internal */
   constructor() {
