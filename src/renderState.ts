@@ -6,7 +6,7 @@ import type {
   EffectPhase,
   Hook,
   TemplateResultInterface,
-  UnitOfWork,
+  UpdateBlock,
   UpdateContext,
   Updater,
 } from './types.js';
@@ -15,7 +15,7 @@ export class RenderState implements UpdateContext<RenderContext> {
   private readonly _globalNamespace: Map<unknown, unknown>;
 
   private readonly _localNamespaces: WeakMap<
-    UnitOfWork<RenderContext>,
+    UpdateBlock<RenderContext>,
     Map<unknown, unknown>
   > = new WeakMap();
 
@@ -64,8 +64,8 @@ export class RenderState implements UpdateContext<RenderContext> {
     return template;
   }
 
-  getScopedValue(unitOfWork: UnitOfWork<RenderContext>, key: unknown): unknown {
-    let scope: UnitOfWork<RenderContext> | null = unitOfWork;
+  getScopedValue(block: UpdateBlock<RenderContext>, key: unknown): unknown {
+    let scope: UpdateBlock<RenderContext> | null = block;
     do {
       const value = this._localNamespaces.get(scope)?.get(key);
       if (value !== undefined) {
@@ -79,27 +79,27 @@ export class RenderState implements UpdateContext<RenderContext> {
     component: ComponentFunction<TProps, TData, RenderContext>,
     props: TProps,
     hooks: Hook[],
-    unitOfWork: UnitOfWork<RenderContext>,
+    block: UpdateBlock<RenderContext>,
     updater: Updater<RenderContext>,
   ): TemplateResultInterface<TData, RenderContext> {
-    const context = new RenderContext(hooks, unitOfWork, this, updater);
+    const context = new RenderContext(hooks, block, this, updater);
     const result = component(props, context);
     context.finalize();
     return result;
   }
 
   setScopedValue(
-    unitOfWork: UnitOfWork<RenderContext>,
+    block: UpdateBlock<RenderContext>,
     key: unknown,
     value: unknown,
   ): void {
-    const variables = this._localNamespaces.get(unitOfWork);
+    const variables = this._localNamespaces.get(block);
     if (variables !== undefined) {
       variables.set(key, value);
     } else {
       const namespace = new Map();
       namespace.set(key, value);
-      this._localNamespaces.set(unitOfWork, namespace);
+      this._localNamespaces.set(block, namespace);
     }
   }
 }

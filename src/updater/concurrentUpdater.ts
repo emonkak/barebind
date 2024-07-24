@@ -4,7 +4,7 @@ import {
   type Effect,
   EffectPhase,
   type TaskPriority,
-  type UnitOfWork,
+  type UpdateBlock,
   type UpdateContext,
   type Updater,
 } from '../types.js';
@@ -21,9 +21,9 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _taskCount = new Atom(0);
 
-  private _currentUnitOfWork: UnitOfWork<TContext> | null = null;
+  private _currentBlock: UpdateBlock<TContext> | null = null;
 
-  private _pendingUnitOfWorks: UnitOfWork<TContext>[] = [];
+  private _pendingBlocks: UpdateBlock<TContext>[] = [];
 
   private _pendingLayoutEffects: Effect[] = [];
 
@@ -43,8 +43,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     this._taskCount = taskCount;
   }
 
-  getCurrentUnitOfWork(): UnitOfWork<TContext> | null {
-    return this._currentUnitOfWork;
+  getCurrentBlock(): UpdateBlock<TContext> | null {
+    return this._currentBlock;
   }
 
   getCurrentPriority(): TaskPriority {
@@ -56,8 +56,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  enqueueUnitOfWork(unitOfWork: UnitOfWork<TContext>): void {
-    this._pendingUnitOfWorks.push(unitOfWork);
+  enqueueBlock(block: UpdateBlock<TContext>): void {
+    this._pendingBlocks.push(block);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
@@ -75,7 +75,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   isPending(): boolean {
     return (
       this._taskCount.value > 0 ||
-      this._pendingUnitOfWorks.length > 0 ||
+      this._pendingBlocks.length > 0 ||
       this._pendingLayoutEffects.length > 0 ||
       this._pendingMutationEffects.length > 0 ||
       this._pendingPassiveEffects.length > 0
@@ -87,11 +87,11 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   scheduleUpdate(): void {
-    if (this._currentUnitOfWork !== null) {
+    if (this._currentBlock !== null) {
       return;
     }
     this._scheduleRenderPipelines();
-    this._scheduleUnitOfWorkingEffects();
+    this._scheduleBlockingEffects();
     this._schedulePassiveEffects();
   }
 
@@ -118,17 +118,15 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     });
   }
 
-  private async _beginWork(
-    rootUnitOfWork: UnitOfWork<TContext>,
-  ): Promise<void> {
-    let pendingUnitOfWorks = [rootUnitOfWork];
+  private async _beginWork(rootBlock: UpdateBlock<TContext>): Promise<void> {
+    let pendingBlocks = [rootBlock];
     let startTime = this._scheduler.getCurrentTime();
 
     do {
-      for (let i = 0, l = pendingUnitOfWorks.length; i < l; i++) {
-        const unitOfWork = pendingUnitOfWorks[i]!;
-        if (!unitOfWork.shouldPerformWork()) {
-          unitOfWork.cancelWork();
+      for (let i = 0, l = pendingBlocks.length; i < l; i++) {
+        const block = pendingBlocks[i]!;
+        if (!block.shouldUpdate()) {
+          block.cancelUpdate();
           continue;
         }
 
@@ -138,50 +136,50 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
           )
         ) {
           await this._scheduler.yieldToMain({
-            priority: unitOfWork.priority,
+            priority: block.priority,
           });
           startTime = this._scheduler.getCurrentTime();
         }
 
-        this._currentUnitOfWork = unitOfWork;
+        this._currentBlock = block;
         try {
-          unitOfWork.performWork(this._context, this);
+          block.performUpdate(this._context, this);
         } finally {
-          this._currentUnitOfWork = null;
+          this._currentBlock = null;
         }
       }
 
-      pendingUnitOfWorks = this._pendingUnitOfWorks;
-      this._pendingUnitOfWorks = [];
-    } while (pendingUnitOfWorks.length > 0);
+      pendingBlocks = this._pendingBlocks;
+      this._pendingBlocks = [];
+    } while (pendingBlocks.length > 0);
 
-    this._scheduleUnitOfWorkingEffects();
+    this._scheduleBlockingEffects();
     this._schedulePassiveEffects();
   }
 
   private _scheduleRenderPipelines(): void {
-    const pendingUnitOfWorks = this._pendingUnitOfWorks;
-    this._pendingUnitOfWorks = [];
+    const pendingBlocks = this._pendingBlocks;
+    this._pendingBlocks = [];
 
-    for (let i = 0, l = pendingUnitOfWorks.length; i < l; i++) {
-      const unitOfWork = pendingUnitOfWorks[i]!;
+    for (let i = 0, l = pendingBlocks.length; i < l; i++) {
+      const block = pendingBlocks[i]!;
       this._scheduler.requestCallback(
         async () => {
           try {
-            await this._beginRenderPipeline()._beginWork(unitOfWork);
+            await this._beginRenderPipeline()._beginWork(block);
           } finally {
             this._taskCount.value--;
           }
         },
         {
-          priority: unitOfWork.priority,
+          priority: block.priority,
         },
       );
       this._taskCount.value++;
     }
   }
 
-  private _scheduleUnitOfWorkingEffects(): void {
+  private _scheduleBlockingEffects(): void {
     const pendingMutationEffects = this._pendingMutationEffects;
     const pendingLayoutEffects = this._pendingLayoutEffects;
 

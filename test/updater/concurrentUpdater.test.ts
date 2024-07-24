@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
-import { MockScheduler, MockUnitOfWork, MockUpdateContext } from '../mocks.js';
+import { MockScheduler, MockUpdateBlock, MockUpdateContext } from '../mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -66,18 +66,18 @@ describe('ConcurrentUpdater', () => {
   });
 
   describe('.isPending()', () => {
-    it('should return true if there is a pending unit of work', () => {
+    it('should return true if there is a pending block', () => {
       const updater = new ConcurrentUpdater(new MockUpdateContext());
 
-      updater.enqueueUnitOfWork(new MockUnitOfWork());
+      updater.enqueueBlock(new MockUpdateBlock());
 
       expect(updater.isPending()).toBe(true);
     });
 
-    it('should return true if there is a unit of work scheduled in rendering pipelines', () => {
+    it('should return true if there is a block scheduled in rendering pipelines', () => {
       const updater = new ConcurrentUpdater(new MockUpdateContext());
 
-      updater.enqueueUnitOfWork(new MockUnitOfWork());
+      updater.enqueueBlock(new MockUpdateBlock());
       updater.scheduleUpdate();
 
       expect(updater.isPending()).toBe(true);
@@ -118,7 +118,7 @@ describe('ConcurrentUpdater', () => {
     it('should return whether an update is scheduled', async () => {
       const updater = new ConcurrentUpdater(new MockUpdateContext());
 
-      updater.enqueueUnitOfWork(new MockUnitOfWork());
+      updater.enqueueBlock(new MockUpdateBlock());
       expect(updater.isScheduled()).toBe(false);
 
       updater.scheduleUpdate();
@@ -131,25 +131,25 @@ describe('ConcurrentUpdater', () => {
 
   describe('.scheduleUpdate()', () => {
     it.each(TASK_PRIORITIES)(
-      'should update the unitOfWork according to its priority',
+      'should update the block according to its priority',
       async (priority) => {
         const scheduler = new MockScheduler();
         const updater = new ConcurrentUpdater(new MockUpdateContext(), {
           scheduler,
         });
 
-        const unitOfWork = new MockUnitOfWork();
+        const block = new MockUpdateBlock();
         const prioritySpy = vi
-          .spyOn(unitOfWork, 'priority', 'get')
+          .spyOn(block, 'priority', 'get')
           .mockReturnValue(priority);
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
-        const performWorkSpy = vi
-          .spyOn(unitOfWork, 'performWork')
+        const performUpdateSpy = vi
+          .spyOn(block, 'performUpdate')
           .mockImplementation((_context, updater) => {
-            expect(updater.getCurrentUnitOfWork()).toBe(unitOfWork);
+            expect(updater.getCurrentBlock()).toBe(block);
           });
 
-        updater.enqueueUnitOfWork(unitOfWork);
+        updater.enqueueBlock(block);
         updater.scheduleUpdate();
 
         await updater.waitForUpdate();
@@ -159,7 +159,7 @@ describe('ConcurrentUpdater', () => {
         expect(requestCallbackSpy).toHaveBeenCalledWith(expect.any(Function), {
           priority,
         });
-        expect(performWorkSpy).toHaveBeenCalledOnce();
+        expect(performUpdateSpy).toHaveBeenCalledOnce();
       },
     );
 
@@ -169,23 +169,23 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const unitOfWork = new MockUnitOfWork();
+      const block = new MockUpdateBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
-      const performWorkSpy = vi
-        .spyOn(unitOfWork, 'performWork')
+      const performUpdateSpy = vi
+        .spyOn(block, 'performUpdate')
         .mockImplementation((_context, updater) => {
-          expect(updater.getCurrentUnitOfWork()).toBe(unitOfWork);
+          expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);
           updater.enqueuePassiveEffect(passiveEffect);
           updater.scheduleUpdate();
         });
 
-      updater.enqueueUnitOfWork(unitOfWork);
+      updater.enqueueBlock(block);
       updater.scheduleUpdate();
 
       await updater.waitForUpdate();
@@ -194,7 +194,7 @@ describe('ConcurrentUpdater', () => {
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
       expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
-      expect(performWorkSpy).toHaveBeenCalledOnce();
+      expect(performUpdateSpy).toHaveBeenCalledOnce();
     });
 
     it('should commit mutation and layout effects with "user-blocking" priority', async () => {
@@ -242,27 +242,27 @@ describe('ConcurrentUpdater', () => {
       });
     });
 
-    it('should cancel the update of the unit of work if shouldPerformWork() returns false', async () => {
+    it('should cancel the update of the block if shouldUpdate() returns false', async () => {
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater(new MockUpdateContext(), {
         scheduler,
       });
 
-      const unitOfWork = new MockUnitOfWork();
-      const performWorkSpy = vi.spyOn(unitOfWork, 'performWork');
-      const shouldPerformWorkSpy = vi
-        .spyOn(unitOfWork, 'shouldPerformWork')
+      const block = new MockUpdateBlock();
+      const performUpdateSpy = vi.spyOn(block, 'performUpdate');
+      const shouldUpdateSpy = vi
+        .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
-      const cancelWorkSpy = vi.spyOn(unitOfWork, 'cancelWork');
+      const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
 
-      updater.enqueueUnitOfWork(unitOfWork);
+      updater.enqueueBlock(block);
       updater.scheduleUpdate();
 
       await updater.waitForUpdate();
 
-      expect(performWorkSpy).not.toHaveBeenCalled();
-      expect(shouldPerformWorkSpy).toHaveBeenCalledOnce();
-      expect(cancelWorkSpy).toHaveBeenCalledOnce();
+      expect(performUpdateSpy).not.toHaveBeenCalled();
+      expect(shouldUpdateSpy).toHaveBeenCalledOnce();
+      expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {
@@ -284,13 +284,13 @@ describe('ConcurrentUpdater', () => {
         });
       const yieldToMainSpy = vi.spyOn(scheduler, 'yieldToMain');
 
-      const block1 = new MockUnitOfWork();
-      const block2 = new MockUnitOfWork();
-      const performWork1Spy = vi.spyOn(block1, 'performWork');
-      const performWork2Spy = vi.spyOn(block1, 'performWork');
+      const block1 = new MockUpdateBlock();
+      const block2 = new MockUpdateBlock();
+      const performUpdate1Spy = vi.spyOn(block1, 'performUpdate');
+      const performUpdate2Spy = vi.spyOn(block1, 'performUpdate');
 
-      updater.enqueueUnitOfWork(block1);
-      updater.enqueueUnitOfWork(block2);
+      updater.enqueueBlock(block1);
+      updater.enqueueBlock(block2);
       updater.scheduleUpdate();
 
       await updater.waitForUpdate();
@@ -298,8 +298,8 @@ describe('ConcurrentUpdater', () => {
       expect(getCurrentTimeSpy).toHaveBeenCalled();
       expect(shouldYieldToMainSpy).toHaveBeenCalledTimes(2);
       expect(yieldToMainSpy).toHaveBeenCalledTimes(2);
-      expect(performWork1Spy).toHaveBeenCalledOnce();
-      expect(performWork2Spy).toHaveBeenCalledOnce();
+      expect(performUpdate1Spy).toHaveBeenCalledOnce();
+      expect(performUpdate2Spy).toHaveBeenCalledOnce();
     });
   });
 });

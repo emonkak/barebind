@@ -441,10 +441,10 @@ function parseChildren(
           const tailCompoent = components.length - 1;
 
           for (let i = 0; i < tailCompoent; i++) {
-            const unitOfWork = components[i]!;
+            const component = components[i]!;
 
-            if (unitOfWork !== '') {
-              const text = document.createTextNode(unitOfWork);
+            if (component !== '') {
+              const text = document.createTextNode(component);
               currentNode.before(text);
               index++;
             }

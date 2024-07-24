@@ -2,7 +2,7 @@ import {
   type Effect,
   EffectPhase,
   type TaskPriority,
-  type UnitOfWork,
+  type UpdateBlock,
   type UpdateContext,
   type Updater,
 } from '../types.js';
@@ -10,9 +10,9 @@ import {
 export class SyncUpdater<TContext> implements Updater<TContext> {
   private readonly _context: UpdateContext<TContext>;
 
-  private _currentUnitOfWork: UnitOfWork<TContext> | null = null;
+  private _currentBlock: UpdateBlock<TContext> | null = null;
 
-  private _pendingUnitOfWorks: UnitOfWork<TContext>[] = [];
+  private _pendingBlocks: UpdateBlock<TContext>[] = [];
 
   private _pendingMutationEffects: Effect[] = [];
 
@@ -26,16 +26,16 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     this._context = context;
   }
 
-  getCurrentUnitOfWork(): UnitOfWork<TContext> | null {
-    return this._currentUnitOfWork;
+  getCurrentBlock(): UpdateBlock<TContext> | null {
+    return this._currentBlock;
   }
 
   getCurrentPriority(): TaskPriority {
     return 'user-blocking';
   }
 
-  enqueueUnitOfWork(unitOfWork: UnitOfWork<TContext>): void {
-    this._pendingUnitOfWorks.push(unitOfWork);
+  enqueueBlock(block: UpdateBlock<TContext>): void {
+    this._pendingBlocks.push(block);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
@@ -52,7 +52,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
 
   isPending(): boolean {
     return (
-      this._pendingUnitOfWorks.length > 0 ||
+      this._pendingBlocks.length > 0 ||
       this._pendingLayoutEffects.length > 0 ||
       this._pendingMutationEffects.length > 0 ||
       this._pendingPassiveEffects.length > 0
@@ -84,21 +84,21 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   flush(): void {
     try {
       do {
-        while (this._pendingUnitOfWorks.length > 0) {
-          const pendingUnitOfWorks = this._pendingUnitOfWorks;
-          this._pendingUnitOfWorks = [];
+        while (this._pendingBlocks.length > 0) {
+          const pendingBlocks = this._pendingBlocks;
+          this._pendingBlocks = [];
 
-          for (let i = 0, l = pendingUnitOfWorks.length; i < l; i++) {
-            const unitOfWork = pendingUnitOfWorks[i]!;
-            if (!unitOfWork.shouldPerformWork()) {
-              unitOfWork.cancelWork();
+          for (let i = 0, l = pendingBlocks.length; i < l; i++) {
+            const block = pendingBlocks[i]!;
+            if (!block.shouldUpdate()) {
+              block.cancelUpdate();
               continue;
             }
-            this._currentUnitOfWork = unitOfWork;
+            this._currentBlock = block;
             try {
-              unitOfWork.performWork(this._context, this);
+              block.performUpdate(this._context, this);
             } finally {
-              this._currentUnitOfWork = null;
+              this._currentBlock = null;
             }
           }
         }
@@ -127,7 +127,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
           );
         }
       } while (
-        this._pendingUnitOfWorks.length > 0 ||
+        this._pendingBlocks.length > 0 ||
         this._pendingMutationEffects.length > 0 ||
         this._pendingLayoutEffects.length > 0 ||
         this._pendingPassiveEffects.length > 0

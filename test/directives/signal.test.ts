@@ -6,7 +6,7 @@ import { RenderContext, usableTag } from '../../src/renderContext.js';
 import { RenderState } from '../../src/renderState.js';
 import { type Hook, PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUnitOfWork } from '.././mocks.js';
+import { MockUpdateBlock } from '.././mocks.js';
 
 describe('Signal', () => {
   describe('.toJSON()', () => {
@@ -65,25 +65,25 @@ describe('Signal', () => {
   describe('[usableTag]()', () => {
     it('should subscribe the signal and return a signal value', () => {
       const signal = new Atom('foo');
-      const unitOfWork = new MockUnitOfWork();
+      const block = new MockUpdateBlock();
       const hooks: Hook[] = [];
       const state = new RenderState();
       const updater = new SyncUpdater(state);
-      const context = new RenderContext(hooks, unitOfWork, state, updater);
+      const context = new RenderContext(hooks, block, state, updater);
 
-      const requestWorkSpy = vi.spyOn(unitOfWork, 'requestWork');
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const value = signal[usableTag](context);
 
       updater.flush();
 
       expect(value).toBe('foo');
-      expect(requestWorkSpy).not.toHaveBeenCalled();
+      expect(requestUpdateSpy).not.toHaveBeenCalled();
 
       signal.value = 'bar';
 
       updater.flush();
 
-      expect(requestWorkSpy).toHaveBeenCalled();
+      expect(requestUpdateSpy).toHaveBeenCalled();
     });
   });
 });

@@ -16,7 +16,7 @@ import {
   type Template,
   type TemplateFragment,
   type TemplateResultInterface,
-  type UnitOfWork,
+  type UpdateBlock,
   type UpdateContext,
   type Updater,
   directiveTag,
@@ -79,10 +79,10 @@ export class MockBinding implements Binding<MockDirective>, Effect {
   }
 }
 
-export class MockUnitOfWork<TContext> implements UnitOfWork<TContext> {
-  private _parent: UnitOfWork<TContext> | null;
+export class MockUpdateBlock<TContext> implements UpdateBlock<TContext> {
+  private _parent: UpdateBlock<TContext> | null;
 
-  constructor(parent: UnitOfWork<TContext> | null = null) {
+  constructor(parent: UpdateBlock<TContext> | null = null) {
     this._parent = parent;
   }
 
@@ -90,7 +90,7 @@ export class MockUnitOfWork<TContext> implements UnitOfWork<TContext> {
     return false;
   }
 
-  get parent(): UnitOfWork<TContext> | null {
+  get parent(): UpdateBlock<TContext> | null {
     return this._parent;
   }
 
@@ -98,15 +98,15 @@ export class MockUnitOfWork<TContext> implements UnitOfWork<TContext> {
     return 'background';
   }
 
-  cancelWork(): void {}
+  cancelUpdate(): void {}
 
-  shouldPerformWork(): boolean {
+  shouldUpdate(): boolean {
     return true;
   }
 
-  requestWork(_priority: TaskPriority, _updater: Updater<TContext>): void {}
+  requestUpdate(_priority: TaskPriority, _updater: Updater<TContext>): void {}
 
-  performWork(
+  performUpdate(
     _context: UpdateContext<TContext>,
     _updater: Updater<TContext>,
   ): void {}
@@ -151,7 +151,7 @@ export class MockScheduler implements Scheduler {
 
 export interface MockRenderContext {
   hooks: Hook[];
-  unitOfWork: UnitOfWork<MockRenderContext>;
+  block: UpdateBlock<MockRenderContext>;
   updater: Updater<MockRenderContext>;
 }
 
@@ -166,10 +166,10 @@ export class MockUpdateContext implements UpdateContext<MockRenderContext> {
     component: ComponentFunction<TProps, TData, MockRenderContext>,
     props: TProps,
     hooks: Hook[],
-    unitOfWork: UnitOfWork<MockRenderContext>,
+    block: UpdateBlock<MockRenderContext>,
     updater: Updater<MockRenderContext>,
   ): TemplateResultInterface<TData, MockRenderContext> {
-    return component(props, { hooks, unitOfWork, updater });
+    return component(props, { hooks, block, updater });
   }
 }
 

@@ -11,7 +11,7 @@ import {
   type TaskPriority,
   type Template,
   type TemplateFragment,
-  type UnitOfWork,
+  type UpdateBlock,
   type UpdateContext,
   type Updater,
   comparePriorities,
@@ -65,7 +65,7 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error('Component directive must be used in ChildNodePart.');
     }
-    return new ComponentBinding(this, part, updater.getCurrentUnitOfWork());
+    return new ComponentBinding(this, part, updater.getCurrentBlock());
   }
 }
 
@@ -73,13 +73,13 @@ export class ComponentBinding<TProps, TData, TContext>
   implements
     Binding<Component<TProps, TData, TContext>, TContext>,
     Effect,
-    UnitOfWork<TContext>
+    UpdateBlock<TContext>
 {
   private _directive: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: UnitOfWork<TContext> | null;
+  private readonly _parent: UpdateBlock<TContext> | null;
 
   private _pendingFragment: TemplateFragment<TData, TContext> | null = null;
 
@@ -107,7 +107,7 @@ export class ComponentBinding<TProps, TData, TContext>
   constructor(
     directive: Component<TProps, TData, TContext>,
     part: ChildNodePart,
-    parent: UnitOfWork<TContext> | null,
+    parent: UpdateBlock<TContext> | null,
   ) {
     this._directive = directive;
     this._part = part;
@@ -130,7 +130,7 @@ export class ComponentBinding<TProps, TData, TContext>
     return this._part.node;
   }
 
-  get parent(): UnitOfWork<TContext> | null {
+  get parent(): UpdateBlock<TContext> | null {
     return this._parent;
   }
 
@@ -142,11 +142,11 @@ export class ComponentBinding<TProps, TData, TContext>
     return !!(this._flags & FLAG_WORKING || this._flags & FLAG_UNMOUNTING);
   }
 
-  shouldPerformWork(): boolean {
+  shouldUpdate(): boolean {
     if (!this.dirty) {
       return false;
     }
-    let current: UnitOfWork<TContext> | null = this;
+    let current: UpdateBlock<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.dirty) {
         return false;
@@ -155,25 +155,25 @@ export class ComponentBinding<TProps, TData, TContext>
     return true;
   }
 
-  cancelWork(): void {
+  cancelUpdate(): void {
     this._flags &= ~FLAG_WORKING;
   }
 
-  requestWork(priority: TaskPriority, updater: Updater): void {
+  requestUpdate(priority: TaskPriority, updater: Updater): void {
     if (
       !(this._flags & FLAG_WORKING) ||
       comparePriorities(priority, this._priority) > 0
     ) {
       this._flags |= FLAG_WORKING;
       this._priority = priority;
-      updater.enqueueUnitOfWork(this);
+      updater.enqueueBlock(this);
       updater.scheduleUpdate();
     }
 
     this._flags &= ~FLAG_UNMOUNTING;
   }
 
-  performWork(
+  performUpdate(
     context: UpdateContext<TContext>,
     updater: Updater<TContext>,
   ): void {
@@ -312,7 +312,7 @@ export class ComponentBinding<TProps, TData, TContext>
       if (this._parent !== null) {
         this._priority = this._parent.priority;
       }
-      updater.enqueueUnitOfWork(this);
+      updater.enqueueBlock(this);
     }
 
     this._flags &= ~FLAG_UNMOUNTING;

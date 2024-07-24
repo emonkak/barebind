@@ -9,7 +9,7 @@ import {
   type MockRenderContext,
   MockTemplate,
   MockTemplateFragment,
-  MockUnitOfWork,
+  MockUpdateBlock,
   MockUpdateContext,
 } from '../mocks.js';
 
@@ -45,9 +45,9 @@ describe('Component', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const parent = new MockUnitOfWork();
+      const parent = new MockUpdateBlock();
 
-      vi.spyOn(updater, 'getCurrentUnitOfWork').mockReturnValue(parent);
+      vi.spyOn(updater, 'getCurrentBlock').mockReturnValue(parent);
 
       const binding = directive[directiveTag](part, updater);
 
@@ -79,7 +79,7 @@ describe('Component', () => {
 });
 
 describe('ComponentBinding', () => {
-  describe('.shouldPerformWork()', () => {
+  describe('.shouldUpdate()', () => {
     it('should return false after initialization', () => {
       const directive = componentDirective(
         () => ({ template: new MockTemplate(), data: {} }),
@@ -89,10 +89,10 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUnitOfWork();
+      const parent = new MockUpdateBlock();
       const binding = new ComponentBinding(directive, part, parent);
 
-      expect(binding.shouldPerformWork()).toBe(false);
+      expect(binding.shouldUpdate()).toBe(false);
     });
 
     it('should return true after an update is requested', () => {
@@ -104,13 +104,13 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUnitOfWork();
+      const parent = new MockUpdateBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      binding.requestWork('user-blocking', updater);
+      binding.requestUpdate('user-blocking', updater);
 
-      expect(binding.shouldPerformWork()).toBe(true);
+      expect(binding.shouldUpdate()).toBe(true);
     });
 
     it('should return false if there is a dirty parent', () => {
@@ -122,19 +122,19 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUnitOfWork();
+      const parent = new MockUpdateBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockUpdateContext());
 
       vi.spyOn(parent, 'dirty', 'get').mockReturnValue(true);
 
-      binding.requestWork('user-blocking', updater);
+      binding.requestUpdate('user-blocking', updater);
 
-      expect(binding.shouldPerformWork()).toBe(false);
+      expect(binding.shouldUpdate()).toBe(false);
     });
   });
 
-  describe('.cancelWork()', () => {
+  describe('.cancelUpdate()', () => {
     it('should cancel the scheduled update', () => {
       const template = new MockTemplate();
       const data = {};
@@ -147,15 +147,15 @@ describe('ComponentBinding', () => {
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
-      binding.requestWork('user-visible', updater);
-      binding.cancelWork();
+      binding.requestUpdate('user-visible', updater);
+      binding.cancelUpdate();
 
       expect(binding.dirty).toBe(false);
       expect(binding.priority).toBe('user-visible');
     });
   });
 
-  describe('.requestWork()', () => {
+  describe('.requestUpdate()', () => {
     it('should schdule the update', () => {
       const template = new MockTemplate();
       const data = {};
@@ -167,15 +167,15 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(directive, part, null);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
-      const enqueueUnitOfWorkSpy = vi.spyOn(updater, 'enqueueUnitOfWork');
+      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
-      binding.requestWork('user-visible', updater);
+      binding.requestUpdate('user-visible', updater);
 
       expect(binding.dirty).toBe(true);
       expect(binding.priority).toBe('user-visible');
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledOnce();
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -190,17 +190,17 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(directive, part, null);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
-      const enqueueUnitOfWorkSpy = vi.spyOn(updater, 'enqueueUnitOfWork');
+      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
-      binding.requestWork('user-visible', updater);
-      binding.requestWork('user-blocking', updater);
+      binding.requestUpdate('user-visible', updater);
+      binding.requestUpdate('user-blocking', updater);
 
       expect(binding.dirty).toBe(true);
       expect(binding.priority).toBe('user-blocking');
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueUnitOfWorkSpy).toHaveBeenNthCalledWith(1, binding);
-      expect(enqueueUnitOfWorkSpy).toHaveBeenNthCalledWith(2, binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
+      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
+      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(2, binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
     });
 
@@ -216,16 +216,16 @@ describe('ComponentBinding', () => {
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
-      const enqueueUnitOfWorkSpy = vi.spyOn(updater, 'enqueueUnitOfWork');
+      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
-      binding.requestWork('user-blocking', updater);
-      binding.requestWork('user-blocking', updater);
+      binding.requestUpdate('user-blocking', updater);
+      binding.requestUpdate('user-blocking', updater);
 
       expect(binding.dirty).toBe(true);
       expect(binding.priority).toBe('user-blocking');
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledOnce();
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -252,7 +252,7 @@ describe('ComponentBinding', () => {
       updater.flush();
 
       binding.unbind(updater);
-      binding.requestWork('user-blocking', updater);
+      binding.requestUpdate('user-blocking', updater);
       updater.flush();
 
       expect(binding.dirty).toBe(false);
@@ -265,7 +265,7 @@ describe('ComponentBinding', () => {
     });
   });
 
-  describe('.update()', () => {
+  describe('.performUpdate()', () => {
     it('should abort the update if an update is not requested', () => {
       const template = new MockTemplate();
       const data = {};
@@ -280,7 +280,7 @@ describe('ComponentBinding', () => {
 
       const hydrateSpy = vi.spyOn(template, 'hydrate');
 
-      binding.performWork(state, updater);
+      binding.performUpdate(state, updater);
 
       expect(hydrateSpy).not.toHaveBeenCalled();
       expect(updater.isPending()).toBe(false);
@@ -320,7 +320,7 @@ describe('ComponentBinding', () => {
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should enqueue the binding as a unit of work with the parent priority', () => {
+    it('should enqueue the binding as a block with the parent priority', () => {
       const template = new MockTemplate();
       const data = {};
       const directive = componentDirective(() => ({ template, data }), {});
@@ -328,7 +328,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUnitOfWork();
+      const parent = new MockUpdateBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
@@ -336,15 +336,15 @@ describe('ComponentBinding', () => {
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
         .mockReturnValue('user-visible');
-      const enqueueUnitOfWorkSpy = vi.spyOn(updater, 'enqueueUnitOfWork');
+      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
       binding.connect(updater);
       updater.flush();
 
       expect(getPrioritySpy).toHaveBeenCalledOnce();
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledOnce();
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
       expect(binding.priority).toBe('user-visible');
     });
@@ -361,14 +361,14 @@ describe('ComponentBinding', () => {
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
-      const enqueueUnitOfWorkSpy = vi.spyOn(updater, 'enqueueUnitOfWork');
+      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
       binding.connect(updater);
       binding.connect(updater);
 
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledOnce();
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
 
@@ -805,21 +805,21 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(directive1, part, null);
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
-      const enqueueUnitOfWorkSpy = vi.spyOn(updater, 'enqueueUnitOfWork');
+      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
       binding.connect(updater);
-      binding.performWork(state, updater);
+      binding.performUpdate(state, updater);
 
       binding.bind(directive2, updater);
-      binding.performWork(state, updater);
+      binding.performUpdate(state, updater);
 
-      expect(enqueueUnitOfWorkSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueUnitOfWorkSpy).toHaveBeenNthCalledWith(1, binding);
-      expect(enqueueUnitOfWorkSpy).toHaveBeenNthCalledWith(2, binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
+      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
+      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(2, binding);
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
     });
@@ -886,7 +886,7 @@ describe('ComponentBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      binding.requestWork('user-blocking', updater);
+      binding.requestUpdate('user-blocking', updater);
       binding.unbind(updater);
       updater.flush();
 
