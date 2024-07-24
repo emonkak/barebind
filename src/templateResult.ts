@@ -20,9 +20,10 @@ import {
 } from './types.js';
 
 const FLAG_NONE = 0;
-const FLAG_UPDATING = 1 << 0;
-const FLAG_MUTATING = 1 << 1;
-const FLAG_UNMOUNTING = 1 << 2;
+const FLAG_CONNECTED = 1 << 0;
+const FLAG_UPDATING = 1 << 1;
+const FLAG_MUTATING = 1 << 2;
+const FLAG_UNMOUNTING = 1 << 3;
 
 export class TemplateResult<TData, TContext = unknown>
   implements Directive<TContext>, TemplateResultInterface<TData, TContext>
@@ -139,6 +140,10 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void {
+    if (!(this._flags & FLAG_CONNECTED)) {
+      return;
+    }
+
     if (
       !(this._flags & FLAG_UPDATING) ||
       comparePriorities(priority, this._priority) > 0
@@ -209,11 +214,13 @@ export class TemplateResultBinding<TData, TContext>
     this._requestMutation(updater);
 
     this._flags |= FLAG_UNMOUNTING;
-    this._flags &= ~FLAG_UPDATING;
+    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
+
+    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   commit(): void {
@@ -240,6 +247,7 @@ export class TemplateResultBinding<TData, TContext>
       updater.enqueueBlock(this);
     }
 
+    this._flags |= FLAG_CONNECTED;
     this._flags &= ~FLAG_UNMOUNTING;
   }
 

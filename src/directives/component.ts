@@ -22,9 +22,10 @@ import {
 } from '../types.js';
 
 const FLAG_NONE = 0;
-const FLAG_UPDATING = 1 << 0;
-const FLAG_MUTATING = 1 << 1;
-const FLAG_UNMOUNTING = 1 << 2;
+const FLAG_CONNECTED = 1 << 0;
+const FLAG_UPDATING = 1 << 1;
+const FLAG_MUTATING = 1 << 2;
+const FLAG_UNMOUNTING = 1 << 3;
 
 export function component<TProps, TData, TContext>(
   component: ComponentFunction<TProps, TData, TContext>,
@@ -160,6 +161,10 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   requestUpdate(priority: TaskPriority, updater: Updater): void {
+    if (!(this._flags & FLAG_CONNECTED)) {
+      return;
+    }
+
     if (
       !(this._flags & FLAG_UPDATING) ||
       comparePriorities(priority, this._priority) > 0
@@ -169,8 +174,6 @@ export class ComponentBinding<TProps, TData, TContext>
       updater.enqueueBlock(this);
       updater.scheduleUpdate();
     }
-
-    this._flags &= ~FLAG_UNMOUNTING;
   }
 
   performUpdate(
@@ -274,7 +277,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._requestMutation(updater);
 
     this._flags |= FLAG_UNMOUNTING;
-    this._flags &= ~FLAG_UPDATING;
+    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   disconnect(): void {
@@ -282,6 +285,8 @@ export class ComponentBinding<TProps, TData, TContext>
 
     cleanHooks(this._hooks);
     this._hooks = [];
+
+    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   commit(): void {
@@ -308,6 +313,7 @@ export class ComponentBinding<TProps, TData, TContext>
       updater.enqueueBlock(this);
     }
 
+    this._flags |= FLAG_CONNECTED;
     this._flags &= ~FLAG_UNMOUNTING;
   }
 

@@ -93,6 +93,9 @@ describe('TemplateBinding', () => {
       const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockUpdateContext());
 
+      binding.connect(updater);
+      updater.flush();
+
       binding.requestUpdate('user-blocking', updater);
 
       expect(binding.shouldUpdate()).toBe(true);
@@ -109,6 +112,9 @@ describe('TemplateBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       vi.spyOn(parent, 'dirty', 'get').mockReturnValue(true);
+
+      binding.connect(updater);
+      updater.flush();
 
       binding.requestUpdate('user-blocking', updater);
 
@@ -127,6 +133,9 @@ describe('TemplateBinding', () => {
       const state = new MockUpdateContext();
       const updater = new SyncUpdater(state);
 
+      binding.connect(updater);
+      updater.flush();
+
       binding.requestUpdate('user-visible', updater);
       binding.cancelUpdate();
 
@@ -144,6 +153,10 @@ describe('TemplateBinding', () => {
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
+
+      binding.connect(updater);
+      updater.flush();
+
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
@@ -164,6 +177,10 @@ describe('TemplateBinding', () => {
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
+
+      binding.connect(updater);
+      updater.flush();
+
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
@@ -178,6 +195,67 @@ describe('TemplateBinding', () => {
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
     });
 
+    it('should do nothing if the binding is not connected', () => {
+      const directive = new TemplateResult(new MockTemplate(), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateResultBinding(directive, part, null);
+      const updater = new SyncUpdater(new MockUpdateContext());
+
+      binding.requestUpdate('background', updater);
+
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-blocking');
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
+    });
+
+    it('should do nothing if the binding is disconnected', () => {
+      const directive = new TemplateResult(new MockTemplate(), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateResultBinding(directive, part, null);
+      const updater = new SyncUpdater(new MockUpdateContext());
+
+      binding.connect(updater);
+      updater.flush();
+
+      binding.disconnect();
+      binding.requestUpdate('background', updater);
+
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-blocking');
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
+    });
+
+    it('should do nothing if the binding is unbound', () => {
+      const directive = new TemplateResult(new MockTemplate(), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateResultBinding(directive, part, null);
+      const updater = new SyncUpdater(new MockUpdateContext());
+
+      binding.connect(updater);
+      updater.flush();
+
+      binding.unbind(updater);
+      updater.flush();
+
+      binding.requestUpdate('background', updater);
+
+      expect(binding.dirty).toBe(false);
+      expect(binding.priority).toBe('user-blocking');
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
+    });
+
     it('should do nothing if an update is already scheduled', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
@@ -187,49 +265,20 @@ describe('TemplateBinding', () => {
       const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
 
+      binding.connect(updater);
+      updater.flush();
+
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
       binding.requestUpdate('user-blocking', updater);
-      binding.requestUpdate('user-blocking', updater);
+      binding.requestUpdate('background', updater);
 
       expect(binding.dirty).toBe(true);
       expect(binding.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-    });
-
-    it('should cancel the unmount in progress', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = new MockTemplateFragment();
-
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
-        .mockReturnValue(fragment);
-      const mountSpy = vi.spyOn(fragment, 'mount');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
-
-      binding.connect(updater);
-      updater.flush();
-
-      binding.unbind(updater);
-      binding.requestUpdate('user-blocking', updater);
-      updater.flush();
-
-      expect(binding.dirty).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(mountSpy).toHaveBeenCalledOnce();
-      expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(unmountSpy).not.toHaveBeenCalled();
     });
 
     it('should mark itself as dirty', () => {
@@ -240,6 +289,9 @@ describe('TemplateBinding', () => {
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
       const updater = new SyncUpdater(new MockUpdateContext());
+
+      binding.connect(updater);
+      updater.flush();
 
       binding.requestUpdate('user-blocking', updater);
 
@@ -614,7 +666,7 @@ describe('TemplateBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      binding.connect(updater);
+      binding.requestUpdate('user-blocking', updater);
       binding.unbind(updater);
       updater.flush();
 
@@ -669,6 +721,38 @@ describe('TemplateBinding', () => {
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
       expect(disconnectSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should cancel the update in progress', () => {
+      const directive = new TemplateResult(new MockTemplate(), {});
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateResultBinding(directive, part, null);
+      const updater = new SyncUpdater(new MockUpdateContext());
+      const fragment = new MockTemplateFragment();
+
+      const hydrateSpy = vi
+        .spyOn(directive.template, 'hydrate')
+        .mockReturnValue(fragment);
+      const mountSpy = vi.spyOn(fragment, 'mount');
+      const unmountSpy = vi.spyOn(fragment, 'unmount');
+      const attachSpy = vi.spyOn(fragment, 'attach');
+
+      binding.connect(updater);
+      updater.flush();
+
+      binding.requestUpdate('user-blocking', updater);
+      binding.disconnect();
+      updater.flush();
+
+      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(attachSpy).not.toHaveBeenCalled();
+      expect(mountSpy).toHaveBeenCalledOnce();
+      expect(mountSpy).toHaveBeenCalledWith(part);
+      expect(unmountSpy).not.toHaveBeenCalled();
     });
   });
 });
