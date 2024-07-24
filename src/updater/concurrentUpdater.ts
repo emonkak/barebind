@@ -118,7 +118,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     });
   }
 
-  private async _updateUnitOfWork(
+  private async _beginWork(
     rootUnitOfWork: UnitOfWork<TContext>,
   ): Promise<void> {
     let pendingUnitOfWorks = [rootUnitOfWork];
@@ -168,7 +168,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         async () => {
           try {
-            await this._beginRenderPipeline()._updateUnitOfWork(unitOfWork);
+            await this._beginRenderPipeline()._beginWork(unitOfWork);
           } finally {
             this._taskCount.value--;
           }
