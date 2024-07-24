@@ -188,7 +188,8 @@ export class ComponentBinding<TProps, TData, TContext>
       this._memoizedComponent !== component
     ) {
       // The component has been changed, so we need to clean hooks.
-      this._cleanHooks();
+      updater.enqueuePassiveEffect(new CleanHooks(this._hooks));
+      this._hooks = [];
     }
 
     const { template, data } = context.renderComponent(
@@ -266,7 +267,10 @@ export class ComponentBinding<TProps, TData, TContext>
 
   unbind(updater: Updater): void {
     this._pendingFragment?.detach(updater);
-    this._cleanHooks();
+
+    cleanHooks(this._hooks);
+    this._hooks = [];
+
     this._requestMutation(updater);
 
     this._flags |= FLAG_UNMOUNTING;
@@ -275,7 +279,9 @@ export class ComponentBinding<TProps, TData, TContext>
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
-    this._cleanHooks();
+
+    cleanHooks(this._hooks);
+    this._hooks = [];
   }
 
   commit(): void {
@@ -291,20 +297,6 @@ export class ComponentBinding<TProps, TData, TContext>
     }
 
     this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
-  }
-
-<<<<<<< HEAD
-  private _cleanHooks(): void {
-    const hooks = this._hooks;
-
-    for (let i = 0, l = hooks.length; i < l; i++) {
-      const hook = hooks[i]!;
-      if (hook.type === HookType.Effect) {
-        hook.cleanup?.();
-      }
-    }
-
-    hooks.length = 0;
   }
 
   private _forceUpdate(updater: Updater<TContext>): void {
@@ -324,5 +316,26 @@ export class ComponentBinding<TProps, TData, TContext>
       updater.enqueueMutationEffect(this);
       this._flags |= FLAG_MUTATING;
     }
+  }
+}
+
+function cleanHooks(hooks: Hook[]): void {
+  for (let i = 0, l = hooks.length; i < l; i++) {
+    const hook = hooks[i]!;
+    if (hook.type === HookType.Effect) {
+      hook.cleanup?.();
+    }
+  }
+}
+
+class CleanHooks implements Effect {
+  private _hooks: Hook[];
+
+  constructor(hooks: Hook[]) {
+    this._hooks = hooks;
+  }
+
+  commit() {
+    cleanHooks(this._hooks);
   }
 }
