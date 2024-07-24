@@ -22,7 +22,7 @@ import {
 } from '../types.js';
 
 const FLAG_NONE = 0;
-const FLAG_WORKING = 1 << 0;
+const FLAG_UPDATING = 1 << 0;
 const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
@@ -139,7 +139,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   get dirty(): boolean {
-    return !!(this._flags & FLAG_WORKING || this._flags & FLAG_UNMOUNTING);
+    return !!(this._flags & FLAG_UPDATING || this._flags & FLAG_UNMOUNTING);
   }
 
   shouldUpdate(): boolean {
@@ -156,15 +156,15 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   cancelUpdate(): void {
-    this._flags &= ~FLAG_WORKING;
+    this._flags &= ~FLAG_UPDATING;
   }
 
   requestUpdate(priority: TaskPriority, updater: Updater): void {
     if (
-      !(this._flags & FLAG_WORKING) ||
+      !(this._flags & FLAG_UPDATING) ||
       comparePriorities(priority, this._priority) > 0
     ) {
-      this._flags |= FLAG_WORKING;
+      this._flags |= FLAG_UPDATING;
       this._priority = priority;
       updater.enqueueBlock(this);
       updater.scheduleUpdate();
@@ -177,7 +177,7 @@ export class ComponentBinding<TProps, TData, TContext>
     context: UpdateContext<TContext>,
     updater: Updater<TContext>,
   ): void {
-    if (!(this._flags & FLAG_WORKING)) {
+    if (!(this._flags & FLAG_UPDATING)) {
       return;
     }
 
@@ -249,11 +249,11 @@ export class ComponentBinding<TProps, TData, TContext>
 
     this._memoizedComponent = component;
     this._memoizedTemplate = template;
-    this._flags &= ~FLAG_WORKING;
+    this._flags &= ~FLAG_UPDATING;
   }
 
   connect(updater: Updater): void {
-    this._forceWork(updater);
+    this._forceUpdate(updater);
   }
 
   bind(newValue: Component<TProps, TData, TContext>, updater: Updater): void {
@@ -261,7 +261,7 @@ export class ComponentBinding<TProps, TData, TContext>
       ensureDirective(Component, newValue);
     }
     this._directive = newValue;
-    this._forceWork(updater);
+    this._forceUpdate(updater);
   }
 
   unbind(updater: Updater): void {
@@ -270,7 +270,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._requestMutation(updater);
 
     this._flags |= FLAG_UNMOUNTING;
-    this._flags &= ~FLAG_WORKING;
+    this._flags &= ~FLAG_UPDATING;
   }
 
   disconnect(): void {
@@ -293,6 +293,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
   }
 
+<<<<<<< HEAD
   private _cleanHooks(): void {
     const hooks = this._hooks;
 
@@ -306,9 +307,9 @@ export class ComponentBinding<TProps, TData, TContext>
     hooks.length = 0;
   }
 
-  private _forceWork(updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_WORKING)) {
-      this._flags |= FLAG_WORKING;
+  private _forceUpdate(updater: Updater<TContext>): void {
+    if (!(this._flags & FLAG_UPDATING)) {
+      this._flags |= FLAG_UPDATING;
       if (this._parent !== null) {
         this._priority = this._parent.priority;
       }

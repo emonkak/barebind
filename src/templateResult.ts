@@ -20,7 +20,7 @@ import {
 } from './types.js';
 
 const FLAG_NONE = 0;
-const FLAG_WORKING = 1 << 0;
+const FLAG_UPDATING = 1 << 0;
 const FLAG_MUTATING = 1 << 1;
 const FLAG_UNMOUNTING = 1 << 2;
 
@@ -118,7 +118,7 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   get dirty(): boolean {
-    return (this._flags & (FLAG_WORKING | FLAG_MUTATING)) !== 0;
+    return (this._flags & (FLAG_UPDATING | FLAG_MUTATING)) !== 0;
   }
 
   shouldUpdate(): boolean {
@@ -135,15 +135,15 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   cancelUpdate(): void {
-    this._flags &= ~FLAG_WORKING;
+    this._flags &= ~FLAG_UPDATING;
   }
 
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void {
     if (
-      !(this._flags & FLAG_WORKING) ||
+      !(this._flags & FLAG_UPDATING) ||
       comparePriorities(priority, this._priority) > 0
     ) {
-      this._flags |= FLAG_WORKING;
+      this._flags |= FLAG_UPDATING;
       this._priority = priority;
       updater.enqueueBlock(this);
       updater.scheduleUpdate();
@@ -156,7 +156,7 @@ export class TemplateResultBinding<TData, TContext>
     _context: UpdateContext<TContext>,
     updater: Updater<TContext>,
   ): void {
-    if (!(this._flags & FLAG_WORKING)) {
+    if (!(this._flags & FLAG_UPDATING)) {
       return;
     }
 
@@ -188,11 +188,11 @@ export class TemplateResultBinding<TData, TContext>
     }
 
     this._memoizedTemplate = template;
-    this._flags &= ~FLAG_WORKING;
+    this._flags &= ~FLAG_UPDATING;
   }
 
   connect(updater: Updater<TContext>): void {
-    this._forceWork(updater);
+    this._forceUpdate(updater);
   }
 
   bind(newValue: TemplateResult<TData, TContext>, updater: Updater): void {
@@ -200,7 +200,7 @@ export class TemplateResultBinding<TData, TContext>
       ensureDirective(TemplateResult, newValue);
     }
     this._directive = newValue;
-    this._forceWork(updater);
+    this._forceUpdate(updater);
   }
 
   unbind(updater: Updater<TContext>): void {
@@ -209,7 +209,7 @@ export class TemplateResultBinding<TData, TContext>
     this._requestMutation(updater);
 
     this._flags |= FLAG_UNMOUNTING;
-    this._flags &= ~FLAG_WORKING;
+    this._flags &= ~FLAG_UPDATING;
   }
 
   disconnect(): void {
@@ -231,9 +231,9 @@ export class TemplateResultBinding<TData, TContext>
     this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
   }
 
-  private _forceWork(updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_WORKING)) {
-      this._flags |= FLAG_WORKING;
+  private _forceUpdate(updater: Updater<TContext>): void {
+    if (!(this._flags & FLAG_UPDATING)) {
+      this._flags |= FLAG_UPDATING;
       if (this._parent !== null) {
         this._priority = this._parent.priority;
       }
