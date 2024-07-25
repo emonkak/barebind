@@ -10,6 +10,10 @@
     "./directives.js": {
       "import": "./lib/directives.js",
       "types": "./lib/directives.d.ts"
+    },
+    "./router.js": {
+      "import": "./lib/router.js",
+      "types": "./lib/router.d.ts"
     }
   },
   "type": "module",
