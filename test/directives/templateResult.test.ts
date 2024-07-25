@@ -2,15 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   TemplateResult,
   TemplateResultBinding,
-} from '../src/templateResult.js';
-import { PartType, directiveTag, nameTag } from '../src/types.js';
-import { SyncUpdater } from '../src/updater/syncUpdater.js';
+} from '../../src/directives/templateResult.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
+import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockTemplate,
   MockTemplateFragment,
   MockUpdateBlock,
   MockUpdateContext,
-} from './mocks.js';
+} from '../mocks.js';
 
 describe('Fragment', () => {
   describe('.constructor()', () => {

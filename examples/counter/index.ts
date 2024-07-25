@@ -2,12 +2,12 @@ import {
   ConcurrentUpdater,
   type RenderContext,
   RenderState,
-  type TemplateResult,
   mount,
 } from '@emonkak/ebit';
 import {
   Atom,
   type Signal,
+  type TemplateResult,
   choice,
   classMap,
   component,

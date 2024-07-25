@@ -1,3 +1,4 @@
+import { TemplateResult } from './directives/templateResult.js';
 import type { RenderState } from './renderState.js';
 import {
   type ElementData,
@@ -5,7 +6,6 @@ import {
 } from './template/elementTemplate.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
-import { TemplateResult } from './templateResult.js';
 import {
   type Cleanup,
   type EffectCallback,

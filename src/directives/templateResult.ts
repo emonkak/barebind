@@ -17,7 +17,7 @@ import {
   ensureDirective,
   nameOf,
   nameTag,
-} from './types.js';
+} from '../types.js';
 
 const FLAG_NONE = 0;
 const FLAG_CONNECTED = 1 << 0;
