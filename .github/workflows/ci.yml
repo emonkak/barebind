@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Build sources 
-        run: npm run build
+        run: npm run build:all
       - name: Lint sources
         run: npm run lint
       - name: Run tests
