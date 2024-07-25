@@ -23,7 +23,6 @@ const FLAG_NONE = 0;
 const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
-const FLAG_UNMOUNTING = 1 << 3;
 
 export class TemplateResult<TData, TContext = unknown>
   implements Directive<TContext>, TemplateResultInterface<TData, TContext>
@@ -118,17 +117,17 @@ export class TemplateResultBinding<TData, TContext>
     return this._priority;
   }
 
-  get dirty(): boolean {
-    return (this._flags & (FLAG_UPDATING | FLAG_MUTATING)) !== 0;
+  get isUpdating(): boolean {
+    return !!(this._flags & FLAG_UPDATING);
   }
 
   shouldUpdate(): boolean {
-    if (!this.dirty) {
+    if (!(this._flags & FLAG_UPDATING)) {
       return false;
     }
     let current: UpdateBlock<TContext> | null = this;
     while ((current = current.parent) !== null) {
-      if (current.dirty) {
+      if (current.isUpdating) {
         return false;
       }
     }
@@ -153,18 +152,12 @@ export class TemplateResultBinding<TData, TContext>
       updater.enqueueBlock(this);
       updater.scheduleUpdate();
     }
-
-    this._flags &= ~FLAG_UNMOUNTING;
   }
 
   performUpdate(
     _context: UpdateContext<TContext>,
     updater: Updater<TContext>,
   ): void {
-    if (!(this._flags & FLAG_UPDATING)) {
-      return;
-    }
-
     const { template, data } = this._directive;
 
     if (this._pendingFragment !== null) {
@@ -211,9 +204,9 @@ export class TemplateResultBinding<TData, TContext>
   unbind(updater: Updater<TContext>): void {
     // Detach data from the current fragment before its unmount.
     this._pendingFragment?.detach(updater);
+
     this._requestMutation(updater);
 
-    this._flags |= FLAG_UNMOUNTING;
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
@@ -224,18 +217,18 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   commit(): void {
-    if (this._flags & FLAG_UNMOUNTING) {
-      this._memoizedFragment?.unmount(this._part);
-      this._memoizedFragment = null;
-    } else {
+    if (this._flags & FLAG_CONNECTED) {
       if (this._memoizedFragment !== this._pendingFragment) {
         this._memoizedFragment?.unmount(this._part);
         this._pendingFragment?.mount(this._part);
         this._memoizedFragment = this._pendingFragment;
       }
+    } else {
+      this._memoizedFragment?.unmount(this._part);
+      this._memoizedFragment = null;
     }
 
-    this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
+    this._flags &= ~FLAG_MUTATING;
   }
 
   private _forceUpdate(updater: Updater<TContext>): void {
@@ -248,13 +241,12 @@ export class TemplateResultBinding<TData, TContext>
     }
 
     this._flags |= FLAG_CONNECTED;
-    this._flags &= ~FLAG_UNMOUNTING;
   }
 
   private _requestMutation(updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_MUTATING)) {
-      updater.enqueueMutationEffect(this);
       this._flags |= FLAG_MUTATING;
+      updater.enqueueMutationEffect(this);
     }
   }
 }

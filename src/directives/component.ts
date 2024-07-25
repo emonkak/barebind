@@ -25,7 +25,6 @@ const FLAG_NONE = 0;
 const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
-const FLAG_UNMOUNTING = 1 << 3;
 
 export function component<TProps, TData, TContext>(
   component: ComponentFunction<TProps, TData, TContext>,
@@ -139,17 +138,17 @@ export class ComponentBinding<TProps, TData, TContext>
     return this._priority;
   }
 
-  get dirty(): boolean {
-    return !!(this._flags & FLAG_UPDATING || this._flags & FLAG_UNMOUNTING);
+  get isUpdating(): boolean {
+    return !!(this._flags & FLAG_UPDATING);
   }
 
   shouldUpdate(): boolean {
-    if (!this.dirty) {
+    if (!(this._flags & FLAG_UPDATING)) {
       return false;
     }
     let current: UpdateBlock<TContext> | null = this;
     while ((current = current.parent) !== null) {
-      if (current.dirty) {
+      if (current.isUpdating) {
         return false;
       }
     }
@@ -180,10 +179,6 @@ export class ComponentBinding<TProps, TData, TContext>
     context: UpdateContext<TContext>,
     updater: Updater<TContext>,
   ): void {
-    if (!(this._flags & FLAG_UPDATING)) {
-      return;
-    }
-
     const { component, props } = this._directive;
 
     if (
@@ -276,7 +271,6 @@ export class ComponentBinding<TProps, TData, TContext>
 
     this._requestMutation(updater);
 
-    this._flags |= FLAG_UNMOUNTING;
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
@@ -290,37 +284,36 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   commit(): void {
-    if (this._flags & FLAG_UNMOUNTING) {
-      this._memoizedFragment?.unmount(this._part);
-      this._memoizedFragment = null;
-    } else {
+    if (this._flags & FLAG_CONNECTED) {
       if (this._memoizedFragment !== this._pendingFragment) {
         this._memoizedFragment?.unmount(this._part);
         this._pendingFragment?.mount(this._part);
         this._memoizedFragment = this._pendingFragment;
       }
+    } else {
+      this._memoizedFragment?.unmount(this._part);
+      this._memoizedFragment = null;
     }
 
-    this._flags &= ~(FLAG_MUTATING | FLAG_UNMOUNTING);
+    this._flags &= ~FLAG_MUTATING;
   }
 
   private _forceUpdate(updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_UPDATING)) {
-      this._flags |= FLAG_UPDATING;
       if (this._parent !== null) {
         this._priority = this._parent.priority;
       }
+      this._flags |= FLAG_UPDATING;
       updater.enqueueBlock(this);
     }
 
     this._flags |= FLAG_CONNECTED;
-    this._flags &= ~FLAG_UNMOUNTING;
   }
 
   private _requestMutation(updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_MUTATING)) {
-      updater.enqueueMutationEffect(this);
       this._flags |= FLAG_MUTATING;
+      updater.enqueueMutationEffect(this);
     }
   }
 }

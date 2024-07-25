@@ -149,8 +149,8 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._pendingBindings = [];
 
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 
@@ -302,8 +302,8 @@ export class OrderedListBinding<TItem, TKey, TValue>
       this._reconcileItems(updater);
     }
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }
@@ -415,8 +415,8 @@ export class InPlaceListBinding<TItem, TValue>
     this._pendingBindings = [];
 
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 
@@ -450,8 +450,8 @@ export class InPlaceListBinding<TItem, TValue>
     this._pendingBindings = newBindings;
 
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }

@@ -110,8 +110,8 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
 
   private _requestMutation(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }

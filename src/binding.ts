@@ -86,8 +86,8 @@ export class AttributeBinding implements Binding<unknown>, Effect {
 
   private _requestMutation(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }
@@ -219,8 +219,8 @@ export class EventBinding implements Binding<unknown>, Effect {
 
   private _requestMutation(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }
@@ -289,8 +289,8 @@ export class NodeBinding implements Binding<unknown>, Effect {
 
   private _requestMutation(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }
@@ -352,8 +352,8 @@ export class PropertyBinding implements Binding<unknown>, Effect {
 
   private _requestMutation(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }

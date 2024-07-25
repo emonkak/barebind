@@ -86,7 +86,7 @@ export class MockUpdateBlock<TContext> implements UpdateBlock<TContext> {
     this._parent = parent;
   }
 
-  get dirty(): boolean {
+  get isUpdating(): boolean {
     return false;
   }
 

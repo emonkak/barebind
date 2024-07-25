@@ -112,8 +112,8 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   private _requestMutation(updater: Updater): void {
     if (!this._dirty) {
-      updater.enqueueMutationEffect(this);
       this._dirty = true;
+      updater.enqueueMutationEffect(this);
     }
   }
 }

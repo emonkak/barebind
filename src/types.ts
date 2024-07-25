@@ -45,9 +45,9 @@ export interface UpdateContext<TContext> {
 }
 
 export interface UpdateBlock<TContext> {
-  get dirty(): boolean;
   get parent(): UpdateBlock<TContext> | null;
   get priority(): TaskPriority;
+  get isUpdating(): boolean;
   shouldUpdate(): boolean;
   cancelUpdate(): void;
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
