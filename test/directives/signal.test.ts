@@ -2,9 +2,15 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
-import { RenderContext, usableTag } from '../../src/renderContext.js';
+import { RenderContext } from '../../src/renderContext.js';
 import { RenderState } from '../../src/renderState.js';
-import { type Hook, PartType, directiveTag, nameTag } from '../../src/types.js';
+import {
+  type Hook,
+  HookType,
+  PartType,
+  directiveTag,
+  nameTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateBlock } from '.././mocks.js';
 
@@ -65,25 +71,28 @@ describe('Signal', () => {
   describe('[usableTag]()', () => {
     it('should subscribe the signal and return a signal value', () => {
       const signal = new Atom('foo');
-      const block = new MockUpdateBlock();
       const hooks: Hook[] = [];
+      const block = new MockUpdateBlock();
       const state = new RenderState();
       const updater = new SyncUpdater(state);
       const context = new RenderContext(hooks, block, state, updater);
 
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-      const value = signal[usableTag](context);
+      const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
+      expect(context.use(signal)).toBe('foo');
+      context.finalize();
       updater.flush();
 
-      expect(value).toBe('foo');
-      expect(requestUpdateSpy).not.toHaveBeenCalled();
+      expect(requstUpdateSpy).not.toHaveBeenCalled();
 
       signal.value = 'bar';
 
-      updater.flush();
+      expect(requstUpdateSpy).toHaveBeenCalledOnce();
 
-      expect(requestUpdateSpy).toHaveBeenCalled();
+      cleanHooks(hooks);
+      signal.value = 'baz';
+
+      expect(requstUpdateSpy).toHaveBeenCalledOnce();
     });
   });
 });
@@ -508,3 +517,12 @@ describe('SignalBinding', () => {
     });
   });
 });
+
+function cleanHooks(hooks: Hook[]): void {
+  for (let i = 0, l = hooks.length; i < l; i++) {
+    const hook = hooks[i]!;
+    if (hook.type === HookType.Effect) {
+      hook.cleanup?.();
+    }
+  }
+}
