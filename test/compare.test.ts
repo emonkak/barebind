@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { dependenciesAreChanged, shallowEqual } from '../src/utils.js';
+import { dependenciesAreChanged, shallowEqual } from '../src/compare.js';
 
 describe('dependenciesAreChanged()', () => {
   it('should return true if a old or new dependency is undefinied', () => {

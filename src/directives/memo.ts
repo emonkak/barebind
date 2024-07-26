@@ -1,4 +1,5 @@
 import { resolveBinding } from '../binding.js';
+import { dependenciesAreChanged } from '../compare.js';
 import {
   type Binding,
   type Directive,
@@ -9,7 +10,6 @@ import {
   nameOf,
   nameTag,
 } from '../types.js';
-import { dependenciesAreChanged } from '../utils.js';
 
 export function memo<T>(
   factory: () => T,

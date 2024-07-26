@@ -1,3 +1,4 @@
+import { shallowEqual } from '../compare.js';
 import {
   type AttributePart,
   type Binding,
@@ -9,7 +10,6 @@ import {
   directiveTag,
   ensureDirective,
 } from '../types.js';
-import { shallowEqual } from '../utils.js';
 
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTERS_PATTERN = /[A-Z]/g;

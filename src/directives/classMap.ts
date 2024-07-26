@@ -1,3 +1,4 @@
+import { shallowEqual } from '../compare.js';
 import {
   type AttributePart,
   type Binding,
@@ -9,7 +10,6 @@ import {
   directiveTag,
   ensureDirective,
 } from '../types.js';
-import { shallowEqual } from '../utils.js';
 
 export type ClassDeclaration = { [key: string]: boolean };
 

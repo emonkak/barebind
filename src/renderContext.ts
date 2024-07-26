@@ -1,3 +1,4 @@
+import { dependenciesAreChanged } from './compare.js';
 import { TemplateResult } from './directives/templateResult.js';
 import type { RenderState } from './renderState.js';
 import {
@@ -19,7 +20,6 @@ import {
   type TaskPriority,
 } from './types.js';
 import type { Effect, UpdateBlock, Updater } from './types.js';
-import { dependenciesAreChanged } from './utils.js';
 
 export const usableTag = Symbol('Usable');
 
