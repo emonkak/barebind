@@ -1,3 +1,4 @@
+export * from './directives/templateResult.js';
 export * from './mount.js';
 export * from './renderContext.js';
 export * from './renderState.js';
