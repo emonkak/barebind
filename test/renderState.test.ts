@@ -67,24 +67,23 @@ describe('RenderState', () => {
   });
 
   describe('.getScopedValue()', () => {
-    it('should get a scoped value from shared variables', () => {
+    it('should get a scoped value from global scope', () => {
       const state = new RenderState(new Map([['foo', 123]]));
       const block = new MockUpdateBlock();
 
-      expect(state.getScopedValue(block, 'foo')).toBe(123);
+      expect(state.getScopedValue('foo')).toBe(123);
+      expect(state.getScopedValue('foo', block)).toBe(123);
     });
 
-    it('should get a scoped value from the block', () => {
+    it('should get a scoped value from block scope', () => {
       const state = new RenderState(new Map([['foo', 123]]));
       const block = new MockUpdateBlock();
 
-      state.setScopedValue(block, 'foo', 456);
+      state.setScopedValue('foo', 456, block);
+      expect(state.getScopedValue('foo', block)).toBe(456);
 
-      expect(state.getScopedValue(block, 'foo')).toBe(456);
-
-      state.setScopedValue(block, 'foo', 789);
-
-      expect(state.getScopedValue(block, 'foo')).toBe(789);
+      state.setScopedValue('foo', 789, block);
+      expect(state.getScopedValue('foo', block)).toBe(789);
     });
 
     it('should get a scoped value from the parent', () => {
@@ -92,9 +91,9 @@ describe('RenderState', () => {
       const parent = new MockUpdateBlock();
       const block = new MockUpdateBlock(parent);
 
-      state.setScopedValue(parent, 'foo', 456);
+      state.setScopedValue('foo', 456, parent);
 
-      expect(state.getScopedValue(block, 'foo')).toBe(456);
+      expect(state.getScopedValue('foo', block)).toBe(456);
     });
   });
 

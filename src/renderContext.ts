@@ -99,8 +99,8 @@ export class RenderContext {
     }
   }
 
-  getContextValue<T>(key: unknown): T | undefined {
-    return this._state.getScopedValue(this._block, key) as T | undefined;
+  getContextValue(key: unknown): unknown {
+    return this._state.getScopedValue(key, this._block);
   }
 
   html(
@@ -126,7 +126,7 @@ export class RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    this._state.setScopedValue(this._block, key, value);
+    this._state.setScopedValue(key, value, this._block);
   }
 
   svg(

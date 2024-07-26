@@ -64,14 +64,18 @@ export class RenderState implements UpdateContext<RenderContext> {
     return template;
   }
 
-  getScopedValue(block: UpdateBlock<RenderContext>, key: unknown): unknown {
-    let scope: UpdateBlock<RenderContext> | null = block;
-    do {
-      const value = this._localNamespaces.get(scope)?.get(key);
+  getScopedValue(
+    key: unknown,
+    scope: UpdateBlock<RenderContext> | null = null,
+  ): unknown {
+    let currentScope = scope;
+    while (currentScope !== null) {
+      const value = this._localNamespaces.get(currentScope)?.get(key);
       if (value !== undefined) {
         return value;
       }
-    } while ((scope = scope.parent));
+      currentScope = currentScope.parent;
+    }
     return this._globalNamespace.get(key);
   }
 
@@ -89,17 +93,17 @@ export class RenderState implements UpdateContext<RenderContext> {
   }
 
   setScopedValue(
-    block: UpdateBlock<RenderContext>,
     key: unknown,
     value: unknown,
+    scope: UpdateBlock<RenderContext>,
   ): void {
-    const variables = this._localNamespaces.get(block);
+    const variables = this._localNamespaces.get(scope);
     if (variables !== undefined) {
       variables.set(key, value);
     } else {
       const namespace = new Map();
       namespace.set(key, value);
-      this._localNamespaces.set(block, namespace);
+      this._localNamespaces.set(scope, namespace);
     }
   }
 }

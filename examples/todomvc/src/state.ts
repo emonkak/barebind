@@ -20,10 +20,10 @@ export class AppState {
   readonly visibleTodos$: Signal<Atom<Todo>[]>;
 
   static [usableTag](context: RenderContext): AppState {
-    const state = context.getContextValue<AppState>(AppState);
+    const state = context.getContextValue(AppState);
     if (!(state instanceof AppState)) {
       throw new Error(
-        'The context value for AppState could not be found, please ensure the state is set by context.setContextValue(AppState, ...).',
+        'A context value for AppState does not exist, please ensure it is registered by context.use(yourAppState).',
       );
     }
     return state;

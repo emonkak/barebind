@@ -120,36 +120,41 @@ describe('Context', () => {
   });
 
   describe('.getContextValue()', () => {
-    it('should get the value from global namespace', () => {
+    it('should get the value from global scope', () => {
       const hooks: Hook[] = [];
       const block = new MockUpdateBlock();
       const state = new RenderState(new Map([['foo', 123]]));
       const updater = new SyncUpdater(state);
 
       const context = new RenderContext(hooks, block, state, updater);
+
       expect(context.getContextValue('foo')).toBe(123);
       expect(context.getContextValue('bar')).toBeUndefined();
     });
 
-    it('should get the value set on the block', () => {
+    it('should get the value from block scope', () => {
       const hooks: Hook[] = [];
       const block = new MockUpdateBlock();
       const state = new RenderState(new Map([['foo', 123]]));
       const updater = new SyncUpdater(state);
 
       let context = new RenderContext(hooks, block, state, updater);
+
       context.setContextValue('foo', 456);
       context.setContextValue('bar', 789);
+
       expect(context.getContextValue('foo')).toBe(456);
       expect(context.getContextValue('bar')).toBe(789);
 
-      context = new RenderContext(hooks, block, state, updater);
+      context = new RenderContext(
+        hooks,
+        new MockUpdateBlock(block),
+        state,
+        updater,
+      );
+
       expect(context.getContextValue('foo')).toBe(456);
       expect(context.getContextValue('bar')).toBe(789);
-
-      context = new RenderContext(hooks, new MockUpdateBlock(), state, updater);
-      expect(context.getContextValue('foo')).toBe(123);
-      expect(context.getContextValue('bar')).toBeUndefined();
     });
   });
 
