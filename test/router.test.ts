@@ -3,8 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RenderContext } from '../src/renderContext.js';
 import { RenderState } from '../src/renderState.js';
 import {
+  RelativeURL,
   Router,
   browserLocation,
+  currentLocation,
+  hashLocation,
   integer,
   route,
   wildcard,
@@ -31,41 +34,49 @@ describe('Router', () => {
 
   describe('.dispatch()', () => {
     it('should dispatch the handler that matches the URL', () => {
-      expect(basicRouter.dispatch({ pathname: '' } as URL)).toBe('index');
-      expect(basicRouter.dispatch(localUrl('/'))).toBe('index');
-      expect(basicRouter.dispatch(localUrl('/articles/123'))).toBe(
+      expect(basicRouter.dispatch(new RelativeURL(''))).toBe('index');
+      expect(basicRouter.dispatch(new RelativeURL('/'))).toBe('index');
+      expect(basicRouter.dispatch(new RelativeURL('/articles/123'))).toBe(
         'showArticle(123)',
       );
-      expect(basicRouter.dispatch(localUrl('/articles/123/edit'))).toBe(
+      expect(basicRouter.dispatch(new RelativeURL('/articles/123/edit'))).toBe(
         'editArticle(123)',
       );
-      expect(basicRouter.dispatch(localUrl('/tags'))).toBe('indexTags');
-      expect(basicRouter.dispatch(localUrl('/tags/'))).toBe('showTag()');
-      expect(basicRouter.dispatch(localUrl('/tags/javascript'))).toBe(
+      expect(basicRouter.dispatch(new RelativeURL('/tags'))).toBe('indexTags');
+      expect(basicRouter.dispatch(new RelativeURL('/tags/'))).toBe('showTag()');
+      expect(basicRouter.dispatch(new RelativeURL('/tags/javascript'))).toBe(
         'showTag(javascript)',
       );
-      expect(basicRouter.dispatch(localUrl('/categories'))).toBe(
+      expect(basicRouter.dispatch(new RelativeURL('/categories'))).toBe(
         'indexCategories',
       );
-      expect(basicRouter.dispatch(localUrl('/categories/'))).toBe(
+      expect(basicRouter.dispatch(new RelativeURL('/categories/'))).toBe(
         'indexCategories',
       );
-      expect(basicRouter.dispatch(localUrl('/categories/123'))).toBe(
+      expect(basicRouter.dispatch(new RelativeURL('/categories/123'))).toBe(
         'showCategory(123)',
       );
     });
 
     it('should return null if the route restricts a trailing slash', () => {
-      expect(basicRouter.dispatch(localUrl('/articles/123/'))).toBe(null);
-      expect(basicRouter.dispatch(localUrl('/articles/123/edit/'))).toBe(null);
-      expect(basicRouter.dispatch(localUrl('/tags/javascript/'))).toBe(null);
+      expect(basicRouter.dispatch(new RelativeURL('/articles/123/'))).toBe(
+        null,
+      );
+      expect(basicRouter.dispatch(new RelativeURL('/articles/123/edit/'))).toBe(
+        null,
+      );
+      expect(basicRouter.dispatch(new RelativeURL('/tags/javascript/'))).toBe(
+        null,
+      );
     });
 
     it('should return null if there is no route matches the URL', () => {
-      expect(basicRouter.dispatch(localUrl('/articles'))).toBe(null);
-      expect(basicRouter.dispatch(localUrl('/articles/'))).toBe(null);
-      expect(basicRouter.dispatch(localUrl('/categories/abc/'))).toBe(null);
-      expect(basicRouter.dispatch(localUrl('/not_found'))).toBe(null);
+      expect(basicRouter.dispatch(new RelativeURL('/articles'))).toBe(null);
+      expect(basicRouter.dispatch(new RelativeURL('/articles/'))).toBe(null);
+      expect(basicRouter.dispatch(new RelativeURL('/categories/abc/'))).toBe(
+        null,
+      );
+      expect(basicRouter.dispatch(new RelativeURL('/not_found'))).toBe(null);
     });
 
     it('should dispatch a handler with args, url and state', () => {
@@ -76,7 +87,7 @@ describe('Router', () => {
       const router = new Router([
         route(['articles', /^\d+$/, 'comments', integer], handler),
       ]);
-      const url = localUrl('/articles/123/comments/456');
+      const url = new RelativeURL('/articles/123/comments/456');
       const historyState = {};
 
       expect(router.dispatch(url, historyState)).toBe(
@@ -91,12 +102,54 @@ describe('Router', () => {
       const router = new Router([
         route(['articles', pattern], ([id]) => `showArticle(${id})`),
       ]);
-      const url = localUrl('/articles/123');
+      const url = new RelativeURL('/articles/123');
       const historyState = {};
 
       expect(router.dispatch(url, historyState)).toBe('showArticle(123)');
       expect(pattern).toHaveBeenCalledOnce();
       expect(pattern).toHaveBeenCalledWith('123', url, historyState);
+    });
+  });
+});
+
+describe('RelativeURL', () => {
+  describe('.fromString()', () => {
+    it('should construct a new RelativeURL from the String', () => {
+      const url = RelativeURL.fromString('/foo?bar=123#baz');
+      expect(url.pathname).toBe('/foo');
+      expect(url.search).toBe('?bar=123');
+      expect(url.searchParams.toString()).toBe('bar=123');
+      expect(url.hash).toBe('#baz');
+      expect(url.toString()).toBe('/foo?bar=123#baz');
+      expect(url.toJSON()).toBe('/foo?bar=123#baz');
+    });
+  });
+
+  describe('.fromURL()', () => {
+    it('should construct a new RelativeURL from the URL', () => {
+      const url = RelativeURL.fromURL(new URL('/foo?bar=123#baz', 'file:'));
+      expect(url.pathname).toBe('/foo');
+      expect(url.search).toBe('?bar=123');
+      expect(url.searchParams.toString()).toBe('bar=123');
+      expect(url.hash).toBe('#baz');
+      expect(url.toString()).toBe('/foo?bar=123#baz');
+      expect(url.toJSON()).toBe('/foo?bar=123#baz');
+    });
+  });
+
+  describe('.fromURL()', () => {
+    it('should construct a new RelativeURL from the LocationLike', () => {
+      const url = RelativeURL.fromLocation({
+        pathname: '/foo',
+        search: '?bar=123',
+        hash: '#baz',
+      });
+      expect(url.pathname).toBe('/foo');
+      expect(url.search).toBe('?bar=123');
+      expect(url.searchParams.toString()).toBe('bar=123');
+      expect(url.hash).toBe('#baz');
+      expect(url.toString()).toBe('/foo?bar=123#baz');
+      expect(url.toJSON()).toBe('/foo?bar=123#baz');
     });
   });
 });
@@ -107,50 +160,308 @@ describe('browserLocation', () => {
 
   afterEach(() => {
     history.replaceState(originalState, '', originalUrl);
+    vi.restoreAllMocks();
   });
 
-  it('should return a state represents the current location of the browser window', () => {
+  it('should return a state represents the current location of the browser', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+
+    history.replaceState(historyState, '', '/articles/123');
+
+    const context = new RenderContext(hooks, block, state, updater);
+    const [locationState] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(window.location.pathname).toBe('/articles/123');
+    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(locationState.state).toStrictEqual(history.state);
+  });
+
+  it('should push the new location to the session history by push action', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+    const pushStateSpy = vi.spyOn(history, 'pushState');
+
+    let context = new RenderContext(hooks, block, state, updater);
+    let [locationState, historyActions] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    historyActions.push(new RelativeURL('/articles/123'));
+    expect(window.location.pathname).toBe('/articles/123');
+    expect(history.state).toBe(null);
+    expect(pushStateSpy).toHaveBeenCalledTimes(1);
+
+    historyActions.push(new RelativeURL('/articles/456'), historyState);
+    expect(window.location.pathname).toBe('/articles/456');
+    expect(history.state).toStrictEqual(historyState);
+    expect(pushStateSpy).toHaveBeenCalledTimes(2);
+
+    context = new RenderContext(hooks, block, state, updater);
+    [locationState, historyActions] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(locationState.url.pathname).toBe('/articles/456');
+    expect(locationState.state).toStrictEqual(history.state);
+  });
+
+  it('should push the new location to the session history by replace action', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+    const replaceStateSpy = vi.spyOn(history, 'replaceState');
+
+    let context = new RenderContext(hooks, block, state, updater);
+    let [locationState, historyActions] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    historyActions.replace(new RelativeURL('/articles/123'));
+    expect(window.location.pathname).toBe('/articles/123');
+    expect(history.state).toBe(null);
+    expect(replaceStateSpy).toHaveBeenCalledTimes(1);
+
+    historyActions.replace(new RelativeURL('/articles/456'), historyState);
+    expect(window.location.pathname).toBe('/articles/456');
+    expect(history.state).toStrictEqual(historyState);
+    expect(replaceStateSpy).toHaveBeenCalledTimes(2);
+
+    context = new RenderContext(hooks, block, state, updater);
+    [locationState, historyActions] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(locationState.url.pathname).toBe('/articles/456');
+    expect(locationState.state).toStrictEqual(history.state);
+  });
+
+  it('should update the state when the "popstate" event is tiggered', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+    let context = new RenderContext(hooks, block, state, updater);
+    let [locationState] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    history.replaceState(historyState, '', '/articles/123');
+    dispatchEvent(new PopStateEvent('popstate', { state: historyState }));
+
+    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+
+    context = new RenderContext(hooks, block, state, updater);
+    [locationState] = context.use(browserLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(window.location.pathname).toBe('/articles/123');
+    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(locationState.state).toStrictEqual(historyState);
+
+    cleanHooks(hooks);
+    dispatchEvent(new PopStateEvent('popstate', { state: historyState }));
+
+    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should register the current location', () => {
     const hooks: Hook[] = [];
     const block = new MockUpdateBlock();
     const state = new RenderState();
     const updater = new SyncUpdater(state);
 
-    let context = new RenderContext(hooks, block, state, updater);
-    const historyState1 = { first: true };
-    const historyState2 = { second: true };
-    const historyState3 = { third: true };
-    const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
+    const context = new RenderContext(hooks, block, state, updater);
+    const [locationState, history] = context.use(browserLocation);
 
-    updateLocation('/articles/123', historyState1);
-    expect(context.use(browserLocation)).toStrictEqual({
-      url: expect.objectContaining({
-        pathname: '/articles/123',
-      }),
-      state: historyState1,
-    });
+    expect(context.use(currentLocation)).toStrictEqual([
+      locationState,
+      history,
+    ]);
+
+    context.finalize();
+    updater.flush();
+  });
+});
+
+describe('currentLocation', () => {
+  it('should throw an error if the current location registered as a context value does not exisit', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const context = new RenderContext(hooks, block, state, updater);
+
+    expect(() => context.use(currentLocation)).toThrow(
+      'A context value for the current location does not exist,',
+    );
+  });
+});
+
+describe('hashLocation', () => {
+  const originalState = history.state;
+  const originalUrl = location.href;
+
+  afterEach(() => {
+    history.replaceState(originalState, '', originalUrl);
+    vi.restoreAllMocks();
+  });
+
+  it('should return a state represents the current location of the browser', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+
+    history.replaceState(historyState, '', '#/articles/123');
+
+    const context = new RenderContext(hooks, block, state, updater);
+    const [locationState] = context.use(hashLocation);
     context.finalize();
     updater.flush();
 
-    expect(requstUpdateSpy).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe('#/articles/123');
+    expect(locationState.url.pathname).toBe('/articles/123');
+  });
 
-    updateLocation('/articles/456', historyState2);
-    context = new RenderContext(hooks, block, state, updater);
-    expect(context.use(browserLocation)).toStrictEqual({
-      url: expect.objectContaining({
-        pathname: '/articles/456',
-      }),
-      state: historyState2,
-    });
+  it('should push the new location to the session history by push action', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+    const pushStateSpy = vi.spyOn(history, 'pushState');
+
+    let context = new RenderContext(hooks, block, state, updater);
+    let [locationState, historyActions] = context.use(hashLocation);
     context.finalize();
+    updater.flush();
 
-    expect(updater.isPending()).toBe(false);
-    expect(updater.isScheduled()).toBe(false);
-    expect(requstUpdateSpy).toHaveBeenCalledOnce();
+    historyActions.push(new RelativeURL('/articles/123'));
+    expect(window.location.hash).toBe('#/articles/123');
+    expect(history.state).toBe(null);
+    expect(pushStateSpy).toHaveBeenCalledTimes(1);
+
+    historyActions.push(new RelativeURL('/articles/456'), historyState);
+    expect(window.location.hash).toBe('#/articles/456');
+    expect(history.state).toStrictEqual(historyState);
+    expect(pushStateSpy).toHaveBeenCalledTimes(2);
+
+    context = new RenderContext(hooks, block, state, updater);
+    [locationState, historyActions] = context.use(hashLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(locationState.url.pathname).toBe('/articles/456');
+    expect(locationState.state).toStrictEqual(history.state);
+  });
+
+  it('should push the new location to the session history by replace action', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+    const replaceStateSpy = vi.spyOn(history, 'replaceState');
+
+    let context = new RenderContext(hooks, block, state, updater);
+    let [locationState, historyActions] = context.use(hashLocation);
+    context.finalize();
+    updater.flush();
+
+    historyActions.replace(new RelativeURL('/articles/123'));
+    expect(window.location.hash).toBe('#/articles/123');
+    expect(history.state).toBe(null);
+    expect(replaceStateSpy).toHaveBeenCalledTimes(1);
+
+    historyActions.replace(new RelativeURL('/articles/456'), historyState);
+    expect(window.location.hash).toBe('#/articles/456');
+    expect(history.state).toStrictEqual(historyState);
+    expect(replaceStateSpy).toHaveBeenCalledTimes(2);
+
+    context = new RenderContext(hooks, block, state, updater);
+    [locationState, historyActions] = context.use(hashLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(locationState.url.pathname).toBe('/articles/456');
+    expect(locationState.state).toStrictEqual(history.state);
+  });
+
+  it('should update the state when the "hashchange" event is tiggered', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+    const historyState = { key: 'foo' };
+    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+    let context = new RenderContext(hooks, block, state, updater);
+    let [locationState] = context.use(hashLocation);
+    context.finalize();
+    updater.flush();
+
+    history.replaceState(historyState, '', '#/articles/123');
+    dispatchEvent(
+      new HashChangeEvent('hashchange', {
+        oldURL: '#',
+        newURL: '#/articles/123',
+      }),
+    );
+
+    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+
+    context = new RenderContext(hooks, block, state, updater);
+    [locationState] = context.use(hashLocation);
+    context.finalize();
+    updater.flush();
+
+    expect(window.location.hash).toBe('#/articles/123');
+    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(locationState.state).toStrictEqual(historyState);
 
     cleanHooks(hooks);
-    updateLocation('/articles/789', historyState3);
+    dispatchEvent(
+      new HashChangeEvent('hashchange', {
+        oldURL: '#/articles/123',
+        newURL: '#/articles/456',
+      }),
+    );
 
-    expect(requstUpdateSpy).toHaveBeenCalledOnce();
+    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should register the current location', () => {
+    const hooks: Hook[] = [];
+    const block = new MockUpdateBlock();
+    const state = new RenderState();
+    const updater = new SyncUpdater(state);
+
+    const context = new RenderContext(hooks, block, state, updater);
+    const [locationState, historyActions] = context.use(hashLocation);
+
+    expect(context.use(currentLocation)).toStrictEqual([
+      locationState,
+      historyActions,
+    ]);
+
+    context.finalize();
+    updater.flush();
   });
 });
 
@@ -180,15 +491,4 @@ function cleanHooks(hooks: Hook[]): void {
       hook.cleanup?.();
     }
   }
-}
-
-function localUrl(path: string): URL {
-  return new URL(path, location.origin);
-}
-
-function updateLocation(url: string, state: unknown) {
-  // "popstate" event will not be emitted unless called by user action.
-  // Therefore, we have to emit it ourselves.
-  history.replaceState(state, '', url);
-  dispatchEvent(new PopStateEvent('popstate', { state }));
 }

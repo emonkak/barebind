@@ -20,17 +20,28 @@ export interface Route<
 export type Pattern =
   | string
   | RegExp
-  | ((component: string, url: URL, state: unknown) => any);
+  | ((component: string, url: RelativeURL, state: unknown) => any);
 
 export type Handler<TArgs extends any[], TResult> = (
   args: TArgs,
-  url: URL,
+  url: RelativeURL,
   state: unknown,
 ) => TResult;
 
+export interface LocationLike {
+  pathname: string;
+  search: string;
+  hash: string;
+}
+
 export interface LocationState {
-  url: URL;
+  url: RelativeURL;
   state: unknown;
+}
+
+export interface HistoryActions {
+  push(url: RelativeURL, state?: unknown): void;
+  replace(url: RelativeURL, state?: unknown): void;
 }
 
 type ExtractArgs<TPatterns> = TPatterns extends []
@@ -45,7 +56,7 @@ type Match<TPattern> = TPattern extends string
     ? [string]
     : TPattern extends (
           component: string,
-          url: URL,
+          url: RelativeURL,
           stae: unknown,
         ) => NonNullable<infer TResult> | null
       ? [TResult]
@@ -58,7 +69,7 @@ export class Router<TResult> {
     this._routes = routes;
   }
 
-  dispatch(url: URL, state: unknown = null): TResult | null {
+  dispatch(url: RelativeURL, state: unknown = null): TResult | null {
     const path = url.pathname;
     const pathWithoutInitialSlash = path[0] === '/' ? path.slice(1) : path;
     const components = pathWithoutInitialSlash.split('/');
@@ -100,15 +111,87 @@ export class Router<TResult> {
   }
 }
 
-export function browserLocation(context: RenderContext): LocationState {
+export class RelativeURL {
+  private readonly _pathname: string;
+
+  private readonly _searchParams: URLSearchParams;
+
+  private readonly _hash: string;
+
+  static fromString(urlString: string): RelativeURL {
+    // SAFETY: Relative URLs can always be safely initialized.
+    return RelativeURL.fromURL(new URL(urlString, 'file:'));
+  }
+
+  static fromLocation(location: LocationLike) {
+    const { pathname, search, hash } = location;
+    return new RelativeURL(pathname, new URLSearchParams(search), hash);
+  }
+
+  static fromURL(url: URL): RelativeURL {
+    const { pathname, searchParams, hash } = url;
+    return new RelativeURL(pathname, searchParams, hash);
+  }
+
+  constructor(
+    pathname: string,
+    searchParams: URLSearchParams = new URLSearchParams(),
+    hash = '',
+  ) {
+    this._pathname = pathname;
+    this._searchParams = searchParams;
+    this._hash = hash;
+  }
+
+  get pathname(): string {
+    return this._pathname;
+  }
+
+  get search(): string {
+    return this._searchParams.size > 0
+      ? '?' + this._searchParams.toString()
+      : '';
+  }
+
+  get searchParams(): URLSearchParams {
+    return this._searchParams;
+  }
+
+  get hash(): string {
+    return this._hash;
+  }
+
+  toJSON(): string {
+    return this.toString();
+  }
+
+  toString(): string {
+    return this._pathname + this.search + this._hash;
+  }
+}
+
+export function browserLocation(
+  context: RenderContext,
+): [LocationState, HistoryActions] {
   const [locationState, setLocationState] = context.useState(() => ({
-    url: new URL(location.href),
+    url: RelativeURL.fromLocation(location),
     state: history.state,
   }));
+  const historyActions = {
+    push(url: RelativeURL, state: unknown = null) {
+      history.pushState(state, '', url.toString());
+      setLocationState({ url, state });
+    },
+    replace(url: RelativeURL, state: unknown = null) {
+      history.replaceState(state, '', url.toString());
+      setLocationState({ url, state });
+    },
+  };
+
   context.useEffect(() => {
     const listener = (event: PopStateEvent) => {
       setLocationState({
-        url: new URL(location.href),
+        url: RelativeURL.fromLocation(location),
         state: event.state,
       });
     };
@@ -117,7 +200,60 @@ export function browserLocation(context: RenderContext): LocationState {
       removeEventListener('popstate', listener);
     };
   }, []);
-  return locationState;
+
+  context.setContextValue(currentLocation, [locationState, historyActions]);
+
+  return [locationState, historyActions];
+}
+
+export function currentLocation(
+  context: RenderContext,
+): [LocationState, HistoryActions] {
+  const value = context.getContextValue(currentLocation);
+
+  if (value == null) {
+    throw new Error(
+      'A context value for the current location does not exist, please ensure it is registered by context.use() with browserLocation or hashLocation.',
+    );
+  }
+
+  return value as [LocationState, HistoryActions];
+}
+
+export function hashLocation(
+  context: RenderContext,
+): [LocationState, HistoryActions] {
+  const [locationState, setLocationState] = context.useState(() => ({
+    url: RelativeURL.fromString(location.hash.slice(1)),
+    state: history.state,
+  }));
+  const historyActions = {
+    push(url: RelativeURL, state: unknown = null) {
+      history.pushState(state, '', '#' + url.toString());
+      setLocationState({ url, state });
+    },
+    replace(url: RelativeURL, state: unknown = null) {
+      history.replaceState(state, '', '#' + url.toString());
+      setLocationState({ url, state });
+    },
+  };
+
+  context.useEffect(() => {
+    const listener = () => {
+      setLocationState({
+        url: RelativeURL.fromString(location.hash.slice(1)),
+        state: history.state,
+      });
+    };
+    addEventListener('hashchange', listener);
+    return () => {
+      removeEventListener('hashchange', listener);
+    };
+  }, []);
+
+  context.setContextValue(currentLocation, [locationState, historyActions]);
+
+  return [locationState, historyActions];
 }
 
 export function integer(component: string): number | null {
@@ -155,7 +291,7 @@ export function wildcard(component: string): string {
 function extractArgs<TPatterns extends Pattern[]>(
   patterns: TPatterns,
   components: string[],
-  url: URL,
+  url: RelativeURL,
   state: unknown,
 ): ExtractArgs<TPatterns> | null {
   if (patterns.length !== components.length) {
