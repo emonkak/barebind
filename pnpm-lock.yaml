@@ -27,12 +27,6 @@ importers:
         specifier: ^8.39.1
         version: 8.39.1(typescript@5.5.4)
 
-  examples/counter:
-    dependencies:
-      '@emonkak/ebit':
-        specifier: workspace:*
-        version: link:../..
-
   examples/todomvc:
     dependencies:
       '@emonkak/ebit':
