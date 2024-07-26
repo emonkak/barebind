@@ -111,6 +111,13 @@ export class RenderContext {
     return new TemplateResult(template, data);
   }
 
+  isFirstRender(): boolean {
+    return (
+      this._hooks.length === 0 ||
+      this._hooks[this._hooks.length - 1]!.type !== HookType.Finalizer
+    );
+  }
+
   requestUpdate(): void {
     this._block.requestUpdate(
       this._updater.getCurrentPriority(),

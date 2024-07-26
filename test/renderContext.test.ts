@@ -174,6 +174,23 @@ describe('Context', () => {
     });
   });
 
+  describe('.isFirstRender()', () => {
+    it('should check whether the render is the first one', () => {
+      const hooks: Hook[] = [];
+      const block = new MockUpdateBlock();
+      const state = new RenderState();
+      const updater = new SyncUpdater(state);
+
+      let context = new RenderContext(hooks, block, state, updater);
+      expect(context.isFirstRender()).toBe(true);
+      context.finalize();
+
+      context = new RenderContext(hooks, block, state, updater);
+      expect(context.isFirstRender()).toBe(false);
+      context.finalize();
+    });
+  });
+
   describe('.requestUpdate()', () => {
     it('should request update to the current block', () => {
       const hooks: Hook[] = [];
