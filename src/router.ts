@@ -177,16 +177,19 @@ export function browserLocation(
     url: RelativeURL.fromLocation(location),
     state: history.state,
   }));
-  const historyActions = {
-    push(url: RelativeURL, state: unknown = null) {
-      history.pushState(state, '', url.toString());
-      setLocationState({ url, state });
-    },
-    replace(url: RelativeURL, state: unknown = null) {
-      history.replaceState(state, '', url.toString());
-      setLocationState({ url, state });
-    },
-  };
+  const historyActions = context.useMemo(
+    () => ({
+      push: (url: RelativeURL, state: unknown = null) => {
+        history.pushState(state, '', url.toString());
+        setLocationState({ url, state });
+      },
+      replace: (url: RelativeURL, state: unknown = null) => {
+        history.replaceState(state, '', url.toString());
+        setLocationState({ url, state });
+      },
+    }),
+    [],
+  );
 
   context.useEffect(() => {
     const listener = (event: PopStateEvent) => {
@@ -227,16 +230,19 @@ export function hashLocation(
     url: RelativeURL.fromString(location.hash.slice(1)),
     state: history.state,
   }));
-  const historyActions = {
-    push(url: RelativeURL, state: unknown = null) {
-      history.pushState(state, '', '#' + url.toString());
-      setLocationState({ url, state });
-    },
-    replace(url: RelativeURL, state: unknown = null) {
-      history.replaceState(state, '', '#' + url.toString());
-      setLocationState({ url, state });
-    },
-  };
+  const historyActions = context.useMemo(
+    () => ({
+      push: (url: RelativeURL, state: unknown = null) => {
+        history.pushState(state, '', '#' + url.toString());
+        setLocationState({ url, state });
+      },
+      replace: (url: RelativeURL, state: unknown = null) => {
+        history.replaceState(state, '', '#' + url.toString());
+        setLocationState({ url, state });
+      },
+    }),
+    [],
+  );
 
   context.useEffect(() => {
     const listener = () => {
