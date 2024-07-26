@@ -10,7 +10,6 @@ import {
 export class NoValue implements Directive {
   static readonly instance: NoValue = new NoValue();
 
-  /** @internal */
   constructor() {
     if (NoValue.instance !== undefined) {
       throw new Error('NoValue constructor cannot be called directly.');
