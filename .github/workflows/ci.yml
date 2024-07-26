@@ -20,13 +20,15 @@ jobs:
           node-version: latest
           cache: 'pnpm'
       - name: Install dependencies
-        run: pnpm install
-      - name: Build sources 
-        run: npm run build:all
+        run: pnpm recursive install
+      - name: Build library
+        run: pnpm run build
+      - name: Build examples
+        run: pnpm run --recursive --parallel build
       - name: Lint sources
-        run: npm run lint
+        run: pnpm run lint
       - name: Run tests
-        run: npm test -- --coverage
+        run: pnpm test -- --coverage
       - name: Upload coverage results
         continue-on-error: true
         uses: coverallsapp/github-action@v2

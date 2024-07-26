@@ -17,7 +17,7 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "build:all": "pnpm run --include-workspace-root --recursive --parallel build",
+    "build:all": "pnpm run --include-workspace-root --recursive build",
     "clean": "tsc --build --clean",
     "clean:all": "pnpm run --include-workspace-root --recursive --parallel clean",
     "lint": "npx biome lint",

@@ -30,13 +30,13 @@ importers:
   examples/counter:
     dependencies:
       '@emonkak/ebit':
-        specifier: ../../
+        specifier: workspace:*
         version: link:../..
 
   examples/todomvc:
     dependencies:
       '@emonkak/ebit':
-        specifier: ../../
+        specifier: workspace:*
         version: link:../..
       todomvc-app-css:
         specifier: ^2.0.0
