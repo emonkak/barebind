@@ -1,4 +1,5 @@
 import type { RenderContext } from '../renderHost.js';
+import { reportPart } from '../report.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -63,7 +64,10 @@ export class Component<TProps, TContext = RenderContext>
     updater: Updater<TContext>,
   ): ComponentBinding<TProps, TContext> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('Component directive must be used in ChildNodePart.');
+      throw new Error(
+        'Component directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
+      );
     }
     return new ComponentBinding(this, part, updater.getCurrentBlock());
   }

@@ -44,7 +44,7 @@ describe('ClassMapDirective', () => {
       } as const;
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'ClassMap directive must be used in the "class" attribute.',
+        'ClassMap directive must be used in a "class" attribute,',
       );
     });
   });

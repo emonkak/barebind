@@ -1,4 +1,5 @@
 import { resolveBinding } from '../binding.js';
+import { reportPart } from '../report.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -63,7 +64,10 @@ export class OrderedList<TItem, TKey, TValue> implements Directive {
     _updater: Updater,
   ): OrderedListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('OrderedList directive must be used in ChildNodePart.');
+      throw new Error(
+        'OrderedList directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
+      );
     }
     return new OrderedListBinding(this, part);
   }
@@ -331,7 +335,10 @@ export class InPlaceList<TItem, TValue> implements Directive {
     _updater: Updater,
   ): InPlaceListBinding<TItem, TValue> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('InPlaceList directive must be used in ChildNodePart.');
+      throw new Error(
+        'InPlaceList directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
+      );
     }
     return new InPlaceListBinding(this, part);
   }

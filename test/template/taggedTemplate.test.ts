@@ -343,7 +343,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
-      expect(fragment.childNodes.map(nodeToString)).toEqual([
+      expect(fragment.childNodes.map(formatNode)).toEqual([
         `
         <div>
           <!--bar-->
@@ -355,7 +355,7 @@ describe('TaggedTemplate', () => {
 
       updater.flush();
 
-      expect(fragment.childNodes.map(nodeToString)).toEqual([
+      expect(fragment.childNodes.map(formatNode)).toEqual([
         `
         <div class="foo">
           <!--bar-->
@@ -371,7 +371,7 @@ describe('TaggedTemplate', () => {
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(0);
-      expect(fragment.childNodes.map(nodeToString)).toEqual(['<div></div>']);
+      expect(fragment.childNodes.map(formatNode)).toEqual(['<div></div>']);
       expect(fragment.startNode).toBe(fragment.childNodes[0]);
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
     });
@@ -429,7 +429,7 @@ describe('TaggedTemplateFragment', () => {
 
       updater.flush();
 
-      expect(fragment.childNodes.map(nodeToString)).toEqual([
+      expect(fragment.childNodes.map(formatNode)).toEqual([
         '<div class="foo">bar</div>',
         '<!--baz-->',
       ]);
@@ -437,7 +437,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.attach(['bar', 'baz', 'qux'], updater);
       updater.flush();
 
-      expect(fragment.childNodes.map(nodeToString)).toEqual([
+      expect(fragment.childNodes.map(formatNode)).toEqual([
         '<div class="bar">baz</div>',
         '<!--qux-->',
       ]);
@@ -461,7 +461,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.mount(part);
       updater.flush();
 
-      expect(fragment.childNodes.map(nodeToString)).toEqual([
+      expect(fragment.childNodes.map(formatNode)).toEqual([
         'foo',
         '<div class="bar">baz</div>',
         '<!--qux-->',
@@ -480,7 +480,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.detach(updater);
       updater.flush();
 
-      expect(fragment.childNodes.map(nodeToString)).toEqual([
+      expect(fragment.childNodes.map(formatNode)).toEqual([
         '',
         '<div class="bar">baz</div>',
         '<!---->',
@@ -618,10 +618,8 @@ function svg<const TData extends readonly any[]>(
   return [TaggedTemplate.parseSVG(tokens, values, MARKER), values];
 }
 
-function nodeToString(node: Node): string {
-  return node.nodeType === Node.ELEMENT_NODE
-    ? (node as Element).outerHTML
-    : node.nodeType === Node.COMMENT_NODE
-      ? '<!--' + node.nodeValue + '-->'
-      : node.nodeValue ?? '';
+function formatNode(node: Node): string {
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(node.cloneNode(true));
+  return wrapper.innerHTML;
 }

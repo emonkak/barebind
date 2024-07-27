@@ -1,3 +1,4 @@
+import { reportPart } from '../report.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -26,7 +27,10 @@ export class UnsafeSVG implements Directive {
 
   [directiveTag](part: Part, _updater: Updater): UnsafeSVGBinding {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('UnsafeSVG directive must be used in ChildNodePart.');
+      throw new Error(
+        'UnsafeSVG directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
+      );
     }
     return new UnsafeSVGBinding(this, part);
   }

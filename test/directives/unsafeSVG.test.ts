@@ -41,7 +41,7 @@ describe('UnsafeSVG', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'UnsafeSVG directive must be used in ChildNodePart.',
+        'UnsafeSVG directive must be used in a child node,',
       );
     });
   });

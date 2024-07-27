@@ -1,3 +1,4 @@
+import { reportPart } from '../report.js';
 import {
   type AttributePart,
   type Binding,
@@ -30,7 +31,10 @@ export class Ref implements Directive {
 
   [directiveTag](part: Part, _updater: Updater): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
-      throw new Error('Ref directive must be used in "ref" attribute.');
+      throw new Error(
+        'Ref directive must be used in a "ref" attribute, but it is used here:\n' +
+          reportPart(part),
+      );
     }
     return new RefBinding(this, part);
   }

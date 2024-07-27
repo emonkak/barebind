@@ -63,7 +63,7 @@ describe('Fragment', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'TemplateResult directive must be used in ChildNodePart.',
+        'TemplateResult directive must be used in a child node,',
       );
     });
   });

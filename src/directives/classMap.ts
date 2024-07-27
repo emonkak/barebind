@@ -1,4 +1,5 @@
 import { shallowEqual } from '../compare.js';
+import { reportPart } from '../report.js';
 import {
   type AttributePart,
   type Binding,
@@ -31,7 +32,8 @@ export class ClassMap implements Directive {
   [directiveTag](part: Part, _updater: Updater): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
-        'ClassMap directive must be used in the "class" attribute.',
+        'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +
+          reportPart(part),
       );
     }
     return new ClassMapBinding(this, part);

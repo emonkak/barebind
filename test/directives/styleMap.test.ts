@@ -44,7 +44,7 @@ describe('StyleMap', () => {
       } as const;
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'StyleMap directive must be used in the "style" attribute.',
+        'StyleMap directive must be used in a "style" attribute,',
       );
     });
   });

@@ -1,3 +1,4 @@
+import { reportPart } from '../report.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -26,7 +27,10 @@ export class UnsafeHTML implements Directive {
 
   [directiveTag](part: Part, _updater: Updater): UnsafeHTMLBinding {
     if (part.type !== PartType.ChildNode) {
-      throw new Error('UnsafeHTML directive must be used in ChildNodePart.');
+      throw new Error(
+        'UnsafeHTML directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
+      );
     }
     return new UnsafeHTMLBinding(this, part);
   }

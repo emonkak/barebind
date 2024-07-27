@@ -70,7 +70,7 @@ describe('OrderedList', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'OrderedList directive must be used in ChildNodePart.',
+        'OrderedList directive must be used in a child node,',
       );
     });
   });
@@ -374,7 +374,7 @@ describe('InPlaceList', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'InPlaceList directive must be used in ChildNodePart.',
+        'InPlaceList directive must be used in a child node,',
       );
     });
   });

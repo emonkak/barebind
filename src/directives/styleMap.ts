@@ -1,4 +1,5 @@
 import { shallowEqual } from '../compare.js';
+import { reportPart } from '../report.js';
 import {
   type AttributePart,
   type Binding,
@@ -44,7 +45,8 @@ export class StyleMap implements Directive {
   [directiveTag](part: Part, _updater: Updater): StyleMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
-        'StyleMap directive must be used in the "style" attribute.',
+        'StyleMap directive must be used in a "style" attribute, but it is used here:\n' +
+          reportPart(part),
       );
     }
     return new StyleMapBinding(this, part);

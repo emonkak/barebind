@@ -72,7 +72,7 @@ describe('Component', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'Component directive must be used in ChildNodePart.',
+        'Component directive must be used in a child node,',
       );
     });
   });

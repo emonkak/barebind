@@ -1,4 +1,5 @@
 import type { RenderContext } from '../renderHost.js';
+import { reportPart } from '../report.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -55,7 +56,8 @@ export class TemplateResult<TData = unknown, TContext = RenderContext>
   ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'TemplateResult directive must be used in ChildNodePart.',
+        'TemplateResult directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
       );
     }
     return new TemplateResultBinding(this, part, updater.getCurrentBlock());

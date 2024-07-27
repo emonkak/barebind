@@ -42,7 +42,7 @@ describe('Ref', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
-        'Ref directive must be used in "ref" attribute',
+        'Ref directive must be used in a "ref" attribute,',
       );
     });
   });
