@@ -19,7 +19,7 @@ export function Footer(
     return context.empty();
   }
 
-  const changeFilterHandlerOf = (newFilter: TodoFilter) => (event: Event) => {
+  const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
     filter$.value = newFilter;
   };
@@ -37,7 +37,7 @@ export function Footer(
           <a
             class=${classMap({ selected: filter === TodoFilter.ALL })}
             href="#"
-            @click=${changeFilterHandlerOf(TodoFilter.ALL)}
+            @click=${handleChangeFilter(TodoFilter.ALL)}
           >
             All
           </a>
@@ -46,7 +46,7 @@ export function Footer(
           <a
             class=${classMap({ selected: filter === TodoFilter.ACTIVE })}
             href="#"
-            @click=${changeFilterHandlerOf(TodoFilter.ACTIVE)}
+            @click=${handleChangeFilter(TodoFilter.ACTIVE)}
           >
             Active
           </a>
@@ -55,7 +55,7 @@ export function Footer(
           <a
             class=${classMap({ selected: filter === TodoFilter.COMPLETED })}
             href="#"
-            @click=${changeFilterHandlerOf(TodoFilter.COMPLETED)}
+            @click=${handleChangeFilter(TodoFilter.COMPLETED)}
           >
             Completed
           </a>
