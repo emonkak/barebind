@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { RenderContext } from '../src/renderContext.js';
-import { RenderHost } from '../src/renderHost.js';
+import { RenderContext, RenderHost } from '../src/renderHost.js';
 import {
   RelativeURL,
   Router,

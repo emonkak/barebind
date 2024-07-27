@@ -4,7 +4,7 @@ import {
   type RenderContext,
   type UsableObject,
   usableTag,
-} from '../renderContext.js';
+} from '../renderHost.js';
 import {
   type Binding,
   type Directive,

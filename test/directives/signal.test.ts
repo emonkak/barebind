@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
-import { RenderContext } from '../../src/renderContext.js';
-import { RenderHost } from '../../src/renderHost.js';
+import { RenderContext, RenderHost } from '../../src/renderHost.js';
 import {
   type Hook,
   HookType,

@@ -1,4 +1,4 @@
-import type { RenderContext } from '../renderContext.js';
+import type { RenderContext } from '../renderHost.js';
 import {
   type Binding,
   type ChildNodePart,
