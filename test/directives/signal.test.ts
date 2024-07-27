@@ -97,6 +97,196 @@ describe('Signal', () => {
   });
 });
 
+describe('SignalBinding', () => {
+  describe('.constructor', () => {
+    it('should construct a new SignalBinding', () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new RenderHost());
+      const binding = new SignalBinding(signal, part, updater);
+
+      expect(binding.part).toBe(part);
+      expect(binding.startNode).toBe(part.node);
+      expect(binding.endNode).toBe(part.node);
+      expect(binding.value).toBe(signal);
+      expect(binding.binding).toBeInstanceOf(NodeBinding);
+      expect(binding.binding.value).toBe('foo');
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
+    });
+  });
+
+  describe('.connect()', () => {
+    it('should subscribe the signal', () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new RenderHost());
+      const binding = new SignalBinding(signal, part, updater);
+
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const bindSpy = vi.spyOn(binding.binding, 'bind');
+
+      binding.connect(updater);
+
+      expect(binding.binding.value).toBe('foo');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).not.toHaveBeenCalled();
+
+      signal.value = 'bar';
+
+      expect(binding.binding.value).toBe('bar');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.bind()', () => {
+    it('should update the the value binding with current signal value', () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new RenderHost());
+      const binding = new SignalBinding(signal, part, updater);
+
+      const unsubscribeSpy = vi.fn();
+      const subscribe = vi
+        .spyOn(signal, 'subscribe')
+        .mockReturnValue(unsubscribeSpy);
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const bindSpy = vi.spyOn(binding.binding, 'bind');
+
+      binding.connect(updater);
+      signal.setUntrackedValue('bar');
+      binding.bind(signal, updater);
+
+      expect(binding.binding.value).toBe('bar');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(unsubscribeSpy).not.toHaveBeenCalled();
+      expect(subscribe).toHaveBeenCalledOnce();
+    });
+
+    it('should unsubscribe the previous subscription if signal changes', () => {
+      const signal1 = new Atom('foo');
+      const signal2 = new Atom('bar');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new RenderHost());
+      const binding = new SignalBinding(signal1, part, updater);
+
+      const unsubscribe1Spy = vi.fn();
+      const unsubscribe2Spy = vi.fn();
+      const subscribe1Spy = vi
+        .spyOn(signal1, 'subscribe')
+        .mockReturnValue(unsubscribe1Spy);
+      const subscribe2Spy = vi
+        .spyOn(signal2, 'subscribe')
+        .mockReturnValue(unsubscribe1Spy);
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const bindSpy = vi.spyOn(binding.binding, 'bind');
+
+      binding.connect(updater);
+      binding.bind(signal2, updater);
+
+      expect(binding.binding.value).toBe('bar');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(unsubscribe1Spy).toHaveBeenCalledOnce();
+      expect(unsubscribe2Spy).not.toHaveBeenCalled();
+      expect(subscribe1Spy).toHaveBeenCalledOnce();
+      expect(subscribe2Spy).toHaveBeenCalledOnce();
+    });
+
+    it('should throw the error if the value is not a signal', () => {
+      expect(() => {
+        const updater = new SyncUpdater(new RenderHost());
+        const binding = new SignalBinding(
+          new Atom('foo'),
+          {
+            type: PartType.Attribute,
+            node: document.createElement('div'),
+            name: 'class',
+          },
+          updater,
+        );
+        binding.bind(null as any, updater);
+      }).toThrow(
+        'A value must be a instance of Signal directive, but got "null".',
+      );
+    });
+  });
+
+  describe('.unbind()', () => {
+    it('should unbind the value binding and unsubscribe the signal', () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new RenderHost());
+      const binding = new SignalBinding(signal, part, updater);
+
+      const unsubscribeSpy = vi.fn();
+      const subscribeSpy = vi
+        .spyOn(signal, 'subscribe')
+        .mockReturnValue(unsubscribeSpy);
+      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
+
+      binding.connect(updater);
+
+      expect(unbindSpy).not.toHaveBeenCalled();
+      expect(unsubscribeSpy).not.toHaveBeenCalled();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+
+      binding.unbind(updater);
+
+      expect(unbindSpy).toHaveBeenCalledOnce();
+      expect(unsubscribeSpy).toHaveBeenCalledOnce();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.disconnect()', () => {
+    it('should disconnect the value binding and unsubscribe the signal', () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const updater = new SyncUpdater(new RenderHost());
+      const binding = new SignalBinding(signal, part, updater);
+
+      const unsubscribeSpy = vi.fn();
+      const subscribeSpy = vi
+        .spyOn(signal, 'subscribe')
+        .mockReturnValue(unsubscribeSpy);
+      const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
+
+      binding.connect(updater);
+
+      expect(unsubscribeSpy).not.toHaveBeenCalled();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).not.toHaveBeenCalled();
+
+      binding.disconnect();
+
+      expect(unsubscribeSpy).toHaveBeenCalledOnce();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledOnce();
+    });
+  });
+});
+
 describe('Atom', () => {
   describe('.value', () => {
     it('should get 0 of the initial version on initalize', () => {
@@ -324,196 +514,6 @@ describe('Projected', () => {
 
       signal.value++;
       expect(callback).not.toHaveBeenCalled();
-    });
-  });
-});
-
-describe('SignalBinding', () => {
-  describe('.constructor', () => {
-    it('should construct a new SignalBinding', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const updater = new SyncUpdater(new RenderHost());
-      const binding = new SignalBinding(signal, part, updater);
-
-      expect(binding.part).toBe(part);
-      expect(binding.startNode).toBe(part.node);
-      expect(binding.endNode).toBe(part.node);
-      expect(binding.value).toBe(signal);
-      expect(binding.binding).toBeInstanceOf(NodeBinding);
-      expect(binding.binding.value).toBe('foo');
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
-  });
-
-  describe('.connect()', () => {
-    it('should subscribe the signal', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const updater = new SyncUpdater(new RenderHost());
-      const binding = new SignalBinding(signal, part, updater);
-
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-
-      binding.connect(updater);
-
-      expect(binding.binding.value).toBe('foo');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).not.toHaveBeenCalled();
-
-      signal.value = 'bar';
-
-      expect(binding.binding.value).toBe('bar');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.bind()', () => {
-    it('should update the the value binding with current signal value', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const updater = new SyncUpdater(new RenderHost());
-      const binding = new SignalBinding(signal, part, updater);
-
-      const unsubscribeSpy = vi.fn();
-      const subscribe = vi
-        .spyOn(signal, 'subscribe')
-        .mockReturnValue(unsubscribeSpy);
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-
-      binding.connect(updater);
-      signal.setUntrackedValue('bar');
-      binding.bind(signal, updater);
-
-      expect(binding.binding.value).toBe('bar');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(unsubscribeSpy).not.toHaveBeenCalled();
-      expect(subscribe).toHaveBeenCalledOnce();
-    });
-
-    it('should unsubscribe the previous subscription if signal changes', () => {
-      const signal1 = new Atom('foo');
-      const signal2 = new Atom('bar');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const updater = new SyncUpdater(new RenderHost());
-      const binding = new SignalBinding(signal1, part, updater);
-
-      const unsubscribe1Spy = vi.fn();
-      const unsubscribe2Spy = vi.fn();
-      const subscribe1Spy = vi
-        .spyOn(signal1, 'subscribe')
-        .mockReturnValue(unsubscribe1Spy);
-      const subscribe2Spy = vi
-        .spyOn(signal2, 'subscribe')
-        .mockReturnValue(unsubscribe1Spy);
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-
-      binding.connect(updater);
-      binding.bind(signal2, updater);
-
-      expect(binding.binding.value).toBe('bar');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(unsubscribe1Spy).toHaveBeenCalledOnce();
-      expect(unsubscribe2Spy).not.toHaveBeenCalled();
-      expect(subscribe1Spy).toHaveBeenCalledOnce();
-      expect(subscribe2Spy).toHaveBeenCalledOnce();
-    });
-
-    it('should throw the error if the value is not a signal', () => {
-      expect(() => {
-        const updater = new SyncUpdater(new RenderHost());
-        const binding = new SignalBinding(
-          new Atom('foo'),
-          {
-            type: PartType.Attribute,
-            node: document.createElement('div'),
-            name: 'class',
-          },
-          updater,
-        );
-        binding.bind(null as any, updater);
-      }).toThrow(
-        'A value must be a instance of Signal directive, but got "null".',
-      );
-    });
-  });
-
-  describe('.unbind()', () => {
-    it('should unbind the value binding and unsubscribe the signal', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const updater = new SyncUpdater(new RenderHost());
-      const binding = new SignalBinding(signal, part, updater);
-
-      const unsubscribeSpy = vi.fn();
-      const subscribeSpy = vi
-        .spyOn(signal, 'subscribe')
-        .mockReturnValue(unsubscribeSpy);
-      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
-
-      binding.connect(updater);
-
-      expect(unbindSpy).not.toHaveBeenCalled();
-      expect(unsubscribeSpy).not.toHaveBeenCalled();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-
-      binding.unbind(updater);
-
-      expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unsubscribeSpy).toHaveBeenCalledOnce();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should disconnect the value binding and unsubscribe the signal', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const updater = new SyncUpdater(new RenderHost());
-      const binding = new SignalBinding(signal, part, updater);
-
-      const unsubscribeSpy = vi.fn();
-      const subscribeSpy = vi
-        .spyOn(signal, 'subscribe')
-        .mockReturnValue(unsubscribeSpy);
-      const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
-
-      binding.connect(updater);
-
-      expect(unsubscribeSpy).not.toHaveBeenCalled();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).not.toHaveBeenCalled();
-
-      binding.disconnect();
-
-      expect(unsubscribeSpy).toHaveBeenCalledOnce();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledOnce();
     });
   });
 });
