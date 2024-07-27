@@ -1,3 +1,4 @@
+import type { RenderContext } from '../renderContext.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -26,27 +27,26 @@ const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
 
-export function component<TProps, TData, TContext>(
-  component: ComponentFunction<TProps, TData, TContext>,
+export function component<TProps, TContext = RenderContext>(
+  component: ComponentFunction<TProps, TContext>,
   props: TProps,
-): Component<TProps, TData, TContext> {
+): Component<TProps, TContext> {
   return new Component(component, props);
 }
 
-export class Component<TProps, TData, TContext> implements Directive<TContext> {
-  private readonly _component: ComponentFunction<TProps, TData, TContext>;
+export class Component<TProps, TContext = RenderContext>
+  implements Directive<TContext>
+{
+  private readonly _component: ComponentFunction<TProps, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(
-    component: ComponentFunction<TProps, TData, TContext>,
-    props: TProps,
-  ) {
+  constructor(component: ComponentFunction<TProps, TContext>, props: TProps) {
     this._component = component;
     this._props = props;
   }
 
-  get component(): ComponentFunction<TProps, TData, TContext> {
+  get component(): ComponentFunction<TProps, TContext> {
     return this._component;
   }
 
@@ -61,7 +61,7 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
   [directiveTag](
     part: Part,
     updater: Updater<TContext>,
-  ): ComponentBinding<TProps, TData, TContext> {
+  ): ComponentBinding<TProps, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error('Component directive must be used in ChildNodePart.');
     }
@@ -69,33 +69,29 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
   }
 }
 
-export class ComponentBinding<TProps, TData, TContext>
+export class ComponentBinding<TProps, TContext>
   implements
-    Binding<Component<TProps, TData, TContext>, TContext>,
+    Binding<Component<TProps, TContext>, TContext>,
     Effect,
     UpdateBlock<TContext>
 {
-  private _directive: Component<TProps, TData, TContext>;
+  private _directive: Component<TProps, TContext>;
 
   private readonly _part: ChildNodePart;
 
   private readonly _parent: UpdateBlock<TContext> | null;
 
-  private _pendingFragment: TemplateFragment<TData, TContext> | null = null;
+  private _pendingFragment: TemplateFragment<unknown, TContext> | null = null;
 
-  private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
+  private _memoizedFragment: TemplateFragment<unknown, TContext> | null = null;
 
-  private _memoizedComponent: ComponentFunction<
-    TProps,
-    TData,
-    TContext
-  > | null = null;
+  private _memoizedComponent: ComponentFunction<TProps, TContext> | null = null;
 
-  private _memoizedTemplate: Template<TData, TContext> | null = null;
+  private _memoizedTemplate: Template<unknown, TContext> | null = null;
 
   private _cachedFragments: WeakMap<
-    Template<TData, TContext>,
-    TemplateFragment<TData, TContext>
+    Template<unknown, TContext>,
+    TemplateFragment<unknown, TContext>
   > | null = null;
 
   private _hooks: Hook[] = [];
@@ -105,7 +101,7 @@ export class ComponentBinding<TProps, TData, TContext>
   private _priority: TaskPriority = 'user-blocking';
 
   constructor(
-    directive: Component<TProps, TData, TContext>,
+    directive: Component<TProps, TContext>,
     part: ChildNodePart,
     parent: UpdateBlock<TContext> | null,
   ) {
@@ -114,7 +110,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._parent = parent;
   }
 
-  get value(): Component<TProps, TData, TContext> {
+  get value(): Component<TProps, TContext> {
     return this._directive;
   }
 
@@ -214,7 +210,7 @@ export class ComponentBinding<TProps, TData, TContext>
         // Next, unmount the old fragment and mount the new fragment.
         this._requestMutation(updater);
 
-        let newFragment: TemplateFragment<TData, TContext>;
+        let newFragment: TemplateFragment<unknown, TContext>;
 
         // Finally, rehydrate the template.
         if (this._cachedFragments !== null) {
@@ -255,7 +251,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._forceUpdate(updater);
   }
 
-  bind(newValue: Component<TProps, TData, TContext>, updater: Updater): void {
+  bind(newValue: Component<TProps, TContext>, updater: Updater): void {
     DEBUG: {
       ensureDirective(Component, newValue);
     }

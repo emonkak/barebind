@@ -1,11 +1,14 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { classMap } from '@emonkak/ebit/directives.js';
 
 import { AppState, TodoFilter } from './state.js';
 
 export interface FooterProps {}
 
-export function Footer(_props: FooterProps, context: RenderContext) {
+export function Footer(
+  _props: FooterProps,
+  context: RenderContext,
+): TemplateResult {
   const state = context.use(AppState);
   const { todos$, activeTodos$, filter$ } = state;
   const todos = context.use(todos$);

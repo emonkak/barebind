@@ -79,13 +79,13 @@ export class RenderState implements UpdateContext<RenderContext> {
     return this._globalNamespace.get(key);
   }
 
-  renderComponent<TProps, TData>(
-    component: ComponentFunction<TProps, TData, RenderContext>,
+  renderComponent<TProps>(
+    component: ComponentFunction<TProps, RenderContext>,
     props: TProps,
     hooks: Hook[],
     block: UpdateBlock<RenderContext>,
     updater: Updater<RenderContext>,
-  ): TemplateResultInterface<TData, RenderContext> {
+  ): TemplateResultInterface<unknown, RenderContext> {
     const context = new RenderContext(hooks, block, this, updater);
     const result = component(props, context);
     context.finalize();

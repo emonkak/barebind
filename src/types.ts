@@ -35,13 +35,13 @@ export interface Updater<TContext = unknown> {
 
 export interface UpdateContext<TContext> {
   flushEffects(effects: Effect[], phase: EffectPhase): void;
-  renderComponent<TProps, TData>(
-    component: ComponentFunction<TProps, TData, TContext>,
+  renderComponent<TProps>(
+    component: ComponentFunction<TProps, TContext>,
     props: TProps,
     hooks: Hook[],
     block: UpdateBlock<TContext>,
     updater: Updater<TContext>,
-  ): TemplateResultInterface<TData, TContext>;
+  ): TemplateResultInterface<unknown, TContext>;
 }
 
 export interface UpdateBlock<TContext> {
@@ -57,10 +57,10 @@ export interface UpdateBlock<TContext> {
   ): void;
 }
 
-export type ComponentFunction<TProps, TData, TContext> = (
+export type ComponentFunction<TProps, TContext> = (
   props: TProps,
   context: TContext,
-) => TemplateResultInterface<TData, TContext>;
+) => TemplateResultInterface<unknown, TContext>;
 
 export interface Template<TData, TContext = unknown> {
   hydrate(

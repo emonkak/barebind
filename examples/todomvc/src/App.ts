@@ -1,4 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { Footer } from './Footer.js';
@@ -10,7 +10,10 @@ interface AppProps {
   state: AppState;
 }
 
-export function App({ state }: AppProps, context: RenderContext) {
+export function App(
+  { state }: AppProps,
+  context: RenderContext,
+): TemplateResult {
   context.use(state);
 
   return context.html`

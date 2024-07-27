@@ -1,4 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import {
   component,
   memo,
@@ -11,7 +11,10 @@ import { AppState } from './state.js';
 
 export interface MainProps {}
 
-export function Main(_props: MainProps, context: RenderContext) {
+export function Main(
+  _props: MainProps,
+  context: RenderContext,
+): TemplateResult {
   const state = context.use(AppState);
   const { visibleTodos$ } = state;
   const visibleTodos = context.use(visibleTodos$);

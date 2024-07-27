@@ -1,4 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import {
   type Atom,
   classMap,
@@ -13,7 +13,10 @@ export interface TodoItemProps {
   todo$: Atom<Todo>;
 }
 
-export function TodoItem({ todo$ }: TodoItemProps, context: RenderContext) {
+export function TodoItem(
+  { todo$ }: TodoItemProps,
+  context: RenderContext,
+): TemplateResult {
   const [isEditing, setIsEditing] = context.useState(false);
   const state = context.use(AppState);
   const todo = context.use(todo$);

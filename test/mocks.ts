@@ -162,13 +162,13 @@ export class MockUpdateContext implements UpdateContext<MockRenderContext> {
     }
   }
 
-  renderComponent<TProps, TData>(
-    component: ComponentFunction<TProps, TData, MockRenderContext>,
+  renderComponent<TProps>(
+    component: ComponentFunction<TProps, MockRenderContext>,
     props: TProps,
     hooks: Hook[],
     block: UpdateBlock<MockRenderContext>,
     updater: Updater<MockRenderContext>,
-  ): TemplateResultInterface<TData, MockRenderContext> {
+  ): TemplateResultInterface<unknown, MockRenderContext> {
     return component(props, { hooks, block, updater });
   }
 }

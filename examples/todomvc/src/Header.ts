@@ -1,4 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
@@ -6,7 +6,10 @@ import { AppState } from './state.js';
 
 export interface HeaderProps {}
 
-export function Header(_props: HeaderProps, context: RenderContext) {
+export function Header(
+  _props: HeaderProps,
+  context: RenderContext,
+): TemplateResult {
   const state = context.use(AppState);
 
   const handleSubmit = (title: string) => {
