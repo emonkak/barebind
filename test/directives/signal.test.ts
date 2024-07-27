@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { NodeBinding } from '../../src/binding.js';
 import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
-import { RenderState } from '../../src/renderState.js';
+import { RenderHost } from '../../src/renderHost.js';
 import {
   type Hook,
   HookType,
@@ -54,7 +54,7 @@ describe('Signal', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = signal[directiveTag](part, updater);
 
       expect(binding.part).toBe(part);
@@ -73,7 +73,7 @@ describe('Signal', () => {
       const signal = new Atom('foo');
       const hooks: Hook[] = [];
       const block = new MockUpdateBlock();
-      const state = new RenderState();
+      const state = new RenderHost();
       const updater = new SyncUpdater(state);
       const context = new RenderContext(hooks, block, state, updater);
 
@@ -336,7 +336,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = new SignalBinding(signal, part, updater);
 
       expect(binding.part).toBe(part);
@@ -357,7 +357,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = new SignalBinding(signal, part, updater);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -384,7 +384,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = new SignalBinding(signal, part, updater);
 
       const unsubscribeSpy = vi.fn();
@@ -412,7 +412,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = new SignalBinding(signal1, part, updater);
 
       const unsubscribe1Spy = vi.fn();
@@ -440,7 +440,7 @@ describe('SignalBinding', () => {
 
     it('should throw the error if the value is not a signal', () => {
       expect(() => {
-        const updater = new SyncUpdater(new RenderState());
+        const updater = new SyncUpdater(new RenderHost());
         const binding = new SignalBinding(
           new Atom('foo'),
           {
@@ -464,7 +464,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = new SignalBinding(signal, part, updater);
 
       const unsubscribeSpy = vi.fn();
@@ -494,7 +494,7 @@ describe('SignalBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new RenderState());
+      const updater = new SyncUpdater(new RenderHost());
       const binding = new SignalBinding(signal, part, updater);
 
       const unsubscribeSpy = vi.fn();

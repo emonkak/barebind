@@ -11,7 +11,7 @@ import type {
   Updater,
 } from './types.js';
 
-export class RenderState implements UpdateContext<RenderContext> {
+export class RenderHost implements UpdateContext<RenderContext> {
   private readonly _globalNamespace: Map<unknown, unknown>;
 
   private readonly _localNamespaces: WeakMap<

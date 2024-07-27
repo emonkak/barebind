@@ -1,6 +1,6 @@
 import { dependenciesAreChanged } from './compare.js';
 import { TemplateResult } from './directives/templateResult.js';
-import type { RenderState } from './renderState.js';
+import type { RenderHost } from './renderHost.js';
 import {
   type ElementData,
   ElementTemplate,
@@ -46,7 +46,7 @@ export class RenderContext {
 
   private readonly _block: UpdateBlock<RenderContext>;
 
-  private readonly _state: RenderState;
+  private readonly _host: RenderHost;
 
   private readonly _updater: Updater<RenderContext>;
 
@@ -55,12 +55,12 @@ export class RenderContext {
   constructor(
     hooks: Hook[],
     block: UpdateBlock<RenderContext>,
-    state: RenderState,
+    host: RenderHost,
     updater: Updater<RenderContext>,
   ) {
     this._hooks = hooks;
     this._block = block;
-    this._state = state;
+    this._host = host;
     this._updater = updater;
   }
 
@@ -100,14 +100,14 @@ export class RenderContext {
   }
 
   getContextValue(key: unknown): unknown {
-    return this._state.getScopedValue(key, this._block);
+    return this._host.getScopedValue(key, this._block);
   }
 
   html<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
   ): TemplateResult<TData, RenderContext> {
-    const template = this._state.getHTMLTemplate(tokens, data);
+    const template = this._host.getHTMLTemplate(tokens, data);
     return new TemplateResult(template, data);
   }
 
@@ -126,14 +126,14 @@ export class RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    this._state.setScopedValue(key, value, this._block);
+    this._host.setScopedValue(key, value, this._block);
   }
 
   svg<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
   ): TemplateResult<TData, RenderContext> {
-    const template = this._state.getSVGTemplate(tokens, data);
+    const template = this._host.getSVGTemplate(tokens, data);
     return new TemplateResult(template, data);
   }
 

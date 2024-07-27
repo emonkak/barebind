@@ -1,22 +1,22 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RenderContext } from '../src/renderContext.js';
-import { RenderState } from '../src/renderState.js';
+import { RenderHost } from '../src/renderHost.js';
 import { EffectPhase, type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockTemplate, MockUpdateBlock } from './mocks.js';
 
-describe('RenderState', () => {
+describe('RenderHost', () => {
   describe('.flushEffects()', () => {
     it('should perform given effects', () => {
-      const state = new RenderState();
+      const host = new RenderHost();
       const effect1 = {
         commit: vi.fn(),
       };
       const effect2 = {
         commit: vi.fn(),
       };
-      state.flushEffects([effect1, effect2], EffectPhase.Passive);
+      host.flushEffects([effect1, effect2], EffectPhase.Passive);
 
       expect(effect1.commit).toHaveBeenCalledOnce();
       expect(effect1.commit).toHaveBeenCalledWith(EffectPhase.Passive);
@@ -27,28 +27,28 @@ describe('RenderState', () => {
 
   describe('.getHTMLTemplate()', () => {
     it('should create a HTML template from tokens', () => {
-      const state = new RenderState();
+      const host = new RenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = state.getHTMLTemplate(tokens, data);
+      const template = host.getHTMLTemplate(tokens, data);
 
       expect(template.holes).toEqual([{ type: PartType.Node, index: 2 }]);
       expect(template.element.innerHTML).toBe('<div>Hello, !</div>');
     });
 
     it('should get a HTML template from cache if avaiable', () => {
-      const state = new RenderState();
+      const host = new RenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = state.getHTMLTemplate(tokens, data);
+      const template = host.getHTMLTemplate(tokens, data);
 
-      expect(template).toBe(state.getHTMLTemplate(tokens, data));
+      expect(template).toBe(host.getHTMLTemplate(tokens, data));
     });
   });
 
   describe('.getSVGTemplate()', () => {
     it('should create a SVG template from tokens', () => {
-      const state = new RenderState();
+      const host = new RenderHost();
       const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
-      const template = state.getSVGTemplate(tokens, data);
+      const template = host.getSVGTemplate(tokens, data);
 
       expect(template.holes).toEqual([{ type: PartType.Node, index: 2 }]);
       expect(template.element.innerHTML).toBe('<text>Hello, !</text>');
@@ -58,48 +58,48 @@ describe('RenderState', () => {
     });
 
     it('should get a SVG template from cache if avaiable', () => {
-      const state = new RenderState();
+      const host = new RenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = state.getSVGTemplate(tokens, data);
+      const template = host.getSVGTemplate(tokens, data);
 
-      expect(template).toBe(state.getSVGTemplate(tokens, data));
+      expect(template).toBe(host.getSVGTemplate(tokens, data));
     });
   });
 
   describe('.getScopedValue()', () => {
     it('should get a scoped value from global scope', () => {
-      const state = new RenderState(new Map([['foo', 123]]));
+      const host = new RenderHost(new Map([['foo', 123]]));
       const block = new MockUpdateBlock();
 
-      expect(state.getScopedValue('foo')).toBe(123);
-      expect(state.getScopedValue('foo', block)).toBe(123);
+      expect(host.getScopedValue('foo')).toBe(123);
+      expect(host.getScopedValue('foo', block)).toBe(123);
     });
 
     it('should get a scoped value from block scope', () => {
-      const state = new RenderState(new Map([['foo', 123]]));
+      const host = new RenderHost(new Map([['foo', 123]]));
       const block = new MockUpdateBlock();
 
-      state.setScopedValue('foo', 456, block);
-      expect(state.getScopedValue('foo', block)).toBe(456);
+      host.setScopedValue('foo', 456, block);
+      expect(host.getScopedValue('foo', block)).toBe(456);
 
-      state.setScopedValue('foo', 789, block);
-      expect(state.getScopedValue('foo', block)).toBe(789);
+      host.setScopedValue('foo', 789, block);
+      expect(host.getScopedValue('foo', block)).toBe(789);
     });
 
     it('should get a scoped value from the parent', () => {
-      const state = new RenderState(new Map([['foo', 123]]));
+      const host = new RenderHost(new Map([['foo', 123]]));
       const parent = new MockUpdateBlock();
       const block = new MockUpdateBlock(parent);
 
-      state.setScopedValue('foo', 456, parent);
+      host.setScopedValue('foo', 456, parent);
 
-      expect(state.getScopedValue('foo', block)).toBe(456);
+      expect(host.getScopedValue('foo', block)).toBe(456);
     });
   });
 
   describe('.renderComponent()', () => {
     it('should return the component', () => {
-      const state = new RenderState();
+      const host = new RenderHost();
       const template = new MockTemplate();
       const props = {
         data: {},
@@ -110,8 +110,8 @@ describe('RenderState', () => {
       });
       const hooks: Hook[] = [];
       const block = new MockUpdateBlock();
-      const updater = new SyncUpdater(state);
-      const result = state.renderComponent(
+      const updater = new SyncUpdater(host);
+      const result = host.renderComponent(
         component,
         props,
         hooks,
