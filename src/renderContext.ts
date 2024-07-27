@@ -103,10 +103,10 @@ export class RenderContext {
     return this._state.getScopedValue(key, this._block);
   }
 
-  html(
+  html<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
-    ...data: unknown[]
-  ): TemplateResult<unknown[], RenderContext> {
+    ...data: TData
+  ): TemplateResult<TData, RenderContext> {
     const template = this._state.getHTMLTemplate(tokens, data);
     return new TemplateResult(template, data);
   }
@@ -129,10 +129,10 @@ export class RenderContext {
     this._state.setScopedValue(key, value, this._block);
   }
 
-  svg(
+  svg<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
-    ...data: unknown[]
-  ): TemplateResult<unknown[], RenderContext> {
+    ...data: TData
+  ): TemplateResult<TData, RenderContext> {
     const template = this._state.getSVGTemplate(tokens, data);
     return new TemplateResult(template, data);
   }

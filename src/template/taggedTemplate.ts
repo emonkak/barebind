@@ -60,12 +60,14 @@ const MARKER_REGEXP = /^\?[0-9a-z]{14}\?$/;
 
 const RANDOM_STRING_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-export class TaggedTemplate implements Template<unknown[]> {
-  static parseHTML(
+export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
+  implements Template<TData>
+{
+  static parseHTML<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
-    values: ReadonlyArray<unknown>,
+    values: TData,
     marker: string,
-  ): TaggedTemplate {
+  ): TaggedTemplate<TData> {
     DEBUG: {
       ensureValidMarker(marker);
     }
@@ -75,11 +77,11 @@ export class TaggedTemplate implements Template<unknown[]> {
     return new TaggedTemplate(template, holes);
   }
 
-  static parseSVG(
+  static parseSVG<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
-    values: ReadonlyArray<unknown>,
+    values: TData,
     marker: string,
-  ): TaggedTemplate {
+  ): TaggedTemplate<TData> {
     DEBUG: {
       ensureValidMarker(marker);
     }
@@ -96,7 +98,7 @@ export class TaggedTemplate implements Template<unknown[]> {
 
   private readonly _holes: Hole[];
 
-  constructor(element: HTMLTemplateElement, holes: Hole[]) {
+  private constructor(element: HTMLTemplateElement, holes: Hole[]) {
     this._element = element;
     this._holes = holes;
   }
@@ -109,7 +111,7 @@ export class TaggedTemplate implements Template<unknown[]> {
     return this._holes;
   }
 
-  hydrate(data: unknown[], updater: Updater): TaggedTemplateFragment {
+  hydrate(data: TData, updater: Updater): TaggedTemplateFragment<TData> {
     const holes = this._holes;
 
     if (holes.length !== data.length) {
@@ -200,12 +202,14 @@ export class TaggedTemplate implements Template<unknown[]> {
     return new TaggedTemplateFragment(bindings, [...rootNode.childNodes]);
   }
 
-  isSameTemplate(other: Template<unknown[]>): boolean {
+  isSameTemplate(other: Template<TData>): boolean {
     return other === this;
   }
 }
 
-export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
+export class TaggedTemplateFragment<TData extends readonly any[]>
+  implements TemplateFragment<TData>
+{
   private readonly _bindings: Binding<unknown>[];
 
   private readonly _childNodes: ChildNode[];
@@ -231,7 +235,7 @@ export class TaggedTemplateFragment implements TemplateFragment<unknown[]> {
     return this._bindings;
   }
 
-  attach(data: unknown[], updater: Updater): void {
+  attach(data: TData, updater: Updater): void {
     if (data.length !== this._bindings.length) {
       throw new Error(
         `The number of new data must be ${this._bindings.length}, but got ${data.length}.`,

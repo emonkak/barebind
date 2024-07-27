@@ -21,7 +21,7 @@ export class RenderState implements UpdateContext<RenderContext> {
 
   private readonly _cachedTemplates: WeakMap<
     ReadonlyArray<string>,
-    TaggedTemplate
+    TaggedTemplate<readonly any[]>
   > = new WeakMap();
 
   private readonly _marker: string = getMarker();
@@ -36,10 +36,10 @@ export class RenderState implements UpdateContext<RenderContext> {
     }
   }
 
-  getHTMLTemplate(
+  getHTMLTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
-    data: unknown[],
-  ): TaggedTemplate {
+    data: TData,
+  ): TaggedTemplate<TData> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
@@ -50,10 +50,10 @@ export class RenderState implements UpdateContext<RenderContext> {
     return template;
   }
 
-  getSVGTemplate(
+  getSVGTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
-    data: unknown[],
-  ): TaggedTemplate {
+    data: TData,
+  ): TaggedTemplate<TData> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {

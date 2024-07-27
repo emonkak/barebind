@@ -27,7 +27,7 @@ const MARKER = getMarker();
 describe('TaggedTemplate', () => {
   describe('.parseHTML()', () => {
     it('should parse holes inside attributes', () => {
-      const template = html`
+      const [template] = html`
         <input type="checkbox" id=${0} .value=${1} @change=${2}>
       `;
       expect(template.holes).toEqual([
@@ -39,7 +39,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside double-quoted attributes', () => {
-      const template = html`
+      const [template] = html`
         <input type="checkbox" id="${0}" .value="${1}" @change="${2}">
       `;
       expect(template.holes).toEqual([
@@ -51,7 +51,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside single-quoted attributes', () => {
-      const template = html`
+      const [template] = html`
         <input type="checkbox" id='${0}' .value='${1}' @change='${2}'>
       `;
       expect(template.holes).toEqual([
@@ -63,7 +63,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse a hole inside a tag name', () => {
-      const template = html`
+      const [template] = html`
         <${0}>
         <${1} >
         <${2}/>
@@ -86,7 +86,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside elements', () => {
-      const template = html`
+      const [template] = html`
         <div id="foo" ${0}></div>
         <div ${1} id="foo"></div>
         <div id="foo" ${2} class="bar"></div>
@@ -106,7 +106,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside descendants', () => {
-      const template = html`
+      const [template] = html`
         <ul>
           <li>${1}</li>
           <li>${2}</li>
@@ -127,7 +127,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse multiple holes inside a child', () => {
-      const template = html`
+      const [template] = html`
         <div>[${0}, ${1}]</div>
         <div>${0}, ${1}</div>
       `;
@@ -146,7 +146,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse a hole inside a comment as ChildNodeHole', () => {
-      const template = html`
+      const [template] = html`
         <!--${0}-->
         <!--${1}/-->
         <!-- ${2} -->
@@ -169,7 +169,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse a hole inside a tag with leading spaces as NodeHole', () => {
-      const template = html`
+      const [template] = html`
         < ${0}>
         < ${0}/>
       `;
@@ -278,7 +278,7 @@ describe('TaggedTemplate', () => {
 
   describe('.parseSVG()', () => {
     it('should parse holes inside attributes', () => {
-      const template = svg`
+      const [template] = svg`
         <circle fill="black" cx=${0} cy=${1} r=${2} />
       `;
       expect(template.holes).toEqual([
@@ -304,18 +304,10 @@ describe('TaggedTemplate', () => {
 
   describe('.hydrate()', () => {
     it('should hydrate a TaggedTemplateFragment', () => {
-      const values = [
-        'foo',
-        'bar',
-        'baz',
-        () => {},
-        { class: 'qux' },
-        new MockDirective(),
-      ];
-      const template = html`
-        <div class=${values[0]}>
-          <!-- ${values[1]} -->
-          <input type="text" .value=${values[2]} @onchange=${values[3]} ${values[4]}><span>${values[5]}</span>
+      const [template, values] = html`
+        <div class=${'foo'}>
+          <!-- ${'bar'} -->
+          <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new MockDirective()}</span>
         </div>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
@@ -373,7 +365,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should hydrate a TaggedTemplateFragment without bindings', () => {
-      const template = html`<div></div>`;
+      const [template] = html`<div></div>`;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate([], updater);
 
@@ -385,7 +377,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should hydrate a TaggedTemplateFragment with empty template', () => {
-      const template = html``;
+      const [template] = html``;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate([], updater);
 
@@ -397,9 +389,8 @@ describe('TaggedTemplate', () => {
     });
 
     it('should throw an error if the number of holes and values do not match', () => {
-      const values = ['foo', 'bar'];
-      const template = html`
-        <div class=${values[0]} class=${values[1]}></div>
+      const [template, values] = html`
+        <div class=${'foo'} class=${'bar'}></div>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
 
@@ -411,10 +402,10 @@ describe('TaggedTemplate', () => {
 
   describe('.isSameTemplate()', () => {
     it('should return whether the template is the same as other template', () => {
-      const template1 = html`
+      const [template1] = html`
         <div></div>
       `;
-      const template2 = html`
+      const [template2] = html`
         <div></div>
       `;
 
@@ -430,9 +421,8 @@ describe('TaggedTemplate', () => {
 describe('TaggedTemplateFragment', () => {
   describe('.attach()', () => {
     it('should bind values corresponding to bindings in the fragment', () => {
-      const values = ['foo', 'bar', 'baz'];
-      const template = html`
-        <div class="${values[0]}">${values[1]}</div><!--${values[2]}-->
+      const [template, values] = html`
+        <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
@@ -456,9 +446,8 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.detach()', () => {
     it('should unbind bindings in the fragment', () => {
-      const values = ['foo', 'bar', 'baz', 'qux'];
-      const template = html`
-        ${values[0]}<div class=${values[1]}>${values[2]}</div><!--${values[3]}-->
+      const [template, values] = html`
+        ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
       `;
       const container = document.createElement('div');
       const part = {
@@ -508,15 +497,14 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should throw an error if the number of binding and values do not match', () => {
-      const values = [0];
-      const template = html`
-        <p>Count: ${values[0]}</p>
+      const [template, values] = html`
+        <p>Count: ${0}</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
 
       expect(() => {
-        fragment.attach([], updater);
+        fragment.attach([] as any, updater);
       }).toThrow('The number of new data must be 1, but got 0.');
     });
   });
@@ -524,9 +512,8 @@ describe('TaggedTemplateFragment', () => {
   describe('.disconnect()', () => {
     it('should disconnect bindings in the fragment', () => {
       const directive = new MockDirective();
-      const values = [directive];
-      const template = html`
-        <div>${values[0]}</div>
+      const [template, values] = html`
+        <div>${directive}</div>
       `;
       let disconnects = 0;
       vi.spyOn(directive, directiveTag).mockImplementation(function (
@@ -552,9 +539,8 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.mount()', () => {
     it('should mount child nodes at the part', () => {
-      const values = ['World'];
-      const template = html`
-        <p>Hello, ${values[0]}!</p>
+      const [template, values] = html`
+        <p>Hello, ${'World'}!</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
@@ -578,9 +564,8 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should not mount child nodes if the part is not mounted', () => {
-      const values = ['World'];
-      const template = html`
-        <p>Hello, ${values[0]}!</p>
+      const [template, values] = html`
+        <p>Hello, ${'World'}!</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = template.hydrate(values, updater);
@@ -619,18 +604,18 @@ describe('getMarker()', () => {
   });
 });
 
-function html(
+function html<TData extends readonly any[]>(
   tokens: TemplateStringsArray,
-  ...values: unknown[]
-): TaggedTemplate {
-  return TaggedTemplate.parseHTML(tokens, values, MARKER);
+  ...values: TData
+): [TaggedTemplate<TData>, TData] {
+  return [TaggedTemplate.parseHTML(tokens, values, MARKER), values];
 }
 
-function svg(
+function svg<const TData extends readonly any[]>(
   tokens: TemplateStringsArray,
-  ...values: unknown[]
-): TaggedTemplate {
-  return TaggedTemplate.parseSVG(tokens, values, MARKER);
+  ...values: TData
+): [TaggedTemplate<TData>, TData] {
+  return [TaggedTemplate.parseSVG(tokens, values, MARKER), values];
 }
 
 function nodeToString(node: Node): string {
