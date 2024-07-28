@@ -103,7 +103,7 @@ export class EventBinding implements Binding<unknown>, Effect {
 
   constructor(value: unknown, part: EventPart) {
     ensureEventListener(value);
-    this._pendingListener = value ?? null;
+    this._pendingListener = value;
     this._part = part;
   }
 
@@ -124,16 +124,13 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   connect(updater: Updater): void {
-    if (this._pendingListener !== this._memoizedListener) {
-      this._requestMutation(updater);
-    }
+    this._requestMutation(updater);
   }
 
   bind(newValue: unknown, updater: Updater): void {
     ensureEventListener(newValue);
-    const newListener = newValue ?? null;
-    if (newListener !== this._memoizedListener) {
-      this._pendingListener = newListener;
+    if (newValue !== this._memoizedListener) {
+      this._pendingListener = newValue;
       this._requestMutation(updater);
     }
   }
@@ -477,10 +474,10 @@ export function resolvePrimitiveBinding(
 
 function ensureEventListener(
   value: unknown,
-): asserts value is EventListenerOrEventListenerObject | null | undefined {
-  if (!(value == null || isEventListener(value))) {
+): asserts value is EventListenerOrEventListenerObject | null {
+  if (!(value === null || isEventListener(value))) {
     throw new Error(
-      'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
+      'A value of EventBinding must be EventListener, EventListenerObject or null.',
     );
   }
 }

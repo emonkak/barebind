@@ -4,13 +4,19 @@ import { ref } from '@emonkak/ebit/directives.js';
 export interface TodoInputProps {
   defaultValue?: string;
   label: string;
-  onBlur?: () => void;
-  onSubmit?: (title: string) => void;
+  onBlur?: (() => void) | null;
+  onSubmit?: ((title: string) => void) | null;
   placeholder?: string;
 }
 
 export function TodoInput(
-  { defaultValue = '', label, onBlur, onSubmit, placeholder }: TodoInputProps,
+  {
+    defaultValue = '',
+    label,
+    onBlur = null,
+    onSubmit = null,
+    placeholder,
+  }: TodoInputProps,
   context: RenderContext,
 ): TemplateResult {
   const inputRef = context.useRef<HTMLInputElement | null>(null);

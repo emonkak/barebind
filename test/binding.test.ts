@@ -273,32 +273,20 @@ describe('EventBinding', () => {
       expect(binding.value).toBe(listener);
     });
 
-    it('should throw the error if the value other than an event listner is passed', () => {
-      expect(() => {
-        new EventBinding(
-          {},
-          {
+    it.each([[{}], [undefined]])(
+      'should throw the error if the value other than an event listner is passed',
+      (value) => {
+        expect(() => {
+          new EventBinding(value, {
             type: PartType.Event,
             node: document.createElement('div'),
             name: 'hello',
-          },
+          });
+        }).toThrow(
+          'A value of EventBinding must be EventListener, EventListenerObject or null.',
         );
-      }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
-      );
-      expect(() => {
-        new EventBinding(
-          {},
-          {
-            type: PartType.Event,
-            node: document.createElement('div'),
-            name: 'hello',
-          },
-        );
-      }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
-      );
-    });
+      },
+    );
   });
 
   describe('.connect()', () => {
@@ -442,74 +430,53 @@ describe('EventBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should do nothing if the new and current listeners are a pair of null and undefined', () => {
+    it('should unbind the active event listener when null is passed', () => {
       const element = document.createElement('div');
       const part = {
         type: PartType.Event,
         node: element,
         name: 'hello',
       } as const;
-      const binding = new EventBinding(null, part);
+      const listener = vi.fn();
+      const event = new CustomEvent('hello');
+      const binding = new EventBinding(listener, part);
       const updater = new SyncUpdater(new MockUpdateContext());
 
+      const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
+
       binding.connect(updater);
+      updater.flush();
+      element.dispatchEvent(event);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      binding.bind(null, updater);
+      updater.flush();
+      element.dispatchEvent(event);
 
-      binding.bind(undefined, updater);
-
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+      expect(listener).toHaveBeenCalledOnce();
+      expect(listener).toHaveBeenCalledWith(event);
     });
 
-    it.each([[null], [undefined]])(
-      'should unbind the active event listener when null or undefined is passed',
-      (noListener) => {
-        const element = document.createElement('div');
-        const part = {
-          type: PartType.Event,
-          node: element,
-          name: 'hello',
-        } as const;
-        const listener = vi.fn();
-        const event = new CustomEvent('hello');
-        const binding = new EventBinding(listener, part);
-        const updater = new SyncUpdater(new MockUpdateContext());
-
-        const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
-        const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
-
-        binding.connect(updater);
-        updater.flush();
-        element.dispatchEvent(event);
-
-        binding.bind(noListener, updater);
-        updater.flush();
-        element.dispatchEvent(event);
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-        expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-        expect(listener).toHaveBeenCalledOnce();
-        expect(listener).toHaveBeenCalledWith(event);
+    it.each([[null], [{}]])(
+      'should throw the error if the value other than an event listner is assigned',
+      () => {
+        expect(() => {
+          const binding = new EventBinding(null, {
+            type: PartType.Event,
+            node: document.createElement('div'),
+            name: 'hello',
+          });
+          const updater = new SyncUpdater(new MockUpdateContext());
+          binding.bind({}, updater);
+        }).toThrow(
+          'A value of EventBinding must be EventListener, EventListenerObject or null.',
+        );
       },
     );
-
-    it('should throw the error if the value other than an event listner is assigned', () => {
-      expect(() => {
-        const binding = new EventBinding(null, {
-          type: PartType.Event,
-          node: document.createElement('div'),
-          name: 'hello',
-        });
-        const updater = new SyncUpdater(new MockUpdateContext());
-        binding.bind({}, updater);
-      }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
-      );
-    });
   });
 
   describe('.unbind()', () => {
