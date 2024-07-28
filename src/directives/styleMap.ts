@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { reportPart } from '../report.js';
+import { ensureDirective, reportPart } from '../error.js';
 import {
   type AttributePart,
   type Binding,
@@ -9,7 +9,6 @@ import {
   PartType,
   type Updater,
   directiveTag,
-  ensureDirective,
 } from '../types.js';
 
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
@@ -89,7 +88,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   bind(newValue: StyleMap, updater: Updater): void {
     DEBUG: {
-      ensureDirective(StyleMap, newValue);
+      ensureDirective(StyleMap, newValue, this._part);
     }
     const oldValue = this._directive;
     if (!shallowEqual(newValue.styleDeclaration, oldValue.styleDeclaration)) {

@@ -1,5 +1,5 @@
 import { resolveBinding } from '../binding.js';
-import { reportPart } from '../report.js';
+import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -9,7 +9,6 @@ import {
   PartType,
   type Updater,
   directiveTag,
-  ensureDirective,
   nameOf,
 } from '../types.js';
 
@@ -122,7 +121,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
 
   bind(newValue: OrderedList<TItem, TKey, TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(OrderedList, newValue);
+      ensureDirective(OrderedList, newValue, this._part);
     }
     this._directive = newValue;
     this._updateItems(updater);
@@ -388,7 +387,7 @@ export class InPlaceListBinding<TItem, TValue>
 
   bind(newValue: InPlaceList<TItem, TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(InPlaceList, newValue);
+      ensureDirective(InPlaceList, newValue, this._part);
     }
     const oldValue = this._directive;
     if (oldValue.items !== newValue.items) {

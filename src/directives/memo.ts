@@ -1,12 +1,12 @@
 import { resolveBinding } from '../binding.js';
 import { dependenciesAreChanged } from '../compare.js';
+import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
   type Part,
   type Updater,
   directiveTag,
-  ensureDirective,
   nameOf,
   nameTag,
 } from '../types.js';
@@ -81,7 +81,7 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   bind(newValue: Memo<T>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(Memo, newValue);
+      ensureDirective(Memo, newValue, this._binding.part);
     }
     const oldDependencies = this._directive.dependencies;
     const newDependencies = newValue.dependencies;

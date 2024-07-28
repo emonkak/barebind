@@ -1,3 +1,4 @@
+import { ensureNonDirective, reportPart } from './error.js';
 import {
   type AttributePart,
   type Binding,
@@ -9,7 +10,6 @@ import {
   type PropertyPart,
   type Updater,
   directiveTag,
-  ensureNonDirective,
   isDirective,
 } from './types.js';
 
@@ -22,7 +22,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
 
   constructor(value: unknown, part: AttributePart) {
     DEBUG: {
-      ensureNonDirective(value);
+      ensureNonDirective(value, part);
     }
     this._value = value;
     this._part = part;
@@ -50,7 +50,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
 
   bind(newValue: unknown, updater: Updater): void {
     DEBUG: {
-      ensureNonDirective(newValue);
+      ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
@@ -102,7 +102,9 @@ export class EventBinding implements Binding<unknown>, Effect {
   private _dirty = false;
 
   constructor(value: unknown, part: EventPart) {
-    ensureEventListener(value);
+    DEBUG: {
+      ensureEventListener(value, part);
+    }
     this._pendingListener = value;
     this._part = part;
   }
@@ -128,7 +130,9 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   bind(newValue: unknown, updater: Updater): void {
-    ensureEventListener(newValue);
+    DEBUG: {
+      ensureEventListener(newValue, this._part);
+    }
     if (newValue !== this._memoizedListener) {
       this._pendingListener = newValue;
       this._requestMutation(updater);
@@ -231,7 +235,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
 
   constructor(value: unknown, part: Part) {
     DEBUG: {
-      ensureNonDirective(value);
+      ensureNonDirective(value, part);
     }
     this._value = value;
     this._part = part;
@@ -259,7 +263,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
 
   bind(newValue: unknown, updater: Updater): void {
     DEBUG: {
-      ensureNonDirective(newValue);
+      ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
@@ -301,7 +305,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
 
   constructor(value: unknown, part: PropertyPart) {
     DEBUG: {
-      ensureNonDirective(value);
+      ensureNonDirective(value, part);
     }
     this._value = value;
     this._part = part;
@@ -329,7 +333,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
 
   bind(newValue: unknown, updater: Updater): void {
     DEBUG: {
-      ensureNonDirective(newValue);
+      ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
@@ -363,7 +367,9 @@ export class ElementBinding implements Binding<unknown> {
   private _bindings: Map<string, Binding<unknown>> = new Map();
 
   constructor(value: unknown, part: ElementPart) {
-    ensureSpreadProps(value);
+    DEBUG: {
+      ensureSpreadProps(value, part);
+    }
     this._props = value;
     this._part = part;
   }
@@ -389,7 +395,9 @@ export class ElementBinding implements Binding<unknown> {
   }
 
   bind(newValue: unknown, updater: Updater): void {
-    ensureSpreadProps(newValue);
+    DEBUG: {
+      ensureSpreadProps(newValue, this._part);
+    }
     if (this._props !== newValue) {
       this._props = newValue;
       this._updateProps(updater);
@@ -474,20 +482,26 @@ export function resolvePrimitiveBinding(
 
 function ensureEventListener(
   value: unknown,
+  part: Part,
 ): asserts value is EventListenerOrEventListenerObject | null {
   if (!(value === null || isEventListener(value))) {
     throw new Error(
-      'A value of EventBinding must be EventListener, EventListenerObject or null.',
+      'A value of EventBinding must be EventListener, EventListenerObject or null.\n' +
+        reportPart(part),
     );
   }
 }
 
 function ensureSpreadProps(
   value: unknown,
+  part: Part,
 ): asserts value is { [key: string]: unknown } {
   if (!(value != null && typeof value === 'object')) {
     throw new Error(
-      'A value of ElementBinding must be an object, but got "' + value + '".',
+      'A value of ElementBinding must be an object, but got "' +
+        value +
+        '".' +
+        reportPart(part),
     );
   }
 }

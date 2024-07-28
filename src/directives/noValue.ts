@@ -1,10 +1,10 @@
+import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
   type Part,
   type Updater,
   directiveTag,
-  ensureDirective,
 } from '../types.js';
 
 export class NoValue implements Directive {
@@ -48,7 +48,7 @@ export class NoValueBinding implements Binding<NoValue> {
 
   bind(newValue: NoValue, _updater: Updater): void {
     DEBUG: {
-      ensureDirective(NoValue, newValue);
+      ensureDirective(NoValue, newValue, this._part);
     }
   }
 

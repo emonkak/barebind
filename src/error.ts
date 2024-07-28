@@ -1,6 +1,44 @@
-import { type Part, PartType } from './types.js';
+import {
+  type Directive,
+  type Part,
+  PartType,
+  isDirective,
+  nameOf,
+} from './types.js';
 
 export const REPORT_MARKER = '[[USED IN HERE!]]';
+
+export function ensureDirective<
+  TExpectedClass extends abstract new (
+    ...args: any[]
+  ) => Directive,
+>(
+  expectedClass: TExpectedClass,
+  actualValue: unknown,
+  part: Part,
+): asserts actualValue is TExpectedClass {
+  if (!(actualValue instanceof expectedClass)) {
+    throw new Error(
+      'A value must be a instance of ' +
+        expectedClass.name +
+        ' directive, but got "' +
+        nameOf(actualValue) +
+        '". Consider using choice(), condition() or dynamic() directive instead.\n' +
+        reportPart(part),
+    );
+  }
+}
+
+export function ensureNonDirective(value: unknown, part: Part): void {
+  if (isDirective(value)) {
+    throw new Error(
+      'A value must not be a directive, but got "' +
+        nameOf(value) +
+        '". Consider using choice(), condition() or dynamic() directive instead.\n' +
+        reportPart(part),
+    );
+  }
+}
 
 export function reportPart(part: Part): string {
   const { parentNode } = part.node;

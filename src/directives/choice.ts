@@ -1,11 +1,11 @@
 import { resolveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
   type Part,
   type Updater,
   directiveTag,
-  ensureDirective,
   nameOf,
   nameTag,
 } from '../types.js';
@@ -92,7 +92,7 @@ export class ChoiceBinding<TKey, TValue>
 
   bind(newValue: Choice<TKey, TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(Choice, newValue);
+      ensureDirective(Choice, newValue, this._binding.part);
     }
 
     const oldValue = this._directive;

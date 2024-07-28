@@ -1,5 +1,5 @@
+import { ensureDirective, reportPart } from '../error.js';
 import type { RenderContext } from '../renderHost.js';
-import { reportPart } from '../report.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -16,7 +16,6 @@ import {
   type Updater,
   comparePriorities,
   directiveTag,
-  ensureDirective,
   nameOf,
   nameTag,
 } from '../types.js';
@@ -198,7 +197,7 @@ export class TemplateResultBinding<TData, TContext>
 
   bind(newValue: TemplateResult<TData, TContext>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(TemplateResult, newValue);
+      ensureDirective(TemplateResult, newValue, this._part);
     }
     this._directive = newValue;
     this._forceUpdate(updater);

@@ -3,13 +3,10 @@ import { describe, expect, it } from 'vitest';
 import {
   comparePriorities,
   directiveTag,
-  ensureDirective,
-  ensureNonDirective,
   isDirective,
   nameOf,
   nameTag,
 } from '../src/types.js';
-import { MockDirective } from './mocks.js';
 
 describe('comparePriorities()', () => {
   it('should returns a negative number, zero, or a number integer as the first priority is less than, equal to, or greater than the second', () => {
@@ -24,36 +21,6 @@ describe('comparePriorities()', () => {
     expect(comparePriorities('background', 'user-blocking')).toBeLessThan(0);
     expect(comparePriorities('background', 'user-visible')).toBeLessThan(0);
     expect(comparePriorities('background', 'background')).toBe(0);
-  });
-});
-
-describe('ensureDirective', () => {
-  it('should throw an error if the value is not instance of the expected class', () => {
-    expect(() => ensureDirective(MockDirective, null)).toThrow(
-      'A value must be a instance of MockDirective directive, but got "null".',
-    );
-  });
-
-  it('should do nothing if the value is instance of the expected class', () => {
-    ensureDirective(MockDirective, new MockDirective());
-  });
-});
-
-describe('ensureNonDirective', () => {
-  it('should throw an error if the value is any directive', () => {
-    expect(() => ensureNonDirective(new MockDirective())).toThrow(
-      'A value must not be a directive, but got "MockDirective".',
-    );
-  });
-
-  it('should do nothing if the value is instance of the expected class', () => {
-    ensureNonDirective(null);
-    ensureNonDirective(undefined);
-    ensureNonDirective('foo');
-    ensureNonDirective(123);
-    ensureNonDirective(true);
-    ensureNonDirective({});
-    ensureNonDirective(() => {});
   });
 });
 

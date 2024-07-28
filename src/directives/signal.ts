@@ -1,4 +1,5 @@
 import { resolveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
 import { LinkedList } from '../linkedList.js';
 import {
   type RenderContext,
@@ -11,7 +12,6 @@ import {
   type Part,
   type Updater,
   directiveTag,
-  ensureDirective,
   nameOf,
   nameTag,
 } from '../types.js';
@@ -102,7 +102,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   bind(newValue: Signal<TValue>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(Signal, newValue);
+      ensureDirective(Signal, newValue, this._binding.part);
     }
     if (this._signal !== newValue) {
       this._signal = newValue;

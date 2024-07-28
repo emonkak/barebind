@@ -204,35 +204,6 @@ export function comparePriorities(
     : getPriorityNumber(second) - getPriorityNumber(first);
 }
 
-export function ensureDirective<
-  TExpectedClass extends abstract new (
-    ...args: any[]
-  ) => Directive,
->(
-  expectedClass: TExpectedClass,
-  actualValue: unknown,
-): asserts actualValue is TExpectedClass {
-  if (!(actualValue instanceof expectedClass)) {
-    throw new Error(
-      'A value must be a instance of ' +
-        expectedClass.name +
-        ' directive, but got "' +
-        nameOf(actualValue) +
-        '". Consider using choice(), condition() or dynamic() directive instead.',
-    );
-  }
-}
-
-export function ensureNonDirective(value: unknown): void {
-  if (isDirective(value)) {
-    throw new Error(
-      'A value must not be a directive, but got "' +
-        nameOf(value) +
-        '". Consider using choice(), condition() or dynamic() directive instead.',
-    );
-  }
-}
-
 export function isDirective(value: unknown): value is Directive<unknown> {
   return value !== null && typeof value === 'object' && directiveTag in value;
 }

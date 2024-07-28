@@ -1,11 +1,11 @@
 import { resolveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
   type Part,
   type Updater,
   directiveTag,
-  ensureDirective,
   nameOf,
   nameTag,
 } from '../types.js';
@@ -141,7 +141,7 @@ export class ConditionBinding<TTrue, TFalse>
 
   bind(newValue: Condition<TTrue, TFalse>, updater: Updater): void {
     DEBUG: {
-      ensureDirective(Condition, newValue);
+      ensureDirective(Condition, newValue, this.currentBinding.part);
     }
 
     const oldValue = this._directive;

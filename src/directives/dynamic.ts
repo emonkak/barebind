@@ -1,11 +1,11 @@
 import { resolveBinding, resolvePrimitiveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
   type Part,
   type Updater,
   directiveTag,
-  ensureDirective,
   isDirective,
   nameOf,
   nameTag,
@@ -71,7 +71,7 @@ export class DynamicBinding implements Binding<unknown> {
 
   bind(newValue: Dynamic, updater: Updater): void {
     DEBUG: {
-      ensureDirective(Dynamic, newValue);
+      ensureDirective(Dynamic, newValue, this._binding.part);
     }
     const oldDynamic = this._binding.value;
     const newDynamic = newValue.value;

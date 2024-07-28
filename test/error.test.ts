@@ -1,7 +1,59 @@
 import { describe, expect, it } from 'vitest';
 
-import { REPORT_MARKER, reportPart } from '../src/report.js';
+import {
+  REPORT_MARKER,
+  ensureDirective,
+  ensureNonDirective,
+  reportPart,
+} from '../src/error.js';
 import { PartType } from '../src/types.js';
+import { MockDirective } from './mocks.js';
+
+describe('ensureDirective', () => {
+  it('should throw an error if the value is not instance of the expected class', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+    expect(() => ensureDirective(MockDirective, null, part)).toThrow(
+      'A value must be a instance of MockDirective directive, but got "null".',
+    );
+  });
+
+  it('should do nothing if the value is instance of the expected class', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+    ensureDirective(MockDirective, new MockDirective(), part);
+  });
+});
+
+describe('ensureNonDirective', () => {
+  it('should throw an error if the value is any directive', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+    expect(() => ensureNonDirective(new MockDirective(), part)).toThrow(
+      'A value must not be a directive, but got "MockDirective".',
+    );
+  });
+
+  it('should do nothing if the value is instance of the expected class', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+    ensureNonDirective(null, part);
+    ensureNonDirective(undefined, part);
+    ensureNonDirective('foo', part);
+    ensureNonDirective(123, part);
+    ensureNonDirective(true, part);
+    ensureNonDirective({}, part);
+    ensureNonDirective(() => {}, part);
+  });
+});
 
 describe('reportPart()', () => {
   it('should report where an AttributePart is inserted', () => {

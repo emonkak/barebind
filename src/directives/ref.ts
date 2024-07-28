@@ -1,4 +1,4 @@
-import { reportPart } from '../report.js';
+import { ensureDirective, reportPart } from '../error.js';
 import {
   type AttributePart,
   type Binding,
@@ -9,7 +9,6 @@ import {
   type RefValue,
   type Updater,
   directiveTag,
-  ensureDirective,
 } from '../types.js';
 
 type ElementRef = RefValue<Element | null>;
@@ -76,7 +75,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   bind(newValue: Ref, updater: Updater): void {
     DEBUG: {
-      ensureDirective(Ref, newValue);
+      ensureDirective(Ref, newValue, this._part);
     }
     const oldValue = this._pendingDirective;
     if (oldValue.ref !== newValue.ref) {

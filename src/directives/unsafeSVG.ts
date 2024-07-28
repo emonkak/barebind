@@ -1,4 +1,4 @@
-import { reportPart } from '../report.js';
+import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -7,7 +7,6 @@ import {
   PartType,
   type Updater,
   directiveTag,
-  ensureDirective,
 } from '../types.js';
 
 export function unsafeSVG(content: string): UnsafeSVG {
@@ -72,7 +71,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
 
   bind(newValue: UnsafeSVG, updater: Updater): void {
     DEBUG: {
-      ensureDirective(UnsafeSVG, newValue);
+      ensureDirective(UnsafeSVG, newValue, this._part);
     }
     const oldValue = this._directive;
     if (oldValue.content !== newValue.content) {

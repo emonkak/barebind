@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { reportPart } from '../report.js';
+import { ensureDirective, reportPart } from '../error.js';
 import {
   type AttributePart,
   type Binding,
@@ -9,7 +9,6 @@ import {
   PartType,
   type Updater,
   directiveTag,
-  ensureDirective,
 } from '../types.js';
 
 export type ClassDeclaration = { [key: string]: boolean };
@@ -74,7 +73,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   bind(newValue: ClassMap, updater: Updater): void {
     DEBUG: {
-      ensureDirective(ClassMap, newValue);
+      ensureDirective(ClassMap, newValue, this._part);
     }
     const oldValue = this._directive;
     if (!shallowEqual(oldValue.classDeclaration, newValue.classDeclaration)) {
