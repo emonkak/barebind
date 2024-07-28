@@ -33,7 +33,7 @@ describe('when()', () => {
 
     expect(directive.condition).toBe(condition);
     expect(directive.trueBranch).toBe(trueBranch);
-    expect(directive.falseBranch).toBe(NoValue.instance);
+    expect(directive.falseBranch()).toBe(NoValue.instance);
   });
 });
 
@@ -44,7 +44,7 @@ describe('unless()', () => {
     const directive = unless(condition, falseBranch);
 
     expect(directive.condition).toBe(condition);
-    expect(directive.trueBranch).toBe(NoValue.instance);
+    expect(directive.trueBranch()).toBe(NoValue.instance);
     expect(directive.falseBranch).toBe(falseBranch);
   });
 });
@@ -102,8 +102,8 @@ describe('Condition', () => {
       const falseDirective = new MockDirective();
       const directive = conditionDirective(
         false,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const part = {
         type: PartType.Node,
@@ -158,7 +158,11 @@ describe('ConditionBinding', () => {
       const falseDirective = new MockDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive = conditionDirective(true, trueDirective, falseDirective);
+      const directive = conditionDirective(
+        true,
+        () => trueDirective,
+        () => falseDirective,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -187,8 +191,8 @@ describe('ConditionBinding', () => {
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
       const directive = conditionDirective(
         false,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const part = {
         type: PartType.ChildNode,
@@ -218,13 +222,13 @@ describe('ConditionBinding', () => {
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
       const directive1 = conditionDirective(
         true,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const directive2 = conditionDirective(
         false,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const part = {
         type: PartType.ChildNode,
@@ -256,13 +260,13 @@ describe('ConditionBinding', () => {
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
       const directive1 = conditionDirective(
         false,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const directive2 = conditionDirective(
         true,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const part = {
         type: PartType.ChildNode,
@@ -294,13 +298,13 @@ describe('ConditionBinding', () => {
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
       const directive1 = conditionDirective(
         true,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const directive2 = conditionDirective(
         false,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const part = {
         type: PartType.ChildNode,
@@ -335,13 +339,13 @@ describe('ConditionBinding', () => {
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
       const directive1 = conditionDirective(
         false,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const directive2 = conditionDirective(
         true,
-        trueDirective,
-        falseDirective,
+        () => trueDirective,
+        () => falseDirective,
       );
       const part = {
         type: PartType.ChildNode,

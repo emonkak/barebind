@@ -11,41 +11,39 @@ import {
 } from '../types.js';
 import { NoValue } from './noValue.js';
 
-type Branch<T> = T extends Function ? () => T : (() => T) | T;
-
 export function condition<TTrue, TFalse>(
   condition: boolean,
-  trueBranch: Branch<TTrue>,
-  falseBranch: Branch<TFalse>,
+  trueBranch: () => TTrue,
+  falseBranch: () => TFalse,
 ): Condition<TTrue, TFalse> {
   return new Condition(condition, trueBranch, falseBranch);
 }
 
 export function when<TTrue>(
   condition: boolean,
-  trueBranch: Branch<TTrue>,
+  trueBranch: () => TTrue,
 ): Condition<TTrue, NoValue> {
-  return new Condition(condition, trueBranch, NoValue.instance);
+  return new Condition(condition, trueBranch, () => NoValue.instance);
 }
 
 export function unless<TFalse>(
   condition: boolean,
-  falseBranch: Branch<TFalse>,
+  falseBranch: () => TFalse,
 ): Condition<NoValue, TFalse> {
-  return new Condition(condition, NoValue.instance, falseBranch);
+  return new Condition(condition, () => NoValue.instance, falseBranch);
 }
 
 export class Condition<TTrue, TFalse> implements Directive {
   private readonly _condition: boolean;
 
-  private readonly _trueBranch: Branch<TTrue>;
+  private readonly _trueBranch: () => TTrue;
 
-  private readonly _falseBranch: Branch<TFalse>;
+  private readonly _falseBranch: () => TFalse;
 
   constructor(
     condition: boolean,
-    trueBranch: Branch<TTrue>,
-    falseBranch: Branch<TFalse>,
+    trueBranch: () => TTrue,
+    falseBranch: () => TFalse,
   ) {
     this._condition = condition;
     this._trueBranch = trueBranch;
@@ -56,11 +54,11 @@ export class Condition<TTrue, TFalse> implements Directive {
     return this._condition;
   }
 
-  get trueBranch(): Branch<TTrue> {
+  get trueBranch(): () => TTrue {
     return this._trueBranch;
   }
 
-  get falseBranch(): Branch<TFalse> {
+  get falseBranch(): () => TFalse {
     return this._falseBranch;
   }
 
@@ -69,11 +67,7 @@ export class Condition<TTrue, TFalse> implements Directive {
       'Condition(' +
       this._condition +
       ', ' +
-      nameOf(
-        this._condition
-          ? evalBranch(this._trueBranch)
-          : evalBranch(this._falseBranch),
-      ) +
+      nameOf(this._condition ? this._trueBranch() : this._falseBranch()) +
       ')'
     );
   }
@@ -103,15 +97,11 @@ export class ConditionBinding<TTrue, TFalse>
     const { condition, trueBranch, falseBranch } = directive;
     this._directive = directive;
     if (condition) {
-      this._trueBinding = resolveBinding(evalBranch(trueBranch), part, updater);
+      this._trueBinding = resolveBinding(trueBranch(), part, updater);
       this._falseBinding = null;
     } else {
       this._trueBinding = null;
-      this._falseBinding = resolveBinding(
-        evalBranch(falseBranch),
-        part,
-        updater,
-      );
+      this._falseBinding = resolveBinding(falseBranch(), part, updater);
     }
   }
 
@@ -149,18 +139,18 @@ export class ConditionBinding<TTrue, TFalse>
 
     if (oldValue.condition === condition) {
       if (condition) {
-        this._trueBinding!.bind(evalBranch(trueBranch), updater);
+        this._trueBinding!.bind(trueBranch(), updater);
       } else {
-        this._falseBinding!.bind(evalBranch(falseBranch), updater);
+        this._falseBinding!.bind(falseBranch(), updater);
       }
     } else {
       if (condition) {
         this._falseBinding!.unbind(updater);
         if (this._trueBinding !== null) {
-          this._trueBinding.bind(evalBranch(trueBranch), updater);
+          this._trueBinding.bind(trueBranch(), updater);
         } else {
           this._trueBinding = resolveBinding(
-            evalBranch(trueBranch),
+            trueBranch(),
             this._falseBinding!.part,
             updater,
           );
@@ -169,10 +159,10 @@ export class ConditionBinding<TTrue, TFalse>
       } else {
         this._trueBinding!.unbind(updater);
         if (this._falseBinding !== null) {
-          this._falseBinding.bind(evalBranch(falseBranch), updater);
+          this._falseBinding.bind(falseBranch(), updater);
         } else {
           this._falseBinding = resolveBinding(
-            evalBranch(falseBranch),
+            falseBranch(),
             this._trueBinding!.part,
             updater,
           );
@@ -191,8 +181,4 @@ export class ConditionBinding<TTrue, TFalse>
   disconnect(): void {
     this.currentBinding.disconnect();
   }
-}
-
-function evalBranch<T>(branch: Branch<T>): T {
-  return typeof branch === 'function' ? branch() : branch;
 }
