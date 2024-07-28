@@ -14,8 +14,8 @@ import {
   type Part,
   type TaskPriority,
   type Template,
+  type TemplateDirective,
   type TemplateFragment,
-  type TemplateResultInterface,
   type UpdateBlock,
   type UpdateContext,
   type Updater,
@@ -168,7 +168,7 @@ export class MockUpdateContext implements UpdateContext<MockRenderContext> {
     hooks: Hook[],
     block: UpdateBlock<MockRenderContext>,
     updater: Updater<MockRenderContext>,
-  ): TemplateResultInterface<unknown, MockRenderContext> {
+  ): TemplateDirective<unknown, MockRenderContext> {
     return component(props, { hooks, block, updater });
   }
 }

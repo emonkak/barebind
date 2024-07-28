@@ -21,7 +21,7 @@ import {
   type ReducerHook,
   type RefObject,
   type TaskPriority,
-  type TemplateResultInterface,
+  type TemplateDirective,
   type UpdateBlock,
   type UpdateContext,
   type Updater,
@@ -121,7 +121,7 @@ export class RenderHost implements UpdateContext<RenderContext> {
     hooks: Hook[],
     block: UpdateBlock<RenderContext>,
     updater: Updater<RenderContext>,
-  ): TemplateResultInterface<unknown, RenderContext> {
+  ): TemplateDirective<unknown, RenderContext> {
     const context = new RenderContext(hooks, block, this, updater);
     const result = component(props, context);
     context.finalize();

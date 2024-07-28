@@ -41,7 +41,7 @@ export interface UpdateContext<TContext> {
     hooks: Hook[],
     block: UpdateBlock<TContext>,
     updater: Updater<TContext>,
-  ): TemplateResultInterface<unknown, TContext>;
+  ): TemplateDirective<unknown, TContext>;
 }
 
 export interface UpdateBlock<TContext> {
@@ -60,7 +60,7 @@ export interface UpdateBlock<TContext> {
 export type ComponentFunction<TProps, TContext> = (
   props: TProps,
   context: TContext,
-) => TemplateResultInterface<unknown, TContext>;
+) => TemplateDirective<unknown, TContext>;
 
 export interface Template<TData, TContext = unknown> {
   render(
@@ -68,6 +68,12 @@ export interface Template<TData, TContext = unknown> {
     updater: Updater<TContext>,
   ): TemplateFragment<TData, TContext>;
   isSameTemplate(other: Template<TData, TContext>): boolean;
+}
+
+export interface TemplateDirective<TData, TContext>
+  extends Directive<TContext> {
+  get template(): Template<TData, TContext>;
+  get data(): TData;
 }
 
 export interface TemplateFragment<TData, TContext = unknown> {
@@ -78,11 +84,6 @@ export interface TemplateFragment<TData, TContext = unknown> {
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
   disconnect(): void;
-}
-
-export interface TemplateResultInterface<TData, TContext> {
-  get template(): Template<TData, TContext>;
-  get data(): TData;
 }
 
 export interface Effect {

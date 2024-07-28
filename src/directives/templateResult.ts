@@ -3,14 +3,13 @@ import type { RenderContext } from '../renderHost.js';
 import {
   type Binding,
   type ChildNodePart,
-  type Directive,
   type Effect,
   type Part,
   PartType,
   type TaskPriority,
   type Template,
+  type TemplateDirective,
   type TemplateFragment,
-  type TemplateResultInterface,
   type UpdateBlock,
   type UpdateContext,
   type Updater,
@@ -26,7 +25,7 @@ const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
 
 export class TemplateResult<TData = unknown, TContext = RenderContext>
-  implements Directive<TContext>, TemplateResultInterface<TData, TContext>
+  implements TemplateDirective<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;
 

@@ -3,6 +3,7 @@ import {
   ComponentBinding,
   component as componentDirective,
 } from '../../src/directives/component.js';
+import { TemplateResult } from '../../src/directives/templateResult.js';
 import { HookType, PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -15,7 +16,7 @@ import {
 
 describe('component()', () => {
   it('should construct a new Component', () => {
-    const component = () => ({ template: new MockTemplate(), data: {} });
+    const component = () => new TemplateResult(new MockTemplate(), {});
     const props = {};
     const directive = componentDirective(component, props);
 
@@ -28,7 +29,7 @@ describe('Component', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
       const directive = componentDirective(function foo() {
-        return { template: new MockTemplate(), data: {} };
+        return new TemplateResult(new MockTemplate(), {});
       }, {});
       expect(directive[nameTag]).toBe('Component(foo)');
     });
@@ -37,7 +38,7 @@ describe('Component', () => {
   describe('[directiveTag]()', () => {
     it('should return an instance of ComponentBinding', () => {
       const directive = componentDirective(
-        () => ({ template: new MockTemplate(), data: {} }),
+        () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -62,7 +63,7 @@ describe('Component', () => {
 
     it('should throw an error if the part is not a ChildNodePart', () => {
       const directive = componentDirective(
-        () => ({ template: new MockTemplate(), data: {} }),
+        () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -82,7 +83,7 @@ describe('ComponentBinding', () => {
   describe('.shouldUpdate()', () => {
     it('should return false after initialization', () => {
       const directive = componentDirective(
-        () => ({ template: new MockTemplate(), data: {} }),
+        () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -97,7 +98,7 @@ describe('ComponentBinding', () => {
 
     it('should return true after an update is requested', () => {
       const directive = componentDirective(
-        () => ({ template: new MockTemplate(), data: {} }),
+        () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -118,7 +119,7 @@ describe('ComponentBinding', () => {
 
     it('should return false if the binding is unbound', () => {
       const directive = componentDirective(
-        () => ({ template: new MockTemplate(), data: {} }),
+        () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -140,7 +141,7 @@ describe('ComponentBinding', () => {
 
     it('should return false if there is a parent being updated', () => {
       const directive = componentDirective(
-        () => ({ template: new MockTemplate(), data: {} }),
+        () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -166,7 +167,10 @@ describe('ComponentBinding', () => {
     it('should cancel the scheduled update', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -190,7 +194,10 @@ describe('ComponentBinding', () => {
     it('should schdule the update', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -217,7 +224,10 @@ describe('ComponentBinding', () => {
     it('should reschedule the update if given higher priority', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -246,7 +256,10 @@ describe('ComponentBinding', () => {
     it('should do nothing if the binding is not connected', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -266,7 +279,10 @@ describe('ComponentBinding', () => {
     it('should do nothing if the binding is disconnected', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -290,7 +306,10 @@ describe('ComponentBinding', () => {
     it('should do nothing if the binding is unbound', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -316,7 +335,10 @@ describe('ComponentBinding', () => {
     it('should do nothing if an update is already scheduled', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -346,7 +368,10 @@ describe('ComponentBinding', () => {
     it('should hyrate the template returned form the component and mount its fragment', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -375,7 +400,10 @@ describe('ComponentBinding', () => {
     it('should enqueue the binding as a block with the parent priority', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -404,7 +432,10 @@ describe('ComponentBinding', () => {
     it('should do nothing if an update is already scheduled', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -427,7 +458,10 @@ describe('ComponentBinding', () => {
     it('should cancel the unmount in progress', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -461,7 +495,10 @@ describe('ComponentBinding', () => {
     it('should mark itself as updating', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -487,11 +524,11 @@ describe('ComponentBinding', () => {
       const data1 = {};
       const data2 = {};
       const directive1 = componentDirective(
-        () => ({ template: template1, data: data1 }),
+        () => new TemplateResult(template1, data1),
         {},
       );
       const directive2 = componentDirective(
-        () => ({ template: template2, data: data2 }),
+        () => new TemplateResult(template2, data2),
         {},
       );
       const part = {
@@ -531,11 +568,11 @@ describe('ComponentBinding', () => {
       const data1 = {};
       const data2 = {};
       const directive1 = componentDirective(
-        () => ({ template: template1, data: data1 }),
+        () => new TemplateResult(template1, data1),
         {},
       );
       const directive2 = componentDirective(
-        () => ({ template: template2, data: data2 }),
+        () => new TemplateResult(template2, data2),
         {},
       );
       const part = {
@@ -597,15 +634,15 @@ describe('ComponentBinding', () => {
       const data2 = {};
       const data3 = {};
       const directive1 = componentDirective(
-        () => ({ template: template1, data: data1 }),
+        () => new TemplateResult(template1, data1),
         {},
       );
       const directive2 = componentDirective(
-        () => ({ template: template2, data: data2 }),
+        () => new TemplateResult(template2, data2),
         {},
       );
       const directive3 = componentDirective(
-        () => ({ template: template3, data: data3 }),
+        () => new TemplateResult(template3, data3),
         {},
       );
       const part = {
@@ -680,7 +717,10 @@ describe('ComponentBinding', () => {
     it('should remount the fragment if it is unmounted', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -728,11 +768,11 @@ describe('ComponentBinding', () => {
       const data1 = {};
       const data2 = {};
       const directive1 = componentDirective(
-        () => ({ template: template1, data: data1 }),
+        () => new TemplateResult(template1, data1),
         {},
       );
       const directive2 = componentDirective(
-        () => ({ template: template2, data: data2 }),
+        () => new TemplateResult(template2, data2),
         {},
       );
       const part = {
@@ -804,7 +844,7 @@ describe('ComponentBinding', () => {
           hooks.push({
             type: HookType.Finalizer,
           });
-          return { template: new MockTemplate(), data: {} };
+          return new TemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -818,7 +858,7 @@ describe('ComponentBinding', () => {
           hooks.push({
             type: HookType.Finalizer,
           });
-          return { template: new MockTemplate(), data: {} };
+          return new TemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -840,11 +880,11 @@ describe('ComponentBinding', () => {
 
     it('should request the mutation only once', () => {
       const directive1 = componentDirective(
-        () => ({ template: new MockTemplate(1), data: {} }),
+        () => new TemplateResult(new MockTemplate(1), {}),
         {},
       );
       const directive2 = componentDirective(
-        () => ({ template: new MockTemplate(2), data: {} }),
+        () => new TemplateResult(new MockTemplate(2), {}),
         {},
       );
       const part = {
@@ -878,7 +918,10 @@ describe('ComponentBinding', () => {
     it('should unmount the memoized fragment', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -913,7 +956,10 @@ describe('ComponentBinding', () => {
     it('should cancel the update in progress', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -949,7 +995,10 @@ describe('ComponentBinding', () => {
     it('should disconnect the current fragment', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -974,7 +1023,10 @@ describe('ComponentBinding', () => {
     it('should cancel the update in progress', () => {
       const template = new MockTemplate();
       const data = {};
-      const directive = componentDirective(() => ({ template, data }), {});
+      const directive = componentDirective(
+        () => new TemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
