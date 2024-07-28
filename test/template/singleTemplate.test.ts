@@ -8,7 +8,7 @@ import {
 } from '../../src/template/singleTemplate.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('ChildNodeTemplate', () => {
   describe('.constructor()', () => {
@@ -21,7 +21,7 @@ describe('ChildNodeTemplate', () => {
 
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with a non-directive value', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = ChildNodeTemplate.instance.render('foo', updater);
 
       updater.flush();
@@ -35,11 +35,11 @@ describe('ChildNodeTemplate', () => {
     });
 
     it('should return SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
-      const directive = new MockDirective();
+      const updater = new SyncUpdater(new MockRenderHost());
+      const directive = new TextDirective();
       const fragment = ChildNodeTemplate.instance.render(directive, updater);
 
-      expect(fragment.binding).toBeInstanceOf(MockBinding);
+      expect(fragment.binding).toBeInstanceOf(TextBinding);
       expect(fragment.binding.value).toBe(directive);
       expect(fragment.binding.part).toMatchObject({
         type: PartType.ChildNode,
@@ -68,7 +68,7 @@ describe('TextTemplate', () => {
 
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = TextTemplate.instance.render('foo', updater);
 
       updater.flush();
@@ -83,11 +83,11 @@ describe('TextTemplate', () => {
     });
 
     it('should return SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
-      const directive = new MockDirective();
+      const updater = new SyncUpdater(new MockRenderHost());
+      const directive = new TextDirective();
       const fragment = TextTemplate.instance.render(directive, updater);
 
-      expect(fragment.binding).toBeInstanceOf(MockBinding);
+      expect(fragment.binding).toBeInstanceOf(TextBinding);
       expect(fragment.binding.value).toBe(directive);
       expect(fragment.binding.part).toMatchObject({
         type: PartType.Node,
@@ -128,7 +128,7 @@ describe('SingleTemplateFragment', () => {
         node: document.createTextNode(''),
       });
       const fragment = new SingleTemplateFragment(binding);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const bindSpy = vi.spyOn(binding, 'bind');
 
       fragment.bind('bar', updater);
@@ -145,7 +145,7 @@ describe('SingleTemplateFragment', () => {
         node: document.createTextNode(''),
       });
       const fragment = new SingleTemplateFragment(binding);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
       fragment.unbind(updater);

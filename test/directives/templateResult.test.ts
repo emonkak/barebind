@@ -6,10 +6,10 @@ import {
 import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
+  MockRenderHost,
   MockTemplate,
   MockTemplateFragment,
   MockUpdateBlock,
-  MockUpdateContext,
 } from '../mocks.js';
 
 describe('Fragment', () => {
@@ -38,7 +38,7 @@ describe('Fragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const parent = new MockUpdateBlock();
 
       vi.spyOn(updater, 'getCurrentBlock').mockReturnValue(parent);
@@ -60,7 +60,7 @@ describe('Fragment', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
         'TemplateResult directive must be used in a child node,',
@@ -91,7 +91,7 @@ describe('TemplateBinding', () => {
       } as const;
       const parent = new MockUpdateBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -109,7 +109,7 @@ describe('TemplateBinding', () => {
       } as const;
       const parent = new MockUpdateBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
 
@@ -130,7 +130,7 @@ describe('TemplateBinding', () => {
       } as const;
       const parent = new MockUpdateBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
 
@@ -151,7 +151,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const state = new MockUpdateContext();
+      const state = new MockRenderHost();
       const updater = new SyncUpdater(state);
 
       binding.connect(updater);
@@ -173,7 +173,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -197,7 +197,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -223,7 +223,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.requestUpdate('background', updater);
 
@@ -240,7 +240,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -261,7 +261,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -284,7 +284,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -309,7 +309,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -332,7 +332,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -361,7 +361,7 @@ describe('TemplateBinding', () => {
       } as const;
       const parent = new MockUpdateBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
@@ -386,7 +386,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
@@ -406,7 +406,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
 
       const renderSpy = vi
@@ -439,7 +439,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.bind(directive, updater);
 
@@ -460,7 +460,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive1, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -495,7 +495,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive1, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment1 = new MockTemplateFragment();
       const fragment2 = new MockTemplateFragment();
       const startNode1 = document.createComment('');
@@ -547,7 +547,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -592,7 +592,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive1, part, null);
-      const state = new MockUpdateContext();
+      const state = new MockRenderHost();
       const updater = new SyncUpdater(state);
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const enqueueMutationEffectSpy = vi.spyOn(
@@ -622,7 +622,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
@@ -656,7 +656,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
 
       const renderSpy = vi
@@ -691,7 +691,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
 
       const renderSpy = vi
@@ -715,7 +715,7 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive, part, null);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new MockTemplateFragment();
 
       const renderSpy = vi

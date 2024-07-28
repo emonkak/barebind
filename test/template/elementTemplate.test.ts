@@ -7,12 +7,12 @@ import {
 } from '../../src/template/elementTemplate.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('ElementTemplate', () => {
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
@@ -45,9 +45,9 @@ describe('ElementTemplate', () => {
     });
 
     it('should return SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
-      const elementDirective = new MockDirective();
-      const childNodeDirective = new MockDirective();
+      const updater = new SyncUpdater(new MockRenderHost());
+      const elementDirective = new TextDirective();
+      const childNodeDirective = new TextDirective();
       const fragment = new ElementTemplate('div').render(
         {
           elementValue: elementDirective,
@@ -56,14 +56,14 @@ describe('ElementTemplate', () => {
         updater,
       );
 
-      expect(fragment.elementBinding).toBeInstanceOf(MockBinding);
+      expect(fragment.elementBinding).toBeInstanceOf(TextBinding);
       expect(fragment.elementBinding.value).toBe(elementDirective);
       expect(fragment.elementBinding.part).toMatchObject({
         type: PartType.Element,
         node: expect.any(Element),
       });
       expect(fragment.elementBinding.part.node.nodeName).toBe('DIV');
-      expect(fragment.childNodeBinding).toBeInstanceOf(MockBinding);
+      expect(fragment.childNodeBinding).toBeInstanceOf(TextBinding);
       expect(fragment.childNodeBinding.value).toBe(childNodeDirective);
       expect(fragment.childNodeBinding.part).toMatchObject({
         type: PartType.ChildNode,
@@ -104,7 +104,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const elementBindingBindSpy = vi.spyOn(elementBinding, 'bind');
       const childNodeBindingBindSpy = vi.spyOn(childNodeBinding, 'bind');
 
@@ -140,7 +140,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const elementBindingUnbindSpy = vi.spyOn(elementBinding, 'unbind');
       const childNodeBindingUnbindSpy = vi.spyOn(childNodeBinding, 'unbind');
 
@@ -173,7 +173,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       elementBinding.connect(updater);
       childNodeBinding.connect(updater);
@@ -212,7 +212,7 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       elementBinding.connect(updater);
       childNodeBinding.connect(updater);

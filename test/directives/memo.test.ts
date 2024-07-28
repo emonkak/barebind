@@ -4,11 +4,11 @@ import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
 import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('memo()', () => {
   it('should construct a new Memo', () => {
-    const factory = () => new MockDirective();
+    const factory = () => new TextDirective();
     const dependencies = ['foo'];
     const directive = memo(factory, dependencies);
 
@@ -32,7 +32,7 @@ describe('Memo', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -50,13 +50,13 @@ describe('Memo', () => {
     });
 
     it('should return an instance of MemoBinding from the directive', () => {
-      const factory = vi.fn(() => new MockDirective());
+      const factory = vi.fn(() => new TextDirective());
       const directive = memo(factory, ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -65,7 +65,7 @@ describe('Memo', () => {
       expect(factory).toHaveBeenCalledOnce();
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
-      expect(binding.binding).toBeInstanceOf(MockBinding);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(getPartSpy).toHaveBeenCalledOnce();
@@ -78,12 +78,12 @@ describe('Memo', () => {
 describe('MemoBinding', () => {
   describe('.connect()', () => {
     it('should delegate to the inner binding', () => {
-      const directive = memo(() => new MockDirective(), ['foo']);
+      const directive = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new MemoBinding(directive, part, updater);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -96,13 +96,13 @@ describe('MemoBinding', () => {
 
   describe('.bind()', () => {
     it('should delete to the inner binding if dependencies are changed', () => {
-      const directive1 = memo(() => new MockDirective(), ['foo']);
-      const directive2 = memo(() => new MockDirective(), ['bar']);
+      const directive1 = memo(() => new TextDirective(), ['foo']);
+      const directive2 = memo(() => new TextDirective(), ['bar']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new MemoBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -117,13 +117,13 @@ describe('MemoBinding', () => {
     });
 
     it('should skip an update if dependencies are not changed', () => {
-      const directive1 = memo(() => new MockDirective(), ['foo']);
+      const directive1 = memo(() => new TextDirective(), ['foo']);
       const directive2 = memo(directive1.factory, directive1.dependencies);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new MemoBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -138,12 +138,12 @@ describe('MemoBinding', () => {
     });
 
     it('should throw an error if the new value is not Memo directive', () => {
-      const directive = memo(() => new MockDirective(), ['foo']);
+      const directive = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new MemoBinding(directive, part, updater);
 
       expect(() => {
@@ -156,12 +156,12 @@ describe('MemoBinding', () => {
 
   describe('.unbind()', () => {
     it('should delegate to the inner binding', () => {
-      const directive = memo(() => new MockDirective(), ['foo']);
+      const directive = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new MemoBinding(directive, part, updater);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -175,12 +175,12 @@ describe('MemoBinding', () => {
 
   describe('.disconnect()', () => {
     it('should delegate to the inner binding', () => {
-      const directive = memo(() => new MockDirective(), ['foo']);
+      const directive = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new MemoBinding(directive, part, updater);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

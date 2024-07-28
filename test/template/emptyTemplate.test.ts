@@ -6,7 +6,7 @@ import {
 } from '../../src/template/emptyTemplate.js';
 import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateContext } from '../mocks.js';
+import { MockRenderHost } from '../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('.constructor()', () => {
@@ -19,7 +19,7 @@ describe('EmptyTemplate', () => {
 
   describe('.render()', () => {
     it('should return EmptyTemplateFragment', () => {
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = EmptyTemplate.instance.render(null, updater);
 
       updater.flush();
@@ -42,7 +42,7 @@ describe('EmptyTemplateFragment', () => {
   describe('.bind()', () => {
     it('should do nothing', () => {
       const fragment = new EmptyTemplateFragment();
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       fragment.bind(null, updater);
 
@@ -54,7 +54,7 @@ describe('EmptyTemplateFragment', () => {
   describe('.unbind()', () => {
     it('should do nothing', () => {
       const fragment = new EmptyTemplateFragment();
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       fragment.unbind(updater);
 

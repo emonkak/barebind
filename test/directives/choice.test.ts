@@ -4,12 +4,12 @@ import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
 import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('choice()', () => {
   it('should construct a new Choice', () => {
     const key = 'foo';
-    const factory = () => new MockDirective();
+    const factory = () => new TextDirective();
     const directive = choice(key, factory);
 
     expect(directive.key).toBe(key);
@@ -33,7 +33,7 @@ describe('Choice', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -53,8 +53,8 @@ describe('Choice', () => {
     });
 
     it('should return an instance of Choice from a directive', () => {
-      const fooDirective = new MockDirective();
-      const barDirective = new MockDirective();
+      const fooDirective = new TextDirective();
+      const barDirective = new TextDirective();
       const factory = vi.fn((key: 'foo' | 'bar') => {
         switch (key) {
           case 'foo':
@@ -68,7 +68,7 @@ describe('Choice', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -78,7 +78,7 @@ describe('Choice', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.binding).toBeInstanceOf(MockBinding);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.binding.value).toBe(fooDirective);
       expect(factory).toHaveBeenCalledOnce();
       expect(factory).toHaveBeenCalledWith('foo');
@@ -92,12 +92,12 @@ describe('Choice', () => {
 describe('ChoiceBinding', () => {
   describe('.connect()', () => {
     it('should delegate to the current binding', () => {
-      const directive = choice('foo', () => new MockDirective());
+      const directive = choice('foo', () => new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive, part, updater);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -111,8 +111,8 @@ describe('ChoiceBinding', () => {
 
   describe('.bind()', () => {
     it('should bind the new value to the current binding if the key is the same', () => {
-      const fooDirective = new MockDirective();
-      const barDirective = new MockDirective();
+      const fooDirective = new TextDirective();
+      const barDirective = new TextDirective();
       const fooDirectiveSpy = vi.spyOn(fooDirective, directiveTag);
       const barDirectiveSpy = vi.spyOn(barDirective, directiveTag);
       const factory = vi.fn((key: 'foo' | 'bar') => {
@@ -123,7 +123,7 @@ describe('ChoiceBinding', () => {
             return barDirective;
         }
       });
-      const directive = new Choice<'foo' | 'bar', MockDirective>(
+      const directive = new Choice<'foo' | 'bar', TextDirective>(
         'foo',
         factory,
       );
@@ -131,7 +131,7 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive, part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -152,8 +152,8 @@ describe('ChoiceBinding', () => {
     });
 
     it('should connect a new binding and unbind the old binidng if the key changes', () => {
-      const fooDirective = new MockDirective();
-      const barDirective = new MockDirective();
+      const fooDirective = new TextDirective();
+      const barDirective = new TextDirective();
       const fooDirectiveSpy = vi.spyOn(fooDirective, directiveTag);
       const barDirectiveSpy = vi.spyOn(barDirective, directiveTag);
       const factory = vi.fn((key: 'foo' | 'bar') => {
@@ -164,11 +164,11 @@ describe('ChoiceBinding', () => {
             return barDirective;
         }
       });
-      const directive1 = new Choice<'foo' | 'bar', MockDirective>(
+      const directive1 = new Choice<'foo' | 'bar', TextDirective>(
         'foo',
         factory,
       );
-      const directive2 = new Choice<'foo' | 'bar', MockDirective>(
+      const directive2 = new Choice<'foo' | 'bar', TextDirective>(
         'bar',
         factory,
       );
@@ -176,7 +176,7 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -199,8 +199,8 @@ describe('ChoiceBinding', () => {
     });
 
     it('should memoize the old binding if the key changes', () => {
-      const fooDirective = new MockDirective();
-      const barDirective = new MockDirective();
+      const fooDirective = new TextDirective();
+      const barDirective = new TextDirective();
       const fooDirectiveSpy = vi.spyOn(fooDirective, directiveTag);
       const barDirectiveSpy = vi.spyOn(barDirective, directiveTag);
       const factory = vi.fn((key: 'foo' | 'bar') => {
@@ -211,11 +211,11 @@ describe('ChoiceBinding', () => {
             return barDirective;
         }
       });
-      const directive1 = new Choice<'foo' | 'bar', MockDirective>(
+      const directive1 = new Choice<'foo' | 'bar', TextDirective>(
         'foo',
         factory,
       );
-      const directive2 = new Choice<'foo' | 'bar', MockDirective>(
+      const directive2 = new Choice<'foo' | 'bar', TextDirective>(
         'bar',
         factory,
       );
@@ -223,7 +223,7 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive1, part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -250,12 +250,12 @@ describe('ChoiceBinding', () => {
     });
 
     it('should throw an error if the new value is not Choice directive', () => {
-      const directive = choice('foo', () => new MockDirective());
+      const directive = choice('foo', () => new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive, part, updater);
 
       expect(() => {
@@ -268,12 +268,12 @@ describe('ChoiceBinding', () => {
 
   describe('.unbind()', () => {
     it('should delegate to the current binding', () => {
-      const directive = choice('foo', () => new MockDirective());
+      const directive = choice('foo', () => new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive, part, updater);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -286,12 +286,12 @@ describe('ChoiceBinding', () => {
 
   describe('.disconnect()', () => {
     it('should delegate to the current binding', () => {
-      const directive = choice('foo', () => new MockDirective());
+      const directive = choice('foo', () => new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new ChoiceBinding(directive, part, updater);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

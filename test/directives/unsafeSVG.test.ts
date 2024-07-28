@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateContext } from '../mocks.js';
+import { MockRenderHost } from '../mocks.js';
 
 import { UnsafeSVGBinding, unsafeSVG } from '../../src/directives/unsafeSVG.js';
 
@@ -23,7 +23,7 @@ describe('UnsafeSVG', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
 
       expect(binding.value).toBe(directive);
@@ -38,7 +38,7 @@ describe('UnsafeSVG', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
         'UnsafeSVG directive must be used in a child node,',
@@ -59,7 +59,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -88,7 +88,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -115,7 +115,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -133,7 +133,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -161,7 +161,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -192,7 +192,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -211,7 +211,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => binding.bind(null as any, updater)).toThrow(
         'A value must be a instance of UnsafeSVG directive, but got "null".',
@@ -230,7 +230,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       container.appendChild(part.node);
       binding.connect(updater);
@@ -251,7 +251,7 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeSVGBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();

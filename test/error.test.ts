@@ -7,7 +7,7 @@ import {
   reportPart,
 } from '../src/error.js';
 import { PartType } from '../src/types.js';
-import { MockDirective } from './mocks.js';
+import { TextDirective } from './mocks.js';
 
 describe('ensureDirective', () => {
   it('should throw an error if the value is not instance of the expected class', () => {
@@ -15,8 +15,8 @@ describe('ensureDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
-    expect(() => ensureDirective(MockDirective, null, part)).toThrow(
-      'A value must be a instance of MockDirective directive, but got "null".',
+    expect(() => ensureDirective(TextDirective, null, part)).toThrow(
+      'A value must be a instance of TextDirective directive, but got "null".',
     );
   });
 
@@ -25,7 +25,7 @@ describe('ensureDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
-    ensureDirective(MockDirective, new MockDirective(), part);
+    ensureDirective(TextDirective, new TextDirective(), part);
   });
 });
 
@@ -35,8 +35,8 @@ describe('ensureNonDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
-    expect(() => ensureNonDirective(new MockDirective(), part)).toThrow(
-      'A value must not be a directive, but got "MockDirective".',
+    expect(() => ensureNonDirective(new TextDirective(), part)).toThrow(
+      'A value must not be a directive, but got "TextDirective".',
     );
   });
 

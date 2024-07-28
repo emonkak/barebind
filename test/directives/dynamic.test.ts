@@ -4,7 +4,7 @@ import { NodeBinding } from '../../src/binding.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
 import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('dynamic()', () => {
   it('should construct a new Dynamic', () => {
@@ -18,8 +18,8 @@ describe('Dynamic', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
       expect(dynamic('foo')[nameTag]).toBe('Dynamic(foo)');
-      expect(dynamic(new MockDirective())[nameTag]).toBe(
-        'Dynamic(MockDirective)',
+      expect(dynamic(new TextDirective())[nameTag]).toBe(
+        'Dynamic(TextDirective)',
       );
     });
   });
@@ -31,7 +31,7 @@ describe('Dynamic', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -48,12 +48,12 @@ describe('Dynamic', () => {
     });
 
     it('should return an instance of DynamicBinding from the directive', () => {
-      const directive = dynamic(new MockDirective());
+      const directive = dynamic(new TextDirective());
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -63,7 +63,7 @@ describe('Dynamic', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.binding).toBeInstanceOf(MockBinding);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(getPartSpy).toHaveBeenCalledOnce();
       expect(getStartNodeSpy).toHaveBeenCalledOnce();
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
@@ -79,7 +79,7 @@ describe('DynamicBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(directive, part, updater);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -96,7 +96,7 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(dynamic('foo'), part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -114,14 +114,14 @@ describe('DynamicBinding', () => {
     });
 
     it('should bind a new value to the current binding if old and new values are the same directive', () => {
-      const directive = new MockDirective();
+      const directive = new TextDirective();
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(
-        dynamic(new MockDirective()),
+        dynamic(new TextDirective()),
         part,
         updater,
       );
@@ -131,10 +131,10 @@ describe('DynamicBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      binding.bind(dynamic(new MockDirective()), updater);
+      binding.bind(dynamic(new TextDirective()), updater);
       updater.flush();
 
-      expect(binding.binding).toBeInstanceOf(MockBinding);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledWith(directive, updater);
       expect(unbindSpy).not.toHaveBeenCalled();
@@ -145,9 +145,9 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(
-        dynamic(new MockDirective()),
+        dynamic(new TextDirective()),
         part,
         updater,
       );
@@ -171,7 +171,7 @@ describe('DynamicBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(dynamic('foo'), part, updater);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -180,10 +180,10 @@ describe('DynamicBinding', () => {
       updater.flush();
 
       let isConnected = false;
-      const directive = new MockDirective();
+      const directive = new TextDirective();
 
       vi.spyOn(directive, directiveTag).mockImplementation((part) => {
-        const binding = new MockBinding(directive, part);
+        const binding = new TextBinding(directive, part);
         vi.spyOn(binding, 'connect').mockImplementation(() => {
           isConnected = true;
         });
@@ -194,7 +194,7 @@ describe('DynamicBinding', () => {
       updater.flush();
 
       expect(isConnected).toBe(true);
-      expect(binding.binding).toBeInstanceOf(MockBinding);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalled();
     });
@@ -207,7 +207,7 @@ describe('DynamicBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(directive, part, updater);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -225,7 +225,7 @@ describe('DynamicBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new DynamicBinding(directive, part, updater);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

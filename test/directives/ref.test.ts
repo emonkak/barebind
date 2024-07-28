@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { RefBinding, ref } from '../../src/directives/ref.js';
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateContext } from '../mocks.js';
+import { MockRenderHost } from '../mocks.js';
 
 describe('ref()', () => {
   it('should construct a new Ref', () => {
@@ -23,7 +23,7 @@ describe('Ref', () => {
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const binding = directive[directiveTag](part, updater);
 
       expect(binding.value).toBe(directive);
@@ -39,7 +39,7 @@ describe('Ref', () => {
         name: 'data-ref',
         node: document.createElement('div'),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => directive[directiveTag](part, updater)).toThrow(
         'Ref directive must be used in a "ref" attribute,',
@@ -59,7 +59,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -77,7 +77,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -94,7 +94,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const enqueueLayoutEffectSpy = vi.spyOn(updater, 'enqueueLayoutEffect');
 
       binding.connect(updater);
@@ -117,7 +117,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -143,7 +143,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -166,7 +166,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -188,7 +188,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -211,7 +211,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -231,7 +231,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => {
         binding.bind(null as any, updater);
@@ -251,7 +251,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -272,7 +272,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -291,7 +291,7 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.unbind(updater);
 

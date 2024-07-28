@@ -20,7 +20,7 @@ import {
   directiveTag,
 } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
 
 const MARKER = getMarker();
 
@@ -307,10 +307,10 @@ describe('TaggedTemplate', () => {
       const [template, values] = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
-          <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new MockDirective()}</span>
+          <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
         </div>
       `;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
@@ -339,7 +339,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.bindings[4]?.part).toMatchObject({
         type: PartType.Element,
       });
-      expect(fragment.bindings[5]).toBeInstanceOf(MockBinding);
+      expect(fragment.bindings[5]).toBeInstanceOf(TextBinding);
       expect(fragment.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
@@ -366,7 +366,7 @@ describe('TaggedTemplate', () => {
 
     it('should return a TaggedTemplateFragment without bindings', () => {
       const [template] = html`<div></div>`;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render([], updater);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
@@ -378,7 +378,7 @@ describe('TaggedTemplate', () => {
 
     it('should return a TaggedTemplateFragment with empty template', () => {
       const [template] = html``;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render([], updater);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
@@ -392,7 +392,7 @@ describe('TaggedTemplate', () => {
       const [template, values] = html`
         <div class=${'foo'} class=${'bar'}></div>
       `;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => {
         template.render(values, updater);
@@ -424,7 +424,7 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       updater.flush();
@@ -454,7 +454,7 @@ describe('TaggedTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       container.appendChild(part.node);
@@ -500,7 +500,7 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <p>Count: ${0}</p>
       `;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       expect(() => {
@@ -511,22 +511,22 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect bindings in the fragment', () => {
-      const directive = new MockDirective();
+      const directive = new TextDirective();
       const [template, values] = html`
         <div>${directive}</div>
       `;
       let disconnects = 0;
       vi.spyOn(directive, directiveTag).mockImplementation(function (
-        this: MockDirective,
+        this: TextDirective,
         part: Part,
       ) {
-        const binding = new MockBinding(directive, part);
+        const binding = new TextBinding(directive, part);
         vi.spyOn(binding, 'disconnect').mockImplementation(() => {
           disconnects++;
         });
         return binding;
       });
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       expect(disconnects).toBe(0);
@@ -542,7 +542,7 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       updater.flush();
@@ -567,7 +567,7 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const fragment = template.render(values, updater);
 
       updater.flush();

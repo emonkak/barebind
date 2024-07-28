@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
 import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateContext } from '../mocks.js';
+import { MockRenderHost } from '../mocks.js';
 
 describe('styleMap()', () => {
   it('should construct a new StyleMap', () => {
@@ -19,7 +19,7 @@ describe('StyleMap', () => {
     it('should return a new instance of StyleMapBinding', () => {
       const styleDeclaration = { display: 'none' };
       const directive = styleMap(styleDeclaration);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -36,7 +36,7 @@ describe('StyleMap', () => {
     it('should throw an error if the part does not indicate "style" attribute', () => {
       const styleDeclaration = { display: 'none' };
       const directive = styleMap(styleDeclaration);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const part = {
         type: PartType.Attribute,
         name: 'data-style',
@@ -66,7 +66,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -91,7 +91,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -120,7 +120,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -144,7 +144,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -166,7 +166,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => {
         binding.bind(null as any, updater);
@@ -191,7 +191,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.connect(updater);
       updater.flush();
@@ -210,7 +210,7 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockUpdateContext());
+      const updater = new SyncUpdater(new MockRenderHost());
 
       binding.unbind(updater);
 

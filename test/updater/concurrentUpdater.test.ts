@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
-import { MockScheduler, MockUpdateBlock, MockUpdateContext } from '../mocks.js';
+import { MockRenderHost, MockScheduler, MockUpdateBlock } from '../mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -32,7 +32,7 @@ const TASK_PRIORITIES: TaskPriority[] = [
 describe('ConcurrentUpdater', () => {
   describe('.getCurrentPriority()', () => {
     it('should return "user-visible" if there is no current event', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
 
@@ -40,7 +40,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return "user-blocking" if the current event is not continuous', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       const eventMock = vi
         .spyOn(globalThis, 'event', 'get')
@@ -53,7 +53,7 @@ describe('ConcurrentUpdater', () => {
     it.each(CONTINUOUS_EVENT_TYPES)(
       'should return "user-visible" if the current event is continuous',
       (eventType) => {
-        const updater = new ConcurrentUpdater(new MockUpdateContext());
+        const updater = new ConcurrentUpdater(new MockRenderHost());
 
         const eventMock = vi
           .spyOn(globalThis, 'event', 'get')
@@ -67,7 +67,7 @@ describe('ConcurrentUpdater', () => {
 
   describe('.isPending()', () => {
     it('should return true if there is a pending block', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       updater.enqueueBlock(new MockUpdateBlock());
 
@@ -75,7 +75,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a block scheduled in rendering pipelines', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       updater.enqueueBlock(new MockUpdateBlock());
       updater.scheduleUpdate();
@@ -84,7 +84,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a pending mutation effect', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       updater.enqueueMutationEffect({ commit() {} });
 
@@ -92,7 +92,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a pending layout effect', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       updater.enqueueLayoutEffect({ commit() {} });
 
@@ -100,7 +100,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a pending passive effect', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       updater.enqueuePassiveEffect({ commit() {} });
 
@@ -108,7 +108,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return false if there are no pending tasks', () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       expect(updater.isPending()).toBe(false);
     });
@@ -116,7 +116,7 @@ describe('ConcurrentUpdater', () => {
 
   describe('.isScheduled()', () => {
     it('should return whether an update is scheduled', async () => {
-      const updater = new ConcurrentUpdater(new MockUpdateContext());
+      const updater = new ConcurrentUpdater(new MockRenderHost());
 
       updater.enqueueBlock(new MockUpdateBlock());
       expect(updater.isScheduled()).toBe(false);
@@ -134,7 +134,7 @@ describe('ConcurrentUpdater', () => {
       'should update the block according to its priority',
       async (priority) => {
         const scheduler = new MockScheduler();
-        const updater = new ConcurrentUpdater(new MockUpdateContext(), {
+        const updater = new ConcurrentUpdater(new MockRenderHost(), {
           scheduler,
         });
 
@@ -165,7 +165,7 @@ describe('ConcurrentUpdater', () => {
 
     it('should commit effects enqueued during an update', async () => {
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockUpdateContext(), {
+      const updater = new ConcurrentUpdater(new MockRenderHost(), {
         scheduler,
       });
 
@@ -199,7 +199,7 @@ describe('ConcurrentUpdater', () => {
 
     it('should commit mutation and layout effects with "user-blocking" priority', async () => {
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockUpdateContext(), {
+      const updater = new ConcurrentUpdater(new MockRenderHost(), {
         scheduler,
       });
 
@@ -223,7 +223,7 @@ describe('ConcurrentUpdater', () => {
 
     it('should commit passive effects with "background" priority', async () => {
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockUpdateContext(), {
+      const updater = new ConcurrentUpdater(new MockRenderHost(), {
         scheduler,
       });
 
@@ -244,7 +244,7 @@ describe('ConcurrentUpdater', () => {
 
     it('should cancel the update of the block if shouldUpdate() returns false', async () => {
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockUpdateContext(), {
+      const updater = new ConcurrentUpdater(new MockRenderHost(), {
         scheduler,
       });
 
@@ -267,7 +267,7 @@ describe('ConcurrentUpdater', () => {
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockUpdateContext(), {
+      const updater = new ConcurrentUpdater(new MockRenderHost(), {
         scheduler,
       });
 
