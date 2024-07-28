@@ -111,7 +111,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  private _beginRenderPipeline(): ConcurrentUpdater<TContext> {
+  private _createRenderPipeline(): ConcurrentUpdater<TContext> {
     return new ConcurrentUpdater(this._context, {
       scheduler: this._scheduler,
       taskCount: this._taskCount,
@@ -163,12 +163,13 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
     for (let i = 0, l = pendingBlocks.length; i < l; i++) {
       const block = pendingBlocks[i]!;
+      const pipeline = this._createRenderPipeline();
       this._scheduler.requestCallback(
         async () => {
           try {
-            await this._beginRenderPipeline()._beginWork(block);
+            await pipeline._beginWork(block);
           } finally {
-            this._taskCount.value--;
+            pipeline._taskCount.value--;
           }
         },
         {
