@@ -317,15 +317,6 @@ export class ComponentBinding<TProps, TContext>
   }
 }
 
-function cleanHooks(hooks: Hook[]): void {
-  for (let i = 0, l = hooks.length; i < l; i++) {
-    const hook = hooks[i]!;
-    if (hook.type === HookType.Effect) {
-      hook.cleanup?.();
-    }
-  }
-}
-
 class CleanHooks implements Effect {
   private _hooks: Hook[];
 
@@ -335,5 +326,14 @@ class CleanHooks implements Effect {
 
   commit() {
     cleanHooks(this._hooks);
+  }
+}
+
+function cleanHooks(hooks: Hook[]): void {
+  for (let i = 0, l = hooks.length; i < l; i++) {
+    const hook = hooks[i]!;
+    if (hook.type === HookType.Effect) {
+      hook.cleanup?.();
+    }
   }
 }
