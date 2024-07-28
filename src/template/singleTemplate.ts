@@ -21,7 +21,7 @@ export class ChildNodeTemplate<T> implements Template<T> {
     }
   }
 
-  hydrate(data: T, updater: Updater): SingleTemplateFragment<T> {
+  render(data: T, updater: Updater): SingleTemplateFragment<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -48,7 +48,7 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  hydrate(data: T, updater: Updater): SingleTemplateFragment<T> {
+  render(data: T, updater: Updater): SingleTemplateFragment<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
@@ -82,11 +82,11 @@ export class SingleTemplateFragment<T> implements TemplateFragment<T> {
     return this._binding.endNode;
   }
 
-  attach(data: T, updater: Updater<unknown>): void {
+  bind(data: T, updater: Updater<unknown>): void {
     this._binding.bind(data, updater);
   }
 
-  detach(updater: Updater): void {
+  unbind(updater: Updater): void {
     this._binding.unbind(updater);
   }
 

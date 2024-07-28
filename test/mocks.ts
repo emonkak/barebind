@@ -180,7 +180,7 @@ export class MockTemplate<TContext> implements Template<{}, TContext> {
     this._id = id;
   }
 
-  hydrate(
+  render(
     _data: {},
     _updater: Updater<TContext>,
   ): MockTemplateFragment<TContext> {
@@ -203,9 +203,9 @@ export class MockTemplateFragment<TContext>
     return null;
   }
 
-  attach(_data: {}, _updater: Updater<TContext>): void {}
+  bind(_data: {}, _updater: Updater<TContext>): void {}
 
-  detach(_updater: Updater): void {}
+  unbind(_updater: Updater): void {}
 
   mount(_part: ChildNodePart): void {}
 

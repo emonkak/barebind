@@ -23,7 +23,7 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
     this._type = type;
   }
 
-  hydrate(
+  render(
     data: ElementData<TElementValue, TChildNodeValue>,
     updater: Updater<unknown>,
   ): ElementTemplateFragment<TElementValue, TChildNodeValue> {
@@ -91,7 +91,7 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
     return this._elementBinding.endNode;
   }
 
-  attach(
+  bind(
     data: ElementData<TElementValue, TChildNodeValue>,
     updater: Updater<unknown>,
   ): void {
@@ -99,7 +99,7 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
     this._childNodeBinding.bind(data.childNodeValue, updater);
   }
 
-  detach(updater: Updater): void {
+  unbind(updater: Updater): void {
     this._elementBinding.unbind(updater);
     this._childNodeBinding.unbind(updater);
   }

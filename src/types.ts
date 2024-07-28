@@ -63,7 +63,7 @@ export type ComponentFunction<TProps, TContext> = (
 ) => TemplateResultInterface<unknown, TContext>;
 
 export interface Template<TData, TContext = unknown> {
-  hydrate(
+  render(
     data: TData,
     updater: Updater<TContext>,
   ): TemplateFragment<TData, TContext>;
@@ -73,8 +73,8 @@ export interface Template<TData, TContext = unknown> {
 export interface TemplateFragment<TData, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
-  attach(data: TData, updater: Updater<TContext>): void;
-  detach(updater: Updater): void;
+  bind(data: TData, updater: Updater<TContext>): void;
+  unbind(updater: Updater): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
   disconnect(): void;

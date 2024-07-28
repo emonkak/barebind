@@ -205,31 +205,31 @@ export class ComponentBinding<TProps, TContext>
           this._requestMutation(updater);
         }
 
-        this._pendingFragment.attach(data, updater);
+        this._pendingFragment.bind(data, updater);
       } else {
-        // The template has been changed, so first, we detach data from the current
+        // The template has been changed, so first, we unbind data from the current
         // fragment.
-        this._pendingFragment.detach(updater);
+        this._pendingFragment.unbind(updater);
 
         // Next, unmount the old fragment and mount the new fragment.
         this._requestMutation(updater);
 
         let newFragment: TemplateFragment<unknown, TContext>;
 
-        // Finally, rehydrate the template.
+        // Finally, render the new template.
         if (this._cachedFragments !== null) {
           const cachedFragment = this._cachedFragments.get(template);
           if (cachedFragment !== undefined) {
-            cachedFragment.attach(data, updater);
+            cachedFragment.bind(data, updater);
             newFragment = cachedFragment;
           } else {
-            newFragment = template.hydrate(data, updater);
+            newFragment = template.render(data, updater);
           }
         } else {
           // It is rare that different templates are returned, so we defer
           // creating fragment caches.
           this._cachedFragments = new WeakMap();
-          newFragment = template.hydrate(data, updater);
+          newFragment = template.render(data, updater);
         }
 
         // Remember the previous fragment for future renderings.
@@ -243,7 +243,7 @@ export class ComponentBinding<TProps, TContext>
     } else {
       // Mount the new fragment before the template hydration.
       this._requestMutation(updater);
-      this._pendingFragment = template.hydrate(data, updater);
+      this._pendingFragment = template.render(data, updater);
     }
 
     this._memoizedComponent = component;
@@ -264,7 +264,7 @@ export class ComponentBinding<TProps, TContext>
   }
 
   unbind(updater: Updater): void {
-    this._pendingFragment?.detach(updater);
+    this._pendingFragment?.unbind(updater);
 
     cleanHooks(this._hooks);
     this._hooks = [];

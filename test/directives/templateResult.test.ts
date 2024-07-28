@@ -325,7 +325,7 @@ describe('TemplateBinding', () => {
   });
 
   describe('.connect()', () => {
-    it('should hydrate the template and mount its fragment', () => {
+    it('should render the template and mount its fragment', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
@@ -336,8 +336,8 @@ describe('TemplateBinding', () => {
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
       const mountSpy = vi.spyOn(fragment, 'mount');
       vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
@@ -345,8 +345,8 @@ describe('TemplateBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(startNode);
@@ -409,12 +409,12 @@ describe('TemplateBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
       const mountSpy = vi.spyOn(fragment, 'mount');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
-      const attachSpy = vi.spyOn(fragment, 'attach');
+      const bindSpy = vi.spyOn(fragment, 'bind');
 
       binding.connect(updater);
       updater.flush();
@@ -423,10 +423,10 @@ describe('TemplateBinding', () => {
       binding.connect(updater);
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(attachSpy).toHaveBeenCalledOnce();
-      expect(attachSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(directive.data, updater);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(unmountSpy).not.toHaveBeenCalled();
@@ -452,7 +452,7 @@ describe('TemplateBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should attach data to the current fragment if that is a hydrated from the same template', () => {
+    it('should bind data to the current fragment if that is a renderd from the same template', () => {
       const directive1 = new TemplateResult(new MockTemplate(), {});
       const directive2 = new TemplateResult(new MockTemplate(), {});
       const part = {
@@ -464,10 +464,10 @@ describe('TemplateBinding', () => {
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
-      const hydrateSpy = vi
-        .spyOn(directive1.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive1.template, 'render')
         .mockReturnValue(fragment);
-      const attachSpy = vi.spyOn(fragment, 'attach');
+      const bindSpy = vi.spyOn(fragment, 'bind');
       const mountSpy = vi.spyOn(fragment, 'mount');
       vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
 
@@ -477,17 +477,17 @@ describe('TemplateBinding', () => {
       binding.bind(directive2, updater);
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive1.data, updater);
-      expect(attachSpy).toHaveBeenCalledOnce();
-      expect(attachSpy).toHaveBeenCalledWith(directive2.data, updater);
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive1.data, updater);
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(directive2.data, updater);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should detach data from the current fragment if that is a hydrated from a different template', () => {
+    it('should unbind data from the current fragment if that is a renderd from a different template', () => {
       const directive1 = new TemplateResult(new MockTemplate(1), {});
       const directive2 = new TemplateResult(new MockTemplate(2), {});
       const part = {
@@ -501,14 +501,14 @@ describe('TemplateBinding', () => {
       const startNode1 = document.createComment('');
       const startNode2 = document.createComment('');
 
-      const hydrate1Spy = vi
-        .spyOn(directive1.template, 'hydrate')
+      const render1Spy = vi
+        .spyOn(directive1.template, 'render')
         .mockReturnValue(fragment1);
-      const hydrate2Spy = vi
-        .spyOn(directive2.template, 'hydrate')
+      const render2Spy = vi
+        .spyOn(directive2.template, 'render')
         .mockReturnValue(fragment2);
-      const detach1Spy = vi.spyOn(fragment1, 'detach');
-      const detach2Spy = vi.spyOn(fragment2, 'detach');
+      const unbind1Spy = vi.spyOn(fragment1, 'unbind');
+      const unbind2Spy = vi.spyOn(fragment2, 'unbind');
       const mount1Spy = vi.spyOn(fragment1, 'mount');
       const mount2Spy = vi.spyOn(fragment2, 'mount');
       const unmount1Spy = vi.spyOn(fragment1, 'unmount');
@@ -522,13 +522,13 @@ describe('TemplateBinding', () => {
       binding.bind(directive2, updater);
       updater.flush();
 
-      expect(hydrate1Spy).toHaveBeenCalledOnce();
-      expect(hydrate1Spy).toHaveBeenCalledWith(directive1.data, updater);
-      expect(hydrate2Spy).toHaveBeenCalledOnce();
-      expect(hydrate2Spy).toHaveBeenCalledWith(directive2.data, updater);
-      expect(detach1Spy).toHaveBeenCalledOnce();
-      expect(detach1Spy).toHaveBeenCalledWith(updater);
-      expect(detach2Spy).not.toHaveBeenCalled();
+      expect(render1Spy).toHaveBeenCalledOnce();
+      expect(render1Spy).toHaveBeenCalledWith(directive1.data, updater);
+      expect(render2Spy).toHaveBeenCalledOnce();
+      expect(render2Spy).toHaveBeenCalledWith(directive2.data, updater);
+      expect(unbind1Spy).toHaveBeenCalledOnce();
+      expect(unbind1Spy).toHaveBeenCalledWith(updater);
+      expect(unbind2Spy).not.toHaveBeenCalled();
       expect(mount1Spy).toHaveBeenCalledOnce();
       expect(mount1Spy).toHaveBeenCalledWith(part);
       expect(mount2Spy).toHaveBeenCalledOnce();
@@ -551,11 +551,11 @@ describe('TemplateBinding', () => {
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
-      const attachSpy = vi.spyOn(fragment, 'attach');
-      const detachSpy = vi.spyOn(fragment, 'detach');
+      const bindSpy = vi.spyOn(fragment, 'bind');
+      const unbindSpy = vi.spyOn(fragment, 'unbind');
       const mountSpy = vi.spyOn(fragment, 'mount');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
       vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
@@ -569,12 +569,12 @@ describe('TemplateBinding', () => {
       binding.bind(directive, updater);
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(attachSpy).toHaveBeenCalledOnce();
-      expect(attachSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(detachSpy).toHaveBeenCalledOnce();
-      expect(detachSpy).toHaveBeenCalledWith(updater);
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(unbindSpy).toHaveBeenCalledOnce();
+      expect(unbindSpy).toHaveBeenCalledWith(updater);
       expect(mountSpy).toHaveBeenCalledTimes(2);
       expect(mountSpy).toHaveBeenNthCalledWith(1, part);
       expect(mountSpy).toHaveBeenNthCalledWith(2, part);
@@ -615,7 +615,7 @@ describe('TemplateBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should detach data from the current fragment', () => {
+    it('should unbind data from the current fragment', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
@@ -626,10 +626,10 @@ describe('TemplateBinding', () => {
       const fragment = new MockTemplateFragment();
       const startNode = document.createComment('');
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
-      const detachSpy = vi.spyOn(fragment, 'detach');
+      const unbindSpy = vi.spyOn(fragment, 'unbind');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
       vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
 
@@ -639,10 +639,10 @@ describe('TemplateBinding', () => {
       binding.unbind(updater);
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(detachSpy).toHaveBeenCalledOnce();
-      expect(detachSpy).toHaveBeenCalledWith(updater);
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(unbindSpy).toHaveBeenCalledOnce();
+      expect(unbindSpy).toHaveBeenCalledWith(updater);
       expect(unmountSpy).toHaveBeenCalledOnce();
       expect(unmountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(part.node);
@@ -659,12 +659,12 @@ describe('TemplateBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
       const mountSpy = vi.spyOn(fragment, 'mount');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
-      const attachSpy = vi.spyOn(fragment, 'attach');
+      const bindSpy = vi.spyOn(fragment, 'bind');
 
       binding.connect(updater);
       updater.flush();
@@ -673,9 +673,9 @@ describe('TemplateBinding', () => {
       binding.unbind(updater);
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(attachSpy).not.toHaveBeenCalled();
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(bindSpy).not.toHaveBeenCalled();
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(unmountSpy).toHaveBeenCalledOnce();
@@ -694,8 +694,8 @@ describe('TemplateBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
       const disconnectSpy = vi.spyOn(fragment, 'disconnect');
 
@@ -703,8 +703,8 @@ describe('TemplateBinding', () => {
       updater.flush();
       binding.disconnect();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
       expect(disconnectSpy).toHaveBeenCalledOnce();
     });
 
@@ -718,12 +718,12 @@ describe('TemplateBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const fragment = new MockTemplateFragment();
 
-      const hydrateSpy = vi
-        .spyOn(directive.template, 'hydrate')
+      const renderSpy = vi
+        .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
       const mountSpy = vi.spyOn(fragment, 'mount');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
-      const attachSpy = vi.spyOn(fragment, 'attach');
+      const bindSpy = vi.spyOn(fragment, 'bind');
 
       binding.connect(updater);
       updater.flush();
@@ -732,9 +732,9 @@ describe('TemplateBinding', () => {
       binding.disconnect();
       updater.flush();
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(directive.data, updater);
-      expect(attachSpy).not.toHaveBeenCalled();
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, updater);
+      expect(bindSpy).not.toHaveBeenCalled();
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(unmountSpy).not.toHaveBeenCalled();

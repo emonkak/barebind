@@ -10,10 +10,10 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBinding, MockDirective, MockUpdateContext } from '../mocks.js';
 
 describe('ElementTemplate', () => {
-  describe('.hydrate()', () => {
-    it('should hydrate SingleTemplateFragment initialized with NodeBinding', () => {
+  describe('.render()', () => {
+    it('should return SingleTemplateFragment initialized with NodeBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = new ElementTemplate('div').hydrate(
+      const fragment = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
           childNodeValue: 'bar',
@@ -44,11 +44,11 @@ describe('ElementTemplate', () => {
       expect(fragment.endNode).toBe(fragment.elementBinding.endNode);
     });
 
-    it('should hydrate SingleTemplateFragment by a directive', () => {
+    it('should return SingleTemplateFragment by a directive', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const elementDirective = new MockDirective();
       const childNodeDirective = new MockDirective();
-      const fragment = new ElementTemplate('div').hydrate(
+      const fragment = new ElementTemplate('div').render(
         {
           elementValue: elementDirective,
           childNodeValue: childNodeDirective,
@@ -87,7 +87,7 @@ describe('ElementTemplate', () => {
 });
 
 describe('ElementTemplateFragment', () => {
-  describe('.attach()', () => {
+  describe('.bind()', () => {
     it('should bind a value to the bindings', () => {
       const elementBinding = new ElementBinding(
         { class: 'foo' },
@@ -108,7 +108,7 @@ describe('ElementTemplateFragment', () => {
       const elementBindingBindSpy = vi.spyOn(elementBinding, 'bind');
       const childNodeBindingBindSpy = vi.spyOn(childNodeBinding, 'bind');
 
-      fragment.attach(
+      fragment.bind(
         { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
         updater,
       );
@@ -123,7 +123,7 @@ describe('ElementTemplateFragment', () => {
     });
   });
 
-  describe('.detach()', () => {
+  describe('.unbind()', () => {
     it('should unbind the value from the bindings', () => {
       const elementBinding = new ElementBinding(
         { class: 'foo' },
@@ -144,7 +144,7 @@ describe('ElementTemplateFragment', () => {
       const elementBindingUnbindSpy = vi.spyOn(elementBinding, 'unbind');
       const childNodeBindingUnbindSpy = vi.spyOn(childNodeBinding, 'unbind');
 
-      fragment.detach(updater);
+      fragment.unbind(updater);
 
       expect(elementBindingUnbindSpy).toHaveBeenCalledOnce();
       expect(childNodeBindingUnbindSpy).toHaveBeenCalledOnce();

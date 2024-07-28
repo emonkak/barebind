@@ -170,22 +170,22 @@ export class TemplateResultBinding<TData, TContext>
           this._requestMutation(updater);
         }
 
-        this._pendingFragment.attach(data, updater);
+        this._pendingFragment.bind(data, updater);
       } else {
-        // The template has been changed, so first, we detach data from the current
+        // The template has been changed, so first, we unbind data from the current
         // fragment.
-        this._pendingFragment.detach(updater);
+        this._pendingFragment.unbind(updater);
 
         // Next, unmount the old fragment and mount the new fragment.
         this._requestMutation(updater);
 
-        // Finally, rehydrate the template.
-        this._pendingFragment = template.hydrate(data, updater);
+        // Finally, render the new template.
+        this._pendingFragment = template.render(data, updater);
       }
     } else {
       // Mount the new fragment before the template hydration.
       this._requestMutation(updater);
-      this._pendingFragment = template.hydrate(data, updater);
+      this._pendingFragment = template.render(data, updater);
     }
 
     this._memoizedTemplate = template;
@@ -206,7 +206,7 @@ export class TemplateResultBinding<TData, TContext>
 
   unbind(updater: Updater<TContext>): void {
     // Detach data from the current fragment before its unmount.
-    this._pendingFragment?.detach(updater);
+    this._pendingFragment?.unbind(updater);
 
     this._requestMutation(updater);
 

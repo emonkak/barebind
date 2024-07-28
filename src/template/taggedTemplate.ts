@@ -111,7 +111,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
     return this._holes;
   }
 
-  hydrate(data: TData, updater: Updater): TaggedTemplateFragment<TData> {
+  render(data: TData, updater: Updater): TaggedTemplateFragment<TData> {
     const holes = this._holes;
 
     if (holes.length !== data.length) {
@@ -235,7 +235,7 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
     return this._bindings;
   }
 
-  attach(data: TData, updater: Updater): void {
+  bind(data: TData, updater: Updater): void {
     if (data.length !== this._bindings.length) {
       throw new Error(
         `The number of new data must be ${this._bindings.length}, but got ${data.length}.`,
@@ -255,7 +255,7 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
     }
   }
 
-  detach(updater: Updater): void {
+  unbind(updater: Updater): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       const part = binding.part;

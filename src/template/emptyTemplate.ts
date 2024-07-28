@@ -14,7 +14,7 @@ export class EmptyTemplate implements Template<null> {
     }
   }
 
-  hydrate(_data: null, _updater: Updater): EmptyTemplateFragment {
+  render(_data: null, _updater: Updater): EmptyTemplateFragment {
     return new EmptyTemplateFragment();
   }
 
@@ -32,9 +32,9 @@ export class EmptyTemplateFragment implements TemplateFragment<null> {
     return null;
   }
 
-  attach(_data: null, _updater: Updater<unknown>): void {}
+  bind(_data: null, _updater: Updater<unknown>): void {}
 
-  detach(_updater: Updater): void {}
+  unbind(_updater: Updater): void {}
 
   mount(_part: ChildNodePart): void {}
 

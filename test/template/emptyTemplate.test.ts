@@ -17,10 +17,10 @@ describe('EmptyTemplate', () => {
     });
   });
 
-  describe('.hydrate()', () => {
-    it('should hydrate EmptyTemplateFragment', () => {
+  describe('.render()', () => {
+    it('should return EmptyTemplateFragment', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = EmptyTemplate.instance.hydrate(null, updater);
+      const fragment = EmptyTemplate.instance.render(null, updater);
 
       updater.flush();
 
@@ -39,24 +39,24 @@ describe('EmptyTemplate', () => {
 });
 
 describe('EmptyTemplateFragment', () => {
-  describe('.attach()', () => {
+  describe('.bind()', () => {
     it('should do nothing', () => {
       const fragment = new EmptyTemplateFragment();
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      fragment.attach(null, updater);
+      fragment.bind(null, updater);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
   });
 
-  describe('.detach()', () => {
+  describe('.unbind()', () => {
     it('should do nothing', () => {
       const fragment = new EmptyTemplateFragment();
       const updater = new SyncUpdater(new MockUpdateContext());
 
-      fragment.detach(updater);
+      fragment.unbind(updater);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

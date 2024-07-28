@@ -302,8 +302,8 @@ describe('TaggedTemplate', () => {
     });
   });
 
-  describe('.hydrate()', () => {
-    it('should hydrate a TaggedTemplateFragment', () => {
+  describe('.render()', () => {
+    it('should return a TaggedTemplateFragment', () => {
       const [template, values] = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
@@ -311,7 +311,7 @@ describe('TaggedTemplate', () => {
         </div>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(values.length);
@@ -364,10 +364,10 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should hydrate a TaggedTemplateFragment without bindings', () => {
+    it('should return a TaggedTemplateFragment without bindings', () => {
       const [template] = html`<div></div>`;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate([], updater);
+      const fragment = template.render([], updater);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(0);
@@ -376,10 +376,10 @@ describe('TaggedTemplate', () => {
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
     });
 
-    it('should hydrate a TaggedTemplateFragment with empty template', () => {
+    it('should return a TaggedTemplateFragment with empty template', () => {
       const [template] = html``;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate([], updater);
+      const fragment = template.render([], updater);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(0);
@@ -395,7 +395,7 @@ describe('TaggedTemplate', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
 
       expect(() => {
-        template.hydrate(values, updater);
+        template.render(values, updater);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
   });
@@ -419,13 +419,13 @@ describe('TaggedTemplate', () => {
 });
 
 describe('TaggedTemplateFragment', () => {
-  describe('.attach()', () => {
+  describe('.bind()', () => {
     it('should bind values corresponding to bindings in the fragment', () => {
       const [template, values] = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       updater.flush();
 
@@ -434,7 +434,7 @@ describe('TaggedTemplateFragment', () => {
         '<!--baz-->',
       ]);
 
-      fragment.attach(['bar', 'baz', 'qux'], updater);
+      fragment.bind(['bar', 'baz', 'qux'], updater);
       updater.flush();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
@@ -444,7 +444,7 @@ describe('TaggedTemplateFragment', () => {
     });
   });
 
-  describe('.detach()', () => {
+  describe('.unbind()', () => {
     it('should unbind bindings in the fragment', () => {
       const [template, values] = html`
         ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
@@ -455,7 +455,7 @@ describe('TaggedTemplateFragment', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       container.appendChild(part.node);
       fragment.mount(part);
@@ -477,7 +477,7 @@ describe('TaggedTemplateFragment', () => {
         vi.spyOn(binding, 'disconnect'),
       );
 
-      fragment.detach(updater);
+      fragment.unbind(updater);
       updater.flush();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
@@ -501,10 +501,10 @@ describe('TaggedTemplateFragment', () => {
         <p>Count: ${0}</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       expect(() => {
-        fragment.attach([] as any, updater);
+        fragment.bind([] as any, updater);
       }).toThrow('The number of new data must be 1, but got 0.');
     });
   });
@@ -527,7 +527,7 @@ describe('TaggedTemplateFragment', () => {
         return binding;
       });
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       expect(disconnects).toBe(0);
 
@@ -543,7 +543,7 @@ describe('TaggedTemplateFragment', () => {
         <p>Hello, ${'World'}!</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       updater.flush();
 
@@ -568,7 +568,7 @@ describe('TaggedTemplateFragment', () => {
         <p>Hello, ${'World'}!</p>
       `;
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = template.hydrate(values, updater);
+      const fragment = template.render(values, updater);
 
       updater.flush();
 

@@ -19,10 +19,10 @@ describe('ChildNodeTemplate', () => {
     });
   });
 
-  describe('.hydrate()', () => {
-    it('should hydrate SingleTemplateFragment initialized with a non-directive value', () => {
+  describe('.render()', () => {
+    it('should return SingleTemplateFragment initialized with a non-directive value', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = ChildNodeTemplate.instance.hydrate('foo', updater);
+      const fragment = ChildNodeTemplate.instance.render('foo', updater);
 
       updater.flush();
 
@@ -34,10 +34,10 @@ describe('ChildNodeTemplate', () => {
       expect(fragment.binding.part.node.nodeValue).toBe('foo');
     });
 
-    it('should hydrate SingleTemplateFragment by a directive', () => {
+    it('should return SingleTemplateFragment by a directive', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const directive = new MockDirective();
-      const fragment = ChildNodeTemplate.instance.hydrate(directive, updater);
+      const fragment = ChildNodeTemplate.instance.render(directive, updater);
 
       expect(fragment.binding).toBeInstanceOf(MockBinding);
       expect(fragment.binding.value).toBe(directive);
@@ -66,10 +66,10 @@ describe('TextTemplate', () => {
     });
   });
 
-  describe('.hydrate()', () => {
-    it('should hydrate SingleTemplateFragment initialized with NodeBinding', () => {
+  describe('.render()', () => {
+    it('should return SingleTemplateFragment initialized with NodeBinding', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
-      const fragment = TextTemplate.instance.hydrate('foo', updater);
+      const fragment = TextTemplate.instance.render('foo', updater);
 
       updater.flush();
 
@@ -82,10 +82,10 @@ describe('TextTemplate', () => {
       expect(fragment.binding.part.node.nodeValue).toBe('foo');
     });
 
-    it('should hydrate SingleTemplateFragment by a directive', () => {
+    it('should return SingleTemplateFragment by a directive', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const directive = new MockDirective();
-      const fragment = TextTemplate.instance.hydrate(directive, updater);
+      const fragment = TextTemplate.instance.render(directive, updater);
 
       expect(fragment.binding).toBeInstanceOf(MockBinding);
       expect(fragment.binding.value).toBe(directive);
@@ -121,7 +121,7 @@ describe('SingleTemplateFragment', () => {
     });
   });
 
-  describe('.attach()', () => {
+  describe('.bind()', () => {
     it('should bind a value to the binding', () => {
       const binding = new NodeBinding('foo', {
         type: PartType.Node,
@@ -131,14 +131,14 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      fragment.attach('bar', updater);
+      fragment.bind('bar', updater);
 
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledWith('bar', updater);
     });
   });
 
-  describe('.detach()', () => {
+  describe('.unbind()', () => {
     it('should unbind the value from the binding', () => {
       const binding = new NodeBinding('foo', {
         type: PartType.Node,
@@ -148,7 +148,7 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater(new MockUpdateContext());
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      fragment.detach(updater);
+      fragment.unbind(updater);
 
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(updater);
