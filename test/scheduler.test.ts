@@ -308,7 +308,7 @@ describe('yieldToMain()', () => {
     });
   });
 
-  describe('using queueMicrotask()', () => {
+  describe('using setTimeout()', () => {
     beforeEach(() => {
       vi.stubGlobal('scheduler', {});
     });
@@ -320,9 +320,10 @@ describe('yieldToMain()', () => {
     it('should wait until the current callback has completed', () => {
       const scheduler = getDefaultScheduler();
       const queueMicrotaskSpy = vi
-        .spyOn(globalThis, 'queueMicrotask')
+        .spyOn(globalThis, 'setTimeout')
         .mockImplementation((callback) => {
           callback();
+          return 0 as any;
         });
       expect(scheduler.yieldToMain()).resolves.toBeUndefined();
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();

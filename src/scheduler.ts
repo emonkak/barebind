@@ -77,7 +77,7 @@ export function getDefaultScheduler(): Scheduler {
   if (typeof scheduler.yield === 'function') {
     yieldToMain = (options) => scheduler.yield(options);
   } else {
-    yieldToMain = () => new Promise(queueMicrotask);
+    yieldToMain = () => new Promise((resolve) => setTimeout(resolve));
   }
 
   return {
