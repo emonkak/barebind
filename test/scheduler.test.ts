@@ -105,7 +105,6 @@ describe('requestCallback()', () => {
   describe('using setTimeout()', () => {
     beforeEach(() => {
       vi.stubGlobal('scheduler', {});
-      vi.stubGlobal('requestIdleCallback', undefined);
     });
 
     it('should schedule the callback without priority', () => {
@@ -137,21 +136,28 @@ describe('requestCallback()', () => {
       expect(setTimeoutSpy).toHaveBeenCalledOnce();
       expect(setTimeoutSpy).toHaveBeenCalledWith(callback);
     });
+  });
+
+  describe('using requestAnimationFrame()', () => {
+    beforeEach(() => {
+      vi.stubGlobal('scheduler', {});
+      vi.stubGlobal('requestIdleCallback', undefined);
+    });
 
     it('should schedule the callback with "background" priority', () => {
       const callback = () => {};
-      const setTimeoutSpy = vi
-        .spyOn(globalThis, 'setTimeout')
+      const requestAnimationFrameSpy = vi
+        .spyOn(globalThis, 'requestAnimationFrame')
         .mockImplementation((callback) => {
-          callback();
+          callback(0);
           return 0 as any;
         });
       const scheduler = getDefaultScheduler();
       scheduler.requestCallback(callback, {
         priority: 'background',
       });
-      expect(setTimeoutSpy).toHaveBeenCalledOnce();
-      expect(setTimeoutSpy).toHaveBeenCalledWith(callback);
+      expect(requestAnimationFrameSpy).toHaveBeenCalledOnce();
+      expect(requestAnimationFrameSpy).toHaveBeenCalledWith(callback);
     });
   });
 

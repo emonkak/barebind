@@ -25,27 +25,27 @@ export function getDefaultScheduler(): Scheduler {
   let shouldYieldToMain: Scheduler['shouldYieldToMain'];
   let yieldToMain: Scheduler['yieldToMain'];
 
-  if (typeof globalThis.performance?.now === 'function') {
+  if (typeof performance.now === 'function') {
     getCurrentTime = () => performance.now();
   } else {
     getCurrentTime = () => Date.now();
   }
 
-  if (typeof globalThis.scheduler?.postTask === 'function') {
+  if (typeof scheduler.postTask === 'function') {
     requestCallback = (callback, options) =>
       scheduler.postTask(callback, options);
   } else {
-    const requestIdleCallback =
-      typeof globalThis.requestIdleCallback === 'function'
-        ? globalThis.requestIdleCallback
-        : setTimeout;
+    const requestBackgroundTask =
+      typeof requestIdleCallback === 'function'
+        ? requestIdleCallback
+        : requestAnimationFrame;
     requestCallback = (callback, options) => {
       switch (options?.priority) {
         case 'user-blocking':
           queueMicrotask(callback);
           break;
         case 'background':
-          requestIdleCallback(callback);
+          requestBackgroundTask(callback);
           break;
         default:
           setTimeout(callback);
@@ -54,7 +54,7 @@ export function getDefaultScheduler(): Scheduler {
     };
   }
 
-  if (typeof globalThis.navigator?.scheduling?.isInputPending === 'function') {
+  if (typeof navigator.scheduling?.isInputPending === 'function') {
     shouldYieldToMain = (elapsedTime) => {
       if (elapsedTime < FRAME_YIELD_INTERVAL) {
         return false;
@@ -74,7 +74,7 @@ export function getDefaultScheduler(): Scheduler {
     };
   }
 
-  if (typeof globalThis.scheduler?.yield === 'function') {
+  if (typeof scheduler.yield === 'function') {
     yieldToMain = (options) => scheduler.yield(options);
   } else {
     yieldToMain = () => new Promise(queueMicrotask);
