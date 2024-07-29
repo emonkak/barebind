@@ -23,7 +23,14 @@ const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
 
-export class TemplateResult<TData = unknown, TContext = unknown>
+export function templateResult<TData, TContext>(
+  template: Template<TData, TContext>,
+  data: TData,
+): TemplateResult<TData, TContext> {
+  return new TemplateResult(template, data);
+}
+
+export class TemplateResult<TData, TContext>
   implements TemplateDirective<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;

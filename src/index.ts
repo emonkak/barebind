@@ -1,4 +1,3 @@
-export * from './directives/templateResult.js';
 export * from './mount.js';
 export * from './renderHost.js';
 export * from './scheduler.js';

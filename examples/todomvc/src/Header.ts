@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateResult } from '@emonkak/ebit';
+import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
@@ -9,7 +9,7 @@ export interface HeaderProps {}
 export function Header(
   _props: HeaderProps,
   context: RenderContext,
-): TemplateResult {
+): TemplateDirective {
   const state = context.use(AppState);
 
   const handleSubmit = (title: string) => {

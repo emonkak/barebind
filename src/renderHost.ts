@@ -171,7 +171,7 @@ export class RenderContext {
     this._updater = updater;
   }
 
-  childNode<T>(value: T): TemplateResult<T, RenderContext> {
+  childNode<T>(value: T): TemplateDirective<T, RenderContext> {
     const template = ChildNodeTemplate.instance;
     return new TemplateResult(template, value);
   }
@@ -180,7 +180,7 @@ export class RenderContext {
     type: string,
     elementValue: TElementValue,
     childNodeValue: TChildNodeValue,
-  ): TemplateResult<
+  ): TemplateDirective<
     ElementData<TElementValue, TChildNodeValue>,
     RenderContext
   > {
@@ -188,7 +188,7 @@ export class RenderContext {
     return new TemplateResult(template, { elementValue, childNodeValue });
   }
 
-  empty(): TemplateResult<null, RenderContext> {
+  empty(): TemplateDirective<null, RenderContext> {
     const template = EmptyTemplate.instance;
     return new TemplateResult(template, null);
   }
@@ -213,7 +213,7 @@ export class RenderContext {
   html<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): TemplateResult<TData, RenderContext> {
+  ): TemplateDirective<TData, RenderContext> {
     const template = this._host.getHTMLTemplate(tokens, data);
     return new TemplateResult(template, data);
   }
@@ -239,12 +239,12 @@ export class RenderContext {
   svg<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): TemplateResult<TData, RenderContext> {
+  ): TemplateDirective<TData, RenderContext> {
     const template = this._host.getSVGTemplate(tokens, data);
     return new TemplateResult(template, data);
   }
 
-  text<T>(value: T): TemplateResult<T, RenderContext> {
+  text<T>(value: T): TemplateDirective<T, RenderContext> {
     const template = TextTemplate.instance;
     return new TemplateResult(template, value);
   }

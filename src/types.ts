@@ -70,7 +70,7 @@ export interface Template<TData, TContext = unknown> {
   isSameTemplate(other: Template<TData, TContext>): boolean;
 }
 
-export interface TemplateDirective<TData, TContext>
+export interface TemplateDirective<TData = unknown, TContext = unknown>
   extends Directive<TContext> {
   get template(): Template<TData, TContext>;
   get data(): TData;

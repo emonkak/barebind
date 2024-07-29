@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   TemplateResult,
   TemplateResultBinding,
+  templateResult,
 } from '../../src/directives/templateResult.js';
 import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -12,18 +13,18 @@ import {
   MockUpdateBlock,
 } from '../mocks.js';
 
-describe('Fragment', () => {
-  describe('.constructor()', () => {
-    it('should construct a new Fragment', () => {
-      const template = new MockTemplate();
-      const data = {};
-      const directive = new TemplateResult(template, data);
+describe('templateResult()', () => {
+  it('should construct a new TemplateResult', () => {
+    const template = new MockTemplate();
+    const data = {};
+    const directive = templateResult(template, data);
 
-      expect(directive.template).toBe(template);
-      expect(directive.data).toBe(data);
-    });
+    expect(directive.template).toBe(template);
+    expect(directive.data).toBe(data);
   });
+});
 
+describe('TemplateResult', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
