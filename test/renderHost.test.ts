@@ -78,8 +78,8 @@ describe('RenderHost', () => {
   });
 
   describe('.getScopedValue()', () => {
-    it('should get a scoped value from global scope', () => {
-      const host = new RenderHost(new Map([['foo', 123]]));
+    it('should get a scoped value from constants', () => {
+      const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const block = new MockUpdateBlock();
 
       expect(host.getScopedValue('foo')).toBe(123);
@@ -87,7 +87,7 @@ describe('RenderHost', () => {
     });
 
     it('should get a scoped value from block scope', () => {
-      const host = new RenderHost(new Map([['foo', 123]]));
+      const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const block = new MockUpdateBlock();
 
       host.setScopedValue('foo', 456, block);
@@ -98,7 +98,7 @@ describe('RenderHost', () => {
     });
 
     it('should get a scoped value from the parent', () => {
-      const host = new RenderHost(new Map([['foo', 123]]));
+      const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const parent = new MockUpdateBlock();
       const block = new MockUpdateBlock(parent);
 
@@ -244,10 +244,10 @@ describe('Context', () => {
   });
 
   describe('.getContextValue()', () => {
-    it('should get the value from global scope', () => {
+    it('should get the value from constants', () => {
       const hooks: Hook[] = [];
       const block = new MockUpdateBlock();
-      const host = new RenderHost(new Map([['foo', 123]]));
+      const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const updater = new SyncUpdater(host);
 
       const context = new RenderContext(hooks, block, host, updater);
@@ -259,7 +259,7 @@ describe('Context', () => {
     it('should get the value from block scope', () => {
       const hooks: Hook[] = [];
       const block = new MockUpdateBlock();
-      const host = new RenderHost(new Map([['foo', 123]]));
+      const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const updater = new SyncUpdater(host);
 
       let context = new RenderContext(hooks, block, host, updater);

@@ -47,10 +47,14 @@ export interface UsableObject<TResult, TContext> {
   [usableTag](context: TContext): TResult;
 }
 
-export class RenderHost implements UpdateContext<RenderContext> {
-  private readonly _globalNamespace: Map<unknown, unknown>;
+export interface RenderHostOptions {
+  constants?: Map<unknown, unknown>;
+}
 
-  private readonly _localNamespaces: WeakMap<
+export class RenderHost implements UpdateContext<RenderContext> {
+  private readonly _constants: Map<unknown, unknown>;
+
+  private readonly _blockScopes: WeakMap<
     UpdateBlock<RenderContext>,
     Map<unknown, unknown>
   > = new WeakMap();
@@ -62,8 +66,8 @@ export class RenderHost implements UpdateContext<RenderContext> {
 
   private readonly _marker: string = getMarker();
 
-  constructor(globalNamespace: Map<unknown, unknown> = new Map()) {
-    this._globalNamespace = new Map(globalNamespace);
+  constructor({ constants = new Map() }: RenderHostOptions = {}) {
+    this._constants = new Map(constants);
   }
 
   flushEffects(effects: Effect[], phase: EffectPhase): void {
@@ -102,17 +106,17 @@ export class RenderHost implements UpdateContext<RenderContext> {
 
   getScopedValue(
     key: unknown,
-    scope: UpdateBlock<RenderContext> | null = null,
+    block: UpdateBlock<RenderContext> | null = null,
   ): unknown {
-    let currentScope = scope;
+    let currentScope = block;
     while (currentScope !== null) {
-      const value = this._localNamespaces.get(currentScope)?.get(key);
+      const value = this._blockScopes.get(currentScope)?.get(key);
       if (value !== undefined) {
         return value;
       }
       currentScope = currentScope.parent;
     }
-    return this._globalNamespace.get(key);
+    return this._constants.get(key);
   }
 
   renderComponent<TProps>(
@@ -131,15 +135,15 @@ export class RenderHost implements UpdateContext<RenderContext> {
   setScopedValue(
     key: unknown,
     value: unknown,
-    scope: UpdateBlock<RenderContext>,
+    block: UpdateBlock<RenderContext>,
   ): void {
-    const variables = this._localNamespaces.get(scope);
+    const variables = this._blockScopes.get(block);
     if (variables !== undefined) {
       variables.set(key, value);
     } else {
       const namespace = new Map();
       namespace.set(key, value);
-      this._localNamespaces.set(scope, namespace);
+      this._blockScopes.set(block, namespace);
     }
   }
 }
