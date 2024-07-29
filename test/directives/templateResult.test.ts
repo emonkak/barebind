@@ -593,8 +593,8 @@ describe('TemplateBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TemplateResultBinding(directive1, part, null);
-      const state = new MockRenderHost();
-      const updater = new SyncUpdater(state);
+      const host = new MockRenderHost();
+      const updater = new SyncUpdater(host);
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -602,10 +602,10 @@ describe('TemplateBinding', () => {
       );
 
       binding.connect(updater);
-      binding.performUpdate(state, updater);
+      binding.performUpdate(host, updater);
 
       binding.bind(directive2, updater);
-      binding.performUpdate(state, updater);
+      binding.performUpdate(host, updater);
 
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);

@@ -1,14 +1,13 @@
 import {
   type Effect,
   EffectPhase,
-  type TaskPriority,
   type UpdateBlock,
-  type UpdateContext,
+  type UpdateHost,
   type Updater,
 } from '../types.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
-  private readonly _context: UpdateContext<TContext>;
+  private readonly _host: UpdateHost<TContext>;
 
   private _currentBlock: UpdateBlock<TContext> | null = null;
 
@@ -22,8 +21,8 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
 
   private _isScheduled = false;
 
-  constructor(context: UpdateContext<TContext>) {
-    this._context = context;
+  constructor(host: UpdateHost<TContext>) {
+    this._host = host;
   }
 
   getCurrentBlock(): UpdateBlock<TContext> | null {
@@ -96,7 +95,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
             }
             this._currentBlock = block;
             try {
-              block.performUpdate(this._context, this);
+              block.performUpdate(this._host, this);
             } finally {
               this._currentBlock = null;
             }
@@ -106,25 +105,19 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
         if (this._pendingMutationEffects.length > 0) {
           const pendingMutationEffects = this._pendingMutationEffects;
           this._pendingMutationEffects = [];
-          this._context.flushEffects(
-            pendingMutationEffects,
-            EffectPhase.Mutation,
-          );
+          this._host.flushEffects(pendingMutationEffects, EffectPhase.Mutation);
         }
 
         if (this._pendingLayoutEffects.length > 0) {
           const pendingLayoutEffects = this._pendingLayoutEffects;
           this._pendingLayoutEffects = [];
-          this._context.flushEffects(pendingLayoutEffects, EffectPhase.Layout);
+          this._host.flushEffects(pendingLayoutEffects, EffectPhase.Layout);
         }
 
         if (this._pendingPassiveEffects.length > 0) {
           const pendingPassiveEffects = this._pendingPassiveEffects;
           this._pendingPassiveEffects = [];
-          this._context.flushEffects(
-            pendingPassiveEffects,
-            EffectPhase.Passive,
-          );
+          this._host.flushEffects(pendingPassiveEffects, EffectPhase.Passive);
         }
       } while (
         this._pendingBlocks.length > 0 ||

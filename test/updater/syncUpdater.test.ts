@@ -84,7 +84,7 @@ describe('SyncUpdater', () => {
       const passiveEffect = { commit: vi.fn() };
       const performUpdateSpy = vi
         .spyOn(block, 'performUpdate')
-        .mockImplementation((_context, updater) => {
+        .mockImplementation((_host, updater) => {
           expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);

@@ -13,7 +13,7 @@ import {
   type Template,
   type TemplateFragment,
   type UpdateBlock,
-  type UpdateContext,
+  type UpdateHost,
   type Updater,
   comparePriorities,
   directiveTag,
@@ -178,10 +178,7 @@ export class ComponentBinding<TProps, TData, TContext>
     }
   }
 
-  performUpdate(
-    context: UpdateContext<TContext>,
-    updater: Updater<TContext>,
-  ): void {
+  performUpdate(host: UpdateHost<TContext>, updater: Updater<TContext>): void {
     const { component, props } = this._directive;
 
     if (
@@ -193,7 +190,7 @@ export class ComponentBinding<TProps, TData, TContext>
       this._hooks = [];
     }
 
-    const { template, data } = context.renderComponent(
+    const { template, data } = host.renderComponent(
       component,
       props,
       this._hooks,

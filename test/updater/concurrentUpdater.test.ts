@@ -145,7 +145,7 @@ describe('ConcurrentUpdater', () => {
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
         const performUpdateSpy = vi
           .spyOn(block, 'performUpdate')
-          .mockImplementation((_context, updater) => {
+          .mockImplementation((_host, updater) => {
             expect(updater.getCurrentBlock()).toBe(block);
           });
 
@@ -177,7 +177,7 @@ describe('ConcurrentUpdater', () => {
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
       const performUpdateSpy = vi
         .spyOn(block, 'performUpdate')
-        .mockImplementation((_context, updater) => {
+        .mockImplementation((_host, updater) => {
           expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);

@@ -17,7 +17,7 @@ import {
   type TemplateDirective,
   type TemplateFragment,
   type UpdateBlock,
-  type UpdateContext,
+  type UpdateHost,
   type Updater,
   directiveTag,
 } from '../src/types.js';
@@ -28,7 +28,7 @@ export interface MockRenderContext {
   updater: Updater<MockRenderContext>;
 }
 
-export class MockRenderHost implements UpdateContext<MockRenderContext> {
+export class MockRenderHost implements UpdateHost<MockRenderContext> {
   flushEffects(effects: Effect[], phase: EffectPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(phase);
@@ -136,7 +136,7 @@ export class MockUpdateBlock<TContext> implements UpdateBlock<TContext> {
   requestUpdate(_priority: TaskPriority, _updater: Updater<TContext>): void {}
 
   performUpdate(
-    _context: UpdateContext<TContext>,
+    _host: UpdateHost<TContext>,
     _updater: Updater<TContext>,
   ): void {}
 }

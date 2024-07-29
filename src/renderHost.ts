@@ -23,7 +23,7 @@ import {
   type TaskPriority,
   type TemplateDirective,
   type UpdateBlock,
-  type UpdateContext,
+  type UpdateHost,
   type Updater,
 } from './types.js';
 
@@ -51,7 +51,7 @@ export interface RenderHostOptions {
   constants?: Map<unknown, unknown>;
 }
 
-export class RenderHost implements UpdateContext<RenderContext> {
+export class RenderHost implements UpdateHost<RenderContext> {
   private readonly _constants: Map<unknown, unknown>;
 
   private readonly _blockScopes: WeakMap<

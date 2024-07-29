@@ -3,9 +3,8 @@ import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
 import {
   type Effect,
   EffectPhase,
-  type TaskPriority,
   type UpdateBlock,
-  type UpdateContext,
+  type UpdateHost,
   type Updater,
 } from '../types.js';
 
@@ -15,7 +14,7 @@ export interface ConcurrentUpdaterOptions {
 }
 
 export class ConcurrentUpdater<TContext> implements Updater<TContext> {
-  private readonly _context: UpdateContext<TContext>;
+  private readonly _host: UpdateHost<TContext>;
 
   private readonly _scheduler: Scheduler;
 
@@ -32,13 +31,13 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   private _pendingPassiveEffects: Effect[] = [];
 
   constructor(
-    context: UpdateContext<TContext>,
+    host: UpdateHost<TContext>,
     {
       scheduler = getDefaultScheduler(),
       taskCount = new Atom(0),
     }: ConcurrentUpdaterOptions = {},
   ) {
-    this._context = context;
+    this._host = host;
     this._scheduler = scheduler;
     this._taskCount = taskCount;
   }
@@ -112,7 +111,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   private _createRenderPipeline(): ConcurrentUpdater<TContext> {
-    return new ConcurrentUpdater(this._context, {
+    return new ConcurrentUpdater(this._host, {
       scheduler: this._scheduler,
       taskCount: this._taskCount,
     });
@@ -143,7 +142,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
         this._currentBlock = block;
         try {
-          block.performUpdate(this._context, this);
+          block.performUpdate(this._host, this);
         } finally {
           this._currentBlock = null;
         }
@@ -191,14 +190,11 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            this._context.flushEffects(
+            this._host.flushEffects(
               pendingMutationEffects,
               EffectPhase.Mutation,
             );
-            this._context.flushEffects(
-              pendingLayoutEffects,
-              EffectPhase.Layout,
-            );
+            this._host.flushEffects(pendingLayoutEffects, EffectPhase.Layout);
           } finally {
             this._taskCount.value--;
           }
@@ -218,10 +214,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            this._context.flushEffects(
-              pendingPassiveEffects,
-              EffectPhase.Passive,
-            );
+            this._host.flushEffects(pendingPassiveEffects, EffectPhase.Passive);
           } finally {
             this._taskCount.value--;
           }

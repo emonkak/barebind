@@ -33,7 +33,7 @@ export interface Updater<TContext = unknown> {
   scheduleUpdate(): void;
 }
 
-export interface UpdateContext<TContext> {
+export interface UpdateHost<TContext> {
   flushEffects(effects: Effect[], phase: EffectPhase): void;
   renderComponent<TProps, TData>(
     component: ComponentFunction<TProps, TData, TContext>,
@@ -51,10 +51,7 @@ export interface UpdateBlock<TContext> {
   shouldUpdate(): boolean;
   cancelUpdate(): void;
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
-  performUpdate(
-    context: UpdateContext<TContext>,
-    updater: Updater<TContext>,
-  ): void;
+  performUpdate(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
 }
 
 export type ComponentFunction<TProps, TData, TContext> = (

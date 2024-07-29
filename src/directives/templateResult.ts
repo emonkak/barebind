@@ -10,7 +10,7 @@ import {
   type TemplateDirective,
   type TemplateFragment,
   type UpdateBlock,
-  type UpdateContext,
+  type UpdateHost,
   type Updater,
   comparePriorities,
   directiveTag,
@@ -161,10 +161,7 @@ export class TemplateResultBinding<TData, TContext>
     }
   }
 
-  performUpdate(
-    _context: UpdateContext<TContext>,
-    updater: Updater<TContext>,
-  ): void {
+  performUpdate(_host: UpdateHost<TContext>, updater: Updater<TContext>): void {
     const { template, data } = this._directive;
 
     if (this._pendingFragment !== null) {
