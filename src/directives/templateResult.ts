@@ -164,28 +164,24 @@ export class TemplateResultBinding<TData, TContext>
   performUpdate(_host: UpdateHost<TContext>, updater: Updater<TContext>): void {
     const { template, data } = this._directive;
 
-    if (this._pendingFragment !== null) {
-      if (this._memoizedTemplate!.isSameTemplate(template)) {
-        // If fragment is changed, we must remount it.
-        if (this._memoizedFragment !== this._pendingFragment) {
-          this._requestMutation(updater);
-        }
-
-        this._pendingFragment.bind(data, updater);
-      } else {
-        // The template has been changed, so first, we unbind data from the current
-        // fragment.
-        this._pendingFragment.unbind(updater);
-
-        // Next, unmount the old fragment and mount the new fragment.
+    if (this._memoizedTemplate?.isSameTemplate(template)) {
+      // The fragment may have been unmounted. If so, we have to remount it.
+      if (this._memoizedFragment !== this._pendingFragment) {
         this._requestMutation(updater);
-
-        // Finally, render the new template.
-        this._pendingFragment = template.render(data, updater);
       }
+
+      // SAFETY: If there is a memoized template, the fragment will be present.
+      this._pendingFragment!.bind(data, updater);
     } else {
-      // Mount the new fragment before the template hydration.
+      // Here the template has been changed or has not been rendered yet. First,
+      // we unbind data from the current fragment if the template has been
+      // rendered.
+      this._pendingFragment?.unbind(updater);
+
+      // Next, unmount the old fragment and mount the new fragment.
       this._requestMutation(updater);
+
+      // Finally, render the new template.
       this._pendingFragment = template.render(data, updater);
     }
 

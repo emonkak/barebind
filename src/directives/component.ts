@@ -200,7 +200,7 @@ export class ComponentBinding<TProps, TData, TContext>
 
     if (this._pendingFragment !== null) {
       if (this._memoizedTemplate!.isSameTemplate(template)) {
-        // If fragment is changed, we must remount it.
+        // The fragment may have been unmounted. If so, we have to remount it.
         if (this._memoizedFragment !== this._pendingFragment) {
           this._requestMutation(updater);
         }
@@ -241,8 +241,9 @@ export class ComponentBinding<TProps, TData, TContext>
         this._pendingFragment = newFragment;
       }
     } else {
-      // Mount the new fragment before the template hydration.
+      // We have to mount the new fragment before the template rendering.
       this._requestMutation(updater);
+
       this._pendingFragment = template.render(data, updater);
     }
 
