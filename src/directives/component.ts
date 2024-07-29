@@ -1,5 +1,4 @@
 import { ensureDirective, reportPart } from '../error.js';
-import type { RenderContext } from '../renderHost.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -27,26 +26,27 @@ const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
 
-export function component<TProps, TContext = RenderContext>(
-  component: ComponentFunction<TProps, TContext>,
+export function component<TProps, TData, TContext>(
+  component: ComponentFunction<TProps, TData, TContext>,
   props: TProps,
-): Component<TProps, TContext> {
+): Component<TProps, TData, TContext> {
   return new Component(component, props);
 }
 
-export class Component<TProps, TContext = RenderContext>
-  implements Directive<TContext>
-{
-  private readonly _component: ComponentFunction<TProps, TContext>;
+export class Component<TProps, TData, TContext> implements Directive<TContext> {
+  private readonly _component: ComponentFunction<TProps, TData, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(component: ComponentFunction<TProps, TContext>, props: TProps) {
+  constructor(
+    component: ComponentFunction<TProps, TData, TContext>,
+    props: TProps,
+  ) {
     this._component = component;
     this._props = props;
   }
 
-  get component(): ComponentFunction<TProps, TContext> {
+  get component(): ComponentFunction<TProps, TData, TContext> {
     return this._component;
   }
 
@@ -61,7 +61,7 @@ export class Component<TProps, TContext = RenderContext>
   [directiveTag](
     part: Part,
     updater: Updater<TContext>,
-  ): ComponentBinding<TProps, TContext> {
+  ): ComponentBinding<TProps, TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here:\n' +
@@ -72,13 +72,13 @@ export class Component<TProps, TContext = RenderContext>
   }
 }
 
-export class ComponentBinding<TProps, TContext>
+export class ComponentBinding<TProps, TData, TContext>
   implements
-    Binding<Component<TProps, TContext>, TContext>,
+    Binding<Component<TProps, TData, TContext>, TContext>,
     Effect,
     UpdateBlock<TContext>
 {
-  private _directive: Component<TProps, TContext>;
+  private _directive: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -88,7 +88,11 @@ export class ComponentBinding<TProps, TContext>
 
   private _memoizedFragment: TemplateFragment<unknown, TContext> | null = null;
 
-  private _memoizedComponent: ComponentFunction<TProps, TContext> | null = null;
+  private _memoizedComponent: ComponentFunction<
+    TProps,
+    TData,
+    TContext
+  > | null = null;
 
   private _memoizedTemplate: Template<unknown, TContext> | null = null;
 
@@ -104,7 +108,7 @@ export class ComponentBinding<TProps, TContext>
   private _priority: TaskPriority = 'user-blocking';
 
   constructor(
-    directive: Component<TProps, TContext>,
+    directive: Component<TProps, TData, TContext>,
     part: ChildNodePart,
     parent: UpdateBlock<TContext> | null,
   ) {
@@ -113,7 +117,7 @@ export class ComponentBinding<TProps, TContext>
     this._parent = parent;
   }
 
-  get value(): Component<TProps, TContext> {
+  get value(): Component<TProps, TData, TContext> {
     return this._directive;
   }
 
@@ -254,7 +258,7 @@ export class ComponentBinding<TProps, TContext>
     this._forceUpdate(updater);
   }
 
-  bind(newValue: Component<TProps, TContext>, updater: Updater): void {
+  bind(newValue: Component<TProps, TData, TContext>, updater: Updater): void {
     DEBUG: {
       ensureDirective(Component, newValue, this._part);
     }

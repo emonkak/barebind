@@ -35,13 +35,13 @@ export class MockRenderHost implements UpdateContext<MockRenderContext> {
     }
   }
 
-  renderComponent<TProps>(
-    component: ComponentFunction<TProps, MockRenderContext>,
+  renderComponent<TProps, TData>(
+    component: ComponentFunction<TProps, TData, MockRenderContext>,
     props: TProps,
     hooks: Hook[],
     block: UpdateBlock<MockRenderContext>,
     updater: Updater<MockRenderContext>,
-  ): TemplateDirective<unknown, MockRenderContext> {
+  ): TemplateDirective<TData, MockRenderContext> {
     return component(props, { hooks, block, updater });
   }
 }

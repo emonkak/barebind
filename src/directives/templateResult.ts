@@ -1,5 +1,4 @@
 import { ensureDirective, reportPart } from '../error.js';
-import type { RenderContext } from '../renderHost.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -24,7 +23,7 @@ const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 const FLAG_MUTATING = 1 << 2;
 
-export class TemplateResult<TData = unknown, TContext = RenderContext>
+export class TemplateResult<TData = unknown, TContext = unknown>
   implements TemplateDirective<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;

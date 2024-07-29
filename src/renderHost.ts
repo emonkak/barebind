@@ -119,13 +119,13 @@ export class RenderHost implements UpdateContext<RenderContext> {
     return this._constants.get(key);
   }
 
-  renderComponent<TProps>(
-    component: ComponentFunction<TProps, RenderContext>,
+  renderComponent<TProps, TData>(
+    component: ComponentFunction<TProps, TData, RenderContext>,
     props: TProps,
     hooks: Hook[],
     block: UpdateBlock<RenderContext>,
     updater: Updater<RenderContext>,
-  ): TemplateDirective<unknown, RenderContext> {
+  ): TemplateDirective<TData, RenderContext> {
     const context = new RenderContext(hooks, block, this, updater);
     const result = component(props, context);
     context.finalize();
