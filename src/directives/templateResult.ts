@@ -1,6 +1,7 @@
 import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
+  type Block,
   type ChildNodePart,
   type Effect,
   type Part,
@@ -9,7 +10,6 @@ import {
   type Template,
   type TemplateDirective,
   type TemplateFragment,
-  type UpdateBlock,
   type UpdateHost,
   type Updater,
   comparePriorities,
@@ -72,13 +72,13 @@ export class TemplateResultBinding<TData, TContext>
   implements
     Binding<TemplateResult<TData, TContext>, TContext>,
     Effect,
-    UpdateBlock<TContext>
+    Block<TContext>
 {
   private _directive: TemplateResult<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: UpdateBlock<TContext> | null;
+  private readonly _parent: Block<TContext> | null;
 
   private _pendingFragment: TemplateFragment<TData, TContext> | null = null;
 
@@ -93,7 +93,7 @@ export class TemplateResultBinding<TData, TContext>
   constructor(
     directive: TemplateResult<TData, TContext>,
     part: ChildNodePart,
-    parent: UpdateBlock<TContext> | null,
+    parent: Block<TContext> | null,
   ) {
     this._directive = directive;
     this._part = part;
@@ -116,7 +116,7 @@ export class TemplateResultBinding<TData, TContext>
     return this._part.node;
   }
 
-  get parent(): UpdateBlock<TContext> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 
@@ -132,7 +132,7 @@ export class TemplateResultBinding<TData, TContext>
     if (!(this._flags & FLAG_UPDATING)) {
       return false;
     }
-    let current: UpdateBlock<TContext> | null = this;
+    let current: Block<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.isUpdating) {
         return false;

@@ -1,7 +1,7 @@
 import {
+  type Block,
   type Effect,
   EffectPhase,
-  type UpdateBlock,
   type UpdateHost,
   type Updater,
 } from '../types.js';
@@ -9,9 +9,9 @@ import {
 export class SyncUpdater<TContext> implements Updater<TContext> {
   private readonly _host: UpdateHost<TContext>;
 
-  private _currentBlock: UpdateBlock<TContext> | null = null;
+  private _currentBlock: Block<TContext> | null = null;
 
-  private _pendingBlocks: UpdateBlock<TContext>[] = [];
+  private _pendingBlocks: Block<TContext>[] = [];
 
   private _pendingMutationEffects: Effect[] = [];
 
@@ -25,7 +25,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     this._host = host;
   }
 
-  getCurrentBlock(): UpdateBlock<TContext> | null {
+  getCurrentBlock(): Block<TContext> | null {
     return this._currentBlock;
   }
 
@@ -33,7 +33,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     return 'user-blocking';
   }
 
-  enqueueBlock(block: UpdateBlock<TContext>): void {
+  enqueueBlock(block: Block<TContext>): void {
     this._pendingBlocks.push(block);
   }
 

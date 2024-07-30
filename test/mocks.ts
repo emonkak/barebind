@@ -5,6 +5,7 @@ import type {
 } from '../src/scheduler.js';
 import {
   type Binding,
+  type Block,
   type ChildNodePart,
   type ComponentFunction,
   type Directive,
@@ -16,7 +17,6 @@ import {
   type Template,
   type TemplateDirective,
   type TemplateFragment,
-  type UpdateBlock,
   type UpdateHost,
   type Updater,
   directiveTag,
@@ -24,7 +24,7 @@ import {
 
 export interface MockRenderContext {
   hooks: Hook[];
-  block: UpdateBlock<MockRenderContext>;
+  block: Block<MockRenderContext>;
   updater: Updater<MockRenderContext>;
 }
 
@@ -39,7 +39,7 @@ export class MockRenderHost implements UpdateHost<MockRenderContext> {
     component: ComponentFunction<TProps, TData, MockRenderContext>,
     props: TProps,
     hooks: Hook[],
-    block: UpdateBlock<MockRenderContext>,
+    block: Block<MockRenderContext>,
     updater: Updater<MockRenderContext>,
   ): TemplateDirective<TData, MockRenderContext> {
     return component(props, { hooks, block, updater });
@@ -108,10 +108,10 @@ export class MockTemplateFragment<TContext>
   disconnect(): void {}
 }
 
-export class MockUpdateBlock<TContext> implements UpdateBlock<TContext> {
-  private _parent: UpdateBlock<TContext> | null;
+export class MockBlock<TContext> implements Block<TContext> {
+  private _parent: Block<TContext> | null;
 
-  constructor(parent: UpdateBlock<TContext> | null = null) {
+  constructor(parent: Block<TContext> | null = null) {
     this._parent = parent;
   }
 
@@ -119,7 +119,7 @@ export class MockUpdateBlock<TContext> implements UpdateBlock<TContext> {
     return false;
   }
 
-  get parent(): UpdateBlock<TContext> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 

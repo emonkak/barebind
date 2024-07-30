@@ -1,9 +1,9 @@
 import { Atom } from '../directives/signal.js';
 import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
 import {
+  type Block,
   type Effect,
   EffectPhase,
-  type UpdateBlock,
   type UpdateHost,
   type Updater,
 } from '../types.js';
@@ -20,9 +20,9 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _taskCount = new Atom(0);
 
-  private _currentBlock: UpdateBlock<TContext> | null = null;
+  private _currentBlock: Block<TContext> | null = null;
 
-  private _pendingBlocks: UpdateBlock<TContext>[] = [];
+  private _pendingBlocks: Block<TContext>[] = [];
 
   private _pendingLayoutEffects: Effect[] = [];
 
@@ -42,7 +42,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     this._taskCount = taskCount;
   }
 
-  getCurrentBlock(): UpdateBlock<TContext> | null {
+  getCurrentBlock(): Block<TContext> | null {
     return this._currentBlock;
   }
 
@@ -55,7 +55,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  enqueueBlock(block: UpdateBlock<TContext>): void {
+  enqueueBlock(block: Block<TContext>): void {
     this._pendingBlocks.push(block);
   }
 
@@ -117,7 +117,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     });
   }
 
-  private async _beginWork(rootBlock: UpdateBlock<TContext>): Promise<void> {
+  private async _beginWork(rootBlock: Block<TContext>): Promise<void> {
     let pendingBlocks = [rootBlock];
     let startTime = this._scheduler.getCurrentTime();
 

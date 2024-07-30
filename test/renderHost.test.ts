@@ -15,7 +15,7 @@ import {
 import { TaggedTemplate } from '../src/template/taggedTemplate.js';
 import { EffectPhase, type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockTemplate, MockUpdateBlock } from './mocks.js';
+import { MockBlock, MockTemplate } from './mocks.js';
 
 describe('RenderHost', () => {
   describe('.flushEffects()', () => {
@@ -80,7 +80,7 @@ describe('RenderHost', () => {
   describe('.getScopedValue()', () => {
     it('should get a scoped value from constants', () => {
       const host = new RenderHost({ constants: new Map([['foo', 123]]) });
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
 
       expect(host.getScopedValue('foo')).toBe(123);
       expect(host.getScopedValue('foo', block)).toBe(123);
@@ -88,7 +88,7 @@ describe('RenderHost', () => {
 
     it('should get a scoped value from block scope', () => {
       const host = new RenderHost({ constants: new Map([['foo', 123]]) });
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
 
       host.setScopedValue('foo', 456, block);
       expect(host.getScopedValue('foo', block)).toBe(456);
@@ -99,8 +99,8 @@ describe('RenderHost', () => {
 
     it('should get a scoped value from the parent', () => {
       const host = new RenderHost({ constants: new Map([['foo', 123]]) });
-      const parent = new MockUpdateBlock();
-      const block = new MockUpdateBlock(parent);
+      const parent = new MockBlock();
+      const block = new MockBlock(parent);
 
       host.setScopedValue('foo', 456, parent);
 
@@ -120,7 +120,7 @@ describe('RenderHost', () => {
         return { template, data: props.data };
       });
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const updater = new SyncUpdater(host);
       const result = host.renderComponent(
         component,
@@ -146,7 +146,7 @@ describe('Context', () => {
   describe('.childNode()', () => {
     it('should return Fragment with ChildNodeTemplate set as a template', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -161,7 +161,7 @@ describe('Context', () => {
   describe('.element()', () => {
     it('should return Fragment with ElementTemplate set as a template', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -183,7 +183,7 @@ describe('Context', () => {
   describe('.empty()', () => {
     it('should return Fragment with EmptyTemplate set as a template', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -198,7 +198,7 @@ describe('Context', () => {
   describe('.finalize()', () => {
     it('should enqueue a Finalizer hook', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -213,7 +213,7 @@ describe('Context', () => {
 
     it('should throw an error if fewer hooks are used than last time.', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -229,7 +229,7 @@ describe('Context', () => {
 
     it('should throw an error if more hooks are used than last time.', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -246,7 +246,7 @@ describe('Context', () => {
   describe('.getContextValue()', () => {
     it('should get the value from constants', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const updater = new SyncUpdater(host);
 
@@ -258,7 +258,7 @@ describe('Context', () => {
 
     it('should get the value from block scope', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost({ constants: new Map([['foo', 123]]) });
       const updater = new SyncUpdater(host);
 
@@ -270,12 +270,7 @@ describe('Context', () => {
       expect(context.getContextValue('foo')).toBe(456);
       expect(context.getContextValue('bar')).toBe(789);
 
-      context = new RenderContext(
-        hooks,
-        new MockUpdateBlock(block),
-        host,
-        updater,
-      );
+      context = new RenderContext(hooks, new MockBlock(block), host, updater);
 
       expect(context.getContextValue('foo')).toBe(456);
       expect(context.getContextValue('bar')).toBe(789);
@@ -285,7 +280,7 @@ describe('Context', () => {
   describe('.html()', () => {
     it('should return Fragment with an HTML-formatted TaggedTemplate set as a template', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -306,7 +301,7 @@ describe('Context', () => {
   describe('.isFirstRender()', () => {
     it('should check whether the render is the first one', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -323,7 +318,7 @@ describe('Context', () => {
   describe('.requestUpdate()', () => {
     it('should request update to the current block', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
@@ -339,7 +334,7 @@ describe('Context', () => {
   describe('.svg()', () => {
     it('should return Fragment with an SVG-hormatted TaggedTemplate set as a template', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -360,7 +355,7 @@ describe('Context', () => {
   describe('.text()', () => {
     it('should return FragmenFragment TextTemplate set as a template', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -374,7 +369,7 @@ describe('Context', () => {
 
   describe('.use()', () => {
     it('should handle the UsableCallback', () => {
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const hooks: Hook[] = [];
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
@@ -389,7 +384,7 @@ describe('Context', () => {
 
     it('should handle the UsableObject', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -406,7 +401,7 @@ describe('Context', () => {
   describe('.useCallback()', () => {
     it('should return a memoized callback', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -427,7 +422,7 @@ describe('Context', () => {
   describe('.useDeferredValue()', () => {
     it('should return a value deferred until next rendering', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
@@ -454,7 +449,7 @@ describe('Context', () => {
 
     it('should return a initial value if it is presented', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -476,7 +471,7 @@ describe('Context', () => {
   describe('.useEffect()', () => {
     it('should enqueue a callback as a passive effect', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const enqueuePassiveEffectSpy = vi.spyOn(updater, 'enqueuePassiveEffect');
@@ -500,7 +495,7 @@ describe('Context', () => {
 
     it('should perform a cleanup function when a new effect is enqueued', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -524,7 +519,7 @@ describe('Context', () => {
 
     it('should not perform an effect function if dependencies are not changed', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -547,7 +542,7 @@ describe('Context', () => {
   describe('.useEvent()', () => {
     it('should always return a stable function', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -576,7 +571,7 @@ describe('Context', () => {
   describe('.useLayoutEffect()', () => {
     it('should enqueue a callback as a layout effect', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const enqueueLayoutEffectSpy = vi.spyOn(updater, 'enqueueLayoutEffect');
@@ -600,7 +595,7 @@ describe('Context', () => {
 
     it('should perform a cleanup function when a new effect is enqueued', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -624,7 +619,7 @@ describe('Context', () => {
 
     it('should not perform an effect function if dependencies are not changed', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -647,7 +642,7 @@ describe('Context', () => {
   describe('.useMemo()', () => {
     it('should return a memoized value until dependencies is changed', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -668,7 +663,7 @@ describe('Context', () => {
   describe('.useReducer()', () => {
     it('should update the host by the current priority', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
@@ -711,7 +706,7 @@ describe('Context', () => {
 
     it('should update the host by the priority specified by user', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
@@ -754,7 +749,7 @@ describe('Context', () => {
 
     it('should skip update the host when the host has not changed', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
@@ -779,7 +774,7 @@ describe('Context', () => {
 
     it('should return the result of the function as an initial host', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -802,7 +797,7 @@ describe('Context', () => {
 
     it('should always return the same host and the dispatcher', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -825,7 +820,7 @@ describe('Context', () => {
   describe('.useRef()', () => {
     it('should return a same object', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -841,7 +836,7 @@ describe('Context', () => {
   describe('.useState()', () => {
     it('should update the host by the current priority', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
@@ -875,7 +870,7 @@ describe('Context', () => {
 
     it('should update the host by the priority specified by user', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
@@ -909,7 +904,7 @@ describe('Context', () => {
 
     it('should skip update the host when the host has not changed', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
@@ -931,7 +926,7 @@ describe('Context', () => {
 
     it('should return the result of the function as an initial host', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -956,7 +951,7 @@ describe('Context', () => {
   describe('.useSyncEnternalStore()', () => {
     it('should return the snapshot value', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
 
@@ -977,7 +972,7 @@ describe('Context', () => {
 
     it('should request update to the block by the current priority when changes are notified to subscribers', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
@@ -1012,7 +1007,7 @@ describe('Context', () => {
 
     it('should request update to the block by the priority specified by user when changes are notified to subscribers', () => {
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');

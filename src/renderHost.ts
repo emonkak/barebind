@@ -8,6 +8,7 @@ import { EmptyTemplate } from './template/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import {
+  type Block,
   type Cleanup,
   type ComponentFunction,
   type Effect,
@@ -22,7 +23,6 @@ import {
   type RefObject,
   type TaskPriority,
   type TemplateDirective,
-  type UpdateBlock,
   type UpdateHost,
   type Updater,
 } from './types.js';
@@ -55,7 +55,7 @@ export class RenderHost implements UpdateHost<RenderContext> {
   private readonly _constants: Map<unknown, unknown>;
 
   private readonly _blockScopes: WeakMap<
-    UpdateBlock<RenderContext>,
+    Block<RenderContext>,
     Map<unknown, unknown>
   > = new WeakMap();
 
@@ -106,7 +106,7 @@ export class RenderHost implements UpdateHost<RenderContext> {
 
   getScopedValue(
     key: unknown,
-    block: UpdateBlock<RenderContext> | null = null,
+    block: Block<RenderContext> | null = null,
   ): unknown {
     let currentScope = block;
     while (currentScope !== null) {
@@ -123,7 +123,7 @@ export class RenderHost implements UpdateHost<RenderContext> {
     component: ComponentFunction<TProps, TData, RenderContext>,
     props: TProps,
     hooks: Hook[],
-    block: UpdateBlock<RenderContext>,
+    block: Block<RenderContext>,
     updater: Updater<RenderContext>,
   ): TemplateDirective<TData, RenderContext> {
     const context = new RenderContext(hooks, block, this, updater);
@@ -135,7 +135,7 @@ export class RenderHost implements UpdateHost<RenderContext> {
   setScopedValue(
     key: unknown,
     value: unknown,
-    block: UpdateBlock<RenderContext>,
+    block: Block<RenderContext>,
   ): void {
     const variables = this._blockScopes.get(block);
     if (variables !== undefined) {
@@ -151,7 +151,7 @@ export class RenderHost implements UpdateHost<RenderContext> {
 export class RenderContext {
   private readonly _hooks: Hook[];
 
-  private readonly _block: UpdateBlock<RenderContext>;
+  private readonly _block: Block<RenderContext>;
 
   private readonly _host: RenderHost;
 
@@ -161,7 +161,7 @@ export class RenderContext {
 
   constructor(
     hooks: Hook[],
-    block: UpdateBlock<RenderContext>,
+    block: Block<RenderContext>,
     host: RenderHost,
     updater: Updater<RenderContext>,
   ) {

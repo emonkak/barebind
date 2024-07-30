@@ -7,10 +7,10 @@ import {
 import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
+  MockBlock,
   MockRenderHost,
   MockTemplate,
   MockTemplateFragment,
-  MockUpdateBlock,
 } from '../mocks.js';
 
 describe('templateResult()', () => {
@@ -40,7 +40,7 @@ describe('TemplateResult', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderHost());
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
 
       vi.spyOn(updater, 'getCurrentBlock').mockReturnValue(parent);
 
@@ -78,7 +78,7 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
 
       expect(binding.shouldUpdate()).toBe(false);
@@ -90,7 +90,7 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 
@@ -108,7 +108,7 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 
@@ -129,7 +129,7 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 
@@ -360,7 +360,7 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new TemplateResultBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 

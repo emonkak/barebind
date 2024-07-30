@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
-import { MockRenderHost, MockScheduler, MockUpdateBlock } from '../mocks.js';
+import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -69,7 +69,7 @@ describe('ConcurrentUpdater', () => {
     it('should return true if there is a pending block', () => {
       const updater = new ConcurrentUpdater(new MockRenderHost());
 
-      updater.enqueueBlock(new MockUpdateBlock());
+      updater.enqueueBlock(new MockBlock());
 
       expect(updater.isPending()).toBe(true);
     });
@@ -77,7 +77,7 @@ describe('ConcurrentUpdater', () => {
     it('should return true if there is a block scheduled in rendering pipelines', () => {
       const updater = new ConcurrentUpdater(new MockRenderHost());
 
-      updater.enqueueBlock(new MockUpdateBlock());
+      updater.enqueueBlock(new MockBlock());
       updater.scheduleUpdate();
 
       expect(updater.isPending()).toBe(true);
@@ -118,7 +118,7 @@ describe('ConcurrentUpdater', () => {
     it('should return whether an update is scheduled', async () => {
       const updater = new ConcurrentUpdater(new MockRenderHost());
 
-      updater.enqueueBlock(new MockUpdateBlock());
+      updater.enqueueBlock(new MockBlock());
       expect(updater.isScheduled()).toBe(false);
 
       updater.scheduleUpdate();
@@ -138,7 +138,7 @@ describe('ConcurrentUpdater', () => {
           scheduler,
         });
 
-        const block = new MockUpdateBlock();
+        const block = new MockBlock();
         const prioritySpy = vi
           .spyOn(block, 'priority', 'get')
           .mockReturnValue(priority);
@@ -169,7 +169,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
@@ -248,7 +248,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const performUpdateSpy = vi.spyOn(block, 'performUpdate');
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
@@ -284,8 +284,8 @@ describe('ConcurrentUpdater', () => {
         });
       const yieldToMainSpy = vi.spyOn(scheduler, 'yieldToMain');
 
-      const block1 = new MockUpdateBlock();
-      const block2 = new MockUpdateBlock();
+      const block1 = new MockBlock();
+      const block2 = new MockBlock();
       const performUpdate1Spy = vi.spyOn(block1, 'performUpdate');
       const performUpdate2Spy = vi.spyOn(block1, 'performUpdate');
 

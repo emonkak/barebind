@@ -21,12 +21,12 @@ export interface Directive<TContext = unknown> {
 }
 
 export interface Updater<TContext> {
-  getCurrentBlock(): UpdateBlock<TContext> | null;
+  getCurrentBlock(): Block<TContext> | null;
   getCurrentPriority(): TaskPriority;
   isPending(): boolean;
   isScheduled(): boolean;
   waitForUpdate(): Promise<void>;
-  enqueueBlock(block: UpdateBlock<TContext>): void;
+  enqueueBlock(block: Block<TContext>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
@@ -39,13 +39,13 @@ export interface UpdateHost<TContext> {
     component: ComponentFunction<TProps, TData, TContext>,
     props: TProps,
     hooks: Hook[],
-    block: UpdateBlock<TContext>,
+    block: Block<TContext>,
     updater: Updater<TContext>,
   ): TemplateDirective<TData, TContext>;
 }
 
-export interface UpdateBlock<TContext> {
-  get parent(): UpdateBlock<TContext> | null;
+export interface Block<TContext> {
+  get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
   get isUpdating(): boolean;
   shouldUpdate(): boolean;

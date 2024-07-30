@@ -11,7 +11,7 @@ import {
   nameTag,
 } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateBlock } from '.././mocks.js';
+import { MockBlock } from '.././mocks.js';
 
 describe('Signal', () => {
   describe('.toJSON()', () => {
@@ -71,7 +71,7 @@ describe('Signal', () => {
     it('should subscribe the signal and return a signal value', () => {
       const signal = new Atom('foo');
       const hooks: Hook[] = [];
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const state = new RenderHost();
       const updater = new SyncUpdater(state);
       const context = new RenderContext(hooks, block, state, updater);

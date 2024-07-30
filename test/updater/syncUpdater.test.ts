@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, MockUpdateBlock } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('SyncUpdater', () => {
   describe('.getCurrentPriority()', () => {
@@ -16,7 +16,7 @@ describe('SyncUpdater', () => {
     it('should return true if there is a pending block', () => {
       const updater = new SyncUpdater(new MockRenderHost());
 
-      updater.enqueueBlock(new MockUpdateBlock());
+      updater.enqueueBlock(new MockBlock());
       expect(updater.isPending()).toBe(true);
     });
 
@@ -78,7 +78,7 @@ describe('SyncUpdater', () => {
     it('should update the block on a microtask', async () => {
       const updater = new SyncUpdater(new MockRenderHost());
 
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
@@ -108,7 +108,7 @@ describe('SyncUpdater', () => {
     it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
       const updater = new SyncUpdater(new MockRenderHost());
 
-      const block = new MockUpdateBlock();
+      const block = new MockBlock();
       const performUpdateSpy = vi.spyOn(block, 'performUpdate');
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')

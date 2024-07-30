@@ -13,7 +13,7 @@ import {
 } from '../src/router.js';
 import { type Hook, HookType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockUpdateBlock } from './mocks.js';
+import { MockBlock } from './mocks.js';
 
 describe('Router', () => {
   const basicRouter = new Router([
@@ -162,7 +162,7 @@ describe('browserLocation', () => {
 
   it('should return a state represents the current location of the browser', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -181,7 +181,7 @@ describe('browserLocation', () => {
 
   it('should push the new location to the session history by push action', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -213,7 +213,7 @@ describe('browserLocation', () => {
 
   it('should push the new location to the session history by replace action', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -245,7 +245,7 @@ describe('browserLocation', () => {
 
   it('should update the state when the "popstate" event is tiggered', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -278,7 +278,7 @@ describe('browserLocation', () => {
 
   it('should register the current location', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
 
@@ -298,7 +298,7 @@ describe('browserLocation', () => {
 describe('currentLocation', () => {
   it('should throw an error if the current location registered as a context value does not exisit', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const context = new RenderContext(hooks, block, host, updater);
@@ -320,7 +320,7 @@ describe('hashLocation', () => {
 
   it('should return a state represents the current location of the browser', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -338,7 +338,7 @@ describe('hashLocation', () => {
 
   it('should push the new location to the session history by push action', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -370,7 +370,7 @@ describe('hashLocation', () => {
 
   it('should push the new location to the session history by replace action', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -402,7 +402,7 @@ describe('hashLocation', () => {
 
   it('should update the state when the "hashchange" event is tiggered', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
     const state = { key: 'foo' };
@@ -445,7 +445,7 @@ describe('hashLocation', () => {
 
   it('should register the current location', () => {
     const hooks: Hook[] = [];
-    const block = new MockUpdateBlock();
+    const block = new MockBlock();
     const host = new RenderHost();
     const updater = new SyncUpdater(host);
 

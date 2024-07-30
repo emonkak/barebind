@@ -1,6 +1,7 @@
 import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
+  type Block,
   type ChildNodePart,
   type ComponentFunction,
   type Directive,
@@ -12,7 +13,6 @@ import {
   type TaskPriority,
   type Template,
   type TemplateFragment,
-  type UpdateBlock,
   type UpdateHost,
   type Updater,
   comparePriorities,
@@ -76,13 +76,13 @@ export class ComponentBinding<TProps, TData, TContext>
   implements
     Binding<Component<TProps, TData, TContext>, TContext>,
     Effect,
-    UpdateBlock<TContext>
+    Block<TContext>
 {
   private _directive: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: UpdateBlock<TContext> | null;
+  private readonly _parent: Block<TContext> | null;
 
   private _pendingFragment: TemplateFragment<unknown, TContext> | null = null;
 
@@ -110,7 +110,7 @@ export class ComponentBinding<TProps, TData, TContext>
   constructor(
     directive: Component<TProps, TData, TContext>,
     part: ChildNodePart,
-    parent: UpdateBlock<TContext> | null,
+    parent: Block<TContext> | null,
   ) {
     this._directive = directive;
     this._part = part;
@@ -133,7 +133,7 @@ export class ComponentBinding<TProps, TData, TContext>
     return this._part.node;
   }
 
-  get parent(): UpdateBlock<TContext> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 
@@ -149,7 +149,7 @@ export class ComponentBinding<TProps, TData, TContext>
     if (!(this._flags & FLAG_UPDATING)) {
       return false;
     }
-    let current: UpdateBlock<TContext> | null = this;
+    let current: Block<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.isUpdating) {
         return false;

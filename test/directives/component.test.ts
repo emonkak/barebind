@@ -7,11 +7,11 @@ import { TemplateResult } from '../../src/directives/templateResult.js';
 import { HookType, PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
+  MockBlock,
   type MockRenderContext,
   MockRenderHost,
   MockTemplate,
   MockTemplateFragment,
-  MockUpdateBlock,
 } from '../mocks.js';
 
 describe('component()', () => {
@@ -46,7 +46,7 @@ describe('Component', () => {
         node: document.createComment(''),
       } as const;
       const updater = new SyncUpdater(new MockRenderHost());
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
 
       vi.spyOn(updater, 'getCurrentBlock').mockReturnValue(parent);
 
@@ -90,7 +90,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
 
       expect(binding.shouldUpdate()).toBe(false);
@@ -105,7 +105,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 
@@ -126,7 +126,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 
@@ -148,7 +148,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const updater = new SyncUpdater(new MockRenderHost());
 
@@ -408,7 +408,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const parent = new MockUpdateBlock();
+      const parent = new MockBlock();
       const binding = new ComponentBinding(directive, part, parent);
       const host = new MockRenderHost();
       const updater = new SyncUpdater(host);
