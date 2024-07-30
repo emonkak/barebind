@@ -190,13 +190,9 @@ export class ComponentBinding<TProps, TData, TContext>
       this._hooks = [];
     }
 
-    const { template, data } = host.renderComponent(
-      component,
-      props,
-      this._hooks,
-      this,
-      updater,
-    );
+    const context = host.beginRenderContext(this._hooks, this, updater);
+    const { template, data } = component(props, context);
+    host.finishRenderContext(context);
 
     if (this._pendingFragment !== null) {
       if (this._memoizedTemplate!.isSameTemplate(template)) {

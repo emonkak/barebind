@@ -163,8 +163,8 @@ describe('RenderHost', () => {
     });
   });
 
-  describe('.renderComponent()', () => {
-    it('should return the component', () => {
+  describe('.beginRenderContext()', () => {
+    it('should create a new MockRenderContext', () => {
       const host = new RenderHost();
       const template = new MockTemplate();
       const props = {
@@ -177,15 +177,10 @@ describe('RenderHost', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const updater = new SyncUpdater(host);
-      const result = host.renderComponent(
-        component,
-        props,
-        hooks,
-        block,
-        updater,
-      );
+      const context = host.beginRenderContext(hooks, block, updater);
+      const result = component(props, context);
+      host.finishRenderContext(context);
 
-      expect(result.template).toBe(template);
       expect(result.data).toEqual(props.data);
       expect(component).toHaveBeenCalledOnce();
       expect(component).toHaveBeenCalledWith(props, expect.any(RenderContext));
@@ -197,7 +192,7 @@ describe('RenderHost', () => {
   });
 });
 
-describe('Context', () => {
+describe('RenderContext', () => {
   describe('.childNode()', () => {
     it('should return Fragment with ChildNodeTemplate set as a template', () => {
       const hooks: Hook[] = [];

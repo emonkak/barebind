@@ -33,15 +33,14 @@ export interface Updater<TContext> {
 }
 
 export interface UpdateHost<TContext> {
-  getCurrentPriority(): TaskPriority;
-  flushEffects(effects: Effect[], phase: EffectPhase): void;
-  renderComponent<TProps, TData>(
-    component: ComponentFunction<TProps, TData, TContext>,
-    props: TProps,
+  beginRenderContext(
     hooks: Hook[],
     block: Block<TContext>,
     updater: Updater<TContext>,
-  ): TemplateDirective<TData, TContext>;
+  ): TContext;
+  finishRenderContext(context: TContext): void;
+  flushEffects(effects: Effect[], phase: EffectPhase): void;
+  getCurrentPriority(): TaskPriority;
 }
 
 export interface Block<TContext> {

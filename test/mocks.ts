@@ -7,7 +7,6 @@ import {
   type Binding,
   type Block,
   type ChildNodePart,
-  type ComponentFunction,
   type Directive,
   type Effect,
   type EffectPhase,
@@ -15,7 +14,6 @@ import {
   type Part,
   type TaskPriority,
   type Template,
-  type TemplateDirective,
   type TemplateFragment,
   type UpdateHost,
   type Updater,
@@ -29,9 +27,15 @@ export interface MockRenderContext {
 }
 
 export class MockRenderHost implements UpdateHost<MockRenderContext> {
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
+  beginRenderContext(
+    hooks: Hook[],
+    block: Block<MockRenderContext>,
+    updater: Updater<MockRenderContext>,
+  ): MockRenderContext {
+    return { hooks, block, updater };
   }
+
+  finishRenderContext(_context: MockRenderContext): void {}
 
   flushEffects(effects: Effect[], phase: EffectPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
@@ -39,14 +43,8 @@ export class MockRenderHost implements UpdateHost<MockRenderContext> {
     }
   }
 
-  renderComponent<TProps, TData>(
-    component: ComponentFunction<TProps, TData, MockRenderContext>,
-    props: TProps,
-    hooks: Hook[],
-    block: Block<MockRenderContext>,
-    updater: Updater<MockRenderContext>,
-  ): TemplateDirective<TData, MockRenderContext> {
-    return component(props, { hooks, block, updater });
+  getCurrentPriority(): TaskPriority {
+    return 'user-blocking';
   }
 }
 

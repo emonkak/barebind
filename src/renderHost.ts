@@ -10,7 +10,6 @@ import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import {
   type Block,
   type Cleanup,
-  type ComponentFunction,
   type Effect,
   type EffectCallback,
   type EffectHook,
@@ -70,6 +69,18 @@ export class RenderHost implements UpdateHost<RenderContext> {
     this._constants = new Map(constants);
   }
 
+  beginRenderContext(
+    hooks: Hook[],
+    block: Block<RenderContext>,
+    updater: Updater<RenderContext>,
+  ): RenderContext {
+    return new RenderContext(hooks, block, this, updater);
+  }
+
+  finishRenderContext(context: RenderContext): void {
+    context.finalize();
+  }
+
   flushEffects(effects: Effect[], phase: EffectPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(phase);
@@ -126,19 +137,6 @@ export class RenderHost implements UpdateHost<RenderContext> {
       currentScope = currentScope.parent;
     }
     return this._constants.get(key);
-  }
-
-  renderComponent<TProps, TData>(
-    component: ComponentFunction<TProps, TData, RenderContext>,
-    props: TProps,
-    hooks: Hook[],
-    block: Block<RenderContext>,
-    updater: Updater<RenderContext>,
-  ): TemplateDirective<TData, RenderContext> {
-    const context = new RenderContext(hooks, block, this, updater);
-    const result = component(props, context);
-    context.finalize();
-    return result;
   }
 
   setScopedValue(
