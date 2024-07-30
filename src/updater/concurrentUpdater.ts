@@ -140,7 +140,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._currentBlock = pendingBlock;
       this._currentPipeline = pipeline;
       try {
-        pendingBlock.performUpdate(this._host, this);
+        pendingBlock.update(this._host, this);
       } finally {
         this._currentBlock = null;
         this._currentPipeline = originalPipeline;

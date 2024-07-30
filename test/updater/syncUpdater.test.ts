@@ -82,8 +82,8 @@ describe('SyncUpdater', () => {
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
-      const performUpdateSpy = vi
-        .spyOn(block, 'performUpdate')
+      const updateSpy = vi
+        .spyOn(block, 'update')
         .mockImplementation((_host, updater) => {
           expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
@@ -102,14 +102,14 @@ describe('SyncUpdater', () => {
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
-      expect(performUpdateSpy).toHaveBeenCalledOnce();
+      expect(updateSpy).toHaveBeenCalledOnce();
     });
 
     it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
       const updater = new SyncUpdater(new MockRenderHost());
 
       const block = new MockBlock();
-      const performUpdateSpy = vi.spyOn(block, 'performUpdate');
+      const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
@@ -123,7 +123,7 @@ describe('SyncUpdater', () => {
 
       await updater.waitForUpdate();
 
-      expect(performUpdateSpy).not.toHaveBeenCalled();
+      expect(updateSpy).not.toHaveBeenCalled();
       expect(shouldUpdateSpy).toHaveBeenCalledOnce();
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });

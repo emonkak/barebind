@@ -135,10 +135,7 @@ export class MockBlock<TContext> implements Block<TContext> {
 
   requestUpdate(_priority: TaskPriority, _updater: Updater<TContext>): void {}
 
-  performUpdate(
-    _host: UpdateHost<TContext>,
-    _updater: Updater<TContext>,
-  ): void {}
+  update(_host: UpdateHost<TContext>, _updater: Updater<TContext>): void {}
 }
 
 export class TextBinding implements Binding<TextDirective>, Effect {

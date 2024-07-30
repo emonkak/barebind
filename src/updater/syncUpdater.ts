@@ -95,7 +95,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
             }
             this._currentBlock = block;
             try {
-              block.performUpdate(this._host, this);
+              block.update(this._host, this);
             } finally {
               this._currentBlock = null;
             }

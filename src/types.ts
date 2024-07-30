@@ -51,7 +51,7 @@ export interface Block<TContext> {
   shouldUpdate(): boolean;
   cancelUpdate(): void;
   requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
-  performUpdate(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
+  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
 }
 
 export type ComponentFunction<TProps, TData, TContext> = (

@@ -901,10 +901,10 @@ describe('ComponentBinding', () => {
       );
 
       binding.connect(updater);
-      binding.performUpdate(host, updater);
+      binding.update(host, updater);
 
       binding.bind(directive2, updater);
-      binding.performUpdate(host, updater);
+      binding.update(host, updater);
 
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
       expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);

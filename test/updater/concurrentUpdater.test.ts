@@ -134,8 +134,8 @@ describe('ConcurrentUpdater', () => {
           .spyOn(block, 'priority', 'get')
           .mockReturnValue(priority);
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
-        const performUpdateSpy = vi
-          .spyOn(block, 'performUpdate')
+        const updateSpy = vi
+          .spyOn(block, 'update')
           .mockImplementation((_host, updater) => {
             expect(updater.getCurrentBlock()).toBe(block);
           });
@@ -150,7 +150,7 @@ describe('ConcurrentUpdater', () => {
         expect(requestCallbackSpy).toHaveBeenCalledWith(expect.any(Function), {
           priority,
         });
-        expect(performUpdateSpy).toHaveBeenCalledOnce();
+        expect(updateSpy).toHaveBeenCalledOnce();
       },
     );
 
@@ -166,8 +166,8 @@ describe('ConcurrentUpdater', () => {
       const passiveEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
-      const performUpdateSpy = vi
-        .spyOn(block, 'performUpdate')
+      const updateSpy = vi
+        .spyOn(block, 'update')
         .mockImplementation((_host, updater) => {
           expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
@@ -185,7 +185,7 @@ describe('ConcurrentUpdater', () => {
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
       expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
-      expect(performUpdateSpy).toHaveBeenCalledOnce();
+      expect(updateSpy).toHaveBeenCalledOnce();
     });
 
     it('should commit mutation and layout effects with "user-blocking" priority', async () => {
@@ -240,7 +240,7 @@ describe('ConcurrentUpdater', () => {
       });
 
       const block = new MockBlock();
-      const performUpdateSpy = vi.spyOn(block, 'performUpdate');
+      const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
         .mockReturnValue(false);
@@ -251,7 +251,7 @@ describe('ConcurrentUpdater', () => {
 
       await updater.waitForUpdate();
 
-      expect(performUpdateSpy).not.toHaveBeenCalled();
+      expect(updateSpy).not.toHaveBeenCalled();
       expect(shouldUpdateSpy).toHaveBeenCalledOnce();
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
@@ -277,8 +277,8 @@ describe('ConcurrentUpdater', () => {
 
       const block1 = new MockBlock();
       const block2 = new MockBlock();
-      const performUpdate1Spy = vi.spyOn(block1, 'performUpdate');
-      const performUpdate2Spy = vi.spyOn(block1, 'performUpdate');
+      const update1Spy = vi.spyOn(block1, 'update');
+      const update2Spy = vi.spyOn(block1, 'update');
 
       updater.enqueueBlock(block1);
       updater.enqueueBlock(block2);
@@ -289,8 +289,8 @@ describe('ConcurrentUpdater', () => {
       expect(getCurrentTimeSpy).toHaveBeenCalled();
       expect(shouldYieldToMainSpy).toHaveBeenCalledTimes(2);
       expect(yieldToMainSpy).toHaveBeenCalledTimes(2);
-      expect(performUpdate1Spy).toHaveBeenCalledOnce();
-      expect(performUpdate2Spy).toHaveBeenCalledOnce();
+      expect(update1Spy).toHaveBeenCalledOnce();
+      expect(update2Spy).toHaveBeenCalledOnce();
     });
   });
 });

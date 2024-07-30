@@ -178,7 +178,7 @@ export class ComponentBinding<TProps, TData, TContext>
     }
   }
 
-  performUpdate(host: UpdateHost<TContext>, updater: Updater<TContext>): void {
+  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void {
     const { component, props } = this._directive;
 
     if (

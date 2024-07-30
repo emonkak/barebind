@@ -161,7 +161,7 @@ export class TemplateResultBinding<TData, TContext>
     }
   }
 
-  performUpdate(_host: UpdateHost<TContext>, updater: Updater<TContext>): void {
+  update(_host: UpdateHost<TContext>, updater: Updater<TContext>): void {
     const { template, data } = this._directive;
 
     if (this._memoizedTemplate?.isSameTemplate(template)) {
