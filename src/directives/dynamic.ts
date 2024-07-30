@@ -4,7 +4,7 @@ import {
   type Binding,
   type Directive,
   type Part,
-  type Updater,
+  type UpdateContext,
   directiveTag,
   isDirective,
   nameOf,
@@ -30,19 +30,19 @@ export class Dynamic implements Directive {
     return 'Dynamic(' + nameOf(this._value) + ')';
   }
 
-  [directiveTag](part: Part, updater: Updater<unknown>): DynamicBinding {
-    return new DynamicBinding(this, part, updater);
+  [directiveTag](part: Part, context: UpdateContext<unknown>): DynamicBinding {
+    return new DynamicBinding(this, part, context);
   }
 }
 
 export class DynamicBinding implements Binding<unknown> {
   private _directive: Dynamic;
 
-  private _binding: Binding<unknown>;
+  private _binding: Binding<any>;
 
-  constructor(directive: Dynamic, part: Part, updater: Updater<unknown>) {
+  constructor(directive: Dynamic, part: Part, context: UpdateContext<unknown>) {
     this._directive = directive;
-    this._binding = resolveBinding(directive.value, part, updater);
+    this._binding = resolveBinding(directive.value, part, context);
   }
 
   get value(): Dynamic {
@@ -65,11 +65,11 @@ export class DynamicBinding implements Binding<unknown> {
     return this._binding;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._binding.connect(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._binding.connect(context);
   }
 
-  bind(newValue: Dynamic, updater: Updater<unknown>): void {
+  bind(newValue: Dynamic, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(Dynamic, newValue, this._binding.part);
     }
@@ -77,25 +77,25 @@ export class DynamicBinding implements Binding<unknown> {
     const newDynamic = newValue.value;
     if (isDirective(newDynamic)) {
       if (isDirective(oldDynamic) && isSamePrototype(oldDynamic, newDynamic)) {
-        this._binding.bind(newDynamic, updater);
+        this._binding.bind(newDynamic, context);
       } else {
-        this._binding.unbind(updater);
-        this._binding = newDynamic[directiveTag](this._binding.part, updater);
-        this._binding.connect(updater);
+        this._binding.unbind(context);
+        this._binding = newDynamic[directiveTag](this._binding.part, context);
+        this._binding.connect(context);
       }
     } else {
       if (isDirective(oldDynamic)) {
-        this._binding.unbind(updater);
+        this._binding.unbind(context);
         this._binding = resolvePrimitiveBinding(newDynamic, this._binding.part);
-        this._binding.connect(updater);
+        this._binding.connect(context);
       } else {
-        this._binding.bind(newDynamic, updater);
+        this._binding.bind(newDynamic, context);
       }
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
-    this._binding.unbind(updater);
+  unbind(context: UpdateContext<unknown>): void {
+    this._binding.unbind(context);
   }
 
   disconnect(): void {

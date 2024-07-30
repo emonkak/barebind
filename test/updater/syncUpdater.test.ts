@@ -1,40 +1,40 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockRenderHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('SyncUpdater', () => {
   describe('.isPending()', () => {
     it('should return true if there is a pending block', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const updater = new SyncUpdater();
 
       updater.enqueueBlock(new MockBlock());
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return true if there is a pending mutation effect', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const updater = new SyncUpdater();
 
       updater.enqueueMutationEffect({ commit() {} });
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return true if there is a pending layout effect', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const updater = new SyncUpdater();
 
       updater.enqueueLayoutEffect({ commit() {} });
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return true if there is a pending passive effect', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const updater = new SyncUpdater();
 
       updater.enqueuePassiveEffect({ commit() {} });
       expect(updater.isPending()).toBe(true);
     });
 
     it('should return false if there are no pending tasks', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const updater = new SyncUpdater();
 
       expect(updater.isPending()).toBe(false);
     });
@@ -42,11 +42,12 @@ describe('SyncUpdater', () => {
 
   describe('.isScheduled()', () => {
     it('should return whether an update is scheduled', async () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
 
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
@@ -56,11 +57,12 @@ describe('SyncUpdater', () => {
 
   describe('.scheduleUpdate()', () => {
     it('should do nothing if already scheduled', async () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.scheduleUpdate();
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
+      updater.scheduleUpdate(host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -68,8 +70,8 @@ describe('SyncUpdater', () => {
     });
 
     it('should update the block on a microtask', async () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
@@ -77,7 +79,6 @@ describe('SyncUpdater', () => {
       const updateSpy = vi
         .spyOn(block, 'update')
         .mockImplementation((_host, updater) => {
-          expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);
           updater.enqueuePassiveEffect(passiveEffect);
@@ -85,7 +86,7 @@ describe('SyncUpdater', () => {
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
       updater.enqueueBlock(block);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -98,8 +99,8 @@ describe('SyncUpdater', () => {
     });
 
     it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
       const block = new MockBlock();
       const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
@@ -109,7 +110,7 @@ describe('SyncUpdater', () => {
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
       updater.enqueueBlock(block);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -121,8 +122,8 @@ describe('SyncUpdater', () => {
     });
 
     it('should commit effects on a microtask', async () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
@@ -131,7 +132,7 @@ describe('SyncUpdater', () => {
       updater.enqueueMutationEffect(mutationEffect);
       updater.enqueueLayoutEffect(layoutEffect);
       updater.enqueuePassiveEffect(passiveEffect);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -143,10 +144,11 @@ describe('SyncUpdater', () => {
     });
 
     it('should cancel the update when flushed', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
 
-      updater.scheduleUpdate();
-      updater.flush();
+      updater.scheduleUpdate(host);
+      updater.flushUpdate(host);
 
       expect(updater.isScheduled()).toBe(false);
     });
@@ -154,7 +156,7 @@ describe('SyncUpdater', () => {
 
   describe('.waitForUpdate()', () => {
     it('should returns a resolved Promise if not scheduled', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const updater = new SyncUpdater();
 
       expect(
         Promise.race([

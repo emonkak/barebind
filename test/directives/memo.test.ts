@@ -2,9 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
-import { PartType, directiveTag, nameTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('memo()', () => {
   it('should construct a new Memo', () => {
@@ -32,8 +37,10 @@ describe('Memo', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
       const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
@@ -56,8 +63,10 @@ describe('Memo', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
       const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
@@ -83,14 +92,16 @@ describe('MemoBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new MemoBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new MemoBinding(directive, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
-      binding.connect(updater);
+      binding.connect(context);
 
       expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(updater);
+      expect(connectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -102,15 +113,17 @@ describe('MemoBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new MemoBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new MemoBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(bindSpy).toHaveBeenCalledOnce();
@@ -123,15 +136,17 @@ describe('MemoBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new MemoBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new MemoBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive1);
       expect(bindSpy).not.toHaveBeenCalled();
@@ -143,11 +158,13 @@ describe('MemoBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new MemoBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new MemoBinding(directive, part, context);
 
       expect(() => {
-        binding.bind(null as any, updater);
+        binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of Memo directive, but got "null".',
       );
@@ -161,15 +178,17 @@ describe('MemoBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new MemoBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new MemoBinding(directive, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(binding.value.dependencies).toBe(undefined);
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -180,8 +199,10 @@ describe('MemoBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new MemoBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new MemoBinding(directive, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 
       binding.disconnect();

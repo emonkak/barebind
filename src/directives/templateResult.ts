@@ -10,9 +10,11 @@ import {
   type Template,
   type TemplateDirective,
   type TemplateFragment,
+  type UpdateContext,
   type UpdateHost,
   type Updater,
   comparePriorities,
+  createUpdateContext,
   directiveTag,
   nameOf,
   nameTag,
@@ -56,7 +58,7 @@ export class TemplateResult<TData, TContext>
 
   [directiveTag](
     part: Part,
-    updater: Updater<TContext>,
+    context: UpdateContext<TContext>,
   ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -64,7 +66,7 @@ export class TemplateResult<TData, TContext>
           reportPart(part),
       );
     }
-    return new TemplateResultBinding(this, part, updater.getCurrentBlock());
+    return new TemplateResultBinding(this, part, context.currentBlock);
   }
 }
 
@@ -145,7 +147,11 @@ export class TemplateResultBinding<TData, TContext>
     this._flags &= ~FLAG_UPDATING;
   }
 
-  requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void {
+  requestUpdate(
+    priority: TaskPriority,
+    host: UpdateHost<TContext>,
+    updater: Updater<TContext>,
+  ): void {
     if (!(this._flags & FLAG_CONNECTED)) {
       return;
     }
@@ -157,11 +163,12 @@ export class TemplateResultBinding<TData, TContext>
       this._flags |= FLAG_UPDATING;
       this._priority = priority;
       updater.enqueueBlock(this);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
     }
   }
 
-  update(_host: UpdateHost<TContext>, updater: Updater<TContext>): void {
+  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void {
+    const context = createUpdateContext(host, updater, this);
     const { template, data } = this._directive;
 
     if (this._memoizedTemplate?.isSameTemplate(template)) {
@@ -171,44 +178,44 @@ export class TemplateResultBinding<TData, TContext>
       }
 
       // SAFETY: If there is a memoized template, the fragment will be present.
-      this._pendingFragment!.bind(data, updater);
+      this._pendingFragment!.bind(data, context);
     } else {
       // Here the template has been changed or has not been rendered yet. First,
       // we unbind data from the current fragment if the template has been
       // rendered.
-      this._pendingFragment?.unbind(updater);
+      this._pendingFragment?.unbind(context);
 
       // Next, unmount the old fragment and mount the new fragment.
       this._requestMutation(updater);
 
       // Finally, render the new template.
-      this._pendingFragment = template.render(data, updater);
+      this._pendingFragment = template.render(data, context);
     }
 
     this._memoizedTemplate = template;
     this._flags &= ~FLAG_UPDATING;
   }
 
-  connect(updater: Updater<TContext>): void {
-    this._forceUpdate(updater);
+  connect(context: UpdateContext<TContext>): void {
+    this._forceUpdate(context.updater);
   }
 
   bind(
     newValue: TemplateResult<TData, TContext>,
-    updater: Updater<TContext>,
+    context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
       ensureDirective(TemplateResult, newValue, this._part);
     }
     this._directive = newValue;
-    this._forceUpdate(updater);
+    this._forceUpdate(context.updater);
   }
 
-  unbind(updater: Updater<TContext>): void {
+  unbind(context: UpdateContext<TContext>): void {
     // Detach data from the current fragment before its unmount.
-    this._pendingFragment?.unbind(updater);
+    this._pendingFragment?.unbind(context);
 
-    this._requestMutation(updater);
+    this._requestMutation(context.updater);
 
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
@@ -236,10 +243,10 @@ export class TemplateResultBinding<TData, TContext>
 
   private _forceUpdate(updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_UPDATING)) {
-      this._flags |= FLAG_UPDATING;
       if (this._parent !== null) {
         this._priority = this._parent.priority;
       }
+      this._flags |= FLAG_UPDATING;
       updater.enqueueBlock(this);
     }
 

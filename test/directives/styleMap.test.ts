@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 describe('styleMap()', () => {
   it('should construct a new StyleMap', () => {
@@ -19,13 +23,15 @@ describe('StyleMap', () => {
     it('should return a new instance of StyleMapBinding', () => {
       const styleDeclaration = { display: 'none' };
       const directive = styleMap(styleDeclaration);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const binding = directive[directiveTag](part, updater);
+      const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
@@ -36,14 +42,16 @@ describe('StyleMap', () => {
     it('should throw an error if the part does not indicate "style" attribute', () => {
       const styleDeclaration = { display: 'none' };
       const directive = styleMap(styleDeclaration);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const part = {
         type: PartType.Attribute,
         name: 'data-style',
         node: document.createElement('div'),
       } as const;
 
-      expect(() => directive[directiveTag](part, updater)).toThrow(
+      expect(() => directive[directiveTag](part, context)).toThrow(
         'StyleMap directive must be used in a "style" attribute,',
       );
     });
@@ -66,10 +74,12 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(part.node.style).toHaveLength(7);
       expect(part.node.style.getPropertyValue('--my-css-property')).toBe('1');
@@ -91,14 +101,16 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -120,13 +132,15 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(part.node.style).toHaveLength(4);
@@ -144,12 +158,14 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
+      binding.bind(directive2, context);
 
       expect(binding.value).toBe(directive1);
       expect(updater.isPending()).toBe(false);
@@ -166,10 +182,12 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       expect(() => {
-        binding.bind(null as any, updater);
+        binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of StyleMap directive, but got "null".',
       );
@@ -191,13 +209,15 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(part.node.style).toHaveLength(0);
     });
@@ -210,9 +230,11 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new StyleMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

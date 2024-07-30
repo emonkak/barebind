@@ -1,4 +1,4 @@
-import type { RenderContext } from './renderHost.js';
+import type { RenderContext } from './renderContext.js';
 
 export interface Route<
   TResult,

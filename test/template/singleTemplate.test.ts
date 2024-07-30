@@ -6,9 +6,9 @@ import {
   SingleTemplateFragment,
   TextTemplate,
 } from '../../src/template/singleTemplate.js';
-import { PartType } from '../../src/types.js';
+import { PartType, createUpdateContext } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('ChildNodeTemplate', () => {
   describe('.constructor()', () => {
@@ -21,10 +21,12 @@ describe('ChildNodeTemplate', () => {
 
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with a non-directive value', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = ChildNodeTemplate.instance.render('foo', updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = ChildNodeTemplate.instance.render('foo', context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.binding).toBeInstanceOf(NodeBinding);
       expect(fragment.binding.part).toMatchObject({
@@ -35,9 +37,11 @@ describe('ChildNodeTemplate', () => {
     });
 
     it('should return SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const directive = new TextDirective();
-      const fragment = ChildNodeTemplate.instance.render(directive, updater);
+      const fragment = ChildNodeTemplate.instance.render(directive, context);
 
       expect(fragment.binding).toBeInstanceOf(TextBinding);
       expect(fragment.binding.value).toBe(directive);
@@ -68,10 +72,12 @@ describe('TextTemplate', () => {
 
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = TextTemplate.instance.render('foo', updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = TextTemplate.instance.render('foo', context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.binding).toBeInstanceOf(NodeBinding);
       expect(fragment.binding.value).toBe('foo');
@@ -83,9 +89,11 @@ describe('TextTemplate', () => {
     });
 
     it('should return SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const directive = new TextDirective();
-      const fragment = TextTemplate.instance.render(directive, updater);
+      const fragment = TextTemplate.instance.render(directive, context);
 
       expect(fragment.binding).toBeInstanceOf(TextBinding);
       expect(fragment.binding.value).toBe(directive);
@@ -123,35 +131,39 @@ describe('SingleTemplateFragment', () => {
 
   describe('.bind()', () => {
     it('should bind a value to the binding', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new NodeBinding('foo', {
         type: PartType.Node,
         node: document.createTextNode(''),
       });
       const fragment = new SingleTemplateFragment(binding);
-      const updater = new SyncUpdater(new MockRenderHost());
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      fragment.bind('bar', updater);
+      fragment.bind('bar', context);
 
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith('bar', updater);
+      expect(bindSpy).toHaveBeenCalledWith('bar', context);
     });
   });
 
   describe('.unbind()', () => {
     it('should unbind the value from the binding', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new NodeBinding('foo', {
         type: PartType.Node,
         node: document.createTextNode(''),
       });
       const fragment = new SingleTemplateFragment(binding);
-      const updater = new SyncUpdater(new MockRenderHost());
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      fragment.unbind(updater);
+      fragment.unbind(context);
 
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
   });
 

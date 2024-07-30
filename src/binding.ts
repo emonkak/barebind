@@ -8,6 +8,7 @@ import {
   type Part,
   PartType,
   type PropertyPart,
+  type UpdateContext,
   type Updater,
   directiveTag,
   isDirective,
@@ -44,24 +45,24 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: unknown, updater: Updater<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     if (this._value !== null) {
       this._value = null;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
@@ -125,23 +126,23 @@ export class EventBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: unknown, updater: Updater<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureEventListener(newValue, this._part);
     }
     if (newValue !== this._memoizedListener) {
       this._pendingListener = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedListener !== null) {
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
 
     this._pendingListener = null;
@@ -257,24 +258,24 @@ export class NodeBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: unknown, updater: Updater<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     if (this._value !== null) {
       this._value = null;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
@@ -327,21 +328,21 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: unknown, updater: Updater<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._value, newValue)) {
       this._value = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(_updater: Updater<unknown>): void {}
+  unbind(_context: UpdateContext<unknown>): void {}
 
   disconnect(): void {}
 
@@ -390,24 +391,24 @@ export class ElementBinding implements Binding<unknown> {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._updateProps(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._updateProps(context);
   }
 
-  bind(newValue: unknown, updater: Updater<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
     }
     if (this._props !== newValue) {
       this._props = newValue;
-      this._updateProps(updater);
+      this._updateProps(context);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     this._props = {};
     for (const binding of this._bindings.values()) {
-      binding.unbind(updater);
+      binding.unbind(context);
     }
   }
 
@@ -417,13 +418,13 @@ export class ElementBinding implements Binding<unknown> {
     }
   }
 
-  private _updateProps(updater: Updater<unknown>): void {
+  private _updateProps(context: UpdateContext<unknown>): void {
     for (const [name, binding] of this._bindings.entries()) {
       if (
         !Object.hasOwn(this._props, name) ||
         this._props[name] === undefined
       ) {
-        binding.unbind(updater);
+        binding.unbind(context);
         this._bindings.delete(name);
       }
     }
@@ -437,11 +438,11 @@ export class ElementBinding implements Binding<unknown> {
       const binding = this._bindings.get(name);
 
       if (binding !== undefined) {
-        binding.bind(value, updater);
+        binding.bind(value, context);
       } else {
         const part = resolveSpreadPart(name, this._part.node);
-        const newBinding = resolveBinding(value, part, updater);
-        newBinding.connect(updater);
+        const newBinding = resolveBinding(value, part, context);
+        newBinding.connect(context);
         this._bindings.set(name, newBinding);
       }
     }
@@ -451,10 +452,10 @@ export class ElementBinding implements Binding<unknown> {
 export function resolveBinding<TValue, TContext>(
   value: TValue,
   part: Part,
-  updater: Updater<TContext>,
+  context: UpdateContext<TContext>,
 ): Binding<TValue, TContext> {
   if (isDirective(value)) {
-    return value[directiveTag](part, updater) as Binding<TValue, TContext>;
+    return value[directiveTag](part, context) as Binding<TValue, TContext>;
   } else {
     return resolvePrimitiveBinding(value, part) as Binding<TValue, TContext>;
   }

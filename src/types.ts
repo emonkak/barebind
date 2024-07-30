@@ -7,29 +7,42 @@ export interface Binding<TValue, TContext = unknown> {
   get part(): Part;
   get startNode(): ChildNode;
   get endNode(): ChildNode;
-  connect(updater: Updater<TContext>): void;
-  bind(newValue: TValue, updater: Updater<TContext>): void;
-  unbind(updater: Updater<TContext>): void;
+  connect(context: UpdateContext<TContext>): void;
+  bind(newValue: TValue, context: UpdateContext<TContext>): void;
+  unbind(context: UpdateContext<TContext>): void;
   disconnect(): void;
 }
 
 export interface Directive<TContext = unknown> {
   [directiveTag](
     part: Part,
-    updater: Updater<TContext>,
-  ): Binding<ThisType<this>>;
+    context: UpdateContext<TContext>,
+  ): Binding<ThisType<this>, TContext>;
 }
 
-export interface Updater<TContext> {
-  getCurrentBlock(): Block<TContext> | null;
-  isPending(): boolean;
-  isScheduled(): boolean;
-  waitForUpdate(): Promise<void>;
-  enqueueBlock(block: Block<TContext>): void;
-  enqueueLayoutEffect(effect: Effect): void;
-  enqueueMutationEffect(effect: Effect): void;
-  enqueuePassiveEffect(effect: Effect): void;
-  scheduleUpdate(): void;
+export interface Block<TContext> {
+  get parent(): Block<TContext> | null;
+  get priority(): TaskPriority;
+  get isUpdating(): boolean;
+  shouldUpdate(): boolean;
+  cancelUpdate(): void;
+  requestUpdate(
+    priority: TaskPriority,
+    host: UpdateHost<TContext>,
+    updater: Updater<TContext>,
+  ): void;
+  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
+}
+
+export type ComponentFunction<TProps, TData, TContext> = (
+  props: TProps,
+  context: TContext,
+) => TemplateDirective<TData, TContext>;
+
+export interface UpdateContext<TContext> {
+  readonly host: UpdateHost<TContext>;
+  readonly updater: Updater<TContext>;
+  readonly currentBlock: Block<TContext> | null;
 }
 
 export interface UpdateHost<TContext> {
@@ -41,27 +54,33 @@ export interface UpdateHost<TContext> {
   finishRenderContext(context: TContext): void;
   flushEffects(effects: Effect[], phase: EffectPhase): void;
   getCurrentPriority(): TaskPriority;
+  getHTMLTemplate<TData extends readonly any[]>(
+    tokens: ReadonlyArray<string>,
+    data: TData,
+  ): Template<TData>;
+  getSVGTemplate<TData extends readonly any[]>(
+    tokens: ReadonlyArray<string>,
+    data: TData,
+  ): Template<TData>;
+  getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
+  setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
 }
 
-export interface Block<TContext> {
-  get parent(): Block<TContext> | null;
-  get priority(): TaskPriority;
-  get isUpdating(): boolean;
-  shouldUpdate(): boolean;
-  cancelUpdate(): void;
-  requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void;
-  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
+export interface Updater<TContext> {
+  enqueueBlock(block: Block<TContext>): void;
+  enqueueLayoutEffect(effect: Effect): void;
+  enqueueMutationEffect(effect: Effect): void;
+  enqueuePassiveEffect(effect: Effect): void;
+  isPending(): boolean;
+  isScheduled(): boolean;
+  scheduleUpdate(host: UpdateHost<TContext>): void;
+  waitForUpdate(): Promise<void>;
 }
-
-export type ComponentFunction<TProps, TData, TContext> = (
-  props: TProps,
-  context: TContext,
-) => TemplateDirective<TData, TContext>;
 
 export interface Template<TData, TContext = unknown> {
   render(
     data: TData,
-    updater: Updater<TContext>,
+    context: UpdateContext<TContext>,
   ): TemplateFragment<TData, TContext>;
   isSameTemplate(other: Template<TData, TContext>): boolean;
 }
@@ -75,8 +94,8 @@ export interface TemplateDirective<TData = unknown, TContext = unknown>
 export interface TemplateFragment<TData, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
-  bind(data: TData, updater: Updater<TContext>): void;
-  unbind(updater: Updater<TContext>): void;
+  bind(data: TData, context: UpdateContext<TContext>): void;
+  unbind(context: UpdateContext<TContext>): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
   disconnect(): void;
@@ -199,6 +218,18 @@ export function comparePriorities(
   return first === second
     ? 0
     : getPriorityNumber(second) - getPriorityNumber(first);
+}
+
+export function createUpdateContext<TContext>(
+  host: UpdateHost<TContext>,
+  updater: Updater<TContext>,
+  currentBlock: Block<TContext> | null = null,
+): UpdateContext<TContext> {
+  return {
+    host,
+    updater,
+    currentBlock,
+  };
 }
 
 export function isDirective(value: unknown): value is Directive<unknown> {

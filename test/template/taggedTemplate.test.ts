@@ -17,10 +17,11 @@ import {
   type Part,
   PartType,
   type Template,
+  createUpdateContext,
   directiveTag,
 } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 const MARKER = getMarker();
 
@@ -310,8 +311,10 @@ describe('TaggedTemplate', () => {
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
         </div>
       `;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = template.render(values, context);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(values.length);
@@ -353,7 +356,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.startNode).toBe(fragment.childNodes[0]);
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         `
@@ -365,9 +368,11 @@ describe('TaggedTemplate', () => {
     });
 
     it('should return a TaggedTemplateFragment without bindings', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template] = html`<div></div>`;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render([], updater);
+      const fragment = template.render([], context);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(0);
@@ -377,9 +382,11 @@ describe('TaggedTemplate', () => {
     });
 
     it('should return a TaggedTemplateFragment with empty template', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template] = html``;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render([], updater);
+      const fragment = template.render([], context);
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(0);
@@ -389,13 +396,15 @@ describe('TaggedTemplate', () => {
     });
 
     it('should throw an error if the number of holes and values do not match', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template, values] = html`
         <div class=${'foo'} class=${'bar'}></div>
       `;
-      const updater = new SyncUpdater(new MockRenderHost());
 
       expect(() => {
-        template.render(values, updater);
+        template.render(values, context);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
   });
@@ -421,21 +430,23 @@ describe('TaggedTemplate', () => {
 describe('TaggedTemplateFragment', () => {
   describe('.bind()', () => {
     it('should bind values corresponding to bindings in the fragment', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template, values] = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const fragment = template.render(values, context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '<div class="foo">bar</div>',
         '<!--baz-->',
       ]);
 
-      fragment.bind(['bar', 'baz', 'qux'], updater);
-      updater.flush();
+      fragment.bind(['bar', 'baz', 'qux'], context);
+      updater.flushUpdate(host);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '<div class="bar">baz</div>',
@@ -454,12 +465,14 @@ describe('TaggedTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = template.render(values, context);
 
       container.appendChild(part.node);
       fragment.mount(part);
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         'foo',
@@ -477,8 +490,8 @@ describe('TaggedTemplateFragment', () => {
         vi.spyOn(binding, 'disconnect'),
       );
 
-      fragment.unbind(updater);
-      updater.flush();
+      fragment.unbind(context);
+      updater.flushUpdate(host);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '',
@@ -497,20 +510,25 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should throw an error if the number of binding and values do not match', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template, values] = html`
         <p>Count: ${0}</p>
       `;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const fragment = template.render(values, context);
 
       expect(() => {
-        fragment.bind([] as any, updater);
+        fragment.bind([] as any, context);
       }).toThrow('The number of new data must be 1, but got 0.');
     });
   });
 
   describe('.disconnect()', () => {
     it('should disconnect bindings in the fragment', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const directive = new TextDirective();
       const [template, values] = html`
         <div>${directive}</div>
@@ -526,8 +544,7 @@ describe('TaggedTemplateFragment', () => {
         });
         return binding;
       });
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const fragment = template.render(values, context);
 
       expect(disconnects).toBe(0);
 
@@ -539,13 +556,15 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.mount()', () => {
     it('should mount child nodes at the part', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const fragment = template.render(values, context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       const container = document.createElement('div');
       const part = {
@@ -564,13 +583,15 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should not mount child nodes if the part is not mounted', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = template.render(values, updater);
+      const fragment = template.render(values, context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       const container = document.createElement('div');
       const part = {

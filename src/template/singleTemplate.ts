@@ -5,7 +5,7 @@ import {
   PartType,
   type Template,
   type TemplateFragment,
-  type Updater,
+  type UpdateContext,
   nameOf,
 } from '../types.js';
 
@@ -21,7 +21,7 @@ export class ChildNodeTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, updater: Updater<unknown>): SingleTemplateFragment<T> {
+  render(data: T, context: UpdateContext<unknown>): SingleTemplateFragment<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -29,8 +29,8 @@ export class ChildNodeTemplate<T> implements Template<T> {
     DEBUG: {
       part.node.nodeValue = nameOf(data);
     }
-    const binding = resolveBinding(data, part, updater);
-    binding.connect(updater);
+    const binding = resolveBinding(data, part, context);
+    binding.connect(context);
     return new SingleTemplateFragment(binding);
   }
 
@@ -48,13 +48,13 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, updater: Updater<unknown>): SingleTemplateFragment<T> {
+  render(data: T, context: UpdateContext<unknown>): SingleTemplateFragment<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
-    const binding = resolveBinding(data, part, updater);
-    binding.connect(updater);
+    const binding = resolveBinding(data, part, context);
+    binding.connect(context);
     return new SingleTemplateFragment(binding);
   }
 
@@ -82,12 +82,12 @@ export class SingleTemplateFragment<T> implements TemplateFragment<T> {
     return this._binding.endNode;
   }
 
-  bind(data: T, updater: Updater<unknown>): void {
-    this._binding.bind(data, updater);
+  bind(data: T, context: UpdateContext<unknown>): void {
+    this._binding.bind(data, context);
   }
 
-  unbind(updater: Updater<unknown>): void {
-    this._binding.unbind(updater);
+  unbind(context: UpdateContext<unknown>): void {
+    this._binding.unbind(context);
   }
 
   mount(part: ChildNodePart): void {

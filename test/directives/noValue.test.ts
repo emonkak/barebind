@@ -5,9 +5,13 @@ import {
   NoValueBinding,
   noValue,
 } from '../../src/directives/noValue.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 describe('noValue', () => {
   it('should be the same as NoValue.instance', () => {
@@ -30,8 +34,10 @@ describe('NoValue', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = noValue[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = noValue[directiveTag](part, context);
 
       expect(binding.value).toBe(noValue);
       expect(binding.part).toBe(part);
@@ -49,9 +55,11 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
+      binding.connect(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -65,9 +73,11 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.bind(noValue, updater);
+      binding.bind(noValue, context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -79,9 +89,11 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      expect(() => binding.bind(null as any, updater)).toThrow(
+      expect(() => binding.bind(null as any, context)).toThrow(
         'A value must be a instance of NoValue directive, but got "null".',
       );
     });
@@ -94,9 +106,11 @@ describe('NoValueBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new NoValueBinding(part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

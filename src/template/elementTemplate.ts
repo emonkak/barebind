@@ -5,7 +5,7 @@ import {
   PartType,
   type Template,
   type TemplateFragment,
-  type Updater,
+  type UpdateContext,
   nameOf,
 } from '../types.js';
 
@@ -25,7 +25,7 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
 
   render(
     data: ElementData<TElementValue, TChildNodeValue>,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ): ElementTemplateFragment<TElementValue, TChildNodeValue> {
     const { elementValue, childNodeValue } = data;
     const elementPart = {
@@ -39,14 +39,14 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
     DEBUG: {
       childNodePart.node.data = nameOf(data.elementValue);
     }
-    const elementBinding = resolveBinding(elementValue, elementPart, updater);
+    const elementBinding = resolveBinding(elementValue, elementPart, context);
     const childNodeBinding = resolveBinding(
       childNodeValue,
       childNodePart,
-      updater,
+      context,
     );
-    elementBinding.connect(updater);
-    childNodeBinding.connect(updater);
+    elementBinding.connect(context);
+    childNodeBinding.connect(context);
     return new ElementTemplateFragment(elementBinding, childNodeBinding);
   }
 
@@ -93,15 +93,15 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
 
   bind(
     data: ElementData<TElementValue, TChildNodeValue>,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ): void {
-    this._elementBinding.bind(data.elementValue, updater);
-    this._childNodeBinding.bind(data.childNodeValue, updater);
+    this._elementBinding.bind(data.elementValue, context);
+    this._childNodeBinding.bind(data.childNodeValue, context);
   }
 
-  unbind(updater: Updater<unknown>) {
-    this._elementBinding.unbind(updater);
-    this._childNodeBinding.unbind(updater);
+  unbind(context: UpdateContext<unknown>) {
+    this._elementBinding.unbind(context);
+    this._childNodeBinding.unbind(context);
   }
 
   mount(part: ChildNodePart): void {

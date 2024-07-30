@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ClassMapBinding, classMap } from '../../src/directives/classMap.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 describe('classMap()', () => {
   it('should construct a ClassMap', () => {
@@ -19,13 +23,15 @@ describe('ClassMapDirective', () => {
     it('should return a new instance of ClassMapBinding', () => {
       const classDeclaration = { foo: true };
       const directive = classMap(classDeclaration);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
-      const binding = directive[directiveTag](part, updater);
+      const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
@@ -36,14 +42,16 @@ describe('ClassMapDirective', () => {
     it('should throw an error if the part does not indicate "class" attribute', () => {
       const classDeclaration = { foo: true };
       const directive = classMap(classDeclaration);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const part = {
         type: PartType.Attribute,
         name: 'className',
         node: document.createElement('div'),
       } as const;
 
-      expect(() => directive[directiveTag](part, updater)).toThrow(
+      expect(() => directive[directiveTag](part, context)).toThrow(
         'ClassMap directive must be used in a "class" attribute,',
       );
     });
@@ -64,10 +72,12 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(part.node.classList).toHaveLength(2);
       expect(part.node.classList).toContain('foo');
@@ -86,14 +96,16 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -117,13 +129,15 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(part.node.classList).toHaveLength(1);
@@ -143,12 +157,14 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
+      binding.bind(directive2, context);
 
       expect(binding.value).toBe(directive1);
       expect(updater.isPending()).toBe(false);
@@ -165,10 +181,12 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       expect(() => {
-        binding.bind(null as any, updater);
+        binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of ClassMap directive, but got "null".',
       );
@@ -188,13 +206,15 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(part.node.classList).toHaveLength(0);
     });
@@ -207,9 +227,11 @@ describe('ClassMapBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new ClassMapBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

@@ -6,7 +6,7 @@ import {
   PartType,
   type Template,
   type TemplateFragment,
-  type Updater,
+  type UpdateContext,
   nameOf,
 } from '../types.js';
 
@@ -113,7 +113,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
 
   render(
     data: TData,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ): TaggedTemplateFragment<TData> {
     const holes = this._holes;
 
@@ -185,8 +185,8 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
               break;
           }
 
-          const binding = resolveBinding(data[holeIndex], part, updater);
-          binding.connect(updater);
+          const binding = resolveBinding(data[holeIndex], part, context);
+          binding.connect(context);
 
           bindings[holeIndex] = binding;
           holeIndex++;
@@ -238,7 +238,7 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
     return this._bindings;
   }
 
-  bind(data: TData, updater: Updater<unknown>): void {
+  bind(data: TData, context: UpdateContext<unknown>): void {
     if (data.length !== this._bindings.length) {
       throw new Error(
         `The number of new data must be ${this._bindings.length}, but got ${data.length}.`,
@@ -254,11 +254,11 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
         }
       }
 
-      binding.bind(data[i]!, updater);
+      binding.bind(data[i]!, context);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       const part = binding.part;
@@ -268,7 +268,7 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
         this._childNodes.includes(part.node)
       ) {
         // This binding is mounted as a child of the root, so it must be unbound.
-        binding.unbind(updater);
+        binding.unbind(context);
       } else {
         // Otherwise, it does not need to be unbound.
         binding.disconnect();

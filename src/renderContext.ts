@@ -6,14 +6,12 @@ import {
 } from './template/elementTemplate.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
-import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import {
   type Block,
   type Cleanup,
   type Effect,
   type EffectCallback,
   type EffectHook,
-  type EffectPhase,
   type FinalizerHook,
   type Hook,
   HookType,
@@ -29,8 +27,12 @@ import {
 export const usableTag = Symbol('Usable');
 
 export type Usable<TResult, TContext> =
-  | UsableCallback<TResult, TContext>
-  | UsableObject<TResult, TContext>;
+  | UsableObject<TResult, TContext>
+  | UsableCallback<TResult, TContext>;
+
+export interface UsableObject<TResult, TContext> {
+  [usableTag](context: TContext): TResult;
+}
 
 export type UsableCallback<TResult, TContext> = (context: TContext) => TResult;
 
@@ -42,125 +44,12 @@ export type NewState<TState> = TState extends Function
   ? (prevState: TState) => TState
   : ((prevState: TState) => TState) | TState;
 
-export interface UsableObject<TResult, TContext> {
-  [usableTag](context: TContext): TResult;
-}
-
-export interface RenderHostOptions {
-  constants?: Map<unknown, unknown>;
-}
-
-export class RenderHost implements UpdateHost<RenderContext> {
-  private readonly _constants: Map<unknown, unknown>;
-
-  private readonly _blockScopes: WeakMap<
-    Block<RenderContext>,
-    Map<unknown, unknown>
-  > = new WeakMap();
-
-  private readonly _cachedTemplates: WeakMap<
-    ReadonlyArray<string>,
-    TaggedTemplate<readonly any[]>
-  > = new WeakMap();
-
-  private readonly _marker: string = getMarker();
-
-  constructor({ constants = new Map() }: RenderHostOptions = {}) {
-    this._constants = new Map(constants);
-  }
-
-  beginRenderContext(
-    hooks: Hook[],
-    block: Block<RenderContext>,
-    updater: Updater<RenderContext>,
-  ): RenderContext {
-    return new RenderContext(hooks, block, this, updater);
-  }
-
-  finishRenderContext(context: RenderContext): void {
-    context.finalize();
-  }
-
-  flushEffects(effects: Effect[], phase: EffectPhase): void {
-    for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(phase);
-    }
-  }
-
-  getCurrentPriority(): TaskPriority {
-    const currentEvent = window.event;
-    if (currentEvent !== undefined) {
-      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
-    } else {
-      return 'user-visible';
-    }
-  }
-
-  getHTMLTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
-    data: TData,
-  ): TaggedTemplate<TData> {
-    let template = this._cachedTemplates.get(tokens);
-
-    if (template === undefined) {
-      template = TaggedTemplate.parseHTML(tokens, data, this._marker);
-      this._cachedTemplates.set(tokens, template);
-    }
-
-    return template;
-  }
-
-  getSVGTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
-    data: TData,
-  ): TaggedTemplate<TData> {
-    let template = this._cachedTemplates.get(tokens);
-
-    if (template === undefined) {
-      template = TaggedTemplate.parseSVG(tokens, data, this._marker);
-      this._cachedTemplates.set(tokens, template);
-    }
-
-    return template;
-  }
-
-  getScopedValue(
-    key: unknown,
-    block: Block<RenderContext> | null = null,
-  ): unknown {
-    let currentScope = block;
-    while (currentScope !== null) {
-      const value = this._blockScopes.get(currentScope)?.get(key);
-      if (value !== undefined) {
-        return value;
-      }
-      currentScope = currentScope.parent;
-    }
-    return this._constants.get(key);
-  }
-
-  setScopedValue(
-    key: unknown,
-    value: unknown,
-    block: Block<RenderContext>,
-  ): void {
-    const variables = this._blockScopes.get(block);
-    if (variables !== undefined) {
-      variables.set(key, value);
-    } else {
-      const namespace = new Map();
-      namespace.set(key, value);
-      this._blockScopes.set(block, namespace);
-    }
-  }
-}
-
 export class RenderContext {
   private readonly _hooks: Hook[];
 
   private readonly _block: Block<RenderContext>;
 
-  private readonly _host: RenderHost;
+  private readonly _host: UpdateHost<RenderContext>;
 
   private readonly _updater: Updater<RenderContext>;
 
@@ -169,7 +58,7 @@ export class RenderContext {
   constructor(
     hooks: Hook[],
     block: Block<RenderContext>,
-    host: RenderHost,
+    host: UpdateHost<RenderContext>,
     updater: Updater<RenderContext>,
   ) {
     this._hooks = hooks;
@@ -233,7 +122,11 @@ export class RenderContext {
   }
 
   forceUpdate(): void {
-    this._block.requestUpdate(this._host.getCurrentPriority(), this._updater);
+    this._block.requestUpdate(
+      this._host.getCurrentPriority(),
+      this._host,
+      this._updater,
+    );
   }
 
   setContextValue(key: unknown, value: unknown): void {
@@ -392,6 +285,7 @@ export class RenderContext {
             hook.state = nextState;
             this._block.requestUpdate(
               priority ?? this._host.getCurrentPriority(),
+              this._host,
               this._updater,
             );
           }
@@ -430,6 +324,7 @@ export class RenderContext {
         subscribe(() => {
           this._block.requestUpdate(
             priority ?? this._host.getCurrentPriority(),
+            this._host,
             this._updater,
           );
         }),
@@ -464,30 +359,5 @@ function ensureHookType<TExpectedHook extends Hook>(
     throw new Error(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
-  }
-}
-
-function isContinuousEvent(event: Event): boolean {
-  switch (event.type as keyof DocumentEventMap) {
-    case 'drag':
-    case 'dragenter':
-    case 'dragleave':
-    case 'dragover':
-    case 'mouseenter':
-    case 'mouseleave':
-    case 'mousemove':
-    case 'mouseout':
-    case 'mouseover':
-    case 'pointerenter':
-    case 'pointerleave':
-    case 'pointermove':
-    case 'pointerout':
-    case 'pointerover':
-    case 'scroll':
-    case 'touchmove':
-    case 'wheel':
-      return true;
-    default:
-      return false;
   }
 }

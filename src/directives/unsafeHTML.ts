@@ -5,6 +5,7 @@ import {
   type Directive,
   type Part,
   PartType,
+  type UpdateContext,
   type Updater,
   directiveTag,
 } from '../types.js';
@@ -24,7 +25,10 @@ export class UnsafeHTML implements Directive {
     return this._content;
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): UnsafeHTMLBinding {
+  [directiveTag](
+    part: Part,
+    _context: UpdateContext<unknown>,
+  ): UnsafeHTMLBinding {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'UnsafeHTML directive must be used in a child node, but it is used here:\n' +
@@ -65,26 +69,26 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: UnsafeHTML, updater: Updater<unknown>): void {
+  bind(newValue: UnsafeHTML, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(UnsafeHTML, newValue, this._part);
     }
     const oldValue = this._directive;
     if (oldValue.content !== newValue.content) {
       this._directive = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { content } = this._directive;
     if (content !== '') {
       this._directive = new UnsafeHTML('');
-      this.connect(updater);
+      this.connect(context);
     }
   }
 

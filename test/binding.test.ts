@@ -8,9 +8,14 @@ import {
   PropertyBinding,
   resolveBinding,
 } from '../src/binding.js';
-import { type Part, PartType, directiveTag } from '../src/types.js';
+import {
+  type Part,
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from './mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from './mocks.js';
 
 describe('AttributeBinding', () => {
   describe('.constructor()', () => {
@@ -39,16 +44,18 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('foo');
       expect(element.getAttribute('class')).toBe('foo');
 
-      binding.bind('bar', updater);
-      updater.flush();
+      binding.bind('bar', context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('bar');
       expect(element.getAttribute('class')).toBe('bar');
@@ -72,16 +79,18 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding(obj1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(obj1);
       expect(element.getAttribute('class')).toBe('foo');
 
-      binding.bind(obj2, updater);
-      updater.flush();
+      binding.bind(obj2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(obj2);
       expect(element.getAttribute('class')).toBe('bar');
@@ -95,16 +104,18 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(true, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(true);
       expect(element.hasAttribute('contenteditable')).toBe(true);
 
-      binding.bind(false, updater);
-      updater.flush();
+      binding.bind(false, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(false);
       expect(element.hasAttribute('contenteditable')).toBe(false);
@@ -118,11 +129,13 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(null, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       element.toggleAttribute('contenteditable', true);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(null);
       expect(element.hasAttribute('contenteditable')).toBe(false);
@@ -136,11 +149,13 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(undefined, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       element.toggleAttribute('contenteditable', true);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(undefined);
       expect(element.hasAttribute('contenteditable')).toBe(false);
@@ -154,9 +169,11 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.bind('foo', updater);
+      binding.bind('foo', context);
 
       expect(binding.value).toBe('foo');
       expect(updater.isPending()).toBe(false);
@@ -171,15 +188,17 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(undefined, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -192,8 +211,10 @@ describe('AttributeBinding', () => {
           node: document.createElement('div'),
           name: 'class',
         });
-        const updater = new SyncUpdater(new MockRenderHost());
-        binding.bind(new TextDirective(), updater);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = createUpdateContext(host, updater);
+        binding.bind(new TextDirective(), context);
       }).toThrow('A value must not be a directive,');
     });
   });
@@ -207,11 +228,13 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(true, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       element.toggleAttribute('contenteditable', true);
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(null);
       expect(element.hasAttribute('contenteditable')).toBe(false);
@@ -225,15 +248,17 @@ describe('AttributeBinding', () => {
         name: 'contenteditable',
       } as const;
       const binding = new AttributeBinding(undefined, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.unbind(updater);
-      binding.unbind(updater);
+      binding.unbind(context);
+      binding.unbind(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -299,15 +324,17 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -326,12 +353,14 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
@@ -340,8 +369,8 @@ describe('EventBinding', () => {
       expect(listener1).toHaveBeenCalledWith(event);
       expect(listener2).not.toHaveBeenCalled();
 
-      binding.bind(listener2, updater);
-      updater.flush();
+      binding.bind(listener2, context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
       expect(listener1).toHaveBeenCalledOnce();
@@ -365,13 +394,15 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
@@ -384,8 +415,8 @@ describe('EventBinding', () => {
       expect(listener1.handleEvent).toHaveBeenCalledWith(event);
       expect(listener2.handleEvent).not.toHaveBeenCalled();
 
-      binding.bind(listener2, updater);
-      updater.flush();
+      binding.bind(listener2, context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
@@ -413,18 +444,20 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
 
-      binding.bind(listener, updater);
+      binding.bind(listener, context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -440,17 +473,19 @@ describe('EventBinding', () => {
       const listener = vi.fn();
       const event = new CustomEvent('hello');
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
-      binding.bind(null, updater);
-      updater.flush();
+      binding.bind(null, context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
@@ -470,8 +505,10 @@ describe('EventBinding', () => {
             node: document.createElement('div'),
             name: 'hello',
           });
-          const updater = new SyncUpdater(new MockRenderHost());
-          binding.bind({}, updater);
+          const host = new MockUpdateHost();
+          const updater = new SyncUpdater();
+          const context = createUpdateContext(host, updater);
+          binding.bind({}, context);
         }).toThrow(
           'A value of EventBinding must be EventListener, EventListenerObject or null.',
         );
@@ -490,17 +527,19 @@ describe('EventBinding', () => {
       } as const;
       const event = new CustomEvent('hello');
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
       element.dispatchEvent(event);
 
       expect(binding.value).toBe(null);
@@ -521,19 +560,21 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
+      binding.connect(context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.unbind(updater);
-      binding.unbind(updater);
+      binding.unbind(context);
+      binding.unbind(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -548,14 +589,16 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.unbind(updater);
-      binding.unbind(updater);
+      binding.unbind(context);
+      binding.unbind(context);
 
       expect(enqueueMutationEffectSpy).not.toHaveBeenCalled();
     });
@@ -571,13 +614,15 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       binding.disconnect();
 
@@ -597,13 +642,15 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       binding.disconnect();
 
@@ -631,14 +678,16 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
+      binding.connect(context);
       binding.disconnect();
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(addEventListenerSpy).not.toHaveBeenCalled();
       expect(removeEventListenerSpy).not.toHaveBeenCalledOnce();
@@ -653,14 +702,16 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(listener, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(updater);
+      binding.connect(context);
       binding.disconnect();
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(addEventListenerSpy).not.toHaveBeenCalled();
       expect(removeEventListenerSpy).not.toHaveBeenCalledOnce();
@@ -694,23 +745,25 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('foo');
       expect(node.nodeValue).toBe('foo');
 
-      binding.bind('bar', updater);
-      updater.flush();
+      binding.bind('bar', context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('bar');
       expect(node.nodeValue).toBe('bar');
 
-      binding.bind(null, updater);
-      updater.flush();
-      updater.flush();
+      binding.bind(null, context);
+      updater.flushUpdate(host);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(null);
       expect(node.nodeValue).toBe('');
@@ -722,10 +775,12 @@ describe('NodeBinding', () => {
         type: PartType.Node,
         node,
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new NodeBinding('foo', part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.bind('foo', updater);
+      binding.bind('foo', context);
 
       expect(binding.value).toBe('foo');
       expect(updater.isPending()).toBe(false);
@@ -739,14 +794,16 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding(undefined, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -758,8 +815,10 @@ describe('NodeBinding', () => {
           type: PartType.Node,
           node: document.createElement('div'),
         });
-        const updater = new SyncUpdater(new MockRenderHost());
-        binding.bind(new TextDirective(), updater);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = createUpdateContext(host, updater);
+        binding.bind(new TextDirective(), context);
       }).toThrow('A value must not be a directive,');
     });
   });
@@ -772,16 +831,18 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('foo');
       expect(node.nodeValue).toBe('foo');
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(null);
       expect(node.nodeValue).toBe('');
@@ -794,14 +855,16 @@ describe('NodeBinding', () => {
         node,
       } as const;
       const binding = new NodeBinding(undefined, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.unbind(updater);
-      binding.unbind(updater);
+      binding.unbind(context);
+      binding.unbind(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -849,16 +912,18 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('foo');
       expect(element.className).toBe('foo');
 
-      binding.bind('bar', updater);
-      updater.flush();
+      binding.bind('bar', context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe('bar');
       expect(element.className).toBe('bar');
@@ -871,10 +936,12 @@ describe('PropertyBinding', () => {
         node: element,
         name: 'className',
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
       const binding = new PropertyBinding('foo', part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.bind('foo', updater);
+      binding.bind('foo', context);
 
       expect(binding.value).toBe('foo');
       expect(updater.isPending()).toBe(false);
@@ -889,14 +956,16 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding(undefined, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -909,8 +978,10 @@ describe('PropertyBinding', () => {
           node: document.createElement('div'),
           name: 'className',
         });
-        const updater = new SyncUpdater(new MockRenderHost());
-        binding.bind(new TextDirective(), updater);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = createUpdateContext(host, updater);
+        binding.bind(new TextDirective(), context);
       }).toThrow('A value must not be a directive,');
     });
   });
@@ -925,10 +996,12 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(setterSpy).not.toHaveBeenCalled();
     });
@@ -944,10 +1017,11 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
       const binding = new PropertyBinding('foo', part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
 
       binding.disconnect();
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(setterSpy).not.toHaveBeenCalled();
     });
@@ -991,8 +1065,10 @@ describe('ElementBinding', () => {
             node: document.createElement('div'),
           },
         );
-        const updater = new SyncUpdater(new MockRenderHost());
-        binding.bind(null, updater);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = createUpdateContext(host, updater);
+        binding.bind(null, context);
       }).toThrow('A value of ElementBinding must be an object,');
     });
   });
@@ -1009,10 +1085,12 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(element.getAttribute('class')).toBe('foo');
       expect(element.getAttribute('title')).toBe('bar');
@@ -1029,10 +1107,12 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(element.className).toBe('foo');
       expect(element.title).toBe('bar');
@@ -1050,10 +1130,12 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -1077,13 +1159,15 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(props, updater);
-      updater.flush();
+      binding.bind(props, context);
+      updater.flushUpdate(host);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -1101,19 +1185,21 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       binding.bind(
         {
           class: 'foo', // same value as last time
           title: 'baz',
         },
-        updater,
+        context,
       );
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(setAttributeSpy).toHaveBeenCalledTimes(3);
       expect(setAttributeSpy).toHaveBeenCalledWith('class', 'foo');
@@ -1134,13 +1220,15 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind({ class: undefined }, updater);
-      updater.flush();
+      binding.bind({ class: undefined }, context);
+      updater.flushUpdate(host);
 
       expect(element.hasAttribute('class')).toBe(false);
       expect(element.hasAttribute('title')).toBe(false);
@@ -1159,13 +1247,15 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(element.hasAttribute('class')).toBe(false);
       expect(element.hasAttribute('title')).toBe(false);
@@ -1196,10 +1286,12 @@ describe('ElementBinding', () => {
         node: element,
       } as const;
       const binding = new ElementBinding(props, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       binding.disconnect();
 
@@ -1216,12 +1308,14 @@ describe('resolveBinding()', () => {
     } as const;
     const directive = new TextDirective();
     const directiveSpy = vi.spyOn(directive, directiveTag);
-    const updater = new SyncUpdater(new MockRenderHost());
-    const binding = resolveBinding(directive, part, updater);
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
+    const binding = resolveBinding(directive, part, context);
 
     expect(binding).toBeInstanceOf(TextBinding);
     expect(directiveSpy).toHaveBeenCalledOnce();
-    expect(directiveSpy).toHaveBeenCalledWith(part, updater);
+    expect(directiveSpy).toHaveBeenCalledWith(part, context);
   });
 
   it('should resolve the value as a AttributeBinding if the part is a AttributePart', () => {
@@ -1231,8 +1325,10 @@ describe('resolveBinding()', () => {
       node: element,
       name: 'class',
     } as const;
-    const updater = new SyncUpdater(new MockRenderHost());
-    const binding = resolveBinding('foo', part, updater);
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
+    const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(AttributeBinding);
     expect(binding.value).toBe('foo');
@@ -1248,8 +1344,10 @@ describe('resolveBinding()', () => {
       node: element,
       name: 'hello',
     } as const;
-    const updater = new SyncUpdater(new MockRenderHost());
-    const binding = resolveBinding(listener, part, updater);
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
+    const binding = resolveBinding(listener, part, context);
 
     expect(binding).toBeInstanceOf(EventBinding);
     expect(binding.value).toBe(listener);
@@ -1264,8 +1362,10 @@ describe('resolveBinding()', () => {
       node: element,
       name: 'className',
     } as const;
-    const updater = new SyncUpdater(new MockRenderHost());
-    const binding = resolveBinding('foo', part, updater);
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
+    const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(PropertyBinding);
     expect(binding.value).toBe('foo');
@@ -1279,8 +1379,10 @@ describe('resolveBinding()', () => {
       type: PartType.Node,
       node,
     } as const;
-    const updater = new SyncUpdater(new MockRenderHost());
-    const binding = resolveBinding('foo', part, updater);
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
+    const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(NodeBinding);
     expect(binding.value).toBe('foo');
@@ -1294,8 +1396,10 @@ describe('resolveBinding()', () => {
       type: PartType.ChildNode,
       node,
     } as const;
-    const updater = new SyncUpdater(new MockRenderHost());
-    const binding = resolveBinding('foo', part, updater);
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
+    const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(NodeBinding);
     expect(binding.value).toBe('foo');
@@ -1309,15 +1413,17 @@ describe('resolveBinding()', () => {
       type: PartType.Element,
       node: element,
     } as const;
-    const updater = new SyncUpdater(new MockRenderHost());
+    const host = new MockUpdateHost();
+    const updater = new SyncUpdater();
+    const context = createUpdateContext(host, updater);
     const props = {
       class: 'foo',
       title: 'bar',
     };
-    const binding = resolveBinding(props, part, updater);
+    const binding = resolveBinding(props, part, context);
 
-    binding.connect(updater);
-    updater.flush();
+    binding.connect(context);
+    updater.flushUpdate(host);
 
     expect(binding).toBeInstanceOf(ElementBinding);
     expect(binding.value).toBe(props);

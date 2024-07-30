@@ -5,23 +5,25 @@ import {
   ElementTemplate,
   ElementTemplateFragment,
 } from '../../src/template/elementTemplate.js';
-import { PartType } from '../../src/types.js';
+import { PartType, createUpdateContext } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('ElementTemplate', () => {
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
           childNodeValue: 'bar',
         },
-        updater,
+        context,
       );
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.elementBinding).toBeInstanceOf(ElementBinding);
       expect(fragment.elementBinding.value).toEqual({ class: 'foo' });
@@ -45,7 +47,9 @@ describe('ElementTemplate', () => {
     });
 
     it('should return SingleTemplateFragment by a directive', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const elementDirective = new TextDirective();
       const childNodeDirective = new TextDirective();
       const fragment = new ElementTemplate('div').render(
@@ -53,7 +57,7 @@ describe('ElementTemplate', () => {
           elementValue: elementDirective,
           childNodeValue: childNodeDirective,
         },
-        updater,
+        context,
       );
 
       expect(fragment.elementBinding).toBeInstanceOf(TextBinding);
@@ -89,6 +93,9 @@ describe('ElementTemplate', () => {
 describe('ElementTemplateFragment', () => {
   describe('.bind()', () => {
     it('should bind a value to the bindings', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const elementBinding = new ElementBinding(
         { class: 'foo' },
         {
@@ -104,27 +111,29 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderHost());
       const elementBindingBindSpy = vi.spyOn(elementBinding, 'bind');
       const childNodeBindingBindSpy = vi.spyOn(childNodeBinding, 'bind');
 
       fragment.bind(
         { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
-        updater,
+        context,
       );
 
       expect(elementBindingBindSpy).toHaveBeenCalledOnce();
       expect(elementBindingBindSpy).toHaveBeenCalledWith(
         { class: 'bar' },
-        updater,
+        context,
       );
       expect(childNodeBindingBindSpy).toHaveBeenCalledOnce();
-      expect(childNodeBindingBindSpy).toHaveBeenCalledWith('baz', updater);
+      expect(childNodeBindingBindSpy).toHaveBeenCalledWith('baz', context);
     });
   });
 
   describe('.unbind()', () => {
     it('should unbind the value from the bindings', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const elementBinding = new ElementBinding(
         { class: 'foo' },
         {
@@ -140,11 +149,10 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderHost());
       const elementBindingUnbindSpy = vi.spyOn(elementBinding, 'unbind');
       const childNodeBindingUnbindSpy = vi.spyOn(childNodeBinding, 'unbind');
 
-      fragment.unbind(updater);
+      fragment.unbind(context);
 
       expect(elementBindingUnbindSpy).toHaveBeenCalledOnce();
       expect(childNodeBindingUnbindSpy).toHaveBeenCalledOnce();
@@ -158,6 +166,9 @@ describe('ElementTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const elementBinding = new ElementBinding(
         { class: 'foo' },
         {
@@ -173,11 +184,10 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderHost());
 
-      elementBinding.connect(updater);
-      childNodeBinding.connect(updater);
-      updater.flush();
+      elementBinding.connect(context);
+      childNodeBinding.connect(context);
+      updater.flushUpdate(host);
 
       container.appendChild(part.node);
       fragment.mount(part);
@@ -197,6 +207,9 @@ describe('ElementTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const elementBinding = new ElementBinding(
         { class: 'foo' },
         {
@@ -212,11 +225,10 @@ describe('ElementTemplateFragment', () => {
         elementBinding,
         childNodeBinding,
       );
-      const updater = new SyncUpdater(new MockRenderHost());
 
-      elementBinding.connect(updater);
-      childNodeBinding.connect(updater);
-      updater.flush();
+      elementBinding.connect(context);
+      childNodeBinding.connect(context);
+      updater.flushUpdate(host);
 
       container.appendChild(part.node);
       fragment.mount(part);

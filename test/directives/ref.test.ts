@@ -1,9 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RefBinding, ref } from '../../src/directives/ref.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 describe('ref()', () => {
   it('should construct a new Ref', () => {
@@ -23,8 +27,10 @@ describe('Ref', () => {
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
@@ -39,9 +45,11 @@ describe('Ref', () => {
         name: 'data-ref',
         node: document.createElement('div'),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, updater)).toThrow(
+      expect(() => directive[directiveTag](part, context)).toThrow(
         'Ref directive must be used in a "ref" attribute,',
       );
     });
@@ -59,10 +67,12 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(refFunction).toHaveBeenCalledOnce();
       expect(refFunction).toHaveBeenCalledWith(part.node);
@@ -77,10 +87,12 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(refObject.current).toBe(part.node);
     });
@@ -94,11 +106,13 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueLayoutEffectSpy = vi.spyOn(updater, 'enqueueLayoutEffect');
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueLayoutEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueLayoutEffectSpy).toHaveBeenCalledWith(binding);
@@ -117,13 +131,15 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(refFunction1).toHaveBeenCalledTimes(2);
@@ -143,13 +159,15 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(refObject1.current).toBe(null);
@@ -166,12 +184,14 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
+      binding.bind(directive2, context);
 
       expect(binding.value).toBe(directive1);
       expect(updater.isPending()).toBe(false);
@@ -188,13 +208,15 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(refFunction).toHaveBeenCalledTimes(2);
@@ -211,13 +233,15 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(refObject.current).toBe(null);
@@ -231,10 +255,12 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       expect(() => {
-        binding.bind(null as any, updater);
+        binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of Ref directive, but got "null".',
       );
@@ -251,13 +277,15 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(refFunction).toHaveBeenCalledTimes(2);
       expect(refFunction).toHaveBeenCalledWith(null);
@@ -272,13 +300,15 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(refObject.current).toBe(null);
     });
@@ -291,9 +321,11 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

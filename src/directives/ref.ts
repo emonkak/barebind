@@ -7,6 +7,7 @@ import {
   type Part,
   PartType,
   type RefValue,
+  type UpdateContext,
   type Updater,
   directiveTag,
 } from '../types.js';
@@ -28,7 +29,7 @@ export class Ref implements Directive {
     return this._ref;
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): RefBinding {
+  [directiveTag](part: Part, _context: UpdateContext<unknown>): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +
@@ -69,26 +70,26 @@ export class RefBinding implements Binding<Ref>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestEffect(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestEffect(context.updater);
   }
 
-  bind(newValue: Ref, updater: Updater<unknown>): void {
+  bind(newValue: Ref, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(Ref, newValue, this._part);
     }
     const oldValue = this._pendingDirective;
     if (oldValue.ref !== newValue.ref) {
       this._pendingDirective = newValue;
-      this.connect(updater);
+      this.connect(context);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { ref } = this._pendingDirective;
     if (ref !== null) {
       this._pendingDirective = new Ref(null);
-      this._requestEffect(updater);
+      this._requestEffect(context.updater);
     }
   }
 

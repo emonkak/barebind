@@ -10,10 +10,9 @@ import {
 
 export interface ConcurrentUpdaterOptions {
   scheduler?: Scheduler;
-  taskCount?: Atom<number>;
 }
 
-interface Pipeline<TContext> {
+interface UpdatePipeline<TContext> {
   blocks: Block<TContext>[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
@@ -21,54 +20,42 @@ interface Pipeline<TContext> {
 }
 
 export class ConcurrentUpdater<TContext> implements Updater<TContext> {
-  private readonly _host: UpdateHost<TContext>;
-
   private readonly _scheduler: Scheduler;
 
-  private readonly _taskCount = new Atom(0);
+  private readonly _taskCount: Atom<number> = new Atom(0);
 
-  private _currentBlock: Block<TContext> | null = null;
+  private _pipeline: UpdatePipeline<TContext> = createPipeline([], [], [], []);
 
-  private _currentPipeline: Pipeline<TContext> = createPipeline([], [], [], []);
+  private _isUpdating = false;
 
-  constructor(
-    host: UpdateHost<TContext>,
-    {
-      scheduler = getDefaultScheduler(),
-      taskCount = new Atom(0),
-    }: ConcurrentUpdaterOptions = {},
-  ) {
-    this._host = host;
+  constructor({
+    scheduler = getDefaultScheduler(),
+  }: ConcurrentUpdaterOptions = {}) {
     this._scheduler = scheduler;
-    this._taskCount = taskCount;
-  }
-
-  getCurrentBlock(): Block<TContext> | null {
-    return this._currentBlock;
   }
 
   enqueueBlock(block: Block<TContext>): void {
-    this._currentPipeline.blocks.push(block);
+    this._pipeline.blocks.push(block);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
-    this._currentPipeline.layoutEffects.push(effect);
+    this._pipeline.layoutEffects.push(effect);
   }
 
   enqueueMutationEffect(effect: Effect): void {
-    this._currentPipeline.mutationEffects.push(effect);
+    this._pipeline.mutationEffects.push(effect);
   }
 
   enqueuePassiveEffect(effect: Effect): void {
-    this._currentPipeline.passiveEffects.push(effect);
+    this._pipeline.passiveEffects.push(effect);
   }
 
   isPending(): boolean {
     return (
-      this._currentPipeline.blocks.length > 0 ||
-      this._currentPipeline.layoutEffects.length > 0 ||
-      this._currentPipeline.mutationEffects.length > 0 ||
-      this._currentPipeline.passiveEffects.length > 0
+      this._pipeline.blocks.length > 0 ||
+      this._pipeline.mutationEffects.length > 0 ||
+      this._pipeline.layoutEffects.length > 0 ||
+      this._pipeline.passiveEffects.length > 0
     );
   }
 
@@ -76,14 +63,15 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     return this._taskCount.value > 0;
   }
 
-  scheduleUpdate(): void {
-    if (this._currentBlock !== null) {
+  scheduleUpdate(host: UpdateHost<TContext>): void {
+    if (this._isUpdating) {
       return;
     }
-    this._scheduleBlocks(this._currentPipeline);
-    this._scheduleBlockingEffects(this._currentPipeline);
-    this._schedulePassiveEffects(this._currentPipeline);
-    this._currentPipeline = createPipeline([], [], [], []);
+    const pipeline = this._pipeline;
+    this._pipeline = createPipeline([], [], [], []);
+    this._scheduleBlocks(pipeline, host);
+    this._scheduleBlockingEffects(pipeline, host);
+    this._schedulePassiveEffects(pipeline, host);
   }
 
   waitForUpdate(): Promise<void> {
@@ -102,18 +90,21 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  private async _beginUpdate(block: Block<TContext>): Promise<void> {
-    const pipeline = createPipeline([block], [], [], []);
-    const pendingBlocks = pipeline.blocks;
-    const originalPipeline = this._currentPipeline;
+  private async _beginUpdate(
+    rootBlock: Block<TContext>,
+    host: UpdateHost<TContext>,
+  ): Promise<void> {
+    const originalPipeline = this._pipeline;
+    const pipeline = createPipeline([rootBlock], [], [], []);
+    const blocks = pipeline.blocks;
 
     let startTime = this._scheduler.getCurrentTime();
 
-    // Do not reuse pendingBlock.length since it can grow.
-    for (let i = 0; i < pendingBlocks.length; i++) {
-      const pendingBlock = pendingBlocks[i]!;
-      if (!pendingBlock.shouldUpdate()) {
-        pendingBlock.cancelUpdate();
+    // Do not remember block.length since it can grow.
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i]!;
+      if (!block.shouldUpdate()) {
+        block.cancelUpdate();
         continue;
       }
 
@@ -123,32 +114,35 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         )
       ) {
         await this._scheduler.yieldToMain({
-          priority: pendingBlock.priority,
+          priority: block.priority,
         });
         startTime = this._scheduler.getCurrentTime();
       }
 
-      this._currentBlock = pendingBlock;
-      this._currentPipeline = pipeline;
+      this._pipeline = pipeline;
+      this._isUpdating = true;
       try {
-        pendingBlock.update(this._host, this);
+        block.update(host, this);
       } finally {
-        this._currentBlock = null;
-        this._currentPipeline = originalPipeline;
+        this._isUpdating = false;
+        this._pipeline = originalPipeline;
       }
     }
 
-    this._scheduleBlockingEffects(pipeline);
-    this._schedulePassiveEffects(pipeline);
+    this._scheduleBlockingEffects(pipeline, host);
+    this._schedulePassiveEffects(pipeline, host);
   }
 
-  private _scheduleBlocks(pipeline: Pipeline<TContext>): void {
+  private _scheduleBlocks(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void {
     for (let i = 0, l = pipeline.blocks.length; i < l; i++) {
       const block = pipeline.blocks[i]!;
       this._scheduler.requestCallback(
         async () => {
           try {
-            await this._beginUpdate(block);
+            await this._beginUpdate(block, host);
           } finally {
             this._taskCount.value--;
           }
@@ -161,7 +155,10 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  private _scheduleBlockingEffects(pipeline: Pipeline<TContext>): void {
+  private _scheduleBlockingEffects(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void {
     if (
       pipeline.mutationEffects.length > 0 ||
       pipeline.layoutEffects.length > 0
@@ -169,11 +166,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            this._host.flushEffects(
-              pipeline.mutationEffects,
-              EffectPhase.Mutation,
-            );
-            this._host.flushEffects(pipeline.layoutEffects, EffectPhase.Layout);
+            host.flushEffects(pipeline.mutationEffects, EffectPhase.Mutation);
+            host.flushEffects(pipeline.layoutEffects, EffectPhase.Layout);
           } finally {
             this._taskCount.value--;
           }
@@ -184,15 +178,15 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  private _schedulePassiveEffects(pipeline: Pipeline<TContext>): void {
+  private _schedulePassiveEffects(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void {
     if (pipeline.passiveEffects.length > 0) {
       this._scheduler.requestCallback(
         () => {
           try {
-            this._host.flushEffects(
-              pipeline.passiveEffects,
-              EffectPhase.Passive,
-            );
+            host.flushEffects(pipeline.passiveEffects, EffectPhase.Passive);
           } finally {
             this._taskCount.value--;
           }
@@ -209,7 +203,7 @@ function createPipeline<TContext>(
   mutationEffects: Effect[],
   layoutEffects: Effect[],
   passiveEffects: [],
-): Pipeline<TContext> {
+): UpdatePipeline<TContext> {
   return {
     blocks,
     mutationEffects,

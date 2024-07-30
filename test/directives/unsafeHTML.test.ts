@@ -1,8 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 import {
   UnsafeHTMLBinding,
@@ -26,8 +30,10 @@ describe('UnsafeHTML', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
@@ -41,9 +47,11 @@ describe('UnsafeHTML', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, updater)).toThrow(
+      expect(() => directive[directiveTag](part, context)).toThrow(
         'UnsafeHTML directive must be used in a child node,',
       );
     });
@@ -60,11 +68,13 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.startNode).toBeInstanceOf(HTMLElement);
       expect((binding.startNode as HTMLElement).outerHTML).toBe(
@@ -82,11 +92,13 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.startNode).toBeInstanceOf(HTMLElement);
       expect((binding.startNode as HTMLElement).outerHTML).toBe(
@@ -104,11 +116,13 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -122,14 +136,16 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
       );
 
-      binding.connect(updater);
-      binding.connect(updater);
+      binding.connect(context);
+      binding.connect(context);
 
       expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -146,14 +162,16 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.value).toBe(directive2);
       expect(binding.startNode).toBeInstanceOf(Text);
@@ -170,12 +188,14 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive1, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
+      binding.bind(directive2, context);
 
       expect(binding.value).toBe(directive1);
       expect(updater.isPending()).toBe(false);
@@ -189,9 +209,11 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      expect(() => binding.bind(null as any, updater)).toThrow(
+      expect(() => binding.bind(null as any, context)).toThrow(
         'A value must be a instance of UnsafeHTML directive, but got "null".',
       );
     });
@@ -206,14 +228,16 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -227,12 +251,14 @@ describe('UnsafeHTMLBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new UnsafeHTMLBinding(directive, part);
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

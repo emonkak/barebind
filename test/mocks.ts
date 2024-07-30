@@ -1,3 +1,8 @@
+import {
+  RenderContext,
+  type UsableObject,
+  usableTag,
+} from '../src/renderContext.js';
 import type {
   RequestCallbackOptions,
   Scheduler,
@@ -15,100 +20,11 @@ import {
   type TaskPriority,
   type Template,
   type TemplateFragment,
+  type UpdateContext,
   type UpdateHost,
   type Updater,
   directiveTag,
 } from '../src/types.js';
-
-export interface MockRenderContext {
-  hooks: Hook[];
-  block: Block<MockRenderContext>;
-  updater: Updater<MockRenderContext>;
-}
-
-export class MockRenderHost implements UpdateHost<MockRenderContext> {
-  beginRenderContext(
-    hooks: Hook[],
-    block: Block<MockRenderContext>,
-    updater: Updater<MockRenderContext>,
-  ): MockRenderContext {
-    return { hooks, block, updater };
-  }
-
-  finishRenderContext(_context: MockRenderContext): void {}
-
-  flushEffects(effects: Effect[], phase: EffectPhase): void {
-    for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(phase);
-    }
-  }
-
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
-  }
-}
-
-export class MockScheduler implements Scheduler {
-  getCurrentTime(): number {
-    return Date.now();
-  }
-
-  requestCallback(
-    callback: () => void,
-    _options?: RequestCallbackOptions,
-  ): void {
-    callback();
-  }
-
-  shouldYieldToMain(_elapsedTime: number): boolean {
-    return false;
-  }
-
-  yieldToMain(_options?: YieldToMainOptions): Promise<void> {
-    return Promise.resolve();
-  }
-}
-
-export class MockTemplate<TContext> implements Template<{}, TContext> {
-  private _id: number;
-
-  constructor(id = 0) {
-    this._id = id;
-  }
-
-  render(
-    _data: {},
-    _updater: Updater<TContext>,
-  ): MockTemplateFragment<TContext> {
-    return new MockTemplateFragment();
-  }
-
-  isSameTemplate(other: Template<{}, TContext>): boolean {
-    return other instanceof MockTemplate && other._id === this._id;
-  }
-}
-
-export class MockTemplateFragment<TContext>
-  implements TemplateFragment<{}, TContext>
-{
-  get startNode(): ChildNode | null {
-    return null;
-  }
-
-  get endNode(): ChildNode | null {
-    return null;
-  }
-
-  bind(_data: {}, _updater: Updater<TContext>): void {}
-
-  unbind(_updater: Updater<TContext>): void {}
-
-  mount(_part: ChildNodePart): void {}
-
-  unmount(_part: ChildNodePart): void {}
-
-  disconnect(): void {}
-}
 
 export class MockBlock<TContext> implements Block<TContext> {
   private _parent: Block<TContext> | null;
@@ -135,9 +51,156 @@ export class MockBlock<TContext> implements Block<TContext> {
     return true;
   }
 
-  requestUpdate(_priority: TaskPriority, _updater: Updater<TContext>): void {}
+  requestUpdate(
+    _priority: TaskPriority,
+    _host: UpdateHost<TContext>,
+    _updater: Updater<TContext>,
+  ): void {}
 
   update(_host: UpdateHost<TContext>, _updater: Updater<TContext>): void {}
+}
+
+export class MockScheduler implements Scheduler {
+  getCurrentTime(): number {
+    return Date.now();
+  }
+
+  requestCallback(
+    callback: () => void,
+    _options?: RequestCallbackOptions,
+  ): void {
+    callback();
+  }
+
+  shouldYieldToMain(_elapsedTime: number): boolean {
+    return false;
+  }
+
+  yieldToMain(_options?: YieldToMainOptions): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+export class MockTemplate<TData, TContext>
+  implements Template<TData, TContext>
+{
+  private _name: string;
+
+  get name(): string {
+    return this._name;
+  }
+
+  constructor(name = '') {
+    this._name = name;
+  }
+
+  render(
+    data: TData,
+    _context: UpdateContext<TContext>,
+  ): MockTemplateFragment<TData, TContext> {
+    return new MockTemplateFragment(data);
+  }
+
+  isSameTemplate(other: Template<TData, TContext>): boolean {
+    return other instanceof MockTemplate && other._name === this._name;
+  }
+}
+
+export class MockTemplateFragment<TData, TContext>
+  implements TemplateFragment<TData, TContext>
+{
+  private _data: TData;
+
+  constructor(data: TData) {
+    this._data = data;
+  }
+
+  get startNode(): ChildNode | null {
+    return null;
+  }
+
+  get endNode(): ChildNode | null {
+    return null;
+  }
+
+  get data(): TData {
+    return this._data;
+  }
+
+  bind(data: TData, _context: UpdateContext<TContext>): void {
+    this._data = data;
+  }
+
+  unbind(_context: UpdateContext<TContext>): void {}
+
+  mount(_part: ChildNodePart): void {}
+
+  unmount(_part: ChildNodePart): void {}
+
+  disconnect(): void {}
+}
+
+export class MockUpdateHost implements UpdateHost<RenderContext> {
+  beginRenderContext(
+    hooks: Hook[],
+    block: Block<RenderContext>,
+    updater: Updater<RenderContext>,
+  ): RenderContext {
+    return new RenderContext(hooks, block, this, updater);
+  }
+
+  finishRenderContext(context: RenderContext): void {
+    context.finalize();
+  }
+
+  flushEffects(effects: Effect[], phase: EffectPhase): void {
+    for (let i = 0, l = effects.length; i < l; i++) {
+      effects[i]!.commit(phase);
+    }
+  }
+
+  getCurrentPriority(): TaskPriority {
+    return 'user-blocking';
+  }
+
+  getHTMLTemplate<TData extends readonly any[]>(
+    _tokens: ReadonlyArray<string>,
+    _data: TData,
+  ): Template<TData> {
+    return new MockTemplate('html');
+  }
+
+  getSVGTemplate<TData extends readonly any[]>(
+    _tokens: ReadonlyArray<string>,
+    _data: TData,
+  ): Template<TData> {
+    return new MockTemplate('svg');
+  }
+
+  getScopedValue(
+    _key: unknown,
+    _block: Block<RenderContext> | null = null,
+  ): unknown {
+    return undefined;
+  }
+
+  setScopedValue(
+    _key: unknown,
+    _value: unknown,
+    _block: Block<RenderContext>,
+  ): void {}
+}
+
+export class MockUsableObject<T> implements UsableObject<T, unknown> {
+  private _returnValue: T;
+
+  constructor(returnValue: T) {
+    this._returnValue = returnValue;
+  }
+
+  [usableTag](): T {
+    return this._returnValue;
+  }
 }
 
 export class TextBinding implements Binding<TextDirective>, Effect {
@@ -168,16 +231,16 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     return this._part.node;
   }
 
-  bind(newValue: TextDirective, updater: Updater<unknown>): void {
+  bind(newValue: TextDirective, { updater }: UpdateContext<unknown>): void {
     this._directive = newValue;
     updater.enqueueMutationEffect(this);
   }
 
-  connect(updater: Updater<unknown>): void {
+  connect({ updater }: UpdateContext<unknown>): void {
     updater.enqueueMutationEffect(this);
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind({ updater }: UpdateContext<unknown>): void {
     this._directive = new TextDirective(null);
     updater.enqueueMutationEffect(this);
   }
@@ -208,7 +271,7 @@ export class TextDirective implements Directive {
     return this._content;
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): TextBinding {
+  [directiveTag](part: Part, _context: UpdateContext<unknown>): TextBinding {
     return new TextBinding(this, part);
   }
 }

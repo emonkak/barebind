@@ -5,7 +5,7 @@ import {
   type Binding,
   type Directive,
   type Part,
-  type Updater,
+  type UpdateContext,
   directiveTag,
   nameOf,
   nameTag,
@@ -40,8 +40,8 @@ export class Memo<T> implements Directive {
     return 'Memo(' + nameOf(this._factory()) + ')';
   }
 
-  [directiveTag](part: Part, updater: Updater<unknown>): MemoBinding<T> {
-    return new MemoBinding(this, part, updater);
+  [directiveTag](part: Part, context: UpdateContext<unknown>): MemoBinding<T> {
+    return new MemoBinding(this, part, context);
   }
 }
 
@@ -50,9 +50,9 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   private readonly _binding: Binding<T>;
 
-  constructor(directive: Memo<T>, part: Part, updater: Updater<unknown>) {
+  constructor(directive: Memo<T>, part: Part, context: UpdateContext<unknown>) {
     this._directive = directive;
-    this._binding = resolveBinding(directive.factory(), part, updater);
+    this._binding = resolveBinding(directive.factory(), part, context);
   }
 
   get value(): Memo<T> {
@@ -75,11 +75,11 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     return this._binding;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._binding.connect(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._binding.connect(context);
   }
 
-  bind(newValue: Memo<T>, updater: Updater<unknown>): void {
+  bind(newValue: Memo<T>, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(Memo, newValue, this._binding.part);
     }
@@ -87,13 +87,13 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     const newDependencies = newValue.dependencies;
     if (dependenciesAreChanged(oldDependencies, newDependencies)) {
       this._directive = newValue;
-      this._binding.bind(newValue.factory(), updater);
+      this._binding.bind(newValue.factory(), context);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     this._directive = new Memo(this._directive.factory, undefined);
-    this._binding.unbind(updater);
+    this._binding.unbind(context);
   }
 
   disconnect(): void {

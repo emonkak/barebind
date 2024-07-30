@@ -8,9 +8,14 @@ import {
   unless,
   when,
 } from '../../src/directives/condition.js';
-import { PartType, directiveTag, nameTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('condition()', () => {
   it('should construct a new Condition', () => {
@@ -80,8 +85,10 @@ describe('Condition', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
       const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
@@ -109,8 +116,10 @@ describe('Condition', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
       const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
@@ -140,15 +149,17 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive, part, context);
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(updater);
+      expect(connectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -167,21 +178,23 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive, updater);
-      updater.flush();
+      binding.bind(directive, context);
+      updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(trueDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
       expect(falseDirectiveSpy).not.toHaveBeenCalled();
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(falseDirective, updater);
+      expect(bindSpy).toHaveBeenCalledWith(falseDirective, context);
     });
 
     it('should bind the false value to the current binding if the condition is the same', () => {
@@ -198,21 +211,23 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive, updater);
-      updater.flush();
+      binding.bind(directive, context);
+      updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(falseDirective);
       expect(trueDirectiveSpy).not.toHaveBeenCalled();
       expect(falseDirectiveSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(trueDirective, updater);
+      expect(bindSpy).toHaveBeenCalledWith(trueDirective, context);
     });
 
     it('should connect a true binding and unbind the false binidng if the condition changes', () => {
@@ -234,23 +249,25 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(falseDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
       expect(falseDirectiveSpy).toHaveBeenCalledOnce();
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should connect a false binding and unbind the true binidng if the condition changes', () => {
@@ -272,23 +289,25 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(trueDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
       expect(falseDirectiveSpy).toHaveBeenCalledOnce();
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should memoize the true binding if key changes', () => {
@@ -310,26 +329,28 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive1, updater);
-      updater.flush();
+      binding.bind(directive1, context);
+      updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(trueDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
       expect(falseDirectiveSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should memoize the false binding if key changes', () => {
@@ -351,26 +372,28 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive1, updater);
-      updater.flush();
+      binding.bind(directive1, context);
+      updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(falseDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
       expect(falseDirectiveSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should throw an error if the new value is not Condition directive', () => {
@@ -383,11 +406,13 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive, part, context);
 
       expect(() => {
-        binding.bind(null as any, updater);
+        binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of Condition directive, but got "null".',
       );
@@ -405,14 +430,16 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive, part, context);
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -427,8 +454,10 @@ describe('ConditionBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ConditionBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ConditionBinding(directive, part, context);
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 
       binding.disconnect();

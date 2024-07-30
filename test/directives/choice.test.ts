@@ -2,9 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
-import { PartType, directiveTag, nameTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('choice()', () => {
   it('should construct a new Choice', () => {
@@ -33,8 +38,10 @@ describe('Choice', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
       const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
@@ -68,8 +75,10 @@ describe('Choice', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
       const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
@@ -97,15 +106,17 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(updater);
+      expect(connectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -131,15 +142,17 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive, updater);
-      updater.flush();
+      binding.bind(directive, context);
+      updater.flushUpdate(host);
 
       expect(binding.binding.value).toBe(fooDirective);
       expect(fooDirectiveSpy).toHaveBeenCalledOnce();
@@ -148,7 +161,7 @@ describe('ChoiceBinding', () => {
       expect(factory).toHaveBeenNthCalledWith(1, 'foo');
       expect(factory).toHaveBeenNthCalledWith(2, 'foo');
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(barDirective, updater);
+      expect(bindSpy).toHaveBeenCalledWith(barDirective, context);
     });
 
     it('should connect a new binding and unbind the old binidng if the key changes', () => {
@@ -176,16 +189,18 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.binding.value).toBe(barDirective);
       expect(fooDirectiveSpy).toHaveBeenCalledOnce();
@@ -195,7 +210,7 @@ describe('ChoiceBinding', () => {
       expect(factory).toHaveBeenNthCalledWith(2, 'bar');
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should memoize the old binding if the key changes', () => {
@@ -223,19 +238,21 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive1, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive1, updater);
-      updater.flush();
+      binding.bind(directive1, context);
+      updater.flushUpdate(host);
 
       expect(binding.binding.value).toBe(fooDirective);
       expect(fooDirectiveSpy).toHaveBeenCalledOnce();
@@ -246,7 +263,7 @@ describe('ChoiceBinding', () => {
       expect(factory).toHaveBeenNthCalledWith(3, 'foo');
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should throw an error if the new value is not Choice directive', () => {
@@ -255,11 +272,13 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive, part, context);
 
       expect(() => {
-        binding.bind(null as any, updater);
+        binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of Choice directive, but got "null".',
       );
@@ -273,14 +292,16 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
-      binding.unbind(updater);
+      binding.unbind(context);
 
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(updater);
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -291,8 +312,10 @@ describe('ChoiceBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = new ChoiceBinding(directive, part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = new ChoiceBinding(directive, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 
       binding.disconnect();

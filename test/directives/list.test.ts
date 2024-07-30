@@ -6,9 +6,13 @@ import {
   inPlaceList,
   orderedList,
 } from '../../src/directives/list.js';
-import { PartType, directiveTag } from '../../src/types.js';
+import {
+  PartType,
+  createUpdateContext,
+  directiveTag,
+} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost, TextDirective } from '../mocks.js';
+import { MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('orderedList()', () => {
@@ -47,8 +51,10 @@ describe('OrderedList', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
@@ -67,9 +73,11 @@ describe('OrderedList', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, updater)).toThrow(
+      expect(() => directive[directiveTag](part, context)).toThrow(
         'OrderedList directive must be used in a child node,',
       );
     });
@@ -89,12 +97,14 @@ describe('OrderedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new OrderedListBinding(directive, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.startNode.nodeValue).toBe('foo');
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
@@ -117,13 +127,15 @@ describe('OrderedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new OrderedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
-      binding.connect(updater);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(commitSpy).toHaveBeenCalledOnce();
     });
@@ -150,15 +162,17 @@ describe('OrderedListBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
           } as const;
-          const updater = new SyncUpdater(new MockRenderHost());
+          const host = new MockUpdateHost();
+          const updater = new SyncUpdater();
+          const context = createUpdateContext(host, updater);
           const binding = new OrderedListBinding(directive1, part);
 
           container.appendChild(part.node);
-          binding.connect(updater);
-          updater.flush();
+          binding.connect(context);
+          updater.flushUpdate(host);
 
-          binding.bind(directive2, updater);
-          updater.flush();
+          binding.bind(directive2, context);
+          updater.flushUpdate(host);
 
           expect(
             binding.bindings.map((binding) => binding.value.content),
@@ -197,15 +211,17 @@ describe('OrderedListBinding', () => {
               type: PartType.ChildNode,
               node: document.createComment(''),
             } as const;
-            const updater = new SyncUpdater(new MockRenderHost());
+            const host = new MockUpdateHost();
+            const updater = new SyncUpdater();
+            const context = createUpdateContext(host, updater);
             const binding = new OrderedListBinding(directive1, part);
 
             container.appendChild(part.node);
-            binding.connect(updater);
-            updater.flush();
+            binding.connect(context);
+            updater.flushUpdate(host);
 
-            binding.bind(directive2, updater);
-            updater.flush();
+            binding.bind(directive2, context);
+            updater.flushUpdate(host);
 
             expect(
               binding.bindings.map((binding) => binding.value.content),
@@ -240,15 +256,17 @@ describe('OrderedListBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
           } as const;
-          const updater = new SyncUpdater(new MockRenderHost());
+          const host = new MockUpdateHost();
+          const updater = new SyncUpdater();
+          const context = createUpdateContext(host, updater);
           const binding = new OrderedListBinding(directive1, part);
 
           container.appendChild(part.node);
-          binding.connect(updater);
-          updater.flush();
+          binding.connect(context);
+          updater.flushUpdate(host);
 
-          binding.bind(directive2, updater);
-          updater.flush();
+          binding.bind(directive2, context);
+          updater.flushUpdate(host);
 
           expect(
             binding.bindings.map((binding) => binding.value.content),
@@ -275,15 +293,17 @@ describe('OrderedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new OrderedListBinding(directive, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(binding.bindings).toHaveLength(0);
       expect(container.innerHTML).toBe('<!---->');
@@ -299,13 +319,15 @@ describe('OrderedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new OrderedListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
-      binding.unbind(updater);
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(commitSpy).toHaveBeenCalledOnce();
     });
@@ -323,12 +345,14 @@ describe('OrderedListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new OrderedListBinding(directive, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       const disconnectSpies = binding.bindings.map((binding) =>
         vi.spyOn(binding, 'disconnect'),
@@ -355,8 +379,10 @@ describe('InPlaceList', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
-      const binding = directive[directiveTag](part, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
@@ -371,9 +397,11 @@ describe('InPlaceList', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, updater)).toThrow(
+      expect(() => directive[directiveTag](part, context)).toThrow(
         'InPlaceList directive must be used in a child node,',
       );
     });
@@ -392,12 +420,14 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(binding.startNode.nodeValue).toBe('foo');
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
@@ -419,13 +449,15 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
-      binding.connect(updater);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       expect(commitSpy).toHaveBeenCalledOnce();
     });
@@ -446,15 +478,17 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive1, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
         directive2.items,
@@ -478,15 +512,17 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive1, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
-      updater.flush();
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
 
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
         directive2.items,
@@ -504,13 +540,15 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive1, part);
 
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.bind(directive2, updater);
+      binding.bind(directive2, context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -525,15 +563,17 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(binding.bindings).toHaveLength(0);
       expect(container.innerHTML).toBe('<!---->');
@@ -545,13 +585,15 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
-      binding.unbind(updater);
-      binding.unbind(updater);
-      updater.flush();
+      binding.unbind(context);
+      binding.unbind(context);
+      updater.flushUpdate(host);
 
       expect(commitSpy).toHaveBeenCalledOnce();
     });
@@ -568,12 +610,14 @@ describe('InPlaceListBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const updater = new SyncUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const binding = new InPlaceListBinding(directive, part);
 
       container.appendChild(part.node);
-      binding.connect(updater);
-      updater.flush();
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       const disconnectSpies = binding.bindings.map((binding) =>
         vi.spyOn(binding, 'disconnect'),

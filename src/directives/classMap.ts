@@ -7,6 +7,7 @@ import {
   type Effect,
   type Part,
   PartType,
+  type UpdateContext,
   type Updater,
   directiveTag,
 } from '../types.js';
@@ -28,7 +29,10 @@ export class ClassMap implements Directive {
     return this._classDeclaration;
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): ClassMapBinding {
+  [directiveTag](
+    part: Part,
+    _context: UpdateContext<unknown>,
+  ): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
         'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +
@@ -67,26 +71,26 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: ClassMap, updater: Updater<unknown>): void {
+  bind(newValue: ClassMap, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(ClassMap, newValue, this._part);
     }
     const oldValue = this._directive;
     if (!shallowEqual(oldValue.classDeclaration, newValue.classDeclaration)) {
       this._directive = newValue;
-      this.connect(updater);
+      this.connect(context);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { classDeclaration } = this._directive;
     if (Object.keys(classDeclaration).length > 0) {
       this._directive = new ClassMap({});
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 

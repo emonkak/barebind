@@ -5,12 +5,12 @@ import {
   type RenderContext,
   type UsableObject,
   usableTag,
-} from '../renderHost.js';
+} from '../renderContext.js';
 import {
   type Binding,
   type Directive,
   type Part,
-  type Updater,
+  type UpdateContext,
   directiveTag,
   nameOf,
   nameTag,
@@ -47,8 +47,11 @@ export abstract class Signal<TValue>
     return this.value;
   }
 
-  [directiveTag](part: Part, updater: Updater<unknown>): SignalBinding<TValue> {
-    return new SignalBinding(this, part, updater);
+  [directiveTag](
+    part: Part,
+    context: UpdateContext<unknown>,
+  ): SignalBinding<TValue> {
+    return new SignalBinding(this, part, context);
   }
 
   [usableTag](context: RenderContext): TValue {
@@ -70,9 +73,13 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   private _subscription: Subscription | null = null;
 
-  constructor(signal: Signal<TValue>, part: Part, updater: Updater<unknown>) {
+  constructor(
+    signal: Signal<TValue>,
+    part: Part,
+    context: UpdateContext<unknown>,
+  ) {
     this._signal = signal;
-    this._binding = resolveBinding(signal.value, part, updater);
+    this._binding = resolveBinding(signal.value, part, context);
   }
 
   get value(): Signal<TValue> {
@@ -95,12 +102,12 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     return this._binding;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._binding.connect(updater);
-    this._subscription ??= this._subscribeSignal(this._signal, updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._binding.connect(context);
+    this._subscription ??= this._subscribeSignal(this._signal, context);
   }
 
-  bind(newValue: Signal<TValue>, updater: Updater<unknown>): void {
+  bind(newValue: Signal<TValue>, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(Signal, newValue, this._binding.part);
     }
@@ -109,12 +116,12 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
       this._subscription?.();
       this._subscription = null;
     }
-    this._binding.bind(newValue.value, updater);
-    this._subscription ??= this._subscribeSignal(newValue, updater);
+    this._binding.bind(newValue.value, context);
+    this._subscription ??= this._subscribeSignal(newValue, context);
   }
 
-  unbind(updater: Updater<unknown>): void {
-    this._binding.unbind(updater);
+  unbind(context: UpdateContext<unknown>): void {
+    this._binding.unbind(context);
     this._subscription?.();
     this._subscription = null;
   }
@@ -127,11 +134,12 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   private _subscribeSignal(
     signal: Signal<TValue>,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ): Subscription {
     return signal.subscribe(() => {
-      this._binding.bind(signal.value, updater);
-      updater.scheduleUpdate();
+      const { host, updater } = context;
+      this._binding.bind(signal.value, context);
+      updater.scheduleUpdate(host);
     });
   }
 }

@@ -5,6 +5,7 @@ import {
   type Directive,
   type Part,
   PartType,
+  type UpdateContext,
   type Updater,
   directiveTag,
 } from '../types.js';
@@ -24,7 +25,10 @@ export class UnsafeSVG implements Directive {
     return this._content;
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): UnsafeSVGBinding {
+  [directiveTag](
+    part: Part,
+    _context: UpdateContext<unknown>,
+  ): UnsafeSVGBinding {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'UnsafeSVG directive must be used in a child node, but it is used here:\n' +
@@ -65,26 +69,26 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: UnsafeSVG, updater: Updater<unknown>): void {
+  bind(newValue: UnsafeSVG, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(UnsafeSVG, newValue, this._part);
     }
     const oldValue = this._directive;
     if (oldValue.content !== newValue.content) {
       this._directive = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { content } = this._directive;
     if (content !== '') {
       this._directive = new UnsafeSVG('');
-      this.connect(updater);
+      this.connect(context);
     }
   }
 

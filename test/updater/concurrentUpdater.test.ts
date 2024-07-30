@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
-import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
+import { MockBlock, MockScheduler, MockUpdateHost } from '../mocks.js';
 
 const TASK_PRIORITIES: TaskPriority[] = [
   'user-blocking',
@@ -12,7 +12,7 @@ const TASK_PRIORITIES: TaskPriority[] = [
 describe('ConcurrentUpdater', () => {
   describe('.isPending()', () => {
     it('should return true if there is a pending block', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
+      const updater = new ConcurrentUpdater();
 
       updater.enqueueBlock(new MockBlock());
 
@@ -20,7 +20,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a pending mutation effect', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
+      const updater = new ConcurrentUpdater();
 
       updater.enqueueMutationEffect({ commit() {} });
 
@@ -28,7 +28,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a pending layout effect', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
+      const updater = new ConcurrentUpdater();
 
       updater.enqueueLayoutEffect({ commit() {} });
 
@@ -36,7 +36,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return true if there is a pending passive effect', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
+      const updater = new ConcurrentUpdater();
 
       updater.enqueuePassiveEffect({ commit() {} });
 
@@ -44,7 +44,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should return false if there are no pending tasks', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
+      const updater = new ConcurrentUpdater();
 
       expect(updater.isPending()).toBe(false);
     });
@@ -52,12 +52,13 @@ describe('ConcurrentUpdater', () => {
 
   describe('.isScheduled()', () => {
     it('should return whether an update is scheduled', async () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
+      const host = new MockUpdateHost();
+      const updater = new ConcurrentUpdater();
 
       updater.enqueueBlock(new MockBlock());
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
@@ -69,8 +70,9 @@ describe('ConcurrentUpdater', () => {
     it.each(TASK_PRIORITIES)(
       'should update the block according to its priority',
       async (priority) => {
+        const host = new MockUpdateHost();
         const scheduler = new MockScheduler();
-        const updater = new ConcurrentUpdater(new MockRenderHost(), {
+        const updater = new ConcurrentUpdater({
           scheduler,
         });
 
@@ -79,14 +81,10 @@ describe('ConcurrentUpdater', () => {
           .spyOn(block, 'priority', 'get')
           .mockReturnValue(priority);
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
-        const updateSpy = vi
-          .spyOn(block, 'update')
-          .mockImplementation((_host, updater) => {
-            expect(updater.getCurrentBlock()).toBe(block);
-          });
+        const updateSpy = vi.spyOn(block, 'update');
 
         updater.enqueueBlock(block);
-        updater.scheduleUpdate();
+        updater.scheduleUpdate(host);
 
         await updater.waitForUpdate();
 
@@ -100,8 +98,9 @@ describe('ConcurrentUpdater', () => {
     );
 
     it('should commit effects enqueued during an update', async () => {
+      const host = new MockUpdateHost();
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockRenderHost(), {
+      const updater = new ConcurrentUpdater({
         scheduler,
       });
 
@@ -114,15 +113,14 @@ describe('ConcurrentUpdater', () => {
       const updateSpy = vi
         .spyOn(block, 'update')
         .mockImplementation((_host, updater) => {
-          expect(updater.getCurrentBlock()).toBe(block);
           updater.enqueueMutationEffect(mutationEffect);
           updater.enqueueLayoutEffect(layoutEffect);
           updater.enqueuePassiveEffect(passiveEffect);
-          updater.scheduleUpdate();
+          updater.scheduleUpdate(host);
         });
 
       updater.enqueueBlock(block);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       await updater.waitForUpdate();
 
@@ -134,8 +132,9 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should commit mutation and layout effects with "user-blocking" priority', async () => {
+      const host = new MockUpdateHost();
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockRenderHost(), {
+      const updater = new ConcurrentUpdater({
         scheduler,
       });
 
@@ -145,7 +144,7 @@ describe('ConcurrentUpdater', () => {
 
       updater.enqueueMutationEffect(mutationEffect);
       updater.enqueueLayoutEffect(layoutEffect);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       await updater.waitForUpdate();
 
@@ -158,8 +157,9 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should commit passive effects with "background" priority', async () => {
+      const host = new MockUpdateHost();
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockRenderHost(), {
+      const updater = new ConcurrentUpdater({
         scheduler,
       });
 
@@ -167,7 +167,7 @@ describe('ConcurrentUpdater', () => {
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
       updater.enqueuePassiveEffect(passiveEffect);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       await updater.waitForUpdate();
 
@@ -179,8 +179,9 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should cancel the update of the block if shouldUpdate() returns false', async () => {
+      const host = new MockUpdateHost();
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockRenderHost(), {
+      const updater = new ConcurrentUpdater({
         scheduler,
       });
 
@@ -192,7 +193,7 @@ describe('ConcurrentUpdater', () => {
       const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
 
       updater.enqueueBlock(block);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       await updater.waitForUpdate();
 
@@ -202,8 +203,9 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {
+      const host = new MockUpdateHost();
       const scheduler = new MockScheduler();
-      const updater = new ConcurrentUpdater(new MockRenderHost(), {
+      const updater = new ConcurrentUpdater({
         scheduler,
       });
 
@@ -227,7 +229,7 @@ describe('ConcurrentUpdater', () => {
 
       updater.enqueueBlock(block1);
       updater.enqueueBlock(block2);
-      updater.scheduleUpdate();
+      updater.scheduleUpdate(host);
 
       await updater.waitForUpdate();
 

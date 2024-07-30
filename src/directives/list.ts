@@ -7,6 +7,7 @@ import {
   type Effect,
   type Part,
   PartType,
+  type UpdateContext,
   type Updater,
   directiveTag,
   nameOf,
@@ -60,7 +61,7 @@ export class OrderedList<TItem, TKey, TValue> implements Directive {
 
   [directiveTag](
     part: Part,
-    _updater: Updater<unknown>,
+    _context: UpdateContext<unknown>,
   ): OrderedListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -115,25 +116,28 @@ export class OrderedListBinding<TItem, TKey, TValue>
     return this._pendingBindings;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._updateItems(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._updateItems(context);
+    this._requestMutation(context.updater);
   }
 
   bind(
     newValue: OrderedList<TItem, TKey, TValue>,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ): void {
     DEBUG: {
       ensureDirective(OrderedList, newValue, this._part);
     }
     this._directive = newValue;
-    this._updateItems(updater);
+    this._updateItems(context);
+    this._requestMutation(context.updater);
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { keySelector, valueSelector } = this._directive;
     this._directive = new OrderedList([], keySelector, valueSelector);
-    this._clearItems(updater);
+    this._clearItems(context);
+    this._requestMutation(context.updater);
   }
 
   disconnect(): void {
@@ -147,20 +151,15 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._dirty = false;
   }
 
-  private _clearItems(updater: Updater<unknown>): void {
+  private _clearItems(context: UpdateContext<unknown>): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      removeItem(this._pendingBindings[i]!, updater);
+      removeItem(this._pendingBindings[i]!, context);
     }
 
     this._pendingBindings = [];
-
-    if (!this._dirty) {
-      this._dirty = true;
-      updater.enqueueMutationEffect(this);
-    }
   }
 
-  private _insertItems(updater: Updater<unknown>): void {
+  private _insertItems(context: UpdateContext<unknown>): void {
     const { items, keySelector, valueSelector } = this._directive;
     const newBindings = new Array<Binding<TValue>>(items.length);
     const newKeys = new Array<TKey>(items.length);
@@ -170,14 +169,14 @@ export class OrderedListBinding<TItem, TKey, TValue>
       const key = keySelector(item, i);
       const value = valueSelector(item, i);
       newKeys[i] = key;
-      newBindings[i] = insertItem(key, value, null, this._part, updater);
+      newBindings[i] = insertItem(key, value, null, this._part, context);
     }
 
     this._pendingBindings = newBindings;
     this._memoizedKeys = newKeys;
   }
 
-  private _reconcileItems(updater: Updater<unknown>): void {
+  private _reconcileItems(context: UpdateContext<unknown>): void {
     const { items, keySelector, valueSelector } = this._directive;
     const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
@@ -204,32 +203,32 @@ export class OrderedListBinding<TItem, TKey, TValue>
       } else if (oldKeys[oldHead] === newKeys[newHead]) {
         // Old head matches new head; update in place
         const binding = (newBindings[newHead] = oldBindings[oldHead]!);
-        binding.bind(newValues[newHead]!, updater);
+        binding.bind(newValues[newHead]!, context);
         oldHead++;
         newHead++;
       } else if (oldKeys[oldTail] === newKeys[newTail]) {
         // Old tail matches new tail; update in place
         const binding = (newBindings[newTail] = oldBindings[oldTail]!);
-        binding.bind(newValues[newTail]!, updater);
+        binding.bind(newValues[newTail]!, context);
         oldTail--;
         newTail--;
       } else if (oldKeys[oldHead] === newKeys[newTail]) {
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newTail] = oldBindings[oldHead]!);
-        binding.bind(newValues[newTail]!, updater);
+        binding.bind(newValues[newTail]!, context);
         moveItem(
           binding,
           newBindings[newTail + 1] ?? null,
           this._part,
-          updater,
+          context,
         );
         oldHead++;
         newTail--;
       } else if (oldKeys[oldTail] === newKeys[newHead]) {
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newHead] = oldBindings[oldTail]!);
-        binding.bind(newValues[newHead]!, updater);
-        moveItem(binding, oldBindings[oldHead]!, this._part, updater);
+        binding.bind(newValues[newHead]!, context);
+        moveItem(binding, oldBindings[oldHead]!, this._part, context);
         oldTail--;
         newHead++;
       } else {
@@ -241,11 +240,11 @@ export class OrderedListBinding<TItem, TKey, TValue>
         }
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
           // Old head is no longer in new list; remove
-          removeItem(oldBindings[oldHead]!, updater);
+          removeItem(oldBindings[oldHead]!, context);
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
           // Old tail is no longer in new list; remove
-          removeItem(oldBindings[oldTail]!, updater);
+          removeItem(oldBindings[oldTail]!, context);
           oldTail--;
         } else {
           // Any mismatches at this point are due to additions or moves; see if
@@ -254,8 +253,8 @@ export class OrderedListBinding<TItem, TKey, TValue>
           if (oldIndex !== undefined && oldBindings[oldIndex] !== null) {
             // Reuse the old binding.
             const binding = (newBindings[newHead] = oldBindings[oldIndex]!);
-            binding.bind(newValues[newHead]!, updater);
-            moveItem(binding, oldBindings[oldHead]!, this._part, updater);
+            binding.bind(newValues[newHead]!, context);
+            moveItem(binding, oldBindings[oldHead]!, this._part, context);
             // This marks the old binding as having been used, so that it will
             // be skipped in the first two checks above.
             oldBindings[oldIndex] = null;
@@ -266,7 +265,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
               newValues[newHead]!,
               oldBindings[oldHead]!,
               this._part,
-              updater,
+              context,
             );
           }
           newHead++;
@@ -283,7 +282,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
         newValues[newHead]!,
         newBindings[newTail + 1] ?? null,
         this._part,
-        updater,
+        context,
       );
       newHead++;
     }
@@ -292,7 +291,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
     while (oldHead <= oldTail) {
       const oldBinding = oldBindings[oldHead]!;
       if (oldBinding !== null) {
-        removeItem(oldBinding, updater);
+        removeItem(oldBinding, context);
       }
       oldHead++;
     }
@@ -301,12 +300,15 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._memoizedKeys = newKeys;
   }
 
-  private _updateItems(updater: Updater<unknown>): void {
+  private _updateItems(context: UpdateContext<unknown>): void {
     if (this._pendingBindings.length === 0) {
-      this._insertItems(updater);
+      this._insertItems(context);
     } else {
-      this._reconcileItems(updater);
+      this._reconcileItems(context);
     }
+  }
+
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
@@ -334,7 +336,7 @@ export class InPlaceList<TItem, TValue> implements Directive {
 
   [directiveTag](
     part: Part,
-    _updater: Updater<unknown>,
+    _context: UpdateContext<unknown>,
   ): InPlaceListBinding<TItem, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -384,25 +386,31 @@ export class InPlaceListBinding<TItem, TValue>
     return this._pendingBindings;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._updateItems(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._updateItems(context);
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: InPlaceList<TItem, TValue>, updater: Updater<unknown>): void {
+  bind(
+    newValue: InPlaceList<TItem, TValue>,
+    context: UpdateContext<unknown>,
+  ): void {
     DEBUG: {
       ensureDirective(InPlaceList, newValue, this._part);
     }
     const oldValue = this._directive;
     if (oldValue.items !== newValue.items) {
       this._directive = newValue;
-      this._updateItems(updater);
+      this._updateItems(context);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { valueSelector } = this._directive;
     this._directive = new InPlaceList([], valueSelector);
-    this._clearItems(updater);
+    this._clearItems(context);
+    this._requestMutation(context.updater);
   }
 
   disconnect(): void {
@@ -416,20 +424,22 @@ export class InPlaceListBinding<TItem, TValue>
     this._dirty = false;
   }
 
-  private _clearItems(updater: Updater<unknown>): void {
+  private _clearItems(context: UpdateContext<unknown>): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      removeItem(this._pendingBindings[i]!, updater);
+      removeItem(this._pendingBindings[i]!, context);
     }
 
     this._pendingBindings = [];
+  }
 
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
     }
   }
 
-  private _updateItems(updater: Updater<unknown>): void {
+  private _updateItems(context: UpdateContext<unknown>): void {
     const { items, valueSelector } = this._directive;
     const oldBindings = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
@@ -442,26 +452,21 @@ export class InPlaceListBinding<TItem, TValue>
       const item = items[i]!;
       const value = valueSelector(item, i);
       const binding = this._pendingBindings[i]!;
-      binding.bind(value, updater);
+      binding.bind(value, context);
       newBindings[i] = binding;
     }
 
     for (let i = oldBindings.length, l = items.length; i < l; i++) {
       const item = items[i]!;
       const value = valueSelector(item, i);
-      newBindings[i] = insertItem(i, value, null, this._part, updater);
+      newBindings[i] = insertItem(i, value, null, this._part, context);
     }
 
     for (let i = items.length, l = oldBindings.length; i < l; i++) {
-      removeItem(oldBindings[i]!, updater);
+      removeItem(oldBindings[i]!, context);
     }
 
     this._pendingBindings = newBindings;
-
-    if (!this._dirty) {
-      this._dirty = true;
-      updater.enqueueMutationEffect(this);
-    }
   }
 }
 
@@ -543,22 +548,22 @@ function insertItem<TKey, TValue>(
   value: TValue,
   referenceBinding: Binding<TValue> | null,
   containerPart: Part,
-  updater: Updater<unknown>,
+  context: UpdateContext<unknown>,
 ): Binding<TValue> {
   const part = {
     type: PartType.ChildNode,
     node: document.createComment(''),
   } as const;
-  const binding = resolveBinding(value, part, updater);
+  const binding = resolveBinding(value, part, context);
 
   DEBUG: {
     part.node.data = nameOf(value) + '@' + nameOf(key);
   }
 
-  updater.enqueueMutationEffect(
+  context.updater.enqueueMutationEffect(
     new InsertItem(part, referenceBinding, containerPart),
   );
-  binding.connect(updater);
+  binding.connect(context);
 
   return binding;
 }
@@ -567,9 +572,9 @@ function moveItem<T>(
   binding: Binding<T>,
   referenceBinding: Binding<T> | null,
   containerPart: Part,
-  updater: Updater<unknown>,
+  context: UpdateContext<unknown>,
 ): void {
-  updater.enqueueMutationEffect(
+  context.updater.enqueueMutationEffect(
     new MoveItem(binding, referenceBinding, containerPart),
   );
 }
@@ -595,7 +600,10 @@ function moveNodes(
   referenceNode.before(...targetNodes);
 }
 
-function removeItem<T>(binding: Binding<T>, updater: Updater<unknown>): void {
-  binding.unbind(updater);
-  updater.enqueueMutationEffect(new RemoveItem(binding.part));
+function removeItem<T>(
+  binding: Binding<T>,
+  context: UpdateContext<unknown>,
+): void {
+  binding.unbind(context);
+  context.updater.enqueueMutationEffect(new RemoveItem(binding.part));
 }

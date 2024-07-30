@@ -3,7 +3,7 @@ import {
   type Binding,
   type Directive,
   type Part,
-  type Updater,
+  type UpdateContext,
   directiveTag,
 } from '../types.js';
 
@@ -16,7 +16,7 @@ export class NoValue implements Directive {
     }
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): NoValueBinding {
+  [directiveTag](part: Part, _context: UpdateContext<unknown>): NoValueBinding {
     return new NoValueBinding(part);
   }
 }
@@ -44,15 +44,15 @@ export class NoValueBinding implements Binding<NoValue> {
     return this._part.node;
   }
 
-  connect(_updater: Updater<unknown>): void {}
+  connect(_context: UpdateContext<unknown>): void {}
 
-  bind(newValue: NoValue, _updater: Updater<unknown>): void {
+  bind(newValue: NoValue, _context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(NoValue, newValue, this._part);
     }
   }
 
-  unbind(_updater: Updater<unknown>): void {}
+  unbind(_context: UpdateContext<unknown>): void {}
 
   disconnect(): void {}
 }

@@ -4,9 +4,9 @@ import {
   EmptyTemplate,
   EmptyTemplateFragment,
 } from '../../src/template/emptyTemplate.js';
-import { PartType } from '../../src/types.js';
+import { PartType, createUpdateContext } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockRenderHost } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('.constructor()', () => {
@@ -19,10 +19,12 @@ describe('EmptyTemplate', () => {
 
   describe('.render()', () => {
     it('should return EmptyTemplateFragment', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-      const fragment = EmptyTemplate.instance.render(null, updater);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = EmptyTemplate.instance.render(null, context);
 
-      updater.flush();
+      updater.flushUpdate(host);
 
       expect(fragment.startNode).toBe(null);
       expect(fragment.endNode).toBe(null);
@@ -41,10 +43,12 @@ describe('EmptyTemplate', () => {
 describe('EmptyTemplateFragment', () => {
   describe('.bind()', () => {
     it('should do nothing', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = new EmptyTemplateFragment();
-      const updater = new SyncUpdater(new MockRenderHost());
 
-      fragment.bind(null, updater);
+      fragment.bind(null, context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
@@ -53,10 +57,12 @@ describe('EmptyTemplateFragment', () => {
 
   describe('.unbind()', () => {
     it('should do nothing', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = new EmptyTemplateFragment();
-      const updater = new SyncUpdater(new MockRenderHost());
 
-      fragment.unbind(updater);
+      fragment.unbind(context);
 
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);

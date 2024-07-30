@@ -2,7 +2,7 @@ import type {
   ChildNodePart,
   Template,
   TemplateFragment,
-  Updater,
+  UpdateContext,
 } from '../types.js';
 
 export class EmptyTemplate implements Template<null> {
@@ -14,7 +14,7 @@ export class EmptyTemplate implements Template<null> {
     }
   }
 
-  render(_data: null, _updater: Updater<unknown>): EmptyTemplateFragment {
+  render(_data: null, _context: UpdateContext<unknown>): EmptyTemplateFragment {
     return new EmptyTemplateFragment();
   }
 
@@ -32,9 +32,9 @@ export class EmptyTemplateFragment implements TemplateFragment<null> {
     return null;
   }
 
-  bind(_data: null, _updater: Updater<unknown>): void {}
+  bind(_data: null, _context: UpdateContext<unknown>): void {}
 
-  unbind(_updater: Updater<unknown>): void {}
+  unbind(_context: UpdateContext<unknown>): void {}
 
   mount(_part: ChildNodePart): void {}
 

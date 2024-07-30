@@ -7,6 +7,7 @@ import {
   type Effect,
   type Part,
   PartType,
+  type UpdateContext,
   type Updater,
   directiveTag,
 } from '../types.js';
@@ -41,7 +42,10 @@ export class StyleMap implements Directive {
     return this._styleDeclaration;
   }
 
-  [directiveTag](part: Part, _updater: Updater<unknown>): StyleMapBinding {
+  [directiveTag](
+    part: Part,
+    _context: UpdateContext<unknown>,
+  ): StyleMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
         'StyleMap directive must be used in a "style" attribute, but it is used here:\n' +
@@ -82,26 +86,26 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this._requestMutation(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this._requestMutation(context.updater);
   }
 
-  bind(newValue: StyleMap, updater: Updater<unknown>): void {
+  bind(newValue: StyleMap, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(StyleMap, newValue, this._part);
     }
     const oldValue = this._directive;
     if (!shallowEqual(newValue.styleDeclaration, oldValue.styleDeclaration)) {
       this._directive = newValue;
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 
-  unbind(updater: Updater<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     const { styleDeclaration } = this._directive;
     if (Object.keys(styleDeclaration).length > 0) {
       this._directive = new StyleMap({});
-      this._requestMutation(updater);
+      this._requestMutation(context.updater);
     }
   }
 

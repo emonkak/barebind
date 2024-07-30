@@ -4,7 +4,7 @@ import {
   type Binding,
   type Directive,
   type Part,
-  type Updater,
+  type UpdateContext,
   directiveTag,
   nameOf,
   nameTag,
@@ -74,9 +74,9 @@ export class Condition<TTrue, TFalse> implements Directive {
 
   [directiveTag](
     part: Part,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ): ConditionBinding<TTrue, TFalse> {
-    return new ConditionBinding<TTrue, TFalse>(this, part, updater);
+    return new ConditionBinding<TTrue, TFalse>(this, part, context);
   }
 }
 
@@ -92,16 +92,16 @@ export class ConditionBinding<TTrue, TFalse>
   constructor(
     directive: Condition<TTrue, TFalse>,
     part: Part,
-    updater: Updater<unknown>,
+    context: UpdateContext<unknown>,
   ) {
     const { condition, trueBranch, falseBranch } = directive;
     this._directive = directive;
     if (condition) {
-      this._trueBinding = resolveBinding(trueBranch(), part, updater);
+      this._trueBinding = resolveBinding(trueBranch(), part, context);
       this._falseBinding = null;
     } else {
       this._trueBinding = null;
-      this._falseBinding = resolveBinding(falseBranch(), part, updater);
+      this._falseBinding = resolveBinding(falseBranch(), part, context);
     }
   }
 
@@ -125,11 +125,14 @@ export class ConditionBinding<TTrue, TFalse>
     return this._directive.condition ? this._trueBinding! : this._falseBinding!;
   }
 
-  connect(updater: Updater<unknown>): void {
-    this.currentBinding.connect(updater);
+  connect(context: UpdateContext<unknown>): void {
+    this.currentBinding.connect(context);
   }
 
-  bind(newValue: Condition<TTrue, TFalse>, updater: Updater<unknown>): void {
+  bind(
+    newValue: Condition<TTrue, TFalse>,
+    context: UpdateContext<unknown>,
+  ): void {
     DEBUG: {
       ensureDirective(Condition, newValue, this.currentBinding.part);
     }
@@ -139,34 +142,34 @@ export class ConditionBinding<TTrue, TFalse>
 
     if (oldValue.condition === condition) {
       if (condition) {
-        this._trueBinding!.bind(trueBranch(), updater);
+        this._trueBinding!.bind(trueBranch(), context);
       } else {
-        this._falseBinding!.bind(falseBranch(), updater);
+        this._falseBinding!.bind(falseBranch(), context);
       }
     } else {
       if (condition) {
-        this._falseBinding!.unbind(updater);
+        this._falseBinding!.unbind(context);
         if (this._trueBinding !== null) {
-          this._trueBinding.bind(trueBranch(), updater);
+          this._trueBinding.bind(trueBranch(), context);
         } else {
           this._trueBinding = resolveBinding(
             trueBranch(),
             this._falseBinding!.part,
-            updater,
+            context,
           );
-          this._trueBinding.connect(updater);
+          this._trueBinding.connect(context);
         }
       } else {
-        this._trueBinding!.unbind(updater);
+        this._trueBinding!.unbind(context);
         if (this._falseBinding !== null) {
-          this._falseBinding.bind(falseBranch(), updater);
+          this._falseBinding.bind(falseBranch(), context);
         } else {
           this._falseBinding = resolveBinding(
             falseBranch(),
             this._trueBinding!.part,
-            updater,
+            context,
           );
-          this._falseBinding.connect(updater);
+          this._falseBinding.connect(context);
         }
       }
     }
@@ -174,8 +177,8 @@ export class ConditionBinding<TTrue, TFalse>
     this._directive = newValue;
   }
 
-  unbind(updater: Updater<unknown>): void {
-    this.currentBinding.unbind(updater);
+  unbind(context: UpdateContext<unknown>): void {
+    this.currentBinding.unbind(context);
   }
 
   disconnect(): void {
