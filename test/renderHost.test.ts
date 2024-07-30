@@ -365,7 +365,7 @@ describe('RenderContext', () => {
     });
   });
 
-  describe('.requestUpdate()', () => {
+  describe('.forceUpdate()', () => {
     it('should request update to the current block with the current priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
@@ -378,7 +378,7 @@ describe('RenderContext', () => {
         .mockReturnValue('user-blocking');
 
       const context = new RenderContext(hooks, block, host, updater);
-      context.requestUpdate();
+      context.forceUpdate();
 
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith('user-blocking', updater);

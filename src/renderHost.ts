@@ -232,7 +232,7 @@ export class RenderContext {
     );
   }
 
-  requestUpdate(): void {
+  forceUpdate(): void {
     this._block.requestUpdate(this._host.getCurrentPriority(), this._updater);
   }
 

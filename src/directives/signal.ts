@@ -55,7 +55,7 @@ export abstract class Signal<TValue>
     context.useEffect(
       () =>
         this.subscribe(() => {
-          context.requestUpdate();
+          context.forceUpdate();
         }),
       [this],
     );
