@@ -41,7 +41,7 @@ export class StyleMap implements Directive {
     return this._styleDeclaration;
   }
 
-  [directiveTag](part: Part, _updater: Updater): StyleMapBinding {
+  [directiveTag](part: Part, _updater: Updater<unknown>): StyleMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
         'StyleMap directive must be used in a "style" attribute, but it is used here:\n' +
@@ -82,11 +82,11 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: StyleMap, updater: Updater): void {
+  bind(newValue: StyleMap, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(StyleMap, newValue, this._part);
     }
@@ -97,7 +97,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { styleDeclaration } = this._directive;
     if (Object.keys(styleDeclaration).length > 0) {
       this._directive = new StyleMap({});
@@ -132,7 +132,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       updater.enqueueMutationEffect(this);
       this._dirty = true;

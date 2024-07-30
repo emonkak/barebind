@@ -40,7 +40,7 @@ export class Memo<T> implements Directive {
     return 'Memo(' + nameOf(this._factory()) + ')';
   }
 
-  [directiveTag](part: Part, updater: Updater): MemoBinding<T> {
+  [directiveTag](part: Part, updater: Updater<unknown>): MemoBinding<T> {
     return new MemoBinding(this, part, updater);
   }
 }
@@ -50,7 +50,7 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   private readonly _binding: Binding<T>;
 
-  constructor(directive: Memo<T>, part: Part, updater: Updater) {
+  constructor(directive: Memo<T>, part: Part, updater: Updater<unknown>) {
     this._directive = directive;
     this._binding = resolveBinding(directive.factory(), part, updater);
   }
@@ -75,11 +75,11 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     return this._binding;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._binding.connect(updater);
   }
 
-  bind(newValue: Memo<T>, updater: Updater): void {
+  bind(newValue: Memo<T>, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(Memo, newValue, this._binding.part);
     }
@@ -91,7 +91,7 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._directive = new Memo(this._directive.factory, undefined);
     this._binding.unbind(updater);
   }

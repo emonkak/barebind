@@ -20,7 +20,7 @@ export interface Directive<TContext = unknown> {
   ): Binding<ThisType<this>>;
 }
 
-export interface Updater<TContext = unknown> {
+export interface Updater<TContext> {
   getCurrentBlock(): UpdateBlock<TContext> | null;
   getCurrentPriority(): TaskPriority;
   isPending(): boolean;
@@ -77,7 +77,7 @@ export interface TemplateFragment<TData, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
   bind(data: TData, updater: Updater<TContext>): void;
-  unbind(updater: Updater): void;
+  unbind(updater: Updater<TContext>): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
   disconnect(): void;

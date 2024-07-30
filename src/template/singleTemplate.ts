@@ -21,7 +21,7 @@ export class ChildNodeTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, updater: Updater): SingleTemplateFragment<T> {
+  render(data: T, updater: Updater<unknown>): SingleTemplateFragment<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -48,7 +48,7 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, updater: Updater): SingleTemplateFragment<T> {
+  render(data: T, updater: Updater<unknown>): SingleTemplateFragment<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
@@ -86,7 +86,7 @@ export class SingleTemplateFragment<T> implements TemplateFragment<T> {
     this._binding.bind(data, updater);
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._binding.unbind(updater);
   }
 

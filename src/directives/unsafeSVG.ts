@@ -24,7 +24,7 @@ export class UnsafeSVG implements Directive {
     return this._content;
   }
 
-  [directiveTag](part: Part, _updater: Updater): UnsafeSVGBinding {
+  [directiveTag](part: Part, _updater: Updater<unknown>): UnsafeSVGBinding {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'UnsafeSVG directive must be used in a child node, but it is used here:\n' +
@@ -65,11 +65,11 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: UnsafeSVG, updater: Updater): void {
+  bind(newValue: UnsafeSVG, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(UnsafeSVG, newValue, this._part);
     }
@@ -80,7 +80,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { content } = this._directive;
     if (content !== '') {
       this._directive = new UnsafeSVG('');
@@ -111,7 +111,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);

@@ -30,7 +30,7 @@ export class Dynamic implements Directive {
     return 'Dynamic(' + nameOf(this._value) + ')';
   }
 
-  [directiveTag](part: Part, updater: Updater): DynamicBinding {
+  [directiveTag](part: Part, updater: Updater<unknown>): DynamicBinding {
     return new DynamicBinding(this, part, updater);
   }
 }
@@ -40,7 +40,7 @@ export class DynamicBinding implements Binding<unknown> {
 
   private _binding: Binding<unknown>;
 
-  constructor(directive: Dynamic, part: Part, updater: Updater) {
+  constructor(directive: Dynamic, part: Part, updater: Updater<unknown>) {
     this._directive = directive;
     this._binding = resolveBinding(directive.value, part, updater);
   }
@@ -65,11 +65,11 @@ export class DynamicBinding implements Binding<unknown> {
     return this._binding;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._binding.connect(updater);
   }
 
-  bind(newValue: Dynamic, updater: Updater): void {
+  bind(newValue: Dynamic, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(Dynamic, newValue, this._binding.part);
     }
@@ -94,7 +94,7 @@ export class DynamicBinding implements Binding<unknown> {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._binding.unbind(updater);
   }
 

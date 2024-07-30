@@ -16,7 +16,7 @@ export class NoValue implements Directive {
     }
   }
 
-  [directiveTag](part: Part, _updater: Updater): NoValueBinding {
+  [directiveTag](part: Part, _updater: Updater<unknown>): NoValueBinding {
     return new NoValueBinding(part);
   }
 }
@@ -44,15 +44,15 @@ export class NoValueBinding implements Binding<NoValue> {
     return this._part.node;
   }
 
-  connect(_updater: Updater): void {}
+  connect(_updater: Updater<unknown>): void {}
 
-  bind(newValue: NoValue, _updater: Updater): void {
+  bind(newValue: NoValue, _updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(NoValue, newValue, this._part);
     }
   }
 
-  unbind(_updater: Updater): void {}
+  unbind(_updater: Updater<unknown>): void {}
 
   disconnect(): void {}
 }

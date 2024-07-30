@@ -60,7 +60,7 @@ export class OrderedList<TItem, TKey, TValue> implements Directive {
 
   [directiveTag](
     part: Part,
-    _updater: Updater,
+    _updater: Updater<unknown>,
   ): OrderedListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -115,11 +115,14 @@ export class OrderedListBinding<TItem, TKey, TValue>
     return this._pendingBindings;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._updateItems(updater);
   }
 
-  bind(newValue: OrderedList<TItem, TKey, TValue>, updater: Updater): void {
+  bind(
+    newValue: OrderedList<TItem, TKey, TValue>,
+    updater: Updater<unknown>,
+  ): void {
     DEBUG: {
       ensureDirective(OrderedList, newValue, this._part);
     }
@@ -127,7 +130,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._updateItems(updater);
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { keySelector, valueSelector } = this._directive;
     this._directive = new OrderedList([], keySelector, valueSelector);
     this._clearItems(updater);
@@ -144,7 +147,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._dirty = false;
   }
 
-  private _clearItems(updater: Updater): void {
+  private _clearItems(updater: Updater<unknown>): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
       removeItem(this._pendingBindings[i]!, updater);
     }
@@ -157,7 +160,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
     }
   }
 
-  private _insertItems(updater: Updater): void {
+  private _insertItems(updater: Updater<unknown>): void {
     const { items, keySelector, valueSelector } = this._directive;
     const newBindings = new Array<Binding<TValue>>(items.length);
     const newKeys = new Array<TKey>(items.length);
@@ -174,7 +177,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._memoizedKeys = newKeys;
   }
 
-  private _reconcileItems(updater: Updater): void {
+  private _reconcileItems(updater: Updater<unknown>): void {
     const { items, keySelector, valueSelector } = this._directive;
     const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
@@ -298,7 +301,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._memoizedKeys = newKeys;
   }
 
-  private _updateItems(updater: Updater): void {
+  private _updateItems(updater: Updater<unknown>): void {
     if (this._pendingBindings.length === 0) {
       this._insertItems(updater);
     } else {
@@ -331,7 +334,7 @@ export class InPlaceList<TItem, TValue> implements Directive {
 
   [directiveTag](
     part: Part,
-    _updater: Updater,
+    _updater: Updater<unknown>,
   ): InPlaceListBinding<TItem, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -381,11 +384,11 @@ export class InPlaceListBinding<TItem, TValue>
     return this._pendingBindings;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._updateItems(updater);
   }
 
-  bind(newValue: InPlaceList<TItem, TValue>, updater: Updater): void {
+  bind(newValue: InPlaceList<TItem, TValue>, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(InPlaceList, newValue, this._part);
     }
@@ -396,7 +399,7 @@ export class InPlaceListBinding<TItem, TValue>
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { valueSelector } = this._directive;
     this._directive = new InPlaceList([], valueSelector);
     this._clearItems(updater);
@@ -413,7 +416,7 @@ export class InPlaceListBinding<TItem, TValue>
     this._dirty = false;
   }
 
-  private _clearItems(updater: Updater): void {
+  private _clearItems(updater: Updater<unknown>): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
       removeItem(this._pendingBindings[i]!, updater);
     }
@@ -426,7 +429,7 @@ export class InPlaceListBinding<TItem, TValue>
     }
   }
 
-  private _updateItems(updater: Updater): void {
+  private _updateItems(updater: Updater<unknown>): void {
     const { items, valueSelector } = this._directive;
     const oldBindings = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
@@ -540,7 +543,7 @@ function insertItem<TKey, TValue>(
   value: TValue,
   referenceBinding: Binding<TValue> | null,
   containerPart: Part,
-  updater: Updater,
+  updater: Updater<unknown>,
 ): Binding<TValue> {
   const part = {
     type: PartType.ChildNode,
@@ -564,7 +567,7 @@ function moveItem<T>(
   binding: Binding<T>,
   referenceBinding: Binding<T> | null,
   containerPart: Part,
-  updater: Updater,
+  updater: Updater<unknown>,
 ): void {
   updater.enqueueMutationEffect(
     new MoveItem(binding, referenceBinding, containerPart),
@@ -592,7 +595,7 @@ function moveNodes(
   referenceNode.before(...targetNodes);
 }
 
-function removeItem<T>(binding: Binding<T>, updater: Updater): void {
+function removeItem<T>(binding: Binding<T>, updater: Updater<unknown>): void {
   binding.unbind(updater);
   updater.enqueueMutationEffect(new RemoveItem(binding.part));
 }

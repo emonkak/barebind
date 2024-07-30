@@ -44,11 +44,11 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: unknown, updater: Updater): void {
+  bind(newValue: unknown, updater: Updater<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -58,7 +58,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     if (this._value !== null) {
       this._value = null;
       this._requestMutation(updater);
@@ -84,7 +84,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
@@ -125,11 +125,11 @@ export class EventBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: unknown, updater: Updater): void {
+  bind(newValue: unknown, updater: Updater<unknown>): void {
     DEBUG: {
       ensureEventListener(newValue, this._part);
     }
@@ -139,7 +139,7 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     if (this._memoizedListener !== null) {
       this._requestMutation(updater);
     }
@@ -218,7 +218,7 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
@@ -257,11 +257,11 @@ export class NodeBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: unknown, updater: Updater): void {
+  bind(newValue: unknown, updater: Updater<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -271,7 +271,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     if (this._value !== null) {
       this._value = null;
       this._requestMutation(updater);
@@ -288,7 +288,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
@@ -327,11 +327,11 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: unknown, updater: Updater): void {
+  bind(newValue: unknown, updater: Updater<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -341,7 +341,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(_updater: Updater): void {}
+  unbind(_updater: Updater<unknown>): void {}
 
   disconnect(): void {}
 
@@ -351,7 +351,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
@@ -390,11 +390,11 @@ export class ElementBinding implements Binding<unknown> {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._updateProps(updater);
   }
 
-  bind(newValue: unknown, updater: Updater): void {
+  bind(newValue: unknown, updater: Updater<unknown>): void {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
     }
@@ -404,7 +404,7 @@ export class ElementBinding implements Binding<unknown> {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._props = {};
     for (const binding of this._bindings.values()) {
       binding.unbind(updater);
@@ -417,7 +417,7 @@ export class ElementBinding implements Binding<unknown> {
     }
   }
 
-  private _updateProps(updater: Updater): void {
+  private _updateProps(updater: Updater<unknown>): void {
     for (const [name, binding] of this._bindings.entries()) {
       if (
         !Object.hasOwn(this._props, name) ||

@@ -162,7 +162,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._flags &= ~FLAG_UPDATING;
   }
 
-  requestUpdate(priority: TaskPriority, updater: Updater): void {
+  requestUpdate(priority: TaskPriority, updater: Updater<TContext>): void {
     if (!(this._flags & FLAG_CONNECTED)) {
       return;
     }
@@ -252,11 +252,14 @@ export class ComponentBinding<TProps, TData, TContext>
     this._flags &= ~FLAG_UPDATING;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<TContext>): void {
     this._forceUpdate(updater);
   }
 
-  bind(newValue: Component<TProps, TData, TContext>, updater: Updater): void {
+  bind(
+    newValue: Component<TProps, TData, TContext>,
+    updater: Updater<TContext>,
+  ): void {
     DEBUG: {
       ensureDirective(Component, newValue, this._part);
     }
@@ -264,7 +267,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._forceUpdate(updater);
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<TContext>): void {
     this._pendingFragment?.unbind(updater);
 
     cleanHooks(this._hooks);

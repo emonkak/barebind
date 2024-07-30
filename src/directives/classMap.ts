@@ -28,7 +28,7 @@ export class ClassMap implements Directive {
     return this._classDeclaration;
   }
 
-  [directiveTag](part: Part, _updater: Updater): ClassMapBinding {
+  [directiveTag](part: Part, _updater: Updater<unknown>): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
         'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +
@@ -67,11 +67,11 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: ClassMap, updater: Updater): void {
+  bind(newValue: ClassMap, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(ClassMap, newValue, this._part);
     }
@@ -82,7 +82,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { classDeclaration } = this._directive;
     if (Object.keys(classDeclaration).length > 0) {
       this._directive = new ClassMap({});
@@ -111,7 +111,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);

@@ -99,7 +99,7 @@ export class MockTemplateFragment<TContext>
 
   bind(_data: {}, _updater: Updater<TContext>): void {}
 
-  unbind(_updater: Updater): void {}
+  unbind(_updater: Updater<TContext>): void {}
 
   mount(_part: ChildNodePart): void {}
 
@@ -169,16 +169,16 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     return this._part.node;
   }
 
-  bind(newValue: TextDirective, updater: Updater): void {
+  bind(newValue: TextDirective, updater: Updater<unknown>): void {
     this._directive = newValue;
     updater.enqueueMutationEffect(this);
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     updater.enqueueMutationEffect(this);
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._directive = new TextDirective(null);
     updater.enqueueMutationEffect(this);
   }

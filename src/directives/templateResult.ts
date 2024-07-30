@@ -193,7 +193,10 @@ export class TemplateResultBinding<TData, TContext>
     this._forceUpdate(updater);
   }
 
-  bind(newValue: TemplateResult<TData, TContext>, updater: Updater): void {
+  bind(
+    newValue: TemplateResult<TData, TContext>,
+    updater: Updater<TContext>,
+  ): void {
     DEBUG: {
       ensureDirective(TemplateResult, newValue, this._part);
     }

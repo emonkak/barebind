@@ -28,7 +28,7 @@ export class Ref implements Directive {
     return this._ref;
   }
 
-  [directiveTag](part: Part, _updater: Updater): RefBinding {
+  [directiveTag](part: Part, _updater: Updater<unknown>): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +
@@ -69,11 +69,11 @@ export class RefBinding implements Binding<Ref>, Effect {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestEffect(updater);
   }
 
-  bind(newValue: Ref, updater: Updater): void {
+  bind(newValue: Ref, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(Ref, newValue, this._part);
     }
@@ -84,7 +84,7 @@ export class RefBinding implements Binding<Ref>, Effect {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { ref } = this._pendingDirective;
     if (ref !== null) {
       this._pendingDirective = new Ref(null);
@@ -118,7 +118,7 @@ export class RefBinding implements Binding<Ref>, Effect {
     this._dirty = false;
   }
 
-  private _requestEffect(updater: Updater): void {
+  private _requestEffect(updater: Updater<unknown>): void {
     if (!this._dirty) {
       updater.enqueueLayoutEffect(this);
       this._dirty = true;

@@ -45,7 +45,10 @@ export class Choice<TKey, TValue> implements Directive {
     );
   }
 
-  [directiveTag](part: Part, updater: Updater): ChoiceBinding<TKey, TValue> {
+  [directiveTag](
+    part: Part,
+    updater: Updater<unknown>,
+  ): ChoiceBinding<TKey, TValue> {
     return new ChoiceBinding(this, part, updater);
   }
 }
@@ -59,7 +62,11 @@ export class ChoiceBinding<TKey, TValue>
 
   private _cachedBindings: Map<TKey, Binding<TValue>> = new Map();
 
-  constructor(directive: Choice<TKey, TValue>, part: Part, updater: Updater) {
+  constructor(
+    directive: Choice<TKey, TValue>,
+    part: Part,
+    updater: Updater<unknown>,
+  ) {
     const { key, factory } = directive;
     const value = factory(key);
     this._directive = directive;
@@ -86,11 +93,11 @@ export class ChoiceBinding<TKey, TValue>
     return this._binding;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._binding.connect(updater);
   }
 
-  bind(newValue: Choice<TKey, TValue>, updater: Updater): void {
+  bind(newValue: Choice<TKey, TValue>, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(Choice, newValue, this._binding.part);
     }
@@ -121,7 +128,7 @@ export class ChoiceBinding<TKey, TValue>
     this._directive = newValue;
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._binding.unbind(updater);
   }
 

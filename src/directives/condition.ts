@@ -74,7 +74,7 @@ export class Condition<TTrue, TFalse> implements Directive {
 
   [directiveTag](
     part: Part,
-    updater: Updater,
+    updater: Updater<unknown>,
   ): ConditionBinding<TTrue, TFalse> {
     return new ConditionBinding<TTrue, TFalse>(this, part, updater);
   }
@@ -92,7 +92,7 @@ export class ConditionBinding<TTrue, TFalse>
   constructor(
     directive: Condition<TTrue, TFalse>,
     part: Part,
-    updater: Updater,
+    updater: Updater<unknown>,
   ) {
     const { condition, trueBranch, falseBranch } = directive;
     this._directive = directive;
@@ -125,11 +125,11 @@ export class ConditionBinding<TTrue, TFalse>
     return this._directive.condition ? this._trueBinding! : this._falseBinding!;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this.currentBinding.connect(updater);
   }
 
-  bind(newValue: Condition<TTrue, TFalse>, updater: Updater): void {
+  bind(newValue: Condition<TTrue, TFalse>, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(Condition, newValue, this.currentBinding.part);
     }
@@ -174,7 +174,7 @@ export class ConditionBinding<TTrue, TFalse>
     this._directive = newValue;
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this.currentBinding.unbind(updater);
   }
 

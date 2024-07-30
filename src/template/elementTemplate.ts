@@ -99,7 +99,7 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
     this._childNodeBinding.bind(data.childNodeValue, updater);
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>) {
     this._elementBinding.unbind(updater);
     this._childNodeBinding.unbind(updater);
   }

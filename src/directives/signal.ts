@@ -47,7 +47,7 @@ export abstract class Signal<TValue>
     return this.value;
   }
 
-  [directiveTag](part: Part, updater: Updater): SignalBinding<TValue> {
+  [directiveTag](part: Part, updater: Updater<unknown>): SignalBinding<TValue> {
     return new SignalBinding(this, part, updater);
   }
 
@@ -70,7 +70,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   private _subscription: Subscription | null = null;
 
-  constructor(signal: Signal<TValue>, part: Part, updater: Updater) {
+  constructor(signal: Signal<TValue>, part: Part, updater: Updater<unknown>) {
     this._signal = signal;
     this._binding = resolveBinding(signal.value, part, updater);
   }
@@ -95,12 +95,12 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     return this._binding;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._binding.connect(updater);
     this._subscription ??= this._subscribeSignal(this._signal, updater);
   }
 
-  bind(newValue: Signal<TValue>, updater: Updater): void {
+  bind(newValue: Signal<TValue>, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(Signal, newValue, this._binding.part);
     }
@@ -113,7 +113,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     this._subscription ??= this._subscribeSignal(newValue, updater);
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     this._binding.unbind(updater);
     this._subscription?.();
     this._subscription = null;
@@ -127,7 +127,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   private _subscribeSignal(
     signal: Signal<TValue>,
-    updater: Updater,
+    updater: Updater<unknown>,
   ): Subscription {
     return signal.subscribe(() => {
       this._binding.bind(signal.value, updater);

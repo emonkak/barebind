@@ -24,7 +24,7 @@ export class UnsafeHTML implements Directive {
     return this._content;
   }
 
-  [directiveTag](part: Part, _updater: Updater): UnsafeHTMLBinding {
+  [directiveTag](part: Part, _updater: Updater<unknown>): UnsafeHTMLBinding {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'UnsafeHTML directive must be used in a child node, but it is used here:\n' +
@@ -65,11 +65,11 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
     return this._part.node;
   }
 
-  connect(updater: Updater): void {
+  connect(updater: Updater<unknown>): void {
     this._requestMutation(updater);
   }
 
-  bind(newValue: UnsafeHTML, updater: Updater): void {
+  bind(newValue: UnsafeHTML, updater: Updater<unknown>): void {
     DEBUG: {
       ensureDirective(UnsafeHTML, newValue, this._part);
     }
@@ -80,7 +80,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
     }
   }
 
-  unbind(updater: Updater): void {
+  unbind(updater: Updater<unknown>): void {
     const { content } = this._directive;
     if (content !== '') {
       this._directive = new UnsafeHTML('');
@@ -111,7 +111,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
     this._dirty = false;
   }
 
-  private _requestMutation(updater: Updater): void {
+  private _requestMutation(updater: Updater<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
