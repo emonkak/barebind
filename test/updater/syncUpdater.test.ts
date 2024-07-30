@@ -4,14 +4,6 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('SyncUpdater', () => {
-  describe('.getCurrentPriority()', () => {
-    it('should return "user-blocking"', () => {
-      const updater = new SyncUpdater(new MockRenderHost());
-
-      expect(updater.getCurrentPriority()).toBe('user-blocking');
-    });
-  });
-
   describe('.isPending()', () => {
     it('should return true if there is a pending block', () => {
       const updater = new SyncUpdater(new MockRenderHost());

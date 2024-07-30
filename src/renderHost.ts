@@ -76,6 +76,15 @@ export class RenderHost implements UpdateHost<RenderContext> {
     }
   }
 
+  getCurrentPriority(): TaskPriority {
+    const currentEvent = window.event;
+    if (currentEvent !== undefined) {
+      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
+    } else {
+      return 'user-visible';
+    }
+  }
+
   getHTMLTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     data: TData,
@@ -226,10 +235,7 @@ export class RenderContext {
   }
 
   requestUpdate(): void {
-    this._block.requestUpdate(
-      this._updater.getCurrentPriority(),
-      this._updater,
-    );
+    this._block.requestUpdate(this._host.getCurrentPriority(), this._updater);
   }
 
   setContextValue(key: unknown, value: unknown): void {
@@ -387,7 +393,7 @@ export class RenderContext {
           if (!Object.is(hook.state, nextState)) {
             hook.state = nextState;
             this._block.requestUpdate(
-              priority ?? this._updater.getCurrentPriority(),
+              priority ?? this._host.getCurrentPriority(),
               this._updater,
             );
           }
@@ -425,7 +431,7 @@ export class RenderContext {
       () =>
         subscribe(() => {
           this._block.requestUpdate(
-            priority ?? this._updater.getCurrentPriority(),
+            priority ?? this._host.getCurrentPriority(),
             this._updater,
           );
         }),
@@ -460,5 +466,30 @@ function ensureHookType<TExpectedHook extends Hook>(
     throw new Error(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
+  }
+}
+
+function isContinuousEvent(event: Event): boolean {
+  switch (event.type as keyof DocumentEventMap) {
+    case 'drag':
+    case 'dragenter':
+    case 'dragleave':
+    case 'dragover':
+    case 'mouseenter':
+    case 'mouseleave':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointerenter':
+    case 'pointerleave':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'touchmove':
+    case 'wheel':
+      return true;
+    default:
+      return false;
   }
 }

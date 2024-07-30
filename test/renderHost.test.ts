@@ -17,6 +17,26 @@ import { EffectPhase, type Hook, HookType, PartType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, MockTemplate } from './mocks.js';
 
+const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
+  'drag',
+  'dragenter',
+  'dragleave',
+  'dragover',
+  'mouseenter',
+  'mouseleave',
+  'mousemove',
+  'mouseout',
+  'mouseover',
+  'pointerenter',
+  'pointerleave',
+  'pointermove',
+  'pointerout',
+  'pointerover',
+  'scroll',
+  'touchmove',
+  'wheel',
+];
+
 describe('RenderHost', () => {
   describe('.flushEffects()', () => {
     it('should perform given effects', () => {
@@ -34,6 +54,41 @@ describe('RenderHost', () => {
       expect(effect2.commit).toHaveBeenCalledOnce();
       expect(effect2.commit).toHaveBeenCalledWith(EffectPhase.Passive);
     });
+  });
+
+  describe('.getCurrentPriority()', () => {
+    it('should return "user-visible" if there is no current event', () => {
+      const host = new RenderHost();
+
+      vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
+
+      expect(host.getCurrentPriority()).toBe('user-visible');
+    });
+
+    it('should return "user-blocking" if the current event is not continuous', () => {
+      const host = new RenderHost();
+
+      const eventMock = vi
+        .spyOn(globalThis, 'event', 'get')
+        .mockReturnValue(new MouseEvent('click'));
+
+      expect(host.getCurrentPriority()).toBe('user-blocking');
+      expect(eventMock).toHaveBeenCalled();
+    });
+
+    it.each(CONTINUOUS_EVENT_TYPES)(
+      'should return "user-visible" if the current event is continuous',
+      (eventType) => {
+        const host = new RenderHost();
+
+        const eventMock = vi
+          .spyOn(globalThis, 'event', 'get')
+          .mockReturnValue(new CustomEvent(eventType));
+
+        expect(host.getCurrentPriority()).toBe('user-visible');
+        expect(eventMock).toHaveBeenCalled();
+      },
+    );
   });
 
   describe('.getHTMLTemplate()', () => {
@@ -316,18 +371,23 @@ describe('Context', () => {
   });
 
   describe('.requestUpdate()', () => {
-    it('should request update to the current block', () => {
+    it('should request update to the current block with the current priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
+
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+      const getCurrentPrioritySpy = vi
+        .spyOn(host, 'getCurrentPriority')
+        .mockReturnValue('user-blocking');
 
       const context = new RenderContext(hooks, block, host, updater);
       context.requestUpdate();
 
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith('user-blocking', updater);
+      expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
     });
   });
 
@@ -667,7 +727,7 @@ describe('Context', () => {
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
-        .spyOn(updater, 'getCurrentPriority')
+        .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
@@ -710,7 +770,7 @@ describe('Context', () => {
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
-        .spyOn(updater, 'getCurrentPriority')
+        .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
@@ -840,7 +900,7 @@ describe('Context', () => {
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
-        .spyOn(updater, 'getCurrentPriority')
+        .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
@@ -874,7 +934,7 @@ describe('Context', () => {
       const host = new RenderHost();
       const updater = new SyncUpdater(host);
       const getCurrentPrioritySpy = vi
-        .spyOn(updater, 'getCurrentPriority')
+        .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
@@ -977,7 +1037,7 @@ describe('Context', () => {
       const updater = new SyncUpdater(host);
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const getCurrentPrioritySpy = vi
-        .spyOn(updater, 'getCurrentPriority')
+        .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
 
       const snapshot = 'foo';

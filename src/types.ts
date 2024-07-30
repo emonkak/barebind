@@ -22,7 +22,6 @@ export interface Directive<TContext = unknown> {
 
 export interface Updater<TContext> {
   getCurrentBlock(): Block<TContext> | null;
-  getCurrentPriority(): TaskPriority;
   isPending(): boolean;
   isScheduled(): boolean;
   waitForUpdate(): Promise<void>;
@@ -34,6 +33,7 @@ export interface Updater<TContext> {
 }
 
 export interface UpdateHost<TContext> {
+  getCurrentPriority(): TaskPriority;
   flushEffects(effects: Effect[], phase: EffectPhase): void;
   renderComponent<TProps, TData>(
     component: ComponentFunction<TProps, TData, TContext>,

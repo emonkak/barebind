@@ -29,10 +29,6 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     return this._currentBlock;
   }
 
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
-  }
-
   enqueueBlock(block: Block<TContext>): void {
     this._pendingBlocks.push(block);
   }

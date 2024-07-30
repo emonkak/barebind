@@ -29,6 +29,10 @@ export interface MockRenderContext {
 }
 
 export class MockRenderHost implements UpdateHost<MockRenderContext> {
+  getCurrentPriority(): TaskPriority {
+    return 'user-blocking';
+  }
+
   flushEffects(effects: Effect[], phase: EffectPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(phase);

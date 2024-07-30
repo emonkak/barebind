@@ -47,15 +47,6 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     return this._currentBlock;
   }
 
-  getCurrentPriority(): TaskPriority {
-    const currentEvent = window.event;
-    if (currentEvent !== undefined) {
-      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
-    } else {
-      return 'user-visible';
-    }
-  }
-
   enqueueBlock(block: Block<TContext>): void {
     this._currentPipeline.blocks.push(block);
   }
@@ -225,29 +216,4 @@ function createPipeline<TContext>(
     layoutEffects,
     passiveEffects,
   };
-}
-
-function isContinuousEvent(event: Event): boolean {
-  switch (event.type as keyof DocumentEventMap) {
-    case 'drag':
-    case 'dragenter':
-    case 'dragleave':
-    case 'dragover':
-    case 'mouseenter':
-    case 'mouseleave':
-    case 'mousemove':
-    case 'mouseout':
-    case 'mouseover':
-    case 'pointerenter':
-    case 'pointerleave':
-    case 'pointermove':
-    case 'pointerout':
-    case 'pointerover':
-    case 'scroll':
-    case 'touchmove':
-    case 'wheel':
-      return true;
-    default:
-      return false;
-  }
 }

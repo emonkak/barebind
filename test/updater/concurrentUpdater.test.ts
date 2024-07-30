@@ -3,26 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
 import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
 
-const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
-  'drag',
-  'dragenter',
-  'dragleave',
-  'dragover',
-  'mouseenter',
-  'mouseleave',
-  'mousemove',
-  'mouseout',
-  'mouseover',
-  'pointerenter',
-  'pointerleave',
-  'pointermove',
-  'pointerout',
-  'pointerover',
-  'scroll',
-  'touchmove',
-  'wheel',
-];
-
 const TASK_PRIORITIES: TaskPriority[] = [
   'user-blocking',
   'user-visible',
@@ -30,41 +10,6 @@ const TASK_PRIORITIES: TaskPriority[] = [
 ];
 
 describe('ConcurrentUpdater', () => {
-  describe('.getCurrentPriority()', () => {
-    it('should return "user-visible" if there is no current event', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
-
-      vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
-
-      expect(updater.getCurrentPriority()).toBe('user-visible');
-    });
-
-    it('should return "user-blocking" if the current event is not continuous', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
-
-      const eventMock = vi
-        .spyOn(globalThis, 'event', 'get')
-        .mockReturnValue(new MouseEvent('click'));
-
-      expect(updater.getCurrentPriority()).toBe('user-blocking');
-      expect(eventMock).toHaveBeenCalled();
-    });
-
-    it.each(CONTINUOUS_EVENT_TYPES)(
-      'should return "user-visible" if the current event is continuous',
-      (eventType) => {
-        const updater = new ConcurrentUpdater(new MockRenderHost());
-
-        const eventMock = vi
-          .spyOn(globalThis, 'event', 'get')
-          .mockReturnValue(new CustomEvent(eventType));
-
-        expect(updater.getCurrentPriority()).toBe('user-visible');
-        expect(eventMock).toHaveBeenCalled();
-      },
-    );
-  });
-
   describe('.isPending()', () => {
     it('should return true if there is a pending block', () => {
       const updater = new ConcurrentUpdater(new MockRenderHost());
