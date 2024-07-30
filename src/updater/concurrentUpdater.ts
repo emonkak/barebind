@@ -74,7 +74,6 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   isPending(): boolean {
     return (
-      this._taskCount.value > 0 ||
       this._currentPipeline.blocks.length > 0 ||
       this._currentPipeline.layoutEffects.length > 0 ||
       this._currentPipeline.mutationEffects.length > 0 ||

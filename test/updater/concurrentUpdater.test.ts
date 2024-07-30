@@ -74,15 +74,6 @@ describe('ConcurrentUpdater', () => {
       expect(updater.isPending()).toBe(true);
     });
 
-    it('should return true if there is a block scheduled in rendering pipelines', () => {
-      const updater = new ConcurrentUpdater(new MockRenderHost());
-
-      updater.enqueueBlock(new MockBlock());
-      updater.scheduleUpdate();
-
-      expect(updater.isPending()).toBe(true);
-    });
-
     it('should return true if there is a pending mutation effect', () => {
       const updater = new ConcurrentUpdater(new MockRenderHost());
 
