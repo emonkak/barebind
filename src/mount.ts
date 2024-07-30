@@ -12,7 +12,7 @@ export function mount<TValue, TContext>(
   value: TValue,
   container: ChildNode,
   updater: Updater<TContext>,
-): Binding<TValue> {
+): Binding<TValue, TContext> {
   const part = {
     type: PartType.ChildNode,
     node: document.createComment(''),

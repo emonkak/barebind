@@ -121,7 +121,7 @@ export class ConditionBinding<TTrue, TFalse>
     return this.currentBinding.endNode;
   }
 
-  get currentBinding(): Binding<TTrue | TFalse> {
+  get currentBinding(): Binding<TTrue> | Binding<TFalse> {
     return this._directive.condition ? this._trueBinding! : this._falseBinding!;
   }
 

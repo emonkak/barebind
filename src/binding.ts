@@ -364,7 +364,7 @@ export class ElementBinding implements Binding<unknown> {
 
   private readonly _part: ElementPart;
 
-  private _bindings: Map<string, Binding<unknown>> = new Map();
+  private _bindings: Map<string, Binding<any>> = new Map();
 
   constructor(value: unknown, part: ElementPart) {
     DEBUG: {
@@ -434,15 +434,15 @@ export class ElementBinding implements Binding<unknown> {
         continue;
       }
 
-      let binding = this._bindings.get(name);
+      const binding = this._bindings.get(name);
 
       if (binding !== undefined) {
         binding.bind(value, updater);
       } else {
         const part = resolveSpreadPart(name, this._part.node);
-        binding = resolveBinding(value, part, updater);
-        binding.connect(updater);
-        this._bindings.set(name, binding);
+        const newBinding = resolveBinding(value, part, updater);
+        newBinding.connect(updater);
+        this._bindings.set(name, newBinding);
       }
     }
   }
