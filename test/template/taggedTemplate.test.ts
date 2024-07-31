@@ -604,6 +604,8 @@ describe('TaggedTemplateFragment', () => {
       fragment.connect(context);
       updater.flushUpdate(host);
 
+      expect(container.innerHTML).toBe('<!---->');
+
       fragment.mount(part);
 
       expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
@@ -632,6 +634,8 @@ describe('TaggedTemplateFragment', () => {
       container.appendChild(part.node);
       fragment.connect(context);
       updater.flushUpdate(host);
+
+      expect(container.innerHTML).toBe('<!---->');
 
       fragment.mount(part);
 

@@ -33,6 +33,10 @@ export class MockBlock<TContext> implements Block<TContext> {
     this._parent = parent;
   }
 
+  get isConnected(): boolean {
+    return false;
+  }
+
   get isUpdating(): boolean {
     return false;
   }
@@ -42,7 +46,7 @@ export class MockBlock<TContext> implements Block<TContext> {
   }
 
   get priority(): TaskPriority {
-    return 'background';
+    return 'user-blocking';
   }
 
   cancelUpdate(): void {}
@@ -84,16 +88,6 @@ export class MockScheduler implements Scheduler {
 export class MockTemplate<TData, TContext>
   implements Template<TData, TContext>
 {
-  private _name: string;
-
-  get name(): string {
-    return this._name;
-  }
-
-  constructor(name = '') {
-    this._name = name;
-  }
-
   render(
     data: TData,
     _context: UpdateContext<TContext>,
@@ -102,7 +96,7 @@ export class MockTemplate<TData, TContext>
   }
 
   isSameTemplate(other: Template<TData, TContext>): boolean {
-    return other instanceof MockTemplate && other._name === this._name;
+    return other === this;
   }
 }
 
@@ -111,16 +105,19 @@ export class MockTemplateFragment<TData, TContext>
 {
   private _data: TData;
 
-  constructor(data: TData) {
+  private readonly _childNodes: ChildNode[];
+
+  constructor(data: TData, childNodes: ChildNode[] = []) {
     this._data = data;
+    this._childNodes = childNodes;
   }
 
   get startNode(): ChildNode | null {
-    return null;
+    return this._childNodes[0] ?? null;
   }
 
   get endNode(): ChildNode | null {
-    return null;
+    return this._childNodes.at(-1) ?? null;
   }
 
   get data(): TData {
@@ -169,14 +166,14 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
     _tokens: ReadonlyArray<string>,
     _data: TData,
   ): Template<TData> {
-    return new MockTemplate('html');
+    return new MockTemplate();
   }
 
   getSVGTemplate<TData extends readonly any[]>(
     _tokens: ReadonlyArray<string>,
     _data: TData,
   ): Template<TData> {
-    return new MockTemplate('svg');
+    return new MockTemplate();
   }
 
   getScopedValue(

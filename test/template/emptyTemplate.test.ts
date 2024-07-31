@@ -93,6 +93,9 @@ describe('EmptyTemplateFragment', () => {
       const fragment = new EmptyTemplateFragment();
 
       container.appendChild(part.node);
+
+      expect(container.innerHTML).toBe('<!---->');
+
       fragment.mount(part);
 
       expect(container.innerHTML).toBe('<!---->');

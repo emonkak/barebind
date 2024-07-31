@@ -1,3 +1,4 @@
+import { BlockBinding } from '../block.js';
 import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
@@ -10,23 +11,21 @@ import {
   HookType,
   type Part,
   PartType,
-  type TaskPriority,
   type Template,
+  type TemplateDirective,
   type TemplateFragment,
   type UpdateContext,
-  type UpdateHost,
   type Updater,
-  comparePriorities,
-  createUpdateContext,
   directiveTag,
   nameOf,
   nameTag,
 } from '../types.js';
 
-const FLAG_NONE = 0;
-const FLAG_CONNECTED = 1 << 0;
-const FLAG_UPDATING = 1 << 1;
-const FLAG_MUTATING = 1 << 2;
+enum Status {
+  Fresh,
+  Mounting,
+  Unmounting,
+}
 
 export function component<TProps, TData, TContext>(
   component: ComponentFunction<TProps, TData, TContext>,
@@ -63,38 +62,34 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
   [directiveTag](
     part: Part,
     context: UpdateContext<TContext>,
-  ): ComponentBinding<TProps, TData, TContext> {
+  ): BlockBinding<Component<TProps, TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    return new ComponentBinding(this, part, context.currentBlock);
+    // Make the directive a target for incremental updates by returning
+    // a block.
+    return new ComponentBinding(this, part, context.currentBlock).block;
   }
 }
 
 export class ComponentBinding<TProps, TData, TContext>
-  implements
-    Binding<Component<TProps, TData, TContext>, TContext>,
-    Effect,
-    Block<TContext>
+  implements Binding<Component<TProps, TData, TContext>, TContext>, Effect
 {
   private _directive: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
-  private readonly _parent: Block<TContext> | null;
+  private readonly _block: BlockBinding<
+    Component<TProps, TData, TContext>,
+    TContext
+  >;
 
   private _pendingFragment: TemplateFragment<unknown, TContext> | null = null;
 
   private _memoizedFragment: TemplateFragment<unknown, TContext> | null = null;
-
-  private _memoizedComponent: ComponentFunction<
-    TProps,
-    TData,
-    TContext
-  > | null = null;
 
   private _memoizedTemplate: Template<unknown, TContext> | null = null;
 
@@ -105,9 +100,7 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _hooks: Hook[] = [];
 
-  private _flags = FLAG_NONE;
-
-  private _priority: TaskPriority = 'user-blocking';
+  private _status = Status.Fresh;
 
   constructor(
     directive: Component<TProps, TData, TContext>,
@@ -116,7 +109,7 @@ export class ComponentBinding<TProps, TData, TContext>
   ) {
     this._directive = directive;
     this._part = part;
-    this._parent = parent;
+    this._block = new BlockBinding(this, parent);
   }
 
   get value(): Component<TProps, TData, TContext> {
@@ -135,131 +128,24 @@ export class ComponentBinding<TProps, TData, TContext>
     return this._part.node;
   }
 
-  get parent(): Block<TContext> | null {
-    return this._parent;
-  }
-
-  get priority(): TaskPriority {
-    return this._priority;
-  }
-
-  get isUpdating(): boolean {
-    return !!(this._flags & FLAG_UPDATING);
-  }
-
-  shouldUpdate(): boolean {
-    if (!(this._flags & FLAG_UPDATING)) {
-      return false;
-    }
-    let current: Block<TContext> | null = this;
-    while ((current = current.parent) !== null) {
-      if (current.isUpdating) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  cancelUpdate(): void {
-    this._flags &= ~FLAG_UPDATING;
-  }
-
-  requestUpdate(
-    priority: TaskPriority,
-    host: UpdateHost<TContext>,
-    updater: Updater<TContext>,
-  ): void {
-    if (!(this._flags & FLAG_CONNECTED)) {
-      return;
-    }
-
-    if (
-      !(this._flags & FLAG_UPDATING) ||
-      comparePriorities(priority, this._priority) > 0
-    ) {
-      this._flags |= FLAG_UPDATING;
-      this._priority = priority;
-      updater.enqueueBlock(this);
-      updater.scheduleUpdate(host);
-    }
-  }
-
-  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void {
-    const context = createUpdateContext(host, updater, this);
-    const { component, props } = this._directive;
-
-    if (
-      this._memoizedComponent !== null &&
-      this._memoizedComponent !== component
-    ) {
-      // The component has been changed, so we need to clean hooks.
-      updater.enqueuePassiveEffect(new CleanHooks(this._hooks));
-      this._hooks = [];
-    }
-
-    const renderContext = host.beginRenderContext(this._hooks, this, updater);
-    const { template, data } = component(props, renderContext);
-    host.finishRenderContext(renderContext);
-
-    if (this._pendingFragment !== null) {
-      if (this._memoizedTemplate!.isSameTemplate(template)) {
-        // The fragment may have been unmounted. If so, we have to remount it.
-        if (this._memoizedFragment !== this._pendingFragment) {
-          this._requestMutation(updater);
-        }
-
-        this._pendingFragment.bind(data, context);
-      } else {
-        // The template has been changed, so first, we unbind data from the current
-        // fragment.
-        this._pendingFragment.unbind(context);
-
-        // Next, unmount the old fragment and mount the new fragment.
-        this._requestMutation(updater);
-
-        let newFragment: TemplateFragment<unknown, TContext>;
-
-        // Finally, render the new template.
-        if (this._cachedFragments !== null) {
-          const cachedFragment = this._cachedFragments.get(template);
-          if (cachedFragment !== undefined) {
-            cachedFragment.bind(data, context);
-            newFragment = cachedFragment;
-          } else {
-            newFragment = template.render(data, context);
-          }
-        } else {
-          // It is rare that different templates are returned, so we defer
-          // creating fragment caches.
-          this._cachedFragments = new WeakMap();
-          newFragment = template.render(data, context);
-        }
-
-        // Remember the previous fragment for future renderings.
-        this._cachedFragments.set(
-          this._memoizedTemplate!,
-          this._pendingFragment,
-        );
-
-        newFragment.connect(context);
-
-        this._pendingFragment = newFragment;
-      }
-    } else {
-      // We have to mount the new fragment before the template rendering.
-      this._requestMutation(updater);
-
-      this._pendingFragment = template.render(data, context);
-      this._pendingFragment.connect(context);
-    }
-
-    this._memoizedComponent = component;
-    this._memoizedTemplate = template;
-    this._flags &= ~FLAG_UPDATING;
+  get block(): BlockBinding<Component<TProps, TData, TContext>, TContext> {
+    return this._block;
   }
 
   connect(context: UpdateContext<TContext>): void {
-    this._forceUpdate(context.updater);
+    const { component, props } = this._directive;
+    const { template, data } = this._renderComponent(component, props, context);
+
+    if (this._pendingFragment === null) {
+      // We have to mount the new fragment before the template rendering.
+      this._requestMutation(context.updater, Status.Mounting);
+
+      this._pendingFragment = template.render(data, context);
+    }
+
+    this._pendingFragment.connect(context);
+
+    this._memoizedTemplate = template;
   }
 
   bind(
@@ -269,74 +155,130 @@ export class ComponentBinding<TProps, TData, TContext>
     DEBUG: {
       ensureDirective(Component, newValue, this._part);
     }
+
+    const { component, props } = newValue;
+
+    if (this._directive.component !== component) {
+      // The component has been changed, so we need to clean hooks before
+      // rendering.
+      cleanHooks(this._hooks);
+    }
+
+    const { template, data } = this._renderComponent(component, props, context);
+
+    if (this._pendingFragment !== null) {
+      // Safety: If a pending fragment exists, there will always be a memoized
+      // template.
+      if (this._memoizedTemplate!.isSameTemplate(template)) {
+        // Here we use the same template as before. However the fragment may have
+        // been unmounted. If so, we have to remount it.
+        if (this._memoizedFragment !== this._pendingFragment) {
+          this._requestMutation(context.updater, Status.Mounting);
+        }
+
+        this._pendingFragment.bind(data, context);
+      } else {
+        // Here the template has been changed, so first, we unbind data from the current
+        // fragment.
+        this._pendingFragment.unbind(context);
+
+        // Next, unmount the old fragment and mount the new fragment.
+        this._requestMutation(context.updater, Status.Mounting);
+
+        let newFragment: TemplateFragment<TData, TContext>;
+
+        // Finally, render the new template.
+        if (this._cachedFragments !== null) {
+          const cachedFragment = this._cachedFragments.get(template);
+          if (cachedFragment !== undefined) {
+            cachedFragment.bind(data, context);
+            newFragment = cachedFragment;
+          } else {
+            newFragment = template.render(data, context);
+            newFragment.connect(context);
+          }
+        } else {
+          // It is rare that different templates are returned, so we defer
+          // creating fragment caches.
+          this._cachedFragments = new WeakMap();
+          newFragment = template.render(data, context);
+          newFragment.connect(context);
+        }
+
+        // Remember the previous fragment for future renderings.
+        this._cachedFragments.set(
+          this._memoizedTemplate!,
+          this._pendingFragment,
+        );
+
+        this._pendingFragment = newFragment;
+      }
+    } else {
+      // The template has never been rendered here. We have to mount the new
+      // fragment before rendering the template. This branch will never be
+      // executed unless bind() is called before connect().
+      this._requestMutation(context.updater, Status.Mounting);
+
+      this._pendingFragment = template.render(data, context);
+      this._pendingFragment.connect(context);
+    }
+
     this._directive = newValue;
-    this._forceUpdate(context.updater);
+    this._memoizedTemplate = template;
   }
 
   unbind(context: UpdateContext<TContext>): void {
     this._pendingFragment?.unbind(context);
 
     cleanHooks(this._hooks);
-    this._hooks = [];
 
-    this._requestMutation(context.updater);
-
-    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
+    this._requestMutation(context.updater, Status.Unmounting);
   }
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
 
     cleanHooks(this._hooks);
-    this._hooks = [];
-
-    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   commit(): void {
-    if (this._flags & FLAG_CONNECTED) {
-      if (this._memoizedFragment !== this._pendingFragment) {
+    switch (this._status) {
+      case Status.Mounting:
         this._memoizedFragment?.unmount(this._part);
         this._pendingFragment?.mount(this._part);
         this._memoizedFragment = this._pendingFragment;
-      }
-    } else {
-      this._memoizedFragment?.unmount(this._part);
-      this._memoizedFragment = null;
+        break;
+      case Status.Unmounting:
+        this._memoizedFragment?.unmount(this._part);
+        this._memoizedFragment = null;
+        break;
     }
 
-    this._flags &= ~FLAG_MUTATING;
+    this._status = Status.Fresh;
   }
 
-  private _forceUpdate(updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_UPDATING)) {
-      if (this._parent !== null) {
-        this._priority = this._parent.priority;
-      }
-      this._flags |= FLAG_UPDATING;
-      updater.enqueueBlock(this);
-    }
+  private _renderComponent(
+    component: ComponentFunction<TProps, TData, TContext>,
+    props: TProps,
+    { host, updater }: UpdateContext<TContext>,
+  ): TemplateDirective<TData, TContext> {
+    const renderContext = host.beginRenderContext(
+      this._hooks,
+      this._block,
+      updater,
+    );
+    const result = component(props, renderContext);
 
-    this._flags |= FLAG_CONNECTED;
+    host.finishRenderContext(renderContext);
+
+    return result;
   }
 
-  private _requestMutation(updater: Updater<TContext>): void {
-    if (!(this._flags & FLAG_MUTATING)) {
-      this._flags |= FLAG_MUTATING;
+  private _requestMutation(updater: Updater<TContext>, status: Status): void {
+    if (this._status === Status.Fresh) {
       updater.enqueueMutationEffect(this);
     }
-  }
-}
-
-class CleanHooks implements Effect {
-  private _hooks: Hook[];
-
-  constructor(hooks: Hook[]) {
-    this._hooks = hooks;
-  }
-
-  commit() {
-    cleanHooks(this._hooks);
+    this._status = status;
   }
 }
 
@@ -347,4 +289,5 @@ function cleanHooks(hooks: Hook[]): void {
       hook.cleanup?.();
     }
   }
+  hooks.length = 0;
 }

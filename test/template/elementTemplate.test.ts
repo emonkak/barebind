@@ -126,6 +126,8 @@ describe('ElementTemplateFragment', () => {
       fragment.connect(context);
       updater.flushUpdate(host);
 
+      expect(container.innerHTML).toBe('<!---->');
+
       fragment.mount(part);
 
       expect(container.innerHTML).toBe(
@@ -160,6 +162,8 @@ describe('ElementTemplateFragment', () => {
       container.appendChild(part.node);
       fragment.connect(context);
       updater.flushUpdate(host);
+
+      expect(container.innerHTML).toBe('<!---->');
 
       fragment.mount(part);
 

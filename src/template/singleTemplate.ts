@@ -70,16 +70,16 @@ export class SingleTemplateFragment<T> implements TemplateFragment<T> {
     this._binding = resolveBinding(data, part, context);
   }
 
-  get binding(): Binding<T> {
-    return this._binding;
-  }
-
   get startNode(): ChildNode {
     return this._binding.startNode;
   }
 
   get endNode(): ChildNode {
     return this._binding.endNode;
+  }
+
+  get binding(): Binding<T> {
+    return this._binding;
   }
 
   connect(context: UpdateContext<unknown>): void {

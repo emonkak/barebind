@@ -133,6 +133,8 @@ describe('SingleTemplateFragment', () => {
       fragment.connect(context);
       updater.flushUpdate(host);
 
+      expect(container.innerHTML).toBe('<!---->');
+
       fragment.mount(part);
 
       expect(container.innerHTML).toBe('foo<!---->');
@@ -160,6 +162,9 @@ describe('SingleTemplateFragment', () => {
       } as const;
 
       container.appendChild(part.node);
+
+      expect(container.innerHTML).toBe('<!---->');
+
       fragment.mount(part);
       updater.flushUpdate(host);
 

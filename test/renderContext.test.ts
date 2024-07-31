@@ -141,15 +141,14 @@ describe('RenderContext', () => {
       const updater = new SyncUpdater();
 
       const context = new RenderContext(hooks, block, host, updater);
+      const getHTMLTemplateSpy = vi.spyOn(host, 'getHTMLTemplate');
+
       const directive = context.html`
         <div class=${0}>Hello, ${1}!</div>
       `;
-
       expect(directive.template).toBeInstanceOf(MockTemplate);
-      expect((directive.template as MockTemplate<unknown, unknown>).name).toBe(
-        'html',
-      );
-      expect(directive.data).toEqual([0, 1]);
+      expect(directive.data).toStrictEqual([0, 1]);
+      expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
   });
 
@@ -222,15 +221,14 @@ describe('RenderContext', () => {
       const updater = new SyncUpdater();
 
       const context = new RenderContext(hooks, block, host, updater);
+      const getSVGTemplateSpy = vi.spyOn(host, 'getSVGTemplate');
+
       const directive = context.svg`
         <text x=${0} y=${1}>Hello, ${2}!</text>
       `;
-
       expect(directive.template).toBeInstanceOf(MockTemplate);
-      expect((directive.template as MockTemplate<unknown, unknown>).name).toBe(
-        'svg',
-      );
-      expect(directive.data).toEqual([0, 1, 2]);
+      expect(directive.data).toStrictEqual([0, 1, 2]);
+      expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });
 

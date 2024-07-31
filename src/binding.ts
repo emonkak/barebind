@@ -93,6 +93,95 @@ export class AttributeBinding implements Binding<unknown>, Effect {
   }
 }
 
+export class ElementBinding implements Binding<unknown> {
+  private _props: { [key: string]: unknown };
+
+  private readonly _part: ElementPart;
+
+  private _bindings: Map<string, Binding<any>> = new Map();
+
+  constructor(value: unknown, part: ElementPart) {
+    DEBUG: {
+      ensureSpreadProps(value, part);
+    }
+    this._props = value;
+    this._part = part;
+  }
+
+  get value(): unknown {
+    return this._props;
+  }
+
+  get part(): ElementPart {
+    return this._part;
+  }
+
+  get startNode(): ChildNode {
+    return this._part.node;
+  }
+
+  get endNode(): ChildNode {
+    return this._part.node;
+  }
+
+  connect(context: UpdateContext<unknown>): void {
+    this._updateProps(context);
+  }
+
+  bind(newValue: unknown, context: UpdateContext<unknown>): void {
+    DEBUG: {
+      ensureSpreadProps(newValue, this._part);
+    }
+    if (this._props !== newValue) {
+      this._props = newValue;
+      this._updateProps(context);
+    }
+  }
+
+  unbind(context: UpdateContext<unknown>): void {
+    this._props = {};
+    for (const binding of this._bindings.values()) {
+      binding.unbind(context);
+    }
+  }
+
+  disconnect(): void {
+    for (const binding of this._bindings.values()) {
+      binding.disconnect();
+    }
+  }
+
+  private _updateProps(context: UpdateContext<unknown>): void {
+    for (const [name, binding] of this._bindings.entries()) {
+      if (
+        !Object.hasOwn(this._props, name) ||
+        this._props[name] === undefined
+      ) {
+        binding.unbind(context);
+        this._bindings.delete(name);
+      }
+    }
+
+    for (const name in this._props) {
+      const value = this._props[name];
+      if (value === undefined) {
+        continue;
+      }
+
+      const binding = this._bindings.get(name);
+
+      if (binding !== undefined) {
+        binding.bind(value, context);
+      } else {
+        const part = resolveSpreadPart(name, this._part.node);
+        const newBinding = resolveBinding(value, part, context);
+        newBinding.connect(context);
+        this._bindings.set(name, newBinding);
+      }
+    }
+  }
+}
+
 export class EventBinding implements Binding<unknown>, Effect {
   private _pendingListener: EventListenerOrEventListenerObject | null;
 
@@ -356,95 +445,6 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     if (!this._dirty) {
       this._dirty = true;
       updater.enqueueMutationEffect(this);
-    }
-  }
-}
-
-export class ElementBinding implements Binding<unknown> {
-  private _props: { [key: string]: unknown };
-
-  private readonly _part: ElementPart;
-
-  private _bindings: Map<string, Binding<any>> = new Map();
-
-  constructor(value: unknown, part: ElementPart) {
-    DEBUG: {
-      ensureSpreadProps(value, part);
-    }
-    this._props = value;
-    this._part = part;
-  }
-
-  get value(): unknown {
-    return this._props;
-  }
-
-  get part(): ElementPart {
-    return this._part;
-  }
-
-  get startNode(): ChildNode {
-    return this._part.node;
-  }
-
-  get endNode(): ChildNode {
-    return this._part.node;
-  }
-
-  connect(context: UpdateContext<unknown>): void {
-    this._updateProps(context);
-  }
-
-  bind(newValue: unknown, context: UpdateContext<unknown>): void {
-    DEBUG: {
-      ensureSpreadProps(newValue, this._part);
-    }
-    if (this._props !== newValue) {
-      this._props = newValue;
-      this._updateProps(context);
-    }
-  }
-
-  unbind(context: UpdateContext<unknown>): void {
-    this._props = {};
-    for (const binding of this._bindings.values()) {
-      binding.unbind(context);
-    }
-  }
-
-  disconnect(): void {
-    for (const binding of this._bindings.values()) {
-      binding.disconnect();
-    }
-  }
-
-  private _updateProps(context: UpdateContext<unknown>): void {
-    for (const [name, binding] of this._bindings.entries()) {
-      if (
-        !Object.hasOwn(this._props, name) ||
-        this._props[name] === undefined
-      ) {
-        binding.unbind(context);
-        this._bindings.delete(name);
-      }
-    }
-
-    for (const name in this._props) {
-      const value = this._props[name];
-      if (value === undefined) {
-        continue;
-      }
-
-      const binding = this._bindings.get(name);
-
-      if (binding !== undefined) {
-        binding.bind(value, context);
-      } else {
-        const part = resolveSpreadPart(name, this._part.node);
-        const newBinding = resolveBinding(value, part, context);
-        newBinding.connect(context);
-        this._bindings.set(name, newBinding);
-      }
     }
   }
 }

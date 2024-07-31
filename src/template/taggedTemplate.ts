@@ -124,11 +124,11 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
     }
 
     const bindings = new Array(holes.length);
-    const rootNode = document.importNode(this._element.content, true);
+    const fragment = document.importNode(this._element.content, true);
 
     if (holes.length > 0) {
       const walker = document.createTreeWalker(
-        rootNode,
+        fragment,
         NodeFilter.SHOW_ELEMENT |
           NodeFilter.SHOW_TEXT |
           NodeFilter.SHOW_COMMENT,
@@ -199,7 +199,12 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
       }
     }
 
-    return new TaggedTemplateFragment(bindings, [...rootNode.childNodes]);
+    const childNodes = [...fragment.childNodes];
+
+    // Detach child nodes from the DocumentFragment.
+    fragment.replaceChildren();
+
+    return new TaggedTemplateFragment(bindings, childNodes);
   }
 
   isSameTemplate(other: Template<TData>): boolean {

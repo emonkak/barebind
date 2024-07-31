@@ -1,5 +1,8 @@
 import { dependenciesAreChanged } from './compare.js';
-import { TemplateResult } from './directives/templateResult.js';
+import {
+  LazyTemplateResult,
+  TemplateResult,
+} from './directives/templateResult.js';
 import {
   type ElementData,
   ElementTemplate,
@@ -111,7 +114,7 @@ export class RenderContext {
     ...data: TData
   ): TemplateDirective<TData, RenderContext> {
     const template = this._host.getHTMLTemplate(tokens, data);
-    return new TemplateResult(template, data);
+    return new LazyTemplateResult(template, data);
   }
 
   isFirstRender(): boolean {
@@ -138,7 +141,7 @@ export class RenderContext {
     ...data: TData
   ): TemplateDirective<TData, RenderContext> {
     const template = this._host.getSVGTemplate(tokens, data);
-    return new TemplateResult(template, data);
+    return new LazyTemplateResult(template, data);
   }
 
   text<T>(value: T): TemplateDirective<T, RenderContext> {

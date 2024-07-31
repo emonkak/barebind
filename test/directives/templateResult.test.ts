@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  LazyTemplateResult,
   TemplateResult,
   TemplateResultBinding,
-  templateResult,
 } from '../../src/directives/templateResult.js';
 import {
   PartType,
@@ -17,17 +17,6 @@ import {
   MockTemplateFragment,
   MockUpdateHost,
 } from '../mocks.js';
-
-describe('templateResult()', () => {
-  it('should construct a new TemplateResult', () => {
-    const template = new MockTemplate();
-    const data = {};
-    const directive = templateResult(template, data);
-
-    expect(directive.template).toBe(template);
-    expect(directive.data).toBe(data);
-  });
-});
 
 describe('TemplateResult', () => {
   describe('[nameTag]', () => {
@@ -55,9 +44,6 @@ describe('TemplateResult', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.parent).toBe(currentBlock);
-      expect(binding.priority).toBe('user-blocking');
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
@@ -77,447 +63,113 @@ describe('TemplateResult', () => {
   });
 });
 
-describe('TemplateBinding', () => {
-  describe('.shouldUpdate()', () => {
-    it('should return false after initialization', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const parent = new MockBlock();
-      const binding = new TemplateResultBinding(directive, part, parent);
-
-      expect(binding.shouldUpdate()).toBe(false);
-    });
-
-    it('should return true after an update is requested', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const parent = new MockBlock();
-      const binding = new TemplateResultBinding(directive, part, parent);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.requestUpdate('user-blocking', host, updater);
-
-      expect(binding.shouldUpdate()).toBe(true);
-    });
-
-    it('should return false if the binding is unbound', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const parent = new MockBlock();
-      const binding = new TemplateResultBinding(directive, part, parent);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.unbind(context);
-      binding.requestUpdate('user-blocking', host, updater);
-
-      expect(binding.shouldUpdate()).toBe(false);
-    });
-
-    it('should return false if there is a parent being updated', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const parent = new MockBlock();
-      const binding = new TemplateResultBinding(directive, part, parent);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.requestUpdate('user-blocking', host, updater);
-
-      expect(binding.shouldUpdate()).toBe(false);
+describe('LazyTemplateResult', () => {
+  describe('[nameTag]', () => {
+    it('should return a string represented itself', () => {
+      const directive = new LazyTemplateResult(new MockTemplate(), {});
+      expect(directive[nameTag]).toBe('LazyTemplateResult(MockTemplate)');
     });
   });
 
-  describe('.cancelUpdate()', () => {
-    it('should cancel the scheduled update', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
+  describe('[directiveTag]()', () => {
+    it('should return an instance of TemplateBinding', () => {
+      const directive = new LazyTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const currentBlock = new MockBlock();
+      const context = createUpdateContext(host, updater, currentBlock);
 
-      binding.connect(context);
-      updater.flushUpdate(host);
+      const binding = directive[directiveTag](part, context);
 
-      binding.requestUpdate('user-visible', host, updater);
-      binding.cancelUpdate();
-
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-visible');
-    });
-  });
-
-  describe('.requestUpdate()', () => {
-    it('should schdule the update', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      binding.requestUpdate('user-visible', host, updater);
-
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-visible');
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
-      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-    });
-
-    it('should reschedule the update if given higher priority', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      binding.requestUpdate('user-visible', host, updater);
-      binding.requestUpdate('user-blocking', host, updater);
-
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
-      expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
-      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(2, binding);
-      expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
-    });
-
-    it('should do nothing if the binding is not connected', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-
-      binding.requestUpdate('background', host, updater);
-
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
-
-    it('should do nothing if the binding is disconnected', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.disconnect();
-      binding.requestUpdate('background', host, updater);
-
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
-
-    it('should do nothing if the binding is unbound', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.unbind(context);
-      updater.flushUpdate(host);
-
-      binding.requestUpdate('background', host, updater);
-
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
-
-    it('should do nothing if an update is already scheduled', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      binding.requestUpdate('user-blocking', host, updater);
-      binding.requestUpdate('background', host, updater);
-
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
-      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-    });
-
-    it('should mark itself as updating', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.requestUpdate('user-blocking', host, updater);
-
-      expect(binding.isUpdating).toBe(true);
-
-      updater.flushUpdate(host);
-
-      expect(binding.isUpdating).toBe(false);
-    });
-  });
-
-  describe('.connect()', () => {
-    it('should render the template and mount its fragment', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive.data);
-      const startNode = document.createComment('');
-
-      const renderSpy = vi
-        .spyOn(directive.template, 'render')
-        .mockReturnValue(fragment);
-      const mountSpy = vi.spyOn(fragment, 'mount');
-      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
-      expect(mountSpy).toHaveBeenCalledOnce();
-      expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(startNode);
+      expect(binding.value).toBe(directive);
+      expect(binding.part).toBe(part);
+      expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should enqueue the binding as a block with the parent priority', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
+    it('should throw an error if the part is not a ChildNodePart', () => {
+      const directive = new LazyTemplateResult(new MockTemplate(), {});
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
+        type: PartType.Node,
+        node: document.createTextNode(''),
       } as const;
-      const parent = new MockBlock();
-      const binding = new TemplateResultBinding(directive, part, parent);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
-      expect(binding.priority).toBe('background');
+      expect(() => directive[directiveTag](part, context)).toThrow(
+        'TemplateResult directive must be used in a child node,',
+      );
     });
+  });
+});
 
-    it('should do nothing if an update is already scheduled', () => {
+describe('TemplateResultBinding', () => {
+  describe('.connect()', () => {
+    it('should not render the template if it is already rendered', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(directive.data, [
+        document.createComment(''),
+      ]);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      binding.connect(context);
-      binding.connect(context);
-
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
-    });
-
-    it('should cancel the unmount in progress', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive.data);
 
       const renderSpy = vi
         .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
       const mountSpy = vi.spyOn(fragment, 'mount');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
-      const bindSpy = vi.spyOn(fragment, 'bind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.unbind(context);
       binding.connect(context);
       updater.flushUpdate(host);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, context);
+      expect(connectSpy).toHaveBeenCalledTimes(2);
+      expect(connectSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(unmountSpy).not.toHaveBeenCalled();
-    });
-
-    it('should mark itself as dirty', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      binding.bind(directive, context);
-
-      expect(binding.isUpdating).toBe(true);
-
-      updater.flushUpdate(host);
-
-      expect(binding.isUpdating).toBe(false);
+      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.endNode).toBe(part.node);
     });
   });
 
   describe('.bind()', () => {
-    it('should bind data to the current fragment if that is a renderd from the same template', () => {
-      const directive1 = new TemplateResult(new MockTemplate(), {});
-      const directive2 = new TemplateResult(new MockTemplate(), {});
+    it('should bind data to the current fragment if it is a renderd from the same template', () => {
+      const template = new MockTemplate();
+      const directive1 = new TemplateResult(template, {});
+      const directive2 = new TemplateResult(template, {});
+      const fragment = new MockTemplateFragment(directive1.data, [
+        document.createComment(''),
+      ]);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive1, part, null);
+      const binding = new TemplateResultBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive1.data);
-      const startNode = document.createComment('');
 
       const renderSpy = vi
         .spyOn(directive1.template, 'render')
-        .mockReturnValue(fragment);
+        .mockReturnValueOnce(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
       const bindSpy = vi.spyOn(fragment, 'bind');
       const mountSpy = vi.spyOn(fragment, 'mount');
-      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -526,38 +178,34 @@ describe('TemplateBinding', () => {
       updater.flushUpdate(host);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive1.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(renderSpy).toHaveBeenCalledWith(directive1.data, context);
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(directive2.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(bindSpy).toHaveBeenCalledWith(directive2.data, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(startNode);
+      expect(binding.startNode).toBe(fragment.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should unbind data from the current fragment if that is a renderd from a different template', () => {
-      const directive1 = new TemplateResult(new MockTemplate('foo'), {});
-      const directive2 = new TemplateResult(new MockTemplate('bar'), {});
+    it('should unbind data from the current fragment if it is a renderd from a different template', () => {
+      const directive1 = new TemplateResult(new MockTemplate(), {});
+      const directive2 = new TemplateResult(new MockTemplate(), {});
+      const fragment1 = new MockTemplateFragment(directive1.data, [
+        document.createComment(''),
+      ]);
+      const fragment2 = new MockTemplateFragment(directive2.data, [
+        document.createComment(''),
+      ]);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive1, part, null);
+      const binding = new TemplateResultBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const fragment1 = new MockTemplateFragment(directive1.data);
-      const fragment2 = new MockTemplateFragment(directive2.data);
-      const startNode1 = document.createComment('');
-      const startNode2 = document.createComment('');
 
       const render1Spy = vi
         .spyOn(directive1.template, 'render')
@@ -565,14 +213,14 @@ describe('TemplateBinding', () => {
       const render2Spy = vi
         .spyOn(directive2.template, 'render')
         .mockReturnValue(fragment2);
+      const connect1Spy = vi.spyOn(fragment1, 'connect');
+      const connect2Spy = vi.spyOn(fragment2, 'connect');
       const unbind1Spy = vi.spyOn(fragment1, 'unbind');
       const unbind2Spy = vi.spyOn(fragment2, 'unbind');
       const mount1Spy = vi.spyOn(fragment1, 'mount');
       const mount2Spy = vi.spyOn(fragment2, 'mount');
       const unmount1Spy = vi.spyOn(fragment1, 'unmount');
       const unmount2Spy = vi.spyOn(fragment2, 'unmount');
-      vi.spyOn(fragment1, 'startNode', 'get').mockReturnValue(startNode1);
-      vi.spyOn(fragment2, 'startNode', 'get').mockReturnValue(startNode2);
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -581,23 +229,15 @@ describe('TemplateBinding', () => {
       updater.flushUpdate(host);
 
       expect(render1Spy).toHaveBeenCalledOnce();
-      expect(render1Spy).toHaveBeenCalledWith(directive1.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(render1Spy).toHaveBeenCalledWith(directive1.data, context);
       expect(render2Spy).toHaveBeenCalledOnce();
-      expect(render2Spy).toHaveBeenCalledWith(directive2.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(render2Spy).toHaveBeenCalledWith(directive2.data, context);
+      expect(connect1Spy).toHaveBeenCalledOnce();
+      expect(connect1Spy).toHaveBeenCalledWith(context);
+      expect(connect2Spy).toHaveBeenCalled();
+      expect(connect2Spy).toHaveBeenCalledWith(context);
       expect(unbind1Spy).toHaveBeenCalledOnce();
-      expect(unbind1Spy).toHaveBeenCalledWith({
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(unbind1Spy).toHaveBeenCalledWith(context);
       expect(unbind2Spy).not.toHaveBeenCalled();
       expect(mount1Spy).toHaveBeenCalledOnce();
       expect(mount1Spy).toHaveBeenCalledWith(part);
@@ -606,26 +246,120 @@ describe('TemplateBinding', () => {
       expect(unmount1Spy).toHaveBeenCalledOnce();
       expect(unmount1Spy).toHaveBeenCalledWith(part);
       expect(unmount2Spy).not.toHaveBeenCalled();
-      expect(binding.startNode).toBe(startNode2);
+      expect(binding.startNode).toBe(fragment2.startNode);
+      expect(binding.endNode).toBe(part.node);
+    });
+
+    it('should render the template when it is called without calling connect()', () => {
+      const directive1 = new TemplateResult(new MockTemplate(), {});
+      const directive2 = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(directive1.data, [
+        document.createComment(''),
+      ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateResultBinding(directive1, part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+
+      const renderSpy = vi
+        .spyOn(directive2.template, 'render')
+        .mockReturnValueOnce(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
+      const bindSpy = vi.spyOn(fragment, 'bind');
+      const mountSpy = vi.spyOn(fragment, 'mount');
+
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
+
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(directive2.data, context);
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
+      expect(bindSpy).not.toHaveBeenCalled();
+      expect(mountSpy).toHaveBeenCalledOnce();
+      expect(mountSpy).toHaveBeenCalledWith(part);
+      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.endNode).toBe(part.node);
+    });
+
+    it('should only mount the last rendered fragment if there is multiple renderings durling a transation', () => {
+      const directive1 = new TemplateResult(new MockTemplate(), {});
+      const directive2 = new TemplateResult(new MockTemplate(), {});
+      const fragment1 = new MockTemplateFragment(directive1.data, [
+        document.createComment(''),
+      ]);
+      const fragment2 = new MockTemplateFragment(directive2.data, [
+        document.createComment(''),
+      ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateResultBinding(directive1, part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+
+      const render1Spy = vi
+        .spyOn(directive1.template, 'render')
+        .mockReturnValue(fragment1);
+      const render2Spy = vi
+        .spyOn(directive2.template, 'render')
+        .mockReturnValue(fragment2);
+      const connect1Spy = vi.spyOn(fragment1, 'connect');
+      const connect2Spy = vi.spyOn(fragment2, 'connect');
+      const unbind1Spy = vi.spyOn(fragment1, 'unbind');
+      const unbind2Spy = vi.spyOn(fragment2, 'unbind');
+      const mount1Spy = vi.spyOn(fragment1, 'mount');
+      const mount2Spy = vi.spyOn(fragment2, 'mount');
+      const unmount1Spy = vi.spyOn(fragment1, 'unmount');
+      const unmount2Spy = vi.spyOn(fragment2, 'unmount');
+
+      binding.connect(context);
+      binding.bind(directive2, context);
+      updater.flushUpdate(host);
+
+      expect(render1Spy).toHaveBeenCalledOnce();
+      expect(render1Spy).toHaveBeenCalledWith(directive1.data, context);
+      expect(render2Spy).toHaveBeenCalledOnce();
+      expect(render2Spy).toHaveBeenCalledWith(directive2.data, context);
+      expect(connect1Spy).toHaveBeenCalledOnce();
+      expect(connect1Spy).toHaveBeenCalledWith(context);
+      expect(connect2Spy).toHaveBeenCalled();
+      expect(connect2Spy).toHaveBeenCalledWith(context);
+      expect(unbind1Spy).toHaveBeenCalledOnce();
+      expect(unbind1Spy).toHaveBeenCalledWith(context);
+      expect(unbind2Spy).not.toHaveBeenCalled();
+      expect(mount1Spy).not.toHaveBeenCalled();
+      expect(mount2Spy).toHaveBeenCalledOnce();
+      expect(mount2Spy).toHaveBeenCalledWith(part);
+      expect(unmount1Spy).not.toHaveBeenCalled();
+      expect(unmount2Spy).not.toHaveBeenCalled();
+      expect(binding.startNode).toBe(fragment2.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
     it('should remount the fragment if it is unmounted', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(directive.data);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive.data);
       const startNode = document.createComment('');
 
       const renderSpy = vi
         .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
       const bindSpy = vi.spyOn(fragment, 'bind');
       const unbindSpy = vi.spyOn(fragment, 'unbind');
       const mountSpy = vi.spyOn(fragment, 'mount');
@@ -642,17 +376,11 @@ describe('TemplateBinding', () => {
       updater.flushUpdate(host);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, context);
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(bindSpy).toHaveBeenCalledWith(directive.data, context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledTimes(2);
@@ -663,58 +391,29 @@ describe('TemplateBinding', () => {
       expect(binding.startNode).toBe(startNode);
       expect(binding.endNode).toBe(part.node);
     });
-
-    it('should request the mutation only once', () => {
-      const directive1 = new TemplateResult(new MockTemplate('foo'), {});
-      const directive2 = new TemplateResult(new MockTemplate('bar'), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const binding = new TemplateResultBinding(directive1, part, null);
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const enqueueMutationEffectSpy = vi.spyOn(
-        updater,
-        'enqueueMutationEffect',
-      );
-
-      binding.connect(context);
-      binding.update(host, updater);
-
-      binding.bind(directive2, context);
-      binding.update(host, updater);
-
-      expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(1, binding);
-      expect(enqueueBlockSpy).toHaveBeenNthCalledWith(2, binding);
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
-    });
   });
 
   describe('.unbind()', () => {
     it('should unbind data from the current fragment', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(directive.data, [
+        document.createComment(''),
+      ]);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive.data);
-      const startNode = document.createComment('');
 
       const renderSpy = vi
         .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
       const unbindSpy = vi.spyOn(fragment, 'unbind');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
-      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -723,56 +422,15 @@ describe('TemplateBinding', () => {
       updater.flushUpdate(host);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, context);
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
       expect(unmountSpy).toHaveBeenCalledOnce();
       expect(unmountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-    });
-
-    it('should cancel the update in progress', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive.data);
-
-      const renderSpy = vi
-        .spyOn(directive.template, 'render')
-        .mockReturnValue(fragment);
-      const mountSpy = vi.spyOn(fragment, 'mount');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.requestUpdate('user-blocking', host, updater);
-      binding.unbind(context);
-      updater.flushUpdate(host);
-
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
-      expect(bindSpy).not.toHaveBeenCalled();
-      expect(mountSpy).toHaveBeenCalledOnce();
-      expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(unmountSpy).toHaveBeenCalledOnce();
-      expect(unmountSpy).toHaveBeenCalledWith(part);
     });
   });
 
@@ -783,7 +441,7 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
+      const binding = new TemplateResultBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -792,6 +450,7 @@ describe('TemplateBinding', () => {
       const renderSpy = vi
         .spyOn(directive.template, 'render')
         .mockReturnValue(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
       const disconnectSpy = vi.spyOn(fragment, 'disconnect');
 
       binding.connect(context);
@@ -799,50 +458,9 @@ describe('TemplateBinding', () => {
       binding.disconnect();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
+      expect(renderSpy).toHaveBeenCalledWith(directive.data, context);
+      expect(connectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledOnce();
-    });
-
-    it('should cancel the update in progress', () => {
-      const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new TemplateResultBinding(directive, part, null);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const fragment = new MockTemplateFragment(directive.data);
-
-      const renderSpy = vi
-        .spyOn(directive.template, 'render')
-        .mockReturnValue(fragment);
-      const mountSpy = vi.spyOn(fragment, 'mount');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.requestUpdate('user-blocking', host, updater);
-      binding.disconnect();
-      updater.flushUpdate(host);
-
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(directive.data, {
-        host,
-        updater,
-        currentBlock: binding,
-      });
-      expect(bindSpy).not.toHaveBeenCalled();
-      expect(mountSpy).toHaveBeenCalledOnce();
-      expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(unmountSpy).not.toHaveBeenCalled();
     });
   });
 });

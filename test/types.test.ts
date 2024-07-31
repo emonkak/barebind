@@ -1,28 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  comparePriorities,
-  directiveTag,
-  isDirective,
-  nameOf,
-  nameTag,
-} from '../src/types.js';
-
-describe('comparePriorities()', () => {
-  it('should returns a negative number, zero, or a number integer as the first priority is less than, equal to, or greater than the second', () => {
-    expect(comparePriorities('user-blocking', 'user-blocking')).toBe(0);
-    expect(comparePriorities('user-blocking', 'user-visible')).toBeGreaterThan(
-      0,
-    );
-    expect(comparePriorities('user-blocking', 'background')).toBeGreaterThan(0);
-    expect(comparePriorities('user-visible', 'user-blocking')).toBeLessThan(0);
-    expect(comparePriorities('user-visible', 'user-visible')).toBe(0);
-    expect(comparePriorities('user-visible', 'background')).toBeGreaterThan(0);
-    expect(comparePriorities('background', 'user-blocking')).toBeLessThan(0);
-    expect(comparePriorities('background', 'user-visible')).toBeLessThan(0);
-    expect(comparePriorities('background', 'background')).toBe(0);
-  });
-});
+import { directiveTag, isDirective, nameOf, nameTag } from '../src/types.js';
 
 describe('isDirective()', () => {
   it('should return true if the value is directive', () => {

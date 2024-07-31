@@ -23,6 +23,7 @@ export interface Directive<TContext = unknown> {
 export interface Block<TContext> {
   get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
+  get isConnected(): boolean;
   get isUpdating(): boolean;
   shouldUpdate(): boolean;
   cancelUpdate(): void;
@@ -212,15 +213,6 @@ export interface RefObject<T> {
   current: T;
 }
 
-export function comparePriorities(
-  firstPriority: TaskPriority,
-  secondPriority: TaskPriority,
-): number {
-  return firstPriority === secondPriority
-    ? 0
-    : getPriorityNumber(secondPriority) - getPriorityNumber(firstPriority);
-}
-
 export function createUpdateContext<TContext>(
   host: UpdateHost<TContext>,
   updater: Updater<TContext>,
@@ -252,15 +244,4 @@ export function nameOf(value: unknown): string {
     return 'undefined';
   }
   return value.toString();
-}
-
-function getPriorityNumber(priority: TaskPriority): number {
-  switch (priority) {
-    case 'user-blocking':
-      return 0;
-    case 'user-visible':
-      return 1;
-    case 'background':
-      return 2;
-  }
 }
