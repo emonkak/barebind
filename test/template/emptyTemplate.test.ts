@@ -10,7 +10,7 @@ import { MockUpdateHost } from '../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('.constructor()', () => {
-    it('should be forbidden from being called directly', () => {
+    it('should throw an error from being called directly', () => {
       expect(() => new (EmptyTemplate as any)()).toThrow(
         'EmptyTemplate constructor cannot be called directly.',
       );
@@ -18,14 +18,14 @@ describe('EmptyTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return EmptyTemplateFragment', () => {
+    it('should return a new EmptyTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
       const fragment = EmptyTemplate.instance.render(null, context);
 
-      updater.flushUpdate(host);
-
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
       expect(fragment.startNode).toBe(null);
       expect(fragment.endNode).toBe(null);
     });
@@ -41,6 +41,20 @@ describe('EmptyTemplate', () => {
 });
 
 describe('EmptyTemplateFragment', () => {
+  describe('.connect()', () => {
+    it('should do nothing', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = new EmptyTemplateFragment();
+
+      fragment.connect(context);
+
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
+    });
+  });
+
   describe('.bind()', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();

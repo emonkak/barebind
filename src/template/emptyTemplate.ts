@@ -32,6 +32,8 @@ export class EmptyTemplateFragment implements TemplateFragment<null> {
     return null;
   }
 
+  connect(_context: UpdateContext<unknown>): void {}
+
   bind(_data: null, _context: UpdateContext<unknown>): void {}
 
   unbind(_context: UpdateContext<unknown>): void {}

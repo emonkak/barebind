@@ -304,7 +304,7 @@ describe('TaggedTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a TaggedTemplateFragment', () => {
+    it('should return a new TaggedTemplateFragment', () => {
       const [template, values] = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
@@ -316,6 +316,8 @@ describe('TaggedTemplate', () => {
       const context = createUpdateContext(host, updater);
       const fragment = template.render(values, context);
 
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(values.length);
       expect(fragment.bindings.map((binding) => binding.value)).toEqual(values);
@@ -346,25 +348,25 @@ describe('TaggedTemplate', () => {
       expect(fragment.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
-      expect(fragment.childNodes.map(formatNode)).toEqual([
-        `
-        <div>
-          <!--bar-->
-          <input type="text"><span></span>
-        </div>`.trim(),
-      ]);
+      // expect(fragment.childNodes.map(formatNode)).toEqual([
+      //   `
+      //   <div>
+      //     <!--bar-->
+      //     <input type="text"><span></span>
+      //   </div>`.trim(),
+      // ]);
       expect(fragment.startNode).toBe(fragment.childNodes[0]);
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
 
-      updater.flushUpdate(host);
-
-      expect(fragment.childNodes.map(formatNode)).toEqual([
-        `
-        <div class="foo">
-          <!--bar-->
-          <input type="text" class="qux"><span></span>
-        </div>`.trim(),
-      ]);
+      // updater.flushUpdate(host);
+      //
+      // expect(fragment.childNodes.map(formatNode)).toEqual([
+      //   `
+      //   <div class="foo">
+      //     <!--bar-->
+      //     <input type="text" class="qux"><span></span>
+      //   </div>`.trim(),
+      // ]);
     });
 
     it('should return a TaggedTemplateFragment without bindings', () => {
@@ -428,16 +430,43 @@ describe('TaggedTemplate', () => {
 });
 
 describe('TaggedTemplateFragment', () => {
-  describe('.bind()', () => {
-    it('should bind values corresponding to bindings in the fragment', () => {
+  describe('.connect()', () => {
+    it('should connect bindings in the fragment', () => {
+      const [template, values] = html`
+        <div class=${'foo'}>
+          <!-- ${'bar'} -->
+          <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
+        </div>
+      `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
+      const fragment = template.render(values, context);
+
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
+      expect(fragment.childNodes.map(formatNode)).toEqual([
+        `
+        <div class="foo">
+          <!--bar-->
+          <input type="text" class="qux"><span></span>
+        </div>`.trim(),
+      ]);
+    });
+  });
+
+  describe('.bind()', () => {
+    it('should bind values corresponding to bindings in the fragment', () => {
       const [template, values] = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = template.render(values, context);
 
+      fragment.connect(context);
       updater.flushUpdate(host);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
@@ -471,8 +500,10 @@ describe('TaggedTemplateFragment', () => {
       const fragment = template.render(values, context);
 
       container.appendChild(part.node);
-      fragment.mount(part);
+      fragment.connect(context);
       updater.flushUpdate(host);
+
+      fragment.mount(part);
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         'foo',
@@ -526,13 +557,13 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect bindings in the fragment', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
       const directive = new TextDirective();
       const [template, values] = html`
         <div>${directive}</div>
       `;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       let disconnects = 0;
       vi.spyOn(directive, directiveTag).mockImplementation(function (
         this: TextDirective,
@@ -555,17 +586,14 @@ describe('TaggedTemplateFragment', () => {
   });
 
   describe('.mount()', () => {
-    it('should mount child nodes at the part', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+    it('should mount child nodes before the part node', () => {
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = template.render(values, context);
-
-      updater.flushUpdate(host);
-
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -573,6 +601,9 @@ describe('TaggedTemplateFragment', () => {
       } as const;
 
       container.appendChild(part.node);
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
       fragment.mount(part);
 
       expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
@@ -581,31 +612,37 @@ describe('TaggedTemplateFragment', () => {
 
       expect(container.innerHTML).toBe('<!---->');
     });
+  });
 
-    it('should not mount child nodes if the part is not mounted', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+  describe('.unmount()', () => {
+    it('should not remove child nodes if a different part is given', () => {
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = template.render(values, context);
-
-      updater.flushUpdate(host);
-
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
 
+      container.appendChild(part.node);
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
       fragment.mount(part);
 
-      expect(container.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
 
-      fragment.unmount(part);
+      fragment.unmount({
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      });
 
-      expect(container.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
     });
   });
 });

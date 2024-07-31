@@ -127,6 +127,8 @@ export class MockTemplateFragment<TData, TContext>
     return this._data;
   }
 
+  connect(_conext: UpdateContext<TContext>): void {}
+
   bind(data: TData, _context: UpdateContext<TContext>): void {
     this._data = data;
   }

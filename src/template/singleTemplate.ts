@@ -2,6 +2,7 @@ import { resolveBinding } from '../binding.js';
 import {
   type Binding,
   type ChildNodePart,
+  type Part,
   PartType,
   type Template,
   type TemplateFragment,
@@ -26,12 +27,12 @@ export class ChildNodeTemplate<T> implements Template<T> {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+
     DEBUG: {
       part.node.nodeValue = nameOf(data);
     }
-    const binding = resolveBinding(data, part, context);
-    binding.connect(context);
-    return new SingleTemplateFragment(binding);
+
+    return new SingleTemplateFragment(data, part, context);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -53,9 +54,8 @@ export class TextTemplate<T> implements Template<T> {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
-    const binding = resolveBinding(data, part, context);
-    binding.connect(context);
-    return new SingleTemplateFragment(binding);
+
+    return new SingleTemplateFragment(data, part, context);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -66,8 +66,8 @@ export class TextTemplate<T> implements Template<T> {
 export class SingleTemplateFragment<T> implements TemplateFragment<T> {
   private readonly _binding: Binding<T>;
 
-  constructor(binding: Binding<T>) {
-    this._binding = binding;
+  constructor(data: T, part: Part, context: UpdateContext<unknown>) {
+    this._binding = resolveBinding(data, part, context);
   }
 
   get binding(): Binding<T> {
@@ -80,6 +80,10 @@ export class SingleTemplateFragment<T> implements TemplateFragment<T> {
 
   get endNode(): ChildNode {
     return this._binding.endNode;
+  }
+
+  connect(context: UpdateContext<unknown>): void {
+    this._binding.connect(context);
   }
 
   bind(data: T, context: UpdateContext<unknown>): void {

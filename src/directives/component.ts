@@ -241,6 +241,8 @@ export class ComponentBinding<TProps, TData, TContext>
           this._pendingFragment,
         );
 
+        newFragment.connect(context);
+
         this._pendingFragment = newFragment;
       }
     } else {
@@ -248,6 +250,7 @@ export class ComponentBinding<TProps, TData, TContext>
       this._requestMutation(updater);
 
       this._pendingFragment = template.render(data, context);
+      this._pendingFragment.connect(context);
     }
 
     this._memoizedComponent = component;

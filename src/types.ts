@@ -94,6 +94,7 @@ export interface TemplateDirective<TData = unknown, TContext = unknown>
 export interface TemplateFragment<TData, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
+  connect(context: UpdateContext<TContext>): void;
   bind(data: TData, context: UpdateContext<TContext>): void;
   unbind(context: UpdateContext<TContext>): void;
   mount(part: ChildNodePart): void;

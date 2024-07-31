@@ -190,6 +190,7 @@ export class TemplateResultBinding<TData, TContext>
 
       // Finally, render the new template.
       this._pendingFragment = template.render(data, context);
+      this._pendingFragment.connect(context);
     }
 
     this._memoizedTemplate = template;

@@ -185,10 +185,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
               break;
           }
 
-          const binding = resolveBinding(data[holeIndex], part, context);
-          binding.connect(context);
-
-          bindings[holeIndex] = binding;
+          bindings[holeIndex] = resolveBinding(data[holeIndex], part, context);
           holeIndex++;
 
           if (holeIndex >= holes.length) {
@@ -236,6 +233,13 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
 
   get bindings(): Binding<unknown>[] {
     return this._bindings;
+  }
+
+  connect(context: UpdateContext<unknown>): void {
+    for (let i = 0, l = this._bindings.length; i < l; i++) {
+      const binding = this._bindings[i]!;
+      binding.connect(context);
+    }
   }
 
   bind(data: TData, context: UpdateContext<unknown>): void {

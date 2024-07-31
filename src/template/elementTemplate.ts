@@ -27,27 +27,7 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
     data: ElementData<TElementValue, TChildNodeValue>,
     context: UpdateContext<unknown>,
   ): ElementTemplateFragment<TElementValue, TChildNodeValue> {
-    const { elementValue, childNodeValue } = data;
-    const elementPart = {
-      type: PartType.Element,
-      node: document.createElement(this._type),
-    } as const;
-    const childNodePart = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-    DEBUG: {
-      childNodePart.node.data = nameOf(data.elementValue);
-    }
-    const elementBinding = resolveBinding(elementValue, elementPart, context);
-    const childNodeBinding = resolveBinding(
-      childNodeValue,
-      childNodePart,
-      context,
-    );
-    elementBinding.connect(context);
-    childNodeBinding.connect(context);
-    return new ElementTemplateFragment(elementBinding, childNodeBinding);
+    return new ElementTemplateFragment(this._type, data, context);
   }
 
   isSameTemplate(
@@ -68,11 +48,35 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
   private readonly _childNodeBinding: Binding<TChildNodeValue>;
 
   constructor(
-    elementBinding: Binding<TElementValue>,
-    childNodeBinding: Binding<TChildNodeValue>,
+    type: string,
+    data: ElementData<TElementValue, TChildNodeValue>,
+    context: UpdateContext<unknown>,
   ) {
-    this._elementBinding = elementBinding;
-    this._childNodeBinding = childNodeBinding;
+    const elementPart = {
+      type: PartType.Element,
+      node: document.createElement(type),
+    } as const;
+    const childNodePart = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+
+    DEBUG: {
+      childNodePart.node.data = nameOf(data.childNodeValue);
+    }
+
+    elementPart.node.appendChild(childNodePart.node);
+
+    this._elementBinding = resolveBinding(
+      data.elementValue,
+      elementPart,
+      context,
+    );
+    this._childNodeBinding = resolveBinding(
+      data.childNodeValue,
+      childNodePart,
+      context,
+    );
   }
 
   get elementBinding(): Binding<TElementValue> {
@@ -91,6 +95,11 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
     return this._elementBinding.endNode;
   }
 
+  connect(context: UpdateContext<unknown>): void {
+    this._elementBinding.connect(context);
+    this._childNodeBinding.connect(context);
+  }
+
   bind(
     data: ElementData<TElementValue, TChildNodeValue>,
     context: UpdateContext<unknown>,
@@ -107,9 +116,7 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
   mount(part: ChildNodePart): void {
     const referenceNode = part.node;
     const element = this._elementBinding.part.node;
-    const childNode = this._childNodeBinding.part.node;
 
-    element.appendChild(childNode);
     referenceNode.before(element);
   }
 
@@ -118,10 +125,8 @@ export class ElementTemplateFragment<TElementValue, TChildNodeValue>
 
     if (parentNode !== null) {
       const element = this._elementBinding.part.node;
-      const childNode = this._childNodeBinding.part.node;
 
       parentNode.removeChild(element);
-      element.removeChild(childNode);
     }
   }
 

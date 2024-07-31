@@ -8,11 +8,11 @@ import {
 } from '../../src/template/singleTemplate.js';
 import { PartType, createUpdateContext } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import { MockUpdateHost } from '../mocks.js';
 
 describe('ChildNodeTemplate', () => {
   describe('.constructor()', () => {
-    it('should be forbidden from being called directly', () => {
+    it('should throw an error from being called directly', () => {
       expect(() => new (ChildNodeTemplate as any)()).toThrow(
         'ChildNodeTemplate constructor cannot be called directly.',
       );
@@ -20,7 +20,7 @@ describe('ChildNodeTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return SingleTemplateFragment initialized with a non-directive value', () => {
+    it('should return a new SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -34,21 +34,8 @@ describe('ChildNodeTemplate', () => {
         node: expect.any(Comment),
       });
       expect(fragment.binding.part.node.nodeValue).toBe('foo');
-    });
-
-    it('should return SingleTemplateFragment by a directive', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const directive = new TextDirective();
-      const fragment = ChildNodeTemplate.instance.render(directive, context);
-
-      expect(fragment.binding).toBeInstanceOf(TextBinding);
-      expect(fragment.binding.value).toBe(directive);
-      expect(fragment.binding.part).toMatchObject({
-        type: PartType.ChildNode,
-        node: expect.any(Comment),
-      });
+      expect(fragment.startNode).toBe(fragment.binding.startNode);
+      expect(fragment.endNode).toBe(fragment.binding.endNode);
     });
   });
 
@@ -63,7 +50,7 @@ describe('ChildNodeTemplate', () => {
 
 describe('TextTemplate', () => {
   describe('.constructor()', () => {
-    it('should be forbidden from being called directly', () => {
+    it('should throw an error from being called directly', () => {
       expect(() => new (TextTemplate as any)()).toThrow(
         'TextTemplate constructor cannot be called directly.',
       );
@@ -71,13 +58,11 @@ describe('TextTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return SingleTemplateFragment initialized with NodeBinding', () => {
+    it('should return SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
       const fragment = TextTemplate.instance.render('foo', context);
-
-      updater.flushUpdate(host);
 
       expect(fragment.binding).toBeInstanceOf(NodeBinding);
       expect(fragment.binding.value).toBe('foo');
@@ -85,22 +70,8 @@ describe('TextTemplate', () => {
         type: PartType.Node,
         node: expect.any(Text),
       });
-      expect(fragment.binding.part.node.nodeValue).toBe('foo');
-    });
-
-    it('should return SingleTemplateFragment by a directive', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const directive = new TextDirective();
-      const fragment = TextTemplate.instance.render(directive, context);
-
-      expect(fragment.binding).toBeInstanceOf(TextBinding);
-      expect(fragment.binding.value).toBe(directive);
-      expect(fragment.binding.part).toMatchObject({
-        type: PartType.Node,
-        node: expect.any(Text),
-      });
+      expect(fragment.startNode).toBe(fragment.binding.startNode);
+      expect(fragment.endNode).toBe(fragment.binding.endNode);
     });
   });
 
@@ -114,73 +85,54 @@ describe('TextTemplate', () => {
 });
 
 describe('SingleTemplateFragment', () => {
-  describe('.constructor()', () => {
-    it('should construct a new SingleTemplateFragment', () => {
-      const binding = new NodeBinding('foo', {
+  describe('.connect()', () => {
+    it('should bind values to element and child binding', () => {
+      const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
-      });
-      const fragment = new SingleTemplateFragment(binding);
-
-      expect(fragment.binding).toBe(binding);
-      expect(fragment.binding.value).toBe('foo');
-      expect(fragment.startNode).toBe(binding.startNode);
-      expect(fragment.endNode).toBe(binding.endNode);
-    });
-  });
-
-  describe('.bind()', () => {
-    it('should bind a value to the binding', () => {
+      } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new NodeBinding('foo', {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      });
-      const fragment = new SingleTemplateFragment(binding);
-      const bindSpy = vi.spyOn(binding, 'bind');
+      const fragment = new SingleTemplateFragment('foo', part, context);
+
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
+      expect(part.node.nodeValue).toBe('foo');
 
       fragment.bind('bar', context);
+      updater.flushUpdate(host);
 
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith('bar', context);
-    });
-  });
-
-  describe('.unbind()', () => {
-    it('should unbind the value from the binding', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const binding = new NodeBinding('foo', {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      });
-      const fragment = new SingleTemplateFragment(binding);
-      const unbindSpy = vi.spyOn(binding, 'unbind');
+      expect(part.node.nodeValue).toBe('bar');
 
       fragment.unbind(context);
+      updater.flushUpdate(host);
 
-      expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(context);
+      expect(part.node.nodeValue).toBe('');
     });
   });
 
   describe('.mount()', () => {
-    it('should mount the binding before the part', () => {
+    it('should mount the node before the part node', () => {
+      const fragmentPart = {
+        type: PartType.Node,
+        node: document.createTextNode('foo'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new NodeBinding('foo', {
-        type: PartType.Node,
-        node: document.createTextNode('foo'),
-      });
-      const fragment = new SingleTemplateFragment(binding);
 
       container.appendChild(part.node);
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
       fragment.mount(part);
 
       expect(container.innerHTML).toBe('foo<!---->');
@@ -192,20 +144,24 @@ describe('SingleTemplateFragment', () => {
   });
 
   describe('.unmount()', () => {
-    it('should do nothing if a different part from the one at mount is given', () => {
+    it('should not remove the node if a different part is given', () => {
+      const fragmentPart = {
+        type: PartType.Node,
+        node: document.createTextNode('foo'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new NodeBinding('foo', {
-        type: PartType.Node,
-        node: document.createTextNode('foo'),
-      });
-      const fragment = new SingleTemplateFragment(binding);
 
       container.appendChild(part.node);
       fragment.mount(part);
+      updater.flushUpdate(host);
 
       expect(container.innerHTML).toBe('foo<!---->');
 
@@ -224,9 +180,11 @@ describe('SingleTemplateFragment', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const binding = new NodeBinding('foo', part);
-      const fragment = new SingleTemplateFragment(binding);
-      const disconnectSpy = vi.spyOn(binding, 'disconnect');
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = new SingleTemplateFragment('foo', part, context);
+      const disconnectSpy = vi.spyOn(fragment.binding, 'disconnect');
 
       fragment.disconnect();
 

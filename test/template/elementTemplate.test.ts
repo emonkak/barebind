@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ElementBinding, NodeBinding } from '../../src/binding.js';
+import { ElementBinding } from '../../src/binding.js';
 import {
   ElementTemplate,
   ElementTemplateFragment,
@@ -15,184 +15,122 @@ describe('ElementTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
+      const elementValue = { class: 'foo' };
+      const childNodeValue = new TextDirective('bar');
       const fragment = new ElementTemplate('div').render(
         {
-          elementValue: { class: 'foo' },
-          childNodeValue: 'bar',
+          elementValue,
+          childNodeValue,
         },
         context,
       );
 
-      updater.flushUpdate(host);
-
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
       expect(fragment.elementBinding).toBeInstanceOf(ElementBinding);
-      expect(fragment.elementBinding.value).toEqual({ class: 'foo' });
-      expect(fragment.elementBinding.part).toMatchObject({
-        type: PartType.Element,
-        node: expect.any(Element),
-      });
-      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
-        '<div class="foo"></div>',
-      );
-      expect(fragment.elementBinding.part.node.nodeName).toBe('DIV');
-      expect(fragment.childNodeBinding).toBeInstanceOf(NodeBinding);
-      expect(fragment.childNodeBinding.value).toBe('bar');
-      expect(fragment.childNodeBinding.part).toMatchObject({
-        type: PartType.ChildNode,
-        node: expect.any(Comment),
-      });
-      expect(fragment.childNodeBinding.part.node.nodeValue).toBe('bar');
-      expect(fragment.startNode).toBe(fragment.elementBinding.startNode);
-      expect(fragment.endNode).toBe(fragment.elementBinding.endNode);
-    });
-
-    it('should return SingleTemplateFragment by a directive', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const elementDirective = new TextDirective();
-      const childNodeDirective = new TextDirective();
-      const fragment = new ElementTemplate('div').render(
-        {
-          elementValue: elementDirective,
-          childNodeValue: childNodeDirective,
-        },
-        context,
-      );
-
-      expect(fragment.elementBinding).toBeInstanceOf(TextBinding);
-      expect(fragment.elementBinding.value).toBe(elementDirective);
+      expect(fragment.elementBinding.value).toBe(elementValue);
       expect(fragment.elementBinding.part).toMatchObject({
         type: PartType.Element,
         node: expect.any(Element),
       });
       expect(fragment.elementBinding.part.node.nodeName).toBe('DIV');
       expect(fragment.childNodeBinding).toBeInstanceOf(TextBinding);
-      expect(fragment.childNodeBinding.value).toBe(childNodeDirective);
+      expect(fragment.childNodeBinding.value).toBe(childNodeValue);
       expect(fragment.childNodeBinding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
       });
+      expect(fragment.startNode).toBe(fragment.elementBinding.startNode);
+      expect(fragment.endNode).toBe(fragment.elementBinding.endNode);
     });
   });
 
   describe('.isSameTemplate()', () => {
-    it('should return true if the instance is the same', () => {
+    it('should return true if an instance is the same', () => {
       const template = new ElementTemplate('div');
       expect(template.isSameTemplate(template)).toBe(true);
     });
 
-    it('should return true if the type is the same', () => {
+    it('should return true if a type is the same', () => {
       expect(
         new ElementTemplate('div').isSameTemplate(new ElementTemplate('div')),
       ).toBe(true);
+    });
+
+    it('should return false if a type is not the same', () => {
+      expect(
+        new ElementTemplate('div').isSameTemplate(new ElementTemplate('p')),
+      ).toBe(false);
     });
   });
 });
 
 describe('ElementTemplateFragment', () => {
-  describe('.bind()', () => {
-    it('should bind a value to the bindings', () => {
+  describe('.connect()', () => {
+    it('should bind values to element and child binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const elementBinding = new ElementBinding(
-        { class: 'foo' },
-        {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        },
-      );
-      const childNodeBinding = new NodeBinding('bar', {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      });
       const fragment = new ElementTemplateFragment(
-        elementBinding,
-        childNodeBinding,
+        'div',
+        { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
+        context,
       );
-      const elementBindingBindSpy = vi.spyOn(elementBinding, 'bind');
-      const childNodeBindingBindSpy = vi.spyOn(childNodeBinding, 'bind');
+
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
+      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
+        '<div class="foo"><!--bar--></div>',
+      );
 
       fragment.bind(
         { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
         context,
       );
+      updater.flushUpdate(host);
 
-      expect(elementBindingBindSpy).toHaveBeenCalledOnce();
-      expect(elementBindingBindSpy).toHaveBeenCalledWith(
-        { class: 'bar' },
-        context,
+      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
+        '<div class="bar"><!--baz--></div>',
       );
-      expect(childNodeBindingBindSpy).toHaveBeenCalledOnce();
-      expect(childNodeBindingBindSpy).toHaveBeenCalledWith('baz', context);
-    });
-  });
-
-  describe('.unbind()', () => {
-    it('should unbind the value from the bindings', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const elementBinding = new ElementBinding(
-        { class: 'foo' },
-        {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        },
-      );
-      const childNodeBinding = new NodeBinding('bar', {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      });
-      const fragment = new ElementTemplateFragment(
-        elementBinding,
-        childNodeBinding,
-      );
-      const elementBindingUnbindSpy = vi.spyOn(elementBinding, 'unbind');
-      const childNodeBindingUnbindSpy = vi.spyOn(childNodeBinding, 'unbind');
 
       fragment.unbind(context);
+      updater.flushUpdate(host);
 
-      expect(elementBindingUnbindSpy).toHaveBeenCalledOnce();
-      expect(childNodeBindingUnbindSpy).toHaveBeenCalledOnce();
+      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
+        '<div><!----></div>',
+      );
     });
   });
 
   describe('.mount()', () => {
-    it('should mount the binding before the part', () => {
+    it('should mount the element before the part node', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = new ElementTemplateFragment(
+        'div',
+        {
+          elementValue: { class: 'foo' },
+          childNodeValue: new TextDirective('bar'),
+        },
+        context,
+      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const elementBinding = new ElementBinding(
-        { class: 'foo' },
-        {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        },
-      );
-      const childNodeBinding = new NodeBinding('bar', {
-        type: PartType.Node,
-        node: document.createTextNode('bar'),
-      });
-      const fragment = new ElementTemplateFragment(
-        elementBinding,
-        childNodeBinding,
-      );
-
-      elementBinding.connect(context);
-      childNodeBinding.connect(context);
-      updater.flushUpdate(host);
 
       container.appendChild(part.node);
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
       fragment.mount(part);
 
-      expect(container.innerHTML).toBe('<div class="foo">bar</div><!---->');
+      expect(container.innerHTML).toBe(
+        '<div class="foo">bar<!--TextDirective--></div><!---->',
+      );
 
       fragment.unmount(part);
 
@@ -201,72 +139,62 @@ describe('ElementTemplateFragment', () => {
   });
 
   describe('.unmount()', () => {
-    it('should do nothing if a different part from the one at mount is given', () => {
+    it('should not remove the node if a different part is given', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = new ElementTemplateFragment(
+        'div',
+        {
+          elementValue: { class: 'foo' },
+          childNodeValue: new TextDirective('bar'),
+        },
+        context,
+      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-      const elementBinding = new ElementBinding(
-        { class: 'foo' },
-        {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        },
-      );
-      const childNodeBinding = new NodeBinding('bar', {
-        type: PartType.Node,
-        node: document.createTextNode('bar'),
-      });
-      const fragment = new ElementTemplateFragment(
-        elementBinding,
-        childNodeBinding,
-      );
-
-      elementBinding.connect(context);
-      childNodeBinding.connect(context);
-      updater.flushUpdate(host);
 
       container.appendChild(part.node);
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
       fragment.mount(part);
 
-      expect(container.innerHTML).toBe('<div class="foo">bar</div><!---->');
+      expect(container.innerHTML).toBe(
+        '<div class="foo">bar<!--TextDirective--></div><!---->',
+      );
 
       fragment.unmount({
         type: PartType.ChildNode,
         node: document.createComment(''),
       });
 
-      expect(container.innerHTML).toBe('<div class="foo">bar</div><!---->');
+      expect(container.innerHTML).toBe(
+        '<div class="foo">bar<!--TextDirective--></div><!---->',
+      );
     });
   });
 
   describe('.disconnect()', () => {
     it('should disconnect from the binding', () => {
-      const elementBinding = new ElementBinding(
-        { class: 'foo' },
-        {
-          type: PartType.Element,
-          node: document.createElement('div'),
-        },
-      );
-      const childNodeBinding = new NodeBinding('bar', {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      });
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
       const fragment = new ElementTemplateFragment(
-        elementBinding,
-        childNodeBinding,
+        'div',
+        { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
+        context,
       );
+
       const elementBindingDisconnectSpy = vi.spyOn(
-        elementBinding,
+        fragment.elementBinding,
         'disconnect',
       );
       const childNodeBindingDisconnectSpy = vi.spyOn(
-        childNodeBinding,
+        fragment.childNodeBinding,
         'disconnect',
       );
 
