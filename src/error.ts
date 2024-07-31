@@ -57,34 +57,36 @@ export function reportPart(part: Part): string {
       beforePart += formatNode(childNode);
     }
     return (
-      startTag(parentNode) +
+      openTag(parentNode) +
       beforePart +
       formatPart(part) +
       afterPart +
-      endTag(parentNode)
+      closeTag(parentNode)
     );
   } else {
     return formatPart(part);
   }
 }
 
-function editTag(element: Element, insideTag: string): string {
-  const unclosedStartTag = element.outerHTML.slice(
-    0,
-    -(element.tagName.length + element.innerHTML.length + 4),
-  );
-  return (
-    unclosedStartTag +
-    ' ' +
-    insideTag +
-    '>' +
-    element.innerHTML +
-    endTag(element)
-  );
+function closeTag(element: Element): string {
+  return '</' + element.tagName.toLowerCase() + '>';
 }
 
-function endTag(element: Element): string {
-  return '</' + element.tagName.toLowerCase() + '>';
+function editTag(element: Element, insideTag: string): string {
+  const isSelfClosing = isSelfClosingTag(element);
+  const offset = isSelfClosing ? 1 : element.tagName.length + 4;
+  const unclosedOpenTag = element.outerHTML.slice(
+    0,
+    -(element.innerHTML.length + offset),
+  );
+
+  let output = unclosedOpenTag + ' ' + insideTag + '>';
+
+  if (!isSelfClosing) {
+    output += element.innerHTML + closeTag(element);
+  }
+
+  return output;
 }
 
 function escapeHTML(s: string): string {
@@ -120,11 +122,14 @@ function formatPart(part: Part): string {
   }
 }
 
-function startTag(element: Element): string {
-  return element.outerHTML.slice(
-    0,
-    -(element.tagName.length + element.innerHTML.length + 3),
-  );
+function isSelfClosingTag(element: Element): boolean {
+  return !element.outerHTML.endsWith(closeTag(element));
+}
+
+function openTag(element: Element): string {
+  // Assumption: The element is not self-closing tag.
+  const offset = element.tagName.length + 3;
+  return element.outerHTML.slice(0, -(element.innerHTML.length + offset));
 }
 
 function unquotedAttribute(name: string, value: string): string {

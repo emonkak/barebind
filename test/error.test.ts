@@ -15,6 +15,7 @@ describe('ensureDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+
     expect(() => ensureDirective(TextDirective, null, part)).toThrow(
       'A value must be a instance of TextDirective directive, but got "null".',
     );
@@ -25,6 +26,7 @@ describe('ensureDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+
     ensureDirective(TextDirective, new TextDirective(), part);
   });
 });
@@ -35,6 +37,7 @@ describe('ensureNonDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+
     expect(() => ensureNonDirective(new TextDirective(), part)).toThrow(
       'A value must not be a directive, but got "TextDirective".',
     );
@@ -45,6 +48,7 @@ describe('ensureNonDirective', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+
     ensureNonDirective(null, part);
     ensureNonDirective(undefined, part);
     ensureNonDirective('foo', part);
@@ -60,17 +64,19 @@ describe('reportPart()', () => {
     const part = {
       type: PartType.Attribute,
       name: 'class',
-      node: document.createElement('div'),
+      node: document.createElement('input'),
     } as const;
-    expect(reportPart(part)).toBe(`<div class=${REPORT_MARKER}></div>`);
+
+    expect(reportPart(part)).toBe(`<input class=${REPORT_MARKER}>`);
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
     container.appendChild(part.node);
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
+
     expect(reportPart(part)).toBe(
-      `<div>foo<div class=${REPORT_MARKER}></div><!--bar--><span></span></div>`,
+      `<div>foo<input class=${REPORT_MARKER}><!--bar--><span></span></div>`,
     );
   });
 
@@ -80,6 +86,7 @@ describe('reportPart()', () => {
       name: 'click',
       node: document.createComment(''),
     } as const;
+
     expect(reportPart(part)).toBe(`${REPORT_MARKER}<!---->`);
 
     const container = document.createElement('div');
@@ -87,6 +94,7 @@ describe('reportPart()', () => {
     container.appendChild(part.node);
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
+
     expect(reportPart(part)).toBe(
       `<div>foo${REPORT_MARKER}<!----><!--bar--><span></span></div>`,
     );
@@ -97,6 +105,7 @@ describe('reportPart()', () => {
       type: PartType.Element,
       node: document.createElement('div'),
     } as const;
+
     expect(reportPart(part)).toBe(`<div ${REPORT_MARKER}></div>`);
 
     const container = document.createElement('div');
@@ -104,6 +113,7 @@ describe('reportPart()', () => {
     container.appendChild(part.node);
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
+
     expect(reportPart(part)).toBe(
       `<div>foo<div ${REPORT_MARKER}></div><!--bar--><span></span></div>`,
     );
@@ -113,17 +123,19 @@ describe('reportPart()', () => {
     const part = {
       type: PartType.Event,
       name: 'click',
-      node: document.createElement('div'),
+      node: document.createElement('button'),
     } as const;
-    expect(reportPart(part)).toBe(`<div @click=${REPORT_MARKER}></div>`);
+
+    expect(reportPart(part)).toBe(`<button @click=${REPORT_MARKER}></button>`);
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
     container.appendChild(part.node);
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
+
     expect(reportPart(part)).toBe(
-      `<div>foo<div @click=${REPORT_MARKER}></div><!--bar--><span></span></div>`,
+      `<div>foo<button @click=${REPORT_MARKER}></button><!--bar--><span></span></div>`,
     );
   });
 
@@ -133,6 +145,7 @@ describe('reportPart()', () => {
       name: 'click',
       node: document.createTextNode('foo'),
     } as const;
+
     expect(reportPart(part)).toBe(`${REPORT_MARKER}`);
 
     const container = document.createElement('div');
@@ -140,6 +153,7 @@ describe('reportPart()', () => {
     container.appendChild(part.node);
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
+
     expect(reportPart(part)).toBe(
       `<div>foo${REPORT_MARKER}<!--bar--><span></span></div>`,
     );
@@ -148,18 +162,23 @@ describe('reportPart()', () => {
   it('should report where a PropertyPart is inserted', () => {
     const part = {
       type: PartType.Property,
-      name: 'class',
-      node: document.createElement('div'),
+      name: 'value',
+      node: document.createElement('input'),
     } as const;
-    expect(reportPart(part)).toBe(`<div .class=${REPORT_MARKER}></div>`);
+    part.node.setAttribute('type', 'text');
+
+    expect(reportPart(part)).toBe(
+      `<input type="text" .value=${REPORT_MARKER}>`,
+    );
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
     container.appendChild(part.node);
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
+
     expect(reportPart(part)).toBe(
-      `<div>foo<div .class=${REPORT_MARKER}></div><!--bar--><span></span></div>`,
+      `<div>foo<input type="text" .value=${REPORT_MARKER}><!--bar--><span></span></div>`,
     );
   });
 });
