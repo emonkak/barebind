@@ -68,15 +68,15 @@ describe('ConcurrentUpdater', () => {
 
   describe('.scheduleUpdate()', () => {
     it.each(TASK_PRIORITIES)(
-      'should update the block according to its priority',
+      'should request update the block with its own priority',
       async (priority) => {
         const host = new MockUpdateHost();
         const scheduler = new MockScheduler();
         const updater = new ConcurrentUpdater({
           scheduler,
         });
-
         const block = new MockBlock();
+
         const prioritySpy = vi
           .spyOn(block, 'priority', 'get')
           .mockReturnValue(priority);

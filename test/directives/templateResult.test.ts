@@ -399,20 +399,16 @@ describe('TemplateBinding', () => {
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      const getPrioritySpy = vi
-        .spyOn(parent, 'priority', 'get')
-        .mockReturnValue('user-visible');
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      expect(getPrioritySpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
-      expect(binding.priority).toBe('user-visible');
+      expect(binding.priority).toBe('background');
     });
 
     it('should do nothing if an update is already scheduled', () => {

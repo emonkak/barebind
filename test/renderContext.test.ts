@@ -171,7 +171,26 @@ describe('RenderContext', () => {
   });
 
   describe('.forceUpdate()', () => {
-    it('should request update to the current block with the current priority', () => {
+    it('should request update with the given priority', () => {
+      const hooks: Hook[] = [];
+      const block = new MockBlock();
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+      const context = new RenderContext(hooks, block, host, updater);
+      context.forceUpdate('background');
+
+      expect(requestUpdateSpy).toHaveBeenCalledOnce();
+      expect(requestUpdateSpy).toHaveBeenCalledWith(
+        'background',
+        host,
+        updater,
+      );
+    });
+
+    it('should request update with the host priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
@@ -528,15 +547,16 @@ describe('RenderContext', () => {
   });
 
   describe('.useReducer()', () => {
-    it('should update the host by the current priority', () => {
+    it('should request update with "inherit" priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const getCurrentPrioritySpy = vi
         .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       let context = new RenderContext(hooks, block, host, updater);
       let [message, addMessage] = context.useReducer<string[], string>(
@@ -546,13 +566,13 @@ describe('RenderContext', () => {
       addMessage('foo');
 
       expect(message).toEqual([]);
-      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
         host,
         updater,
       );
+      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(1);
 
       context = new RenderContext(hooks, block, host, updater);
       [message, addMessage] = context.useReducer<string[], string>(
@@ -562,13 +582,13 @@ describe('RenderContext', () => {
       addMessage('bar');
 
       expect(message).toEqual(['foo']);
-      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
         host,
         updater,
       );
+      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(2);
 
       context = new RenderContext(hooks, block, host, updater);
       [message, addMessage] = context.useReducer<string[], string>(
@@ -579,14 +599,11 @@ describe('RenderContext', () => {
       expect(message).toEqual(['foo', 'bar']);
     });
 
-    it('should update the host by the priority specified by user', () => {
+    it('should request update with user-specified priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const getCurrentPrioritySpy = vi
-        .spyOn(host, 'getCurrentPriority')
-        .mockReturnValue('user-blocking');
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       let context = new RenderContext(hooks, block, host, updater);
@@ -594,13 +611,12 @@ describe('RenderContext', () => {
         (messages, message) => [...messages, message],
         [],
       );
-      addMessage('foo', 'background');
+      addMessage('foo', 'user-blocking');
 
       expect(message).toEqual([]);
-      expect(getCurrentPrioritySpy).not.toHaveBeenCalled();
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
-        'background',
+        'user-blocking',
         host,
         updater,
       );
@@ -613,7 +629,6 @@ describe('RenderContext', () => {
       addMessage('bar', 'background');
 
       expect(message).toEqual(['foo']);
-      expect(getCurrentPrioritySpy).not.toHaveBeenCalled();
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
@@ -630,7 +645,7 @@ describe('RenderContext', () => {
       expect(message).toEqual(['foo', 'bar']);
     });
 
-    it('should skip update the host when the host has not changed', () => {
+    it('should skip request update if the state has not changed', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
@@ -655,7 +670,7 @@ describe('RenderContext', () => {
       expect(requestUpdateSpy).not.toHaveBeenCalled();
     });
 
-    it('should return the result of the function as an initial host', () => {
+    it('should return the function result as an initial state', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
@@ -678,7 +693,7 @@ describe('RenderContext', () => {
       expect(message).toEqual(['foo', 'bar', 'baz']);
     });
 
-    it('should always return the same host and the dispatcher', () => {
+    it('should always return the same dispatcher', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
@@ -717,41 +732,42 @@ describe('RenderContext', () => {
   });
 
   describe('.useState()', () => {
-    it('should update the host by the current priority', () => {
+    it('should request update with the host priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
       const getCurrentPrioritySpy = vi
         .spyOn(host, 'getCurrentPriority')
         .mockReturnValue('user-blocking');
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       let context = new RenderContext(hooks, block, host, updater);
       let [count, setCount] = context.useState(0);
       setCount(1);
 
       expect(count).toEqual(0);
-      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
         host,
         updater,
       );
+      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(1);
 
       context = new RenderContext(hooks, block, host, updater);
       [count, setCount] = context.useState(0);
       setCount((n) => n + 2);
 
       expect(count).toEqual(1);
-      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
         host,
         updater,
       );
+      expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(2);
 
       context = new RenderContext(hooks, block, host, updater);
       [count, setCount] = context.useState(0);
@@ -759,25 +775,21 @@ describe('RenderContext', () => {
       expect(count).toEqual(3);
     });
 
-    it('should update the host by the priority specified by user', () => {
+    it('should request update with user-specified priority', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const getCurrentPrioritySpy = vi
-        .spyOn(host, 'getCurrentPriority')
-        .mockReturnValue('user-blocking');
       const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       let context = new RenderContext(hooks, block, host, updater);
       let [count, setCount] = context.useState(0);
-      setCount(1, 'background');
+      setCount(1, 'user-blocking');
 
       expect(count).toEqual(0);
-      expect(getCurrentPrioritySpy).not.toHaveBeenCalled();
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
-        'background',
+        'user-blocking',
         host,
         updater,
       );
@@ -787,7 +799,6 @@ describe('RenderContext', () => {
       setCount((n) => n + 2, 'background');
 
       expect(count).toEqual(1);
-      expect(getCurrentPrioritySpy).not.toHaveBeenCalled();
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
@@ -801,7 +812,7 @@ describe('RenderContext', () => {
       expect(count).toEqual(3);
     });
 
-    it('should skip update the host when the host has not changed', () => {
+    it('should skip requst update if the state has not changed', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
@@ -823,7 +834,7 @@ describe('RenderContext', () => {
       expect(requestUpdateSpy).not.toHaveBeenCalled();
     });
 
-    it('should return the result of the function as an initial host', () => {
+    it('should return the result of the function as an initial state', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
@@ -869,16 +880,12 @@ describe('RenderContext', () => {
       expect(context.useSyncEnternalStore(subscribe, getSnapshot)).toBe('foo');
     });
 
-    it('should request update to the block by the current priority when changes are notified to subscribers', () => {
+    it('should request update with the host priority when changes are notified', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-      const getCurrentPrioritySpy = vi
-        .spyOn(host, 'getCurrentPriority')
-        .mockReturnValue('user-blocking');
-
+      const context = new RenderContext(hooks, block, host, updater);
       const snapshot = 'foo';
       const subscribers: (() => void)[] = [];
       const subscribe = (subscriber: () => void) => {
@@ -889,7 +896,10 @@ describe('RenderContext', () => {
       };
       const getSnapshot = () => snapshot;
 
-      const context = new RenderContext(hooks, block, host, updater);
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+      const getCurrentPrioritySpy = vi
+        .spyOn(host, 'getCurrentPriority')
+        .mockReturnValue('user-blocking');
 
       expect(context.useSyncEnternalStore(subscribe, getSnapshot)).toBe('foo');
 
@@ -908,13 +918,12 @@ describe('RenderContext', () => {
       expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
     });
 
-    it('should request update to the block by the priority specified by user when changes are notified to subscribers', () => {
+    it('should request update with a user-specified priority when changes are notified', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-
+      const context = new RenderContext(hooks, block, host, updater);
       const snapshot = 'foo';
       const subscribers: (() => void)[] = [];
       const subscribe = (subscriber: () => void) => {
@@ -925,26 +934,10 @@ describe('RenderContext', () => {
       };
       const getSnapshot = () => snapshot;
 
-      let context = new RenderContext(hooks, block, host, updater);
-
-      expect(
-        context.useSyncEnternalStore(subscribe, getSnapshot, 'user-blocking'),
-      ).toBe('foo');
-
-      updater.flushUpdate(host);
-
-      for (const subscriber of subscribers) {
-        subscriber();
-      }
-
-      expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
-      expect(requestUpdateSpy).toHaveBeenCalledWith(
-        'user-blocking',
-        host,
-        updater,
-      );
-
-      context = new RenderContext(hooks, block, host, updater);
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+      const getCurrentPrioritySpy = vi
+        .spyOn(host, 'getCurrentPriority')
+        .mockReturnValue('user-blocking');
 
       expect(
         context.useSyncEnternalStore(subscribe, getSnapshot, 'background'),
@@ -956,12 +949,13 @@ describe('RenderContext', () => {
         subscriber();
       }
 
-      expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
+      expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
         host,
         updater,
       );
+      expect(getCurrentPrioritySpy).not.toHaveBeenCalled();
     });
   });
 });

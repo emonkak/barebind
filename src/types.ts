@@ -34,6 +34,9 @@ export interface Block<TContext> {
   update(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
 }
 
+// Reexport TaskPriority in Scheduler API.
+export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
+
 export type ComponentFunction<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
@@ -209,16 +212,13 @@ export interface RefObject<T> {
   current: T;
 }
 
-// Reexport TaskPriority in Scheduler API.
-export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
-
 export function comparePriorities(
-  first: TaskPriority,
-  second: TaskPriority,
+  firstPriority: TaskPriority,
+  secondPriority: TaskPriority,
 ): number {
-  return first === second
+  return firstPriority === secondPriority
     ? 0
-    : getPriorityNumber(second) - getPriorityNumber(first);
+    : getPriorityNumber(secondPriority) - getPriorityNumber(firstPriority);
 }
 
 export function createUpdateContext<TContext>(

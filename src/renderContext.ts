@@ -121,9 +121,9 @@ export class RenderContext {
     );
   }
 
-  forceUpdate(): void {
+  forceUpdate(priority?: TaskPriority): void {
     this._block.requestUpdate(
-      this._host.getCurrentPriority(),
+      priority ?? this._host.getCurrentPriority(),
       this._host,
       this._updater,
     );
@@ -283,11 +283,7 @@ export class RenderContext {
           const nextState = reducer(hook.state, action);
           if (!Object.is(hook.state, nextState)) {
             hook.state = nextState;
-            this._block.requestUpdate(
-              priority ?? this._host.getCurrentPriority(),
-              this._host,
-              this._updater,
-            );
+            this.forceUpdate(priority);
           }
         },
       };
@@ -322,11 +318,7 @@ export class RenderContext {
     this.useEffect(
       () =>
         subscribe(() => {
-          this._block.requestUpdate(
-            priority ?? this._host.getCurrentPriority(),
-            this._host,
-            this._updater,
-          );
+          this.forceUpdate(priority);
         }),
       [subscribe, priority],
     );
