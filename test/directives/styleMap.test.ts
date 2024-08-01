@@ -20,7 +20,7 @@ describe('styleMap()', () => {
 
 describe('StyleMap', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new instance of StyleMapBinding', () => {
+    it('should return a new StyleMapBinding', () => {
       const styleDeclaration = { display: 'none' };
       const directive = styleMap(styleDeclaration);
       const host = new MockUpdateHost();

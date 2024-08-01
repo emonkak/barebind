@@ -20,7 +20,7 @@ describe('classMap()', () => {
 
 describe('ClassMapDirective', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new instance of ClassMapBinding', () => {
+    it('should return a new ClassMapBinding', () => {
       const classDeclaration = { foo: true };
       const directive = classMap(classDeclaration);
       const host = new MockUpdateHost();

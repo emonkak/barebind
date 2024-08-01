@@ -27,7 +27,7 @@ describe('TemplateResult', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of TemplateBinding', () => {
+    it('should return a new TemplateBinding', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,

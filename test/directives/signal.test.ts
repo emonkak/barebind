@@ -48,7 +48,7 @@ describe('Signal', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should construct a new SignalBinding', () => {
+    it('should return a new SignalBinding', () => {
       const signal = new Atom('foo');
       const part = {
         type: PartType.Node,

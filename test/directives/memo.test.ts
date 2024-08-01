@@ -30,7 +30,7 @@ describe('Memo', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of MemoBinding from the non-directive value', () => {
+    it('should return a new MemoBinding from the non-directive value', () => {
       const factory = vi.fn(() => 'foo');
       const directive = memo(factory, ['foo']);
       const part = {
@@ -56,7 +56,7 @@ describe('Memo', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return an instance of MemoBinding from the directive', () => {
+    it('should return a new MemoBinding from the directive value', () => {
       const factory = vi.fn(() => new TextDirective());
       const directive = memo(factory, ['foo']);
       const part = {

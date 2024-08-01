@@ -31,7 +31,7 @@ describe('Choice', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of Choice from a non-directive value', () => {
+    it('should return a new ChoiceBinding from a non-directive value', () => {
       const factory = vi.fn((key: 'foo' | 'bar') => key);
       const directive = choice('foo', factory);
       const part = {
@@ -59,7 +59,7 @@ describe('Choice', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return an instance of Choice from a directive', () => {
+    it('should return a new ChoiceBinding from a directive value', () => {
       const fooDirective = new TextDirective();
       const barDirective = new TextDirective();
       const factory = vi.fn((key: 'foo' | 'bar') => {

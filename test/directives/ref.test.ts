@@ -20,7 +20,7 @@ describe('ref()', () => {
 
 describe('Ref', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new instance of RefBinding', () => {
+    it('should return a new RefBinding', () => {
       const directive = ref(() => {});
       const part = {
         type: PartType.Attribute,

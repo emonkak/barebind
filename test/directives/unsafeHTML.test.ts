@@ -24,7 +24,7 @@ describe('unsafeHTML()', () => {
 
 describe('UnsafeHTML', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new instance of ClassMapBinding', () => {
+    it('should return a new UnsafeHTMLBinding', () => {
       const directive = unsafeHTML('<span>foo</span>bar');
       const part = {
         type: PartType.ChildNode,

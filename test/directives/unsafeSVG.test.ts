@@ -21,7 +21,7 @@ describe('unsafeSVG()', () => {
 
 describe('UnsafeSVG', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new instance of ClassMapBinding', () => {
+    it('should return a new UnsafeSVG', () => {
       const directive = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const part = {
         type: PartType.ChildNode,

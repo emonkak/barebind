@@ -30,7 +30,7 @@ describe('Dynamic', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of DynamicBinding from the non-directive value', () => {
+    it('should return a new DynamicBinding from the non-directive value', () => {
       const directive = dynamic('foo');
       const part = {
         type: PartType.Node,
@@ -54,7 +54,7 @@ describe('Dynamic', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return an instance of DynamicBinding from the directive', () => {
+    it('should return an instance of DynamicBinding from a directive value', () => {
       const directive = dynamic(new TextDirective());
       const part = {
         type: PartType.Node,

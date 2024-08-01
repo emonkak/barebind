@@ -75,7 +75,7 @@ describe('Condition', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of ConditionBinding from a non-directive value', () => {
+    it('should return a new ConditionBinding from a non-directive value', () => {
       const directive = conditionDirective(
         true,
         () => 'foo',
@@ -104,7 +104,7 @@ describe('Condition', () => {
       expect(getEndNode).toHaveBeenCalledOnce();
     });
 
-    it('should return an instance of ConditionBinding from a directive', () => {
+    it('should return a new ConditionBinding from a directive value', () => {
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const directive = conditionDirective(

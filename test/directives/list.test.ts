@@ -41,7 +41,7 @@ describe('inPlaceList()', () => {
 
 describe('OrderedList', () => {
   describe('[directiveTag]()', () => {
-    it('should return an instance of OrderedListBinding', () => {
+    it('should return a new OrderedListBinding', () => {
       const directive = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
@@ -373,7 +373,7 @@ describe('OrderedListBinding', () => {
 
 describe('InPlaceList', () => {
   describe('[directiveTag]()', () => {
-    it('should return an instance of InPlaceListBinding', () => {
+    it('should return a new InPlaceListBinding', () => {
       const directive = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.ChildNode,

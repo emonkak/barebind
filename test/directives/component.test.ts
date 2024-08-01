@@ -41,7 +41,7 @@ describe('Component', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return an instance of BlockBinding', () => {
+    it('should return a new BlockBinding', () => {
       const directive = componentDirective(
         () => new TemplateResult(new MockTemplate(), {}),
         {},

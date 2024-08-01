@@ -29,7 +29,7 @@ describe('NoValue', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new instance of NoValueBinding', () => {
+    it('should return a new NoValueBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
