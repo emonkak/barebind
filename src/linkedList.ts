@@ -4,10 +4,20 @@ export interface Node<T> {
   value: T;
 }
 
+export type NodeRef<T> = { [key: symbol]: Node<T> | undefined };
+
+export interface ReadonlyNode<T> {
+  readonly prev: ReadonlyNode<T> | null;
+  readonly next: ReadonlyNode<T> | null;
+  readonly value: T;
+}
+
 export class LinkedList<T> implements Iterable<T> {
   private _head: Node<T> | null = null;
 
   private _tail: Node<T> | null = null;
+
+  #key: symbol = Symbol();
 
   *[Symbol.iterator](): Iterator<T> {
     for (let node = this._head; node !== null; node = node.next) {
@@ -15,25 +25,16 @@ export class LinkedList<T> implements Iterable<T> {
     }
   }
 
-  back(): Node<T> | null {
+  back(): ReadonlyNode<T> | null {
     return this._tail;
   }
 
-  front(): Node<T> | null {
+  front(): ReadonlyNode<T> | null {
     return this._head;
   }
 
   isEmpty(): boolean {
     return this._head === null;
-  }
-
-  contains(other: Node<T>): boolean {
-    for (let node = this._head; node !== null; node = node.next) {
-      if (node === other) {
-        return true;
-      }
-    }
-    return false;
   }
 
   popBack(): Node<T> | null {
@@ -66,7 +67,7 @@ export class LinkedList<T> implements Iterable<T> {
     return head;
   }
 
-  pushBack(value: T): Node<T> {
+  pushBack(value: T): NodeRef<T> {
     const node = { prev: this._tail, next: null, value };
 
     if (this._tail !== null) {
@@ -77,10 +78,10 @@ export class LinkedList<T> implements Iterable<T> {
       this._tail = node;
     }
 
-    return node;
+    return { [this.#key]: node };
   }
 
-  pushFront(value: T): Node<T> {
+  pushFront(value: T): NodeRef<T> {
     const node = { prev: null, next: this._head, value };
 
     if (this._head !== null) {
@@ -91,14 +92,13 @@ export class LinkedList<T> implements Iterable<T> {
       this._tail = node;
     }
 
-    return node;
+    return { [this.#key]: node };
   }
 
-  remove(node: Node<T>): void {
-    DEBUG: {
-      if (!this.contains(node)) {
-        throw new Error('The node is not contained in this list.');
-      }
+  remove(nodeRef: NodeRef<T>): Node<T> | null {
+    const node = nodeRef[this.#key];
+    if (node === undefined) {
+      return null;
     }
     if (node.prev !== null) {
       node.prev.next = node.next;
@@ -112,5 +112,7 @@ export class LinkedList<T> implements Iterable<T> {
     }
     node.prev = null;
     node.next = null;
+    nodeRef[this.#key] = undefined;
+    return node;
   }
 }

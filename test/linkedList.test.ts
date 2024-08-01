@@ -15,31 +15,24 @@ describe('LinkedList', () => {
   describe('.pushFront()', () => {
     it('should prepend a single value to the list', () => {
       const list = new LinkedList();
-      const foo = list.pushFront('foo');
 
-      expect(foo.value).toBe('foo');
-      expect(list.contains(foo)).toBe(true);
-      expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(foo);
+      list.pushFront('foo');
+
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('foo');
       expect(Array.from(list)).toEqual(['foo']);
     });
 
-    it('should prepend values to the list', () => {
+    it('should prepend multiple values to the list', () => {
       const list = new LinkedList();
-      const foo = list.pushFront('foo');
-      const bar = list.pushFront('bar');
-      const baz = list.pushFront('baz');
 
-      expect(foo.value).toBe('foo');
-      expect(bar.value).toBe('bar');
-      expect(baz.value).toBe('baz');
-      expect(list.contains(foo)).toBe(true);
-      expect(list.contains(bar)).toBe(true);
-      expect(list.contains(baz)).toBe(true);
+      list.pushFront('foo');
+      list.pushFront('bar');
+      list.pushFront('baz');
+
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(baz);
-      expect(list.back()).toBe(foo);
+      expect(list.front()?.value).toBe('baz');
+      expect(list.back()?.value).toBe('foo');
       expect(Array.from(list)).toEqual(['baz', 'bar', 'foo']);
     });
   });
@@ -47,89 +40,79 @@ describe('LinkedList', () => {
   describe('.pushBack()', () => {
     it('should append a single value to the list', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
 
-      expect(foo.value).toBe('foo');
-      expect(list.contains(foo)).toBe(true);
+      list.pushBack('foo');
+
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(foo);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('foo');
       expect(Array.from(list)).toEqual(['foo']);
     });
 
-    it('should append values to the list', () => {
+    it('should append multiple values to the list', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      expect(foo.value).toBe('foo');
-      expect(bar.value).toBe('bar');
-      expect(baz.value).toBe('baz');
-      expect(list.contains(foo)).toBe(true);
-      expect(list.contains(bar)).toBe(true);
-      expect(list.contains(baz)).toBe(true);
+      list.pushBack('foo');
+      list.pushBack('bar');
+      list.pushBack('baz');
+
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(baz);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toEqual(['foo', 'bar', 'baz']);
     });
   });
 
   describe('.popFront()', () => {
-    it('should remove values from the head', () => {
+    it('should remove nodes from the head', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      expect(list.popFront()).toBe(foo);
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(true);
-      expect(list.contains(baz)).toBe(true);
-      expect(foo.next).toBe(null);
-      expect(foo.prev).toBe(null);
+      list.pushBack('foo');
+      list.pushBack('bar');
+      list.pushBack('baz');
+
+      const foo = list.popFront();
+
+      expect(foo?.value).toBe('foo');
+      expect(foo?.next).toBe(null);
+      expect(foo?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(bar);
-      expect(list.back()).toBe(baz);
+      expect(list.front()?.value).toBe('bar');
+      expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toEqual(['bar', 'baz']);
 
-      expect(list.popFront()).toBe(bar);
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(true);
-      expect(bar.next).toBe(null);
-      expect(bar.prev).toBe(null);
+      const bar = list.popFront();
+
+      expect(bar?.value).toBe('bar');
+      expect(bar?.next).toBe(null);
+      expect(bar?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(baz);
-      expect(list.back()).toBe(baz);
+      expect(list.front()?.value).toBe('baz');
+      expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toEqual(['baz']);
 
-      expect(list.popFront()).toBe(baz);
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(false);
-      expect(baz.next).toBe(null);
-      expect(baz.prev).toBe(null);
+      const baz = list.popFront();
+
+      expect(baz?.value).toBe('baz');
+      expect(baz?.next).toBe(null);
+      expect(baz?.prev).toBe(null);
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
       expect(Array.from(list)).toEqual([]);
     });
 
-    it('should remove head values', () => {
+    it('should remove head nodes', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      expect(list.popFront()).toBe(foo);
-      expect(list.popFront()).toBe(bar);
-      expect(list.popFront()).toBe(baz);
+      list.pushBack('foo');
+      list.pushBack('bar');
+      list.pushBack('baz');
 
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(false);
+      expect(list.popFront()?.value).toBe('foo');
+      expect(list.popFront()?.value).toBe('bar');
+      expect(list.popFront()?.value).toBe('baz');
+
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
@@ -138,59 +121,55 @@ describe('LinkedList', () => {
   });
 
   describe('.popBack()', () => {
-    it('should remove values from the tail', () => {
+    it('should remove nodes from the tail', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      expect(list.popBack()).toBe(baz);
-      expect(list.contains(foo)).toBe(true);
-      expect(list.contains(bar)).toBe(true);
-      expect(list.contains(baz)).toBe(false);
-      expect(baz.next).toBe(null);
-      expect(baz.prev).toBe(null);
+      list.pushBack('foo');
+      list.pushBack('bar');
+      list.pushBack('baz');
+
+      const baz = list.popBack();
+
+      expect(baz?.value).toBe('baz');
+      expect(baz?.next).toBe(null);
+      expect(baz?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(bar);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('bar');
       expect(Array.from(list)).toEqual(['foo', 'bar']);
 
-      expect(list.popBack()).toBe(bar);
-      expect(list.contains(foo)).toBe(true);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(false);
-      expect(bar.next).toBe(null);
-      expect(bar.prev).toBe(null);
+      const bar = list.popBack();
+
+      expect(bar?.value).toBe('bar');
+      expect(bar?.next).toBe(null);
+      expect(bar?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(foo);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('foo');
       expect(Array.from(list)).toEqual(['foo']);
 
-      expect(list.popBack()).toBe(foo);
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(false);
-      expect(foo.next).toBe(null);
-      expect(foo.prev).toBe(null);
+      const foo = list.popBack();
+
+      expect(foo?.value).toBe('foo');
+      expect(foo?.next).toBe(null);
+      expect(foo?.prev).toBe(null);
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
       expect(Array.from(list)).toEqual([]);
     });
 
-    it('should remove tail values', () => {
+    it('should remove tail nodes', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      expect(list.popBack()).toBe(baz);
-      expect(list.popBack()).toBe(bar);
-      expect(list.popBack()).toBe(foo);
+      list.pushBack('foo');
+      list.pushBack('bar');
+      list.pushBack('baz');
 
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(false);
+      expect(list.popBack()?.value).toBe('baz');
+      expect(list.popBack()?.value).toBe('bar');
+      expect(list.popBack()?.value).toBe('foo');
+
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
@@ -199,69 +178,76 @@ describe('LinkedList', () => {
   });
 
   describe('.remove()', () => {
-    it('should remove a value', () => {
+    it('should remove a middle node', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      list.remove(bar);
+      list.pushBack('foo');
+      const barRef = list.pushBack('bar');
+      list.pushBack('baz');
 
-      expect(bar.next).toBe(null);
-      expect(bar.prev).toBe(null);
-      expect(list.contains(foo)).toBe(true);
-      expect(list.contains(bar)).toBe(false);
-      expect(list.contains(baz)).toBe(true);
+      const bar = list.remove(barRef);
+
+      expect(bar?.next).toBe(null);
+      expect(bar?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(baz);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toEqual(['foo', 'baz']);
     });
 
-    it('should remove the head value', () => {
+    it('should remove the head node', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      list.remove(foo);
+      const fooRef = list.pushBack('foo');
+      list.pushBack('bar');
+      list.pushBack('baz');
 
-      expect(foo.next).toBe(null);
-      expect(foo.prev).toBe(null);
-      expect(list.contains(foo)).toBe(false);
-      expect(list.contains(bar)).toBe(true);
-      expect(list.contains(baz)).toBe(true);
+      const foo = list.remove(fooRef);
+
+      expect(foo?.next).toBe(null);
+      expect(foo?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(bar);
-      expect(list.back()).toBe(baz);
+      expect(list.front()?.value).toBe('bar');
+      expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toEqual(['bar', 'baz']);
     });
 
-    it('should remove the tail value', () => {
+    it('should remove the tail node', () => {
       const list = new LinkedList();
-      const foo = list.pushBack('foo');
-      const bar = list.pushBack('bar');
-      const baz = list.pushBack('baz');
 
-      list.remove(baz);
+      list.pushBack('foo');
+      list.pushBack('bar');
+      const bazRef = list.pushBack('baz');
 
-      expect(baz.next).toBe(null);
-      expect(baz.prev).toBe(null);
-      expect(list.contains(foo)).toBe(true);
-      expect(list.contains(bar)).toBe(true);
-      expect(list.contains(baz)).toBe(false);
+      const baz = list.remove(bazRef);
+
+      expect(baz?.next).toBe(null);
+      expect(baz?.prev).toBe(null);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(foo);
-      expect(list.back()).toBe(bar);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('bar');
       expect(Array.from(list)).toEqual(['foo', 'bar']);
     });
 
-    it('should not remove a value not contained in the list', () => {
+    it('should not remove a node that has already been removed', () => {
       const list = new LinkedList();
 
-      expect(() =>
-        list.remove({ prev: null, next: null, value: 'foo' }),
-      ).toThrow('The node is not contained in this list.');
+      list.pushBack('foo');
+      const barRef = list.pushBack('bar');
+      list.pushBack('baz');
+
+      expect(list.remove(barRef)?.value).toBe('bar');
+      expect(list.remove(barRef)).toBe(null);
+      expect(list.isEmpty()).toBe(false);
+      expect(list.front()?.value).toBe('foo');
+      expect(list.back()?.value).toBe('baz');
+      expect(Array.from(list)).toEqual(['foo', 'baz']);
+    });
+
+    it('should not remove a node not contained in the list', () => {
+      const list = new LinkedList();
+
+      expect(list.remove({})).toBe(null);
     });
   });
 });

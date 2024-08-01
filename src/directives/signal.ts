@@ -186,9 +186,9 @@ export class Atom<TValue> extends Signal<TValue> {
   }
 
   subscribe(subscriber: Subscriber): Subscription {
-    const node = this._subscribers.pushBack(subscriber);
+    const nodeRef = this._subscribers.pushBack(subscriber);
     return () => {
-      this._subscribers.remove(node);
+      this._subscribers.remove(nodeRef);
     };
   }
 }
