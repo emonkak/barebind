@@ -198,35 +198,15 @@ describe('UpdateController', () => {
       const host = new UpdateController();
       const updater = new SyncUpdater();
       const directiveSpy = vi.spyOn(value, directiveTag);
-      const isScheduledSpy = vi.spyOn(updater, 'isScheduled');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
       expect(host.mount(value, container, updater)).toBeInstanceOf(TextBinding);
       expect(directiveSpy).toHaveBeenCalledOnce();
-      expect(isScheduledSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalled();
 
       await updater.waitForUpdate();
 
       expect(container.innerHTML).toBe('<!--TextDirective-->');
-    });
-
-    it('should not schedule update if it is already scheduled', () => {
-      const value = new TextDirective();
-      const container = document.createElement('div');
-      const host = new UpdateController();
-      const updater = new SyncUpdater();
-      const directiveSpy = vi.spyOn(value, directiveTag);
-      const isScheduledSpy = vi
-        .spyOn(updater, 'isScheduled')
-        .mockReturnValue(true);
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      expect(host.mount(value, container, updater)).toBeInstanceOf(TextBinding);
-      expect(container.innerHTML).toBe('');
-      expect(directiveSpy).toHaveBeenCalledOnce();
-      expect(isScheduledSpy).toHaveBeenCalledOnce();
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
   });
 });

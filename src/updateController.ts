@@ -130,9 +130,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
 
     binding.connect(context);
 
-    if (!updater.isScheduled()) {
-      updater.scheduleUpdate(this);
-    }
+    updater.scheduleUpdate(this);
 
     return binding;
   }
