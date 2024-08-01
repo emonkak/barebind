@@ -17,14 +17,15 @@ describe('isDirective()', () => {
 
 describe('nameOf()', () => {
   it('should return the name of the value', () => {
-    expect(nameOf(() => {})).toBe('Function');
-    expect(nameOf(123)).toBe('123');
-    expect(nameOf(function foo() {})).toBe('foo');
-    expect(nameOf(new Date())).toBe('Date');
     expect(nameOf(null)).toBe('null');
-    expect(nameOf(true)).toBe('true');
     expect(nameOf(undefined)).toBe('undefined');
+    expect(nameOf('foo')).toBe('"foo"');
+    expect(nameOf(123)).toBe('123');
+    expect(nameOf(true)).toBe('true');
     expect(nameOf({})).toBe('Object');
+    expect(nameOf(new Date())).toBe('Date');
+    expect(nameOf(() => {})).toBe('Function');
+    expect(nameOf(function foo() {})).toBe('foo');
     expect(nameOf({ [nameTag]: 'foo' })).toBe('foo');
   });
 });

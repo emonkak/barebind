@@ -22,7 +22,7 @@ describe('dynamic()', () => {
 describe('Dynamic', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(dynamic('foo')[nameTag]).toBe('Dynamic(foo)');
+      expect(dynamic('foo')[nameTag]).toBe('Dynamic("foo")');
       expect(dynamic(new TextDirective())[nameTag]).toBe(
         'Dynamic(TextDirective)',
       );

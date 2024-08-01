@@ -25,8 +25,8 @@ describe('choice()', () => {
 describe('Choice', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(choice('foo', (key) => key)[nameTag]).toBe('Choice(foo, foo)');
-      expect(choice('bar', (key) => key)[nameTag]).toBe('Choice(bar, bar)');
+      expect(choice('foo', (key) => key)[nameTag]).toBe('Choice("foo", "foo")');
+      expect(choice('bar', (key) => key)[nameTag]).toBe('Choice("bar", "bar")');
     });
   });
 

@@ -43,7 +43,7 @@ describe('Signal', () => {
 
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new Atom('foo')[nameTag]).toBe('Signal(foo)');
+      expect(new Atom('foo')[nameTag]).toBe('Signal("foo")');
     });
   });
 

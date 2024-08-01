@@ -113,7 +113,7 @@ describe('OrderedListBinding', () => {
         'baz',
       ]);
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@foo-->bar<!--TextDirective@bar-->baz<!--TextDirective@baz--><!---->',
+        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
       );
     });
 
@@ -179,7 +179,7 @@ describe('OrderedListBinding', () => {
           ).toEqual(directive2.items);
           expect(container.innerHTML).toBe(
             items2
-              .map((item) => item + '<!--TextDirective@' + item + '-->')
+              .map((item) => item + '<!--TextDirective@"' + item + '"-->')
               .join('') + '<!---->',
           );
         }
@@ -228,7 +228,7 @@ describe('OrderedListBinding', () => {
             ).toEqual(directive2.items);
             expect(container.innerHTML).toBe(
               items2!
-                .map((item) => item + '<!--TextDirective@' + item + '-->')
+                .map((item) => item + '<!--TextDirective@"' + item + '"-->')
                 .join('') + '<!---->',
             );
           }
@@ -273,7 +273,7 @@ describe('OrderedListBinding', () => {
           ).toEqual(directive2.items);
           expect(container.innerHTML).toBe(
             items2
-              .map((item) => item + '<!--TextDirective@' + item + '-->')
+              .map((item) => item + '<!--TextDirective@"' + item + '"-->')
               .join('') + '<!---->',
           );
         }
@@ -365,7 +365,7 @@ describe('OrderedListBinding', () => {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@foo-->bar<!--TextDirective@bar-->baz<!--TextDirective@baz--><!---->',
+        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
       );
     });
   });

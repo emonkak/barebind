@@ -243,5 +243,5 @@ export function nameOf(value: unknown): string {
   if (typeof value === 'undefined') {
     return 'undefined';
   }
-  return value.toString();
+  return JSON.stringify(value);
 }

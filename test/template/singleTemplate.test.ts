@@ -33,7 +33,7 @@ describe('ChildNodeTemplate', () => {
         type: PartType.ChildNode,
         node: expect.any(Comment),
       });
-      expect(fragment.binding.part.node.nodeValue).toBe('foo');
+      expect(fragment.binding.part.node.nodeValue).toBe('"foo"');
       expect(fragment.startNode).toBe(fragment.binding.startNode);
       expect(fragment.endNode).toBe(fragment.binding.endNode);
     });

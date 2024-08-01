@@ -25,7 +25,7 @@ describe('memo()', () => {
 describe('Memo', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(memo(() => 'foo', [])[nameTag]).toBe('Memo(foo)');
+      expect(memo(() => 'foo', [])[nameTag]).toBe('Memo("foo")');
     });
   });
 
