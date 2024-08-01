@@ -88,7 +88,7 @@ export class ComponentBinding<TProps, TData, TContext>
     TemplateFragment<unknown, TContext>
   > | null = null;
 
-  private _hooks: Hook[] = [];
+  private readonly _hooks: Hook[] = [];
 
   private _status = Status.Committed;
 
