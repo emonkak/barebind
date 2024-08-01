@@ -10,18 +10,18 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
 describe('ref()', () => {
-  it('should construct a new Ref', () => {
+  it('should construct a new Ref directive', () => {
     const refFunction = () => {};
-    const directive = ref(refFunction);
+    const value = ref(refFunction);
 
-    expect(directive.ref).toBe(refFunction);
+    expect(value.ref).toBe(refFunction);
   });
 });
 
 describe('Ref', () => {
   describe('[directiveTag]()', () => {
     it('should return a new RefBinding', () => {
-      const directive = ref(() => {});
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -30,16 +30,16 @@ describe('Ref', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
 
     it('should throw an error if the part does not indicate "ref" attribute', () => {
-      const directive = ref(() => {});
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'data-ref',
@@ -49,7 +49,7 @@ describe('Ref', () => {
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, context)).toThrow(
+      expect(() => value[directiveTag](part, context)).toThrow(
         'Ref directive must be used in a "ref" attribute,',
       );
     });
@@ -60,13 +60,13 @@ describe('RefBinding', () => {
   describe('.connect()', () => {
     it('should call a RefCallback with the element', () => {
       const refFunction = vi.fn();
-      const directive = ref(refFunction);
+      const value = ref(refFunction);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -80,13 +80,13 @@ describe('RefBinding', () => {
 
     it('should assign the element to a RefObject', () => {
       const refObject = { current: null };
-      const directive = ref(refObject);
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -99,13 +99,13 @@ describe('RefBinding', () => {
 
     it('should do nothing if the update is already scheduled', () => {
       const refObject = { current: null };
-      const directive = ref(refObject);
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -248,13 +248,13 @@ describe('RefBinding', () => {
     });
 
     it('should throw an error if the new value is not Ref directive', () => {
-      const directive = ref(() => {});
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -270,13 +270,13 @@ describe('RefBinding', () => {
   describe('.unbind()', () => {
     it('should call a old RefCallback with null', () => {
       const refFunction = vi.fn();
-      const directive = ref(refFunction);
+      const value = ref(refFunction);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -293,13 +293,13 @@ describe('RefBinding', () => {
 
     it('should unassign the element from a old RefObject', () => {
       const refObject = { current: null };
-      const directive = ref(refObject);
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -314,13 +314,13 @@ describe('RefBinding', () => {
     });
 
     it('should do nothing if there is no ref', () => {
-      const directive = ref(null);
+      const value = ref(null);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -334,13 +334,13 @@ describe('RefBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = ref(() => {});
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive, part);
+      const binding = new RefBinding(value, part);
 
       binding.disconnect();
     });

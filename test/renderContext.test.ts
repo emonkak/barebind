@@ -25,10 +25,10 @@ describe('RenderContext', () => {
       const updater = new SyncUpdater();
 
       const context = new RenderContext(hooks, block, host, updater);
-      const directive = context.childNode('foo');
+      const value = context.childNode('foo');
 
-      expect(directive.template).toBeInstanceOf(ChildNodeTemplate);
-      expect(directive.data).toBe('foo');
+      expect(value.template).toBeInstanceOf(ChildNodeTemplate);
+      expect(value.data).toBe('foo');
     });
   });
 
@@ -40,14 +40,10 @@ describe('RenderContext', () => {
       const updater = new SyncUpdater();
 
       const context = new RenderContext(hooks, block, host, updater);
-      const directive = context.element(
-        'div',
-        { class: 'foo', id: 'bar' },
-        'baz',
-      );
+      const value = context.element('div', { class: 'foo', id: 'bar' }, 'baz');
 
-      expect(directive.template).toBeInstanceOf(ElementTemplate);
-      expect(directive.data).toEqual({
+      expect(value.template).toBeInstanceOf(ElementTemplate);
+      expect(value.data).toEqual({
         elementValue: { class: 'foo', id: 'bar' },
         childNodeValue: 'baz',
       });
@@ -61,10 +57,10 @@ describe('RenderContext', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new RenderContext(hooks, block, host, updater);
-      const directive = context.empty();
+      const value = context.empty();
 
-      expect(directive.template).toBe(EmptyTemplate.instance);
-      expect(directive.data).toEqual(null);
+      expect(value.template).toBe(EmptyTemplate.instance);
+      expect(value.data).toEqual(null);
     });
   });
 
@@ -143,11 +139,11 @@ describe('RenderContext', () => {
       const context = new RenderContext(hooks, block, host, updater);
       const getHTMLTemplateSpy = vi.spyOn(host, 'getHTMLTemplate');
 
-      const directive = context.html`
+      const value = context.html`
         <div class=${0}>Hello, ${1}!</div>
       `;
-      expect(directive.value.template).toBeInstanceOf(MockTemplate);
-      expect(directive.value.data).toStrictEqual([0, 1]);
+      expect(value.value.template).toBeInstanceOf(MockTemplate);
+      expect(value.value.data).toStrictEqual([0, 1]);
       expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -223,11 +219,11 @@ describe('RenderContext', () => {
       const context = new RenderContext(hooks, block, host, updater);
       const getSVGTemplateSpy = vi.spyOn(host, 'getSVGTemplate');
 
-      const directive = context.svg`
+      const value = context.svg`
         <text x=${0} y=${1}>Hello, ${2}!</text>
       `;
-      expect(directive.value.template).toBeInstanceOf(MockTemplate);
-      expect(directive.value.data).toStrictEqual([0, 1, 2]);
+      expect(value.value.template).toBeInstanceOf(MockTemplate);
+      expect(value.value.data).toStrictEqual([0, 1, 2]);
       expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -240,10 +236,10 @@ describe('RenderContext', () => {
       const updater = new SyncUpdater();
 
       const context = new RenderContext(hooks, block, host, updater);
-      const directive = context.text('foo');
+      const value = context.text('foo');
 
-      expect(directive.template).toBeInstanceOf(TextTemplate);
-      expect(directive.data).toEqual('foo');
+      expect(value.template).toBeInstanceOf(TextTemplate);
+      expect(value.data).toEqual('foo');
     });
   });
 

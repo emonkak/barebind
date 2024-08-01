@@ -40,7 +40,7 @@ export class UnsafeHTML implements Directive {
 }
 
 export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
-  private _directive: UnsafeHTML;
+  private _value: UnsafeHTML;
 
   private readonly _part: ChildNodePart;
 
@@ -48,13 +48,13 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
 
   private _dirty = false;
 
-  constructor(_value: UnsafeHTML, part: ChildNodePart) {
-    this._directive = _value;
+  constructor(value: UnsafeHTML, part: ChildNodePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): UnsafeHTML {
-    return this._directive;
+    return this._value;
   }
 
   get part(): ChildNodePart {
@@ -77,17 +77,17 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
     DEBUG: {
       ensureDirective(UnsafeHTML, newValue, this._part);
     }
-    const oldValue = this._directive;
+    const oldValue = this._value;
     if (oldValue.content !== newValue.content) {
-      this._directive = newValue;
+      this._value = newValue;
       this._requestMutation(context.updater);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { content } = this._directive;
+    const { content } = this._value;
     if (content !== '') {
-      this._directive = new UnsafeHTML('');
+      this._value = new UnsafeHTML('');
       this.connect(context);
     }
   }
@@ -95,7 +95,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
   disconnect(): void {}
 
   commit(): void {
-    const { content } = this._directive;
+    const { content } = this._value;
 
     for (let i = 0, l = this._childNodes.length; i < l; i++) {
       this._childNodes[i]!.remove();

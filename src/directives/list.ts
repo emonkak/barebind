@@ -76,7 +76,7 @@ export class OrderedList<TItem, TKey, TValue> implements Directive {
 export class OrderedListBinding<TItem, TKey, TValue>
   implements Binding<OrderedList<TItem, TKey, TValue>>, Effect
 {
-  private _directive: OrderedList<TItem, TKey, TValue>;
+  private _value: OrderedList<TItem, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -88,16 +88,13 @@ export class OrderedListBinding<TItem, TKey, TValue>
 
   private _dirty = false;
 
-  constructor(
-    directive: OrderedList<TItem, TKey, TValue>,
-    part: ChildNodePart,
-  ) {
-    this._directive = directive;
+  constructor(value: OrderedList<TItem, TKey, TValue>, part: ChildNodePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): OrderedList<TItem, TKey, TValue> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): ChildNodePart {
@@ -128,14 +125,14 @@ export class OrderedListBinding<TItem, TKey, TValue>
     DEBUG: {
       ensureDirective(OrderedList, newValue, this._part);
     }
-    this._directive = newValue;
+    this._value = newValue;
     this._updateItems(context);
     this._requestMutation(context.updater);
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { keySelector, valueSelector } = this._directive;
-    this._directive = new OrderedList([], keySelector, valueSelector);
+    const { keySelector, valueSelector } = this._value;
+    this._value = new OrderedList([], keySelector, valueSelector);
     this._clearItems(context);
     this._requestMutation(context.updater);
   }
@@ -160,7 +157,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
   }
 
   private _insertItems(context: UpdateContext<unknown>): void {
-    const { items, keySelector, valueSelector } = this._directive;
+    const { items, keySelector, valueSelector } = this._value;
     const newBindings = new Array<Binding<TValue>>(items.length);
     const newKeys = new Array<TKey>(items.length);
 
@@ -177,7 +174,7 @@ export class OrderedListBinding<TItem, TKey, TValue>
   }
 
   private _reconcileItems(context: UpdateContext<unknown>): void {
-    const { items, keySelector, valueSelector } = this._directive;
+    const { items, keySelector, valueSelector } = this._value;
     const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
     const oldKeys = this._memoizedKeys;
@@ -351,7 +348,7 @@ export class InPlaceList<TItem, TValue> implements Directive {
 export class InPlaceListBinding<TItem, TValue>
   implements Binding<InPlaceList<TItem, TValue>>, Effect
 {
-  private _directive: InPlaceList<TItem, TValue>;
+  private _value: InPlaceList<TItem, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -361,13 +358,13 @@ export class InPlaceListBinding<TItem, TValue>
 
   private _dirty = false;
 
-  constructor(directive: InPlaceList<TItem, TValue>, part: ChildNodePart) {
-    this._directive = directive;
+  constructor(value: InPlaceList<TItem, TValue>, part: ChildNodePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): InPlaceList<TItem, TValue> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): ChildNodePart {
@@ -398,17 +395,17 @@ export class InPlaceListBinding<TItem, TValue>
     DEBUG: {
       ensureDirective(InPlaceList, newValue, this._part);
     }
-    const oldValue = this._directive;
+    const oldValue = this._value;
     if (oldValue.items !== newValue.items) {
-      this._directive = newValue;
+      this._value = newValue;
       this._updateItems(context);
       this._requestMutation(context.updater);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { valueSelector } = this._directive;
-    this._directive = new InPlaceList([], valueSelector);
+    const { valueSelector } = this._value;
+    this._value = new InPlaceList([], valueSelector);
     this._clearItems(context);
     this._requestMutation(context.updater);
   }
@@ -440,7 +437,7 @@ export class InPlaceListBinding<TItem, TValue>
   }
 
   private _updateItems(context: UpdateContext<unknown>): void {
-    const { items, valueSelector } = this._directive;
+    const { items, valueSelector } = this._value;
     const oldBindings = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
 

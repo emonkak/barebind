@@ -12,13 +12,13 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('memo()', () => {
-  it('should construct a new Memo', () => {
+  it('should construct a new Memo directive', () => {
     const factory = () => new TextDirective();
     const dependencies = ['foo'];
-    const directive = memo(factory, dependencies);
+    const value = memo(factory, dependencies);
 
-    expect(directive.factory).toBe(factory);
-    expect(directive.dependencies).toBe(dependencies);
+    expect(value.factory).toBe(factory);
+    expect(value.dependencies).toBe(dependencies);
   });
 });
 
@@ -32,7 +32,7 @@ describe('Memo', () => {
   describe('[directiveTag]()', () => {
     it('should return a new MemoBinding from the non-directive value', () => {
       const factory = vi.fn(() => 'foo');
-      const directive = memo(factory, ['foo']);
+      const value = memo(factory, ['foo']);
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -40,13 +40,13 @@ describe('Memo', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
       const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
 
       expect(factory).toHaveBeenCalledOnce();
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.binding).toBeInstanceOf(NodeBinding);
       expect(binding.startNode).toBe(part.node);
@@ -58,7 +58,7 @@ describe('Memo', () => {
 
     it('should return a new MemoBinding from the directive value', () => {
       const factory = vi.fn(() => new TextDirective());
-      const directive = memo(factory, ['foo']);
+      const value = memo(factory, ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -66,13 +66,13 @@ describe('Memo', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
       const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
 
       expect(factory).toHaveBeenCalledOnce();
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.startNode).toBe(part.node);
@@ -87,7 +87,7 @@ describe('Memo', () => {
 describe('MemoBinding', () => {
   describe('.connect()', () => {
     it('should delegate to the inner binding', () => {
-      const directive = memo(() => new TextDirective(), ['foo']);
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -95,7 +95,7 @@ describe('MemoBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new MemoBinding(directive, part, context);
+      const binding = new MemoBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
       binding.connect(context);
@@ -153,7 +153,7 @@ describe('MemoBinding', () => {
     });
 
     it('should throw an error if the new value is not Memo directive', () => {
-      const directive = memo(() => new TextDirective(), ['foo']);
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -161,7 +161,7 @@ describe('MemoBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new MemoBinding(directive, part, context);
+      const binding = new MemoBinding(value, part, context);
 
       expect(() => {
         binding.bind(null as any, context);
@@ -173,7 +173,7 @@ describe('MemoBinding', () => {
 
   describe('.unbind()', () => {
     it('should delegate to the inner binding', () => {
-      const directive = memo(() => new TextDirective(), ['foo']);
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -181,7 +181,7 @@ describe('MemoBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new MemoBinding(directive, part, context);
+      const binding = new MemoBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.unbind(context);
@@ -194,7 +194,7 @@ describe('MemoBinding', () => {
 
   describe('.disconnect()', () => {
     it('should delegate to the inner binding', () => {
-      const directive = memo(() => new TextDirective(), ['foo']);
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -202,7 +202,7 @@ describe('MemoBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new MemoBinding(directive, part, context);
+      const binding = new MemoBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 
       binding.disconnect();

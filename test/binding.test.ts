@@ -1306,12 +1306,12 @@ describe('resolveBinding()', () => {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
-    const directive = new TextDirective();
-    const directiveSpy = vi.spyOn(directive, directiveTag);
+    const value = new TextDirective();
+    const directiveSpy = vi.spyOn(value, directiveTag);
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
     const context = createUpdateContext(host, updater);
-    const binding = resolveBinding(directive, part, context);
+    const binding = resolveBinding(value, part, context);
 
     expect(binding).toBeInstanceOf(TextBinding);
     expect(directiveSpy).toHaveBeenCalledOnce();

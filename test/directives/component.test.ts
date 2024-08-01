@@ -21,29 +21,29 @@ import {
 } from '../mocks.js';
 
 describe('component()', () => {
-  it('should construct a new Component wrapped in Lazy', () => {
+  it('should construct a new Component directive wrapped in Lazy directive', () => {
     const type = () => new TemplateResult(new MockTemplate(), {});
     const props = {};
-    const directive = component(type, props);
+    const value = component(type, props);
 
-    expect(directive.value.type).toBe(type);
-    expect(directive.value.props).toBe(props);
+    expect(value.value.type).toBe(type);
+    expect(value.value.props).toBe(props);
   });
 });
 
 describe('Component', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      const directive = new Component(function foo() {
+      const value = new Component(function foo() {
         return new TemplateResult(new MockTemplate(), {});
       }, {});
-      expect(directive[nameTag]).toBe('Component(foo)');
+      expect(value[nameTag]).toBe('Component(foo)');
     });
   });
 
   describe('[directiveTag]()', () => {
     it('should return a new BlockBinding', () => {
-      const directive = new Component(
+      const value = new Component(
         () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
@@ -54,16 +54,16 @@ describe('Component', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = new Component(
+      const value = new Component(
         () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
@@ -75,7 +75,7 @@ describe('Component', () => {
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, context)).toThrow(
+      expect(() => value[directiveTag](part, context)).toThrow(
         'Component directive must be used in a child node,',
       );
     });
@@ -90,15 +90,12 @@ describe('ComponentBinding', () => {
       const fragment = new MockTemplateFragment(data, [
         document.createComment(''),
       ]);
-      const directive = new Component(
-        () => new TemplateResult(template, data),
-        {},
-      );
+      const value = new Component(() => new TemplateResult(template, data), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part);
+      const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -124,7 +121,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should update the block if an update is requested', () => {
-      const directive = new Component<{}, unknown, RenderContext>(
+      const value = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
           context.forceUpdate('user-blocking');
           return new TemplateResult(new MockTemplate(), {});
@@ -135,7 +132,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part);
+      const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -154,7 +151,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should throw an error on render if the current block not exists', () => {
-      const directive = new Component<{}, unknown, RenderContext>(
+      const value = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
           context.forceUpdate('user-blocking');
           return new TemplateResult(new MockTemplate(), {});
@@ -165,7 +162,7 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part);
+      const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext<RenderContext>(host, updater);
@@ -448,15 +445,12 @@ describe('ComponentBinding', () => {
       const fragment = new MockTemplateFragment(data, [
         document.createComment(''),
       ]);
-      const directive = new Component(
-        () => new TemplateResult(template, data),
-        {},
-      );
+      const value = new Component(() => new TemplateResult(template, data), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part);
+      const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -477,7 +471,7 @@ describe('ComponentBinding', () => {
       binding.unbind(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive, context);
+      binding.bind(value, context);
       updater.flushUpdate(host);
 
       expect(renderSpy).toHaveBeenCalledOnce();
@@ -615,15 +609,12 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const fragment = new MockTemplateFragment(data);
-      const directive = new Component(
-        () => new TemplateResult(template, data),
-        {},
-      );
+      const value = new Component(() => new TemplateResult(template, data), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part);
+      const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -658,15 +649,12 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const fragment = new MockTemplateFragment(data);
-      const directive = new Component(
-        () => new TemplateResult(template, data),
-        {},
-      );
+      const value = new Component(() => new TemplateResult(template, data), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part);
+      const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();

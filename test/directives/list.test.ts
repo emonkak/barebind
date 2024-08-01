@@ -16,33 +16,33 @@ import { MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('orderedList()', () => {
-  it('should construst a new OrderedList', () => {
+  it('should construst a new OrderedList directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
     const keySelector = (item: string) => item;
-    const directive = orderedList(items, keySelector, valueSelector);
+    const value = orderedList(items, keySelector, valueSelector);
 
-    expect(directive.items).toBe(items);
-    expect(directive.valueSelector).toBe(valueSelector);
-    expect(directive.keySelector).toBe(keySelector);
+    expect(value.items).toBe(items);
+    expect(value.valueSelector).toBe(valueSelector);
+    expect(value.keySelector).toBe(keySelector);
   });
 });
 
 describe('inPlaceList()', () => {
-  it('should construst a new OrderedList used indexes as keys', () => {
+  it('should construst a new InPlaceList directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
-    const directive = inPlaceList(items, valueSelector);
+    const value = inPlaceList(items, valueSelector);
 
-    expect(directive.items).toBe(items);
-    expect(directive.valueSelector).toBe(valueSelector);
+    expect(value.items).toBe(items);
+    expect(value.valueSelector).toBe(valueSelector);
   });
 });
 
 describe('OrderedList', () => {
   describe('[directiveTag]()', () => {
     it('should return a new OrderedListBinding', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -54,9 +54,9 @@ describe('OrderedList', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -64,7 +64,7 @@ describe('OrderedList', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -77,7 +77,7 @@ describe('OrderedList', () => {
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, context)).toThrow(
+      expect(() => value[directiveTag](part, context)).toThrow(
         'OrderedList directive must be used in a child node,',
       );
     });
@@ -87,7 +87,7 @@ describe('OrderedList', () => {
 describe('OrderedListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -100,7 +100,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new OrderedListBinding(directive, part);
+      const binding = new OrderedListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -118,7 +118,7 @@ describe('OrderedListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -130,7 +130,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new OrderedListBinding(directive, part);
+      const binding = new OrderedListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.connect(context);
@@ -283,7 +283,7 @@ describe('OrderedListBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -296,7 +296,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new OrderedListBinding(directive, part);
+      const binding = new OrderedListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -310,7 +310,7 @@ describe('OrderedListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -322,7 +322,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new OrderedListBinding(directive, part);
+      const binding = new OrderedListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.unbind(context);
@@ -335,7 +335,7 @@ describe('OrderedListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const directive = orderedList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -348,7 +348,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new OrderedListBinding(directive, part);
+      const binding = new OrderedListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -374,7 +374,7 @@ describe('OrderedListBinding', () => {
 describe('InPlaceList', () => {
   describe('[directiveTag]()', () => {
     it('should return a new InPlaceListBinding', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
+      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -382,9 +382,9 @@ describe('InPlaceList', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -392,7 +392,7 @@ describe('InPlaceList', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
+      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -401,7 +401,7 @@ describe('InPlaceList', () => {
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, context)).toThrow(
+      expect(() => value[directiveTag](part, context)).toThrow(
         'InPlaceList directive must be used in a child node,',
       );
     });
@@ -411,7 +411,7 @@ describe('InPlaceList', () => {
 describe('InPlaceListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
-      const directive = inPlaceList(
+      const value = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
@@ -423,7 +423,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new InPlaceListBinding(directive, part);
+      const binding = new InPlaceListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -441,7 +441,7 @@ describe('InPlaceListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = inPlaceList(
+      const value = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
@@ -452,7 +452,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new InPlaceListBinding(directive, part);
+      const binding = new InPlaceListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.connect(context);
@@ -557,7 +557,7 @@ describe('InPlaceListBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
+      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -566,7 +566,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new InPlaceListBinding(directive, part);
+      const binding = new InPlaceListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -580,7 +580,7 @@ describe('InPlaceListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const directive = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
+      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -588,7 +588,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new InPlaceListBinding(directive, part);
+      const binding = new InPlaceListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.unbind(context);
@@ -601,7 +601,7 @@ describe('InPlaceListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const directive = inPlaceList(
+      const value = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
@@ -613,7 +613,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new InPlaceListBinding(directive, part);
+      const binding = new InPlaceListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);

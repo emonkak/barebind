@@ -557,19 +557,19 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect bindings in the fragment', () => {
-      const directive = new TextDirective();
+      const value = new TextDirective();
       const [template, values] = html`
-        <div>${directive}</div>
+        <div>${value}</div>
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
       let disconnects = 0;
-      vi.spyOn(directive, directiveTag).mockImplementation(function (
+      vi.spyOn(value, directiveTag).mockImplementation(function (
         this: TextDirective,
         part: Part,
       ) {
-        const binding = new TextBinding(directive, part);
+        const binding = new TextBinding(value, part);
         vi.spyOn(binding, 'disconnect').mockImplementation(() => {
           disconnects++;
         });

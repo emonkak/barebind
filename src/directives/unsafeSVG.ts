@@ -40,7 +40,7 @@ export class UnsafeSVG implements Directive {
 }
 
 export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
-  private _directive: UnsafeSVG;
+  private _value: UnsafeSVG;
 
   private readonly _part: ChildNodePart;
 
@@ -48,13 +48,13 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
 
   private _dirty = false;
 
-  constructor(directive: UnsafeSVG, part: ChildNodePart) {
-    this._directive = directive;
+  constructor(value: UnsafeSVG, part: ChildNodePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): UnsafeSVG {
-    return this._directive;
+    return this._value;
   }
 
   get part(): ChildNodePart {
@@ -77,17 +77,17 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
     DEBUG: {
       ensureDirective(UnsafeSVG, newValue, this._part);
     }
-    const oldValue = this._directive;
+    const oldValue = this._value;
     if (oldValue.content !== newValue.content) {
-      this._directive = newValue;
+      this._value = newValue;
       this._requestMutation(context.updater);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { content } = this._directive;
+    const { content } = this._value;
     if (content !== '') {
-      this._directive = new UnsafeSVG('');
+      this._value = new UnsafeSVG('');
       this.connect(context);
     }
   }
@@ -95,7 +95,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
   disconnect(): void {}
 
   commit(): void {
-    const { content } = this._directive;
+    const { content } = this._value;
 
     for (let i = 0, l = this._childNodes.length; i < l; i++) {
       this._childNodes[i]!.remove();

@@ -83,19 +83,19 @@ export class Condition<TTrue, TFalse> implements Directive {
 export class ConditionBinding<TTrue, TFalse>
   implements Binding<Condition<TTrue, TFalse>>
 {
-  private _directive: Condition<TTrue, TFalse>;
+  private _value: Condition<TTrue, TFalse>;
 
   private _trueBinding: Binding<TTrue> | null = null;
 
   private _falseBinding: Binding<TFalse> | null = null;
 
   constructor(
-    directive: Condition<TTrue, TFalse>,
+    value: Condition<TTrue, TFalse>,
     part: Part,
     context: UpdateContext<unknown>,
   ) {
-    const { condition, trueBranch, falseBranch } = directive;
-    this._directive = directive;
+    const { condition, trueBranch, falseBranch } = value;
+    this._value = value;
     if (condition) {
       this._trueBinding = resolveBinding(trueBranch(), part, context);
       this._falseBinding = null;
@@ -106,7 +106,7 @@ export class ConditionBinding<TTrue, TFalse>
   }
 
   get value(): Condition<TTrue, TFalse> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): Part {
@@ -122,7 +122,7 @@ export class ConditionBinding<TTrue, TFalse>
   }
 
   get currentBinding(): Binding<TTrue> | Binding<TFalse> {
-    return this._directive.condition ? this._trueBinding! : this._falseBinding!;
+    return this._value.condition ? this._trueBinding! : this._falseBinding!;
   }
 
   connect(context: UpdateContext<unknown>): void {
@@ -137,7 +137,7 @@ export class ConditionBinding<TTrue, TFalse>
       ensureDirective(Condition, newValue, this.currentBinding.part);
     }
 
-    const oldValue = this._directive;
+    const oldValue = this._value;
     const { condition, trueBranch, falseBranch } = newValue;
 
     if (oldValue.condition === condition) {
@@ -174,7 +174,7 @@ export class ConditionBinding<TTrue, TFalse>
       }
     }
 
-    this._directive = newValue;
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {

@@ -203,19 +203,19 @@ export class MockUsableObject<T> implements UsableObject<T, unknown> {
 }
 
 export class TextBinding implements Binding<TextDirective>, Effect {
-  private _directive: TextDirective;
+  private _value: TextDirective;
 
   private readonly _part: Part;
 
   private _text: Text = document.createTextNode('');
 
   constructor(value: TextDirective, part: Part) {
-    this._directive = value;
+    this._value = value;
     this._part = part;
   }
 
   get value(): TextDirective {
-    return this._directive;
+    return this._value;
   }
 
   get part(): Part {
@@ -231,7 +231,7 @@ export class TextBinding implements Binding<TextDirective>, Effect {
   }
 
   bind(newValue: TextDirective, { updater }: UpdateContext<unknown>): void {
-    this._directive = newValue;
+    this._value = newValue;
     updater.enqueueMutationEffect(this);
   }
 
@@ -240,14 +240,14 @@ export class TextBinding implements Binding<TextDirective>, Effect {
   }
 
   unbind({ updater }: UpdateContext<unknown>): void {
-    this._directive = new TextDirective(null);
+    this._value = new TextDirective(null);
     updater.enqueueMutationEffect(this);
   }
 
   disconnect(): void {}
 
   commit() {
-    const { content } = this._directive;
+    const { content } = this._value;
 
     this._text.nodeValue = content;
 

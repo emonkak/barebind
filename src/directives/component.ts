@@ -73,7 +73,7 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
 export class ComponentBinding<TProps, TData, TContext>
   implements Binding<Component<TProps, TData, TContext>, TContext>, Effect
 {
-  private _directive: Component<TProps, TData, TContext>;
+  private _value: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -92,16 +92,13 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _status = Status.Committed;
 
-  constructor(
-    directive: Component<TProps, TData, TContext>,
-    part: ChildNodePart,
-  ) {
-    this._directive = directive;
+  constructor(value: Component<TProps, TData, TContext>, part: ChildNodePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): Component<TProps, TData, TContext> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): ChildNodePart {
@@ -117,7 +114,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   connect(context: UpdateContext<TContext>): void {
-    const { type, props } = this._directive;
+    const { type, props } = this._value;
     const { template, data } = this._renderComponent(type, props, context);
 
     if (this._pendingFragment === null) {
@@ -142,7 +139,7 @@ export class ComponentBinding<TProps, TData, TContext>
 
     const { type, props } = newValue;
 
-    if (this._directive.type !== type) {
+    if (this._value.type !== type) {
       // The component has been changed, so we need to clean hooks before
       // rendering.
       cleanHooks(this._hooks);
@@ -207,7 +204,7 @@ export class ComponentBinding<TProps, TData, TContext>
       this._pendingFragment.connect(context);
     }
 
-    this._directive = newValue;
+    this._value = newValue;
     this._memoizedTemplate = template;
   }
 

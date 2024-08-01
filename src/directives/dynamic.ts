@@ -36,17 +36,17 @@ export class Dynamic implements Directive {
 }
 
 export class DynamicBinding implements Binding<unknown> {
-  private _directive: Dynamic;
+  private _value: Dynamic;
 
   private _binding: Binding<any>;
 
-  constructor(directive: Dynamic, part: Part, context: UpdateContext<unknown>) {
-    this._directive = directive;
-    this._binding = resolveBinding(directive.value, part, context);
+  constructor(value: Dynamic, part: Part, context: UpdateContext<unknown>) {
+    this._value = value;
+    this._binding = resolveBinding(value.value, part, context);
   }
 
   get value(): Dynamic {
-    return this._directive;
+    return this._value;
   }
 
   get part(): Part {

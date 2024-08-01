@@ -56,25 +56,25 @@ export class Choice<TKey, TValue> implements Directive {
 export class ChoiceBinding<TKey, TValue>
   implements Binding<Choice<TKey, TValue>>
 {
-  private _directive: Choice<TKey, TValue>;
+  private _value: Choice<TKey, TValue>;
 
   private _binding: Binding<TValue>;
 
   private _cachedBindings: Map<TKey, Binding<TValue>> = new Map();
 
   constructor(
-    directive: Choice<TKey, TValue>,
+    value: Choice<TKey, TValue>,
     part: Part,
     context: UpdateContext<unknown>,
   ) {
-    const { key, factory } = directive;
-    const value = factory(key);
-    this._directive = directive;
-    this._binding = resolveBinding(value, part, context);
+    const { key, factory } = value;
+    const selection = factory(key);
+    this._value = value;
+    this._binding = resolveBinding(selection, part, context);
   }
 
   get value(): Choice<TKey, TValue> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): Part {
@@ -102,12 +102,12 @@ export class ChoiceBinding<TKey, TValue>
       ensureDirective(Choice, newValue, this._binding.part);
     }
 
-    const oldValue = this._directive;
+    const oldValue = this._value;
     const { key, factory } = newValue;
-    const value = factory(key);
+    const selection = factory(key);
 
     if (Object.is(oldValue.key, newValue.key)) {
-      this._binding.bind(value, context);
+      this._binding.bind(selection, context);
     } else {
       this._binding.unbind(context);
 
@@ -116,16 +116,16 @@ export class ChoiceBinding<TKey, TValue>
 
       const cachedBinding = this._cachedBindings.get(key);
       if (cachedBinding !== undefined) {
-        cachedBinding.bind(value, context);
+        cachedBinding.bind(selection, context);
         this._binding = cachedBinding;
       } else {
-        const binding = resolveBinding(value, this._binding.part, context);
+        const binding = resolveBinding(selection, this._binding.part, context);
         binding.connect(context);
         this._binding = binding;
       }
     }
 
-    this._directive = newValue;
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {

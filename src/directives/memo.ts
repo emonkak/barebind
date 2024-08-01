@@ -46,17 +46,17 @@ export class Memo<T> implements Directive {
 }
 
 export class MemoBinding<T> implements Binding<Memo<T>> {
-  private _directive: Memo<T>;
+  private _value: Memo<T>;
 
   private readonly _binding: Binding<T>;
 
-  constructor(directive: Memo<T>, part: Part, context: UpdateContext<unknown>) {
-    this._directive = directive;
-    this._binding = resolveBinding(directive.factory(), part, context);
+  constructor(value: Memo<T>, part: Part, context: UpdateContext<unknown>) {
+    this._value = value;
+    this._binding = resolveBinding(value.factory(), part, context);
   }
 
   get value(): Memo<T> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): Part {
@@ -83,21 +83,21 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     DEBUG: {
       ensureDirective(Memo, newValue, this._binding.part);
     }
-    const oldDependencies = this._directive.dependencies;
+    const oldDependencies = this._value.dependencies;
     const newDependencies = newValue.dependencies;
     if (dependenciesAreChanged(oldDependencies, newDependencies)) {
-      this._directive = newValue;
+      this._value = newValue;
       this._binding.bind(newValue.factory(), context);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    this._directive = new Memo(this._directive.factory, undefined);
+    this._value = new Memo(this._value.factory, undefined);
     this._binding.unbind(context);
   }
 
   disconnect(): void {
-    this._directive = new Memo(this._directive.factory, undefined);
+    this._value = new Memo(this._value.factory, undefined);
     this._binding.disconnect();
   }
 }

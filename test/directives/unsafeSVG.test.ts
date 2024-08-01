@@ -11,18 +11,18 @@ import { MockUpdateHost } from '../mocks.js';
 import { UnsafeSVGBinding, unsafeSVG } from '../../src/directives/unsafeSVG.js';
 
 describe('unsafeSVG()', () => {
-  it('should construct a new UnsafeSVG', () => {
+  it('should construct a new UnsafeSVG directive', () => {
     const content = '<circle cx="0" cy="0" r="10" />';
-    const directive = unsafeSVG(content);
+    const value = unsafeSVG(content);
 
-    expect(directive.content).toBe(content);
+    expect(value.content).toBe(content);
   });
 });
 
 describe('UnsafeSVG', () => {
   describe('[directiveTag]()', () => {
     it('should return a new UnsafeSVG', () => {
-      const directive = unsafeSVG('<circle cx="0" cy="0" r="10" />');
+      const value = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -30,16 +30,16 @@ describe('UnsafeSVG', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = unsafeSVG('<circle cx="0" cy="0" r="10" />');
+      const value = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -48,7 +48,7 @@ describe('UnsafeSVG', () => {
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
 
-      expect(() => directive[directiveTag](part, context)).toThrow(
+      expect(() => value[directiveTag](part, context)).toThrow(
         'UnsafeSVG directive must be used in a child node,',
       );
     });
@@ -58,7 +58,7 @@ describe('UnsafeSVG', () => {
 describe('UnsafeSVGBinding', () => {
   describe('.connect()', () => {
     it('should insert the single node parsed from an unsafe SVG content before the part', () => {
-      const directive = unsafeSVG(
+      const value = unsafeSVG(
         '<g><circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text></g>',
       );
       const container = document.createElement('svg');
@@ -66,7 +66,7 @@ describe('UnsafeSVGBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -89,7 +89,7 @@ describe('UnsafeSVGBinding', () => {
     });
 
     it('should insert the multiple nodes parsed from an unsafe SVG content before the part', () => {
-      const directive = unsafeSVG(
+      const value = unsafeSVG(
         '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
       );
       const container = document.createElement('svg');
@@ -97,7 +97,7 @@ describe('UnsafeSVGBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -120,13 +120,13 @@ describe('UnsafeSVGBinding', () => {
     });
 
     it('should not insert any nodese if the unsafe SVG content is empty', () => {
-      const directive = unsafeSVG('');
+      const value = unsafeSVG('');
       const container = document.createElement('svg');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -141,12 +141,12 @@ describe('UnsafeSVGBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const directive = unsafeSVG('<circle cx="0" cy="0" r="10" />');
+      const value = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -225,12 +225,12 @@ describe('UnsafeSVGBinding', () => {
     });
 
     it('should throw an error if the new value is not UnsafeSVG directive', () => {
-      const directive = unsafeSVG('<circle x="0" y="0" r="10" />');
+      const value = unsafeSVG('<circle x="0" y="0" r="10" />');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -243,7 +243,7 @@ describe('UnsafeSVGBinding', () => {
 
   describe('.unbind()', () => {
     it('should remove all nodes parsed from the current unsafe SVG content', () => {
-      const directive = unsafeSVG(
+      const value = unsafeSVG(
         '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
       );
       const container = document.createElement('svg');
@@ -251,7 +251,7 @@ describe('UnsafeSVGBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -269,12 +269,12 @@ describe('UnsafeSVGBinding', () => {
     });
 
     it('should skip an update if the current unsafe SVG content is empty', () => {
-      const directive = unsafeSVG('');
+      const value = unsafeSVG('');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
@@ -291,12 +291,12 @@ describe('UnsafeSVGBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const directive = unsafeSVG('Hello, <strong>World!</strong>');
+      const value = unsafeSVG('Hello, <strong>World!</strong>');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive, part);
+      const binding = new UnsafeSVGBinding(value, part);
 
       binding.disconnect();
     });

@@ -66,7 +66,7 @@ export class TemplateResult<TData, TContext>
 export class TemplateResultBinding<TData, TContext>
   implements Binding<TemplateResult<TData, TContext>, TContext>, Effect
 {
-  private _directive: TemplateResult<TData, TContext>;
+  private _value: TemplateResult<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -76,13 +76,13 @@ export class TemplateResultBinding<TData, TContext>
 
   private _status = Status.Committed;
 
-  constructor(directive: TemplateResult<TData, TContext>, part: ChildNodePart) {
-    this._directive = directive;
+  constructor(value: TemplateResult<TData, TContext>, part: ChildNodePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): TemplateResult<TData, TContext> {
-    return this._directive;
+    return this._value;
   }
 
   get part(): ChildNodePart {
@@ -98,7 +98,7 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   connect(context: UpdateContext<TContext>): void {
-    const { template, data } = this._directive;
+    const { template, data } = this._value;
 
     if (this._pendingFragment === null) {
       this._requestMutation(context.updater, Status.Mounting);
@@ -119,7 +119,7 @@ export class TemplateResultBinding<TData, TContext>
     const { template, data } = newValue;
 
     if (this._pendingFragment !== null) {
-      if (this._directive.template.isSameTemplate(template)) {
+      if (this._value.template.isSameTemplate(template)) {
         // Here we use the same template as before. However the fragment may have
         // been unmounted. If so, we have to remount it.
         if (this._pendingFragment !== this._memoizedFragment) {
@@ -149,7 +149,7 @@ export class TemplateResultBinding<TData, TContext>
       this._pendingFragment.connect(context);
     }
 
-    this._directive = newValue;
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<TContext>): void {

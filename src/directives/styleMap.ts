@@ -57,7 +57,7 @@ export class StyleMap implements Directive {
 }
 
 export class StyleMapBinding implements Binding<StyleMap>, Effect {
-  private _directive: StyleMap;
+  private _value: StyleMap;
 
   private readonly _part: AttributePart;
 
@@ -65,13 +65,13 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   private _dirty = false;
 
-  constructor(directive: StyleMap, part: AttributePart) {
-    this._directive = directive;
+  constructor(value: StyleMap, part: AttributePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): StyleMap {
-    return this._directive;
+    return this._value;
   }
 
   get part(): AttributePart {
@@ -94,17 +94,17 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     DEBUG: {
       ensureDirective(StyleMap, newValue, this._part);
     }
-    const oldValue = this._directive;
+    const oldValue = this._value;
     if (!shallowEqual(newValue.styleDeclaration, oldValue.styleDeclaration)) {
-      this._directive = newValue;
+      this._value = newValue;
       this._requestMutation(context.updater);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { styleDeclaration } = this._directive;
+    const { styleDeclaration } = this._value;
     if (Object.keys(styleDeclaration).length > 0) {
-      this._directive = new StyleMap({});
+      this._value = new StyleMap({});
       this._requestMutation(context.updater);
     }
   }
@@ -117,7 +117,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
       | MathMLElement
       | SVGElement;
     const oldStyleDeclaration = this._memoizedStyleDeclaration;
-    const newStyleDeclaration = this._directive.styleDeclaration;
+    const newStyleDeclaration = this._value.styleDeclaration;
 
     for (const newProperty in newStyleDeclaration) {
       const cssProperty = toCSSProperty(newProperty);

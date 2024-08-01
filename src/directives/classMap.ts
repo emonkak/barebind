@@ -44,19 +44,19 @@ export class ClassMap implements Directive {
 }
 
 export class ClassMapBinding implements Effect, Binding<ClassMap> {
-  private _directive: ClassMap;
+  private _value: ClassMap;
 
   private readonly _part: AttributePart;
 
   private _dirty = false;
 
-  constructor(directive: ClassMap, part: AttributePart) {
-    this._directive = directive;
+  constructor(value: ClassMap, part: AttributePart) {
+    this._value = value;
     this._part = part;
   }
 
   get value(): ClassMap {
-    return this._directive;
+    return this._value;
   }
 
   get part(): AttributePart {
@@ -79,17 +79,17 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     DEBUG: {
       ensureDirective(ClassMap, newValue, this._part);
     }
-    const oldValue = this._directive;
+    const oldValue = this._value;
     if (!shallowEqual(oldValue.classDeclaration, newValue.classDeclaration)) {
-      this._directive = newValue;
+      this._value = newValue;
       this.connect(context);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { classDeclaration } = this._directive;
+    const { classDeclaration } = this._value;
     if (Object.keys(classDeclaration).length > 0) {
-      this._directive = new ClassMap({});
+      this._value = new ClassMap({});
       this._requestMutation(context.updater);
     }
   }
@@ -98,7 +98,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   commit(): void {
     const { classList } = this._part.node;
-    const { classDeclaration } = this._directive;
+    const { classDeclaration } = this._value;
 
     for (const className in classDeclaration) {
       const enabled = classDeclaration[className];

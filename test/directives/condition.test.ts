@@ -18,15 +18,15 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
 describe('condition()', () => {
-  it('should construct a new Condition', () => {
+  it('should construct a new Condition directive', () => {
     const condition = true;
     const trueBranch = () => 'foo';
     const falseBranch = () => 'bar';
-    const directive = conditionDirective(condition, trueBranch, falseBranch);
+    const value = conditionDirective(condition, trueBranch, falseBranch);
 
-    expect(directive.condition).toBe(condition);
-    expect(directive.trueBranch).toBe(trueBranch);
-    expect(directive.falseBranch).toBe(falseBranch);
+    expect(value.condition).toBe(condition);
+    expect(value.trueBranch).toBe(trueBranch);
+    expect(value.falseBranch).toBe(falseBranch);
   });
 });
 
@@ -34,11 +34,11 @@ describe('when()', () => {
   it('should construct a new Condition without false case', () => {
     const condition = true;
     const trueBranch = () => 'foo';
-    const directive = when(condition, trueBranch);
+    const value = when(condition, trueBranch);
 
-    expect(directive.condition).toBe(condition);
-    expect(directive.trueBranch).toBe(trueBranch);
-    expect(directive.falseBranch()).toBe(NoValue.instance);
+    expect(value.condition).toBe(condition);
+    expect(value.trueBranch).toBe(trueBranch);
+    expect(value.falseBranch()).toBe(NoValue.instance);
   });
 });
 
@@ -46,11 +46,11 @@ describe('unless()', () => {
   it('should construct a new Condition without true case', () => {
     const condition = true;
     const falseBranch = () => 'bar';
-    const directive = unless(condition, falseBranch);
+    const value = unless(condition, falseBranch);
 
-    expect(directive.condition).toBe(condition);
-    expect(directive.trueBranch()).toBe(NoValue.instance);
-    expect(directive.falseBranch).toBe(falseBranch);
+    expect(value.condition).toBe(condition);
+    expect(value.trueBranch()).toBe(NoValue.instance);
+    expect(value.falseBranch).toBe(falseBranch);
   });
 });
 
@@ -76,7 +76,7 @@ describe('Condition', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new ConditionBinding from a non-directive value', () => {
-      const directive = conditionDirective(
+      const value = conditionDirective(
         true,
         () => 'foo',
         () => 'bar',
@@ -88,12 +88,12 @@ describe('Condition', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
       const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -107,7 +107,7 @@ describe('Condition', () => {
     it('should return a new ConditionBinding from a directive value', () => {
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
-      const directive = conditionDirective(
+      const value = conditionDirective(
         false,
         () => trueDirective,
         () => falseDirective,
@@ -119,12 +119,12 @@ describe('Condition', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = directive[directiveTag](part, context);
+      const binding = value[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
       const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
 
-      expect(binding.value).toBe(directive);
+      expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -140,7 +140,7 @@ describe('Condition', () => {
 describe('ConditionBinding', () => {
   describe('.connect()', () => {
     it('should delegate to the current binding', () => {
-      const directive = conditionDirective(
+      const value = conditionDirective(
         true,
         () => 'foo',
         () => 'bar',
@@ -152,7 +152,7 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new ConditionBinding(directive, part, context);
+      const binding = new ConditionBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
       binding.connect(context);
@@ -169,7 +169,7 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive = conditionDirective(
+      const value = conditionDirective(
         true,
         () => trueDirective,
         () => falseDirective,
@@ -181,13 +181,13 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new ConditionBinding(directive, part, context);
+      const binding = new ConditionBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive, context);
+      binding.bind(value, context);
       updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(trueDirective);
@@ -202,7 +202,7 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive = conditionDirective(
+      const value = conditionDirective(
         false,
         () => trueDirective,
         () => falseDirective,
@@ -214,13 +214,13 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new ConditionBinding(directive, part, context);
+      const binding = new ConditionBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive, context);
+      binding.bind(value, context);
       updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(falseDirective);
@@ -397,7 +397,7 @@ describe('ConditionBinding', () => {
     });
 
     it('should throw an error if the new value is not Condition directive', () => {
-      const directive = conditionDirective(
+      const value = conditionDirective(
         true,
         () => 'foo',
         () => 'bar',
@@ -409,7 +409,7 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new ConditionBinding(directive, part, context);
+      const binding = new ConditionBinding(value, part, context);
 
       expect(() => {
         binding.bind(null as any, context);
@@ -421,7 +421,7 @@ describe('ConditionBinding', () => {
 
   describe('.unbind()', () => {
     it('should delegate to the current binding', () => {
-      const directive = conditionDirective(
+      const value = conditionDirective(
         true,
         () => 'foo',
         () => 'bar',
@@ -433,7 +433,7 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new ConditionBinding(directive, part, context);
+      const binding = new ConditionBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.unbind(context);
@@ -445,7 +445,7 @@ describe('ConditionBinding', () => {
 
   describe('.disconnect()', () => {
     it('should delegate to the current binding', () => {
-      const directive = conditionDirective(
+      const value = conditionDirective(
         true,
         () => 'foo',
         () => 'bar',
@@ -457,7 +457,7 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = createUpdateContext(host, updater);
-      const binding = new ConditionBinding(directive, part, context);
+      const binding = new ConditionBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 
       binding.disconnect();
