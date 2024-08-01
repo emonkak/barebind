@@ -140,7 +140,7 @@ export class MockTemplateFragment<TData, TContext>
 }
 
 export class MockUpdateHost implements UpdateHost<RenderContext> {
-  beginRenderContext(
+  beginRender(
     hooks: Hook[],
     block: Block<RenderContext>,
     updater: Updater<RenderContext>,
@@ -148,7 +148,7 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
     return new RenderContext(hooks, block, this, updater);
   }
 
-  finishRenderContext(context: RenderContext): void {
+  finishRender(context: RenderContext): void {
     context.finalize();
   }
 

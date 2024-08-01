@@ -251,14 +251,10 @@ export class ComponentBinding<TProps, TData, TContext>
       throw new Error('Component directive must be used with a block.');
     }
 
-    const renderContext = host.beginRenderContext(
-      this._hooks,
-      currentBlock,
-      updater,
-    );
+    const renderContext = host.beginRender(this._hooks, currentBlock, updater);
     const result = type(props, renderContext);
 
-    host.finishRenderContext(renderContext);
+    host.finishRender(renderContext);
 
     return result.valueOf() as TemplateDirective<TData, TContext>;
   }

@@ -38,7 +38,7 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 ];
 
 describe('UpdateController', () => {
-  describe('.beginRenderContext()', () => {
+  describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
       const host = new UpdateController();
       const template = new MockTemplate();
@@ -52,9 +52,9 @@ describe('UpdateController', () => {
       const hooks: Hook[] = [];
       const block = new MockBlock();
       const updater = new SyncUpdater();
-      const context = host.beginRenderContext(hooks, block, updater);
+      const context = host.beginRender(hooks, block, updater);
       const result = component(props, context);
-      host.finishRenderContext(context);
+      host.finishRender(context);
 
       expect(result.data).toEqual(props.data);
       expect(component).toHaveBeenCalledOnce();

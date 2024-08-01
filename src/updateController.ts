@@ -39,7 +39,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
     this._constants = new Map(constants);
   }
 
-  beginRenderContext(
+  beginRender(
     hooks: Hook[],
     block: Block<RenderContext>,
     updater: Updater<RenderContext>,
@@ -47,7 +47,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
     return new RenderContext(hooks, block, this, updater);
   }
 
-  finishRenderContext(context: RenderContext): void {
+  finishRender(context: RenderContext): void {
     context.finalize();
   }
 

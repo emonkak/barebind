@@ -50,12 +50,12 @@ export interface UpdateContext<TContext> {
 }
 
 export interface UpdateHost<TContext> {
-  beginRenderContext(
+  beginRender(
     hooks: Hook[],
     block: Block<TContext>,
     updater: Updater<TContext>,
   ): TContext;
-  finishRenderContext(context: TContext): void;
+  finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: EffectPhase): void;
   getCurrentPriority(): TaskPriority;
   getHTMLTemplate<TData extends readonly any[]>(
