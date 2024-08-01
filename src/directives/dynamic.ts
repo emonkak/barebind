@@ -76,7 +76,7 @@ export class DynamicBinding implements Binding<unknown> {
     const oldDynamic = this._binding.value;
     const newDynamic = newValue.value;
     if (isDirective(newDynamic)) {
-      if (isDirective(oldDynamic) && isSamePrototype(oldDynamic, newDynamic)) {
+      if (isDirective(oldDynamic) && isInstanceOf(oldDynamic, newDynamic)) {
         this._binding.bind(newDynamic, context);
       } else {
         this._binding.unbind(context);
@@ -103,6 +103,9 @@ export class DynamicBinding implements Binding<unknown> {
   }
 }
 
-function isSamePrototype(first: {}, second: {}): boolean {
-  return Object.getPrototypeOf(first) === Object.getPrototypeOf(second);
+function isInstanceOf(base: {}, target: {}): boolean {
+  return Object.prototype.isPrototypeOf.call(
+    Object.getPrototypeOf(base),
+    target,
+  );
 }
