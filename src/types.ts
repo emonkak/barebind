@@ -38,7 +38,7 @@ export interface Block<TContext> {
 // Reexport TaskPriority in Scheduler API.
 export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
 
-export type ComponentFunction<TProps, TData, TContext> = (
+export type ComponentType<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
 ) => Into<TemplateDirective<TData, TContext>>;

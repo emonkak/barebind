@@ -2,7 +2,7 @@ import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
   type ChildNodePart,
-  type ComponentFunction,
+  type ComponentType,
   type Directive,
   type Effect,
   type Hook,
@@ -27,7 +27,7 @@ enum Status {
 }
 
 export function component<TProps, TData, TContext>(
-  component: ComponentFunction<TProps, TData, TContext>,
+  component: ComponentType<TProps, TData, TContext>,
   props: TProps,
 ): Lazy<Component<TProps, TData, TContext>> {
   // Component directive should be used with Lazy directive.
@@ -35,16 +35,16 @@ export function component<TProps, TData, TContext>(
 }
 
 export class Component<TProps, TData, TContext> implements Directive<TContext> {
-  private readonly _type: ComponentFunction<TProps, TData, TContext>;
+  private readonly _type: ComponentType<TProps, TData, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(type: ComponentFunction<TProps, TData, TContext>, props: TProps) {
+  constructor(type: ComponentType<TProps, TData, TContext>, props: TProps) {
     this._type = type;
     this._props = props;
   }
 
-  get type(): ComponentFunction<TProps, TData, TContext> {
+  get type(): ComponentType<TProps, TData, TContext> {
     return this._type;
   }
 
@@ -239,7 +239,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   private _renderComponent(
-    type: ComponentFunction<TProps, TData, TContext>,
+    type: ComponentType<TProps, TData, TContext>,
     props: TProps,
     { host, updater, currentBlock }: UpdateContext<TContext>,
   ): TemplateDirective<TData, TContext> {
