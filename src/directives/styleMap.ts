@@ -151,11 +151,11 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
  * @example
  * toCSSProperty('webkitFontSmoothing'); // => '-webkit-font-smoothing'
  * @example
- * toCSSProperty('paddingComponent'); // => 'padding-component'
+ * toCSSProperty('paddingBlock'); // => 'padding-block'
  * @example
  * // returns the given property as is.
  * toCSSProperty('--my-css-property');
- * toCSSProperty('padding-component');
+ * toCSSProperty('padding-block');
  */
 function toCSSProperty(jsProperty: string): string {
   return jsProperty
