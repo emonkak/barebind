@@ -2,7 +2,10 @@ import type { TaskPriority } from './types.js';
 
 export interface Scheduler {
   getCurrentTime(): number;
-  requestCallback(callback: () => void, options?: RequestCallbackOptions): void;
+  requestCallback(
+    callback: VoidFunction,
+    options?: RequestCallbackOptions,
+  ): void;
   shouldYieldToMain(elapsedTime: number): boolean;
   yieldToMain(options?: YieldToMainOptions): Promise<void>;
 }
@@ -38,7 +41,7 @@ export function getDefaultScheduler(): Scheduler {
     const requestBackgroundTask =
       typeof requestIdleCallback === 'function'
         ? requestIdleCallback
-        : requestAnimationFrame;
+        : (callback: VoidFunction) => setTimeout(callback, 1);
     requestCallback = (callback, options) => {
       switch (options?.priority) {
         case 'user-blocking':

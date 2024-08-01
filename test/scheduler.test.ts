@@ -77,7 +77,7 @@ describe('requestCallback()', () => {
     });
   });
 
-  describe('using queueMicrotask', () => {
+  describe('using queueMicrotask()', () => {
     beforeEach(() => {
       vi.stubGlobal('scheduler', {});
     });
@@ -102,7 +102,7 @@ describe('requestCallback()', () => {
     });
   });
 
-  describe('using setTimeout()', () => {
+  describe('using setTimeout(...)', () => {
     beforeEach(() => {
       vi.stubGlobal('scheduler', {});
     });
@@ -138,7 +138,7 @@ describe('requestCallback()', () => {
     });
   });
 
-  describe('using requestAnimationFrame()', () => {
+  describe('using setTimeout(..., 1)', () => {
     beforeEach(() => {
       vi.stubGlobal('scheduler', {});
       vi.stubGlobal('requestIdleCallback', undefined);
@@ -146,18 +146,18 @@ describe('requestCallback()', () => {
 
     it('should schedule the callback with "background" priority', () => {
       const callback = () => {};
-      const requestAnimationFrameSpy = vi
-        .spyOn(globalThis, 'requestAnimationFrame')
+      const setTimeoutSpy = vi
+        .spyOn(globalThis, 'setTimeout')
         .mockImplementation((callback) => {
-          callback(0);
+          callback();
           return 0 as any;
         });
       const scheduler = getDefaultScheduler();
       scheduler.requestCallback(callback, {
         priority: 'background',
       });
-      expect(requestAnimationFrameSpy).toHaveBeenCalledOnce();
-      expect(requestAnimationFrameSpy).toHaveBeenCalledWith(callback);
+      expect(setTimeoutSpy).toHaveBeenCalledOnce();
+      expect(setTimeoutSpy).toHaveBeenCalledWith(callback, 1);
     });
   });
 
