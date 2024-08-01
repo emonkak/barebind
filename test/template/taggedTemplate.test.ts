@@ -485,7 +485,7 @@ describe('TaggedTemplateFragment', () => {
   });
 
   describe('.unbind()', () => {
-    it('should unbind bindings in the fragment', () => {
+    it('should unbind top-level bindings in the fragment and other bindings are disconnected', () => {
       const [template, values] = html`
         ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
       `;
@@ -537,6 +537,55 @@ describe('TaggedTemplateFragment', () => {
       ]);
       expect(disconnectSpies.map((spy) => spy.mock.calls.length)).toEqual([
         0, 1, 1, 0,
+      ]);
+    });
+
+    it('should only unbind top-level bindings in the fragment', () => {
+      const [template, values] = html`
+        ${'foo'}<div></div><!--${'baz'}-->
+      `;
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext(host, updater);
+      const fragment = template.render(values, context);
+
+      container.appendChild(part.node);
+      fragment.connect(context);
+      updater.flushUpdate(host);
+
+      fragment.mount(part);
+
+      expect(fragment.childNodes.map(formatNode)).toEqual([
+        'foo',
+        '<div></div>',
+        '<!--baz-->',
+      ]);
+      expect(container.innerHTML).toBe('foo<div></div><!--baz--><!---->');
+
+      const unbindSpies = fragment.bindings.map((binding) =>
+        vi.spyOn(binding, 'unbind'),
+      );
+      const disconnectSpies = fragment.bindings.map((binding) =>
+        vi.spyOn(binding, 'disconnect'),
+      );
+
+      fragment.unbind(context);
+      updater.flushUpdate(host);
+
+      expect(fragment.childNodes.map(formatNode)).toEqual([
+        '',
+        '<div></div>',
+        '<!---->',
+      ]);
+      expect(container.innerHTML).toBe('<div></div><!----><!---->');
+      expect(unbindSpies.map((spy) => spy.mock.calls.length)).toEqual([1, 1]);
+      expect(disconnectSpies.map((spy) => spy.mock.calls.length)).toEqual([
+        0, 0,
       ]);
     });
 
