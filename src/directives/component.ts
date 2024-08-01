@@ -1,8 +1,6 @@
-import { BlockBinding } from '../block.js';
 import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
-  type Block,
   type ChildNodePart,
   type ComponentFunction,
   type Directive,
@@ -20,9 +18,10 @@ import {
   nameOf,
   nameTag,
 } from '../types.js';
+import { Lazy } from './lazy.js';
 
 enum Status {
-  Fresh,
+  Committed,
   Mounting,
   Unmounting,
 }
@@ -30,25 +29,23 @@ enum Status {
 export function component<TProps, TData, TContext>(
   component: ComponentFunction<TProps, TData, TContext>,
   props: TProps,
-): Component<TProps, TData, TContext> {
-  return new Component(component, props);
+): Lazy<Component<TProps, TData, TContext>> {
+  // Component directive should be used with Lazy directive.
+  return new Lazy(new Component(component, props));
 }
 
 export class Component<TProps, TData, TContext> implements Directive<TContext> {
-  private readonly _component: ComponentFunction<TProps, TData, TContext>;
+  private readonly _type: ComponentFunction<TProps, TData, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(
-    component: ComponentFunction<TProps, TData, TContext>,
-    props: TProps,
-  ) {
-    this._component = component;
+  constructor(type: ComponentFunction<TProps, TData, TContext>, props: TProps) {
+    this._type = type;
     this._props = props;
   }
 
-  get component(): ComponentFunction<TProps, TData, TContext> {
-    return this._component;
+  get type(): ComponentFunction<TProps, TData, TContext> {
+    return this._type;
   }
 
   get props(): TProps {
@@ -56,22 +53,20 @@ export class Component<TProps, TData, TContext> implements Directive<TContext> {
   }
 
   get [nameTag](): string {
-    return 'Component(' + nameOf(this._component) + ')';
+    return 'Component(' + nameOf(this._type) + ')';
   }
 
   [directiveTag](
     part: Part,
-    context: UpdateContext<TContext>,
-  ): BlockBinding<Component<TProps, TData, TContext>, TContext> {
+    _context: UpdateContext<TContext>,
+  ): ComponentBinding<TProps, TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    // Make the directive a target for incremental updates by returning
-    // a block.
-    return new ComponentBinding(this, part, context.currentBlock).block;
+    return new ComponentBinding(this, part);
   }
 }
 
@@ -81,11 +76,6 @@ export class ComponentBinding<TProps, TData, TContext>
   private _directive: Component<TProps, TData, TContext>;
 
   private readonly _part: ChildNodePart;
-
-  private readonly _block: BlockBinding<
-    Component<TProps, TData, TContext>,
-    TContext
-  >;
 
   private _pendingFragment: TemplateFragment<unknown, TContext> | null = null;
 
@@ -100,16 +90,14 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _hooks: Hook[] = [];
 
-  private _status = Status.Fresh;
+  private _status = Status.Committed;
 
   constructor(
     directive: Component<TProps, TData, TContext>,
     part: ChildNodePart,
-    parent: Block<TContext> | null,
   ) {
     this._directive = directive;
     this._part = part;
-    this._block = new BlockBinding(this, parent);
   }
 
   get value(): Component<TProps, TData, TContext> {
@@ -128,13 +116,9 @@ export class ComponentBinding<TProps, TData, TContext>
     return this._part.node;
   }
 
-  get block(): BlockBinding<Component<TProps, TData, TContext>, TContext> {
-    return this._block;
-  }
-
   connect(context: UpdateContext<TContext>): void {
-    const { component, props } = this._directive;
-    const { template, data } = this._renderComponent(component, props, context);
+    const { type, props } = this._directive;
+    const { template, data } = this._renderComponent(type, props, context);
 
     if (this._pendingFragment === null) {
       // We have to mount the new fragment before the template rendering.
@@ -156,15 +140,15 @@ export class ComponentBinding<TProps, TData, TContext>
       ensureDirective(Component, newValue, this._part);
     }
 
-    const { component, props } = newValue;
+    const { type, props } = newValue;
 
-    if (this._directive.component !== component) {
+    if (this._directive.type !== type) {
       // The component has been changed, so we need to clean hooks before
       // rendering.
       cleanHooks(this._hooks);
     }
 
-    const { template, data } = this._renderComponent(component, props, context);
+    const { template, data } = this._renderComponent(type, props, context);
 
     if (this._pendingFragment !== null) {
       // Safety: If a pending fragment exists, there will always be a memoized
@@ -254,31 +238,41 @@ export class ComponentBinding<TProps, TData, TContext>
         break;
     }
 
-    this._status = Status.Fresh;
+    this._status = Status.Committed;
   }
 
   private _renderComponent(
-    component: ComponentFunction<TProps, TData, TContext>,
+    type: ComponentFunction<TProps, TData, TContext>,
     props: TProps,
-    { host, updater }: UpdateContext<TContext>,
+    { host, updater, currentBlock }: UpdateContext<TContext>,
   ): TemplateDirective<TData, TContext> {
+    if (currentBlock === null) {
+      // Component directive should be used with Lazy directive. Otherwise,
+      // updates will begin from the parent block instead of the component
+      // itself.
+      throw new Error('Component directive must be used with a block.');
+    }
+
     const renderContext = host.beginRenderContext(
       this._hooks,
-      this._block,
+      currentBlock,
       updater,
     );
-    const result = component(props, renderContext);
+    const result = type(props, renderContext);
 
     host.finishRenderContext(renderContext);
 
-    return result;
+    return result.valueOf() as TemplateDirective<TData, TContext>;
   }
 
-  private _requestMutation(updater: Updater<TContext>, status: Status): void {
-    if (this._status === Status.Fresh) {
+  private _requestMutation(
+    updater: Updater<TContext>,
+    newStatus: Status,
+  ): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
-    this._status = status;
+    this._status = newStatus;
   }
 }
 

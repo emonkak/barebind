@@ -3,6 +3,7 @@ export * from './directives/classMap.js';
 export * from './directives/component.js';
 export * from './directives/condition.js';
 export * from './directives/dynamic.js';
+export * from './directives/lazy.js';
 export * from './directives/list.js';
 export * from './directives/memo.js';
 export * from './directives/noValue.js';

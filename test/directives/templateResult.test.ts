@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
-  LazyTemplateResult,
   TemplateResult,
   TemplateResultBinding,
 } from '../../src/directives/templateResult.js';
@@ -48,51 +47,6 @@ describe('TemplateResult', () => {
 
     it('should throw an error if the part is not a ChildNodePart', () => {
       const directive = new TemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
-
-      expect(() => directive[directiveTag](part, context)).toThrow(
-        'TemplateResult directive must be used in a child node,',
-      );
-    });
-  });
-});
-
-describe('LazyTemplateResult', () => {
-  describe('[nameTag]', () => {
-    it('should return a string represented itself', () => {
-      const directive = new LazyTemplateResult(new MockTemplate(), {});
-      expect(directive[nameTag]).toBe('LazyTemplateResult(MockTemplate)');
-    });
-  });
-
-  describe('[directiveTag]()', () => {
-    it('should return an instance of TemplateBinding', () => {
-      const directive = new LazyTemplateResult(new MockTemplate(), {});
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const currentBlock = new MockBlock();
-      const context = createUpdateContext(host, updater, currentBlock);
-
-      const binding = directive[directiveTag](part, context);
-
-      expect(binding.value).toBe(directive);
-      expect(binding.part).toBe(part);
-      expect(binding.startNode).toBe(part.node);
-      expect(binding.endNode).toBe(part.node);
-    });
-
-    it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = new LazyTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),

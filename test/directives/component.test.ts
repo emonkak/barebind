@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  Component,
   ComponentBinding,
-  component as componentDirective,
+  component,
 } from '../../src/directives/component.js';
 import { TemplateResult } from '../../src/directives/templateResult.js';
 import type { RenderContext } from '../../src/renderContext.js';
@@ -20,20 +21,20 @@ import {
 } from '../mocks.js';
 
 describe('component()', () => {
-  it('should construct a new Component', () => {
-    const component = () => new TemplateResult(new MockTemplate(), {});
+  it('should construct a new Component wrapped in Lazy', () => {
+    const type = () => new TemplateResult(new MockTemplate(), {});
     const props = {};
-    const directive = componentDirective(component, props);
+    const directive = component(type, props);
 
-    expect(directive.component).toBe(component);
-    expect(directive.props).toBe(props);
+    expect(directive.value.type).toBe(type);
+    expect(directive.value.props).toBe(props);
   });
 });
 
 describe('Component', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      const directive = componentDirective(function foo() {
+      const directive = new Component(function foo() {
         return new TemplateResult(new MockTemplate(), {});
       }, {});
       expect(directive[nameTag]).toBe('Component(foo)');
@@ -42,7 +43,7 @@ describe('Component', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new BlockBinding', () => {
-      const directive = componentDirective(
+      const directive = new Component(
         () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
@@ -52,26 +53,17 @@ describe('Component', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const parent = new MockBlock();
-      const context = createUpdateContext(host, updater, parent);
+      const context = createUpdateContext(host, updater);
       const binding = directive[directiveTag](part, context);
 
       expect(binding.value).toBe(directive);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.parent).toBe(parent);
-      expect(binding.priority).toBe('user-blocking');
-      expect(binding.binding).toBeInstanceOf(ComponentBinding);
-      expect(
-        (binding.binding as ComponentBinding<unknown, unknown, unknown>).block,
-      ).toBe(binding);
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const directive = componentDirective(
+      const directive = new Component(
         () => new TemplateResult(new MockTemplate(), {}),
         {},
       );
@@ -98,7 +90,7 @@ describe('ComponentBinding', () => {
       const fragment = new MockTemplateFragment(data, [
         document.createComment(''),
       ]);
-      const directive = componentDirective(
+      const directive = new Component(
         () => new TemplateResult(template, data),
         {},
       );
@@ -106,10 +98,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part, null);
+      const binding = new ComponentBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -129,6 +122,58 @@ describe('ComponentBinding', () => {
       expect(binding.startNode).toBe(fragment.startNode);
       expect(binding.endNode).toBe(part.node);
     });
+
+    it('should update the block if an update is requested', () => {
+      const directive = new Component<{}, unknown, RenderContext>(
+        (_props, context) => {
+          context.forceUpdate('user-blocking');
+          return new TemplateResult(new MockTemplate(), {});
+        },
+        {},
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new ComponentBinding(directive, part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const context = createUpdateContext<RenderContext>(host, updater, block);
+
+      const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+      binding.connect(context);
+
+      expect(requstUpdateSpy).toHaveBeenCalledOnce();
+      expect(requstUpdateSpy).toHaveBeenCalledWith(
+        'user-blocking',
+        host,
+        updater,
+      );
+    });
+
+    it('should throw an error on render if the current block not exists', () => {
+      const directive = new Component<{}, unknown, RenderContext>(
+        (_props, context) => {
+          context.forceUpdate('user-blocking');
+          return new TemplateResult(new MockTemplate(), {});
+        },
+        {},
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new ComponentBinding(directive, part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = createUpdateContext<RenderContext>(host, updater);
+
+      expect(() => binding.connect(context)).toThrow(
+        'Component directive must be used with a block.',
+      );
+    });
   });
 
   describe('.bind()', () => {
@@ -139,11 +184,11 @@ describe('ComponentBinding', () => {
       const fragment = new MockTemplateFragment(data1, [
         document.createComment(''),
       ]);
-      const directive1 = componentDirective(
+      const directive1 = new Component(
         () => new TemplateResult(template, data1),
         {},
       );
-      const directive2 = componentDirective(
+      const directive2 = new Component(
         () => new TemplateResult(template, data2),
         {},
       );
@@ -151,10 +196,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive1, part, null);
+      const binding = new ComponentBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -197,15 +243,15 @@ describe('ComponentBinding', () => {
       const fragment3 = new MockTemplateFragment(data3, [
         document.createComment(''),
       ]);
-      const directive1 = componentDirective(
+      const directive1 = new Component(
         () => new TemplateResult(template1, data1),
         {},
       );
-      const directive2 = componentDirective(
+      const directive2 = new Component(
         () => new TemplateResult(template2, data2),
         {},
       );
-      const directive3 = componentDirective(
+      const directive3 = new Component(
         () => new TemplateResult(template3, data3),
         {},
       );
@@ -213,10 +259,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive1, part, null);
+      const binding = new ComponentBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const render1Spy = vi
         .spyOn(template1, 'render')
@@ -285,11 +332,11 @@ describe('ComponentBinding', () => {
       const fragment = new MockTemplateFragment(data1, [
         document.createComment(''),
       ]);
-      const directive1 = componentDirective(
+      const directive1 = new Component(
         () => new TemplateResult(template, data1),
         {},
       );
-      const directive2 = componentDirective(
+      const directive2 = new Component(
         () => new TemplateResult(template, data2),
         {},
       );
@@ -297,10 +344,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive1, part, null);
+      const binding = new ComponentBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -334,11 +382,11 @@ describe('ComponentBinding', () => {
       const fragment2 = new MockTemplateFragment(data2, [
         document.createComment(''),
       ]);
-      const directive1 = componentDirective(
+      const directive1 = new Component(
         () => new TemplateResult(template1, data1),
         {},
       );
-      const directive2 = componentDirective(
+      const directive2 = new Component(
         () => new TemplateResult(template2, data2),
         {},
       );
@@ -346,10 +394,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive1, part, null);
+      const binding = new ComponentBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const render1Spy = vi
         .spyOn(template1, 'render')
@@ -399,7 +448,7 @@ describe('ComponentBinding', () => {
       const fragment = new MockTemplateFragment(data, [
         document.createComment(''),
       ]);
-      const directive = componentDirective(
+      const directive = new Component(
         () => new TemplateResult(template, data),
         {},
       );
@@ -407,10 +456,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part, null);
+      const binding = new ComponentBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -457,11 +507,11 @@ describe('ComponentBinding', () => {
       const fragment2 = new MockTemplateFragment(data2, [
         document.createComment(''),
       ]);
-      const directive1 = componentDirective(
+      const directive1 = new Component(
         () => new TemplateResult(template1, data1),
         {},
       );
-      const directive2 = componentDirective(
+      const directive2 = new Component(
         () => new TemplateResult(template2, data2),
         {},
       );
@@ -469,10 +519,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive1, part, null);
+      const binding = new ComponentBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const render1Spy = vi
         .spyOn(template1, 'render')
@@ -525,14 +576,14 @@ describe('ComponentBinding', () => {
 
     it('should clean hooks if the component has been changed', () => {
       const cleanup = vi.fn();
-      const directive1 = componentDirective<{}, unknown, RenderContext>(
+      const directive1 = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
           context.useEffect(() => cleanup);
           return new TemplateResult(new MockTemplate(), {});
         },
         {},
       );
-      const directive2 = componentDirective<{}, unknown, RenderContext>(
+      const directive2 = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
           context.useEffect(() => cleanup);
           return new TemplateResult(new MockTemplate(), {});
@@ -543,10 +594,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive1, part, null);
+      const binding = new ComponentBinding(directive1, part);
       const host = new MockUpdateHost();
-      const updater = new SyncUpdater<RenderContext>();
-      const context = createUpdateContext(host, updater, binding.block);
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const context = createUpdateContext<RenderContext>(host, updater, block);
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -563,7 +615,7 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const fragment = new MockTemplateFragment(data);
-      const directive = componentDirective(
+      const directive = new Component(
         () => new TemplateResult(template, data),
         {},
       );
@@ -571,10 +623,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part, null);
+      const binding = new ComponentBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
       const connectSpy = vi.spyOn(fragment, 'connect');
@@ -605,7 +658,7 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const fragment = new MockTemplateFragment(data);
-      const directive = componentDirective(
+      const directive = new Component(
         () => new TemplateResult(template, data),
         {},
       );
@@ -613,10 +666,11 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(directive, part, null);
+      const binding = new ComponentBinding(directive, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater, binding.block);
+      const block = new MockBlock();
+      const context = createUpdateContext(host, updater, block);
 
       const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
       const disconnectSpy = vi.spyOn(fragment, 'disconnect');

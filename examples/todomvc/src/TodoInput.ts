@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { Into, RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { ref } from '@emonkak/ebit/directives.js';
 
 export interface TodoInputProps {
@@ -18,7 +18,7 @@ export function TodoInput(
     placeholder,
   }: TodoInputProps,
   context: RenderContext,
-): TemplateDirective {
+): Into<TemplateDirective> {
   const inputRef = context.useRef<HTMLInputElement | null>(null);
 
   context.useEffect(() => {

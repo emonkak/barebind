@@ -1,8 +1,6 @@
 import { dependenciesAreChanged } from './compare.js';
-import {
-  LazyTemplateResult,
-  TemplateResult,
-} from './directives/templateResult.js';
+import { Lazy } from './directives/lazy.js';
+import { TemplateResult } from './directives/templateResult.js';
 import {
   type ElementData,
   ElementTemplate,
@@ -112,9 +110,9 @@ export class RenderContext {
   html<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): TemplateDirective<TData, RenderContext> {
+  ): Lazy<TemplateDirective<TData, RenderContext>> {
     const template = this._host.getHTMLTemplate(tokens, data);
-    return new LazyTemplateResult(template, data);
+    return new Lazy(new TemplateResult(template, data));
   }
 
   isFirstRender(): boolean {
@@ -139,9 +137,9 @@ export class RenderContext {
   svg<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): TemplateDirective<TData, RenderContext> {
+  ): Lazy<TemplateDirective<TData, RenderContext>> {
     const template = this._host.getSVGTemplate(tokens, data);
-    return new LazyTemplateResult(template, data);
+    return new Lazy(new TemplateResult(template, data));
   }
 
   text<T>(value: T): TemplateDirective<T, RenderContext> {

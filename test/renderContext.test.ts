@@ -146,8 +146,8 @@ describe('RenderContext', () => {
       const directive = context.html`
         <div class=${0}>Hello, ${1}!</div>
       `;
-      expect(directive.template).toBeInstanceOf(MockTemplate);
-      expect(directive.data).toStrictEqual([0, 1]);
+      expect(directive.value.template).toBeInstanceOf(MockTemplate);
+      expect(directive.value.data).toStrictEqual([0, 1]);
       expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -226,8 +226,8 @@ describe('RenderContext', () => {
       const directive = context.svg`
         <text x=${0} y=${1}>Hello, ${2}!</text>
       `;
-      expect(directive.template).toBeInstanceOf(MockTemplate);
-      expect(directive.data).toStrictEqual([0, 1, 2]);
+      expect(directive.value.template).toBeInstanceOf(MockTemplate);
+      expect(directive.value.data).toStrictEqual([0, 1, 2]);
       expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });

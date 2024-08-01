@@ -1,4 +1,3 @@
-import { BlockBinding } from '../block.js';
 import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
@@ -17,12 +16,12 @@ import {
 } from '../types.js';
 
 enum Status {
-  Fresh,
+  Committed,
   Mounting,
   Unmounting,
 }
 
-abstract class AbstractTemplateResult<TData, TContext>
+export class TemplateResult<TData, TContext>
   implements TemplateDirective<TData, TContext>
 {
   protected readonly _template: Template<TData, TContext>;
@@ -42,22 +41,12 @@ abstract class AbstractTemplateResult<TData, TContext>
     return this._data;
   }
 
-  abstract [directiveTag](
-    part: Part,
-    _context: UpdateContext<TContext>,
-  ): Binding<TemplateDirective<TData, TContext>, TContext>;
+  get [nameTag](): string {
+    return 'TemplateResult(' + nameOf(this._template) + ')';
+  }
 
   valueOf(): this {
     return this;
-  }
-}
-
-export class TemplateResult<TData, TContext> extends AbstractTemplateResult<
-  TData,
-  TContext
-> {
-  get [nameTag](): string {
-    return 'TemplateResult(' + nameOf(this._template) + ')';
   }
 
   [directiveTag](
@@ -74,36 +63,10 @@ export class TemplateResult<TData, TContext> extends AbstractTemplateResult<
   }
 }
 
-export class LazyTemplateResult<TData, TContext> extends AbstractTemplateResult<
-  TData,
-  TContext
-> {
-  get [nameTag](): string {
-    return 'LazyTemplateResult(' + nameOf(this._template) + ')';
-  }
-
-  [directiveTag](
-    part: Part,
-    context: UpdateContext<TContext>,
-  ): BlockBinding<TemplateDirective<TData, TContext>, TContext> {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'LazyTemplateResult directive must be used in a child node, but it is used here:\n' +
-          reportPart(part),
-      );
-    }
-    // Make the directive a target for incremental updates.
-    return new BlockBinding(
-      new TemplateResultBinding(this, part),
-      context.currentBlock,
-    );
-  }
-}
-
 export class TemplateResultBinding<TData, TContext>
-  implements Binding<AbstractTemplateResult<TData, TContext>, TContext>, Effect
+  implements Binding<TemplateResult<TData, TContext>, TContext>, Effect
 {
-  private _directive: AbstractTemplateResult<TData, TContext>;
+  private _directive: TemplateResult<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -111,17 +74,14 @@ export class TemplateResultBinding<TData, TContext>
 
   private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
 
-  private _status = Status.Fresh;
+  private _status = Status.Committed;
 
-  constructor(
-    directive: AbstractTemplateResult<TData, TContext>,
-    part: ChildNodePart,
-  ) {
+  constructor(directive: TemplateResult<TData, TContext>, part: ChildNodePart) {
     this._directive = directive;
     this._part = part;
   }
 
-  get value(): AbstractTemplateResult<TData, TContext> {
+  get value(): TemplateResult<TData, TContext> {
     return this._directive;
   }
 
@@ -149,11 +109,11 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   bind(
-    newValue: AbstractTemplateResult<TData, TContext>,
+    newValue: TemplateResult<TData, TContext>,
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
-      ensureDirective(AbstractTemplateResult, newValue, this._part);
+      ensureDirective(TemplateResult, newValue, this._part);
     }
 
     const { template, data } = newValue;
@@ -216,13 +176,16 @@ export class TemplateResultBinding<TData, TContext>
         break;
     }
 
-    this._status = Status.Fresh;
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<TContext>, status: Status): void {
-    if (this._status === Status.Fresh) {
+  private _requestMutation(
+    updater: Updater<TContext>,
+    newStatus: Status,
+  ): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
-    this._status = status;
+    this._status = newStatus;
   }
 }

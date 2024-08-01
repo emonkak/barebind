@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { Into, RenderContext, TemplateDirective } from '@emonkak/ebit';
 import {
   type Atom,
   classMap,
@@ -16,7 +16,7 @@ export interface TodoItemProps {
 export function TodoItem(
   { todo$ }: TodoItemProps,
   context: RenderContext,
-): TemplateDirective {
+): Into<TemplateDirective> {
   const [isEditing, setIsEditing] = context.useState(false);
   const state = context.use(AppState);
   const todo = context.use(todo$);

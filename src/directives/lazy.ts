@@ -1,38 +1,78 @@
+import { resolveBinding } from '../binding.js';
 import {
   type Binding,
   type Block,
+  type Directive,
   type Part,
   type UpdateContext,
   type UpdateHost,
   type Updater,
   createUpdateContext,
-} from './types.js';
+  directiveTag,
+  nameOf,
+  nameTag,
+} from '../types.js';
 
 const FLAG_NONE = 0;
 const FLAG_CONNECTED = 1 << 0;
 const FLAG_UPDATING = 1 << 1;
 
-export class BlockBinding<TValue, TContext>
-  implements Binding<TValue, TContext>, Block<TContext>
+export function lazy<TValue>(value: TValue): Lazy<TValue> {
+  return new Lazy(value);
+}
+
+export class Lazy<TValue> implements Directive {
+  private _value: TValue;
+
+  constructor(value: TValue) {
+    this._value = value;
+  }
+
+  get value(): TValue {
+    return this._value;
+  }
+
+  get [nameTag](): string {
+    return 'Lazy(' + nameOf(this._value) + ')';
+  }
+
+  [directiveTag](
+    part: Part,
+    context: UpdateContext<unknown>,
+  ): LazyBinding<TValue> {
+    return new LazyBinding(this, part, context);
+  }
+
+  valueOf(): TValue {
+    return this._value;
+  }
+}
+
+export class LazyBinding<TValue>
+  implements Binding<Lazy<TValue>>, Block<unknown>
 {
+  protected _value: Lazy<TValue>;
+
   protected readonly _binding: Binding<TValue>;
 
-  protected readonly _parent: Block<TContext> | null;
-
-  protected _pendingValue: TValue;
+  protected readonly _parent: Block<unknown> | null;
 
   private _priority: TaskPriority = 'user-blocking';
 
   private _flags = FLAG_NONE;
 
-  constructor(binding: Binding<TValue>, parent: Block<TContext> | null) {
-    this._binding = binding;
-    this._parent = parent;
-    this._pendingValue = binding.value;
+  constructor(
+    value: Lazy<TValue>,
+    part: Part,
+    context: UpdateContext<unknown>,
+  ) {
+    this._value = value;
+    this._binding = resolveBinding(value.value, part, context);
+    this._parent = context.currentBlock;
   }
 
-  get value(): TValue {
-    return this._pendingValue;
+  get value(): Lazy<TValue> {
+    return this._value;
   }
 
   get part(): Part {
@@ -47,7 +87,7 @@ export class BlockBinding<TValue, TContext>
     return this._binding.endNode;
   }
 
-  get parent(): Block<TContext> | null {
+  get parent(): Block<unknown> | null {
     return this._parent;
   }
 
@@ -63,7 +103,7 @@ export class BlockBinding<TValue, TContext>
     return !!(this._flags & FLAG_UPDATING);
   }
 
-  get binding(): Binding<TValue, TContext> {
+  get binding(): Binding<TValue> {
     return this._binding;
   }
 
@@ -71,7 +111,7 @@ export class BlockBinding<TValue, TContext>
     if (!(this._flags & FLAG_UPDATING)) {
       return false;
     }
-    let current: Block<TContext> | null = this;
+    let current: Block<unknown> | null = this;
     while ((current = current.parent) !== null) {
       if (current.isUpdating) {
         return false;
@@ -86,8 +126,8 @@ export class BlockBinding<TValue, TContext>
 
   requestUpdate(
     priority: TaskPriority,
-    host: UpdateHost<TContext>,
-    updater: Updater<TContext>,
+    host: UpdateHost<unknown>,
+    updater: Updater<unknown>,
   ): void {
     if (
       this._flags & FLAG_CONNECTED &&
@@ -101,30 +141,33 @@ export class BlockBinding<TValue, TContext>
     }
   }
 
-  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void {
-    const context = createUpdateContext(host, updater, this);
+  update(host: UpdateHost<unknown>, updater: Updater<unknown>): void {
+    const internalContext = createUpdateContext(host, updater, this);
     if (this._flags & FLAG_CONNECTED) {
-      this._binding.bind(this._pendingValue, context);
+      this._binding.bind(this._value.value, internalContext);
     } else {
-      this._binding.connect(context);
+      this._binding.connect(internalContext);
     }
     this._flags |= FLAG_CONNECTED;
     this._flags &= ~FLAG_UPDATING;
   }
 
-  connect(context: UpdateContext<TContext>): void {
+  connect(context: UpdateContext<unknown>): void {
     this._forceUpdate(context.updater);
   }
 
-  bind(newValue: TValue, context: UpdateContext<TContext>): void {
+  bind(newValue: Lazy<TValue>, context: UpdateContext<unknown>): void {
     this._forceUpdate(context.updater);
-    this._pendingValue = newValue;
+    this._value = newValue;
   }
 
-  unbind(context: UpdateContext<TContext>): void {
-    this._binding.unbind(
-      createUpdateContext(context.host, context.updater, this),
+  unbind(context: UpdateContext<unknown>): void {
+    const internalContext = createUpdateContext(
+      context.host,
+      context.updater,
+      this,
     );
+    this._binding.unbind(internalContext);
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
@@ -133,7 +176,7 @@ export class BlockBinding<TValue, TContext>
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
-  private _forceUpdate(updater: Updater<TContext>): void {
+  private _forceUpdate(updater: Updater<unknown>): void {
     const priority = this._parent?.priority ?? 'user-blocking';
     if (
       !(this._flags & FLAG_UPDATING) ||

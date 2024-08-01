@@ -41,7 +41,7 @@ export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
 export type ComponentFunction<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
-) => TemplateDirective<TData, TContext>;
+) => Into<TemplateDirective<TData, TContext>>;
 
 export interface UpdateContext<TContext> {
   readonly host: UpdateHost<TContext>;
@@ -105,6 +105,8 @@ export interface TemplateFragment<TData, TContext = unknown> {
   unmount(part: ChildNodePart): void;
   disconnect(): void;
 }
+
+export type Into<T> = T | { valueOf(): T };
 
 export interface Effect {
   commit(phase: EffectPhase): void;
