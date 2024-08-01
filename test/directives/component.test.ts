@@ -642,6 +642,34 @@ describe('ComponentBinding', () => {
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
+
+    it('should clean hooks', () => {
+      const cleanup = vi.fn();
+      const directive = new Component<{}, unknown, RenderContext>(
+        (_props, context) => {
+          context.useEffect(() => cleanup);
+          return new TemplateResult(new MockTemplate(), {});
+        },
+        {},
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new ComponentBinding(directive, part);
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const context = createUpdateContext<RenderContext>(host, updater, block);
+
+      binding.connect(context);
+      updater.flushUpdate(host);
+
+      binding.unbind(context);
+      updater.flushUpdate(host);
+
+      expect(cleanup).toHaveBeenCalledOnce();
+    });
   });
 
   describe('.disconnect()', () => {

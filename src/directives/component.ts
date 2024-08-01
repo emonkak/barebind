@@ -88,7 +88,7 @@ export class ComponentBinding<TProps, TData, TContext>
     TemplateFragment<unknown, TContext>
   > | null = null;
 
-  private readonly _hooks: Hook[] = [];
+  private _hooks: Hook[] = [];
 
   private _status = Status.Committed;
 
@@ -142,7 +142,7 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._value.type !== type) {
       // The component has been changed, so we need to clean hooks before
       // rendering.
-      cleanHooks(this._hooks);
+      this._requestCleanHooks(context.updater);
     }
 
     const { template, data } = this._renderComponent(type, props, context);
@@ -211,7 +211,7 @@ export class ComponentBinding<TProps, TData, TContext>
   unbind(context: UpdateContext<TContext>): void {
     this._pendingFragment?.unbind(context);
 
-    cleanHooks(this._hooks);
+    this._requestCleanHooks(context.updater);
 
     this._requestMutation(context.updater, Status.Unmounting);
   }
@@ -220,6 +220,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._pendingFragment?.disconnect();
 
     cleanHooks(this._hooks);
+    this._hooks = [];
   }
 
   commit(): void {
@@ -262,6 +263,13 @@ export class ComponentBinding<TProps, TData, TContext>
     return result.valueOf() as TemplateDirective<TData, TContext>;
   }
 
+  private _requestCleanHooks(updater: Updater<TContext>): void {
+    if (this._hooks.length > 0) {
+      updater.enqueueLayoutEffect(new CleanHooks(this._hooks));
+      this._hooks = [];
+    }
+  }
+
   private _requestMutation(
     updater: Updater<TContext>,
     newStatus: Status,
@@ -280,5 +288,16 @@ function cleanHooks(hooks: Hook[]): void {
       hook.cleanup?.();
     }
   }
-  hooks.length = 0;
+}
+
+class CleanHooks implements Effect {
+  private _hooks: Hook[];
+
+  constructor(hooks: Hook[]) {
+    this._hooks = hooks;
+  }
+
+  commit() {
+    cleanHooks(this._hooks);
+  }
 }
