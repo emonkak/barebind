@@ -13,7 +13,7 @@ import {
 } from '../types.js';
 
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
-const UPPERCASE_LETTERS_PATTERN = /[A-Z]/g;
+const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export type StyleDeclaration = {
   [P in JSStyleProperties]?: string;
@@ -160,5 +160,5 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 function toCSSProperty(jsProperty: string): string {
   return jsProperty
     .replace(VENDOR_PREFIX_PATTERN, '-$1')
-    .replace(UPPERCASE_LETTERS_PATTERN, (c) => '-' + c.toLowerCase());
+    .replace(UPPERCASE_LETTER_PATTERN, (c) => '-' + c.toLowerCase());
 }
