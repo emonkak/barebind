@@ -2,12 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
@@ -38,7 +33,7 @@ describe('Dynamic', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -62,7 +57,7 @@ describe('Dynamic', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -90,7 +85,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -109,7 +104,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(dynamic('foo'), part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -134,7 +129,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(
         dynamic(new TextDirective()),
         part,
@@ -162,7 +157,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(
         dynamic(new TextDirective()),
         part,
@@ -190,7 +185,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(dynamic('foo'), part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -228,7 +223,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -248,7 +243,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new DynamicBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

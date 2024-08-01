@@ -6,12 +6,7 @@ import {
 } from '../../src/directives/component.js';
 import { TemplateResult } from '../../src/directives/templateResult.js';
 import type { RenderContext } from '../../src/renderContext.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -53,7 +48,7 @@ describe('Component', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -73,7 +68,7 @@ describe('Component', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'Component directive must be used in a child node,',
@@ -99,7 +94,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -136,7 +131,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext<RenderContext>(host, updater, block);
+      const context = { host, updater, block };
 
       const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
@@ -165,7 +160,7 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext<RenderContext>(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => binding.connect(context)).toThrow(
         'Component directive must be used with a block.',
@@ -197,7 +192,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -260,7 +255,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const render1Spy = vi
         .spyOn(template1, 'render')
@@ -345,7 +340,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -395,7 +390,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const render1Spy = vi
         .spyOn(template1, 'render')
@@ -454,7 +449,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const renderSpy = vi
         .spyOn(template, 'render')
@@ -517,7 +512,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const render1Spy = vi
         .spyOn(template1, 'render')
@@ -592,7 +587,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext<RenderContext>(host, updater, block);
+      const context = { host, updater, block };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -618,7 +613,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
       const connectSpy = vi.spyOn(fragment, 'connect');
@@ -660,7 +655,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext<RenderContext>(host, updater, block);
+      const context = { host, updater, block };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -686,7 +681,7 @@ describe('ComponentBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = createUpdateContext(host, updater, block);
+      const context = { host, updater, block };
 
       const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
       const disconnectSpy = vi.spyOn(fragment, 'disconnect');

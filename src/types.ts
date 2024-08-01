@@ -46,7 +46,7 @@ export type ComponentType<TProps, TData, TContext> = (
 export interface UpdateContext<TContext> {
   readonly host: UpdateHost<TContext>;
   readonly updater: Updater<TContext>;
-  readonly currentBlock: Block<TContext> | null;
+  readonly block: Block<TContext> | null;
 }
 
 export interface UpdateHost<TContext> {
@@ -213,18 +213,6 @@ export type RefCallback<T> = (value: T) => void;
 
 export interface RefObject<T> {
   current: T;
-}
-
-export function createUpdateContext<TContext>(
-  host: UpdateHost<TContext>,
-  updater: Updater<TContext>,
-  currentBlock: Block<TContext> | null = null,
-): UpdateContext<TContext> {
-  return {
-    host,
-    updater,
-    currentBlock,
-  };
 }
 
 export function isDirective(value: unknown): value is Directive<unknown> {

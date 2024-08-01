@@ -242,16 +242,16 @@ export class ComponentBinding<TProps, TData, TContext>
   private _renderComponent(
     type: ComponentType<TProps, TData, TContext>,
     props: TProps,
-    { host, updater, currentBlock }: UpdateContext<TContext>,
+    { host, updater, block }: UpdateContext<TContext>,
   ): TemplateDirective<TData, TContext> {
-    if (currentBlock === null) {
+    if (block === null) {
       // Component directive should be used with Lazy directive. Otherwise,
       // updates will begin from the parent block instead of the component
       // itself.
       throw new Error('Component directive must be used with a block.');
     }
 
-    const renderContext = host.beginRender(this._hooks, currentBlock, updater);
+    const renderContext = host.beginRender(this._hooks, block, updater);
     const result = type(props, renderContext);
 
     host.finishRender(renderContext);

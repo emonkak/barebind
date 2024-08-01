@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RefBinding, ref } from '../../src/directives/ref.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-} from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
@@ -29,7 +25,7 @@ describe('Ref', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -47,7 +43,7 @@ describe('Ref', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'Ref directive must be used in a "ref" attribute,',
@@ -69,7 +65,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -89,7 +85,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -108,7 +104,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueLayoutEffectSpy = vi.spyOn(updater, 'enqueueLayoutEffect');
 
       binding.connect(context);
@@ -133,7 +129,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -161,7 +157,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -186,7 +182,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -210,7 +206,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -235,7 +231,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -257,7 +253,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => {
         binding.bind(null as any, context);
@@ -279,7 +275,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -302,7 +298,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -323,7 +319,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.unbind(context);
 

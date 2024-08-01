@@ -6,11 +6,7 @@ import {
   inPlaceList,
   orderedList,
 } from '../../src/directives/list.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-} from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
@@ -53,7 +49,7 @@ describe('OrderedList', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -75,7 +71,7 @@ describe('OrderedList', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'OrderedList directive must be used in a child node,',
@@ -99,7 +95,7 @@ describe('OrderedListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new OrderedListBinding(value, part);
 
       container.appendChild(part.node);
@@ -129,7 +125,7 @@ describe('OrderedListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new OrderedListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -164,7 +160,7 @@ describe('OrderedListBinding', () => {
           } as const;
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
-          const context = createUpdateContext(host, updater);
+          const context = { host, updater, block: null };
           const binding = new OrderedListBinding(directive1, part);
 
           container.appendChild(part.node);
@@ -213,7 +209,7 @@ describe('OrderedListBinding', () => {
             } as const;
             const host = new MockUpdateHost();
             const updater = new SyncUpdater();
-            const context = createUpdateContext(host, updater);
+            const context = { host, updater, block: null };
             const binding = new OrderedListBinding(directive1, part);
 
             container.appendChild(part.node);
@@ -258,7 +254,7 @@ describe('OrderedListBinding', () => {
           } as const;
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
-          const context = createUpdateContext(host, updater);
+          const context = { host, updater, block: null };
           const binding = new OrderedListBinding(directive1, part);
 
           container.appendChild(part.node);
@@ -295,7 +291,7 @@ describe('OrderedListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new OrderedListBinding(value, part);
 
       container.appendChild(part.node);
@@ -321,7 +317,7 @@ describe('OrderedListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new OrderedListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -347,7 +343,7 @@ describe('OrderedListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new OrderedListBinding(value, part);
 
       container.appendChild(part.node);
@@ -381,7 +377,7 @@ describe('InPlaceList', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -399,7 +395,7 @@ describe('InPlaceList', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'InPlaceList directive must be used in a child node,',
@@ -422,7 +418,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(value, part);
 
       container.appendChild(part.node);
@@ -451,7 +447,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -480,7 +476,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(directive1, part);
 
       container.appendChild(part.node);
@@ -514,7 +510,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(directive1, part);
 
       container.appendChild(part.node);
@@ -542,7 +538,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(directive1, part);
 
       binding.connect(context);
@@ -565,7 +561,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(value, part);
 
       container.appendChild(part.node);
@@ -587,7 +583,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -612,7 +608,7 @@ describe('InPlaceListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new InPlaceListBinding(value, part);
 
       container.appendChild(part.node);

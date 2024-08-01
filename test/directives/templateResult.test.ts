@@ -3,12 +3,7 @@ import {
   TemplateResult,
   TemplateResultBinding,
 } from '../../src/directives/templateResult.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -35,8 +30,8 @@ describe('TemplateResult', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const currentBlock = new MockBlock();
-      const context = createUpdateContext(host, updater, currentBlock);
+      const block = new MockBlock();
+      const context = { host, updater, block };
 
       const binding = value[directiveTag](part, context);
 
@@ -54,7 +49,7 @@ describe('TemplateResult', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'TemplateResult directive must be used in a child node,',
@@ -77,7 +72,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -117,7 +112,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const renderSpy = vi
         .spyOn(directive1.template, 'render')
@@ -160,7 +155,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const render1Spy = vi
         .spyOn(directive1.template, 'render')
@@ -218,7 +213,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const renderSpy = vi
         .spyOn(directive2.template, 'render')
@@ -257,7 +252,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const render1Spy = vi
         .spyOn(directive1.template, 'render')
@@ -308,7 +303,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const startNode = document.createComment('');
 
       const renderSpy = vi
@@ -361,7 +356,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -399,7 +394,7 @@ describe('TemplateResultBinding', () => {
       const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new MockTemplateFragment(value.data);
 
       const renderSpy = vi

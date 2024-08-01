@@ -5,7 +5,7 @@ import {
   ElementTemplate,
   ElementTemplateFragment,
 } from '../../src/template/elementTemplate.js';
-import { PartType, createUpdateContext } from '../../src/types.js';
+import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
@@ -14,7 +14,7 @@ describe('ElementTemplate', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const elementValue = { class: 'foo' };
       const childNodeValue = new TextDirective('bar');
       const fragment = new ElementTemplate('div').render(
@@ -70,7 +70,7 @@ describe('ElementTemplateFragment', () => {
     it('should bind values to element and child binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new ElementTemplateFragment(
         'div',
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
@@ -107,7 +107,7 @@ describe('ElementTemplateFragment', () => {
     it('should mount the element before the part node', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new ElementTemplateFragment(
         'div',
         {
@@ -144,7 +144,7 @@ describe('ElementTemplateFragment', () => {
     it('should not remove the node if a different part is given', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new ElementTemplateFragment(
         'div',
         {
@@ -186,7 +186,7 @@ describe('ElementTemplateFragment', () => {
     it('should disconnect from the binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new ElementTemplateFragment(
         'div',
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },

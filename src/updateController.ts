@@ -12,7 +12,6 @@ import {
   type TaskPriority,
   type UpdateHost,
   type Updater,
-  createUpdateContext,
   nameOf,
 } from './types.js';
 
@@ -125,7 +124,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
 
     updater.enqueueMutationEffect(new MountPart(part, container));
 
-    const context = createUpdateContext(this, updater);
+    const context = { host: this, updater, block: null };
     const binding = resolveBinding(value, part, context);
 
     binding.connect(context);

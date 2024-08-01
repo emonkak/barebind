@@ -8,12 +8,7 @@ import {
   PropertyBinding,
   resolveBinding,
 } from '../src/binding.js';
-import {
-  type Part,
-  PartType,
-  createUpdateContext,
-  directiveTag,
-} from '../src/types.js';
+import { type Part, PartType, directiveTag } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from './mocks.js';
 
@@ -46,7 +41,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -81,7 +76,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(obj1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -106,7 +101,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(true, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -131,7 +126,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(null, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       element.toggleAttribute('contenteditable', true);
       binding.connect(context);
@@ -151,7 +146,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(undefined, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       element.toggleAttribute('contenteditable', true);
       binding.connect(context);
@@ -171,7 +166,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.bind('foo', context);
 
@@ -190,7 +185,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(undefined, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -213,7 +208,7 @@ describe('AttributeBinding', () => {
         });
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = createUpdateContext(host, updater);
+        const context = { host, updater, block: null };
         binding.bind(new TextDirective(), context);
       }).toThrow('A value must not be a directive,');
     });
@@ -230,7 +225,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(true, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       element.toggleAttribute('contenteditable', true);
       binding.unbind(context);
@@ -250,7 +245,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(undefined, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -326,7 +321,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
@@ -355,7 +350,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
 
@@ -396,7 +391,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -446,7 +441,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -475,7 +470,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -507,7 +502,7 @@ describe('EventBinding', () => {
           });
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
-          const context = createUpdateContext(host, updater);
+          const context = { host, updater, block: null };
           binding.bind({}, context);
         }).toThrow(
           'A value of EventBinding must be EventListener, EventListenerObject or null.',
@@ -529,7 +524,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -562,7 +557,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
 
@@ -591,7 +586,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -616,7 +611,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -644,7 +639,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -680,7 +675,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -704,7 +699,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(listener, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
@@ -747,7 +742,7 @@ describe('NodeBinding', () => {
       const binding = new NodeBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -778,7 +773,7 @@ describe('NodeBinding', () => {
       const binding = new NodeBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.bind('foo', context);
 
@@ -796,7 +791,7 @@ describe('NodeBinding', () => {
       const binding = new NodeBinding(undefined, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -817,7 +812,7 @@ describe('NodeBinding', () => {
         });
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = createUpdateContext(host, updater);
+        const context = { host, updater, block: null };
         binding.bind(new TextDirective(), context);
       }).toThrow('A value must not be a directive,');
     });
@@ -833,7 +828,7 @@ describe('NodeBinding', () => {
       const binding = new NodeBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -857,7 +852,7 @@ describe('NodeBinding', () => {
       const binding = new NodeBinding(undefined, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -914,7 +909,7 @@ describe('PropertyBinding', () => {
       const binding = new PropertyBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -939,7 +934,7 @@ describe('PropertyBinding', () => {
       const binding = new PropertyBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.bind('foo', context);
 
@@ -958,7 +953,7 @@ describe('PropertyBinding', () => {
       const binding = new PropertyBinding(undefined, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -980,7 +975,7 @@ describe('PropertyBinding', () => {
         });
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = createUpdateContext(host, updater);
+        const context = { host, updater, block: null };
         binding.bind(new TextDirective(), context);
       }).toThrow('A value must not be a directive,');
     });
@@ -998,7 +993,7 @@ describe('PropertyBinding', () => {
       const binding = new PropertyBinding('foo', part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.unbind(context);
       updater.flushUpdate(host);
@@ -1067,7 +1062,7 @@ describe('ElementBinding', () => {
         );
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = createUpdateContext(host, updater);
+        const context = { host, updater, block: null };
         binding.bind(null, context);
       }).toThrow('A value of ElementBinding must be an object,');
     });
@@ -1087,7 +1082,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1109,7 +1104,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1132,7 +1127,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1161,7 +1156,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1187,7 +1182,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1222,7 +1217,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1249,7 +1244,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1288,7 +1283,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -1310,7 +1305,7 @@ describe('resolveBinding()', () => {
     const directiveSpy = vi.spyOn(value, directiveTag);
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const binding = resolveBinding(value, part, context);
 
     expect(binding).toBeInstanceOf(TextBinding);
@@ -1327,7 +1322,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(AttributeBinding);
@@ -1346,7 +1341,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const binding = resolveBinding(listener, part, context);
 
     expect(binding).toBeInstanceOf(EventBinding);
@@ -1364,7 +1359,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(PropertyBinding);
@@ -1381,7 +1376,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(NodeBinding);
@@ -1398,7 +1393,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const binding = resolveBinding('foo', part, context);
 
     expect(binding).toBeInstanceOf(NodeBinding);
@@ -1415,7 +1410,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = createUpdateContext(host, updater);
+    const context = { host, updater, block: null };
     const props = {
       class: 'foo',
       title: 'bar',

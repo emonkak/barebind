@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-} from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
@@ -25,7 +21,7 @@ describe('StyleMap', () => {
       const value = styleMap(styleDeclaration);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -44,7 +40,7 @@ describe('StyleMap', () => {
       const value = styleMap(styleDeclaration);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const part = {
         type: PartType.Attribute,
         name: 'data-style',
@@ -76,7 +72,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -103,7 +99,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -134,7 +130,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -160,7 +156,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(directive1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -184,7 +180,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => {
         binding.bind(null as any, context);
@@ -211,7 +207,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -232,7 +228,7 @@ describe('StyleMapBinding', () => {
       const binding = new StyleMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.unbind(context);
 

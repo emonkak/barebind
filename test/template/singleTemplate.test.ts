@@ -6,7 +6,7 @@ import {
   SingleTemplateFragment,
   TextTemplate,
 } from '../../src/template/singleTemplate.js';
-import { PartType, createUpdateContext } from '../../src/types.js';
+import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
@@ -23,7 +23,7 @@ describe('ChildNodeTemplate', () => {
     it('should return a new SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = ChildNodeTemplate.instance.render('foo', context);
 
       updater.flushUpdate(host);
@@ -61,7 +61,7 @@ describe('TextTemplate', () => {
     it('should return SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = TextTemplate.instance.render('foo', context);
 
       expect(fragment.binding).toBeInstanceOf(NodeBinding);
@@ -93,7 +93,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new SingleTemplateFragment('foo', part, context);
 
       fragment.connect(context);
@@ -121,7 +121,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
       const container = document.createElement('div');
       const part = {
@@ -153,7 +153,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
       const container = document.createElement('div');
       const part = {
@@ -187,7 +187,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const fragment = new SingleTemplateFragment('foo', part, context);
       const disconnectSpy = vi.spyOn(fragment.binding, 'disconnect');
 

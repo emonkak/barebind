@@ -8,12 +8,7 @@ import {
   unless,
   when,
 } from '../../src/directives/condition.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
@@ -87,7 +82,7 @@ describe('Condition', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
@@ -118,7 +113,7 @@ describe('Condition', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
@@ -151,7 +146,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
@@ -180,7 +175,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
@@ -213,7 +208,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
@@ -251,7 +246,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -291,7 +286,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -331,7 +326,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -374,7 +369,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -408,7 +403,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(value, part, context);
 
       expect(() => {
@@ -432,7 +427,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -456,7 +451,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ConditionBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 

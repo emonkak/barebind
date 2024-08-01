@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { LazyBinding, lazy } from '../../src/directives/lazy.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -45,7 +40,7 @@ describe('Lazy', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = createUpdateContext(host, updater, parent);
+      const context = { host, updater, block: parent };
       const block = value[directiveTag](part, context);
 
       expect(block.value).toBe(value);
@@ -72,7 +67,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       expect(binding.shouldUpdate()).toBe(false);
@@ -86,7 +81,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -102,7 +97,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -121,7 +116,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -139,7 +134,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = createUpdateContext(host, updater, parent);
+      const context = { host, updater, block: parent };
       const binding = new LazyBinding(value, part, context);
 
       vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
@@ -159,7 +154,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -178,7 +173,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -204,7 +199,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -231,7 +226,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -258,7 +253,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -285,7 +280,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
@@ -309,7 +304,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
@@ -340,7 +335,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = createUpdateContext(host, updater, parent);
+      const context = { host, updater, block: parent };
       const binding = new LazyBinding(value, part, context);
 
       const getPrioritySpy = vi
@@ -374,7 +369,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -408,7 +403,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
@@ -433,7 +428,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -456,7 +451,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value1, part, context);
 
       binding.connect(context);
@@ -492,7 +487,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = createUpdateContext(host, updater, parent);
+      const context = { host, updater, block: parent };
       const binding = new LazyBinding(value1, part, context);
 
       binding.connect(context);
@@ -532,7 +527,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value1, part, context);
 
       binding.connect(context);
@@ -548,7 +543,7 @@ describe('LazyBinding', () => {
       expect(bindSpy).toHaveBeenCalledWith(value2.value, {
         host,
         updater,
-        currentBlock: binding,
+        block: binding,
       });
     });
   });
@@ -562,7 +557,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -581,7 +576,7 @@ describe('LazyBinding', () => {
       expect(unbindSpy).toHaveBeenCalledWith({
         host,
         updater,
-        currentBlock: binding,
+        block: binding,
       });
     });
 
@@ -593,7 +588,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -611,7 +606,7 @@ describe('LazyBinding', () => {
       expect(unbindSpy).toHaveBeenCalledWith({
         host,
         updater,
-        currentBlock: binding,
+        block: binding,
       });
     });
   });
@@ -625,7 +620,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
@@ -651,7 +646,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new LazyBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -669,7 +664,7 @@ describe('LazyBinding', () => {
       expect(unbindSpy).toHaveBeenCalledWith({
         host,
         updater,
-        currentBlock: binding,
+        block: binding,
       });
     });
   });

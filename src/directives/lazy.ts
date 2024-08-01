@@ -7,7 +7,6 @@ import {
   type UpdateContext,
   type UpdateHost,
   type Updater,
-  createUpdateContext,
   directiveTag,
   nameOf,
   nameTag,
@@ -68,7 +67,7 @@ export class LazyBinding<TValue>
   ) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);
-    this._parent = context.currentBlock;
+    this._parent = context.block;
   }
 
   get value(): Lazy<TValue> {
@@ -142,7 +141,7 @@ export class LazyBinding<TValue>
   }
 
   update(host: UpdateHost<unknown>, updater: Updater<unknown>): void {
-    const internalContext = createUpdateContext(host, updater, this);
+    const internalContext = { host, updater, block: this };
     if (this._flags & FLAG_CONNECTED) {
       this._binding.bind(this._value.value, internalContext);
     } else {
@@ -162,11 +161,11 @@ export class LazyBinding<TValue>
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const internalContext = createUpdateContext(
-      context.host,
-      context.updater,
-      this,
-    );
+    const internalContext = {
+      host: context.host,
+      updater: context.updater,
+      block: this,
+    };
     this._binding.unbind(internalContext);
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }

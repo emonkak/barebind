@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ClassMapBinding, classMap } from '../../src/directives/classMap.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-} from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
@@ -25,7 +21,7 @@ describe('ClassMapDirective', () => {
       const value = classMap(classDeclaration);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const part = {
         type: PartType.Attribute,
         name: 'class',
@@ -44,7 +40,7 @@ describe('ClassMapDirective', () => {
       const value = classMap(classDeclaration);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const part = {
         type: PartType.Attribute,
         name: 'className',
@@ -74,7 +70,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -98,7 +94,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const enqueueMutationEffectSpy = vi.spyOn(
         updater,
         'enqueueMutationEffect',
@@ -131,7 +127,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -159,7 +155,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -183,7 +179,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => {
         binding.bind(null as any, context);
@@ -208,7 +204,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -229,7 +225,7 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.unbind(context);
 

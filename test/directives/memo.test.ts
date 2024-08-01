@@ -2,12 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
@@ -39,7 +34,7 @@ describe('Memo', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -65,7 +60,7 @@ describe('Memo', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -94,7 +89,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new MemoBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -115,7 +110,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new MemoBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -138,7 +133,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new MemoBinding(directive1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -160,7 +155,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new MemoBinding(value, part, context);
 
       expect(() => {
@@ -180,7 +175,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new MemoBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -201,7 +196,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new MemoBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

@@ -7,7 +7,6 @@ import {
   type Hook,
   HookType,
   PartType,
-  createUpdateContext,
   directiveTag,
   nameTag,
 } from '../../src/types.js';
@@ -56,7 +55,7 @@ describe('Signal', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = signal[directiveTag](part, context);
 
       expect(binding.part).toBe(part);
@@ -109,7 +108,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new SignalBinding(signal, part, context);
 
       expect(binding.part).toBe(part);
@@ -132,7 +131,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new SignalBinding(signal, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -161,7 +160,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new SignalBinding(signal, part, context);
 
       const unsubscribeSpy = vi.fn();
@@ -191,7 +190,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new SignalBinding(signal1, part, context);
 
       const unsubscribe1Spy = vi.fn();
@@ -221,7 +220,7 @@ describe('SignalBinding', () => {
       expect(() => {
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = createUpdateContext(host, updater);
+        const context = { host, updater, block: null };
         const binding = new SignalBinding(
           new Atom('foo'),
           {
@@ -247,7 +246,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new SignalBinding(signal, part, context);
 
       const unsubscribeSpy = vi.fn();
@@ -279,7 +278,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new SignalBinding(signal, part, context);
 
       const unsubscribeSpy = vi.fn();

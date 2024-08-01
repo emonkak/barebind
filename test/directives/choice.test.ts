@@ -2,12 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/types.js';
+import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 
@@ -40,7 +35,7 @@ describe('Choice', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -77,7 +72,7 @@ describe('Choice', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -108,7 +103,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -141,7 +136,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -182,7 +177,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -225,7 +220,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -259,7 +254,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value, part, context);
 
       expect(() => {
@@ -279,7 +274,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -299,7 +294,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = new ChoiceBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

@@ -5,11 +5,7 @@ import {
   NoValueBinding,
   noValue,
 } from '../../src/directives/noValue.js';
-import {
-  PartType,
-  createUpdateContext,
-  directiveTag,
-} from '../../src/types.js';
+import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
@@ -36,7 +32,7 @@ describe('NoValue', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
       const binding = noValue[directiveTag](part, context);
 
       expect(binding.value).toBe(noValue);
@@ -57,7 +53,7 @@ describe('NoValueBinding', () => {
       const binding = new NoValueBinding(part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.connect(context);
 
@@ -75,7 +71,7 @@ describe('NoValueBinding', () => {
       const binding = new NoValueBinding(part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.bind(noValue, context);
 
@@ -91,7 +87,7 @@ describe('NoValueBinding', () => {
       const binding = new NoValueBinding(part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       expect(() => binding.bind(null as any, context)).toThrow(
         'A value must be a instance of NoValue directive, but got "null".',
@@ -108,7 +104,7 @@ describe('NoValueBinding', () => {
       const binding = new NoValueBinding(part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = createUpdateContext(host, updater);
+      const context = { host, updater, block: null };
 
       binding.unbind(context);
 
