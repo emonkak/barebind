@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '../../src/baseTypes.js';
+import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import {
   ChildNodeTemplate,
@@ -23,10 +23,11 @@ describe('ChildNodeTemplate', () => {
     it('should return a new SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = ChildNodeTemplate.instance.render('foo', context);
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(fragment.binding).toBeInstanceOf(NodeBinding);
       expect(fragment.binding.part).toMatchObject({
@@ -61,7 +62,8 @@ describe('TextTemplate', () => {
     it('should return SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = TextTemplate.instance.render('foo', context);
 
       expect(fragment.binding).toBeInstanceOf(NodeBinding);
@@ -93,21 +95,22 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new SingleTemplateFragment('foo', part, context);
 
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('foo');
 
       fragment.bind('bar', context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('bar');
 
       fragment.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -115,31 +118,31 @@ describe('SingleTemplateFragment', () => {
 
   describe('.mount()', () => {
     it('should mount the node before the part node', () => {
+      const container = document.createElement('div');
+      const containerPart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const fragmentPart = {
         type: PartType.Node,
         node: document.createTextNode('foo'),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
 
-      container.appendChild(part.node);
+      container.appendChild(containerPart.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
+      fragment.mount(containerPart);
 
       expect(container.innerHTML).toBe('foo<!---->');
 
-      fragment.unmount(part);
+      fragment.unmount(containerPart);
 
       expect(container.innerHTML).toBe('<!---->');
     });
@@ -147,26 +150,27 @@ describe('SingleTemplateFragment', () => {
 
   describe('.unmount()', () => {
     it('should not remove the node if a different part is given', () => {
+      const container = document.createElement('div');
+      const containerPart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const fragmentPart = {
         type: PartType.Node,
         node: document.createTextNode('foo'),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
+      const context = new UpdateContext(host, updater);
 
-      container.appendChild(part.node);
+      const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
+
+      container.appendChild(containerPart.node);
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
-      updater.flushUpdate(host);
+      fragment.mount(containerPart);
+      context.flushUpdate();
 
       expect(container.innerHTML).toBe('foo<!---->');
 
@@ -187,8 +191,10 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new SingleTemplateFragment('foo', part, context);
+
       const disconnectSpy = vi.spyOn(fragment.binding, 'disconnect');
 
       fragment.disconnect();

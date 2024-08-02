@@ -112,9 +112,9 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
       ensureDirective(Signal, newValue, this._binding.part);
     }
     if (this._signal !== newValue) {
-      this._signal = newValue;
       this._subscription?.();
       this._subscription = null;
+      this._signal = newValue;
     }
     this._binding.bind(newValue.value, context);
     this._subscription ??= this._subscribeSignal(newValue, context);
@@ -137,9 +137,8 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     context: UpdateContext<unknown>,
   ): Subscription {
     return signal.subscribe(() => {
-      const { host, updater } = context;
       this._binding.bind(signal.value, context);
-      updater.scheduleUpdate(host);
+      context.scheduleUpdate();
     });
   }
 }

@@ -26,12 +26,8 @@ export interface Block<TContext> {
   get isUpdating(): boolean;
   shouldUpdate(): boolean;
   cancelUpdate(): void;
-  requestUpdate(
-    priority: TaskPriority,
-    host: UpdateHost<TContext>,
-    updater: Updater<TContext>,
-  ): void;
-  update(host: UpdateHost<TContext>, updater: Updater<TContext>): void;
+  requestUpdate(priority: TaskPriority, context: UpdateContext<TContext>): void;
+  update(context: UpdateContext<TContext>): void;
 }
 
 // Reexport TaskPriority in Scheduler API.
@@ -42,17 +38,19 @@ export type ComponentType<TProps, TData, TContext> = (
   context: TContext,
 ) => Into<TemplateDirective<TData, TContext>>;
 
-export interface UpdateContext<TContext> {
-  readonly host: UpdateHost<TContext>;
-  readonly updater: Updater<TContext>;
-  readonly block: Block<TContext> | null;
+export interface UpdatePipeline<TContext> {
+  blocks: Block<TContext>[];
+  mutationEffects: Effect[];
+  layoutEffects: Effect[];
+  passiveEffects: Effect[];
 }
 
 export interface UpdateHost<TContext> {
   beginRender(
-    hooks: Hook[],
-    block: Block<TContext>,
     updater: Updater<TContext>,
+    block: Block<TContext>,
+    hooks: Hook[],
+    pipeline: UpdatePipeline<TContext>,
   ): TContext;
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: EffectPhase): void;
@@ -70,13 +68,15 @@ export interface UpdateHost<TContext> {
 }
 
 export interface Updater<TContext> {
-  enqueueBlock(block: Block<TContext>): void;
-  enqueueLayoutEffect(effect: Effect): void;
-  enqueueMutationEffect(effect: Effect): void;
-  enqueuePassiveEffect(effect: Effect): void;
-  isPending(): boolean;
   isScheduled(): boolean;
-  scheduleUpdate(host: UpdateHost<TContext>): void;
+  flushUpdate(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void;
+  scheduleUpdate(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void;
   waitForUpdate(): Promise<void>;
 }
 
@@ -212,6 +212,115 @@ export type RefCallback<T> = (value: T) => void;
 
 export interface RefObject<T> {
   current: T;
+}
+
+export class UpdateContext<TContext> {
+  private _host: UpdateHost<TContext>;
+
+  private _updater: Updater<TContext>;
+
+  private _block: Block<TContext> | null;
+
+  private _pipeline: UpdatePipeline<TContext>;
+
+  constructor(
+    host: UpdateHost<TContext>,
+    updater: Updater<TContext>,
+    block: Block<TContext> | null = null,
+    pipeline: UpdatePipeline<TContext> = createUpdatePipeline(),
+  ) {
+    this._host = host;
+    this._updater = updater;
+    this._block = block;
+    this._pipeline = pipeline;
+  }
+
+  get host(): UpdateHost<TContext> {
+    return this._host;
+  }
+
+  get updater(): Updater<TContext> {
+    return this._updater;
+  }
+
+  get block(): Block<TContext> | null {
+    return this._block;
+  }
+
+  get pipeline(): UpdatePipeline<TContext> {
+    return this._pipeline;
+  }
+
+  enqueueBlock(block: Block<TContext>): void {
+    this._pipeline.blocks.push(block);
+  }
+
+  enqueueLayoutEffect(effect: Effect): void {
+    this._pipeline.layoutEffects.push(effect);
+  }
+
+  enqueueMutationEffect(effect: Effect): void {
+    this._pipeline.mutationEffects.push(effect);
+  }
+
+  enqueuePassiveEffect(effect: Effect): void {
+    this._pipeline.passiveEffects.push(effect);
+  }
+
+  flushUpdate(): void {
+    this._updater.flushUpdate(this._pipeline, this._host);
+  }
+
+  isPending(): boolean {
+    return (
+      this._updater.isScheduled() ||
+      this._pipeline.blocks.length > 0 ||
+      this._pipeline.mutationEffects.length > 0 ||
+      this._pipeline.layoutEffects.length > 0 ||
+      this._pipeline.passiveEffects.length > 0
+    );
+  }
+
+  renderComponent<TProps, TData>(
+    type: ComponentType<TProps, TData, TContext>,
+    props: TProps,
+    hooks: Hook[],
+  ): TemplateDirective<TData, TContext> {
+    if (this._block === null) {
+      // Component directive should be used with Lazy directive. Otherwise,
+      // updates will begin from the parent block instead of the component
+      // itself.
+      throw new Error('Component rendering must be performed within a block.');
+    }
+
+    const context = this._host.beginRender(
+      this._updater,
+      this._block,
+      hooks,
+      this._pipeline,
+    );
+    const result = type(props, context).valueOf() as TemplateDirective<
+      TData,
+      TContext
+    >;
+
+    this._host.finishRender(context);
+
+    return result;
+  }
+
+  scheduleUpdate(): void {
+    this._updater.scheduleUpdate(this._pipeline, this._host);
+  }
+}
+
+export function createUpdatePipeline<TContext>(): UpdatePipeline<TContext> {
+  return {
+    blocks: [],
+    mutationEffects: [],
+    layoutEffects: [],
+    passiveEffects: [],
+  };
 }
 
 export function isDirective(value: unknown): value is Directive<unknown> {

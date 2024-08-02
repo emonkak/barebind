@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '../../src/baseTypes.js';
+import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { ElementBinding } from '../../src/binding.js';
 import {
   ElementTemplate,
@@ -14,7 +14,8 @@ describe('ElementTemplate', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const elementValue = { class: 'foo' };
       const childNodeValue = new TextDirective('bar');
       const fragment = new ElementTemplate('div').render(
@@ -25,8 +26,7 @@ describe('ElementTemplate', () => {
         context,
       );
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
       expect(fragment.elementBinding).toBeInstanceOf(ElementBinding);
       expect(fragment.elementBinding.value).toBe(elementValue);
       expect(fragment.elementBinding.part).toMatchObject({
@@ -70,7 +70,8 @@ describe('ElementTemplateFragment', () => {
     it('should bind values to element and child binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new ElementTemplateFragment(
         'div',
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
@@ -78,7 +79,7 @@ describe('ElementTemplateFragment', () => {
       );
 
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
         '<div class="foo"><!--bar--></div>',
@@ -88,14 +89,14 @@ describe('ElementTemplateFragment', () => {
         { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
         context,
       );
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
         '<div class="bar"><!--baz--></div>',
       );
 
       fragment.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
         '<div><!----></div>',
@@ -105,9 +106,15 @@ describe('ElementTemplateFragment', () => {
 
   describe('.mount()', () => {
     it('should mount the element before the part node', () => {
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new ElementTemplateFragment(
         'div',
         {
@@ -116,15 +123,10 @@ describe('ElementTemplateFragment', () => {
         },
         context,
       );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
 
       container.appendChild(part.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
@@ -142,9 +144,15 @@ describe('ElementTemplateFragment', () => {
 
   describe('.unmount()', () => {
     it('should not remove the node if a different part is given', () => {
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new ElementTemplateFragment(
         'div',
         {
@@ -153,15 +161,10 @@ describe('ElementTemplateFragment', () => {
         },
         context,
       );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
 
       container.appendChild(part.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
@@ -186,7 +189,8 @@ describe('ElementTemplateFragment', () => {
     it('should disconnect from the binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new ElementTemplateFragment(
         'div',
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },

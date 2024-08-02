@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag } from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { ClassMapBinding, classMap } from '../../src/directives/classMap.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
@@ -17,16 +17,16 @@ describe('classMap()', () => {
 describe('ClassMapDirective', () => {
   describe('[directiveTag]()', () => {
     it('should return a new ClassMapBinding', () => {
-      const classDeclaration = { foo: true };
-      const value = classMap(classDeclaration);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
+      const value = classMap({ foo: true });
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -36,16 +36,16 @@ describe('ClassMapDirective', () => {
     });
 
     it('should throw an error if the part does not indicate "class" attribute', () => {
-      const classDeclaration = { foo: true };
-      const value = classMap(classDeclaration);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
       const part = {
         type: PartType.Attribute,
         name: 'className',
         node: document.createElement('div'),
       } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
+      const value = classMap({ foo: true });
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'ClassMap directive must be used in a "class" attribute,',
@@ -57,23 +57,24 @@ describe('ClassMapDirective', () => {
 describe('ClassMapBinding', () => {
   describe('.connect()', () => {
     it('should add properties whose values are true as classes to the element', () => {
-      const value = classMap({
-        foo: true,
-        bar: false,
-        baz: true,
-      });
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
-      const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = classMap({
+        foo: true,
+        bar: false,
+        baz: true,
+      });
+      const binding = new ClassMapBinding(value, part);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.classList).toHaveLength(2);
       expect(part.node.classList).toContain('foo');
@@ -81,22 +82,24 @@ describe('ClassMapBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const value = classMap({
-        foo: true,
-        bar: false,
-        baz: true,
-      });
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
-      const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = classMap({
+        foo: true,
+        bar: false,
+        baz: true,
+      });
+      const binding = new ClassMapBinding(value, part);
+
       const enqueueMutationEffectSpy = vi.spyOn(
-        updater,
+        context,
         'enqueueMutationEffect',
       );
 
@@ -110,6 +113,15 @@ describe('ClassMapBinding', () => {
 
   describe('.bind()', () => {
     it('should remove classes whose values are false from the element', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'class',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = classMap({
         foo: true,
         bar: false,
@@ -119,21 +131,13 @@ describe('ClassMapBinding', () => {
         foo: false,
         bar: true,
       });
-      const part = {
-        type: PartType.Attribute,
-        name: 'class',
-        node: document.createElement('div'),
-      } as const;
       const binding = new ClassMapBinding(value1, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.value).toBe(value2);
       expect(part.node.classList).toHaveLength(1);
@@ -141,45 +145,46 @@ describe('ClassMapBinding', () => {
     });
 
     it('should skip an update if the classes are the same as previous ones', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'class',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = classMap({
         foo: true,
         bar: false,
         baz: true,
       });
       const value2 = classMap(value1.classes);
-      const part = {
-        type: PartType.Attribute,
-        name: 'class',
-        node: document.createElement('div'),
-      } as const;
       const binding = new ClassMapBinding(value1, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
 
       expect(binding.value).toBe(value2);
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
 
     it('should throw an error if the new value is not ClassMap', () => {
-      const value = classMap({
-        foo: true,
-      });
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
-      const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = classMap({
+        foo: true,
+      });
+      const binding = new ClassMapBinding(value, part);
 
       expect(() => {
         binding.bind(null as any, context);
@@ -191,46 +196,47 @@ describe('ClassMapBinding', () => {
 
   describe('.unbind()', () => {
     it('should remove all classes from the element', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'class',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value = classMap({
         foo: true,
         bar: false,
         baz: true,
       });
-      const part = {
-        type: PartType.Attribute,
-        name: 'class',
-        node: document.createElement('div'),
-      } as const;
       const binding = new ClassMapBinding(value, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.classList).toHaveLength(0);
     });
 
     it('should skip an update if the current properties are empty', () => {
-      const value = classMap({});
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
-      const binding = new ClassMapBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = classMap({});
+      const binding = new ClassMapBinding(value, part);
 
       binding.unbind(context);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 

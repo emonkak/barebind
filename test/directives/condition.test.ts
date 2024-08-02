@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
+import {
+  PartType,
+  UpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import { NoValue } from '../../src/directives.js';
 import {
@@ -82,7 +87,7 @@ describe('Condition', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = value[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
@@ -113,7 +118,7 @@ describe('Condition', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = value[directiveTag](part, context);
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
@@ -146,12 +151,12 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
@@ -175,15 +180,15 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.currentBinding.value).toBe(trueDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
@@ -208,15 +213,15 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.currentBinding.value).toBe(falseDirective);
       expect(trueDirectiveSpy).not.toHaveBeenCalled();
@@ -246,16 +251,16 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.currentBinding.value).toBe(falseDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
@@ -286,16 +291,16 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.currentBinding.value).toBe(trueDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
@@ -326,19 +331,19 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value1, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.currentBinding.value).toBe(trueDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
@@ -369,19 +374,19 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value1, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.currentBinding.value).toBe(falseDirective);
       expect(trueDirectiveSpy).toHaveBeenCalledOnce();
@@ -403,7 +408,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
 
       expect(() => {
@@ -427,7 +432,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -451,7 +456,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 

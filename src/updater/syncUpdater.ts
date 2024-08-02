@@ -1,96 +1,75 @@
 import {
-  type Block,
-  type Effect,
   EffectPhase,
+  UpdateContext,
   type UpdateHost,
+  type UpdatePipeline,
   type Updater,
 } from '../baseTypes.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
-  private _pendingBlocks: Block<TContext>[] = [];
+  private readonly _pendingPipelines: UpdatePipeline<TContext>[] = [];
 
-  private _pendingMutationEffects: Effect[] = [];
+  flushUpdate(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void {
+    const { blocks, mutationEffects, layoutEffects, passiveEffects } = pipeline;
 
-  private _pendingLayoutEffects: Effect[] = [];
+    // block.length may be grow.
+    for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
+      do {
+        const block = blocks[i]!;
+        if (!block.shouldUpdate()) {
+          block.cancelUpdate();
+          continue;
+        }
+        const context = new UpdateContext(host, this, block, pipeline);
+        block.update(context);
+      } while (++i < l);
+    }
 
-  private _pendingPassiveEffects: Effect[] = [];
-
-  private _isScheduled = false;
-
-  enqueueBlock(block: Block<TContext>): void {
-    this._pendingBlocks.push(block);
-  }
-
-  enqueueLayoutEffect(effect: Effect): void {
-    this._pendingLayoutEffects.push(effect);
-  }
-
-  enqueueMutationEffect(effect: Effect): void {
-    this._pendingMutationEffects.push(effect);
-  }
-
-  enqueuePassiveEffect(effect: Effect): void {
-    this._pendingPassiveEffects.push(effect);
-  }
-
-  flushUpdate(host: UpdateHost<TContext>): void {
-    const blocks = this._pendingBlocks;
-    const mutationEffects = this._pendingMutationEffects;
-    const layoutEffects = this._pendingLayoutEffects;
-    const passiveEffects = this._pendingPassiveEffects;
-
-    // Do not remember block.length since it can grow.
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i]!;
-      if (!block.shouldUpdate()) {
-        block.cancelUpdate();
-        continue;
-      }
-      block.update(host, this);
+    if (blocks.length > 0) {
+      pipeline.blocks = [];
     }
 
     if (mutationEffects.length > 0) {
       host.flushEffects(mutationEffects, EffectPhase.Mutation);
+      pipeline.mutationEffects = [];
     }
 
     if (layoutEffects.length > 0) {
       host.flushEffects(layoutEffects, EffectPhase.Layout);
+      pipeline.layoutEffects = [];
     }
 
     if (passiveEffects.length > 0) {
       host.flushEffects(passiveEffects, EffectPhase.Passive);
+      pipeline.passiveEffects = [];
     }
-
-    this._pendingBlocks = [];
-    this._pendingMutationEffects = [];
-    this._pendingLayoutEffects = [];
-    this._pendingPassiveEffects = [];
-    this._isScheduled = false;
-  }
-
-  isPending(): boolean {
-    return (
-      this._pendingBlocks.length > 0 ||
-      this._pendingMutationEffects.length > 0 ||
-      this._pendingLayoutEffects.length > 0 ||
-      this._pendingPassiveEffects.length > 0
-    );
   }
 
   isScheduled(): boolean {
-    return this._isScheduled;
+    return this._pendingPipelines.length > 0;
   }
 
-  scheduleUpdate(host: UpdateHost<TContext>): void {
-    if (!this._isScheduled) {
-      this._isScheduled = true;
+  scheduleUpdate(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void {
+    if (this._pendingPipelines.length === 0) {
       queueMicrotask(() => {
-        this.flushUpdate(host);
+        for (let i = 0, l = this._pendingPipelines.length; i < l; i++) {
+          this.flushUpdate(this._pendingPipelines[i]!, host);
+        }
+        this._pendingPipelines.length = 0;
       });
     }
+    this._pendingPipelines.push(pipeline);
   }
 
   waitForUpdate(): Promise<void> {
-    return this._isScheduled ? new Promise(queueMicrotask) : Promise.resolve();
+    return this._pendingPipelines.length > 0
+      ? new Promise(queueMicrotask)
+      : Promise.resolve();
   }
 }

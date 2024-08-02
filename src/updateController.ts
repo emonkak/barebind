@@ -7,7 +7,9 @@ import {
   type Part,
   PartType,
   type TaskPriority,
+  UpdateContext,
   type UpdateHost,
+  type UpdatePipeline,
   type Updater,
   nameOf,
 } from './baseTypes.js';
@@ -39,11 +41,12 @@ export class UpdateController implements UpdateHost<RenderContext> {
   }
 
   beginRender(
-    hooks: Hook[],
-    block: Block<RenderContext>,
     updater: Updater<RenderContext>,
+    block: Block<RenderContext>,
+    hooks: Hook[],
+    pipeline: UpdatePipeline<RenderContext>,
   ): RenderContext {
-    return new RenderContext(hooks, block, this, updater);
+    return new RenderContext(this, updater, block, hooks, pipeline);
   }
 
   finishRender(context: RenderContext): void {
@@ -122,14 +125,14 @@ export class UpdateController implements UpdateHost<RenderContext> {
       part.node.data = nameOf(value);
     }
 
-    updater.enqueueMutationEffect(new MountPart(part, container));
-
-    const context = { host: this, updater, block: null };
+    const context = new UpdateContext(this, updater);
     const binding = resolveBinding(value, part, context);
+
+    context.enqueueMutationEffect(new MountPart(part, container));
 
     binding.connect(context);
 
-    updater.scheduleUpdate(this);
+    context.scheduleUpdate();
 
     return binding;
   }

@@ -5,7 +5,6 @@ import {
   type Part,
   PartType,
   type UpdateContext,
-  type Updater,
   directiveTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
@@ -78,7 +77,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: UnsafeSVG, context: UpdateContext<unknown>): void {
@@ -86,14 +85,14 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
       ensureDirective(UnsafeSVG, newValue, this._part);
     }
     if (newValue.content !== this._memoizedContent) {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedContent !== '') {
-      this._requestMutation(context.updater, Status.Unmounting);
+      this._requestMutation(context, Status.Unmounting);
     }
   }
 
@@ -137,9 +136,12 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
     this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }

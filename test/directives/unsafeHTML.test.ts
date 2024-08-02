@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag } from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
@@ -21,14 +21,15 @@ describe('unsafeHTML()', () => {
 describe('UnsafeHTML', () => {
   describe('[directiveTag]()', () => {
     it('should return a new UnsafeHTMLBinding', () => {
-      const value = unsafeHTML('<span>foo</span>bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('<span>foo</span>bar');
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -38,14 +39,15 @@ describe('UnsafeHTML', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const value = unsafeHTML('foo<span>bar</span>');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('foo<span>bar</span>');
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'UnsafeHTML directive must be used in a child node,',
@@ -57,20 +59,21 @@ describe('UnsafeHTML', () => {
 describe('UnsafeHTMLBinding', () => {
   describe('.connect()', () => {
     it('should insert the single node parsed from an unsafe HTML content before the part', () => {
-      const value = unsafeHTML('<div><span>foo</span>bar</div>');
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('<div><span>foo</span>bar</div>');
+      const binding = new UnsafeHTMLBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.startNode).toBeInstanceOf(HTMLElement);
       expect((binding.startNode as HTMLElement).outerHTML).toBe(
@@ -81,20 +84,21 @@ describe('UnsafeHTMLBinding', () => {
     });
 
     it('should insert the multiple nodes parsed from an unsafe HTML content before the part', () => {
-      const value = unsafeHTML('<span>foo</span>bar');
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('<span>foo</span>bar');
+      const binding = new UnsafeHTMLBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.startNode).toBeInstanceOf(HTMLElement);
       expect((binding.startNode as HTMLElement).outerHTML).toBe(
@@ -105,20 +109,21 @@ describe('UnsafeHTMLBinding', () => {
     });
 
     it('should not insert any nodese if the unsafe HTML content is empty', () => {
-      const value = unsafeHTML('');
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('');
+      const binding = new UnsafeHTMLBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
@@ -126,17 +131,19 @@ describe('UnsafeHTMLBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const value = unsafeHTML('Hello, <strong>World!</strong>');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('Hello, <strong>World!</strong>');
+      const binding = new UnsafeHTMLBinding(value, part);
+
       const enqueueMutationEffectSpy = vi.spyOn(
-        updater,
+        context,
         'enqueueMutationEffect',
       );
 
@@ -150,24 +157,25 @@ describe('UnsafeHTMLBinding', () => {
 
   describe('.bind()', () => {
     it('should replace the old nodes with the nodes parsed from a new unsafe HTML content', () => {
-      const value1 = unsafeHTML('<span>foo</span>bar');
-      const value2 = unsafeHTML('bar<span>baz</span>');
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value1 = unsafeHTML('<span>foo</span>bar');
+      const value2 = unsafeHTML('bar<span>baz</span>');
+      const binding = new UnsafeHTMLBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.value).toBe(value2);
       expect(binding.startNode).toBeInstanceOf(Text);
@@ -177,37 +185,38 @@ describe('UnsafeHTMLBinding', () => {
     });
 
     it('should skip an update if the styles are the same as the previous one', () => {
-      const value1 = unsafeHTML('<span>foo</span>bar');
-      const value2 = unsafeHTML(value1.content);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value1 = unsafeHTML('<span>foo</span>bar');
+      const value2 = unsafeHTML(value1.content);
+      const binding = new UnsafeHTMLBinding(value1, part);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
 
       expect(binding.value).toBe(value2);
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
 
     it('should throw an error if the new value is not UnsafeHTML directive', () => {
-      const value = unsafeHTML('<span>foo</span>bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('<span>foo</span>bar');
+      const binding = new UnsafeHTMLBinding(value, part);
 
       expect(() => binding.bind(null as any, context)).toThrow(
         'A value must be a instance of UnsafeHTML directive, but got "null".',
@@ -217,23 +226,24 @@ describe('UnsafeHTMLBinding', () => {
 
   describe('.unbind()', () => {
     it('should remove all nodes parsed from the current unsafe HTML content', () => {
-      const value = unsafeHTML('foo<span>bar</span>');
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('foo<span>bar</span>');
+      const binding = new UnsafeHTMLBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.value).toBe(value);
       expect(binding.startNode).toBe(part.node);
@@ -242,34 +252,35 @@ describe('UnsafeHTMLBinding', () => {
     });
 
     it('should skip an update if the current unsafe HTML content is empty', () => {
-      const value = unsafeHTML('');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = unsafeHTML('');
+      const binding = new UnsafeHTMLBinding(value, part);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
 
       expect(binding.value).toBe(value);
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const value = unsafeHTML('Hello, <strong>World!</strong>');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+
+      const value = unsafeHTML('Hello, <strong>World!</strong>');
       const binding = new UnsafeHTMLBinding(value, part);
 
       binding.disconnect();

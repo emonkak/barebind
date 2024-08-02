@@ -8,7 +8,6 @@ import {
   type TemplateDirective,
   type TemplateFragment,
   type UpdateContext,
-  type Updater,
   directiveTag,
   nameOf,
   nameTag,
@@ -102,11 +101,11 @@ export class TemplateResultBinding<TData, TContext>
 
     if (this._pendingFragment !== null) {
       if (this._pendingFragment !== this._memoizedFragment) {
-        this._requestMutation(context.updater, Status.Mounting);
+        this._requestMutation(context, Status.Mounting);
       }
       this._pendingFragment.bind(data, context);
     } else {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
     }
@@ -127,7 +126,7 @@ export class TemplateResultBinding<TData, TContext>
         // Here we use the same template as before. However the fragment may have
         // been unmounted. If so, we have to remount it.
         if (this._pendingFragment !== this._memoizedFragment) {
-          this._requestMutation(context.updater, Status.Mounting);
+          this._requestMutation(context, Status.Mounting);
         }
 
         this._pendingFragment.bind(data, context);
@@ -137,7 +136,7 @@ export class TemplateResultBinding<TData, TContext>
         this._pendingFragment.unbind(context);
 
         // Next, unmount the old fragment and mount the new fragment.
-        this._requestMutation(context.updater, Status.Mounting);
+        this._requestMutation(context, Status.Mounting);
 
         // Finally, render the new template.
         this._pendingFragment = template.render(data, context);
@@ -147,7 +146,7 @@ export class TemplateResultBinding<TData, TContext>
       // The template has never been rendered here. We have to mount the new
       // fragment before rendering the template. This branch will never be
       // executed unless bind() is called before connect().
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
 
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
@@ -160,7 +159,7 @@ export class TemplateResultBinding<TData, TContext>
     // Detach data from the current fragment before its unmount.
     this._pendingFragment?.unbind(context);
 
-    this._requestMutation(context.updater, Status.Unmounting);
+    this._requestMutation(context, Status.Unmounting);
   }
 
   disconnect(): void {
@@ -184,11 +183,11 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   private _requestMutation(
-    updater: Updater<TContext>,
+    context: UpdateContext<TContext>,
     newStatus: Status,
   ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }

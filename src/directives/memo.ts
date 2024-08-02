@@ -86,9 +86,9 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     const oldDependencies = this._value.dependencies;
     const newDependencies = newValue.dependencies;
     if (dependenciesAreChanged(oldDependencies, newDependencies)) {
-      this._value = newValue;
       this._binding.bind(newValue.factory(), context);
     }
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {

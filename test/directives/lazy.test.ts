@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
+import {
+  PartType,
+  UpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/baseTypes.js';
 import { LazyBinding, lazy } from '../../src/directives/lazy.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -32,7 +37,6 @@ describe('Lazy', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new LazyBinding', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -40,7 +44,9 @@ describe('Lazy', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = { host, updater, block: parent };
+      const context = new UpdateContext(host, updater, parent);
+
+      const value = lazy(new TextDirective('foo'));
       const block = value[directiveTag](part, context);
 
       expect(block.value).toBe(value);
@@ -60,28 +66,30 @@ describe('Lazy', () => {
 describe('LazyBinding', () => {
   describe('.shouldUpdate()', () => {
     it('should return false after the block is initialized', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       expect(binding.shouldUpdate()).toBe(false);
     });
 
     it('should return true after the block is connected', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -90,33 +98,35 @@ describe('LazyBinding', () => {
     });
 
     it('should return true after an update is requested', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      binding.requestUpdate('user-blocking', host, updater);
+      binding.requestUpdate('user-blocking', context);
 
       expect(binding.shouldUpdate()).toBe(true);
     });
 
     it('should return false after the block is unbound', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -126,7 +136,6 @@ describe('LazyBinding', () => {
     });
 
     it('should return false if there is a parent is updating', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -134,7 +143,9 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = { host, updater, block: parent };
+      const context = new UpdateContext(host, updater, parent);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
@@ -147,14 +158,15 @@ describe('LazyBinding', () => {
 
   describe('.cancelUpdate()', () => {
     it('should cancel the update if it is scheduled', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
@@ -166,23 +178,24 @@ describe('LazyBinding', () => {
 
   describe('.requestUpdate()', () => {
     it('should schedule an update with the user-specified priority', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
-      binding.requestUpdate('background', host, updater);
+      binding.requestUpdate('background', context);
 
       expect(binding.isUpdating).toBe(true);
       expect(binding.priority).toBe('background');
@@ -199,17 +212,17 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', host, updater);
-      binding.requestUpdate('user-visible', host, updater);
+      binding.requestUpdate('background', context);
+      binding.requestUpdate('user-visible', context);
 
       expect(binding.isUpdating).toBe(true);
       expect(binding.priority).toBe('user-visible');
@@ -226,17 +239,17 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('user-blocking', host, updater);
-      binding.requestUpdate('user-visible', host, updater);
+      binding.requestUpdate('user-blocking', context);
+      binding.requestUpdate('user-visible', context);
 
       expect(binding.isUpdating).toBe(true);
       expect(binding.priority).toBe('user-blocking');
@@ -253,17 +266,17 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', host, updater);
-      binding.requestUpdate('background', host, updater);
+      binding.requestUpdate('background', context);
+      binding.requestUpdate('background', context);
 
       expect(binding.isUpdating).toBe(true);
       expect(binding.priority).toBe('background');
@@ -280,13 +293,13 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', host, updater);
+      binding.requestUpdate('background', context);
 
       expect(binding.isUpdating).toBe(false);
       expect(binding.priority).toBe('user-blocking');
@@ -304,11 +317,11 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
       binding.connect(context);
 
@@ -319,7 +332,7 @@ describe('LazyBinding', () => {
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -335,14 +348,14 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = { host, updater, block: parent };
+      const context = new UpdateContext(host, updater, parent);
       const binding = new LazyBinding(value, part, context);
 
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
         .mockReturnValue('background');
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
       binding.connect(context);
 
@@ -354,7 +367,7 @@ describe('LazyBinding', () => {
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -369,16 +382,16 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', host, updater);
+      binding.requestUpdate('background', context);
       binding.connect(context);
 
       expect(binding.isConnected).toBe(true);
@@ -388,7 +401,7 @@ describe('LazyBinding', () => {
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -403,11 +416,11 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
       binding.connect(context);
       binding.connect(context);
@@ -428,7 +441,7 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -436,7 +449,7 @@ describe('LazyBinding', () => {
       binding.connect(context);
       expect(connectSpy).not.toHaveBeenCalled();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
       expect(connectSpy).toHaveBeenCalledOnce();
     });
   });
@@ -451,14 +464,14 @@ describe('LazyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new LazyBinding(value1, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
       binding.bind(value2, context);
 
@@ -470,7 +483,7 @@ describe('LazyBinding', () => {
       expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -487,17 +500,17 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const parent = new MockBlock();
-      const context = { host, updater, block: parent };
+      const context = new UpdateContext(host, updater, parent);
       const binding = new LazyBinding(value1, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
         .mockReturnValue('background');
-      const enqueueBlockSpy = vi.spyOn(updater, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
+      const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
       binding.bind(value2, context);
 
@@ -511,7 +524,7 @@ describe('LazyBinding', () => {
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -519,51 +532,57 @@ describe('LazyBinding', () => {
     });
 
     it('should bind the new value to the binding on update', () => {
-      const value1 = lazy(new TextDirective('foo'));
-      const value2 = lazy(new TextDirective('bar'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value1 = lazy(new TextDirective('foo'));
+      const value2 = lazy(new TextDirective('bar'));
       const binding = new LazyBinding(value1, part, context);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
       binding.bind(value2, context);
       expect(bindSpy).not.toHaveBeenCalled();
 
-      updater.flushUpdate(host);
+      context.flushUpdate();
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value2.value, {
-        host,
-        updater,
-        block: binding,
-      });
+      expect(bindSpy).toHaveBeenCalledWith(
+        value2.value,
+        expect.objectContaining({
+          host,
+          updater,
+          block: binding,
+          pipeline: context.pipeline,
+        }),
+      );
     });
   });
 
   describe('.unbind()', () => {
     it('should unbind the binding', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -573,22 +592,19 @@ describe('LazyBinding', () => {
       expect(binding.isConnected).toBe(false);
       expect(binding.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith({
-        host,
-        updater,
-        block: binding,
-      });
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should cancel the update in progress', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -603,30 +619,27 @@ describe('LazyBinding', () => {
       expect(binding.isConnected).toBe(false);
       expect(binding.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith({
-        host,
-        updater,
-        block: binding,
-      });
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
   });
 
   describe('.disconnect()', () => {
     it('should unbind the binding', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.isConnected).toBe(true);
       expect(binding.isUpdating).toBe(false);
@@ -639,14 +652,15 @@ describe('LazyBinding', () => {
     });
 
     it('should cancel the update in progress', () => {
-      const value = lazy(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = lazy(new TextDirective('foo'));
       const binding = new LazyBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -661,11 +675,7 @@ describe('LazyBinding', () => {
       expect(binding.isConnected).toBe(false);
       expect(binding.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith({
-        host,
-        updater,
-        block: binding,
-      });
+      expect(unbindSpy).toHaveBeenCalledWith(context);
     });
   });
 });

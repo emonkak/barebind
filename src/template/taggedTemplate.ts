@@ -288,7 +288,7 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
     }
 
     if (disconnectingBindings.length > 0) {
-      context.updater.enqueueLayoutEffect(
+      context.enqueueLayoutEffect(
         new DisconenctBindings(disconnectingBindings),
       );
     }

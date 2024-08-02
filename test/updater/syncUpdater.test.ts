@@ -1,57 +1,40 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { createUpdatePipeline } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('SyncUpdater', () => {
-  describe('.isPending()', () => {
-    it('should return true if there is a pending block', () => {
-      const updater = new SyncUpdater();
-
-      updater.enqueueBlock(new MockBlock());
-      expect(updater.isPending()).toBe(true);
-    });
-
-    it('should return true if there is a pending mutation effect', () => {
-      const updater = new SyncUpdater();
-
-      updater.enqueueMutationEffect({ commit() {} });
-      expect(updater.isPending()).toBe(true);
-    });
-
-    it('should return true if there is a pending layout effect', () => {
-      const updater = new SyncUpdater();
-
-      updater.enqueueLayoutEffect({ commit() {} });
-      expect(updater.isPending()).toBe(true);
-    });
-
-    it('should return true if there is a pending passive effect', () => {
-      const updater = new SyncUpdater();
-
-      updater.enqueuePassiveEffect({ commit() {} });
-      expect(updater.isPending()).toBe(true);
-    });
-
-    it('should return false if there are no pending tasks', () => {
-      const updater = new SyncUpdater();
-
-      expect(updater.isPending()).toBe(false);
-    });
-  });
-
-  describe('.isScheduled()', () => {
-    it('should return whether an update is scheduled', async () => {
+  describe('.waitForUpdate()', () => {
+    it('should return a promise that will be fulfilled when the update is complete', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+      const pipeline = createUpdatePipeline();
 
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate(host);
+      updater.scheduleUpdate(pipeline, host);
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
       expect(updater.isScheduled()).toBe(false);
+    });
+
+    it('should return a fulfilled promise when the update is not scheduled', async () => {
+      const updater = new SyncUpdater();
+
+      const isFulfilled = await Promise.race([
+        updater.waitForUpdate().then(
+          () => true,
+          () => false,
+        ),
+        Promise.resolve().then(
+          () => false,
+          () => false,
+        ),
+      ]);
+
+      expect(isFulfilled).toBe(true);
     });
   });
 
@@ -59,10 +42,12 @@ describe('SyncUpdater', () => {
     it('should do nothing if already scheduled', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+      const pipeline = createUpdatePipeline();
+
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.scheduleUpdate(host);
-      updater.scheduleUpdate(host);
+      updater.scheduleUpdate(pipeline, host);
+      updater.scheduleUpdate(pipeline, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -72,21 +57,24 @@ describe('SyncUpdater', () => {
     it('should update the block on a microtask', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+      const pipeline = createUpdatePipeline();
       const block = new MockBlock();
+
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
+
       const updateSpy = vi
         .spyOn(block, 'update')
-        .mockImplementation((_host, updater) => {
-          updater.enqueueMutationEffect(mutationEffect);
-          updater.enqueueLayoutEffect(layoutEffect);
-          updater.enqueuePassiveEffect(passiveEffect);
+        .mockImplementation((context) => {
+          context.enqueueMutationEffect(mutationEffect);
+          context.enqueueLayoutEffect(layoutEffect);
+          context.enqueuePassiveEffect(passiveEffect);
         });
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueBlock(block);
-      updater.scheduleUpdate(host);
+      pipeline.blocks.push(block);
+      updater.scheduleUpdate(pipeline, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -101,7 +89,9 @@ describe('SyncUpdater', () => {
     it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+      const pipeline = createUpdatePipeline();
       const block = new MockBlock();
+
       const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
@@ -109,8 +99,8 @@ describe('SyncUpdater', () => {
       const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueBlock(block);
-      updater.scheduleUpdate(host);
+      pipeline.blocks.push(block);
+      updater.scheduleUpdate(pipeline, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -124,15 +114,17 @@ describe('SyncUpdater', () => {
     it('should commit effects on a microtask', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+      const pipeline = createUpdatePipeline();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
+
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.enqueueMutationEffect(mutationEffect);
-      updater.enqueueLayoutEffect(layoutEffect);
-      updater.enqueuePassiveEffect(passiveEffect);
-      updater.scheduleUpdate(host);
+      pipeline.mutationEffects.push(mutationEffect);
+      pipeline.layoutEffects.push(layoutEffect);
+      pipeline.passiveEffects.push(passiveEffect);
+      updater.scheduleUpdate(pipeline, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -141,35 +133,6 @@ describe('SyncUpdater', () => {
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
-    });
-
-    it('should cancel the update when flushed', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-
-      updater.scheduleUpdate(host);
-      updater.flushUpdate(host);
-
-      expect(updater.isScheduled()).toBe(false);
-    });
-  });
-
-  describe('.waitForUpdate()', () => {
-    it('should returns a resolved Promise if not scheduled', () => {
-      const updater = new SyncUpdater();
-
-      expect(
-        Promise.race([
-          updater.waitForUpdate().then(
-            () => true,
-            () => false,
-          ),
-          Promise.resolve().then(
-            () => false,
-            () => false,
-          ),
-        ]),
-      ).resolves.toBe(true);
     });
   });
 });

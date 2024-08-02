@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag } from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import {
   ListBinding,
   inPlaceList,
@@ -38,18 +38,19 @@ describe('inPlaceList()', () => {
 describe('List', () => {
   describe('[directiveTag]()', () => {
     it('should return a new ListBinding', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => item,
+      );
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -60,18 +61,19 @@ describe('List', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => item,
+      );
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'List directive must be used in a child node,',
@@ -83,11 +85,6 @@ describe('List', () => {
 describe('ListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -95,12 +92,18 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.value).toBe(value);
       expect(binding.startNode.nodeValue).toBe('foo');
@@ -115,24 +118,26 @@ describe('ListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
       const binding = new ListBinding(value, part);
+
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.connect(context);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(commitSpy).toHaveBeenCalledOnce();
     });
@@ -144,6 +149,15 @@ describe('ListBinding', () => {
 
       for (const items1 of allCombinations(source)) {
         for (const items2 of allCombinations(source)) {
+          const container = document.createElement('div');
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+          } as const;
+          const host = new MockUpdateHost();
+          const updater = new SyncUpdater();
+          const context = new UpdateContext(host, updater);
+
           const value1 = orderedList(
             items1,
             (item) => item,
@@ -154,22 +168,14 @@ describe('ListBinding', () => {
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const container = document.createElement('div');
-          const part = {
-            type: PartType.ChildNode,
-            node: document.createComment(''),
-          } as const;
-          const host = new MockUpdateHost();
-          const updater = new SyncUpdater();
-          const context = { host, updater, block: null };
           const binding = new ListBinding(value1, part);
 
           container.appendChild(part.node);
           binding.connect(context);
-          updater.flushUpdate(host);
+          context.flushUpdate();
 
           binding.bind(value2, context);
-          updater.flushUpdate(host);
+          context.flushUpdate();
 
           expect(binding.value).toBe(value2);
           expect(
@@ -194,6 +200,15 @@ describe('ListBinding', () => {
             [permutation1, permutation2],
             [permutation2, permutation1],
           ]) {
+            const container = document.createElement('div');
+            const part = {
+              type: PartType.ChildNode,
+              node: document.createComment(''),
+            } as const;
+            const host = new MockUpdateHost();
+            const updater = new SyncUpdater();
+            const context = new UpdateContext(host, updater);
+
             const value1 = orderedList(
               items1!,
               (item) => item,
@@ -204,22 +219,14 @@ describe('ListBinding', () => {
               (item) => item,
               (item) => new TextDirective(item),
             );
-            const container = document.createElement('div');
-            const part = {
-              type: PartType.ChildNode,
-              node: document.createComment(''),
-            } as const;
-            const host = new MockUpdateHost();
-            const updater = new SyncUpdater();
-            const context = { host, updater, block: null };
             const binding = new ListBinding(value1, part);
 
             container.appendChild(part.node);
             binding.connect(context);
-            updater.flushUpdate(host);
+            context.flushUpdate();
 
             binding.bind(value2, context);
-            updater.flushUpdate(host);
+            context.flushUpdate();
 
             expect(binding.value).toBe(value2);
             expect(
@@ -240,6 +247,15 @@ describe('ListBinding', () => {
 
       for (const items1 of permutations(source)) {
         for (const items2 of permutations(source)) {
+          const container = document.createElement('div');
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+          } as const;
+          const host = new MockUpdateHost();
+          const updater = new SyncUpdater();
+          const context = new UpdateContext(host, updater);
+
           const value1 = orderedList(
             items1,
             (item) => item,
@@ -250,22 +266,14 @@ describe('ListBinding', () => {
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const container = document.createElement('div');
-          const part = {
-            type: PartType.ChildNode,
-            node: document.createComment(''),
-          } as const;
-          const host = new MockUpdateHost();
-          const updater = new SyncUpdater();
-          const context = { host, updater, block: null };
           const binding = new ListBinding(value1, part);
 
           container.appendChild(part.node);
           binding.connect(context);
-          updater.flushUpdate(host);
+          context.flushUpdate();
 
           binding.bind(value2, context);
-          updater.flushUpdate(host);
+          context.flushUpdate();
 
           expect(binding.value).toBe(value2);
           expect(
@@ -281,6 +289,15 @@ describe('ListBinding', () => {
     });
 
     it('should update with longer list than last time', () => {
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
@@ -289,22 +306,14 @@ describe('ListBinding', () => {
         ['qux', 'baz', 'bar', 'foo'],
         (item) => new TextDirective(item),
       );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
       const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.value).toBe(value2);
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
@@ -316,6 +325,15 @@ describe('ListBinding', () => {
     });
 
     it('should update with shoter list than last time', () => {
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
@@ -324,22 +342,14 @@ describe('ListBinding', () => {
         ['bar', 'foo'],
         (item) => new TextDirective(item),
       );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
       const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.value).toBe(value2);
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
@@ -351,6 +361,14 @@ describe('ListBinding', () => {
     });
 
     it('should do nothing if the items is the same as previous ones', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const items = ['foo', 'bar', 'baz'];
       const value1 = orderedList(
         items,
@@ -362,33 +380,20 @@ describe('ListBinding', () => {
         (item) => item,
         (item) => new TextDirective(item),
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
       const binding = new ListBinding(value1, part);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
 
       expect(binding.value).toBe(value2);
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -396,39 +401,47 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => item,
+      );
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.bindings).toHaveLength(0);
       expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => item,
+      );
       const binding = new ListBinding(value, part);
+
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.unbind(context);
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(commitSpy).toHaveBeenCalledOnce();
     });
@@ -436,11 +449,6 @@ describe('ListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -448,12 +456,18 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       const disconnectSpies = binding.bindings.map((binding) =>
         vi.spyOn(binding, 'disconnect'),

@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
+import {
+  PartType,
+  UpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -35,7 +40,7 @@ describe('Choice', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -72,7 +77,7 @@ describe('Choice', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -103,12 +108,12 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
@@ -136,15 +141,15 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.binding.value).toBe(fooDirective);
       expect(fooDirectiveSpy).toHaveBeenCalledOnce();
@@ -177,16 +182,16 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.binding.value).toBe(barDirective);
       expect(fooDirectiveSpy).toHaveBeenCalledOnce();
@@ -220,19 +225,19 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value1, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.binding.value).toBe(fooDirective);
       expect(fooDirectiveSpy).toHaveBeenCalledOnce();
@@ -254,7 +259,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value, part, context);
 
       expect(() => {
@@ -274,7 +279,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -294,7 +299,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new ChoiceBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

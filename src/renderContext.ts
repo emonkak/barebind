@@ -12,7 +12,9 @@ import {
   type RefObject,
   type TaskPriority,
   type TemplateDirective,
+  UpdateContext,
   type UpdateHost,
+  type UpdatePipeline,
   type Updater,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
@@ -46,26 +48,30 @@ export type NewState<TState> = TState extends Function
   : ((prevState: TState) => TState) | TState;
 
 export class RenderContext {
-  private readonly _hooks: Hook[];
-
-  private readonly _block: Block<RenderContext>;
-
   private readonly _host: UpdateHost<RenderContext>;
 
   private readonly _updater: Updater<RenderContext>;
 
+  private readonly _block: Block<RenderContext>;
+
+  private readonly _hooks: Hook[];
+
+  private readonly _pipeline: UpdatePipeline<RenderContext>;
+
   private _hookIndex = 0;
 
   constructor(
-    hooks: Hook[],
-    block: Block<RenderContext>,
     host: UpdateHost<RenderContext>,
     updater: Updater<RenderContext>,
+    block: Block<RenderContext>,
+    hooks: Hook[],
+    pipeline: UpdatePipeline<RenderContext>,
   ) {
-    this._hooks = hooks;
-    this._block = block;
     this._host = host;
     this._updater = updater;
+    this._block = block;
+    this._hooks = hooks;
+    this._pipeline = pipeline;
   }
 
   childNode<T>(value: T): TemplateDirective<T, RenderContext> {
@@ -123,10 +129,15 @@ export class RenderContext {
   }
 
   forceUpdate(priority?: TaskPriority): void {
-    this._block.requestUpdate(
-      priority ?? this._host.getCurrentPriority(),
+    const context = new UpdateContext(
       this._host,
       this._updater,
+      this._block,
+      this._pipeline,
+    );
+    this._block.requestUpdate(
+      priority ?? this._host.getCurrentPriority(),
+      context,
     );
   }
 
@@ -177,7 +188,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.Effect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updater.enqueuePassiveEffect(
+        this._pipeline.passiveEffects.push(
           new InvokeEffectHook(currentHook, callback),
         );
       }
@@ -190,7 +201,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._updater.enqueuePassiveEffect(new InvokeEffectHook(hook, callback));
+      this._pipeline.passiveEffects.push(new InvokeEffectHook(hook, callback));
     }
 
     this._hookIndex++;
@@ -221,7 +232,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.Effect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updater.enqueueLayoutEffect(
+        this._pipeline.layoutEffects.push(
           new InvokeEffectHook(currentHook, callback),
         );
       }
@@ -234,7 +245,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._updater.enqueueLayoutEffect(new InvokeEffectHook(hook, callback));
+      this._pipeline.layoutEffects.push(new InvokeEffectHook(hook, callback));
     }
 
     this._hookIndex++;

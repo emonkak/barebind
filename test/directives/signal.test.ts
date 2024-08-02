@@ -4,6 +4,8 @@ import {
   type Hook,
   HookType,
   PartType,
+  UpdateContext,
+  createUpdatePipeline,
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
@@ -48,41 +50,42 @@ describe('Signal', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new SignalBinding', () => {
-      const signal = new Atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = signal[directiveTag](part, context);
+      const context = new UpdateContext(host, updater);
+
+      const value = new Atom('foo');
+      const binding = value[directiveTag](part, context);
 
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.value).toBe(signal);
+      expect(binding.value).toBe(value);
       expect(binding.binding).toBeInstanceOf(NodeBinding);
       expect(binding.binding.value).toBe('foo');
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 
   describe('[usableTag]()', () => {
     it('should subscribe the signal and return a signal value', () => {
-      const signal = new Atom('foo');
-      const hooks: Hook[] = [];
-      const block = new MockBlock();
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new RenderContext(hooks, block, host, updater);
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const pipeline = createUpdatePipeline();
+      const context = new RenderContext(host, updater, block, hooks, pipeline);
 
+      const signal = new Atom('foo');
       const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       expect(context.use(signal)).toBe('foo');
       context.finalize();
-      updater.flushUpdate(host);
+      updater.flushUpdate(pipeline, host);
 
       expect(requstUpdateSpy).not.toHaveBeenCalled();
 
@@ -99,40 +102,18 @@ describe('Signal', () => {
 });
 
 describe('SignalBinding', () => {
-  describe('.constructor', () => {
-    it('should construct a new SignalBinding', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new SignalBinding(signal, part, context);
-
-      expect(binding.part).toBe(part);
-      expect(binding.startNode).toBe(part.node);
-      expect(binding.endNode).toBe(part.node);
-      expect(binding.value).toBe(signal);
-      expect(binding.binding).toBeInstanceOf(NodeBinding);
-      expect(binding.binding.value).toBe('foo');
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
-  });
-
   describe('.connect()', () => {
     it('should subscribe the signal', () => {
-      const signal = new Atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new SignalBinding(signal, part, context);
+      const context = new UpdateContext(host, updater);
+
+      const value = new Atom('foo');
+      const binding = new SignalBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -143,7 +124,7 @@ describe('SignalBinding', () => {
       expect(connectSpy).toHaveBeenCalled();
       expect(bindSpy).not.toHaveBeenCalled();
 
-      signal.value = 'bar';
+      value.value = 'bar';
 
       expect(binding.binding.value).toBe('bar');
       expect(connectSpy).toHaveBeenCalled();
@@ -153,26 +134,27 @@ describe('SignalBinding', () => {
 
   describe('.bind()', () => {
     it('should update the the value binding with current signal value', () => {
-      const signal = new Atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new SignalBinding(signal, part, context);
+      const context = new UpdateContext(host, updater);
+
+      const value = new Atom('foo');
+      const binding = new SignalBinding(value, part, context);
 
       const unsubscribeSpy = vi.fn();
       const subscribe = vi
-        .spyOn(signal, 'subscribe')
+        .spyOn(value, 'subscribe')
         .mockReturnValue(unsubscribeSpy);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
       binding.connect(context);
-      signal.setUntrackedValue('bar');
-      binding.bind(signal, context);
+      value.setUntrackedValue('bar');
+      binding.bind(value, context);
 
       expect(binding.binding.value).toBe('bar');
       expect(connectSpy).toHaveBeenCalled();
@@ -182,30 +164,31 @@ describe('SignalBinding', () => {
     });
 
     it('should unsubscribe the previous subscription if signal changes', () => {
-      const signal1 = new Atom('foo');
-      const signal2 = new Atom('bar');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new SignalBinding(signal1, part, context);
+      const context = new UpdateContext(host, updater);
+
+      const value1 = new Atom('foo');
+      const value2 = new Atom('bar');
+      const binding = new SignalBinding(value1, part, context);
 
       const unsubscribe1Spy = vi.fn();
       const unsubscribe2Spy = vi.fn();
       const subscribe1Spy = vi
-        .spyOn(signal1, 'subscribe')
+        .spyOn(value1, 'subscribe')
         .mockReturnValue(unsubscribe1Spy);
       const subscribe2Spy = vi
-        .spyOn(signal2, 'subscribe')
+        .spyOn(value2, 'subscribe')
         .mockReturnValue(unsubscribe1Spy);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
       binding.connect(context);
-      binding.bind(signal2, context);
+      binding.bind(value2, context);
 
       expect(binding.binding.value).toBe('bar');
       expect(connectSpy).toHaveBeenCalled();
@@ -217,19 +200,19 @@ describe('SignalBinding', () => {
     });
 
     it('should throw the error if the value is not a signal', () => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
+      const value = new Atom('foo');
+      const binding = new SignalBinding(value, part, context);
+
       expect(() => {
-        const host = new MockUpdateHost();
-        const updater = new SyncUpdater();
-        const context = { host, updater, block: null };
-        const binding = new SignalBinding(
-          new Atom('foo'),
-          {
-            type: PartType.Attribute,
-            node: document.createElement('div'),
-            name: 'class',
-          },
-          context,
-        );
         binding.bind(null as any, context);
       }).toThrow(
         'A value must be a instance of Signal directive, but got "null".',
@@ -239,19 +222,20 @@ describe('SignalBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind the value binding and unsubscribe the signal', () => {
-      const signal = new Atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new SignalBinding(signal, part, context);
+      const context = new UpdateContext(host, updater);
+
+      const value = new Atom('foo');
+      const binding = new SignalBinding(value, part, context);
 
       const unsubscribeSpy = vi.fn();
       const subscribeSpy = vi
-        .spyOn(signal, 'subscribe')
+        .spyOn(value, 'subscribe')
         .mockReturnValue(unsubscribeSpy);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -271,19 +255,20 @@ describe('SignalBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the value binding and unsubscribe the signal', () => {
-      const signal = new Atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new SignalBinding(signal, part, context);
+      const context = new UpdateContext(host, updater);
+
+      const value = new Atom('foo');
+      const binding = new SignalBinding(value, part, context);
 
       const unsubscribeSpy = vi.fn();
       const subscribeSpy = vi
-        .spyOn(signal, 'subscribe')
+        .spyOn(value, 'subscribe')
         .mockReturnValue(unsubscribeSpy);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

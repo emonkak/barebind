@@ -4,6 +4,7 @@ import {
   type Part,
   PartType,
   type Template,
+  UpdateContext,
   directiveTag,
 } from '../../src/baseTypes.js';
 import {
@@ -312,11 +313,10 @@ describe('TaggedTemplate', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(values.length);
       expect(fragment.bindings.map((binding) => binding.value)).toEqual(values);
@@ -357,7 +357,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.startNode).toBe(fragment.childNodes[0]);
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
 
-      // updater.flushUpdate(host);
+      // context.flushUpdate();
       //
       // expect(fragment.childNodes.map(formatNode)).toEqual([
       //   `
@@ -371,7 +371,7 @@ describe('TaggedTemplate', () => {
     it('should return a TaggedTemplateFragment without bindings', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const [template] = html`<div></div>`;
       const fragment = template.render([], context);
 
@@ -385,7 +385,7 @@ describe('TaggedTemplate', () => {
     it('should return a TaggedTemplateFragment with empty template', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const [template] = html``;
       const fragment = template.render([], context);
 
@@ -399,7 +399,7 @@ describe('TaggedTemplate', () => {
     it('should throw an error if the number of holes and values do not match', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const [template, values] = html`
         <div class=${'foo'} class=${'bar'}></div>
       `;
@@ -439,11 +439,11 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
 
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         `
@@ -462,11 +462,11 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
 
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '<div class="foo">bar</div>',
@@ -474,7 +474,7 @@ describe('TaggedTemplateFragment', () => {
       ]);
 
       fragment.bind(['bar', 'baz', 'qux'], context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '<div class="bar">baz</div>',
@@ -495,12 +495,12 @@ describe('TaggedTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
 
       container.appendChild(part.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       fragment.mount(part);
 
@@ -521,7 +521,7 @@ describe('TaggedTemplateFragment', () => {
       );
 
       fragment.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '',
@@ -550,12 +550,12 @@ describe('TaggedTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
 
       container.appendChild(part.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       fragment.mount(part);
 
@@ -574,7 +574,7 @@ describe('TaggedTemplateFragment', () => {
       );
 
       fragment.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(fragment.childNodes.map(formatNode)).toEqual([
         '',
@@ -591,7 +591,7 @@ describe('TaggedTemplateFragment', () => {
     it('should throw an error if the number of binding and values do not match', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const [template, values] = html`
         <p>Count: ${0}</p>
       `;
@@ -611,7 +611,7 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       let disconnects = 0;
       vi.spyOn(value, directiveTag).mockImplementation(function (
         this: TextDirective,
@@ -640,7 +640,7 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
       const container = document.createElement('div');
       const part = {
@@ -650,7 +650,7 @@ describe('TaggedTemplateFragment', () => {
 
       container.appendChild(part.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
@@ -671,7 +671,7 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const fragment = template.render(values, context);
       const container = document.createElement('div');
       const part = {
@@ -681,7 +681,7 @@ describe('TaggedTemplateFragment', () => {
 
       container.appendChild(part.node);
       fragment.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 

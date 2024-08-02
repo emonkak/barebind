@@ -7,7 +7,6 @@ import {
   PartType,
   type RefValue,
   type UpdateContext,
-  type Updater,
   directiveTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
@@ -35,7 +34,7 @@ export class Ref implements Directive {
     return this._ref;
   }
 
-  [directiveTag](part: Part, _context: UpdateContext<unknown>): RefBinding {
+  [directiveTag](part: Part, _contex: UpdateContext<unknown>): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +
@@ -77,7 +76,7 @@ export class RefBinding implements Binding<Ref>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestEffect(context.updater, Status.Mounting);
+    this._requestEffect(context, Status.Mounting);
   }
 
   bind(newValue: Ref, context: UpdateContext<unknown>): void {
@@ -85,14 +84,14 @@ export class RefBinding implements Binding<Ref>, Effect {
       ensureDirective(Ref, newValue, this._part);
     }
     if (newValue.ref !== this._memoizedRef) {
-      this._requestEffect(context.updater, Status.Mounting);
+      this._requestEffect(context, Status.Mounting);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedRef !== null) {
-      this._requestEffect(context.updater, Status.Unmounting);
+      this._requestEffect(context, Status.Unmounting);
     }
   }
 
@@ -131,9 +130,12 @@ export class RefBinding implements Binding<Ref>, Effect {
     this._status = Status.Committed;
   }
 
-  private _requestEffect(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestEffect(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueLayoutEffect(this);
+      context.enqueueLayoutEffect(this);
     }
     this._status = newStatus;
   }

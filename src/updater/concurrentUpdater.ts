@@ -1,8 +1,8 @@
 import {
-  type Block,
-  type Effect,
   EffectPhase,
+  UpdateContext,
   type UpdateHost,
+  type UpdatePipeline,
   type Updater,
 } from '../baseTypes.js';
 import { Atom } from '../directives/signal.js';
@@ -12,19 +12,10 @@ export interface ConcurrentUpdaterOptions {
   scheduler?: Scheduler;
 }
 
-interface UpdatePipeline<TContext> {
-  blocks: Block<TContext>[];
-  mutationEffects: Effect[];
-  layoutEffects: Effect[];
-  passiveEffects: Effect[];
-}
-
 export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   private readonly _scheduler: Scheduler;
 
   private readonly _taskCount: Atom<number> = new Atom(0);
-
-  private _pipeline: UpdatePipeline<TContext> = createPipeline([], [], [], []);
 
   private _isUpdating = false;
 
@@ -34,44 +25,63 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     this._scheduler = scheduler;
   }
 
-  enqueueBlock(block: Block<TContext>): void {
-    this._pipeline.blocks.push(block);
-  }
+  async flushUpdate(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): Promise<void> {
+    const { blocks } = pipeline;
+    let startTime = this._scheduler.getCurrentTime();
 
-  enqueueLayoutEffect(effect: Effect): void {
-    this._pipeline.layoutEffects.push(effect);
-  }
+    // block.length may be grow.
+    for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
+      do {
+        const block = blocks[i]!;
+        if (!block.shouldUpdate()) {
+          block.cancelUpdate();
+          continue;
+        }
 
-  enqueueMutationEffect(effect: Effect): void {
-    this._pipeline.mutationEffects.push(effect);
-  }
+        if (
+          this._scheduler.shouldYieldToMain(
+            this._scheduler.getCurrentTime() - startTime,
+          )
+        ) {
+          await this._scheduler.yieldToMain({
+            priority: block.priority,
+          });
+          startTime = this._scheduler.getCurrentTime();
+        }
 
-  enqueuePassiveEffect(effect: Effect): void {
-    this._pipeline.passiveEffects.push(effect);
-  }
+        const context = new UpdateContext(host, this, block, pipeline);
 
-  isPending(): boolean {
-    return (
-      this._pipeline.blocks.length > 0 ||
-      this._pipeline.mutationEffects.length > 0 ||
-      this._pipeline.layoutEffects.length > 0 ||
-      this._pipeline.passiveEffects.length > 0
-    );
+        this._isUpdating = true;
+
+        try {
+          block.update(context);
+        } finally {
+          this._isUpdating = false;
+        }
+      } while (++i < l);
+    }
+
+    pipeline.blocks = [];
+
+    this._scheduleEffects(pipeline, host);
   }
 
   isScheduled(): boolean {
     return this._taskCount.value > 0;
   }
 
-  scheduleUpdate(host: UpdateHost<TContext>): void {
+  scheduleUpdate(
+    pipeline: UpdatePipeline<TContext>,
+    host: UpdateHost<TContext>,
+  ): void {
     if (this._isUpdating) {
       return;
     }
-    const pipeline = this._pipeline;
-    this._pipeline = createPipeline([], [], [], []);
     this._scheduleBlocks(pipeline, host);
-    this._scheduleBlockingEffects(pipeline, host);
-    this._schedulePassiveEffects(pipeline, host);
+    this._scheduleEffects(pipeline, host);
   }
 
   waitForUpdate(): Promise<void> {
@@ -90,59 +100,24 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     }
   }
 
-  private async _beginUpdate(
-    rootBlock: Block<TContext>,
-    host: UpdateHost<TContext>,
-  ): Promise<void> {
-    const originalPipeline = this._pipeline;
-    const pipeline = createPipeline([rootBlock], [], [], []);
-    const blocks = pipeline.blocks;
-
-    let startTime = this._scheduler.getCurrentTime();
-
-    // Do not remember block.length since it can grow.
-    for (let i = 0; i < blocks.length; i++) {
-      const block = blocks[i]!;
-      if (!block.shouldUpdate()) {
-        block.cancelUpdate();
-        continue;
-      }
-
-      if (
-        this._scheduler.shouldYieldToMain(
-          this._scheduler.getCurrentTime() - startTime,
-        )
-      ) {
-        await this._scheduler.yieldToMain({
-          priority: block.priority,
-        });
-        startTime = this._scheduler.getCurrentTime();
-      }
-
-      this._pipeline = pipeline;
-      this._isUpdating = true;
-      try {
-        block.update(host, this);
-      } finally {
-        this._isUpdating = false;
-        this._pipeline = originalPipeline;
-      }
-    }
-
-    this._scheduleBlockingEffects(pipeline, host);
-    this._schedulePassiveEffects(pipeline, host);
-  }
-
   private _scheduleBlocks(
     pipeline: UpdatePipeline<TContext>,
     host: UpdateHost<TContext>,
   ): void {
-    for (let i = 0, l = pipeline.blocks.length; i < l; i++) {
-      const block = pipeline.blocks[i]!;
+    const { blocks } = pipeline;
+
+    for (let i = 0, l = blocks.length; i < l; i++) {
+      const block = blocks[i]!;
       this._scheduler.requestCallback(
         async () => {
           try {
-            await this._beginUpdate(block, host);
+            const pipeline = {
+              blocks: [block],
+              mutationEffects: [],
+              layoutEffects: [],
+              passiveEffects: [],
+            };
+            await this.flushUpdate(pipeline, host);
           } finally {
             this._taskCount.value--;
           }
@@ -153,61 +128,50 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       );
       this._taskCount.value++;
     }
+
+    pipeline.blocks = [];
   }
 
-  private _scheduleBlockingEffects(
+  private _scheduleEffects(
     pipeline: UpdatePipeline<TContext>,
     host: UpdateHost<TContext>,
   ): void {
-    if (
-      pipeline.mutationEffects.length > 0 ||
-      pipeline.layoutEffects.length > 0
-    ) {
+    const { passiveEffects, mutationEffects, layoutEffects } = pipeline;
+
+    if (mutationEffects.length > 0 || layoutEffects.length > 0) {
       this._scheduler.requestCallback(
         () => {
           try {
-            host.flushEffects(pipeline.mutationEffects, EffectPhase.Mutation);
-            host.flushEffects(pipeline.layoutEffects, EffectPhase.Layout);
+            host.flushEffects(mutationEffects, EffectPhase.Mutation);
+            host.flushEffects(layoutEffects, EffectPhase.Layout);
           } finally {
             this._taskCount.value--;
           }
         },
         { priority: 'user-blocking' },
       );
+
+      pipeline.mutationEffects = [];
+      pipeline.layoutEffects = [];
+
       this._taskCount.value++;
     }
-  }
 
-  private _schedulePassiveEffects(
-    pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
-  ): void {
-    if (pipeline.passiveEffects.length > 0) {
+    if (passiveEffects.length > 0) {
       this._scheduler.requestCallback(
         () => {
           try {
-            host.flushEffects(pipeline.passiveEffects, EffectPhase.Passive);
+            host.flushEffects(passiveEffects, EffectPhase.Passive);
           } finally {
             this._taskCount.value--;
           }
         },
         { priority: 'background' },
       );
+
+      pipeline.passiveEffects = [];
+
       this._taskCount.value++;
     }
   }
-}
-
-function createPipeline<TContext>(
-  blocks: Block<TContext>[],
-  mutationEffects: Effect[],
-  layoutEffects: Effect[],
-  passiveEffects: [],
-): UpdatePipeline<TContext> {
-  return {
-    blocks,
-    mutationEffects,
-    layoutEffects,
-    passiveEffects,
-  };
 }

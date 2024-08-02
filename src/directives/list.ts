@@ -6,7 +6,6 @@ import {
   type Part,
   PartType,
   type UpdateContext,
-  type Updater,
   directiveTag,
   nameOf,
 } from '../baseTypes.js';
@@ -116,7 +115,7 @@ export class ListBinding<TItem, TKey, TValue>
   connect(context: UpdateContext<unknown>): void {
     const { items, keySelector, valueSelector } = this._value;
     this._updateItems(items, keySelector, valueSelector, context);
-    this._requestMutation(context.updater);
+    this._requestMutation(context);
   }
 
   bind(
@@ -129,14 +128,14 @@ export class ListBinding<TItem, TKey, TValue>
     if (newValue.items !== this._value.items) {
       const { items, keySelector, valueSelector } = newValue;
       this._updateItems(items, keySelector, valueSelector, context);
-      this._requestMutation(context.updater);
+      this._requestMutation(context);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     this._clearItems(context);
-    this._requestMutation(context.updater);
+    this._requestMutation(context);
   }
 
   disconnect(): void {
@@ -357,10 +356,10 @@ export class ListBinding<TItem, TKey, TValue>
     }
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
+  private _requestMutation(context: UpdateContext<unknown>): void {
     if (!this._dirty) {
       this._dirty = true;
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
   }
 }
@@ -455,7 +454,7 @@ function insertItem<TKey, TValue>(
     part.node.data = nameOf(value) + '@' + nameOf(key);
   }
 
-  context.updater.enqueueMutationEffect(
+  context.enqueueMutationEffect(
     new InsertItem(part, referenceBinding, containerPart),
   );
   binding.connect(context);
@@ -469,7 +468,7 @@ function moveItem<T>(
   containerPart: Part,
   context: UpdateContext<unknown>,
 ): void {
-  context.updater.enqueueMutationEffect(
+  context.enqueueMutationEffect(
     new MoveItem(binding, referenceBinding, containerPart),
   );
 }
@@ -500,5 +499,5 @@ function removeItem<T>(
   context: UpdateContext<unknown>,
 ): void {
   binding.unbind(context);
-  context.updater.enqueueMutationEffect(new RemoveItem(binding.part));
+  context.enqueueMutationEffect(new RemoveItem(binding.part));
 }

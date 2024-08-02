@@ -4,8 +4,6 @@ import {
   type Directive,
   type Part,
   type UpdateContext,
-  type UpdateHost,
-  type Updater,
   directiveTag,
   nameOf,
   nameTag,
@@ -124,69 +122,65 @@ export class LazyBinding<TValue>
     this._flags &= ~FLAG_UPDATING;
   }
 
-  requestUpdate(
-    priority: TaskPriority,
-    host: UpdateHost<unknown>,
-    updater: Updater<unknown>,
-  ): void {
+  requestUpdate(priority: TaskPriority, context: UpdateContext<unknown>): void {
     if (
       this._flags & FLAG_CONNECTED &&
       (!(this._flags & FLAG_UPDATING) ||
         getPriorityNumber(priority) > getPriorityNumber(this._priority))
     ) {
+      context.enqueueBlock(this);
+      context.scheduleUpdate();
+
       this._priority = priority;
       this._flags |= FLAG_UPDATING;
-      updater.enqueueBlock(this);
-      updater.scheduleUpdate(host);
     }
   }
 
-  update(host: UpdateHost<unknown>, updater: Updater<unknown>): void {
-    const internalContext = { host, updater, block: this };
+  update(context: UpdateContext<unknown>): void {
     if (this._flags & FLAG_DIRTY) {
-      this._binding.bind(this._value.value, internalContext);
+      this._binding.bind(this._value.value, context);
     } else {
-      this._binding.connect(internalContext);
+      this._binding.connect(context);
     }
+
     this._flags |= FLAG_CONNECTED;
     this._flags &= ~(FLAG_DIRTY | FLAG_UPDATING);
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._forceUpdate(context.updater);
+    this._forceUpdate(context);
   }
 
   bind(newValue: Lazy<TValue>, context: UpdateContext<unknown>): void {
-    this._forceUpdate(context.updater);
+    this._forceUpdate(context);
     this._value = newValue;
     this._flags |= FLAG_DIRTY;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const internalContext = {
-      host: context.host,
-      updater: context.updater,
-      block: this,
-    };
-    this._binding.unbind(internalContext);
+    this._binding.unbind(context);
+
     this._flags |= FLAG_DIRTY;
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   disconnect(): void {
     this._binding.disconnect();
+
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
-  private _forceUpdate(updater: Updater<unknown>): void {
+  private _forceUpdate(context: UpdateContext<unknown>): void {
     const priority = this._parent?.priority ?? 'user-blocking';
+
     if (
       !(this._flags & FLAG_UPDATING) ||
       getPriorityNumber(priority) > getPriorityNumber(this._priority)
     ) {
+      context.enqueueBlock(this);
+
       this._priority = priority;
       this._flags |= FLAG_UPDATING;
-      updater.enqueueBlock(this);
     }
   }
 }

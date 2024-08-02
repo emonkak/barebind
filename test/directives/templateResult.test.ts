@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
+import {
+  PartType,
+  UpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/baseTypes.js';
 import {
   TemplateResult,
   TemplateResultBinding,
@@ -23,7 +28,6 @@ describe('TemplateResult', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new TemplateBinding directive', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -31,8 +35,9 @@ describe('TemplateResult', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const context = { host, updater, block };
+      const context = new UpdateContext(host, updater, block);
 
+      const value = new TemplateResult(new MockTemplate(), {});
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -42,14 +47,15 @@ describe('TemplateResult', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = new TemplateResult(new MockTemplate(), {});
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'TemplateResult directive must be used in a child node,',
@@ -61,18 +67,19 @@ describe('TemplateResult', () => {
 describe('TemplateResultBinding', () => {
   describe('.connect()', () => {
     it('should not render the template if it is already rendered', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
-      const fragment = new MockTemplateFragment(value.data, [
-        document.createComment(''),
-      ]);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(value.data, [
+        document.createComment(''),
+      ]);
+      const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -82,10 +89,10 @@ describe('TemplateResultBinding', () => {
       const mountSpy = vi.spyOn(fragment, 'mount');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value.data, context);
@@ -100,17 +107,19 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should remount the fragment if it is unmounted', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
-      const fragment = new MockTemplateFragment(value.data);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const startNode = document.createComment('');
+      const context = new UpdateContext(host, updater);
+
+      const value = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(value.data, [
+        document.createComment(''),
+      ]);
+      const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -120,16 +129,15 @@ describe('TemplateResultBinding', () => {
       const unbindSpy = vi.spyOn(fragment, 'unbind');
       const mountSpy = vi.spyOn(fragment, 'mount');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
-      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value.data, context);
@@ -144,27 +152,28 @@ describe('TemplateResultBinding', () => {
       expect(mountSpy).toHaveBeenNthCalledWith(2, part);
       expect(unmountSpy).toHaveBeenCalledOnce();
       expect(unmountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(startNode);
+      expect(binding.startNode).toBe(fragment.startNode);
       expect(binding.endNode).toBe(part.node);
     });
   });
 
   describe('.bind()', () => {
     it('should bind data to the current fragment if it is a renderd from the same template', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const template = new MockTemplate();
       const value1 = new TemplateResult(template, {});
       const value2 = new TemplateResult(template, {});
       const fragment = new MockTemplateFragment(value1.data, [
         document.createComment(''),
       ]);
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
       const binding = new TemplateResultBinding(value1, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       const renderSpy = vi
         .spyOn(value1.template, 'render')
@@ -174,10 +183,10 @@ describe('TemplateResultBinding', () => {
       const mountSpy = vi.spyOn(fragment, 'mount');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value1.data, context);
@@ -192,6 +201,14 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should unbind data from the current fragment if it is a renderd from a different template', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
       const fragment1 = new MockTemplateFragment(value1.data, [
@@ -200,14 +217,7 @@ describe('TemplateResultBinding', () => {
       const fragment2 = new MockTemplateFragment(value2.data, [
         document.createComment(''),
       ]);
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
       const binding = new TemplateResultBinding(value1, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       const render1Spy = vi
         .spyOn(value1.template, 'render')
@@ -225,10 +235,10 @@ describe('TemplateResultBinding', () => {
       const unmount2Spy = vi.spyOn(fragment2, 'unmount');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
       expect(render1Spy).toHaveBeenCalledWith(value1.data, context);
@@ -253,19 +263,20 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should render the template when it is called without calling connect()', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value1.data, [
         document.createComment(''),
       ]);
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
       const binding = new TemplateResultBinding(value1, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       const renderSpy = vi
         .spyOn(value2.template, 'render')
@@ -275,7 +286,7 @@ describe('TemplateResultBinding', () => {
       const mountSpy = vi.spyOn(fragment, 'mount');
 
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value2.data, context);
@@ -289,6 +300,14 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should only mount the last rendered fragment if there is multiple renderings durling a transation', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
       const fragment1 = new MockTemplateFragment(value1.data, [
@@ -297,14 +316,7 @@ describe('TemplateResultBinding', () => {
       const fragment2 = new MockTemplateFragment(value2.data, [
         document.createComment(''),
       ]);
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
       const binding = new TemplateResultBinding(value1, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
 
       const render1Spy = vi
         .spyOn(value1.template, 'render')
@@ -323,7 +335,7 @@ describe('TemplateResultBinding', () => {
 
       binding.connect(context);
       binding.bind(value2, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
       expect(render1Spy).toHaveBeenCalledWith(value1.data, context);
@@ -346,17 +358,19 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should remount the fragment if it is unmounted', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
-      const fragment = new MockTemplateFragment(value.data);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const startNode = document.createComment('');
+      const context = new UpdateContext(host, updater);
+
+      const value = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(value.data, [
+        document.createComment(''),
+      ]);
+      const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -366,16 +380,15 @@ describe('TemplateResultBinding', () => {
       const unbindSpy = vi.spyOn(fragment, 'unbind');
       const mountSpy = vi.spyOn(fragment, 'mount');
       const unmountSpy = vi.spyOn(fragment, 'unmount');
-      vi.spyOn(fragment, 'startNode', 'get').mockReturnValue(startNode);
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(value, context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value.data, context);
@@ -390,25 +403,26 @@ describe('TemplateResultBinding', () => {
       expect(mountSpy).toHaveBeenNthCalledWith(2, part);
       expect(unmountSpy).toHaveBeenCalledOnce();
       expect(unmountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(startNode);
+      expect(binding.startNode).toBe(fragment.startNode);
       expect(binding.endNode).toBe(part.node);
     });
   });
 
   describe('.unbind()', () => {
     it('should unbind data from the current fragment', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
-      const fragment = new MockTemplateFragment(value.data, [
-        document.createComment(''),
-      ]);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = new TemplateResult(new MockTemplate(), {});
+      const fragment = new MockTemplateFragment(value.data, [
+        document.createComment(''),
+      ]);
+      const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -418,10 +432,10 @@ describe('TemplateResultBinding', () => {
       const unmountSpy = vi.spyOn(fragment, 'unmount');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.unbind(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value.data, context);
@@ -438,16 +452,17 @@ describe('TemplateResultBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the current fragment', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TemplateResultBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
+      const value = new TemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value.data);
+      const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
         .spyOn(value.template, 'render')
@@ -456,7 +471,7 @@ describe('TemplateResultBinding', () => {
       const disconnectSpy = vi.spyOn(fragment, 'disconnect');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
       binding.disconnect();
 
       expect(renderSpy).toHaveBeenCalledOnce();

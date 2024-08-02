@@ -8,7 +8,6 @@ import {
   PartType,
   type PropertyPart,
   type UpdateContext,
-  type Updater,
   directiveTag,
   isDirective,
 } from './baseTypes.js';
@@ -54,7 +53,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -62,14 +61,14 @@ export class AttributeBinding implements Binding<unknown>, Effect {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._memoizedValue, newValue)) {
+      this._requestMutation(context, Status.Mounting);
       this._pendingValue = newValue;
-      this._requestMutation(context.updater, Status.Mounting);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedValue != null) {
-      this._requestMutation(context.updater, Status.Unmounting);
+      this._requestMutation(context, Status.Unmounting);
     }
   }
 
@@ -105,9 +104,12 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }
@@ -146,6 +148,10 @@ export class ElementBinding implements Binding<unknown> {
     return this._part.node;
   }
 
+  get bindings(): Map<string, Binding<any>> {
+    return this._bindings;
+  }
+
   connect(context: UpdateContext<unknown>): void {
     this._updateProps(this._value, context);
   }
@@ -156,8 +162,8 @@ export class ElementBinding implements Binding<unknown> {
     }
     if (this._value !== newValue) {
       this._updateProps(newValue, context);
+      this._value = newValue;
     }
-    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
@@ -243,7 +249,7 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -251,14 +257,14 @@ export class EventBinding implements Binding<unknown>, Effect {
       ensureEventListener(newValue, this._part);
     }
     if (newValue !== this._memoizedListener) {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
+      this._pendingListener = newValue;
     }
-    this._pendingListener = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedListener != null) {
-      this._requestMutation(context.updater, Status.Unmounting);
+      this._requestMutation(context, Status.Unmounting);
     }
   }
 
@@ -356,9 +362,12 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }
@@ -398,7 +407,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -406,14 +415,14 @@ export class NodeBinding implements Binding<unknown>, Effect {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._memoizedValue, newValue)) {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
+      this._pendingValue = newValue;
     }
-    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedValue !== null) {
-      this._requestMutation(context.updater, Status.Unmounting);
+      this._requestMutation(context, Status.Unmounting);
     }
   }
 
@@ -438,9 +447,12 @@ export class NodeBinding implements Binding<unknown>, Effect {
     this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }
@@ -480,7 +492,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -488,9 +500,9 @@ export class PropertyBinding implements Binding<unknown>, Effect {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._memoizedValue, newValue)) {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
+      this._pendingValue = newValue;
     }
-    this._pendingValue = newValue;
   }
 
   unbind(_context: UpdateContext<unknown>): void {}
@@ -510,9 +522,12 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }
@@ -565,7 +580,7 @@ function ensureEventListener(
 function ensureSpreadProps(
   value: unknown,
   part: Part,
-): asserts value is { [key: string]: unknown } {
+): asserts value is SpreadProps {
   if (!(value != null && typeof value === 'object')) {
     throw new Error(
       'A value of ElementBinding must be an object, but got "' +

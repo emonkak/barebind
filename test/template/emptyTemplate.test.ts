@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PartType } from '../../src/baseTypes.js';
+import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import {
   EmptyTemplate,
   EmptyTemplateFragment,
@@ -21,11 +21,11 @@ describe('EmptyTemplate', () => {
     it('should return a new EmptyTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = EmptyTemplate.instance.render(null, context);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
       expect(fragment.startNode).toBe(null);
       expect(fragment.endNode).toBe(null);
     });
@@ -45,13 +45,13 @@ describe('EmptyTemplateFragment', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new EmptyTemplateFragment();
 
       fragment.connect(context);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 
@@ -59,13 +59,13 @@ describe('EmptyTemplateFragment', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new EmptyTemplateFragment();
 
       fragment.bind(null, context);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 
@@ -73,13 +73,13 @@ describe('EmptyTemplateFragment', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
+
       const fragment = new EmptyTemplateFragment();
 
       fragment.unbind(context);
 
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
+      expect(context.isPending()).toBe(false);
     });
   });
 
@@ -90,6 +90,7 @@ describe('EmptyTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+
       const fragment = new EmptyTemplateFragment();
 
       container.appendChild(part.node);

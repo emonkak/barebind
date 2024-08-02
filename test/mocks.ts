@@ -12,6 +12,7 @@ import {
   type TemplateFragment,
   type UpdateContext,
   type UpdateHost,
+  type UpdatePipeline,
   type Updater,
   directiveTag,
 } from '../src/baseTypes.js';
@@ -57,11 +58,10 @@ export class MockBlock<TContext> implements Block<TContext> {
 
   requestUpdate(
     _priority: TaskPriority,
-    _host: UpdateHost<TContext>,
-    _updater: Updater<TContext>,
+    _context: UpdateContext<TContext>,
   ): void {}
 
-  update(_host: UpdateHost<TContext>, _updater: Updater<TContext>): void {}
+  update(_context: UpdateContext<TContext>): void {}
 }
 
 export class MockScheduler implements Scheduler {
@@ -73,7 +73,7 @@ export class MockScheduler implements Scheduler {
     callback: () => void,
     _options?: RequestCallbackOptions,
   ): void {
-    callback();
+    queueMicrotask(callback);
   }
 
   shouldYieldToMain(_elapsedTime: number): boolean {
@@ -141,11 +141,12 @@ export class MockTemplateFragment<TData, TContext>
 
 export class MockUpdateHost implements UpdateHost<RenderContext> {
   beginRender(
-    hooks: Hook[],
-    block: Block<RenderContext>,
     updater: Updater<RenderContext>,
+    block: Block<RenderContext>,
+    hooks: Hook[],
+    pipeline: UpdatePipeline<RenderContext>,
   ): RenderContext {
-    return new RenderContext(hooks, block, this, updater);
+    return new RenderContext(this, updater, block, hooks, pipeline);
   }
 
   finishRender(context: RenderContext): void {
@@ -230,18 +231,18 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     return this._part.node;
   }
 
-  bind(newValue: TextDirective, { updater }: UpdateContext<unknown>): void {
+  bind(newValue: TextDirective, context: UpdateContext<unknown>): void {
     this._value = newValue;
-    updater.enqueueMutationEffect(this);
+    context.enqueueMutationEffect(this);
   }
 
-  connect({ updater }: UpdateContext<unknown>): void {
-    updater.enqueueMutationEffect(this);
+  connect(context: UpdateContext<unknown>): void {
+    context.enqueueMutationEffect(this);
   }
 
-  unbind({ updater }: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext<unknown>): void {
     this._value = new TextDirective(null);
-    updater.enqueueMutationEffect(this);
+    context.enqueueMutationEffect(this);
   }
 
   disconnect(): void {}

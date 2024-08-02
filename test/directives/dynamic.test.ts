@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
+import {
+  PartType,
+  UpdateContext,
+  directiveTag,
+  nameTag,
+} from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -33,7 +38,7 @@ describe('Dynamic', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -57,7 +62,7 @@ describe('Dynamic', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = value[directiveTag](part, context);
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
       const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
@@ -85,7 +90,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(value, part, context);
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -104,16 +109,16 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(dynamic('foo'), part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(dynamic('bar'), context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('bar');
       expect(binding.binding).toBeInstanceOf(NodeBinding);
@@ -129,7 +134,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(
         dynamic(new TextDirective()),
         part,
@@ -139,10 +144,10 @@ describe('DynamicBinding', () => {
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(dynamic(new TextDirective()), context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(bindSpy).toHaveBeenCalledOnce();
@@ -157,7 +162,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(
         dynamic(new TextDirective()),
         part,
@@ -167,10 +172,10 @@ describe('DynamicBinding', () => {
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       binding.bind(dynamic('foo'), context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('foo');
       expect(binding.binding).toBeInstanceOf(NodeBinding);
@@ -185,13 +190,13 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(dynamic('foo'), part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.connect(context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       let isConnected = false;
       const value = new TextDirective();
@@ -205,7 +210,7 @@ describe('DynamicBinding', () => {
       });
 
       binding.bind(dynamic(value), context);
-      updater.flushUpdate(host);
+      context.flushUpdate();
 
       expect(isConnected).toBe(true);
       expect(binding.binding).toBeInstanceOf(TextBinding);
@@ -223,7 +228,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(value, part, context);
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -243,7 +248,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+      const context = new UpdateContext(host, updater);
       const binding = new DynamicBinding(value, part, context);
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

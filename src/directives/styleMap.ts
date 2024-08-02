@@ -6,7 +6,6 @@ import {
   type Part,
   PartType,
   type UpdateContext,
-  type Updater,
   directiveTag,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
@@ -93,7 +92,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: StyleMap, context: UpdateContext<unknown>): void {
@@ -101,14 +100,14 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
       ensureDirective(StyleMap, newValue, this._part);
     }
     if (!shallowEqual(newValue.styles, this._memoizedStyles)) {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (Object.keys(this._memoizedStyles).length > 0) {
-      this._requestMutation(context.updater, Status.Unmounting);
+      this._requestMutation(context, Status.Unmounting);
     }
   }
 
@@ -153,9 +152,12 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }

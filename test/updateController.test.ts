@@ -5,17 +5,12 @@ import {
   type Hook,
   HookType,
   PartType,
+  createUpdatePipeline,
   directiveTag,
 } from '../src/baseTypes.js';
-import { RenderContext } from '../src/renderContext.js';
 import { UpdateController } from '../src/updateController.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import {
-  MockBlock,
-  MockTemplate,
-  TextBinding,
-  TextDirective,
-} from './mocks.js';
+import { MockBlock, TextBinding, TextDirective } from './mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -41,28 +36,16 @@ describe('UpdateController', () => {
   describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
       const host = new UpdateController();
-      const template = new MockTemplate();
-      const props = {
-        data: {},
-      };
-      const component = vi.fn().mockImplementation((props, context) => {
-        context.useEffect(() => {});
-        return { template, data: props.data };
-      });
-      const hooks: Hook[] = [];
-      const block = new MockBlock();
       const updater = new SyncUpdater();
-      const context = host.beginRender(hooks, block, updater);
-      const result = component(props, context);
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const pipeline = createUpdatePipeline();
+
+      const context = host.beginRender(updater, block, hooks, pipeline);
+
       host.finishRender(context);
 
-      expect(result.data).toEqual(props.data);
-      expect(component).toHaveBeenCalledOnce();
-      expect(component).toHaveBeenCalledWith(props, expect.any(RenderContext));
-      expect(hooks).toEqual([
-        expect.objectContaining({ type: HookType.Effect }),
-        { type: HookType.Finalizer },
-      ]);
+      expect(hooks).toStrictEqual([{ type: HookType.Finalizer }]);
     });
   });
 
@@ -125,7 +108,7 @@ describe('UpdateController', () => {
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
-      expect(template.holes).toEqual([{ type: PartType.Node, index: 2 }]);
+      expect(template.holes).toStrictEqual([{ type: PartType.Node, index: 2 }]);
       expect(template.element.innerHTML).toBe('<div>Hello, !</div>');
     });
 
@@ -144,7 +127,7 @@ describe('UpdateController', () => {
       const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
       const template = host.getSVGTemplate(tokens, data);
 
-      expect(template.holes).toEqual([{ type: PartType.Node, index: 2 }]);
+      expect(template.holes).toStrictEqual([{ type: PartType.Node, index: 2 }]);
       expect(template.element.innerHTML).toBe('<text>Hello, !</text>');
       expect(template.element.content.firstElementChild?.namespaceURI).toBe(
         'http://www.w3.org/2000/svg',

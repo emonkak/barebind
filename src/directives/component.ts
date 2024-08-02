@@ -9,10 +9,8 @@ import {
   type Part,
   PartType,
   type Template,
-  type TemplateDirective,
   type TemplateFragment,
   type UpdateContext,
-  type Updater,
   directiveTag,
   nameOf,
   nameTag,
@@ -115,15 +113,19 @@ export class ComponentBinding<TProps, TData, TContext>
 
   connect(context: UpdateContext<TContext>): void {
     const { type, props } = this._value;
-    const { template, data } = this._renderComponent(type, props, context);
+    const { template, data } = context.renderComponent(
+      type,
+      props,
+      this._hooks,
+    );
 
     if (this._pendingFragment !== null) {
       if (this._pendingFragment !== this._memoizedFragment) {
-        this._requestMutation(context.updater, Status.Mounting);
+        this._requestMutation(context, Status.Mounting);
       }
       this._pendingFragment.bind(data, context);
     } else {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
     }
@@ -144,10 +146,14 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._value.type !== type) {
       // The component has been changed, so we need to clean hooks before
       // rendering.
-      this._requestCleanHooks(context.updater);
+      this._requestCleanHooks(context);
     }
 
-    const { template, data } = this._renderComponent(type, props, context);
+    const { template, data } = context.renderComponent(
+      type,
+      props,
+      this._hooks,
+    );
 
     if (this._pendingFragment !== null) {
       // Safety: If a pending fragment exists, there will always be a memoized
@@ -156,7 +162,7 @@ export class ComponentBinding<TProps, TData, TContext>
         // Here we use the same template as before. However the fragment may have
         // been unmounted. If so, we have to remount it.
         if (this._memoizedFragment !== this._pendingFragment) {
-          this._requestMutation(context.updater, Status.Mounting);
+          this._requestMutation(context, Status.Mounting);
         }
 
         this._pendingFragment.bind(data, context);
@@ -166,7 +172,7 @@ export class ComponentBinding<TProps, TData, TContext>
         this._pendingFragment.unbind(context);
 
         // Next, unmount the old fragment and mount the new fragment.
-        this._requestMutation(context.updater, Status.Mounting);
+        this._requestMutation(context, Status.Mounting);
 
         let newFragment: TemplateFragment<TData, TContext>;
 
@@ -200,7 +206,7 @@ export class ComponentBinding<TProps, TData, TContext>
       // The template has never been rendered here. We have to mount the new
       // fragment before rendering the template. This branch will never be
       // executed unless bind() is called before connect().
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
 
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
@@ -213,9 +219,9 @@ export class ComponentBinding<TProps, TData, TContext>
   unbind(context: UpdateContext<TContext>): void {
     this._pendingFragment?.unbind(context);
 
-    this._requestCleanHooks(context.updater);
+    this._requestCleanHooks(context);
 
-    this._requestMutation(context.updater, Status.Unmounting);
+    this._requestMutation(context, Status.Unmounting);
   }
 
   disconnect(): void {
@@ -241,39 +247,19 @@ export class ComponentBinding<TProps, TData, TContext>
     this._status = Status.Committed;
   }
 
-  private _renderComponent(
-    type: ComponentType<TProps, TData, TContext>,
-    props: TProps,
-    { host, updater, block }: UpdateContext<TContext>,
-  ): TemplateDirective<TData, TContext> {
-    if (block === null) {
-      // Component directive should be used with Lazy directive. Otherwise,
-      // updates will begin from the parent block instead of the component
-      // itself.
-      throw new Error('Component directive must be used with a block.');
-    }
-
-    const renderContext = host.beginRender(this._hooks, block, updater);
-    const result = type(props, renderContext);
-
-    host.finishRender(renderContext);
-
-    return result.valueOf() as TemplateDirective<TData, TContext>;
-  }
-
-  private _requestCleanHooks(updater: Updater<TContext>): void {
+  private _requestCleanHooks(context: UpdateContext<TContext>): void {
     if (this._hooks.length > 0) {
-      updater.enqueueLayoutEffect(new CleanHooks(this._hooks));
+      context.enqueueLayoutEffect(new CleanHooks(this._hooks));
       this._hooks = [];
     }
   }
 
   private _requestMutation(
-    updater: Updater<TContext>,
+    context: UpdateContext<TContext>,
     newStatus: Status,
   ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }

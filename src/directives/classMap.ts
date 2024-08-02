@@ -6,7 +6,6 @@ import {
   type Part,
   PartType,
   type UpdateContext,
-  type Updater,
   directiveTag,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
@@ -80,7 +79,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater, Status.Mounting);
+    this._requestMutation(context, Status.Mounting);
   }
 
   bind(newValue: ClassMap, context: UpdateContext<unknown>): void {
@@ -88,14 +87,14 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
       ensureDirective(ClassMap, newValue, this._part);
     }
     if (!shallowEqual(newValue.classes, this._memoizedClasses)) {
-      this._requestMutation(context.updater, Status.Mounting);
+      this._requestMutation(context, Status.Mounting);
     }
     this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (Object.keys(this._memoizedClasses).length > 0) {
-      this._requestMutation(context.updater, Status.Unmounting);
+      this._requestMutation(context, Status.Unmounting);
     }
   }
 
@@ -132,9 +131,12 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+  private _requestMutation(
+    context: UpdateContext<unknown>,
+    newStatus: Status,
+  ): void {
     if (this._status === Status.Committed) {
-      updater.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
   }
