@@ -23,7 +23,6 @@ export interface Directive<TContext = unknown> {
 export interface Block<TContext> {
   get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
-  get isConnected(): boolean;
   get isUpdating(): boolean;
   shouldUpdate(): boolean;
   cancelUpdate(): void;
