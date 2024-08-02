@@ -10,7 +10,7 @@ describe('classMap()', () => {
     const classDeclaration = { foo: true };
     const value = classMap(classDeclaration);
 
-    expect(value.classDeclaration).toBe(classDeclaration);
+    expect(value.classes).toBe(classDeclaration);
   });
 });
 
@@ -146,7 +146,7 @@ describe('ClassMapBinding', () => {
         bar: false,
         baz: true,
       });
-      const value2 = classMap(value1.classDeclaration);
+      const value2 = classMap(value1.classes);
       const part = {
         type: PartType.Attribute,
         name: 'class',
@@ -162,7 +162,7 @@ describe('ClassMapBinding', () => {
 
       binding.bind(value2, context);
 
-      expect(binding.value).toBe(value1);
+      expect(binding.value).toBe(value2);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });

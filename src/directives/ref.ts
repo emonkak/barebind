@@ -14,6 +14,12 @@ import {
 
 type ElementRef = RefValue<Element | null>;
 
+enum Status {
+  Committed,
+  Mounting,
+  Unmounting,
+}
+
 export function ref(ref: ElementRef | null): Ref {
   return new Ref(ref);
 }
@@ -41,21 +47,21 @@ export class Ref implements Directive {
 }
 
 export class RefBinding implements Binding<Ref>, Effect {
-  private _pendingDirective: Ref;
+  private _value: Ref;
 
   private readonly _part: AttributePart;
 
   private _memoizedRef: ElementRef | null = null;
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(directive: Ref, part: AttributePart) {
-    this._pendingDirective = directive;
+    this._value = directive;
     this._part = part;
   }
 
   get value(): Ref {
-    return this._pendingDirective;
+    return this._value;
   }
 
   get part(): AttributePart {
@@ -71,58 +77,72 @@ export class RefBinding implements Binding<Ref>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestEffect(context.updater);
+    this._requestEffect(context.updater, Status.Mounting);
   }
 
   bind(newValue: Ref, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(Ref, newValue, this._part);
     }
-    const oldValue = this._pendingDirective;
-    if (oldValue.ref !== newValue.ref) {
-      this._pendingDirective = newValue;
-      this.connect(context);
+    if (newValue.ref !== this._memoizedRef) {
+      this._requestEffect(context.updater, Status.Mounting);
     }
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { ref } = this._pendingDirective;
-    if (ref !== null) {
-      this._pendingDirective = new Ref(null);
-      this._requestEffect(context.updater);
+    if (this._memoizedRef !== null) {
+      this._requestEffect(context.updater, Status.Unmounting);
     }
   }
 
   disconnect() {}
 
   commit(): void {
-    const oldRef = this._memoizedRef ?? null;
-    const newRef = this._pendingDirective.ref;
+    switch (this._status) {
+      case Status.Mounting: {
+        const oldRef = this._memoizedRef ?? null;
+        const newRef = this._value.ref;
 
-    if (oldRef !== null) {
-      if (typeof oldRef === 'function') {
-        oldRef(null);
-      } else {
-        oldRef.current = null;
+        if (oldRef !== null) {
+          invokeRef(oldRef, null);
+        }
+
+        if (newRef !== null) {
+          invokeRef(newRef, this._part.node);
+        }
+
+        this._memoizedRef = this._value.ref;
+        break;
+      }
+      case Status.Unmounting: {
+        const ref = this._value.ref;
+
+        /* istanbul ignore else @preserve */
+        if (ref !== null) {
+          invokeRef(ref, null);
+        }
+
+        this._memoizedRef = null;
+        break;
       }
     }
 
-    if (newRef !== null) {
-      if (typeof newRef === 'function') {
-        newRef(this._part.node);
-      } else {
-        newRef.current = this._part.node;
-      }
-    }
-
-    this._memoizedRef = this._pendingDirective.ref;
-    this._dirty = false;
+    this._status = Status.Committed;
   }
 
-  private _requestEffect(updater: Updater<unknown>): void {
-    if (!this._dirty) {
+  private _requestEffect(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueLayoutEffect(this);
-      this._dirty = true;
     }
+    this._status = newStatus;
+  }
+}
+
+function invokeRef(ref: ElementRef, value: Element | null): void {
+  if (typeof ref === 'function') {
+    ref(value);
+  } else {
+    ref.current = value;
   }
 }

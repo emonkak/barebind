@@ -14,23 +14,31 @@ import {
   isDirective,
 } from './types.js';
 
+export enum Status {
+  Committed,
+  Mounting,
+  Unmounting,
+}
+
 export class AttributeBinding implements Binding<unknown>, Effect {
-  private _value: unknown;
+  private _pendingValue: unknown;
+
+  private _memoizedValue: unknown = null;
 
   private readonly _part: AttributePart;
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: unknown, part: AttributePart) {
     DEBUG: {
       ensureNonDirective(value, part);
     }
-    this._value = value;
+    this._pendingValue = value;
     this._part = part;
   }
 
   get value(): unknown {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): AttributePart {
@@ -46,55 +54,69 @@ export class AttributeBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
-    if (!Object.is(this._value, newValue)) {
-      this._value = newValue;
-      this._requestMutation(context.updater);
+    if (!Object.is(this._memoizedValue, newValue)) {
+      this._pendingValue = newValue;
+      this._requestMutation(context.updater, Status.Mounting);
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    if (this._value !== null) {
-      this._value = null;
-      this._requestMutation(context.updater);
+    if (this._memoizedValue != null) {
+      this._requestMutation(context.updater, Status.Unmounting);
     }
   }
 
   disconnect(): void {}
 
   commit(): void {
-    const { node, name } = this._part;
-    const value = this._value;
+    switch (this._status) {
+      case Status.Mounting: {
+        const { node, name } = this._part;
+        const value = this._pendingValue;
 
-    if (typeof value === 'string') {
-      node.setAttribute(name, value);
-    } else if (typeof value === 'boolean') {
-      node.toggleAttribute(name, value);
-    } else if (value == null) {
-      node.removeAttribute(name);
-    } else {
-      node.setAttribute(name, value.toString());
+        if (typeof value === 'string') {
+          node.setAttribute(name, value);
+        } else if (typeof value === 'boolean') {
+          node.toggleAttribute(name, value);
+        } else if (value == null) {
+          node.removeAttribute(name);
+        } else {
+          node.setAttribute(name, value.toString());
+        }
+
+        this._memoizedValue = this._pendingValue;
+        break;
+      }
+      case Status.Unmounting: {
+        const { node, name } = this._part;
+        node.removeAttribute(name);
+        this._memoizedValue = null;
+        break;
+      }
     }
 
-    this._dirty = false;
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
-      this._dirty = true;
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
+    this._status = newStatus;
   }
 }
 
+type SpreadProps = { [key: string]: unknown };
+
 export class ElementBinding implements Binding<unknown> {
-  private _props: { [key: string]: unknown };
+  private _value: SpreadProps;
 
   private readonly _part: ElementPart;
 
@@ -104,12 +126,12 @@ export class ElementBinding implements Binding<unknown> {
     DEBUG: {
       ensureSpreadProps(value, part);
     }
-    this._props = value;
+    this._value = value;
     this._part = part;
   }
 
   get value(): unknown {
-    return this._props;
+    return this._value;
   }
 
   get part(): ElementPart {
@@ -125,21 +147,20 @@ export class ElementBinding implements Binding<unknown> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._updateProps(context);
+    this._updateProps(this._value, context);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
     }
-    if (this._props !== newValue) {
-      this._props = newValue;
-      this._updateProps(context);
+    if (this._value !== newValue) {
+      this._updateProps(newValue, context);
     }
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    this._props = {};
     for (const binding of this._bindings.values()) {
       binding.unbind(context);
     }
@@ -151,19 +172,19 @@ export class ElementBinding implements Binding<unknown> {
     }
   }
 
-  private _updateProps(context: UpdateContext<unknown>): void {
+  private _updateProps(
+    props: SpreadProps,
+    context: UpdateContext<unknown>,
+  ): void {
     for (const [name, binding] of this._bindings.entries()) {
-      if (
-        !Object.hasOwn(this._props, name) ||
-        this._props[name] === undefined
-      ) {
+      if (!Object.hasOwn(props, name) || props[name] === undefined) {
         binding.unbind(context);
         this._bindings.delete(name);
       }
     }
 
-    for (const name in this._props) {
-      const value = this._props[name];
+    for (const name in props) {
+      const value = props[name];
       if (value === undefined) {
         continue;
       }
@@ -183,13 +204,19 @@ export class ElementBinding implements Binding<unknown> {
 }
 
 export class EventBinding implements Binding<unknown>, Effect {
-  private _pendingListener: EventListenerOrEventListenerObject | null;
+  private _pendingListener:
+    | EventListenerOrEventListenerObject
+    | null
+    | undefined;
 
-  private _memoizedListener: EventListenerOrEventListenerObject | null = null;
+  private _memoizedListener:
+    | EventListenerOrEventListenerObject
+    | null
+    | undefined = null;
 
   private readonly _part: EventPart;
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: unknown, part: EventPart) {
     DEBUG: {
@@ -216,7 +243,7 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -224,23 +251,21 @@ export class EventBinding implements Binding<unknown>, Effect {
       ensureEventListener(newValue, this._part);
     }
     if (newValue !== this._memoizedListener) {
-      this._pendingListener = newValue;
-      this._requestMutation(context.updater);
+      this._requestMutation(context.updater, Status.Mounting);
     }
+    this._pendingListener = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    if (this._memoizedListener !== null) {
-      this._requestMutation(context.updater);
+    if (this._memoizedListener != null) {
+      this._requestMutation(context.updater, Status.Unmounting);
     }
-
-    this._pendingListener = null;
   }
 
   disconnect(): void {
     const listener = this._memoizedListener;
 
-    if (listener !== null) {
+    if (listener != null) {
       const { node, name } = this._part;
 
       if (typeof listener === 'function') {
@@ -260,43 +285,46 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   commit(): void {
-    const oldListener = this._memoizedListener;
-    const newListener = this._pendingListener;
+    switch (this._status) {
+      case Status.Mounting: {
+        const oldListener = this._memoizedListener;
+        const newListener = this._pendingListener;
 
-    // If both are functions, the event listener options are the same.
-    // Therefore, there is no need to re-register the event listener.
-    if (typeof oldListener === 'object' || typeof newListener === 'object') {
-      if (oldListener !== null) {
-        const { node, name } = this._part;
+        // If both old and new are functions, the event listener options are
+        // the same. Therefore, there is no need to re-attach the event
+        // listener.
+        if (
+          typeof oldListener === 'object' ||
+          typeof newListener === 'object' ||
+          oldListener === undefined ||
+          newListener === undefined
+        ) {
+          if (oldListener != null) {
+            this._detachLisetener(oldListener);
+          }
 
-        if (typeof oldListener === 'function') {
-          node.removeEventListener(name, this);
-        } else {
-          node.removeEventListener(
-            name,
-            this,
-            oldListener as AddEventListenerOptions,
-          );
+          if (newListener != null) {
+            this._attachLisetener(newListener);
+          }
         }
+
+        this._memoizedListener = this._pendingListener;
+        break;
       }
+      case Status.Unmounting: {
+        const listener = this._memoizedListener;
 
-      if (newListener !== null) {
-        const { node, name } = this._part;
-
-        if (typeof newListener === 'function') {
-          node.addEventListener(name, this);
-        } else {
-          node.addEventListener(
-            name,
-            this,
-            newListener as AddEventListenerOptions,
-          );
+        /* istanbul ignore else @preserve */
+        if (listener != null) {
+          this._detachLisetener(listener);
         }
+
+        this._memoizedListener = null;
+        break;
       }
     }
 
-    this._memoizedListener = this._pendingListener;
-    this._dirty = false;
+    this._status = Status.Committed;
   }
 
   handleEvent(event: Event): void {
@@ -308,31 +336,53 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
-      this._dirty = true;
+  private _attachLisetener(listener: EventListenerOrEventListenerObject) {
+    const { node, name } = this._part;
+
+    if (typeof listener === 'function') {
+      node.addEventListener(name, this);
+    } else {
+      node.addEventListener(name, this, listener as AddEventListenerOptions);
+    }
+  }
+
+  private _detachLisetener(listener: EventListenerOrEventListenerObject) {
+    const { node, name } = this._part;
+
+    if (typeof listener === 'function') {
+      node.removeEventListener(name, this);
+    } else {
+      node.removeEventListener(name, this, listener as AddEventListenerOptions);
+    }
+  }
+
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
+    this._status = newStatus;
   }
 }
 
 export class NodeBinding implements Binding<unknown>, Effect {
-  private _value: unknown;
+  private _pendingValue: unknown;
+
+  private _memoizedValue: unknown = null;
 
   private readonly _part: Part;
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: unknown, part: Part) {
     DEBUG: {
       ensureNonDirective(value, part);
     }
-    this._value = value;
+    this._pendingValue = value;
     this._part = part;
   }
 
   get value(): unknown {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): Part {
@@ -348,61 +398,73 @@ export class NodeBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
-    if (!Object.is(this._value, newValue)) {
-      this._value = newValue;
-      this._requestMutation(context.updater);
+    if (!Object.is(this._memoizedValue, newValue)) {
+      this._requestMutation(context.updater, Status.Mounting);
     }
+    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    if (this._value !== null) {
-      this._value = null;
-      this._requestMutation(context.updater);
+    if (this._memoizedValue !== null) {
+      this._requestMutation(context.updater, Status.Unmounting);
     }
   }
 
   disconnect(): void {}
 
   commit(): void {
-    this._part.node.nodeValue =
-      typeof this._value === 'string'
-        ? this._value
-        : this._value?.toString() ?? null;
-    this._dirty = false;
+    switch (this._status) {
+      case Status.Mounting:
+        this._part.node.nodeValue =
+          typeof this._pendingValue === 'string'
+            ? this._pendingValue
+            : this._pendingValue?.toString() ?? null;
+        this._memoizedValue = this._pendingValue;
+        break;
+
+      case Status.Unmounting:
+        this._part.node.nodeValue = null;
+        this._memoizedValue = null;
+        break;
+    }
+
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
-      this._dirty = true;
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
+    this._status = newStatus;
   }
 }
 
 export class PropertyBinding implements Binding<unknown>, Effect {
-  private _value: unknown;
+  private _pendingValue: unknown;
+
+  private _memoizedValue: unknown = null;
 
   private readonly _part: PropertyPart;
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: unknown, part: PropertyPart) {
     DEBUG: {
       ensureNonDirective(value, part);
     }
-    this._value = value;
+    this._pendingValue = value;
     this._part = part;
   }
 
   get value(): unknown {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): PropertyPart {
@@ -418,17 +480,17 @@ export class PropertyBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
-    if (!Object.is(this._value, newValue)) {
-      this._value = newValue;
-      this._requestMutation(context.updater);
+    if (!Object.is(this._memoizedValue, newValue)) {
+      this._requestMutation(context.updater, Status.Mounting);
     }
+    this._pendingValue = newValue;
   }
 
   unbind(_context: UpdateContext<unknown>): void {}
@@ -436,16 +498,23 @@ export class PropertyBinding implements Binding<unknown>, Effect {
   disconnect(): void {}
 
   commit(): void {
-    const { node, name } = this._part;
-    (node as any)[name] = this._value;
-    this._dirty = false;
+    switch (this._status) {
+      case Status.Mounting: {
+        const { node, name } = this._part;
+        (node as any)[name] = this._pendingValue;
+        this._memoizedValue = this._pendingValue;
+        break;
+      }
+    }
+
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
-      this._dirty = true;
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
+    this._status = newStatus;
   }
 }
 
@@ -484,10 +553,10 @@ export function resolvePrimitiveBinding(
 function ensureEventListener(
   value: unknown,
   part: Part,
-): asserts value is EventListenerOrEventListenerObject | null {
-  if (!(value === null || isEventListener(value))) {
+): asserts value is EventListenerOrEventListenerObject | null | undefined {
+  if (!(value == null || isEventListener(value))) {
     throw new Error(
-      'A value of EventBinding must be EventListener, EventListenerObject or null.\n' +
+      'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.\n' +
         reportPart(part),
     );
   }

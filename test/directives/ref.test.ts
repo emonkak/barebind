@@ -119,14 +119,14 @@ describe('RefBinding', () => {
     it('should call a new RefCallback with the element and call a old RefCallback with null', () => {
       const refFunction1 = vi.fn();
       const refFunction2 = vi.fn();
-      const directive1 = ref(refFunction1);
-      const directive2 = ref(refFunction2);
+      const value1 = ref(refFunction1);
+      const value2 = ref(refFunction2);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive1, part);
+      const binding = new RefBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -134,10 +134,10 @@ describe('RefBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(refFunction1).toHaveBeenCalledTimes(2);
       expect(refFunction1).toHaveBeenCalledWith(null);
       expect(refFunction2).toHaveBeenCalledOnce();
@@ -147,14 +147,14 @@ describe('RefBinding', () => {
     it('should assign the element to a new RefObject and unassign the element from a old RefObject', () => {
       const refObject1 = { current: null };
       const refObject2 = { current: null };
-      const directive1 = ref(refObject1);
-      const directive2 = ref(refObject2);
+      const value1 = ref(refObject1);
+      const value2 = ref(refObject2);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive1, part);
+      const binding = new RefBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -162,24 +162,24 @@ describe('RefBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(refObject1.current).toBe(null);
       expect(refObject2.current).toBe(part.node);
     });
 
     it('should skip an update if a ref is the same as the previous one', () => {
       const refObject = { current: null };
-      const directive1 = ref(refObject);
-      const directive2 = ref(refObject);
+      const value1 = ref(refObject);
+      const value2 = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive1, part);
+      const binding = new RefBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -187,23 +187,23 @@ describe('RefBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
 
-      expect(binding.value).toBe(directive1);
+      expect(binding.value).toBe(value2);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
 
     it('should call the current RefCallback with null if the new ref is null', () => {
       const refFunction = vi.fn();
-      const directive1 = ref(refFunction);
-      const directive2 = ref(null);
+      const value1 = ref(refFunction);
+      const value2 = ref(null);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive1, part);
+      const binding = new RefBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -211,24 +211,24 @@ describe('RefBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(refFunction).toHaveBeenCalledTimes(2);
       expect(refFunction).toHaveBeenCalledWith(null);
     });
 
     it('should unassign the element from the current RefObject if the new ref is null', () => {
       const refObject = { current: null };
-      const directive1 = ref(refObject);
-      const directive2 = ref(null);
+      const value1 = ref(refObject);
+      const value2 = ref(null);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const binding = new RefBinding(directive1, part);
+      const binding = new RefBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -236,10 +236,10 @@ describe('RefBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(refObject.current).toBe(null);
     });
 

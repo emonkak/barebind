@@ -116,25 +116,28 @@ describe('AttributeBinding', () => {
       expect(element.hasAttribute('contenteditable')).toBe(false);
     });
 
-    it('should remove the attribute when null is passed', () => {
-      const element = document.createElement('div');
-      const part = {
-        type: PartType.Attribute,
-        node: element,
-        name: 'contenteditable',
-      } as const;
-      const binding = new AttributeBinding(null, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+    it.each([[null], [undefined]])(
+      'should remove the attribute when null or undefined is passed',
+      (value) => {
+        const element = document.createElement('div');
+        const part = {
+          type: PartType.Attribute,
+          node: element,
+          name: 'contenteditable',
+        } as const;
+        const binding = new AttributeBinding(value, part);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = { host, updater, block: null };
 
-      element.toggleAttribute('contenteditable', true);
-      binding.connect(context);
-      updater.flushUpdate(host);
+        element.toggleAttribute('contenteditable', true);
+        binding.connect(context);
+        updater.flushUpdate(host);
 
-      expect(binding.value).toBe(null);
-      expect(element.hasAttribute('contenteditable')).toBe(false);
-    });
+        expect(binding.value).toBe(value);
+        expect(element.hasAttribute('contenteditable')).toBe(false);
+      },
+    );
 
     it('should remove the attribute when undefined is passed', () => {
       const element = document.createElement('div');
@@ -167,6 +170,9 @@ describe('AttributeBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
+
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       binding.bind('foo', context);
 
@@ -227,37 +233,37 @@ describe('AttributeBinding', () => {
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
 
-      element.toggleAttribute('contenteditable', true);
+      binding.connect(context);
+      updater.flushUpdate(host);
+
       binding.unbind(context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(null);
+      expect(binding.value).toBe(true);
       expect(element.hasAttribute('contenteditable')).toBe(false);
     });
 
-    it('should do nothing if the update is already scheduled', () => {
-      const element = document.createElement('div');
-      const part = {
-        type: PartType.Attribute,
-        node: element,
-        name: 'contenteditable',
-      } as const;
-      const binding = new AttributeBinding(undefined, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+    it.each([[null], [undefined]])(
+      'should do nothing if the value is null or undefined',
+      (value) => {
+        const element = document.createElement('div');
+        const part = {
+          type: PartType.Attribute,
+          node: element,
+          name: 'contenteditable',
+        } as const;
+        const binding = new AttributeBinding(value, part);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = { host, updater, block: null };
 
-      const enqueueMutationEffectSpy = vi.spyOn(
-        updater,
-        'enqueueMutationEffect',
-      );
+        binding.unbind(context);
 
-      binding.unbind(context);
-      binding.unbind(context);
-
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
-    });
+        expect(binding.value).toBe(value);
+        expect(updater.isPending()).toBe(false);
+        expect(updater.isScheduled()).toBe(false);
+      },
+    );
   });
 
   describe('.disconnect()', () => {
@@ -293,20 +299,20 @@ describe('EventBinding', () => {
       expect(binding.value).toBe(listener);
     });
 
-    it.each([[{}], [undefined]])(
-      'should throw the error if the value other than an event listner is passed',
-      (value) => {
-        expect(() => {
-          new EventBinding(value, {
+    it('should throw the error if the value other than an event listner is passed', () => {
+      expect(() => {
+        new EventBinding(
+          {},
+          {
             type: PartType.Event,
             node: document.createElement('div'),
             name: 'hello',
-          });
-        }).toThrow(
-          'A value of EventBinding must be EventListener, EventListenerObject or null.',
+          },
         );
-      },
-    );
+      }).toThrow(
+        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
+      );
+    });
   });
 
   describe('.connect()', () => {
@@ -458,57 +464,57 @@ describe('EventBinding', () => {
       expect(updater.isScheduled()).toBe(false);
     });
 
-    it('should unbind the active event listener when null is passed', () => {
-      const element = document.createElement('div');
-      const part = {
-        type: PartType.Event,
-        node: element,
-        name: 'hello',
-      } as const;
-      const listener = vi.fn();
-      const event = new CustomEvent('hello');
-      const binding = new EventBinding(listener, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
+    it.each([[null], [undefined]])(
+      'should unbind the active event listener when null or undefined is passed',
+      (value) => {
+        const element = document.createElement('div');
+        const part = {
+          type: PartType.Event,
+          node: element,
+          name: 'hello',
+        } as const;
+        const listener = vi.fn();
+        const event = new CustomEvent('hello');
+        const binding = new EventBinding(listener, part);
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = { host, updater, block: null };
 
-      const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
-      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
+        const addEventListenerSpy = vi.spyOn(element, 'addEventListener');
+        const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
 
-      binding.connect(context);
-      updater.flushUpdate(host);
-      element.dispatchEvent(event);
+        binding.connect(context);
+        updater.flushUpdate(host);
+        element.dispatchEvent(event);
 
-      binding.bind(null, context);
-      updater.flushUpdate(host);
-      element.dispatchEvent(event);
+        binding.bind(value, context);
+        updater.flushUpdate(host);
+        element.dispatchEvent(event);
 
-      expect(addEventListenerSpy).toHaveBeenCalledOnce();
-      expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-      expect(listener).toHaveBeenCalledOnce();
-      expect(listener).toHaveBeenCalledWith(event);
-    });
-
-    it.each([[null], [{}]])(
-      'should throw the error if the value other than an event listner is assigned',
-      () => {
-        expect(() => {
-          const binding = new EventBinding(null, {
-            type: PartType.Event,
-            node: document.createElement('div'),
-            name: 'hello',
-          });
-          const host = new MockUpdateHost();
-          const updater = new SyncUpdater();
-          const context = { host, updater, block: null };
-          binding.bind({}, context);
-        }).toThrow(
-          'A value of EventBinding must be EventListener, EventListenerObject or null.',
-        );
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+        expect(listener).toHaveBeenCalledOnce();
+        expect(listener).toHaveBeenCalledWith(event);
       },
     );
+
+    it('should throw the error if the value other than an event listner is assigned', () => {
+      expect(() => {
+        const binding = new EventBinding(null, {
+          type: PartType.Event,
+          node: document.createElement('div'),
+          name: 'hello',
+        });
+        const host = new MockUpdateHost();
+        const updater = new SyncUpdater();
+        const context = { host, updater, block: null };
+        binding.bind({}, context);
+      }).toThrow(
+        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
+      );
+    });
   });
 
   describe('.unbind()', () => {
@@ -537,7 +543,7 @@ describe('EventBinding', () => {
       updater.flushUpdate(host);
       element.dispatchEvent(event);
 
-      expect(binding.value).toBe(null);
+      expect(binding.value).toBe(listener);
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
       expect(removeEventListenerSpy).toHaveBeenCalledOnce();
@@ -775,6 +781,9 @@ describe('NodeBinding', () => {
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
 
+      binding.connect(context);
+      updater.flushUpdate(host);
+
       binding.bind('foo', context);
 
       expect(binding.value).toBe('foo');
@@ -839,30 +848,25 @@ describe('NodeBinding', () => {
       binding.unbind(context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(null);
+      expect(binding.value).toBe('foo');
       expect(node.nodeValue).toBe('');
     });
 
-    it('should do nothing if the update is already scheduled', () => {
+    it('should do nothing if the value is null', () => {
       const node = document.createTextNode('');
       const part = {
         type: PartType.Node,
         node,
       } as const;
-      const binding = new NodeBinding(undefined, part);
+      const binding = new NodeBinding(null, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const enqueueMutationEffectSpy = vi.spyOn(
-        updater,
-        'enqueueMutationEffect',
-      );
 
       binding.unbind(context);
-      binding.unbind(context);
 
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
     });
   });
 
@@ -935,6 +939,9 @@ describe('PropertyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
+
+      binding.connect(context);
+      updater.flushUpdate(host);
 
       binding.bind('foo', context);
 
@@ -1197,9 +1204,9 @@ describe('ElementBinding', () => {
       updater.flushUpdate(host);
 
       expect(setAttributeSpy).toHaveBeenCalledTimes(3);
-      expect(setAttributeSpy).toHaveBeenCalledWith('class', 'foo');
-      expect(setAttributeSpy).toHaveBeenCalledWith('title', 'bar');
-      expect(setAttributeSpy).toHaveBeenCalledWith('title', 'baz');
+      expect(setAttributeSpy).toHaveBeenNthCalledWith(1, 'class', 'foo');
+      expect(setAttributeSpy).toHaveBeenNthCalledWith(2, 'title', 'bar');
+      expect(setAttributeSpy).toHaveBeenNthCalledWith(3, 'title', 'baz');
       expect(element.getAttribute('class')).toBe('foo');
       expect(element.getAttribute('title')).toBe('baz');
     });

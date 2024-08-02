@@ -161,10 +161,10 @@ describe('UnsafeSVGBinding', () => {
 
   describe('.bind()', () => {
     it('should replace the old nodes with the nodes parsed from a new unsafe SVG content', () => {
-      const directive1 = unsafeSVG(
+      const value1 = unsafeSVG(
         '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
       );
-      const directive2 = unsafeSVG(
+      const value2 = unsafeSVG(
         '<rect x="0" y="0" width="10" height="10" /><text x="15" y="5">bar</text>',
       );
       const container = document.createElement('svg');
@@ -172,7 +172,7 @@ describe('UnsafeSVGBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive1, part);
+      const binding = new UnsafeSVGBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -181,10 +181,10 @@ describe('UnsafeSVGBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(binding.startNode).toBeInstanceOf(SVGElement);
       expect((binding.startNode as SVGElement).outerHTML).toBe(
         '<rect x="0" y="0" width="10" height="10"></rect>',
@@ -199,13 +199,13 @@ describe('UnsafeSVGBinding', () => {
     });
 
     it('should skip an update if the styles are the same as the previous one', () => {
-      const directive1 = unsafeSVG('<circle cx="0" cy="0" r="10" />');
-      const directive2 = unsafeSVG(directive1.content);
+      const value1 = unsafeSVG('<circle cx="0" cy="0" r="10" />');
+      const value2 = unsafeSVG(value1.content);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeSVGBinding(directive1, part);
+      const binding = new UnsafeSVGBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -213,9 +213,9 @@ describe('UnsafeSVGBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
 
-      expect(binding.value).toBe(directive1);
+      expect(binding.value).toBe(value2);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
@@ -259,6 +259,7 @@ describe('UnsafeSVGBinding', () => {
       binding.unbind(context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(container.innerHTML).toBe('<!---->');
@@ -280,6 +281,7 @@ describe('UnsafeSVGBinding', () => {
 
       binding.unbind(context);
 
+      expect(binding.value).toBe(value);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });

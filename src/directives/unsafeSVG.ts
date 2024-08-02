@@ -10,6 +10,12 @@ import {
   directiveTag,
 } from '../types.js';
 
+enum Status {
+  Committed,
+  Mounting,
+  Unmounting,
+}
+
 export function unsafeSVG(content: string): UnsafeSVG {
   return new UnsafeSVG(content);
 }
@@ -44,9 +50,11 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
 
   private readonly _part: ChildNodePart;
 
+  private _memoizedContent = '';
+
   private _childNodes: ChildNode[] = [];
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: UnsafeSVG, part: ChildNodePart) {
     this._value = value;
@@ -70,55 +78,69 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: UnsafeSVG, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(UnsafeSVG, newValue, this._part);
     }
-    const oldValue = this._value;
-    if (oldValue.content !== newValue.content) {
-      this._value = newValue;
-      this._requestMutation(context.updater);
+    if (newValue.content !== this._memoizedContent) {
+      this._requestMutation(context.updater, Status.Mounting);
     }
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { content } = this._value;
-    if (content !== '') {
-      this._value = new UnsafeSVG('');
-      this.connect(context);
+    if (this._memoizedContent !== '') {
+      this._requestMutation(context.updater, Status.Unmounting);
     }
   }
 
   disconnect(): void {}
 
   commit(): void {
-    const { content } = this._value;
+    switch (this._status) {
+      case Status.Mounting: {
+        const { content } = this._value;
 
-    for (let i = 0, l = this._childNodes.length; i < l; i++) {
-      this._childNodes[i]!.remove();
+        for (let i = 0, l = this._childNodes.length; i < l; i++) {
+          this._childNodes[i]!.remove();
+        }
+
+        if (content !== '') {
+          const template = document.createElement('template');
+          const reference = this._part.node;
+
+          template.innerHTML = '<svg>' + content + '</svg>';
+
+          this._childNodes = [...template.content.firstChild!.childNodes];
+
+          reference.before(...this._childNodes);
+        } else {
+          this._childNodes = [];
+        }
+
+        this._memoizedContent = content;
+        break;
+      }
+      case Status.Unmounting: {
+        for (let i = 0, l = this._childNodes.length; i < l; i++) {
+          this._childNodes[i]!.remove();
+        }
+
+        this._childNodes = [];
+        this._memoizedContent = '';
+      }
     }
 
-    if (content !== '') {
-      const template = document.createElement('template');
-      const reference = this._part.node;
-
-      template.innerHTML = '<svg>' + content + '</svg>';
-      this._childNodes = [...template.content.firstChild!.childNodes];
-      reference.before(...this._childNodes);
-    } else {
-      this._childNodes = [];
-    }
-
-    this._dirty = false;
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
-      this._dirty = true;
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
+    this._status = newStatus;
   }
 }

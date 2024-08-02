@@ -169,8 +169,8 @@ export class LazyBinding<TValue>
       block: this,
     };
     this._binding.unbind(internalContext);
-    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
     this._flags |= FLAG_DIRTY;
+    this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   disconnect(): void {

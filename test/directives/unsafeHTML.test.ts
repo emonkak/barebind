@@ -150,14 +150,14 @@ describe('UnsafeHTMLBinding', () => {
 
   describe('.bind()', () => {
     it('should replace the old nodes with the nodes parsed from a new unsafe HTML content', () => {
-      const directive1 = unsafeHTML('<span>foo</span>bar');
-      const directive2 = unsafeHTML('bar<span>baz</span>');
+      const value1 = unsafeHTML('<span>foo</span>bar');
+      const value2 = unsafeHTML('bar<span>baz</span>');
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(directive1, part);
+      const binding = new UnsafeHTMLBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -166,10 +166,10 @@ describe('UnsafeHTMLBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(binding.startNode).toBeInstanceOf(Text);
       expect(binding.startNode.nodeValue).toBe('bar');
       expect(binding.endNode).toBe(part.node);
@@ -177,13 +177,13 @@ describe('UnsafeHTMLBinding', () => {
     });
 
     it('should skip an update if the styles are the same as the previous one', () => {
-      const directive1 = unsafeHTML('<span>foo</span>bar');
-      const directive2 = unsafeHTML(directive1.content);
+      const value1 = unsafeHTML('<span>foo</span>bar');
+      const value2 = unsafeHTML(value1.content);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new UnsafeHTMLBinding(directive1, part);
+      const binding = new UnsafeHTMLBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -191,9 +191,9 @@ describe('UnsafeHTMLBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
 
-      expect(binding.value).toBe(directive1);
+      expect(binding.value).toBe(value2);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
@@ -235,6 +235,7 @@ describe('UnsafeHTMLBinding', () => {
       binding.unbind(context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(container.innerHTML).toBe('<!---->');
@@ -256,6 +257,7 @@ describe('UnsafeHTMLBinding', () => {
 
       binding.unbind(context);
 
+      expect(binding.value).toBe(value);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });

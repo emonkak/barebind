@@ -102,8 +102,8 @@ describe('MemoBinding', () => {
 
   describe('.bind()', () => {
     it('should delete to the inner binding if dependencies are changed', () => {
-      const directive1 = memo(() => new TextDirective(), ['foo']);
-      const directive2 = memo(() => new TextDirective(), ['bar']);
+      const value1 = memo(() => new TextDirective(), ['foo']);
+      const value2 = memo(() => new TextDirective(), ['bar']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -111,22 +111,22 @@ describe('MemoBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new MemoBinding(directive1, part, context);
+      const binding = new MemoBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(bindSpy).toHaveBeenCalledOnce();
     });
 
     it('should skip an update if dependencies are not changed', () => {
-      const directive1 = memo(() => new TextDirective(), ['foo']);
-      const directive2 = memo(directive1.factory, directive1.dependencies);
+      const value1 = memo(() => new TextDirective(), ['foo']);
+      const value2 = memo(value1.factory, value1.dependencies);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -134,16 +134,16 @@ describe('MemoBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new MemoBinding(directive1, part, context);
+      const binding = new MemoBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive1);
+      expect(binding.value).toBe(value1);
       expect(bindSpy).not.toHaveBeenCalled();
     });
 

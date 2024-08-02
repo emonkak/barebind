@@ -230,12 +230,12 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive1 = conditionDirective(
+      const value1 = conditionDirective(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const directive2 = conditionDirective(
+      const value2 = conditionDirective(
         false,
         () => trueDirective,
         () => falseDirective,
@@ -247,14 +247,14 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new ConditionBinding(directive1, part, context);
+      const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(falseDirective);
@@ -270,12 +270,12 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive1 = conditionDirective(
+      const value1 = conditionDirective(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const directive2 = conditionDirective(
+      const value2 = conditionDirective(
         true,
         () => trueDirective,
         () => falseDirective,
@@ -287,14 +287,14 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new ConditionBinding(directive1, part, context);
+      const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(trueDirective);
@@ -310,12 +310,12 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive1 = conditionDirective(
+      const value1 = conditionDirective(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const directive2 = conditionDirective(
+      const value2 = conditionDirective(
         false,
         () => trueDirective,
         () => falseDirective,
@@ -327,17 +327,17 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new ConditionBinding(directive1, part, context);
+      const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      binding.bind(directive1, context);
+      binding.bind(value1, context);
       updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(trueDirective);
@@ -353,12 +353,12 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const directive1 = conditionDirective(
+      const value1 = conditionDirective(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const directive2 = conditionDirective(
+      const value2 = conditionDirective(
         true,
         () => trueDirective,
         () => falseDirective,
@@ -370,17 +370,17 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new ConditionBinding(directive1, part, context);
+      const binding = new ConditionBinding(value1, part, context);
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      binding.bind(directive1, context);
+      binding.bind(value1, context);
       updater.flushUpdate(host);
 
       expect(binding.currentBinding.value).toBe(falseDirective);

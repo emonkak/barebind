@@ -12,9 +12,6 @@ import {
   directiveTag,
 } from '../types.js';
 
-const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
-const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
-
 export type StyleDeclaration = {
   [P in JSStyleProperties]?: string;
 };
@@ -27,19 +24,28 @@ type ExtractStringProperties<T> = {
   [P in keyof T]: P extends string ? (T[P] extends string ? P : never) : never;
 }[keyof T];
 
-export function styleMap(styleDeclaration: StyleDeclaration): StyleMap {
-  return new StyleMap(styleDeclaration);
+const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
+const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
+
+enum Status {
+  Committed,
+  Mounting,
+  Unmounting,
+}
+
+export function styleMap(styles: StyleDeclaration): StyleMap {
+  return new StyleMap(styles);
 }
 
 export class StyleMap implements Directive {
-  private readonly _styleDeclaration: StyleDeclaration;
+  private readonly _styles: StyleDeclaration;
 
-  constructor(styleDeclaration: StyleDeclaration) {
-    this._styleDeclaration = styleDeclaration;
+  constructor(styles: StyleDeclaration) {
+    this._styles = styles;
   }
 
-  get styleDeclaration(): StyleDeclaration {
-    return this._styleDeclaration;
+  get styles(): StyleDeclaration {
+    return this._styles;
   }
 
   [directiveTag](
@@ -61,9 +67,9 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   private readonly _part: AttributePart;
 
-  private _memoizedStyleDeclaration: StyleDeclaration = {};
+  private _memoizedStyles: StyleDeclaration = {};
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: StyleMap, part: AttributePart) {
     this._value = value;
@@ -87,60 +93,71 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: StyleMap, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(StyleMap, newValue, this._part);
     }
-    const oldValue = this._value;
-    if (!shallowEqual(newValue.styleDeclaration, oldValue.styleDeclaration)) {
-      this._value = newValue;
-      this._requestMutation(context.updater);
+    if (!shallowEqual(newValue.styles, this._memoizedStyles)) {
+      this._requestMutation(context.updater, Status.Mounting);
     }
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { styleDeclaration } = this._value;
-    if (Object.keys(styleDeclaration).length > 0) {
-      this._value = new StyleMap({});
-      this._requestMutation(context.updater);
+    if (Object.keys(this._memoizedStyles).length > 0) {
+      this._requestMutation(context.updater, Status.Unmounting);
     }
   }
 
   disconnect(): void {}
 
   commit(): void {
-    const { style } = this._part.node as
-      | HTMLElement
-      | MathMLElement
-      | SVGElement;
-    const oldStyleDeclaration = this._memoizedStyleDeclaration;
-    const newStyleDeclaration = this._value.styleDeclaration;
+    switch (this._status) {
+      case Status.Mounting: {
+        const { style } = this._part.node as
+          | HTMLElement
+          | MathMLElement
+          | SVGElement;
+        const oldStyles = this._memoizedStyles;
+        const newStyles = this._value.styles;
 
-    for (const newProperty in newStyleDeclaration) {
-      const cssProperty = toCSSProperty(newProperty);
-      const cssValue = newStyleDeclaration[newProperty as JSStyleProperties]!;
-      style.setProperty(cssProperty, cssValue);
-    }
+        for (const newProperty in newStyles) {
+          const cssProperty = toCSSProperty(newProperty);
+          const cssValue = newStyles[newProperty as JSStyleProperties]!;
+          style.setProperty(cssProperty, cssValue);
+        }
 
-    for (const oldProperty in oldStyleDeclaration) {
-      if (!Object.hasOwn(newStyleDeclaration, oldProperty)) {
-        const cssProperty = toCSSProperty(oldProperty);
-        style.removeProperty(cssProperty);
+        for (const oldProperty in oldStyles) {
+          if (!Object.hasOwn(newStyles, oldProperty)) {
+            const cssProperty = toCSSProperty(oldProperty);
+            style.removeProperty(cssProperty);
+          }
+        }
+
+        this._memoizedStyles = newStyles;
+        break;
+      }
+      case Status.Unmounting: {
+        const { style } = this._part.node as
+          | HTMLElement
+          | MathMLElement
+          | SVGElement;
+        style.cssText = '';
+        this._memoizedStyles = {};
       }
     }
 
-    this._memoizedStyleDeclaration = newStyleDeclaration;
-    this._dirty = false;
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
-      this._dirty = true;
     }
+    this._status = newStatus;
   }
 }
 

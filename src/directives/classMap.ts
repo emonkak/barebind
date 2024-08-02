@@ -14,19 +14,25 @@ import {
 
 export type ClassDeclaration = { [key: string]: boolean };
 
-export function classMap(classDeclaration: ClassDeclaration): ClassMap {
-  return new ClassMap(classDeclaration);
+enum Status {
+  Committed,
+  Mounting,
+  Unmounting,
+}
+
+export function classMap(classes: ClassDeclaration): ClassMap {
+  return new ClassMap(classes);
 }
 
 export class ClassMap implements Directive {
-  private readonly _classDeclaration: ClassDeclaration;
+  private readonly _classes: ClassDeclaration;
 
   constructor(classDeclaration: ClassDeclaration) {
-    this._classDeclaration = classDeclaration;
+    this._classes = classDeclaration;
   }
 
-  get classDeclaration(): ClassDeclaration {
-    return this._classDeclaration;
+  get classes(): ClassDeclaration {
+    return this._classes;
   }
 
   [directiveTag](
@@ -44,19 +50,21 @@ export class ClassMap implements Directive {
 }
 
 export class ClassMapBinding implements Effect, Binding<ClassMap> {
-  private _value: ClassMap;
+  private _pendingValue: ClassMap;
+
+  private _memoizedClasses: ClassDeclaration = {};
 
   private readonly _part: AttributePart;
 
-  private _dirty = false;
+  private _status = Status.Committed;
 
   constructor(value: ClassMap, part: AttributePart) {
-    this._value = value;
+    this._pendingValue = value;
     this._part = part;
   }
 
   get value(): ClassMap {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): AttributePart {
@@ -72,53 +80,62 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context.updater);
+    this._requestMutation(context.updater, Status.Mounting);
   }
 
   bind(newValue: ClassMap, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(ClassMap, newValue, this._part);
     }
-    const oldValue = this._value;
-    if (!shallowEqual(oldValue.classDeclaration, newValue.classDeclaration)) {
-      this._value = newValue;
-      this.connect(context);
+    if (!shallowEqual(newValue.classes, this._memoizedClasses)) {
+      this._requestMutation(context.updater, Status.Mounting);
     }
+    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { classDeclaration } = this._value;
-    if (Object.keys(classDeclaration).length > 0) {
-      this._value = new ClassMap({});
-      this._requestMutation(context.updater);
+    if (Object.keys(this._memoizedClasses).length > 0) {
+      this._requestMutation(context.updater, Status.Unmounting);
     }
   }
 
   disconnect(): void {}
 
   commit(): void {
-    const { classList } = this._part.node;
-    const { classDeclaration } = this._value;
+    switch (this._status) {
+      case Status.Mounting: {
+        const { classList } = this._part.node;
+        const oldClasses = this._memoizedClasses;
+        const newClasses = this._pendingValue.classes;
 
-    for (const className in classDeclaration) {
-      const enabled = classDeclaration[className];
-      classList.toggle(className, enabled);
-    }
+        for (const className in newClasses) {
+          const enabled = newClasses[className];
+          classList.toggle(className, enabled);
+        }
 
-    for (let i = classList.length - 1; i >= 0; i--) {
-      const className = classList[i]!;
-      if (!Object.hasOwn(classDeclaration, className)) {
-        classList.remove(className);
+        for (const className in oldClasses) {
+          if (!Object.hasOwn(newClasses, className)) {
+            classList.remove(className);
+          }
+        }
+
+        this._memoizedClasses = newClasses;
+        break;
+      }
+      case Status.Unmounting: {
+        this._part.node.className = '';
+        this._memoizedClasses = {};
+        break;
       }
     }
 
-    this._dirty = false;
+    this._status = Status.Committed;
   }
 
-  private _requestMutation(updater: Updater<unknown>): void {
-    if (!this._dirty) {
-      this._dirty = true;
+  private _requestMutation(updater: Updater<unknown>, newStatus: Status): void {
+    if (this._status === Status.Committed) {
       updater.enqueueMutationEffect(this);
     }
+    this._status = newStatus;
   }
 }

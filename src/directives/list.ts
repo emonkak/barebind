@@ -114,7 +114,8 @@ export class OrderedListBinding<TItem, TKey, TValue>
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._updateItems(context);
+    const { items, keySelector, valueSelector } = this._value;
+    this._updateItems(items, keySelector, valueSelector, context);
     this._requestMutation(context.updater);
   }
 
@@ -125,14 +126,15 @@ export class OrderedListBinding<TItem, TKey, TValue>
     DEBUG: {
       ensureDirective(OrderedList, newValue, this._part);
     }
+    if (newValue.items !== this._value.items) {
+      const { items, keySelector, valueSelector } = newValue;
+      this._updateItems(items, keySelector, valueSelector, context);
+      this._requestMutation(context.updater);
+    }
     this._value = newValue;
-    this._updateItems(context);
-    this._requestMutation(context.updater);
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { keySelector, valueSelector } = this._value;
-    this._value = new OrderedList([], keySelector, valueSelector);
     this._clearItems(context);
     this._requestMutation(context.updater);
   }
@@ -156,8 +158,12 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._pendingBindings = [];
   }
 
-  private _insertItems(context: UpdateContext<unknown>): void {
-    const { items, keySelector, valueSelector } = this._value;
+  private _insertItems(
+    items: TItem[],
+    keySelector: Selector<TItem, TKey>,
+    valueSelector: Selector<TItem, TValue>,
+    context: UpdateContext<unknown>,
+  ): void {
     const newBindings = new Array<Binding<TValue>>(items.length);
     const newKeys = new Array<TKey>(items.length);
 
@@ -173,8 +179,12 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._memoizedKeys = newKeys;
   }
 
-  private _reconcileItems(context: UpdateContext<unknown>): void {
-    const { items, keySelector, valueSelector } = this._value;
+  private _reconcileItems(
+    items: TItem[],
+    keySelector: Selector<TItem, TKey>,
+    valueSelector: Selector<TItem, TValue>,
+    context: UpdateContext<unknown>,
+  ): void {
     const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
     const oldKeys = this._memoizedKeys;
@@ -297,11 +307,16 @@ export class OrderedListBinding<TItem, TKey, TValue>
     this._memoizedKeys = newKeys;
   }
 
-  private _updateItems(context: UpdateContext<unknown>): void {
+  private _updateItems(
+    items: TItem[],
+    keySelector: Selector<TItem, TKey>,
+    valueSelector: Selector<TItem, TValue>,
+    context: UpdateContext<unknown>,
+  ): void {
     if (this._pendingBindings.length === 0) {
-      this._insertItems(context);
+      this._insertItems(items, keySelector, valueSelector, context);
     } else {
-      this._reconcileItems(context);
+      this._reconcileItems(items, keySelector, valueSelector, context);
     }
   }
 
@@ -384,7 +399,8 @@ export class InPlaceListBinding<TItem, TValue>
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._updateItems(context);
+    const { items, valueSelector } = this._value;
+    this._updateItems(items, valueSelector, context);
     this._requestMutation(context.updater);
   }
 
@@ -395,17 +411,15 @@ export class InPlaceListBinding<TItem, TValue>
     DEBUG: {
       ensureDirective(InPlaceList, newValue, this._part);
     }
-    const oldValue = this._value;
-    if (oldValue.items !== newValue.items) {
-      this._value = newValue;
-      this._updateItems(context);
+    if (newValue.items !== this._value.items) {
+      const { items, valueSelector } = newValue;
+      this._updateItems(items, valueSelector, context);
       this._requestMutation(context.updater);
     }
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const { valueSelector } = this._value;
-    this._value = new InPlaceList([], valueSelector);
     this._clearItems(context);
     this._requestMutation(context.updater);
   }
@@ -436,8 +450,11 @@ export class InPlaceListBinding<TItem, TValue>
     }
   }
 
-  private _updateItems(context: UpdateContext<unknown>): void {
-    const { items, valueSelector } = this._value;
+  private _updateItems(
+    items: TItem[],
+    valueSelector: (item: TItem, index: number) => TValue,
+    context: UpdateContext<unknown>,
+  ): void {
     const oldBindings = this._pendingBindings;
     const newBindings = new Array<Binding<TValue>>(items.length);
 

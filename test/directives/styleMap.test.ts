@@ -10,7 +10,7 @@ describe('styleMap()', () => {
     const styleDeclaration = { display: 'none' };
     const value = styleMap(styleDeclaration);
 
-    expect(value.styleDeclaration).toBe(styleDeclaration);
+    expect(value.styles).toBe(styleDeclaration);
   });
 });
 
@@ -115,11 +115,11 @@ describe('StyleMapBinding', () => {
 
   describe('.bind()', () => {
     it('should remove gone styles from the element', () => {
-      const directive1 = styleMap({
+      const value1 = styleMap({
         padding: '8px',
         margin: '8px',
       });
-      const directive2 = styleMap({
+      const value2 = styleMap({
         padding: '0',
       });
       const part = {
@@ -127,7 +127,7 @@ describe('StyleMapBinding', () => {
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const binding = new StyleMapBinding(directive1, part);
+      const binding = new StyleMapBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -135,25 +135,25 @@ describe('StyleMapBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(directive2);
+      expect(binding.value).toBe(value2);
       expect(part.node.style).toHaveLength(4);
       expect(part.node.style.getPropertyValue('padding')).toBe('0px');
     });
 
     it('should skip an update if the styles are the same as previous ones', () => {
-      const directive1 = styleMap({
+      const value1 = styleMap({
         color: 'black',
       });
-      const directive2 = styleMap(directive1.styleDeclaration);
+      const value2 = styleMap(value1.styles);
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const binding = new StyleMapBinding(directive1, part);
+      const binding = new StyleMapBinding(value1, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
@@ -161,9 +161,9 @@ describe('StyleMapBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
 
-      expect(binding.value).toBe(directive1);
+      expect(binding.value).toBe(value2);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });

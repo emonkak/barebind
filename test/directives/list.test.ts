@@ -102,6 +102,7 @@ describe('OrderedListBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value);
       expect(binding.startNode.nodeValue).toBe('foo');
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
         'foo',
@@ -143,12 +144,12 @@ describe('OrderedListBinding', () => {
 
       for (const items1 of allCombinations(source)) {
         for (const items2 of allCombinations(source)) {
-          const directive1 = orderedList(
+          const value1 = orderedList(
             items1,
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const directive2 = orderedList(
+          const value2 = orderedList(
             items2,
             (item) => item,
             (item) => new TextDirective(item),
@@ -161,18 +162,19 @@ describe('OrderedListBinding', () => {
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
           const context = { host, updater, block: null };
-          const binding = new OrderedListBinding(directive1, part);
+          const binding = new OrderedListBinding(value1, part);
 
           container.appendChild(part.node);
           binding.connect(context);
           updater.flushUpdate(host);
 
-          binding.bind(directive2, context);
+          binding.bind(value2, context);
           updater.flushUpdate(host);
 
+          expect(binding.value).toBe(value2);
           expect(
             binding.bindings.map((binding) => binding.value.content),
-          ).toEqual(directive2.items);
+          ).toEqual(value2.items);
           expect(container.innerHTML).toBe(
             items2
               .map((item) => item + '<!--TextDirective@"' + item + '"-->')
@@ -192,12 +194,12 @@ describe('OrderedListBinding', () => {
             [permutation1, permutation2],
             [permutation2, permutation1],
           ]) {
-            const directive1 = orderedList(
+            const value1 = orderedList(
               items1!,
               (item) => item,
               (item) => new TextDirective(item),
             );
-            const directive2 = orderedList(
+            const value2 = orderedList(
               items2!,
               (item) => item,
               (item) => new TextDirective(item),
@@ -210,18 +212,19 @@ describe('OrderedListBinding', () => {
             const host = new MockUpdateHost();
             const updater = new SyncUpdater();
             const context = { host, updater, block: null };
-            const binding = new OrderedListBinding(directive1, part);
+            const binding = new OrderedListBinding(value1, part);
 
             container.appendChild(part.node);
             binding.connect(context);
             updater.flushUpdate(host);
 
-            binding.bind(directive2, context);
+            binding.bind(value2, context);
             updater.flushUpdate(host);
 
+            expect(binding.value).toBe(value2);
             expect(
               binding.bindings.map((binding) => binding.value.content),
-            ).toEqual(directive2.items);
+            ).toEqual(value2.items);
             expect(container.innerHTML).toBe(
               items2!
                 .map((item) => item + '<!--TextDirective@"' + item + '"-->')
@@ -237,12 +240,12 @@ describe('OrderedListBinding', () => {
 
       for (const items1 of permutations(source)) {
         for (const items2 of permutations(source)) {
-          const directive1 = orderedList(
+          const value1 = orderedList(
             items1,
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const directive2 = orderedList(
+          const value2 = orderedList(
             items2,
             (item) => item,
             (item) => new TextDirective(item),
@@ -255,18 +258,19 @@ describe('OrderedListBinding', () => {
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
           const context = { host, updater, block: null };
-          const binding = new OrderedListBinding(directive1, part);
+          const binding = new OrderedListBinding(value1, part);
 
           container.appendChild(part.node);
           binding.connect(context);
           updater.flushUpdate(host);
 
-          binding.bind(directive2, context);
+          binding.bind(value2, context);
           updater.flushUpdate(host);
 
+          expect(binding.value).toBe(value2);
           expect(
             binding.bindings.map((binding) => binding.value.content),
-          ).toEqual(directive2.items);
+          ).toEqual(value2.items);
           expect(container.innerHTML).toBe(
             items2
               .map((item) => item + '<!--TextDirective@"' + item + '"-->')
@@ -274,6 +278,37 @@ describe('OrderedListBinding', () => {
           );
         }
       }
+    });
+
+    it('should do nothing if the items is the same as previous ones', () => {
+      const items = ['foo', 'bar', 'baz'];
+      const value1 = orderedList(
+        items,
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
+      const value2 = orderedList(
+        items,
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = { host, updater, block: null };
+      const binding = new OrderedListBinding(value1, part);
+
+      binding.connect(context);
+      updater.flushUpdate(host);
+
+      binding.bind(value2, context);
+
+      expect(binding.value).toBe(value2);
+      expect(updater.isPending()).toBe(false);
+      expect(updater.isScheduled()).toBe(false);
     });
   });
 
@@ -425,6 +460,7 @@ describe('InPlaceListBinding', () => {
       binding.connect(context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value);
       expect(binding.startNode.nodeValue).toBe('foo');
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
         'foo',
@@ -461,11 +497,11 @@ describe('InPlaceListBinding', () => {
 
   describe('.bind()', () => {
     it('should update with longer list than last time', () => {
-      const directive1 = inPlaceList(
+      const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
-      const directive2 = inPlaceList(
+      const value2 = inPlaceList(
         ['qux', 'baz', 'bar', 'foo'],
         (item) => new TextDirective(item),
       );
@@ -477,17 +513,18 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(directive1, part);
+      const binding = new InPlaceListBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value2);
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
-        directive2.items,
+        value2.items,
       );
       expect(container.innerHTML).toBe(
         'qux<!--TextDirective@0-->baz<!--TextDirective@1-->bar<!--TextDirective@2-->foo<!--TextDirective@3--><!---->',
@@ -495,11 +532,11 @@ describe('InPlaceListBinding', () => {
     });
 
     it('should update with shoter list than last time', () => {
-      const directive1 = inPlaceList(
+      const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
-      const directive2 = inPlaceList(
+      const value2 = inPlaceList(
         ['bar', 'foo'],
         (item) => new TextDirective(item),
       );
@@ -511,17 +548,18 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(directive1, part);
+      const binding = new InPlaceListBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value2);
       expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
-        directive2.items,
+        value2.items,
       );
       expect(container.innerHTML).toBe(
         'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
@@ -530,8 +568,8 @@ describe('InPlaceListBinding', () => {
 
     it('should do nothing if the items is the same as previous ones', () => {
       const items = ['foo', 'bar', 'baz'];
-      const directive1 = inPlaceList(items, (item) => item);
-      const directive2 = inPlaceList(items, (item) => item);
+      const value1 = inPlaceList(items, (item) => item);
+      const value2 = inPlaceList(items, (item) => item);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -539,13 +577,14 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(directive1, part);
+      const binding = new InPlaceListBinding(value1, part);
 
       binding.connect(context);
       updater.flushUpdate(host);
 
-      binding.bind(directive2, context);
+      binding.bind(value2, context);
 
+      expect(binding.value).toBe(value2);
       expect(updater.isPending()).toBe(false);
       expect(updater.isScheduled()).toBe(false);
     });
@@ -571,6 +610,7 @@ describe('InPlaceListBinding', () => {
       binding.unbind(context);
       updater.flushUpdate(host);
 
+      expect(binding.value).toBe(value);
       expect(binding.bindings).toHaveLength(0);
       expect(container.innerHTML).toBe('<!---->');
     });

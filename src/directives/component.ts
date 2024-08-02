@@ -117,17 +117,16 @@ export class ComponentBinding<TProps, TData, TContext>
     const { type, props } = this._value;
     const { template, data } = this._renderComponent(type, props, context);
 
-    if (
-      this._pendingFragment === null ||
-      this._pendingFragment !== this._memoizedFragment
-    ) {
-      // We have to mount the new fragment before the template rendering.
+    if (this._pendingFragment !== null) {
+      if (this._pendingFragment !== this._memoizedFragment) {
+        this._requestMutation(context.updater, Status.Mounting);
+      }
+      this._pendingFragment.bind(data, context);
+    } else {
       this._requestMutation(context.updater, Status.Mounting);
+      this._pendingFragment = template.render(data, context);
+      this._pendingFragment.connect(context);
     }
-
-    this._pendingFragment ??= template.render(data, context);
-
-    this._pendingFragment.connect(context);
 
     this._memoizedTemplate = template;
   }
