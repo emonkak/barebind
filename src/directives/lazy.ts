@@ -13,8 +13,9 @@ import {
 } from '../types.js';
 
 const FLAG_NONE = 0;
-const FLAG_CONNECTED = 1 << 0;
-const FLAG_UPDATING = 1 << 1;
+const FLAG_DIRTY = 1 << 0;
+const FLAG_CONNECTED = 1 << 1;
+const FLAG_UPDATING = 1 << 2;
 
 export function lazy<TValue>(value: TValue): Lazy<TValue> {
   return new Lazy(value);
@@ -142,13 +143,13 @@ export class LazyBinding<TValue>
 
   update(host: UpdateHost<unknown>, updater: Updater<unknown>): void {
     const internalContext = { host, updater, block: this };
-    if (this._flags & FLAG_CONNECTED) {
+    if (this._flags & FLAG_DIRTY) {
       this._binding.bind(this._value.value, internalContext);
     } else {
       this._binding.connect(internalContext);
     }
     this._flags |= FLAG_CONNECTED;
-    this._flags &= ~FLAG_UPDATING;
+    this._flags &= ~(FLAG_DIRTY | FLAG_UPDATING);
   }
 
   connect(context: UpdateContext<unknown>): void {
@@ -158,6 +159,7 @@ export class LazyBinding<TValue>
   bind(newValue: Lazy<TValue>, context: UpdateContext<unknown>): void {
     this._forceUpdate(context.updater);
     this._value = newValue;
+    this._flags |= FLAG_DIRTY;
   }
 
   unbind(context: UpdateContext<unknown>): void {
@@ -168,6 +170,7 @@ export class LazyBinding<TValue>
     };
     this._binding.unbind(internalContext);
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
+    this._flags |= FLAG_DIRTY;
   }
 
   disconnect(): void {
