@@ -1,5 +1,3 @@
-import { resolveBinding } from '../binding.js';
-import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -11,7 +9,9 @@ import {
   type Updater,
   directiveTag,
   nameOf,
-} from '../types.js';
+} from '../baseTypes.js';
+import { resolveBinding } from '../binding.js';
+import { ensureDirective, reportPart } from '../error.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 

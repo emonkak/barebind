@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { PartType } from '../src/baseTypes.js';
 import {
   REPORT_MARKER,
   ensureDirective,
   ensureNonDirective,
   reportPart,
 } from '../src/error.js';
-import { PartType } from '../src/types.js';
 import { TextDirective } from './mocks.js';
 
 describe('ensureDirective', () => {

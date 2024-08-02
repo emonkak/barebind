@@ -1,4 +1,3 @@
-import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -13,7 +12,8 @@ import {
   directiveTag,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { ensureDirective, reportPart } from '../error.js';
 
 enum Status {
   Committed,

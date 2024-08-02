@@ -4,7 +4,7 @@ import {
   PartType,
   isDirective,
   nameOf,
-} from './types.js';
+} from './baseTypes.js';
 
 export const REPORT_MARKER = '[[USED IN HERE!]]';
 

@@ -1,5 +1,3 @@
-import { resolveBinding } from '../binding.js';
-import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
@@ -8,7 +6,9 @@ import {
   directiveTag,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { resolveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
 
 export function choice<TKey, TValue>(
   key: TKey,

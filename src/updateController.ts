@@ -1,6 +1,3 @@
-import { resolveBinding } from './binding.js';
-import { RenderContext } from './renderContext.js';
-import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import {
   type Binding,
   type Block,
@@ -13,7 +10,10 @@ import {
   type UpdateHost,
   type Updater,
   nameOf,
-} from './types.js';
+} from './baseTypes.js';
+import { resolveBinding } from './binding.js';
+import { RenderContext } from './renderContext.js';
+import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 
 export interface UpdateControllerOptions {
   constants?: Map<unknown, unknown>;

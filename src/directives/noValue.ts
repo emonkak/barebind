@@ -1,11 +1,11 @@
-import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
   type Part,
   type UpdateContext,
   directiveTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { ensureDirective } from '../error.js';
 
 export class NoValue implements Directive {
   static readonly instance: NoValue = new NoValue();

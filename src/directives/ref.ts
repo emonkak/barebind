@@ -1,4 +1,3 @@
-import { ensureDirective, reportPart } from '../error.js';
 import {
   type AttributePart,
   type Binding,
@@ -10,7 +9,8 @@ import {
   type UpdateContext,
   type Updater,
   directiveTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { ensureDirective, reportPart } from '../error.js';
 
 type ElementRef = RefValue<Element | null>;
 

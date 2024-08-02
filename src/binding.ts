@@ -1,4 +1,3 @@
-import { ensureNonDirective, reportPart } from './error.js';
 import {
   type AttributePart,
   type Binding,
@@ -12,7 +11,8 @@ import {
   type Updater,
   directiveTag,
   isDirective,
-} from './types.js';
+} from './baseTypes.js';
+import { ensureNonDirective, reportPart } from './error.js';
 
 export enum Status {
   Committed,

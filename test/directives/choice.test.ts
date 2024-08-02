@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
-import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 

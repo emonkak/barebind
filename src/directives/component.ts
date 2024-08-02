@@ -1,4 +1,3 @@
-import { ensureDirective, reportPart } from '../error.js';
 import {
   type Binding,
   type ChildNodePart,
@@ -17,7 +16,8 @@ import {
   directiveTag,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { ensureDirective, reportPart } from '../error.js';
 import { Lazy } from './lazy.js';
 
 enum Status {

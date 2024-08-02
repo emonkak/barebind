@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { RenderContext } from '../src/renderContext.js';
 import {
   EffectPhase,
   type Hook,
   HookType,
   PartType,
   directiveTag,
-} from '../src/types.js';
+} from '../src/baseTypes.js';
+import { RenderContext } from '../src/renderContext.js';
 import { UpdateController } from '../src/updateController.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {

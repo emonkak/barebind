@@ -1,6 +1,3 @@
-import { resolveBinding } from '../binding.js';
-import { dependenciesAreChanged } from '../compare.js';
-import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
@@ -9,7 +6,10 @@ import {
   directiveTag,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { resolveBinding } from '../binding.js';
+import { dependenciesAreChanged } from '../compare.js';
+import { ensureDirective } from '../error.js';
 
 export function memo<T>(
   factory: () => T,

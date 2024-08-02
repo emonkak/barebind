@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { directiveTag, isDirective, nameOf, nameTag } from '../src/types.js';
+import {
+  directiveTag,
+  isDirective,
+  nameOf,
+  nameTag,
+} from '../src/baseTypes.js';
 
 describe('isDirective()', () => {
   it('should return true if the value is directive', () => {

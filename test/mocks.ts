@@ -1,14 +1,4 @@
 import {
-  RenderContext,
-  type UsableObject,
-  usableTag,
-} from '../src/renderContext.js';
-import type {
-  RequestCallbackOptions,
-  Scheduler,
-  YieldToMainOptions,
-} from '../src/scheduler.js';
-import {
   type Binding,
   type Block,
   type ChildNodePart,
@@ -24,7 +14,17 @@ import {
   type UpdateHost,
   type Updater,
   directiveTag,
-} from '../src/types.js';
+} from '../src/baseTypes.js';
+import {
+  RenderContext,
+  type UsableObject,
+  usableTag,
+} from '../src/renderContext.js';
+import type {
+  RequestCallbackOptions,
+  Scheduler,
+  YieldToMainOptions,
+} from '../src/scheduler.js';
 
 export class MockBlock<TContext> implements Block<TContext> {
   private _parent: Block<TContext> | null;

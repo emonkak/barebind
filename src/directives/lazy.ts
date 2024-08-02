@@ -1,4 +1,3 @@
-import { resolveBinding } from '../binding.js';
 import {
   type Binding,
   type Block,
@@ -10,7 +9,8 @@ import {
   directiveTag,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { resolveBinding } from '../binding.js';
 
 const FLAG_NONE = 0;
 const FLAG_DIRTY = 1 << 0;

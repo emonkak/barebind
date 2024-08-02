@@ -1,4 +1,4 @@
-import type { TaskPriority } from './types.js';
+import type { TaskPriority } from './baseTypes.js';
 
 export interface Scheduler {
   getCurrentTime(): number;

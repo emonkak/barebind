@@ -1,12 +1,12 @@
-import { Atom } from '../directives/signal.js';
-import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
 import {
   type Block,
   type Effect,
   EffectPhase,
   type UpdateHost,
   type Updater,
-} from '../types.js';
+} from '../baseTypes.js';
+import { Atom } from '../directives/signal.js';
+import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
 
 export interface ConcurrentUpdaterOptions {
   scheduler?: Scheduler;

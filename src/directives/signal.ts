@@ -1,11 +1,3 @@
-import { resolveBinding } from '../binding.js';
-import { ensureDirective } from '../error.js';
-import { LinkedList } from '../linkedList.js';
-import {
-  type RenderContext,
-  type UsableObject,
-  usableTag,
-} from '../renderContext.js';
 import {
   type Binding,
   type Directive,
@@ -14,7 +6,15 @@ import {
   directiveTag,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { resolveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
+import { LinkedList } from '../linkedList.js';
+import {
+  type RenderContext,
+  type UsableObject,
+  usableTag,
+} from '../renderContext.js';
 
 export type Subscriber = () => void;
 

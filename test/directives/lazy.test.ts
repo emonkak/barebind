@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { PartType, directiveTag, nameTag } from '../../src/baseTypes.js';
 import { LazyBinding, lazy } from '../../src/directives/lazy.js';
-import { PartType, directiveTag, nameTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,

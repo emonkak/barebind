@@ -1,6 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  type Part,
+  PartType,
+  type Template,
+  directiveTag,
+} from '../../src/baseTypes.js';
+import {
   AttributeBinding,
   ElementBinding,
   EventBinding,
@@ -13,12 +19,6 @@ import {
   getMarker,
   isValidMarker,
 } from '../../src/template/taggedTemplate.js';
-import {
-  type Part,
-  PartType,
-  type Template,
-  directiveTag,
-} from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
 

@@ -4,7 +4,7 @@ import {
   EffectPhase,
   type UpdateHost,
   type Updater,
-} from '../types.js';
+} from '../baseTypes.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
   private _pendingBlocks: Block<TContext>[] = [];

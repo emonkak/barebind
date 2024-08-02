@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { type Hook, HookType } from '../src/baseTypes.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
 import { ElementTemplate } from '../src/template/elementTemplate.js';
 import { EmptyTemplate } from '../src/template/emptyTemplate.js';
@@ -7,7 +8,6 @@ import {
   ChildNodeTemplate,
   TextTemplate,
 } from '../src/template/singleTemplate.js';
-import { type Hook, HookType } from '../src/types.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,

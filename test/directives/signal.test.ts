@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { NodeBinding } from '../../src/binding.js';
-import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
-import { RenderContext } from '../../src/renderContext.js';
 import {
   type Hook,
   HookType,
   PartType,
   directiveTag,
   nameTag,
-} from '../../src/types.js';
+} from '../../src/baseTypes.js';
+import { NodeBinding } from '../../src/binding.js';
+import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
+import { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '.././mocks.js';
 

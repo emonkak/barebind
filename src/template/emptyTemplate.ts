@@ -3,7 +3,7 @@ import type {
   Template,
   TemplateFragment,
   UpdateContext,
-} from '../types.js';
+} from '../baseTypes.js';
 
 export class EmptyTemplate implements Template<null> {
   static readonly instance: EmptyTemplate = new EmptyTemplate();

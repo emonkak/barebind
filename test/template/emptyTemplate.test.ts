@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { PartType } from '../../src/baseTypes.js';
 import {
   EmptyTemplate,
   EmptyTemplateFragment,
 } from '../../src/template/emptyTemplate.js';
-import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 

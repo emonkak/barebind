@@ -1,5 +1,3 @@
-import { resolveBinding, resolvePrimitiveBinding } from '../binding.js';
-import { ensureDirective } from '../error.js';
 import {
   type Binding,
   type Directive,
@@ -9,7 +7,9 @@ import {
   isDirective,
   nameOf,
   nameTag,
-} from '../types.js';
+} from '../baseTypes.js';
+import { resolveBinding, resolvePrimitiveBinding } from '../binding.js';
+import { ensureDirective } from '../error.js';
 
 export function dynamic(value: unknown): Dynamic {
   return new Dynamic(value);

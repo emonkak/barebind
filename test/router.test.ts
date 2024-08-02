@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { type Hook, HookType } from '../src/baseTypes.js';
 import { RenderContext } from '../src/renderContext.js';
 import {
   RelativeURL,
@@ -11,7 +12,6 @@ import {
   route,
   wildcard,
 } from '../src/router.js';
-import { type Hook, HookType } from '../src/types.js';
 import { UpdateController } from '../src/updateController.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock } from './mocks.js';

@@ -1,12 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { PartType } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import {
   ChildNodeTemplate,
   SingleTemplateFragment,
   TextTemplate,
 } from '../../src/template/singleTemplate.js';
-import { PartType } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 

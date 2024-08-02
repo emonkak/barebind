@@ -1,12 +1,3 @@
-import { dependenciesAreChanged } from './compare.js';
-import { Lazy } from './directives/lazy.js';
-import { TemplateResult } from './directives/templateResult.js';
-import {
-  type ElementData,
-  ElementTemplate,
-} from './template/elementTemplate.js';
-import { EmptyTemplate } from './template/emptyTemplate.js';
-import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
 import {
   type Block,
   type Cleanup,
@@ -23,7 +14,16 @@ import {
   type TemplateDirective,
   type UpdateHost,
   type Updater,
-} from './types.js';
+} from './baseTypes.js';
+import { dependenciesAreChanged } from './compare.js';
+import { Lazy } from './directives/lazy.js';
+import { TemplateResult } from './directives/templateResult.js';
+import {
+  type ElementData,
+  ElementTemplate,
+} from './template/elementTemplate.js';
+import { EmptyTemplate } from './template/emptyTemplate.js';
+import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
 
 export const usableTag = Symbol('Usable');
 

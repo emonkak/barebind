@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { PartType, directiveTag } from '../../src/baseTypes.js';
 import { RefBinding, ref } from '../../src/directives/ref.js';
-import { PartType, directiveTag } from '../../src/types.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockUpdateHost } from '../mocks.js';
 
