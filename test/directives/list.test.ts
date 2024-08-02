@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  InPlaceListBinding,
-  OrderedListBinding,
+  ListBinding,
   inPlaceList,
   orderedList,
 } from '../../src/directives/list.js';
@@ -12,32 +11,33 @@ import { MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('orderedList()', () => {
-  it('should construst a new OrderedList directive', () => {
+  it('should construst a new list directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
     const keySelector = (item: string) => item;
     const value = orderedList(items, keySelector, valueSelector);
 
     expect(value.items).toBe(items);
-    expect(value.valueSelector).toBe(valueSelector);
     expect(value.keySelector).toBe(keySelector);
+    expect(value.valueSelector).toBe(valueSelector);
   });
 });
 
 describe('inPlaceList()', () => {
-  it('should construst a new InPlaceList directive', () => {
+  it('should construst a new list directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
     const value = inPlaceList(items, valueSelector);
 
     expect(value.items).toBe(items);
+    expect(value.keySelector).toBe(null);
     expect(value.valueSelector).toBe(valueSelector);
   });
 });
 
-describe('OrderedList', () => {
+describe('List', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new OrderedListBinding', () => {
+    it('should return a new ListBinding', () => {
       const value = orderedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
@@ -74,13 +74,13 @@ describe('OrderedList', () => {
       const context = { host, updater, block: null };
 
       expect(() => value[directiveTag](part, context)).toThrow(
-        'OrderedList directive must be used in a child node,',
+        'List directive must be used in a child node,',
       );
     });
   });
 });
 
-describe('OrderedListBinding', () => {
+describe('ListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
       const value = orderedList(
@@ -96,7 +96,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new OrderedListBinding(value, part);
+      const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -127,7 +127,7 @@ describe('OrderedListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new OrderedListBinding(value, part);
+      const binding = new ListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.connect(context);
@@ -162,7 +162,7 @@ describe('OrderedListBinding', () => {
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
           const context = { host, updater, block: null };
-          const binding = new OrderedListBinding(value1, part);
+          const binding = new ListBinding(value1, part);
 
           container.appendChild(part.node);
           binding.connect(context);
@@ -212,7 +212,7 @@ describe('OrderedListBinding', () => {
             const host = new MockUpdateHost();
             const updater = new SyncUpdater();
             const context = { host, updater, block: null };
-            const binding = new OrderedListBinding(value1, part);
+            const binding = new ListBinding(value1, part);
 
             container.appendChild(part.node);
             binding.connect(context);
@@ -258,7 +258,7 @@ describe('OrderedListBinding', () => {
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
           const context = { host, updater, block: null };
-          const binding = new OrderedListBinding(value1, part);
+          const binding = new ListBinding(value1, part);
 
           container.appendChild(part.node);
           binding.connect(context);
@@ -280,222 +280,6 @@ describe('OrderedListBinding', () => {
       }
     });
 
-    it('should do nothing if the items is the same as previous ones', () => {
-      const items = ['foo', 'bar', 'baz'];
-      const value1 = orderedList(
-        items,
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const value2 = orderedList(
-        items,
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new OrderedListBinding(value1, part);
-
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.bind(value2, context);
-
-      expect(binding.value).toBe(value2);
-      expect(updater.isPending()).toBe(false);
-      expect(updater.isScheduled()).toBe(false);
-    });
-  });
-
-  describe('.unbind()', () => {
-    it('should unbind current bindings', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new OrderedListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      binding.unbind(context);
-      updater.flushUpdate(host);
-
-      expect(binding.bindings).toHaveLength(0);
-      expect(container.innerHTML).toBe('<!---->');
-    });
-
-    it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new OrderedListBinding(value, part);
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      binding.unbind(context);
-      binding.unbind(context);
-      updater.flushUpdate(host);
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should disconnect current bindings', () => {
-      const value = orderedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new OrderedListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      const disconnectSpies = binding.bindings.map((binding) =>
-        vi.spyOn(binding, 'disconnect'),
-      );
-
-      binding.disconnect();
-
-      expect(disconnectSpies).toHaveLength(3);
-      for (const disconnectSpy of disconnectSpies) {
-        expect(disconnectSpy).toHaveBeenCalledOnce();
-      }
-      expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
-      );
-    });
-  });
-});
-
-describe('InPlaceList', () => {
-  describe('[directiveTag]()', () => {
-    it('should return a new InPlaceListBinding', () => {
-      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = value[directiveTag](part, context);
-
-      expect(binding.value).toBe(value);
-      expect(binding.part).toBe(part);
-      expect(binding.startNode).toBe(part.node);
-      expect(binding.endNode).toBe(part.node);
-      expect(binding.bindings).toEqual([]);
-    });
-
-    it('should throw an error if the part is not a ChildNodePart', () => {
-      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-
-      expect(() => value[directiveTag](part, context)).toThrow(
-        'InPlaceList directive must be used in a child node,',
-      );
-    });
-  });
-});
-
-describe('InPlaceListBinding', () => {
-  describe('.connect()', () => {
-    it('should connect new bindings from items', () => {
-      const value = inPlaceList(
-        ['foo', 'bar', 'baz'],
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      expect(binding.value).toBe(value);
-      expect(binding.startNode.nodeValue).toBe('foo');
-      expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
-        'foo',
-        'bar',
-        'baz',
-      ]);
-      expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@0-->bar<!--TextDirective@1-->baz<!--TextDirective@2--><!---->',
-      );
-    });
-
-    it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const value = inPlaceList(
-        ['foo', 'bar', 'baz'],
-        (item) => new TextDirective(item),
-      );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value, part);
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      binding.connect(context);
-      binding.connect(context);
-      updater.flushUpdate(host);
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.bind()', () => {
     it('should update with longer list than last time', () => {
       const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
@@ -513,7 +297,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value1, part);
+      const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -548,7 +332,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value1, part);
+      const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -568,8 +352,16 @@ describe('InPlaceListBinding', () => {
 
     it('should do nothing if the items is the same as previous ones', () => {
       const items = ['foo', 'bar', 'baz'];
-      const value1 = inPlaceList(items, (item) => item);
-      const value2 = inPlaceList(items, (item) => item);
+      const value1 = orderedList(
+        items,
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
+      const value2 = orderedList(
+        items,
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -577,7 +369,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value1, part);
+      const binding = new ListBinding(value1, part);
 
       binding.connect(context);
       updater.flushUpdate(host);
@@ -592,7 +384,11 @@ describe('InPlaceListBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
-      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => item,
+      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -601,7 +397,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value, part);
+      const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -610,13 +406,16 @@ describe('InPlaceListBinding', () => {
       binding.unbind(context);
       updater.flushUpdate(host);
 
-      expect(binding.value).toBe(value);
       expect(binding.bindings).toHaveLength(0);
       expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const value = inPlaceList(['foo', 'bar', 'baz'], (item) => item);
+      const value = orderedList(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => item,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -624,7 +423,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value, part);
+      const binding = new ListBinding(value, part);
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.unbind(context);
@@ -637,8 +436,9 @@ describe('InPlaceListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const value = inPlaceList(
+      const value = orderedList(
         ['foo', 'bar', 'baz'],
+        (item) => item,
         (item) => new TextDirective(item),
       );
       const container = document.createElement('div');
@@ -649,7 +449,7 @@ describe('InPlaceListBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = { host, updater, block: null };
-      const binding = new InPlaceListBinding(value, part);
+      const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
@@ -666,7 +466,7 @@ describe('InPlaceListBinding', () => {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@0-->bar<!--TextDirective@1-->baz<!--TextDirective@2--><!---->',
+        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
       );
     });
   });
