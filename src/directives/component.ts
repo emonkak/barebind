@@ -112,25 +112,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   connect(context: UpdateContext<TContext>): void {
-    const { type, props } = this._value;
-    const { template, data } = context.renderComponent(
-      type,
-      props,
-      this._hooks,
-    );
-
-    if (this._pendingFragment !== null) {
-      if (this._pendingFragment !== this._memoizedFragment) {
-        this._requestMutation(context, Status.Mounting);
-      }
-      this._pendingFragment.bind(data, context);
-    } else {
-      this._requestMutation(context, Status.Mounting);
-      this._pendingFragment = template.render(data, context);
-      this._pendingFragment.connect(context);
-    }
-
-    this._memoizedTemplate = template;
+    this._triggerRender(this._value, context);
   }
 
   bind(
@@ -140,8 +122,46 @@ export class ComponentBinding<TProps, TData, TContext>
     DEBUG: {
       ensureDirective(Component, newValue, this._part);
     }
+    this._triggerRender(newValue, context);
+    this._value = newValue;
+  }
 
-    const { type, props } = newValue;
+  unbind(context: UpdateContext<TContext>): void {
+    this._pendingFragment?.unbind(context);
+
+    this._requestCleanHooks(context);
+
+    this._requestMutation(context, Status.Unmounting);
+  }
+
+  disconnect(): void {
+    this._pendingFragment?.disconnect();
+
+    cleanHooks(this._hooks);
+    this._hooks = [];
+  }
+
+  commit(): void {
+    switch (this._status) {
+      case Status.Mounting:
+        this._memoizedFragment?.unmount(this._part);
+        this._pendingFragment?.mount(this._part);
+        this._memoizedFragment = this._pendingFragment;
+        break;
+      case Status.Unmounting:
+        this._memoizedFragment?.unmount(this._part);
+        this._memoizedFragment = null;
+        break;
+    }
+
+    this._status = Status.Committed;
+  }
+
+  private _triggerRender(
+    component: Component<TProps, TData, TContext>,
+    context: UpdateContext<TContext>,
+  ) {
+    const { type, props } = component;
 
     if (this._value.type !== type) {
       // The component has been changed, so we need to clean hooks before
@@ -212,39 +232,7 @@ export class ComponentBinding<TProps, TData, TContext>
       this._pendingFragment.connect(context);
     }
 
-    this._value = newValue;
     this._memoizedTemplate = template;
-  }
-
-  unbind(context: UpdateContext<TContext>): void {
-    this._pendingFragment?.unbind(context);
-
-    this._requestCleanHooks(context);
-
-    this._requestMutation(context, Status.Unmounting);
-  }
-
-  disconnect(): void {
-    this._pendingFragment?.disconnect();
-
-    cleanHooks(this._hooks);
-    this._hooks = [];
-  }
-
-  commit(): void {
-    switch (this._status) {
-      case Status.Mounting:
-        this._memoizedFragment?.unmount(this._part);
-        this._pendingFragment?.mount(this._part);
-        this._memoizedFragment = this._pendingFragment;
-        break;
-      case Status.Unmounting:
-        this._memoizedFragment?.unmount(this._part);
-        this._memoizedFragment = null;
-        break;
-    }
-
-    this._status = Status.Committed;
   }
 
   private _requestCleanHooks(context: UpdateContext<TContext>): void {

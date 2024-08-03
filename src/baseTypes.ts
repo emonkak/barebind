@@ -286,10 +286,10 @@ export class UpdateContext<TContext> {
     props: TProps,
     hooks: Hook[],
   ): TemplateDirective<TData, TContext> {
+    // Component directive should be used with Root directive. Otherwise,
+    // updates will begin from the parent block instead of the component
+    // itself.
     if (this._block === null) {
-      // Component directive should be used with Root directive. Otherwise,
-      // updates will begin from the parent block instead of the component
-      // itself.
       throw new Error('Component rendering must be performed within a block.');
     }
 
