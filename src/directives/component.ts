@@ -16,7 +16,7 @@ import {
   nameTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
-import { Lazy } from './lazy.js';
+import { Root } from './root.js';
 
 enum Status {
   Committed,
@@ -27,9 +27,9 @@ enum Status {
 export function component<TProps, TData, TContext>(
   component: ComponentType<TProps, TData, TContext>,
   props: TProps,
-): Lazy<Component<TProps, TData, TContext>> {
-  // Component directive should be used with Lazy directive.
-  return new Lazy(new Component(component, props));
+): Root<Component<TProps, TData, TContext>> {
+  // Component directive should be used with Root directive.
+  return new Root(new Component(component, props));
 }
 
 export class Component<TProps, TData, TContext> implements Directive<TContext> {

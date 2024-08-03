@@ -21,7 +21,7 @@ import {
 } from '../mocks.js';
 
 describe('component()', () => {
-  it('should construct a new Component directive wrapped in Lazy directive', () => {
+  it('should construct a new Component directive wrapped in Root directive', () => {
     const type = () => new TemplateResult(new MockTemplate(), {});
     const props = {};
     const value = component(type, props);

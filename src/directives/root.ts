@@ -15,11 +15,11 @@ const FLAG_DIRTY = 1 << 0;
 const FLAG_CONNECTED = 1 << 1;
 const FLAG_UPDATING = 1 << 2;
 
-export function lazy<TValue>(value: TValue): Lazy<TValue> {
-  return new Lazy(value);
+export function root<TValue>(value: TValue): Root<TValue> {
+  return new Root(value);
 }
 
-export class Lazy<TValue> implements Directive {
+export class Root<TValue> implements Directive {
   private _value: TValue;
 
   constructor(value: TValue) {
@@ -31,14 +31,14 @@ export class Lazy<TValue> implements Directive {
   }
 
   get [nameTag](): string {
-    return 'Lazy(' + nameOf(this._value) + ')';
+    return 'Root(' + nameOf(this._value) + ')';
   }
 
   [directiveTag](
     part: Part,
     context: UpdateContext<unknown>,
-  ): LazyBinding<TValue> {
-    return new LazyBinding(this, part, context);
+  ): RootBinding<TValue> {
+    return new RootBinding(this, part, context);
   }
 
   valueOf(): TValue {
@@ -46,10 +46,10 @@ export class Lazy<TValue> implements Directive {
   }
 }
 
-export class LazyBinding<TValue>
-  implements Binding<Lazy<TValue>>, Block<unknown>
+export class RootBinding<TValue>
+  implements Binding<Root<TValue>>, Block<unknown>
 {
-  protected _value: Lazy<TValue>;
+  protected _value: Root<TValue>;
 
   protected readonly _binding: Binding<TValue>;
 
@@ -60,7 +60,7 @@ export class LazyBinding<TValue>
   private _flags = FLAG_NONE;
 
   constructor(
-    value: Lazy<TValue>,
+    value: Root<TValue>,
     part: Part,
     context: UpdateContext<unknown>,
   ) {
@@ -69,7 +69,7 @@ export class LazyBinding<TValue>
     this._parent = context.block;
   }
 
-  get value(): Lazy<TValue> {
+  get value(): Root<TValue> {
     return this._value;
   }
 
@@ -151,7 +151,7 @@ export class LazyBinding<TValue>
     this._forceUpdate(context);
   }
 
-  bind(newValue: Lazy<TValue>, context: UpdateContext<unknown>): void {
+  bind(newValue: Root<TValue>, context: UpdateContext<unknown>): void {
     this._forceUpdate(context);
     this._value = newValue;
     this._flags |= FLAG_DIRTY;

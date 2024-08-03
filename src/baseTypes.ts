@@ -287,7 +287,7 @@ export class UpdateContext<TContext> {
     hooks: Hook[],
   ): TemplateDirective<TData, TContext> {
     if (this._block === null) {
-      // Component directive should be used with Lazy directive. Otherwise,
+      // Component directive should be used with Root directive. Otherwise,
       // updates will begin from the parent block instead of the component
       // itself.
       throw new Error('Component rendering must be performed within a block.');

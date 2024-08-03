@@ -6,7 +6,7 @@ import {
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
-import { LazyBinding, lazy } from '../../src/directives/lazy.js';
+import { RootBinding, root } from '../../src/directives/root.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -18,25 +18,25 @@ import {
 describe('root()', () => {
   it('should construct a new Root directive', () => {
     const innerValue = new TextDirective('foo');
-    const value = lazy(innerValue);
+    const value = root(innerValue);
 
     expect(value.value).toBe(innerValue);
     expect(value.valueOf()).toBe(innerValue);
   });
 });
 
-describe('Lazy', () => {
+describe('Root', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(lazy('foo')[nameTag]).toBe('Lazy("foo")');
-      expect(lazy(new TextDirective('foo'))[nameTag]).toBe(
-        'Lazy(TextDirective)',
+      expect(root('foo')[nameTag]).toBe('Root("foo")');
+      expect(root(new TextDirective('foo'))[nameTag]).toBe(
+        'Root(TextDirective)',
       );
     });
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new LazyBinding', () => {
+    it('should return a new RootBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -46,7 +46,7 @@ describe('Lazy', () => {
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
 
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const block = value[directiveTag](part, context);
 
       expect(block.value).toBe(value);
@@ -63,7 +63,7 @@ describe('Lazy', () => {
   });
 });
 
-describe('LazyBinding', () => {
+describe('RootBinding', () => {
   describe('.shouldUpdate()', () => {
     it('should return false after the block is initialized', () => {
       const part = {
@@ -74,8 +74,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       expect(binding.shouldUpdate()).toBe(false);
     });
@@ -89,8 +89,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
 
@@ -106,8 +106,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -126,8 +126,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       binding.unbind(context);
@@ -145,8 +145,8 @@ describe('LazyBinding', () => {
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
 
@@ -166,8 +166,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       binding.cancelUpdate();
@@ -186,8 +186,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -205,7 +205,7 @@ describe('LazyBinding', () => {
     });
 
     it('should reschedule an update a higer priority', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -213,7 +213,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -232,7 +232,7 @@ describe('LazyBinding', () => {
     });
 
     it('should not schedule an update with a lower or equal priority', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -240,7 +240,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -259,7 +259,7 @@ describe('LazyBinding', () => {
     });
 
     it('should not schedule an update if the block is not connected', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -267,7 +267,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -286,7 +286,7 @@ describe('LazyBinding', () => {
     });
 
     it('should not schedule an update if the block is already updating', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -294,7 +294,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
@@ -310,7 +310,7 @@ describe('LazyBinding', () => {
 
   describe('.connect()', () => {
     it('should enqueue the block for update with "user-blocking" priority', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -318,7 +318,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
@@ -340,7 +340,7 @@ describe('LazyBinding', () => {
     });
 
     it('should enqueue the block for update with the parent priority', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -349,7 +349,7 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
@@ -375,7 +375,7 @@ describe('LazyBinding', () => {
     });
 
     it('should re-enqueue the block with "user-blocking" priority', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -383,7 +383,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -409,7 +409,7 @@ describe('LazyBinding', () => {
     });
 
     it('should not enqueue a block if it is already enqueueing', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -417,7 +417,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
@@ -434,7 +434,7 @@ describe('LazyBinding', () => {
     });
 
     it('should connect the binding on update', () => {
-      const value = lazy(new TextDirective('foo'));
+      const value = root(new TextDirective('foo'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -442,7 +442,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value, part, context);
+      const binding = new RootBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -456,8 +456,8 @@ describe('LazyBinding', () => {
 
   describe('.bind()', () => {
     it('should enqueue the block for update', () => {
-      const value1 = lazy(new TextDirective('foo'));
-      const value2 = lazy(new TextDirective('bar'));
+      const value1 = root(new TextDirective('foo'));
+      const value2 = root(new TextDirective('bar'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -465,7 +465,7 @@ describe('LazyBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
-      const binding = new LazyBinding(value1, part, context);
+      const binding = new RootBinding(value1, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -491,8 +491,8 @@ describe('LazyBinding', () => {
     });
 
     it('should enqueue the block for update with the parent priority', () => {
-      const value1 = lazy(new TextDirective('foo'));
-      const value2 = lazy(new TextDirective('bar'));
+      const value1 = root(new TextDirective('foo'));
+      const value2 = root(new TextDirective('bar'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -501,7 +501,7 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
-      const binding = new LazyBinding(value1, part, context);
+      const binding = new RootBinding(value1, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -540,9 +540,9 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value1 = lazy(new TextDirective('foo'));
-      const value2 = lazy(new TextDirective('bar'));
-      const binding = new LazyBinding(value1, part, context);
+      const value1 = root(new TextDirective('foo'));
+      const value2 = root(new TextDirective('bar'));
+      const binding = new RootBinding(value1, part, context);
 
       binding.connect(context);
       context.flushUpdate();
@@ -576,8 +576,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -604,8 +604,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -633,8 +633,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
 
@@ -660,8 +660,8 @@ describe('LazyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = lazy(new TextDirective('foo'));
-      const binding = new LazyBinding(value, part, context);
+      const value = root(new TextDirective('foo'));
+      const binding = new RootBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
