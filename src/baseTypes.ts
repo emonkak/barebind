@@ -314,12 +314,17 @@ export class UpdateContext<TContext> {
   }
 }
 
-export function createUpdatePipeline<TContext>(): UpdatePipeline<TContext> {
+export function createUpdatePipeline<TContext>(
+  blocks: Block<TContext>[] = [],
+  mutationEffects: Effect[] = [],
+  layoutEffects: Effect[] = [],
+  passiveEffects: Effect[] = [],
+): UpdatePipeline<TContext> {
   return {
-    blocks: [],
-    mutationEffects: [],
-    layoutEffects: [],
-    passiveEffects: [],
+    blocks,
+    mutationEffects,
+    layoutEffects,
+    passiveEffects,
   };
 }
 

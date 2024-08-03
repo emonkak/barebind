@@ -4,6 +4,7 @@ import {
   type UpdateHost,
   type UpdatePipeline,
   type Updater,
+  createUpdatePipeline,
 } from '../baseTypes.js';
 import { Atom } from '../directives/signal.js';
 import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
@@ -111,12 +112,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         async () => {
           try {
-            const pipeline = {
-              blocks: [block],
-              mutationEffects: [],
-              layoutEffects: [],
-              passiveEffects: [],
-            };
+            const pipeline = createUpdatePipeline([block]);
             await this.flushUpdate(pipeline, host);
           } finally {
             this._taskCount.value--;
