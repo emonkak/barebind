@@ -48,6 +48,8 @@ export class Memo<T> implements Directive {
 export class MemoBinding<T> implements Binding<Memo<T>> {
   private _value: Memo<T>;
 
+  private _memoizedDependencies: unknown[] | undefined = undefined;
+
   private readonly _binding: Binding<T>;
 
   constructor(value: Memo<T>, part: Part, context: UpdateContext<unknown>) {
@@ -77,27 +79,29 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   connect(context: UpdateContext<unknown>): void {
     this._binding.connect(context);
+    this._memoizedDependencies = this._value.dependencies;
   }
 
   bind(newValue: Memo<T>, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureDirective(Memo, newValue, this._binding.part);
     }
-    const oldDependencies = this._value.dependencies;
+    const oldDependencies = this._memoizedDependencies;
     const newDependencies = newValue.dependencies;
     if (dependenciesAreChanged(oldDependencies, newDependencies)) {
       this._binding.bind(newValue.factory(), context);
     }
     this._value = newValue;
+    this._memoizedDependencies = newDependencies;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    this._value = new Memo(this._value.factory, undefined);
     this._binding.unbind(context);
+    this._memoizedDependencies = undefined;
   }
 
   disconnect(): void {
-    this._value = new Memo(this._value.factory, undefined);
     this._binding.disconnect();
+    this._memoizedDependencies = undefined;
   }
 }
