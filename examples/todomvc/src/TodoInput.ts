@@ -34,8 +34,10 @@ export function TodoInput(
     if (event.key === 'Enter' && !event.isComposing) {
       const target = event.currentTarget as HTMLInputElement;
       const value = target.value.trim();
-      target.value = '';
-      onSubmit?.(value);
+      if (value !== '') {
+        target.value = '';
+        onSubmit?.(value);
+      }
     }
   };
 
