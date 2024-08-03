@@ -18,6 +18,7 @@ describe('ConcurrentUpdater', () => {
       const updater = new ConcurrentUpdater({
         scheduler,
       });
+
       const pipeline = createUpdatePipeline();
 
       pipeline.blocks.push(new MockBlock());
@@ -58,6 +59,7 @@ describe('ConcurrentUpdater', () => {
         const updater = new ConcurrentUpdater({
           scheduler,
         });
+
         const pipeline = createUpdatePipeline();
         const block = new MockBlock();
 
@@ -90,6 +92,7 @@ describe('ConcurrentUpdater', () => {
       const updater = new ConcurrentUpdater({
         scheduler,
       });
+
       const pipeline = createUpdatePipeline();
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
@@ -124,9 +127,11 @@ describe('ConcurrentUpdater', () => {
       const updater = new ConcurrentUpdater({
         scheduler,
       });
+
       const pipeline = createUpdatePipeline();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
+
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
       pipeline.mutationEffects.push(mutationEffect);
@@ -149,8 +154,10 @@ describe('ConcurrentUpdater', () => {
       const updater = new ConcurrentUpdater({
         scheduler,
       });
+
       const pipeline = createUpdatePipeline();
       const passiveEffect = { commit: vi.fn() };
+
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
       pipeline.passiveEffects.push(passiveEffect);
@@ -171,8 +178,10 @@ describe('ConcurrentUpdater', () => {
       const updater = new ConcurrentUpdater({
         scheduler,
       });
+
       const pipeline = createUpdatePipeline();
       const block = new MockBlock();
+
       const updateSpy = vi.spyOn(block, 'update');
       const shouldUpdateSpy = vi
         .spyOn(block, 'shouldUpdate')
@@ -187,6 +196,32 @@ describe('ConcurrentUpdater', () => {
       expect(updateSpy).not.toHaveBeenCalled();
       expect(shouldUpdateSpy).toHaveBeenCalledOnce();
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should block an update while the update pipeline is running', async () => {
+      const host = new MockUpdateHost();
+      const scheduler = new MockScheduler();
+      const updater = new ConcurrentUpdater({
+        scheduler,
+      });
+
+      const pipeline = createUpdatePipeline();
+      const block = new MockBlock();
+
+      const updateSpy = vi
+        .spyOn(block, 'update')
+        .mockImplementation((context) => {
+          context.scheduleUpdate();
+        });
+      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+
+      pipeline.blocks.push(block);
+      updater.scheduleUpdate(pipeline, host);
+
+      await updater.waitForUpdate();
+
+      expect(updateSpy).toHaveBeenCalledOnce();
+      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {

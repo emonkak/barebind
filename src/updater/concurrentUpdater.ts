@@ -18,8 +18,6 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _taskCount: Atom<number> = new Atom(0);
 
-  private _isUpdating = false;
-
   constructor({
     scheduler = getDefaultScheduler(),
   }: ConcurrentUpdaterOptions = {}) {
@@ -33,39 +31,38 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     const { blocks } = pipeline;
     let startTime = this._scheduler.getCurrentTime();
 
-    // block.length may be grow.
-    for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
-      do {
-        const block = blocks[i]!;
-        if (!block.shouldUpdate()) {
-          block.cancelUpdate();
-          continue;
-        }
+    pipeline.isProcessing = true;
 
-        if (
-          this._scheduler.shouldYieldToMain(
-            this._scheduler.getCurrentTime() - startTime,
-          )
-        ) {
-          await this._scheduler.yieldToMain({
-            priority: block.priority,
-          });
-          startTime = this._scheduler.getCurrentTime();
-        }
+    try {
+      // block.length may be grow.
+      for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
+        do {
+          const block = blocks[i]!;
+          if (!block.shouldUpdate()) {
+            block.cancelUpdate();
+            continue;
+          }
 
-        const context = new UpdateContext(host, this, block, pipeline);
+          if (
+            this._scheduler.shouldYieldToMain(
+              this._scheduler.getCurrentTime() - startTime,
+            )
+          ) {
+            await this._scheduler.yieldToMain({
+              priority: block.priority,
+            });
+            startTime = this._scheduler.getCurrentTime();
+          }
 
-        this._isUpdating = true;
+          const context = new UpdateContext(host, this, block, pipeline);
 
-        try {
           block.update(context);
-        } finally {
-          this._isUpdating = false;
-        }
-      } while (++i < l);
+        } while (++i < l);
+      }
+    } finally {
+      pipeline.blocks.length = 0;
+      pipeline.isProcessing = false;
     }
-
-    pipeline.blocks = [];
 
     this._scheduleEffects(pipeline, host);
   }
@@ -78,9 +75,6 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     pipeline: UpdatePipeline<TContext>,
     host: UpdateHost<TContext>,
   ): void {
-    if (this._isUpdating) {
-      return;
-    }
     this._scheduleBlocks(pipeline, host);
     this._scheduleEffects(pipeline, host);
   }

@@ -9,6 +9,7 @@ describe('SyncUpdater', () => {
     it('should return a promise that will be fulfilled when the update is complete', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
       const pipeline = createUpdatePipeline();
 
       expect(updater.isScheduled()).toBe(false);
@@ -42,6 +43,7 @@ describe('SyncUpdater', () => {
     it('should do nothing if already scheduled', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
       const pipeline = createUpdatePipeline();
 
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
@@ -57,9 +59,9 @@ describe('SyncUpdater', () => {
     it('should update the block on a microtask', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
       const pipeline = createUpdatePipeline();
       const block = new MockBlock();
-
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
@@ -89,6 +91,7 @@ describe('SyncUpdater', () => {
     it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
       const pipeline = createUpdatePipeline();
       const block = new MockBlock();
 
@@ -111,9 +114,33 @@ describe('SyncUpdater', () => {
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
+    it('should block an update while the update pipeline is running', async () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+
+      const pipeline = createUpdatePipeline();
+      const block = new MockBlock();
+
+      const updateSpy = vi
+        .spyOn(block, 'update')
+        .mockImplementation((context) => {
+          context.scheduleUpdate();
+        });
+      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+
+      pipeline.blocks.push(block);
+      updater.scheduleUpdate(pipeline, host);
+
+      await updater.waitForUpdate();
+
+      expect(updateSpy).toHaveBeenCalledOnce();
+      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
+    });
+
     it('should commit effects on a microtask', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
+
       const pipeline = createUpdatePipeline();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };

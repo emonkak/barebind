@@ -15,36 +15,39 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   ): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = pipeline;
 
-    // block.length may be grow.
-    for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
-      do {
-        const block = blocks[i]!;
-        if (!block.shouldUpdate()) {
-          block.cancelUpdate();
-          continue;
-        }
-        const context = new UpdateContext(host, this, block, pipeline);
-        block.update(context);
-      } while (++i < l);
-    }
+    pipeline.isProcessing = true;
 
-    if (blocks.length > 0) {
-      pipeline.blocks = [];
+    try {
+      // block.length may be grow.
+      for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
+        do {
+          const block = blocks[i]!;
+          if (!block.shouldUpdate()) {
+            block.cancelUpdate();
+            continue;
+          }
+          const context = new UpdateContext(host, this, block, pipeline);
+          block.update(context);
+        } while (++i < l);
+      }
+    } finally {
+      pipeline.blocks.length = 0;
+      pipeline.isProcessing = false;
     }
 
     if (mutationEffects.length > 0) {
       host.flushEffects(mutationEffects, EffectPhase.Mutation);
-      pipeline.mutationEffects = [];
+      pipeline.mutationEffects.length = 0;
     }
 
     if (layoutEffects.length > 0) {
       host.flushEffects(layoutEffects, EffectPhase.Layout);
-      pipeline.layoutEffects = [];
+      pipeline.layoutEffects.length = 0;
     }
 
     if (passiveEffects.length > 0) {
       host.flushEffects(passiveEffects, EffectPhase.Passive);
-      pipeline.passiveEffects = [];
+      pipeline.passiveEffects.length = 0;
     }
   }
 

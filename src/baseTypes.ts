@@ -44,6 +44,7 @@ export interface UpdatePipeline<TContext> {
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
+  isProcessing: boolean;
 }
 
 export interface UpdateHost<TContext> {
@@ -311,7 +312,9 @@ export class UpdateContext<TContext> {
   }
 
   scheduleUpdate(): void {
-    this._updater.scheduleUpdate(this._pipeline, this._host);
+    if (!this._pipeline.isProcessing) {
+      this._updater.scheduleUpdate(this._pipeline, this._host);
+    }
   }
 }
 
@@ -326,6 +329,7 @@ export function createUpdatePipeline<TContext>(
     mutationEffects,
     layoutEffects,
     passiveEffects,
+    isProcessing: false,
   };
 }
 
