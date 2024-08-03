@@ -90,7 +90,7 @@ describe('Memo', () => {
 
 describe('MemoBinding', () => {
   describe('.connect()', () => {
-    it('should delegate to the inner binding', () => {
+    it('should connect the current binding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -183,7 +183,7 @@ describe('MemoBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should unbind the inner binding', () => {
+    it('should unbind the current binding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -211,7 +211,7 @@ describe('MemoBinding', () => {
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
-    it('should always bind a new value to the inner binding after unbounding', () => {
+    it('should always bind a new value to the current binding after unbounding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -248,7 +248,7 @@ describe('MemoBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should disconnect the inner binding', () => {
+    it('should disconnect the current binding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -274,7 +274,7 @@ describe('MemoBinding', () => {
       expect(disconnectSpy).toHaveBeenCalledOnce();
     });
 
-    it('should always bind a new value to the inner binding after disconnecting', () => {
+    it('should always bind a new value to the current binding after disconnecting', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

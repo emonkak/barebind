@@ -242,14 +242,15 @@ describe('ClassMapBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const value = classMap({
-        foo: true,
-      });
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
+
+      const value = classMap({
+        foo: true,
+      });
       const binding = new ClassMapBinding(value, part);
 
       binding.disconnect();

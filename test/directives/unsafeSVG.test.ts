@@ -299,11 +299,12 @@ describe('UnsafeSVGBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const value = unsafeSVG('Hello, <strong>World!</strong>');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+
+      const value = unsafeSVG('Hello, <strong>World!</strong>');
       const binding = new UnsafeSVGBinding(value, part);
 
       binding.disconnect();

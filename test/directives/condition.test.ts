@@ -76,11 +76,6 @@ describe('Condition', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new ConditionBinding from a non-directive value', () => {
-      const value = conditionDirective(
-        true,
-        () => 'foo',
-        () => 'bar',
-      );
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -88,7 +83,14 @@ describe('Condition', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const value = conditionDirective(
+        true,
+        () => 'foo',
+        () => 'bar',
+      );
       const binding = value[directiveTag](part, context);
+
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
       const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
@@ -105,13 +107,6 @@ describe('Condition', () => {
     });
 
     it('should return a new ConditionBinding from a directive value', () => {
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const value = conditionDirective(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -119,7 +114,16 @@ describe('Condition', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const trueDirective = new TextDirective();
+      const falseDirective = new TextDirective();
+      const value = conditionDirective(
+        false,
+        () => trueDirective,
+        () => falseDirective,
+      );
       const binding = value[directiveTag](part, context);
+
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
       const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
       const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
@@ -139,12 +143,7 @@ describe('Condition', () => {
 
 describe('ConditionBinding', () => {
   describe('.connect()', () => {
-    it('should delegate to the current binding', () => {
-      const value = conditionDirective(
-        true,
-        () => 'foo',
-        () => 'bar',
-      );
+    it('should connecty the current binding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -152,7 +151,14 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const value = conditionDirective(
+        true,
+        () => 'foo',
+        () => 'bar',
+      );
       const binding = new ConditionBinding(value, part, context);
+
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
       binding.connect(context);
@@ -165,6 +171,14 @@ describe('ConditionBinding', () => {
 
   describe('.bind()', () => {
     it('should bind the true value to the current binding if the condition is the same', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
@@ -174,14 +188,8 @@ describe('ConditionBinding', () => {
         () => trueDirective,
         () => falseDirective,
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
+
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
       binding.connect(context);
@@ -198,6 +206,14 @@ describe('ConditionBinding', () => {
     });
 
     it('should bind the false value to the current binding if the condition is the same', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
@@ -207,14 +223,8 @@ describe('ConditionBinding', () => {
         () => trueDirective,
         () => falseDirective,
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value, part, context);
+
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
       binding.connect(context);
@@ -231,6 +241,14 @@ describe('ConditionBinding', () => {
     });
 
     it('should connect a true binding and unbind the false binidng if the condition changes', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
@@ -245,14 +263,8 @@ describe('ConditionBinding', () => {
         () => trueDirective,
         () => falseDirective,
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
+
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -271,6 +283,14 @@ describe('ConditionBinding', () => {
     });
 
     it('should connect a false binding and unbind the true binidng if the condition changes', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
@@ -285,14 +305,8 @@ describe('ConditionBinding', () => {
         () => trueDirective,
         () => falseDirective,
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
+
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -311,6 +325,14 @@ describe('ConditionBinding', () => {
     });
 
     it('should memoize the true binding if key changes', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
@@ -325,14 +347,8 @@ describe('ConditionBinding', () => {
         () => trueDirective,
         () => falseDirective,
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
+
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -354,6 +370,14 @@ describe('ConditionBinding', () => {
     });
 
     it('should memoize the false binding if key changes', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
@@ -368,14 +392,8 @@ describe('ConditionBinding', () => {
         () => trueDirective,
         () => falseDirective,
       );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
       const binding = new ConditionBinding(value1, part, context);
+
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -397,11 +415,6 @@ describe('ConditionBinding', () => {
     });
 
     it('should throw an error if the new value is not Condition directive', () => {
-      const value = conditionDirective(
-        true,
-        () => 'foo',
-        () => 'bar',
-      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -409,6 +422,12 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const value = conditionDirective(
+        true,
+        () => 'foo',
+        () => 'bar',
+      );
       const binding = new ConditionBinding(value, part, context);
 
       expect(() => {
@@ -420,12 +439,7 @@ describe('ConditionBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should delegate to the current binding', () => {
-      const value = conditionDirective(
-        true,
-        () => 'foo',
-        () => 'bar',
-      );
+    it('should unbind the current binding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -433,7 +447,14 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const value = conditionDirective(
+        true,
+        () => 'foo',
+        () => 'bar',
+      );
       const binding = new ConditionBinding(value, part, context);
+
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
       binding.unbind(context);
@@ -444,12 +465,7 @@ describe('ConditionBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should delegate to the current binding', () => {
-      const value = conditionDirective(
-        true,
-        () => 'foo',
-        () => 'bar',
-      );
+    it('should disconnect the current binding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -457,7 +473,14 @@ describe('ConditionBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const value = conditionDirective(
+        true,
+        () => 'foo',
+        () => 'bar',
+      );
       const binding = new ConditionBinding(value, part, context);
+
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 
       binding.disconnect();

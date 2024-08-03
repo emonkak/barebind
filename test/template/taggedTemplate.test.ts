@@ -485,9 +485,6 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.unbind()', () => {
     it('should unbind top-level bindings in the fragment and other bindings are disconnected', () => {
-      const [template, values] = html`
-        ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
-      `;
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -496,6 +493,10 @@ describe('TaggedTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const [template, values] = html`
+        ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
+      `;
       const fragment = template.render(values, context);
 
       container.appendChild(part.node);
@@ -540,9 +541,6 @@ describe('TaggedTemplateFragment', () => {
     });
 
     it('should only unbind top-level bindings in the fragment', () => {
-      const [template, values] = html`
-        ${'foo'}<div></div><!--${'baz'}-->
-      `;
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -551,6 +549,10 @@ describe('TaggedTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
+
+      const [template, values] = html`
+        ${'foo'}<div></div><!--${'baz'}-->
+      `;
       const fragment = template.render(values, context);
 
       container.appendChild(part.node);
@@ -635,18 +637,19 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.mount()', () => {
     it('should mount child nodes before the part node', () => {
-      const [template, values] = html`
-        <p>Hello, ${'World'}!</p>
-      `;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
-      const fragment = template.render(values, context);
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
+      const [template, values] = html`
+        <p>Hello, ${'World'}!</p>
+      `;
+      const fragment = template.render(values, context);
 
       container.appendChild(part.node);
       fragment.connect(context);
@@ -666,18 +669,19 @@ describe('TaggedTemplateFragment', () => {
 
   describe('.unmount()', () => {
     it('should not remove child nodes if a different part is given', () => {
-      const [template, values] = html`
-        <p>Hello, ${'World'}!</p>
-      `;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
-      const fragment = template.render(values, context);
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater);
+
+      const [template, values] = html`
+        <p>Hello, ${'World'}!</p>
+      `;
+      const fragment = template.render(values, context);
 
       container.appendChild(part.node);
       fragment.connect(context);

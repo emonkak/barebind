@@ -883,10 +883,9 @@ describe('NodeBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const node = document.createTextNode('');
       const part = {
         type: PartType.Node,
-        node,
+        node: document.createTextNode(''),
       } as const;
 
       const binding = new NodeBinding('foo', part);
@@ -925,19 +924,21 @@ describe('PropertyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const binding = new PropertyBinding('foo', part);
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const binding = new PropertyBinding(value1, part);
 
       binding.connect(context);
       context.flushUpdate();
 
-      expect(binding.value).toBe('foo');
-      expect(part.node.className).toBe('foo');
+      expect(binding.value).toBe(value1);
+      expect(part.node.className).toBe(value1);
 
-      binding.bind('bar', context);
+      binding.bind(value2, context);
       context.flushUpdate();
 
-      expect(binding.value).toBe('bar');
-      expect(part.node.className).toBe('bar');
+      expect(binding.value).toBe(value2);
+      expect(part.node.className).toBe(value2);
     });
 
     it('should not update the binding if the new and old values are the same', () => {
@@ -950,29 +951,30 @@ describe('PropertyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const binding = new PropertyBinding('foo', part);
+      const value = 'bar';
+      const binding = new PropertyBinding(value, part);
 
       binding.connect(context);
       context.flushUpdate();
 
-      binding.bind('foo', context);
+      binding.bind(value, context);
 
-      expect(binding.value).toBe('foo');
+      expect(binding.value).toBe(value);
       expect(context.isPending()).toBe(false);
     });
 
     it('should do nothing if the update is already scheduled', () => {
-      const element = document.createElement('div');
       const part = {
         type: PartType.Property,
-        node: element,
+        node: document.createElement('div'),
         name: 'className',
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const binding = new PropertyBinding('foo', part);
+      const value = 'foo';
+      const binding = new PropertyBinding(value, part);
 
       const enqueueMutationEffectSpy = vi.spyOn(
         context,
@@ -1014,7 +1016,8 @@ describe('PropertyBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const binding = new PropertyBinding('foo', part);
+      const value = 'foo';
+      const binding = new PropertyBinding(value, part);
 
       const setClassNameSpy = vi.spyOn(part.node, 'className', 'set');
 
@@ -1033,7 +1036,8 @@ describe('PropertyBinding', () => {
         name: 'className',
       } as const;
 
-      const binding = new PropertyBinding('foo', part);
+      const value = 'foo';
+      const binding = new PropertyBinding(value, part);
 
       const setClassNameSpy = vi.spyOn(part.node, 'className', 'set');
 
@@ -1081,7 +1085,8 @@ describe('ElementBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const binding = new ElementBinding({}, part);
+      const value = {};
+      const binding = new ElementBinding(value, part);
 
       expect(() => {
         binding.bind(null, context);
@@ -1326,9 +1331,7 @@ describe('resolveBinding()', () => {
     const context = new UpdateContext(host, updater);
 
     const value = new TextDirective();
-
     const directiveSpy = vi.spyOn(value, directiveTag);
-
     const binding = resolveBinding(value, part, context);
 
     expect(binding).toBeInstanceOf(TextBinding);
