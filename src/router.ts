@@ -264,7 +264,7 @@ export function hashLocation(
 
 export function integer(component: string): number | null {
   const n = Number.parseInt(component, 10);
-  return !Number.isNaN(n) && n.toString() === component ? n : null;
+  return n.toString() === component ? n : null;
 }
 
 export function route<
