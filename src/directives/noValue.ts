@@ -7,7 +7,7 @@ import {
 } from '../baseTypes.js';
 import { ensureDirective } from '../error.js';
 
-export class NoValue implements Directive {
+export class NoValue implements Directive<NoValue> {
   static readonly instance: NoValue = new NoValue();
 
   constructor() {

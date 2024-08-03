@@ -23,7 +23,7 @@ export function ref(ref: ElementRef | null): Ref {
   return new Ref(ref);
 }
 
-export class Ref implements Directive {
+export class Ref implements Directive<Ref> {
   private readonly _ref: ElementRef | null;
 
   constructor(ref: ElementRef | null) {

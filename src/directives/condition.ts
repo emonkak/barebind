@@ -33,7 +33,9 @@ export function unless<TFalse>(
   return new Condition(condition, () => NoValue.instance, falseBranch);
 }
 
-export class Condition<TTrue, TFalse> implements Directive {
+export class Condition<TTrue, TFalse>
+  implements Directive<Condition<TTrue, TFalse>>
+{
   private readonly _condition: boolean;
 
   private readonly _trueBranch: () => TTrue;

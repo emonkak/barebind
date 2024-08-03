@@ -21,7 +21,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 export abstract class Signal<TValue>
-  implements Directive, UsableObject<TValue, RenderContext>
+  implements Directive<Signal<TValue>>, UsableObject<TValue, RenderContext>
 {
   abstract get value(): TValue;
 

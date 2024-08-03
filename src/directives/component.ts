@@ -32,7 +32,9 @@ export function component<TProps, TData, TContext>(
   return new Root(new Component(component, props));
 }
 
-export class Component<TProps, TData, TContext> implements Directive<TContext> {
+export class Component<TProps, TData, TContext>
+  implements Directive<Component<TProps, TData, TContext>, TContext>
+{
   private readonly _type: ComponentType<TProps, TData, TContext>;
 
   private readonly _props: TProps;

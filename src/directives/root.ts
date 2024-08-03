@@ -19,7 +19,7 @@ export function root<TValue>(value: TValue): Root<TValue> {
   return new Root(value);
 }
 
-export class Root<TValue> implements Directive {
+export class Root<TValue> implements Directive<Root<TValue>> {
   private _value: TValue;
 
   constructor(value: TValue) {

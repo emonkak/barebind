@@ -260,7 +260,7 @@ export class TextBinding implements Binding<TextDirective>, Effect {
   }
 }
 
-export class TextDirective implements Directive {
+export class TextDirective implements Directive<TextDirective> {
   private _content: string | null;
 
   constructor(content: string | null = null) {

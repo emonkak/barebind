@@ -13,11 +13,12 @@ export interface Binding<TValue, TContext = unknown> {
   disconnect(): void;
 }
 
-export interface Directive<TContext = unknown> {
+export interface Directive<TThis, TContext = unknown> {
   [directiveTag](
+    this: TThis,
     part: Part,
     context: UpdateContext<TContext>,
-  ): Binding<ThisType<this>, TContext>;
+  ): Binding<TThis, TContext>;
 }
 
 export interface Block<TContext> {
@@ -89,7 +90,7 @@ export interface Template<TData, TContext = unknown> {
 }
 
 export interface TemplateDirective<TData = unknown, TContext = unknown>
-  extends Directive<TContext> {
+  extends Directive<TemplateDirective<TData, TContext>, TContext> {
   get template(): Template<TData, TContext>;
   get data(): TData;
 }
@@ -328,7 +329,9 @@ export function createUpdatePipeline<TContext>(
   };
 }
 
-export function isDirective(value: unknown): value is Directive<unknown> {
+export function isDirective<TValue>(
+  value: TValue,
+): value is TValue & Directive<TValue> {
   return value !== null && typeof value === 'object' && directiveTag in value;
 }
 

@@ -15,7 +15,7 @@ export function dynamic(value: unknown): Dynamic {
   return new Dynamic(value);
 }
 
-export class Dynamic implements Directive {
+export class Dynamic implements Directive<Dynamic> {
   private readonly _value: unknown;
 
   constructor(value: unknown) {

@@ -19,7 +19,7 @@ export function unsafeSVG(content: string): UnsafeSVG {
   return new UnsafeSVG(content);
 }
 
-export class UnsafeSVG implements Directive {
+export class UnsafeSVG implements Directive<UnsafeSVG> {
   private readonly _content: string;
 
   constructor(content: string) {

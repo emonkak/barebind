@@ -29,7 +29,9 @@ export function inPlaceList<TItem, TValue>(
   return new List(items, null, valueSelector);
 }
 
-export class List<TItem, TKey, TValue> implements Directive {
+export class List<TItem, TKey, TValue>
+  implements Directive<List<TItem, TKey, TValue>>
+{
   private readonly _items: TItem[];
 
   private readonly _keySelector: Selector<TItem, TKey> | null;

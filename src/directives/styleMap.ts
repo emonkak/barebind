@@ -36,7 +36,7 @@ export function styleMap(styles: StyleDeclaration): StyleMap {
   return new StyleMap(styles);
 }
 
-export class StyleMap implements Directive {
+export class StyleMap implements Directive<StyleMap> {
   private readonly _styles: StyleDeclaration;
 
   constructor(styles: StyleDeclaration) {

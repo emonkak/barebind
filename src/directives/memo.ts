@@ -18,7 +18,7 @@ export function memo<T>(
   return new Memo(factory, dependencies);
 }
 
-export class Memo<T> implements Directive {
+export class Memo<T> implements Directive<Memo<T>> {
   private readonly _factory: () => T;
 
   private readonly _dependencies: unknown[] | undefined;

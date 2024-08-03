@@ -19,7 +19,7 @@ export function unsafeHTML(content: string): UnsafeHTML {
   return new UnsafeHTML(content);
 }
 
-export class UnsafeHTML implements Directive {
+export class UnsafeHTML implements Directive<UnsafeHTML> {
   private readonly _content: string;
 
   constructor(content: string) {

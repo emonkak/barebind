@@ -539,7 +539,7 @@ export function resolveBinding<TValue, TContext>(
   context: UpdateContext<TContext>,
 ): Binding<TValue, TContext> {
   if (isDirective(value)) {
-    return value[directiveTag](part, context) as Binding<TValue, TContext>;
+    return value[directiveTag](part, context);
   } else {
     return resolvePrimitiveBinding(value, part) as Binding<TValue, TContext>;
   }

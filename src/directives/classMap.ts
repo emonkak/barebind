@@ -23,7 +23,7 @@ export function classMap(classes: ClassDeclaration): ClassMap {
   return new ClassMap(classes);
 }
 
-export class ClassMap implements Directive {
+export class ClassMap implements Directive<ClassMap> {
   private readonly _classes: ClassDeclaration;
 
   constructor(classDeclaration: ClassDeclaration) {

@@ -11,12 +11,13 @@ export const REPORT_MARKER = '[[USED IN HERE!]]';
 export function ensureDirective<
   TExpectedClass extends abstract new (
     ...args: any[]
-  ) => Directive,
+  ) => Directive<TActualValue>,
+  TActualValue,
 >(
   expectedClass: TExpectedClass,
   actualValue: unknown,
   part: Part,
-): asserts actualValue is TExpectedClass {
+): asserts actualValue is TActualValue {
   if (!(actualValue instanceof expectedClass)) {
     throw new Error(
       'A value must be a instance of ' +
