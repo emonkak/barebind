@@ -124,6 +124,13 @@ export class ComponentBinding<TProps, TData, TContext>
     DEBUG: {
       ensureDirective(Component, newValue, this._part);
     }
+
+    if (this._value.type !== newValue.type) {
+      // The component type has been changed, so we need to clean hooks before
+      // rendering.
+      this._requestCleanHooks(context);
+    }
+
     this._triggerRender(newValue, context);
     this._value = newValue;
   }
@@ -164,13 +171,6 @@ export class ComponentBinding<TProps, TData, TContext>
     context: UpdateContext<TContext>,
   ) {
     const { type, props } = component;
-
-    if (this._value.type !== type) {
-      // The component has been changed, so we need to clean hooks before
-      // rendering.
-      this._requestCleanHooks(context);
-    }
-
     const { template, data } = context.renderComponent(
       type,
       props,
