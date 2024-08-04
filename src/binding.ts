@@ -210,12 +210,9 @@ export class ElementBinding implements Binding<unknown> {
 }
 
 export class EventBinding implements Binding<unknown>, Effect {
-  private _pendingListener:
-    | EventListenerOrEventListenerObject
-    | null
-    | undefined;
+  private _pendingValue: EventListenerOrEventListenerObject | null | undefined;
 
-  private _memoizedListener:
+  private _memoizedValue:
     | EventListenerOrEventListenerObject
     | null
     | undefined = null;
@@ -228,12 +225,12 @@ export class EventBinding implements Binding<unknown>, Effect {
     DEBUG: {
       ensureEventListener(value, part);
     }
-    this._pendingListener = value;
+    this._pendingValue = value;
     this._part = part;
   }
 
   get value(): unknown {
-    return this._pendingListener;
+    return this._pendingValue;
   }
 
   get part(): EventPart {
@@ -256,76 +253,63 @@ export class EventBinding implements Binding<unknown>, Effect {
     DEBUG: {
       ensureEventListener(newValue, this._part);
     }
-    if (newValue !== this._memoizedListener) {
+    if (newValue !== this._memoizedValue) {
       this._requestMutation(context, Status.Mounting);
-      this._pendingListener = newValue;
+      this._pendingValue = newValue;
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    if (this._memoizedListener != null) {
+    if (this._memoizedValue != null) {
       this._requestMutation(context, Status.Unmounting);
     }
   }
 
   disconnect(): void {
-    const listener = this._memoizedListener;
+    const value = this._memoizedValue;
 
-    if (listener != null) {
-      const { node, name } = this._part;
-
-      if (typeof listener === 'function') {
-        node.removeEventListener(name, this);
-      } else {
-        node.removeEventListener(
-          name,
-          this,
-          listener as AddEventListenerOptions,
-        );
-      }
-
-      this._memoizedListener = null;
+    if (value != null) {
+      this._detachLisetener(value);
+      this._memoizedValue = null;
     }
-
-    this._pendingListener = null;
   }
 
   commit(): void {
     switch (this._status) {
       case Status.Mounting: {
-        const oldListener = this._memoizedListener;
-        const newListener = this._pendingListener;
+        const oldValue = this._memoizedValue;
+        const newValue = this._pendingValue;
 
         // If both old and new are functions, the event listener options are
         // the same. Therefore, there is no need to re-attach the event
         // listener.
         if (
-          typeof oldListener === 'object' ||
-          typeof newListener === 'object' ||
-          oldListener === undefined ||
-          newListener === undefined
+          typeof oldValue === 'object' ||
+          typeof newValue === 'object' ||
+          oldValue === undefined ||
+          newValue === undefined
         ) {
-          if (oldListener != null) {
-            this._detachLisetener(oldListener);
+          if (oldValue != null) {
+            this._detachLisetener(oldValue);
           }
 
-          if (newListener != null) {
-            this._attachLisetener(newListener);
+          if (newValue != null) {
+            this._attachLisetener(newValue);
           }
         }
 
-        this._memoizedListener = this._pendingListener;
+        this._memoizedValue = this._pendingValue;
         break;
       }
       case Status.Unmounting: {
-        const listener = this._memoizedListener;
+        const value = this._memoizedValue;
 
         /* istanbul ignore else @preserve */
-        if (listener != null) {
-          this._detachLisetener(listener);
+        if (value != null) {
+          this._detachLisetener(value);
         }
 
-        this._memoizedListener = null;
+        this._memoizedValue = null;
         break;
       }
     }
@@ -334,7 +318,7 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   handleEvent(event: Event): void {
-    const listener = this._memoizedListener!;
+    const listener = this._memoizedValue!;
     if (typeof listener === 'function') {
       listener(event);
     } else {

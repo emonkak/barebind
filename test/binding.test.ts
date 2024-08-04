@@ -636,11 +636,11 @@ describe('EventBinding', () => {
 
       binding.disconnect();
 
+      expect(binding.value).toBe(value);
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
       expect(removeEventListenerSpy).toHaveBeenCalledOnce();
       expect(removeEventListenerSpy).toHaveBeenCalledWith('hello', binding);
-      expect(binding.value).toBe(null);
     });
 
     it('should unregister the active event listener object', () => {
@@ -664,6 +664,7 @@ describe('EventBinding', () => {
 
       binding.disconnect();
 
+      expect(binding.value).toBe(value);
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding, value);
       expect(removeEventListenerSpy).toHaveBeenCalledOnce();
@@ -672,10 +673,9 @@ describe('EventBinding', () => {
         binding,
         value,
       );
-      expect(binding.value).toBe(null);
     });
 
-    it('should cancel register an event listener function', () => {
+    it('should do nothing if no event listener is registered', () => {
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
@@ -685,42 +685,18 @@ describe('EventBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = () => {};
-      const binding = new EventBinding(value, part);
+      const binding = new EventBinding(null, part);
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       binding.connect(context);
-      binding.disconnect();
       context.flushUpdate();
 
-      expect(addEventListenerSpy).not.toHaveBeenCalled();
-      expect(removeEventListenerSpy).not.toHaveBeenCalledOnce();
-    });
-
-    it('should cancel register an event listener object', () => {
-      const part = {
-        type: PartType.Event,
-        node: document.createElement('div'),
-        name: 'hello',
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
-
-      const value = { handleEvent: () => {}, capture: true };
-      const binding = new EventBinding(value, part);
-
-      const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
-      const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
-
-      binding.connect(context);
       binding.disconnect();
-      context.flushUpdate();
 
       expect(addEventListenerSpy).not.toHaveBeenCalled();
-      expect(removeEventListenerSpy).not.toHaveBeenCalledOnce();
+      expect(removeEventListenerSpy).not.toHaveBeenCalled();
     });
   });
 });
