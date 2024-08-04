@@ -28,12 +28,12 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     pipeline: UpdatePipeline<TContext>,
     host: UpdateHost<TContext>,
   ): Promise<void> {
-    const { blocks } = pipeline;
-    let startTime = this._scheduler.getCurrentTime();
-
     pipeline.isProcessing = true;
 
     try {
+      const { blocks } = pipeline;
+      let startTime = this._scheduler.getCurrentTime();
+
       // block.length may be grow.
       for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
         do {
