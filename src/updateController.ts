@@ -37,7 +37,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
   private readonly _marker: string = getMarker();
 
   constructor({ constants = new Map() }: UpdateControllerOptions = {}) {
-    this._constants = new Map(constants);
+    this._constants = constants;
   }
 
   beginRender(
