@@ -1,4 +1,4 @@
-import type { Into, RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import {
   component,
   memo,
@@ -14,7 +14,7 @@ export interface MainProps {}
 export function Main(
   _props: MainProps,
   context: RenderContext,
-): Into<TemplateDirective> {
+): TemplateDirective {
   const state = context.use(AppState);
   const { visibleTodos$ } = state;
   const visibleTodos = context.use(visibleTodos$);

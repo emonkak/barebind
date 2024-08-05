@@ -1,42 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
-import { RootBinding, root } from '../../src/directives/root.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { PartType, UpdateContext } from '../src/baseTypes.js';
+import { Root } from '../src/root.js';
+import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockUpdateHost,
   TextBinding,
   TextDirective,
-} from '../mocks.js';
+} from './mocks.js';
 
-describe('root()', () => {
-  it('should construct a new Root directive', () => {
-    const innerValue = new TextDirective('foo');
-    const value = root(innerValue);
-
-    expect(value.value).toBe(innerValue);
-    expect(value.valueOf()).toBe(innerValue);
-  });
-});
-
-describe('Root', () => {
-  describe('[nameTag]', () => {
-    it('should return a string represented itself', () => {
-      expect(root('foo')[nameTag]).toBe('Root("foo")');
-      expect(root(new TextDirective('foo'))[nameTag]).toBe(
-        'Root(TextDirective)',
-      );
-    });
-  });
-
-  describe('[directiveTag]()', () => {
-    it('should return a new RootBinding', () => {
+describe('RootBinding', () => {
+  describe('.constructor()', () => {
+    it('should construct a Root', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -46,8 +22,9 @@ describe('Root', () => {
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
 
-      const value = root(new TextDirective('foo'));
-      const block = value[directiveTag](part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       expect(block.value).toBe(value);
       expect(block.part).toBe(part);
@@ -58,12 +35,9 @@ describe('Root', () => {
       expect(block.isConnected).toBe(false);
       expect(block.isUpdating).toBe(false);
       expect(block.binding).toBeInstanceOf(TextBinding);
-      expect(block.binding.value).toBe(value.value);
+      expect(block.binding.value).toBe(value);
     });
   });
-});
-
-describe('RootBinding', () => {
   describe('.shouldUpdate()', () => {
     it('should return false after the block is initialized', () => {
       const part = {
@@ -74,10 +48,11 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      expect(binding.shouldUpdate()).toBe(false);
+      expect(block.shouldUpdate()).toBe(false);
     });
 
     it('should return true after the block is connected', () => {
@@ -89,12 +64,13 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
 
-      expect(binding.shouldUpdate()).toBe(true);
+      expect(block.shouldUpdate()).toBe(true);
     });
 
     it('should return true after an update is requested', () => {
@@ -106,15 +82,16 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      binding.requestUpdate('user-blocking', context);
+      block.requestUpdate('user-blocking', context);
 
-      expect(binding.shouldUpdate()).toBe(true);
+      expect(block.shouldUpdate()).toBe(true);
     });
 
     it('should return false after the block is unbound', () => {
@@ -126,13 +103,14 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
-      binding.unbind(context);
+      block.connect(context);
+      block.unbind(context);
 
-      expect(binding.shouldUpdate()).toBe(false);
+      expect(block.shouldUpdate()).toBe(false);
     });
 
     it('should return false if there is a parent is updating', () => {
@@ -145,14 +123,15 @@ describe('RootBinding', () => {
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
 
-      binding.connect(context);
+      block.connect(context);
 
-      expect(binding.shouldUpdate()).toBe(false);
+      expect(block.shouldUpdate()).toBe(false);
     });
   });
 
@@ -166,13 +145,14 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
-      binding.cancelUpdate();
+      block.connect(context);
+      block.cancelUpdate();
 
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isUpdating).toBe(false);
     });
   });
 
@@ -186,21 +166,22 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
-      binding.requestUpdate('background', context);
+      block.requestUpdate('background', context);
 
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('background');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -213,22 +194,23 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', context);
-      binding.requestUpdate('user-visible', context);
+      block.requestUpdate('background', context);
+      block.requestUpdate('user-visible', context);
 
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-visible');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-visible');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
     });
 
@@ -241,22 +223,23 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('user-blocking', context);
-      binding.requestUpdate('user-visible', context);
+      block.requestUpdate('user-blocking', context);
+      block.requestUpdate('user-visible', context);
 
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(1);
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -269,22 +252,23 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', context);
-      binding.requestUpdate('background', context);
+      block.requestUpdate('background', context);
+      block.requestUpdate('background', context);
 
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('background');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -297,16 +281,17 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', context);
+      block.requestUpdate('background', context);
 
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).not.toHaveBeenCalled();
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
@@ -322,26 +307,27 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.connect(context);
+      block.connect(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
     });
 
     it('should enqueue the block for update with the parent priority', () => {
@@ -354,8 +340,9 @@ describe('RootBinding', () => {
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       const getPrioritySpy = vi
         .spyOn(parent, 'priority', 'get')
@@ -363,21 +350,21 @@ describe('RootBinding', () => {
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.connect(context);
+      block.connect(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('background');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(getPrioritySpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('background');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('background');
     });
 
     it('should re-enqueue the block with "user-blocking" priority', () => {
@@ -389,30 +376,31 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.requestUpdate('background', context);
-      binding.connect(context);
+      block.requestUpdate('background', context);
+      block.connect(context);
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
 
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
     });
 
     it('should not enqueue a block if it is already enqueueing', () => {
@@ -424,20 +412,21 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.connect(context);
-      binding.connect(context);
+      block.connect(context);
+      block.connect(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
 
@@ -450,12 +439,13 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const connectSpy = vi.spyOn(binding, 'connect');
 
-      binding.connect(context);
+      block.connect(context);
       expect(connectSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
@@ -473,31 +463,32 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value1 = root(new TextDirective('foo'));
-      const value2 = root(new TextDirective('bar'));
-      const binding = new RootBinding(value1, part, context);
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
+      const binding = new TextBinding(value1, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.bind(value2, context);
+      block.bind(value2, context);
 
-      expect(binding.value).toBe(value2);
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.value).toBe(value2);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
     });
 
     it('should enqueue the block for update with the parent priority', () => {
@@ -510,11 +501,12 @@ describe('RootBinding', () => {
       const parent = new MockBlock();
       const context = new UpdateContext(host, updater, parent);
 
-      const value1 = root(new TextDirective('foo'));
-      const value2 = root(new TextDirective('bar'));
-      const binding = new RootBinding(value1, part, context);
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
+      const binding = new TextBinding(value1, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const getPrioritySpy = vi
@@ -523,23 +515,23 @@ describe('RootBinding', () => {
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      binding.bind(value2, context);
+      block.bind(value2, context);
 
-      expect(binding.value).toBe(value2);
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(true);
-      expect(binding.priority).toBe('background');
+      expect(block.value).toBe(value2);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(getPrioritySpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
-      expect(binding.priority).toBe('background');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('background');
     });
 
     it('should bind the new value to the binding on update', () => {
@@ -551,26 +543,27 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value1 = root(new TextDirective('foo'));
-      const value2 = root(new TextDirective('bar'));
-      const binding = new RootBinding(value1, part, context);
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
+      const binding = new TextBinding(value1, part);
+      const block = new Root(binding, context);
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
+      const bindSpy = vi.spyOn(binding, 'bind');
 
-      binding.bind(value2, context);
+      block.bind(value2, context);
       expect(bindSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledWith(
-        value2.value,
+        value2,
         expect.objectContaining({
           host,
           updater,
-          block: binding,
+          block: block,
           pipeline: context.pipeline,
         }),
       );
@@ -587,21 +580,22 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
+      const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
 
-      binding.unbind(context);
+      block.unbind(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
@@ -615,20 +609,21 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
+      const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      binding.connect(context);
+      block.connect(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(true);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
 
-      binding.unbind(context);
+      block.unbind(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
@@ -644,21 +639,22 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
 
-      binding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      expect(binding.isConnected).toBe(true);
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
 
-      binding.disconnect();
+      block.disconnect();
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(disconnectSpy).toHaveBeenCalledOnce();
     });
 
@@ -671,20 +667,21 @@ describe('RootBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater);
 
-      const value = root(new TextDirective('foo'));
-      const binding = new RootBinding(value, part, context);
+      const value = new TextDirective('foo');
+      const binding = new TextBinding(value, part);
+      const block = new Root(binding, context);
 
-      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
+      const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      binding.connect(context);
+      block.connect(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(true);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
 
-      binding.unbind(context);
+      block.unbind(context);
 
-      expect(binding.isConnected).toBe(false);
-      expect(binding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });

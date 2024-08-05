@@ -41,7 +41,7 @@ export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
 export type ComponentType<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
-) => Into<TemplateDirective<TData, TContext>>;
+) => TemplateDirective<TData, TContext>;
 
 export interface UpdatePipeline<TContext> {
   blocks: Block<TContext>[];
@@ -110,8 +110,6 @@ export interface TemplateFragment<TData, TContext = unknown> {
   unmount(part: ChildNodePart): void;
   disconnect(): void;
 }
-
-export type Into<T> = T | { valueOf(): T };
 
 export interface Effect {
   commit(phase: EffectPhase): void;
@@ -305,10 +303,7 @@ export class UpdateContext<TContext> {
       hooks,
       this._pipeline,
     );
-    const result = type(props, context).valueOf() as TemplateDirective<
-      TData,
-      TContext
-    >;
+    const result = type(props, context);
 
     this._host.finishRender(context);
 

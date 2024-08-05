@@ -17,7 +17,7 @@ import {
   nameTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
-import { Root } from './root.js';
+import { Root } from '../root.js';
 
 enum Status {
   Committed,
@@ -28,9 +28,9 @@ enum Status {
 export function component<TProps, TData, TContext>(
   component: ComponentType<TProps, TData, TContext>,
   props: TProps,
-): Root<Component<TProps, TData, TContext>, TContext> {
+): Component<TProps, TData, TContext> {
   // Component directive should be used with Root directive.
-  return new Root(new Component(component, props));
+  return new Component(component, props);
 }
 
 export class Component<TProps, TData, TContext>
@@ -59,15 +59,15 @@ export class Component<TProps, TData, TContext>
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext,
-  ): ComponentBinding<TProps, TData, TContext> {
+    context: DirectiveContext,
+  ): Root<Component<TProps, TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    return new ComponentBinding(this, part);
+    return new Root(new ComponentBinding(this, part), context);
   }
 }
 

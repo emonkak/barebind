@@ -169,8 +169,8 @@ describe('RenderContext', () => {
         <div class=${0}>Hello, ${1}!</div>
       `;
 
-      expect(result.value.template).toBeInstanceOf(MockTemplate);
-      expect(result.value.data).toStrictEqual([0, 1]);
+      expect(result.template).toBeInstanceOf(MockTemplate);
+      expect(result.data).toStrictEqual([0, 1]);
       expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -255,8 +255,8 @@ describe('RenderContext', () => {
         <text x=${0} y=${1}>Hello, ${2}!</text>
       `;
 
-      expect(result.value.template).toBeInstanceOf(MockTemplate);
-      expect(result.value.data).toStrictEqual([0, 1, 2]);
+      expect(result.template).toBeInstanceOf(MockTemplate);
+      expect(result.data).toStrictEqual([0, 1, 2]);
       expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });

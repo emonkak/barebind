@@ -26,8 +26,8 @@ describe('component()', () => {
     const props = {};
     const value = component(type, props);
 
-    expect(value.value.type).toBe(type);
-    expect(value.value.props).toBe(props);
+    expect(value.type).toBe(type);
+    expect(value.props).toBe(props);
   });
 });
 
@@ -42,7 +42,7 @@ describe('Component', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new BlockBinding', () => {
+    it('should return a new BlockBinding wrapped in Root', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -61,6 +61,7 @@ describe('Component', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
+      expect(binding.binding).toBeInstanceOf(ComponentBinding);
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {

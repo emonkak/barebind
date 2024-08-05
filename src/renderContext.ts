@@ -11,15 +11,16 @@ import {
   type ReducerHook,
   type RefObject,
   type TaskPriority,
-  type TemplateDirective,
   UpdateContext,
   type UpdateHost,
   type UpdatePipeline,
   type Updater,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
-import { Root } from './directives/root.js';
-import { TemplateResult } from './directives/templateResult.js';
+import {
+  LazyTemplateResult,
+  TemplateResult,
+} from './directives/templateResult.js';
 import {
   type ElementData,
   ElementTemplate,
@@ -74,7 +75,7 @@ export class RenderContext {
     this._pipeline = pipeline;
   }
 
-  childNode<T>(value: T): TemplateDirective<T, RenderContext> {
+  childNode<T>(value: T): TemplateResult<T, RenderContext> {
     const template = ChildNodeTemplate.instance;
     return new TemplateResult(template, value);
   }
@@ -83,7 +84,7 @@ export class RenderContext {
     type: string,
     elementValue: TElementValue,
     childNodeValue: TChildNodeValue,
-  ): TemplateDirective<
+  ): TemplateResult<
     ElementData<TElementValue, TChildNodeValue>,
     RenderContext
   > {
@@ -91,7 +92,7 @@ export class RenderContext {
     return new TemplateResult(template, { elementValue, childNodeValue });
   }
 
-  empty(): TemplateDirective<null, RenderContext> {
+  empty(): TemplateResult<null, RenderContext> {
     const template = EmptyTemplate.instance;
     return new TemplateResult(template, null);
   }
@@ -116,9 +117,9 @@ export class RenderContext {
   html<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): Root<TemplateDirective<TData, RenderContext>, RenderContext> {
+  ): LazyTemplateResult<TData, RenderContext> {
     const template = this._host.getHTMLTemplate(tokens, data);
-    return new Root(new TemplateResult(template, data));
+    return new LazyTemplateResult(template, data);
   }
 
   isFirstRender(): boolean {
@@ -148,12 +149,12 @@ export class RenderContext {
   svg<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): Root<TemplateDirective<TData, RenderContext>, RenderContext> {
+  ): LazyTemplateResult<TData, RenderContext> {
     const template = this._host.getSVGTemplate(tokens, data);
-    return new Root(new TemplateResult(template, data));
+    return new LazyTemplateResult(template, data);
   }
 
-  text<T>(value: T): TemplateDirective<T, RenderContext> {
+  text<T>(value: T): TemplateResult<T, RenderContext> {
     const template = TextTemplate.instance;
     return new TemplateResult(template, value);
   }

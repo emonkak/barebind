@@ -14,6 +14,7 @@ import {
   nameTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
+import { Root as RootBinding } from '../root.js';
 
 enum Status {
   Committed,
@@ -21,7 +22,7 @@ enum Status {
   Unmounting,
 }
 
-export class TemplateResult<TData, TContext>
+export abstract class AbstractTemplateResult<TData, TContext>
   implements TemplateDirective<TData, TContext>
 {
   protected readonly _template: Template<TData, TContext>;
@@ -41,12 +42,18 @@ export class TemplateResult<TData, TContext>
     return this._data;
   }
 
+  abstract [directiveTag](
+    part: Part,
+    _context: DirectiveContext,
+  ): Binding<AbstractTemplateResult<TData, TContext>, TContext>;
+}
+
+export class TemplateResult<TData, TContext> extends AbstractTemplateResult<
+  TData,
+  TContext
+> {
   get [nameTag](): string {
     return 'TemplateResult(' + nameOf(this._template) + ')';
-  }
-
-  valueOf(): this {
-    return this;
   }
 
   [directiveTag](
@@ -63,10 +70,35 @@ export class TemplateResult<TData, TContext>
   }
 }
 
+export class LazyTemplateResult<TData, TContext> extends AbstractTemplateResult<
+  TData,
+  TContext
+> {
+  get [nameTag](): string {
+    return 'LazyTemplateResult(' + nameOf(this._template) + ')';
+  }
+
+  [directiveTag](
+    part: Part,
+    context: DirectiveContext<TContext>,
+  ): RootBinding<AbstractTemplateResult<TData, TContext>, TContext> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error(
+        'LazyTemplateResult directive must be used in a child node, but it is used here:\n' +
+          reportPart(part),
+      );
+    }
+    return new RootBinding<AbstractTemplateResult<TData, TContext>, TContext>(
+      new TemplateResultBinding(this, part),
+      context,
+    );
+  }
+}
+
 export class TemplateResultBinding<TData, TContext>
-  implements Binding<TemplateResult<TData, TContext>, TContext>, Effect
+  implements Binding<AbstractTemplateResult<TData, TContext>, TContext>, Effect
 {
-  private _value: TemplateResult<TData, TContext>;
+  private _value: AbstractTemplateResult<TData, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -76,12 +108,15 @@ export class TemplateResultBinding<TData, TContext>
 
   private _status = Status.Committed;
 
-  constructor(value: TemplateResult<TData, TContext>, part: ChildNodePart) {
+  constructor(
+    value: AbstractTemplateResult<TData, TContext>,
+    part: ChildNodePart,
+  ) {
     this._value = value;
     this._part = part;
   }
 
-  get value(): TemplateResult<TData, TContext> {
+  get value(): AbstractTemplateResult<TData, TContext> {
     return this._value;
   }
 
@@ -113,11 +148,11 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   bind(
-    newValue: TemplateResult<TData, TContext>,
+    newValue: AbstractTemplateResult<TData, TContext>,
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
-      ensureDirective(TemplateResult, newValue, this._part);
+      ensureDirective(AbstractTemplateResult, newValue, this._part);
     }
 
     const { template, data } = newValue;

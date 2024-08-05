@@ -1,78 +1,39 @@
-import {
-  type Binding,
-  type Block,
-  type Directive,
-  type DirectiveContext,
-  type Part,
-  type UpdateContext,
-  directiveTag,
-  nameOf,
-  nameTag,
-} from '../baseTypes.js';
-import { resolveBinding } from '../binding.js';
+import type {
+  Binding,
+  Block,
+  DirectiveContext,
+  Part,
+  UpdateContext,
+} from './baseTypes.js';
 
 const FLAG_NONE = 0;
 const FLAG_DIRTY = 1 << 0;
 const FLAG_CONNECTED = 1 << 1;
 const FLAG_UPDATING = 1 << 2;
 
-export function root<TValue, TContext>(value: TValue): Root<TValue, TContext> {
-  return new Root(value);
-}
-
 export class Root<TValue, TContext>
-  implements Directive<Root<TValue, TContext>, TContext>
+  implements Binding<TValue>, Block<TContext>
 {
-  private _value: TValue;
-
-  constructor(value: TValue) {
-    this._value = value;
-  }
-
-  get value(): TValue {
-    return this._value;
-  }
-
-  get [nameTag](): string {
-    return 'Root(' + nameOf(this._value) + ')';
-  }
-
-  [directiveTag](
-    part: Part,
-    context: DirectiveContext<TContext>,
-  ): RootBinding<TValue, TContext> {
-    return new RootBinding(this, part, context);
-  }
-
-  valueOf(): TValue {
-    return this._value;
-  }
-}
-
-export class RootBinding<TValue, TContext>
-  implements Binding<Root<TValue, TContext>>, Block<TContext>
-{
-  protected _value: Root<TValue, TContext>;
-
   protected readonly _binding: Binding<TValue, TContext>;
 
   protected readonly _parent: Block<TContext> | null;
+
+  protected _value: TValue;
 
   private _priority: TaskPriority = 'user-blocking';
 
   private _flags = FLAG_NONE;
 
   constructor(
-    value: Root<TValue, TContext>,
-    part: Part,
+    binding: Binding<TValue, TContext>,
     context: DirectiveContext<TContext>,
   ) {
-    this._value = value;
-    this._binding = resolveBinding(value.value, part, context);
+    this._binding = binding;
+    this._value = binding.value;
     this._parent = context.block;
   }
 
-  get value(): Root<TValue, TContext> {
+  get value(): TValue {
     return this._value;
   }
 
@@ -144,7 +105,7 @@ export class RootBinding<TValue, TContext>
 
   update(context: UpdateContext<TContext>): void {
     if (this._flags & FLAG_DIRTY) {
-      this._binding.bind(this._value.value, context);
+      this._binding.bind(this._value, context);
     } else {
       this._binding.connect(context);
     }
@@ -157,10 +118,7 @@ export class RootBinding<TValue, TContext>
     this._forceUpdate(context);
   }
 
-  bind(
-    newValue: Root<TValue, TContext>,
-    context: UpdateContext<TContext>,
-  ): void {
+  bind(newValue: TValue, context: UpdateContext<TContext>): void {
     this._forceUpdate(context);
     this._value = newValue;
     this._flags |= FLAG_DIRTY;

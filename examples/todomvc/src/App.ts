@@ -1,4 +1,4 @@
-import type { Into, RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { Footer } from './Footer.js';
@@ -13,7 +13,7 @@ interface AppProps {
 export function App(
   { state }: AppProps,
   context: RenderContext,
-): Into<TemplateDirective> {
+): TemplateDirective {
   context.use(state);
 
   return context.html`
