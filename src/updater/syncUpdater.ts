@@ -15,8 +15,6 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   ): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = pipeline;
 
-    pipeline.isProcessing = true;
-
     try {
       // block.length may be grow.
       for (let i = 0, l = blocks.length; i < l; l = blocks.length) {
@@ -32,7 +30,6 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
       }
     } finally {
       pipeline.blocks.length = 0;
-      pipeline.isProcessing = false;
     }
 
     if (mutationEffects.length > 0) {

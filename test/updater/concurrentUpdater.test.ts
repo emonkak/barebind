@@ -213,15 +213,16 @@ describe('ConcurrentUpdater', () => {
         .mockImplementation((context) => {
           context.scheduleUpdate();
         });
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
       pipeline.blocks.push(block);
       updater.scheduleUpdate(pipeline, host);
 
+      const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
+
       await updater.waitForUpdate();
 
       expect(updateSpy).toHaveBeenCalledOnce();
-      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
+      expect(requestCallbackSpy).not.toHaveBeenCalled();
     });
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {

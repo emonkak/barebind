@@ -114,29 +114,6 @@ describe('SyncUpdater', () => {
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
-    it('should block an update while the update pipeline is running', async () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-
-      const pipeline = createUpdatePipeline();
-      const block = new MockBlock();
-
-      const updateSpy = vi
-        .spyOn(block, 'update')
-        .mockImplementation((context) => {
-          context.scheduleUpdate();
-        });
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
-
-      pipeline.blocks.push(block);
-      updater.scheduleUpdate(pipeline, host);
-
-      await updater.waitForUpdate();
-
-      expect(updateSpy).toHaveBeenCalledOnce();
-      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-    });
-
     it('should commit effects on a microtask', async () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();

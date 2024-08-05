@@ -18,6 +18,9 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _taskCount: Atom<number> = new Atom(0);
 
+  private readonly _procceingPipelines: WeakSet<UpdatePipeline<TContext>> =
+    new WeakSet();
+
   constructor({
     scheduler = getDefaultScheduler(),
   }: ConcurrentUpdaterOptions = {}) {
@@ -28,7 +31,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     pipeline: UpdatePipeline<TContext>,
     host: UpdateHost<TContext>,
   ): Promise<void> {
-    pipeline.isProcessing = true;
+    this._procceingPipelines.add(pipeline);
 
     try {
       const { blocks } = pipeline;
@@ -61,7 +64,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       }
     } finally {
       pipeline.blocks.length = 0;
-      pipeline.isProcessing = false;
+      this._procceingPipelines.delete(pipeline);
     }
 
     this._scheduleEffects(pipeline, host);
@@ -75,6 +78,10 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     pipeline: UpdatePipeline<TContext>,
     host: UpdateHost<TContext>,
   ): void {
+    if (this._procceingPipelines.has(pipeline)) {
+      // Block an update while rendering.
+      return;
+    }
     this._scheduleBlocks(pipeline, host);
     this._scheduleEffects(pipeline, host);
   }
