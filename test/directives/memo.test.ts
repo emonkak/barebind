@@ -9,7 +9,12 @@ import {
 import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 describe('memo()', () => {
   it('should construct a new Memo directive', () => {
@@ -37,7 +42,7 @@ describe('Memo', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const factory = vi.fn(() => 'foo');
       const value = memo(factory, ['foo']);
@@ -65,7 +70,7 @@ describe('Memo', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const factory = vi.fn(() => new TextDirective());
       const value = memo(factory, ['foo']);
@@ -97,7 +102,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
@@ -119,7 +124,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = memo(() => new TextDirective(), ['foo']);
       const value2 = memo(() => new TextDirective(), ['bar']);
@@ -144,7 +149,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = memo(() => new TextDirective(), ['foo']);
       const value2 = memo(value1.factory, value1.dependencies);
@@ -169,7 +174,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
@@ -190,7 +195,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
@@ -218,7 +223,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const innerValue = new TextDirective();
       const value = memo(() => innerValue, ['foo']);
@@ -255,7 +260,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
@@ -281,7 +286,7 @@ describe('MemoBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const innerValue = new TextDirective();
       const value = memo(() => innerValue, ['foo']);

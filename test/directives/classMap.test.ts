@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { ClassMapBinding, classMap } from '../../src/directives/classMap.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('classMap()', () => {
   it('should construct a ClassMap directive', () => {
@@ -24,7 +24,7 @@ describe('ClassMapDirective', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({ foo: true });
       const binding = value[directiveTag](part, context);
@@ -43,7 +43,7 @@ describe('ClassMapDirective', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({ foo: true });
 
@@ -64,7 +64,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({
         foo: true,
@@ -89,7 +89,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({
         foo: true,
@@ -120,7 +120,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = classMap({
         foo: true,
@@ -152,7 +152,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = classMap({
         foo: true,
@@ -179,7 +179,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({
         foo: true,
@@ -203,7 +203,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({
         foo: true,
@@ -229,7 +229,7 @@ describe('ClassMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = classMap({});
       const binding = new ClassMapBinding(value, part);

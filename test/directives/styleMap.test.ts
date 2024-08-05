@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('styleMap()', () => {
   it('should construct a new StyleMap directive', () => {
@@ -24,7 +24,7 @@ describe('StyleMap', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({ display: 'none' });
       const binding = value[directiveTag](part, context);
@@ -43,7 +43,7 @@ describe('StyleMap', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({ display: 'none' });
 
@@ -64,7 +64,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({
         '--my-css-property': '1',
@@ -96,7 +96,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({
         color: 'black',
@@ -125,7 +125,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = styleMap({
         padding: '8px',
@@ -155,7 +155,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = styleMap({
         color: 'black',
@@ -180,7 +180,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({
         color: 'black',
@@ -204,7 +204,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({
         '--my-css-property': '1',
@@ -232,7 +232,7 @@ describe('StyleMapBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = styleMap({});
       const binding = new StyleMapBinding(value, part);

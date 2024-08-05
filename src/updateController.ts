@@ -15,6 +15,7 @@ import {
 } from './baseTypes.js';
 import { resolveBinding } from './binding.js';
 import { RenderContext } from './renderContext.js';
+import { Root } from './root.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 
 export interface UpdateControllerOptions {
@@ -125,14 +126,17 @@ export class UpdateController implements UpdateHost<RenderContext> {
       part.node.data = nameOf(value);
     }
 
-    const context = new UpdateContext(this, updater);
-    const binding = resolveBinding(value, part, context);
+    const directiveContext = { block: null };
+    const binding = resolveBinding(value, part, directiveContext);
+    const block =
+      binding instanceof Root ? binding : new Root(binding, directiveContext);
+    const updateContext = new UpdateContext(this, updater, block);
 
-    context.enqueueMutationEffect(new MountPart(part, container));
+    updateContext.enqueueMutationEffect(new MountPart(part, container));
 
-    binding.connect(context);
+    binding.connect(updateContext);
 
-    context.scheduleUpdate();
+    updateContext.scheduleUpdate();
 
     return binding;
   }

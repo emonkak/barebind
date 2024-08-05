@@ -15,7 +15,12 @@ import {
   when,
 } from '../../src/directives/condition.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 describe('condition()', () => {
   it('should construct a new Condition directive', () => {
@@ -82,7 +87,7 @@ describe('Condition', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = conditionDirective(
         true,
@@ -113,7 +118,7 @@ describe('Condition', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -150,7 +155,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = conditionDirective(
         true,
@@ -177,7 +182,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -212,7 +217,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -247,7 +252,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -289,7 +294,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -331,7 +336,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -376,7 +381,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
@@ -421,7 +426,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = conditionDirective(
         true,
@@ -446,7 +451,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = conditionDirective(
         true,
@@ -472,7 +477,7 @@ describe('ConditionBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = conditionDirective(
         true,

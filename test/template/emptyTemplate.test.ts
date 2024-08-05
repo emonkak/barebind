@@ -6,7 +6,7 @@ import {
   EmptyTemplateFragment,
 } from '../../src/template/emptyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('.constructor()', () => {
@@ -21,7 +21,7 @@ describe('EmptyTemplate', () => {
     it('should return a new EmptyTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = EmptyTemplate.instance.render(null, context);
 
@@ -45,7 +45,7 @@ describe('EmptyTemplateFragment', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new EmptyTemplateFragment();
 
@@ -59,7 +59,7 @@ describe('EmptyTemplateFragment', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new EmptyTemplateFragment();
 
@@ -73,7 +73,7 @@ describe('EmptyTemplateFragment', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new EmptyTemplateFragment();
 

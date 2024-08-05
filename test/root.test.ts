@@ -10,7 +10,7 @@ import {
   TextDirective,
 } from './mocks.js';
 
-describe('RootBinding', () => {
+describe('Root', () => {
   describe('.constructor()', () => {
     it('should construct a Root', () => {
       const part = {
@@ -46,7 +46,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -62,7 +62,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -80,7 +80,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -101,7 +101,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -113,7 +113,7 @@ describe('RootBinding', () => {
       expect(block.shouldUpdate()).toBe(false);
     });
 
-    it('should return false if there is a parent is updating', () => {
+    it('should return false if there is a parent block is updating', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -143,7 +143,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -164,7 +164,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -192,7 +192,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -221,7 +221,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -250,7 +250,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -279,7 +279,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -305,11 +305,11 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
-      const block = new Root(binding, context);
+      const block = new Root(binding, { block: null });
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
@@ -330,7 +330,7 @@ describe('RootBinding', () => {
       expect(block.priority).toBe('user-blocking');
     });
 
-    it('should enqueue the block for update with the parent priority', () => {
+    it('should enqueue the block for update with the parent block priority', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -374,7 +374,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -410,7 +410,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -437,7 +437,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -461,7 +461,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = new TextDirective('foo');
       const value2 = new TextDirective('bar');
@@ -491,7 +491,7 @@ describe('RootBinding', () => {
       expect(block.priority).toBe('user-blocking');
     });
 
-    it('should enqueue the block for update with the parent priority', () => {
+    it('should enqueue the block for update with the parent block priority', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -541,7 +541,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = new TextDirective('foo');
       const value2 = new TextDirective('bar');
@@ -578,7 +578,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -607,7 +607,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -637,7 +637,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
@@ -665,7 +665,7 @@ describe('RootBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);

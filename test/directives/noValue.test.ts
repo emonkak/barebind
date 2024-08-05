@@ -7,7 +7,7 @@ import {
   noValue,
 } from '../../src/directives/noValue.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('noValue', () => {
   it('should be the same as NoValue.instance', () => {
@@ -32,7 +32,7 @@ describe('NoValue', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = noValue[directiveTag](part, context);
 
@@ -53,7 +53,7 @@ describe('NoValueBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NoValueBinding(part);
 
@@ -71,7 +71,7 @@ describe('NoValueBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NoValueBinding(part);
 
@@ -87,7 +87,7 @@ describe('NoValueBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NoValueBinding(part);
 
@@ -105,7 +105,7 @@ describe('NoValueBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NoValueBinding(part);
 

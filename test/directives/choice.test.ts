@@ -9,7 +9,12 @@ import {
 import { NodeBinding } from '../../src/binding.js';
 import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 describe('choice()', () => {
   it('should construct a new Choice directive', () => {
@@ -38,7 +43,7 @@ describe('Choice', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const factory = vi.fn((key: 'foo' | 'bar') => key);
       const value = choice('foo', factory);
@@ -68,7 +73,7 @@ describe('Choice', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fooDirective = new TextDirective();
       const barDirective = new TextDirective();
@@ -111,7 +116,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = choice('foo', () => new TextDirective());
       const binding = new ChoiceBinding(value, part, context);
@@ -134,7 +139,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fooDirective = new TextDirective();
       const barDirective = new TextDirective();
@@ -176,7 +181,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fooDirective = new TextDirective();
       const barDirective = new TextDirective();
@@ -221,7 +226,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fooDirective = new TextDirective();
       const barDirective = new TextDirective();
@@ -270,7 +275,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = choice('foo', () => new TextDirective());
       const binding = new ChoiceBinding(value, part, context);
@@ -291,7 +296,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = choice('foo', () => new TextDirective());
       const binding = new ChoiceBinding(value, part, context);
@@ -313,7 +318,7 @@ describe('ChoiceBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = choice('foo', () => new TextDirective());
       const binding = new ChoiceBinding(value, part, context);

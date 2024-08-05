@@ -29,7 +29,6 @@ export function component<TProps, TData, TContext>(
   component: ComponentType<TProps, TData, TContext>,
   props: TProps,
 ): Component<TProps, TData, TContext> {
-  // Component directive should be used with Root directive.
   return new Component(component, props);
 }
 
@@ -67,6 +66,8 @@ export class Component<TProps, TData, TContext>
           reportPart(part),
       );
     }
+    // Component directive should be used with Root. Otherwise, updates will
+    // begin from the parent block instead of the component itself.
     return new Root(new ComponentBinding(this, part), context);
   }
 }

@@ -7,7 +7,7 @@ import {
   orderedList,
 } from '../../src/directives/list.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextDirective } from '../mocks.js';
+import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('orderedList()', () => {
@@ -44,7 +44,7 @@ describe('List', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],
@@ -67,7 +67,7 @@ describe('List', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],
@@ -92,7 +92,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],
@@ -124,7 +124,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],
@@ -156,7 +156,7 @@ describe('ListBinding', () => {
           } as const;
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
-          const context = new UpdateContext(host, updater);
+          const context = new UpdateContext(host, updater, new MockBlock());
 
           const value1 = orderedList(
             items1,
@@ -207,7 +207,7 @@ describe('ListBinding', () => {
             } as const;
             const host = new MockUpdateHost();
             const updater = new SyncUpdater();
-            const context = new UpdateContext(host, updater);
+            const context = new UpdateContext(host, updater, new MockBlock());
 
             const value1 = orderedList(
               items1!,
@@ -254,7 +254,7 @@ describe('ListBinding', () => {
           } as const;
           const host = new MockUpdateHost();
           const updater = new SyncUpdater();
-          const context = new UpdateContext(host, updater);
+          const context = new UpdateContext(host, updater, new MockBlock());
 
           const value1 = orderedList(
             items1,
@@ -296,7 +296,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
@@ -332,7 +332,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = inPlaceList(
         ['foo', 'bar', 'baz'],
@@ -367,7 +367,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const items = ['foo', 'bar', 'baz'];
       const value1 = orderedList(
@@ -401,7 +401,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],
@@ -428,7 +428,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],
@@ -456,7 +456,7 @@ describe('ListBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = orderedList(
         ['foo', 'bar', 'baz'],

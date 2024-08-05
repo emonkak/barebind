@@ -49,7 +49,7 @@ describe('Component', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Component(
         () => new TemplateResult(new MockTemplate(), {}),
@@ -71,7 +71,7 @@ describe('Component', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Component(
         () => new TemplateResult(new MockTemplate(), {}),
@@ -201,29 +201,6 @@ describe('ComponentBinding', () => {
       expect(unmountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(fragment.startNode);
       expect(binding.endNode).toBe(part.node);
-    });
-
-    it('should throw an error on render if the current block not exists', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext<RenderContext>(host, updater);
-
-      const value = new Component<{}, unknown, RenderContext>(
-        (_props, context) => {
-          context.forceUpdate('user-blocking');
-          return new TemplateResult(new MockTemplate(), {});
-        },
-        {},
-      );
-      const binding = new ComponentBinding(value, part);
-
-      expect(() => binding.connect(context)).toThrow(
-        'Component rendering must be performed within a block.',
-      );
     });
   });
 

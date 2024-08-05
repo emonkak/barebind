@@ -21,7 +21,12 @@ import {
   isValidMarker,
 } from '../../src/template/taggedTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 const MARKER = getMarker();
 
@@ -313,7 +318,7 @@ describe('TaggedTemplate', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const fragment = template.render(values, context);
 
       expect(context.isPending()).toBe(false);
@@ -371,7 +376,7 @@ describe('TaggedTemplate', () => {
     it('should return a TaggedTemplateFragment without bindings', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const [template] = html`<div></div>`;
       const fragment = template.render([], context);
 
@@ -385,7 +390,7 @@ describe('TaggedTemplate', () => {
     it('should return a TaggedTemplateFragment with empty template', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const [template] = html``;
       const fragment = template.render([], context);
 
@@ -399,7 +404,7 @@ describe('TaggedTemplate', () => {
     it('should throw an error if the number of holes and values do not match', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const [template, values] = html`
         <div class=${'foo'} class=${'bar'}></div>
       `;
@@ -439,7 +444,7 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const fragment = template.render(values, context);
 
       fragment.connect(context);
@@ -462,7 +467,7 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const fragment = template.render(values, context);
 
       fragment.connect(context);
@@ -492,7 +497,7 @@ describe('TaggedTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const [template, values] = html`
         ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
@@ -548,7 +553,7 @@ describe('TaggedTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const [template, values] = html`
         ${'foo'}<div></div><!--${'baz'}-->
@@ -593,7 +598,7 @@ describe('TaggedTemplateFragment', () => {
     it('should throw an error if the number of binding and values do not match', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const [template, values] = html`
         <p>Count: ${0}</p>
       `;
@@ -613,7 +618,7 @@ describe('TaggedTemplateFragment', () => {
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       let disconnects = 0;
       vi.spyOn(value, directiveTag).mockImplementation(function (
         this: TextDirective,
@@ -644,7 +649,7 @@ describe('TaggedTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
@@ -676,7 +681,7 @@ describe('TaggedTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>

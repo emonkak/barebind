@@ -54,7 +54,7 @@ describe('TemplateResult', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TemplateResult(new MockTemplate(), {});
 
@@ -102,7 +102,7 @@ describe('LazyTemplateResult', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new LazyTemplateResult(new MockTemplate(), {});
 
@@ -122,7 +122,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value.data, [
@@ -162,7 +162,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value.data, [
@@ -214,7 +214,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const template = new MockTemplate();
       const value1 = new TemplateResult(template, {});
@@ -256,7 +256,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
@@ -318,7 +318,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
@@ -355,7 +355,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
@@ -413,7 +413,7 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value.data, [
@@ -455,6 +455,25 @@ describe('TemplateResultBinding', () => {
       expect(binding.startNode).toBe(fragment.startNode);
       expect(binding.endNode).toBe(part.node);
     });
+
+    it('should throw an error if the new value is not AbstractTemplateResult', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = new TemplateResult(new MockTemplate(), {});
+      const binding = new TemplateResultBinding(value, part);
+
+      expect(() => {
+        binding.bind(null as any, context);
+      }).toThrow(
+        'A value must be a instance of AbstractTemplateResult directive, but got "null".',
+      );
+    });
   });
 
   describe('.unbind()', () => {
@@ -465,9 +484,9 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new LazyTemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value.data, [
         document.createComment(''),
       ]);
@@ -507,9 +526,9 @@ describe('TemplateResultBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new LazyTemplateResult(new MockTemplate(), {});
       const fragment = new MockTemplateFragment(value.data);
       const binding = new TemplateResultBinding(value, part);
 

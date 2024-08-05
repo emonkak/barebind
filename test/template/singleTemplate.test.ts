@@ -8,7 +8,7 @@ import {
   TextTemplate,
 } from '../../src/template/singleTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('ChildNodeTemplate', () => {
   describe('.constructor()', () => {
@@ -23,7 +23,7 @@ describe('ChildNodeTemplate', () => {
     it('should return a new SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = ChildNodeTemplate.instance.render('foo', context);
 
@@ -62,7 +62,7 @@ describe('TextTemplate', () => {
     it('should return SingleTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = TextTemplate.instance.render('foo', context);
 
@@ -95,7 +95,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new SingleTemplateFragment('foo', part, context);
 
@@ -129,7 +129,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
       const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
 
       container.appendChild(containerPart.node);
@@ -161,7 +161,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
 
@@ -191,7 +191,7 @@ describe('SingleTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new SingleTemplateFragment('foo', part, context);
 

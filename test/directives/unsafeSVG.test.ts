@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 import { UnsafeSVGBinding, unsafeSVG } from '../../src/directives/unsafeSVG.js';
 
@@ -24,7 +24,7 @@ describe('UnsafeSVG', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const binding = value[directiveTag](part, context);
@@ -42,7 +42,7 @@ describe('UnsafeSVG', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG('<circle cx="0" cy="0" r="10" />');
 
@@ -63,7 +63,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG(
         '<g><circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text></g>',
@@ -95,7 +95,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG(
         '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
@@ -127,7 +127,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG('');
       const binding = new UnsafeSVGBinding(value, part);
@@ -148,7 +148,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const binding = new UnsafeSVGBinding(value, part);
@@ -175,7 +175,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = unsafeSVG(
         '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
@@ -213,7 +213,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = unsafeSVG('<circle cx="0" cy="0" r="10" />');
       const value2 = unsafeSVG(value1.content);
@@ -235,7 +235,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG('<circle x="0" y="0" r="10" />');
       const binding = new UnsafeSVGBinding(value, part);
@@ -255,7 +255,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG(
         '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
@@ -282,7 +282,7 @@ describe('UnsafeSVGBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeSVG('');
       const binding = new UnsafeSVGBinding(value, part);

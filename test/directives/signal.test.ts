@@ -56,7 +56,7 @@ describe('Signal', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Atom('foo');
       const binding = value[directiveTag](part, context);
@@ -110,7 +110,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Atom('foo');
       const binding = new SignalBinding(value, part, context);
@@ -140,7 +140,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Atom('foo');
       const binding = new SignalBinding(value, part, context);
@@ -170,7 +170,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = new Atom('foo');
       const value2 = new Atom('bar');
@@ -207,7 +207,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Atom('foo');
       const binding = new SignalBinding(value, part, context);
@@ -228,7 +228,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Atom('foo');
       const binding = new SignalBinding(value, part, context);
@@ -261,7 +261,7 @@ describe('SignalBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new Atom('foo');
       const binding = new SignalBinding(value, part, context);

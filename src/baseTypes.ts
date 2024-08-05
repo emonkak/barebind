@@ -223,14 +223,14 @@ export class UpdateContext<TContext> {
 
   private _updater: Updater<TContext>;
 
-  private _block: Block<TContext> | null;
+  private _block: Block<TContext>;
 
   private _pipeline: UpdatePipeline<TContext>;
 
   constructor(
     host: UpdateHost<TContext>,
     updater: Updater<TContext>,
-    block: Block<TContext> | null = null,
+    block: Block<TContext>,
     pipeline: UpdatePipeline<TContext> = createUpdatePipeline(),
   ) {
     this._host = host;
@@ -290,13 +290,6 @@ export class UpdateContext<TContext> {
     props: TProps,
     hooks: Hook[],
   ): TemplateDirective<TData, TContext> {
-    // Component directive should be used with Root directive. Otherwise,
-    // updates will begin from the parent block instead of the component
-    // itself.
-    if (this._block === null) {
-      throw new Error('Component rendering must be performed within a block.');
-    }
-
     const context = this._host.beginRender(
       this._updater,
       this._block,

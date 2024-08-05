@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { RefBinding, ref } from '../../src/directives/ref.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('ref()', () => {
   it('should construct a new Ref directive', () => {
@@ -24,7 +24,7 @@ describe('Ref', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = ref(() => {});
       const binding = value[directiveTag](part, context);
@@ -43,7 +43,7 @@ describe('Ref', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = ref(() => {});
 
@@ -64,7 +64,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refFunction = vi.fn();
       const value = ref(refFunction);
@@ -85,7 +85,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refObject = { current: null };
       const value = ref(refObject);
@@ -105,7 +105,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refObject = { current: null };
       const value = ref(refObject);
@@ -130,7 +130,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refFunction1 = vi.fn();
       const refFunction2 = vi.fn();
@@ -159,7 +159,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refObject1 = { current: null };
       const refObject2 = { current: null };
@@ -186,7 +186,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refObject = { current: null };
       const value1 = ref(refObject);
@@ -210,7 +210,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refFunction = vi.fn();
       const value1 = ref(refFunction);
@@ -236,7 +236,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refObject = { current: null };
       const value1 = ref(refObject);
@@ -261,7 +261,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = ref(() => {});
       const binding = new RefBinding(value, part);
@@ -283,7 +283,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refFunction = vi.fn();
       const value = ref(refFunction);
@@ -307,7 +307,7 @@ describe('RefBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const refObject = { current: null };
       const value = ref(refObject);
@@ -332,7 +332,7 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       binding.unbind(context);
 

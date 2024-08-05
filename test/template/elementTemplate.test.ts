@@ -7,14 +7,19 @@ import {
   ElementTemplateFragment,
 } from '../../src/template/elementTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 describe('ElementTemplate', () => {
   describe('.render()', () => {
     it('should return SingleTemplateFragment initialized with NodeBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const elementValue = { class: 'foo' };
       const childNodeValue = new TextDirective('bar');
@@ -70,7 +75,7 @@ describe('ElementTemplateFragment', () => {
     it('should bind values to element and child binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new ElementTemplateFragment(
         'div',
@@ -113,7 +118,7 @@ describe('ElementTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new ElementTemplateFragment(
         'div',
@@ -151,7 +156,7 @@ describe('ElementTemplateFragment', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new ElementTemplateFragment(
         'div',
@@ -189,7 +194,7 @@ describe('ElementTemplateFragment', () => {
     it('should disconnect from the binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const fragment = new ElementTemplateFragment(
         'div',

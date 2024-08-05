@@ -8,6 +8,7 @@ import {
   createUpdatePipeline,
   directiveTag,
 } from '../src/baseTypes.js';
+import { Root } from '../src/root.js';
 import { UpdateController } from '../src/updateController.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextBinding, TextDirective } from './mocks.js';
@@ -175,21 +176,51 @@ describe('UpdateController', () => {
   });
 
   describe('.mount()', () => {
-    it('should mount element inside the container', async () => {
-      const value = new TextDirective();
+    it('should mount a non root value inside the container', async () => {
       const container = document.createElement('div');
       const host = new UpdateController();
       const updater = new SyncUpdater();
+
+      const value = new TextDirective('foo');
+
       const directiveSpy = vi.spyOn(value, directiveTag);
       const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
 
-      expect(host.mount(value, container, updater)).toBeInstanceOf(TextBinding);
+      const binding = host.mount(value, container, updater);
+
+      expect(binding).toBeInstanceOf(TextBinding);
       expect(directiveSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalled();
 
       await updater.waitForUpdate();
 
-      expect(container.innerHTML).toBe('<!--TextDirective-->');
+      expect(container.innerHTML).toBe('foo<!--TextDirective-->');
+    });
+
+    it('should mount a root value inside the container', async () => {
+      const container = document.createElement('div');
+      const host = new UpdateController();
+      const updater = new SyncUpdater();
+
+      const value = new TextDirective('foo');
+
+      const directiveSpy = vi
+        .spyOn(value, directiveTag)
+        .mockImplementation(function (this: typeof value, part, context) {
+          return new Root(new TextBinding(this, part), context);
+        });
+      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+
+      const binding = host.mount(value, container, updater);
+
+      expect(binding).toBeInstanceOf(Root);
+      expect(binding.value).toBe(value);
+      expect(directiveSpy).toHaveBeenCalledOnce();
+      expect(scheduleUpdateSpy).toHaveBeenCalled();
+
+      await updater.waitForUpdate();
+
+      expect(container.innerHTML).toBe('foo<!--TextDirective-->');
     });
   });
 });

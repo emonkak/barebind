@@ -272,7 +272,10 @@ export class TextDirective implements Directive<TextDirective> {
     return this._content;
   }
 
-  [directiveTag](part: Part, _context: DirectiveContext<unknown>): TextBinding {
+  [directiveTag](
+    part: Part,
+    _context: DirectiveContext<unknown>,
+  ): Binding<TextDirective> {
     return new TextBinding(this, part);
   }
 }

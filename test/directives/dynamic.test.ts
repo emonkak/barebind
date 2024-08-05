@@ -9,7 +9,12 @@ import {
 import { NodeBinding } from '../../src/binding.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 describe('dynamic()', () => {
   it('should construct a new Dynamic directive', () => {
@@ -37,7 +42,7 @@ describe('Dynamic', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = dynamic('foo');
       const binding = value[directiveTag](part, context);
@@ -63,7 +68,7 @@ describe('Dynamic', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = dynamic(new TextDirective());
       const binding = value[directiveTag](part, context);
@@ -93,7 +98,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = dynamic('foo');
       const binding = new DynamicBinding(value, part, context);
@@ -115,7 +120,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new DynamicBinding(dynamic('foo'), part, context);
 
@@ -141,7 +146,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = new TextDirective();
       const binding = new DynamicBinding(
@@ -172,7 +177,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = dynamic(new TextDirective());
       const binding = new DynamicBinding(value, part, context);
@@ -199,7 +204,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = dynamic('foo');
       const value2 = dynamic(new TextDirective());
@@ -239,7 +244,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = dynamic('foo');
       const binding = new DynamicBinding(value, part, context);
@@ -261,7 +266,7 @@ describe('DynamicBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = dynamic('foo');
       const binding = new DynamicBinding(value, part, context);

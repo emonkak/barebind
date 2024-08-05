@@ -10,7 +10,12 @@ import {
   resolveBinding,
 } from '../src/binding.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockUpdateHost, TextBinding, TextDirective } from './mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from './mocks.js';
 
 describe('AttributeBinding', () => {
   describe('.constructor()', () => {
@@ -40,7 +45,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'foo';
       const binding = new AttributeBinding(value, part);
@@ -66,7 +71,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = {
         toString() {
@@ -101,7 +106,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new AttributeBinding(true, part);
 
@@ -128,7 +133,7 @@ describe('AttributeBinding', () => {
         } as const;
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = new UpdateContext(host, updater);
+        const context = new UpdateContext(host, updater, new MockBlock());
 
         const binding = new AttributeBinding(value, part);
 
@@ -149,7 +154,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new AttributeBinding(undefined, part);
 
@@ -169,7 +174,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'foo';
       const binding = new AttributeBinding('foo', part);
@@ -191,7 +196,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new AttributeBinding(undefined, part);
 
@@ -215,7 +220,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new AttributeBinding(null, part);
 
@@ -234,7 +239,7 @@ describe('AttributeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new AttributeBinding(true, part);
 
@@ -258,7 +263,7 @@ describe('AttributeBinding', () => {
         } as const;
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = new UpdateContext(host, updater);
+        const context = new UpdateContext(host, updater, new MockBlock());
 
         const binding = new AttributeBinding(value, part);
 
@@ -327,7 +332,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = () => {};
       const binding = new EventBinding(value, part);
@@ -354,7 +359,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const event = new CustomEvent('hello');
       const value1 = vi.fn();
@@ -389,7 +394,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const event = new CustomEvent('hello');
       const value1 = {
@@ -447,7 +452,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = () => {};
       const binding = new EventBinding(value, part);
@@ -476,7 +481,7 @@ describe('EventBinding', () => {
         } as const;
         const host = new MockUpdateHost();
         const updater = new SyncUpdater();
-        const context = new UpdateContext(host, updater);
+        const context = new UpdateContext(host, updater, new MockBlock());
 
         const event = new CustomEvent('hello');
         const value1 = vi.fn();
@@ -513,7 +518,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new EventBinding(null, part);
 
@@ -534,7 +539,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const event = new CustomEvent('hello');
       const value = vi.fn();
@@ -568,7 +573,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = () => {};
       const binding = new EventBinding(value, part);
@@ -597,7 +602,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = () => {};
       const binding = new EventBinding(value, part);
@@ -623,7 +628,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = () => {};
       const binding = new EventBinding(value, part);
@@ -651,7 +656,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = { handleEvent: () => {}, capture: true };
       const binding = new EventBinding(value, part);
@@ -683,7 +688,7 @@ describe('EventBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new EventBinding(null, part);
 
@@ -727,7 +732,7 @@ describe('NodeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = 'foo';
       const value2 = 'bar';
@@ -760,7 +765,7 @@ describe('NodeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'foo';
       const binding = new NodeBinding(value, part);
@@ -781,7 +786,7 @@ describe('NodeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NodeBinding('foo', part);
 
@@ -804,7 +809,7 @@ describe('NodeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NodeBinding('foo', part);
 
@@ -822,7 +827,7 @@ describe('NodeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'foo';
       const binding = new NodeBinding(value, part);
@@ -847,7 +852,7 @@ describe('NodeBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new NodeBinding(null, part);
 
@@ -898,7 +903,7 @@ describe('PropertyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = 'foo';
       const value2 = 'bar';
@@ -925,7 +930,7 @@ describe('PropertyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'bar';
       const binding = new PropertyBinding(value, part);
@@ -947,7 +952,7 @@ describe('PropertyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'foo';
       const binding = new PropertyBinding(value, part);
@@ -967,7 +972,7 @@ describe('PropertyBinding', () => {
     it('should throw the error if the value is a directive', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const binding = new PropertyBinding('foo', {
         type: PartType.Property,
@@ -990,7 +995,7 @@ describe('PropertyBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = 'foo';
       const binding = new PropertyBinding(value, part);
@@ -1059,7 +1064,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {};
       const binding = new ElementBinding(value, part);
@@ -1078,7 +1083,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         class: 'foo',
@@ -1100,7 +1105,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         '.className': 'foo',
@@ -1122,7 +1127,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         '@click': () => {},
@@ -1153,7 +1158,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         class: 'foo',
@@ -1177,7 +1182,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         class: 'foo',
@@ -1214,7 +1219,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         class: 'foo',
@@ -1241,7 +1246,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         class: 'foo',
@@ -1268,7 +1273,7 @@ describe('ElementBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = {
         foo: new TextDirective(),
@@ -1304,7 +1309,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = new TextDirective();
     const directiveSpy = vi.spyOn(value, directiveTag);
@@ -1325,7 +1330,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = 'foo';
     const binding = resolveBinding(value, part, context);
@@ -1344,7 +1349,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = vi.fn();
     const binding = resolveBinding(value, part, context);
@@ -1363,7 +1368,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = 'foo';
     const binding = resolveBinding(value, part, context);
@@ -1381,7 +1386,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = 'foo';
     const binding = resolveBinding(value, part, context);
@@ -1398,7 +1403,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = 'foo';
     const binding = resolveBinding(value, part, context);
@@ -1416,7 +1421,7 @@ describe('resolveBinding()', () => {
     } as const;
     const host = new MockUpdateHost();
     const updater = new SyncUpdater();
-    const context = new UpdateContext(host, updater);
+    const context = new UpdateContext(host, updater, new MockBlock());
 
     const value = {
       class: 'foo',

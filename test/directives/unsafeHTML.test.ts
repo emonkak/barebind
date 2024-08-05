@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 import {
   UnsafeHTMLBinding,
@@ -27,7 +27,7 @@ describe('UnsafeHTML', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('<span>foo</span>bar');
       const binding = value[directiveTag](part, context);
@@ -45,7 +45,7 @@ describe('UnsafeHTML', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('foo<span>bar</span>');
 
@@ -66,7 +66,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('<div><span>foo</span>bar</div>');
       const binding = new UnsafeHTMLBinding(value, part);
@@ -91,7 +91,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('<span>foo</span>bar');
       const binding = new UnsafeHTMLBinding(value, part);
@@ -116,7 +116,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('');
       const binding = new UnsafeHTMLBinding(value, part);
@@ -137,7 +137,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('Hello, <strong>World!</strong>');
       const binding = new UnsafeHTMLBinding(value, part);
@@ -164,7 +164,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = unsafeHTML('<span>foo</span>bar');
       const value2 = unsafeHTML('bar<span>baz</span>');
@@ -191,7 +191,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value1 = unsafeHTML('<span>foo</span>bar');
       const value2 = unsafeHTML(value1.content);
@@ -213,7 +213,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('<span>foo</span>bar');
       const binding = new UnsafeHTMLBinding(value, part);
@@ -233,7 +233,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('foo<span>bar</span>');
       const binding = new UnsafeHTMLBinding(value, part);
@@ -258,7 +258,7 @@ describe('UnsafeHTMLBinding', () => {
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater);
+      const context = new UpdateContext(host, updater, new MockBlock());
 
       const value = unsafeHTML('');
       const binding = new UnsafeHTMLBinding(value, part);
