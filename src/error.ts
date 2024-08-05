@@ -11,13 +11,13 @@ export const REPORT_MARKER = '[[USED IN HERE!]]';
 export function ensureDirective<
   TExpectedClass extends abstract new (
     ...args: any[]
-  ) => Directive<TActualValue>,
-  TActualValue,
+  ) => Directive<TExpectedValue>,
+  TExpectedValue,
 >(
   expectedClass: TExpectedClass,
   actualValue: unknown,
   part: Part,
-): asserts actualValue is TActualValue {
+): asserts actualValue is TExpectedValue {
   if (!(actualValue instanceof expectedClass)) {
     throw new Error(
       'A value must be a instance of ' +
@@ -51,11 +51,11 @@ export function reportPart(part: Part): string {
       const childNode = childNodes[i]!;
       if (childNode === part.node) {
         for (i = i + 1; i < l; i++) {
-          afterPart += formatNode(childNodes[i]!);
+          afterPart += toHTML(childNodes[i]!);
         }
         break;
       }
-      beforePart += formatNode(childNode);
+      beforePart += toHTML(childNode);
     }
     return (
       openTag(parentNode) +
@@ -69,11 +69,7 @@ export function reportPart(part: Part): string {
   }
 }
 
-function closeTag(element: Element): string {
-  return '</' + element.tagName.toLowerCase() + '>';
-}
-
-function editTag(element: Element, insideTag: string): string {
+function addAttributes(element: Element, insideTag: string): string {
   const isSelfClosing = isSelfClosingTag(element);
   const offset = isSelfClosing ? 1 : element.tagName.length + 4;
   const unclosedOpenTag = element.outerHTML.slice(
@@ -90,31 +86,32 @@ function editTag(element: Element, insideTag: string): string {
   return output;
 }
 
-function escapeHTML(s: string): string {
-  return new Option(s).innerHTML;
+function closeTag(element: Element): string {
+  return '</' + element.tagName.toLowerCase() + '>';
 }
 
-function formatNode(node: Node): string {
-  const wrapper = document.createElement('div');
-  wrapper.appendChild(node.cloneNode(true));
-  return wrapper.innerHTML;
+function escapeHTML(s: string): string {
+  return new Option(s).innerHTML;
 }
 
 function formatPart(part: Part): string {
   switch (part.type) {
     case PartType.Attribute:
-      return editTag(part.node, unquotedAttribute(part.name, REPORT_MARKER));
+      return addAttributes(
+        part.node,
+        unquotedAttribute(part.name, REPORT_MARKER),
+      );
     case PartType.ChildNode:
-      return REPORT_MARKER + formatNode(part.node);
+      return REPORT_MARKER + toHTML(part.node);
     case PartType.Element:
-      return editTag(part.node, REPORT_MARKER);
+      return addAttributes(part.node, REPORT_MARKER);
     case PartType.Property:
-      return editTag(
+      return addAttributes(
         part.node,
         unquotedAttribute('.' + part.name, REPORT_MARKER),
       );
     case PartType.Event:
-      return editTag(
+      return addAttributes(
         part.node,
         unquotedAttribute('@' + part.name, REPORT_MARKER),
       );
@@ -128,9 +125,15 @@ function isSelfClosingTag(element: Element): boolean {
 }
 
 function openTag(element: Element): string {
-  // Assumption: The element is not self-closing tag.
+  // Assumption: The element is not a self-closing tag.
   const offset = element.tagName.length + 3;
   return element.outerHTML.slice(0, -(element.innerHTML.length + offset));
+}
+
+function toHTML(node: Node): string {
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(node.cloneNode(true));
+  return wrapper.innerHTML;
 }
 
 function unquotedAttribute(name: string, value: string): string {

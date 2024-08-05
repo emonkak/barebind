@@ -347,7 +347,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
-      // expect(fragment.childNodes.map(formatNode)).toEqual([
+      // expect(fragment.childNodes.map(toHTML)).toEqual([
       //   `
       //   <div>
       //     <!--bar-->
@@ -359,7 +359,7 @@ describe('TaggedTemplate', () => {
 
       // context.flushUpdate();
       //
-      // expect(fragment.childNodes.map(formatNode)).toEqual([
+      // expect(fragment.childNodes.map(toHTML)).toEqual([
       //   `
       //   <div class="foo">
       //     <!--bar-->
@@ -377,7 +377,7 @@ describe('TaggedTemplate', () => {
 
       expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
       expect(fragment.bindings).toHaveLength(0);
-      expect(fragment.childNodes.map(formatNode)).toEqual(['<div></div>']);
+      expect(fragment.childNodes.map(toHTML)).toEqual(['<div></div>']);
       expect(fragment.startNode).toBe(fragment.childNodes[0]);
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
     });
@@ -445,7 +445,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.connect(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         `
         <div class="foo">
           <!--bar-->
@@ -468,7 +468,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.connect(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         '<div class="foo">bar</div>',
         '<!--baz-->',
       ]);
@@ -476,7 +476,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.bind(['bar', 'baz', 'qux'], context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         '<div class="bar">baz</div>',
         '<!--qux-->',
       ]);
@@ -505,7 +505,7 @@ describe('TaggedTemplateFragment', () => {
 
       fragment.mount(part);
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         'foo',
         '<div class="bar">baz</div>',
         '<!--qux-->',
@@ -524,7 +524,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.unbind(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         '',
         '<div class="bar">baz</div>',
         '<!---->',
@@ -561,7 +561,7 @@ describe('TaggedTemplateFragment', () => {
 
       fragment.mount(part);
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         'foo',
         '<div></div>',
         '<!--baz-->',
@@ -578,7 +578,7 @@ describe('TaggedTemplateFragment', () => {
       fragment.unbind(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(formatNode)).toEqual([
+      expect(fragment.childNodes.map(toHTML)).toEqual([
         '',
         '<div></div>',
         '<!---->',
@@ -732,7 +732,7 @@ function svg<const TData extends readonly any[]>(
   return [TaggedTemplate.parseSVG(tokens, values, MARKER), values];
 }
 
-function formatNode(node: Node): string {
+function toHTML(node: Node): string {
   const wrapper = document.createElement('div');
   wrapper.appendChild(node.cloneNode(true));
   return wrapper.innerHTML;
