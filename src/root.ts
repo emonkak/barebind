@@ -127,7 +127,6 @@ export class Root<TValue, TContext>
   unbind(context: UpdateContext<TContext>): void {
     this._binding.unbind(context);
 
-    this._flags |= FLAG_DIRTY;
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
