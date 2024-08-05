@@ -243,8 +243,7 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
 
   connect(context: UpdateContext<unknown>): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
-      const binding = this._bindings[i]!;
-      binding.connect(context);
+      this._bindings[i]!.connect(context);
     }
   }
 

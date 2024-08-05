@@ -352,25 +352,26 @@ describe('TaggedTemplate', () => {
       expect(fragment.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
-      // expect(fragment.childNodes.map(toHTML)).toEqual([
-      //   `
-      //   <div>
-      //     <!--bar-->
-      //     <input type="text"><span></span>
-      //   </div>`.trim(),
-      // ]);
+      expect(fragment.childNodes.map(toHTML)).toEqual([
+        `
+        <div>
+          <!--"bar"-->
+          <input type="text"><span></span>
+        </div>`.trim(),
+      ]);
       expect(fragment.startNode).toBe(fragment.childNodes[0]);
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
 
-      // context.flushUpdate();
-      //
-      // expect(fragment.childNodes.map(toHTML)).toEqual([
-      //   `
-      //   <div class="foo">
-      //     <!--bar-->
-      //     <input type="text" class="qux"><span></span>
-      //   </div>`.trim(),
-      // ]);
+      fragment.connect(context);
+      context.flushUpdate();
+
+      expect(fragment.childNodes.map(toHTML)).toEqual([
+        `
+        <div class="foo">
+          <!--bar-->
+          <input type="text" class="qux"><span></span>
+        </div>`.trim(),
+      ]);
     });
 
     it('should return a TaggedTemplateFragment without bindings', () => {
@@ -387,7 +388,7 @@ describe('TaggedTemplate', () => {
       expect(fragment.endNode).toBe(fragment.childNodes[0]);
     });
 
-    it('should return a TaggedTemplateFragment with empty template', () => {
+    it('should return a TaggedTemplateFragment with a empty template', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
@@ -416,7 +417,7 @@ describe('TaggedTemplate', () => {
   });
 
   describe('.isSameTemplate()', () => {
-    it('should return whether the template is the same as other template', () => {
+    it('should return whether the template is the same as the other template', () => {
       const [template1] = html`
         <div></div>
       `;
