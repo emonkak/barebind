@@ -1,6 +1,7 @@
 import {
   type AttributePart,
   type Binding,
+  BindingStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -26,12 +27,6 @@ type ExtractStringProperties<T> = {
 
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
-
-enum Status {
-  Committed,
-  Mounting,
-  Unmounting,
-}
 
 export function styleMap(styles: StyleDeclaration): StyleMap {
   return new StyleMap(styles);
@@ -66,7 +61,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   private _memoizedStyles: StyleDeclaration = {};
 
-  private _status = Status.Committed;
+  private _status = BindingStatus.Committed;
 
   constructor(value: StyleMap, part: AttributePart) {
     this._value = value;
@@ -90,7 +85,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, Status.Mounting);
+    this._requestMutation(context, BindingStatus.Mounting);
   }
 
   bind(newValue: StyleMap, context: UpdateContext<unknown>): void {
@@ -98,14 +93,14 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
       ensureDirective(StyleMap, newValue, this._part);
     }
     if (!shallowEqual(newValue.styles, this._memoizedStyles)) {
-      this._requestMutation(context, Status.Mounting);
+      this._requestMutation(context, BindingStatus.Mounting);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (Object.keys(this._memoizedStyles).length > 0) {
-      this._requestMutation(context, Status.Unmounting);
+      this._requestMutation(context, BindingStatus.Unmounting);
     }
   }
 
@@ -113,7 +108,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   commit(): void {
     switch (this._status) {
-      case Status.Mounting: {
+      case BindingStatus.Mounting: {
         const { style } = this._part.node as
           | HTMLElement
           | MathMLElement
@@ -137,7 +132,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
         this._memoizedStyles = newStyles;
         break;
       }
-      case Status.Unmounting: {
+      case BindingStatus.Unmounting: {
         const { style } = this._part.node as
           | HTMLElement
           | MathMLElement
@@ -147,14 +142,14 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
       }
     }
 
-    this._status = Status.Committed;
+    this._status = BindingStatus.Committed;
   }
 
   private _requestMutation(
     context: UpdateContext<unknown>,
-    newStatus: Status,
+    newStatus: BindingStatus,
   ): void {
-    if (this._status === Status.Committed) {
+    if (this._status === BindingStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._status = newStatus;

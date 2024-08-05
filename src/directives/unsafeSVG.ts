@@ -1,5 +1,6 @@
 import {
   type Binding,
+  BindingStatus,
   type ChildNodePart,
   type Directive,
   type DirectiveContext,
@@ -9,12 +10,6 @@ import {
   directiveTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
-
-enum Status {
-  Committed,
-  Mounting,
-  Unmounting,
-}
 
 export function unsafeSVG(content: string): UnsafeSVG {
   return new UnsafeSVG(content);
@@ -51,7 +46,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
 
   private _childNodes: ChildNode[] = [];
 
-  private _status = Status.Committed;
+  private _status = BindingStatus.Committed;
 
   constructor(value: UnsafeSVG, part: ChildNodePart) {
     this._value = value;
@@ -75,7 +70,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, Status.Mounting);
+    this._requestMutation(context, BindingStatus.Mounting);
   }
 
   bind(newValue: UnsafeSVG, context: UpdateContext<unknown>): void {
@@ -83,14 +78,14 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
       ensureDirective(UnsafeSVG, newValue, this._part);
     }
     if (newValue.content !== this._memoizedContent) {
-      this._requestMutation(context, Status.Mounting);
+      this._requestMutation(context, BindingStatus.Mounting);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedContent !== '') {
-      this._requestMutation(context, Status.Unmounting);
+      this._requestMutation(context, BindingStatus.Unmounting);
     }
   }
 
@@ -98,7 +93,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
 
   commit(): void {
     switch (this._status) {
-      case Status.Mounting: {
+      case BindingStatus.Mounting: {
         const { content } = this._value;
 
         for (let i = 0, l = this._childNodes.length; i < l; i++) {
@@ -121,7 +116,7 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
         this._memoizedContent = content;
         break;
       }
-      case Status.Unmounting: {
+      case BindingStatus.Unmounting: {
         for (let i = 0, l = this._childNodes.length; i < l; i++) {
           this._childNodes[i]!.remove();
         }
@@ -131,14 +126,14 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
       }
     }
 
-    this._status = Status.Committed;
+    this._status = BindingStatus.Committed;
   }
 
   private _requestMutation(
     context: UpdateContext<unknown>,
-    newStatus: Status,
+    newStatus: BindingStatus,
   ): void {
-    if (this._status === Status.Committed) {
+    if (this._status === BindingStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._status = newStatus;

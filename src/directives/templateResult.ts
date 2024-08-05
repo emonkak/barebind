@@ -1,5 +1,6 @@
 import {
   type Binding,
+  BindingStatus,
   type ChildNodePart,
   type DirectiveContext,
   type Effect,
@@ -15,12 +16,6 @@ import {
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
 import { Root as RootBinding } from '../root.js';
-
-enum Status {
-  Committed,
-  Mounting,
-  Unmounting,
-}
 
 export abstract class AbstractTemplateResult<TData, TContext>
   implements TemplateDirective<TData, TContext>
@@ -106,7 +101,7 @@ export class TemplateResultBinding<TData, TContext>
 
   private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
 
-  private _status = Status.Committed;
+  private _status = BindingStatus.Committed;
 
   constructor(
     value: AbstractTemplateResult<TData, TContext>,
@@ -137,11 +132,11 @@ export class TemplateResultBinding<TData, TContext>
 
     if (this._pendingFragment !== null) {
       if (this._pendingFragment !== this._memoizedFragment) {
-        this._requestMutation(context, Status.Mounting);
+        this._requestMutation(context, BindingStatus.Mounting);
       }
       this._pendingFragment.bind(data, context);
     } else {
-      this._requestMutation(context, Status.Mounting);
+      this._requestMutation(context, BindingStatus.Mounting);
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
     }
@@ -162,7 +157,7 @@ export class TemplateResultBinding<TData, TContext>
         // Here we use the same template as before. However the fragment may have
         // been unmounted. If so, we have to remount it.
         if (this._pendingFragment !== this._memoizedFragment) {
-          this._requestMutation(context, Status.Mounting);
+          this._requestMutation(context, BindingStatus.Mounting);
         }
 
         this._pendingFragment.bind(data, context);
@@ -172,7 +167,7 @@ export class TemplateResultBinding<TData, TContext>
         this._pendingFragment.unbind(context);
 
         // Next, unmount the old fragment and mount the new fragment.
-        this._requestMutation(context, Status.Mounting);
+        this._requestMutation(context, BindingStatus.Mounting);
 
         // Finally, render the new template.
         this._pendingFragment = template.render(data, context);
@@ -182,7 +177,7 @@ export class TemplateResultBinding<TData, TContext>
       // The template has never been rendered here. We have to mount the new
       // fragment before rendering the template. This branch will never be
       // executed unless bind() is called before connect().
-      this._requestMutation(context, Status.Mounting);
+      this._requestMutation(context, BindingStatus.Mounting);
 
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
@@ -195,7 +190,7 @@ export class TemplateResultBinding<TData, TContext>
     // Detach data from the current fragment before its unmount.
     this._pendingFragment?.unbind(context);
 
-    this._requestMutation(context, Status.Unmounting);
+    this._requestMutation(context, BindingStatus.Unmounting);
   }
 
   disconnect(): void {
@@ -204,25 +199,25 @@ export class TemplateResultBinding<TData, TContext>
 
   commit(): void {
     switch (this._status) {
-      case Status.Mounting:
+      case BindingStatus.Mounting:
         this._memoizedFragment?.unmount(this._part);
         this._pendingFragment?.mount(this._part);
         this._memoizedFragment = this._pendingFragment;
         break;
-      case Status.Unmounting:
+      case BindingStatus.Unmounting:
         this._memoizedFragment?.unmount(this._part);
         this._memoizedFragment = null;
         break;
     }
 
-    this._status = Status.Committed;
+    this._status = BindingStatus.Committed;
   }
 
   private _requestMutation(
     context: UpdateContext<TContext>,
-    newStatus: Status,
+    newStatus: BindingStatus,
   ): void {
-    if (this._status === Status.Committed) {
+    if (this._status === BindingStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._status = newStatus;

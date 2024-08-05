@@ -1,5 +1,6 @@
 import {
   type Binding,
+  BindingStatus,
   type Block,
   type ChildNodePart,
   type Directive,
@@ -209,7 +210,9 @@ export class TextBinding implements Binding<TextDirective>, Effect {
 
   private readonly _part: Part;
 
-  private _text: Text = document.createTextNode('');
+  private _status = BindingStatus.Committed;
+
+  private _textNode: Text = document.createTextNode('');
 
   constructor(value: TextDirective, part: Part) {
     this._value = value;
@@ -225,7 +228,9 @@ export class TextBinding implements Binding<TextDirective>, Effect {
   }
 
   get startNode(): ChildNode {
-    return this._text.parentNode !== null ? this._text : this._part.node;
+    return this._textNode.parentNode !== null
+      ? this._textNode
+      : this._part.node;
   }
 
   get endNode(): ChildNode {
@@ -233,31 +238,42 @@ export class TextBinding implements Binding<TextDirective>, Effect {
   }
 
   bind(newValue: TextDirective, context: UpdateContext<unknown>): void {
-    this._value = newValue;
     context.enqueueMutationEffect(this);
+    this._value = newValue;
+    this._status = BindingStatus.Mounting;
   }
 
   connect(context: UpdateContext<unknown>): void {
     context.enqueueMutationEffect(this);
+    this._status = BindingStatus.Mounting;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    this._value = new TextDirective(null);
     context.enqueueMutationEffect(this);
+    this._status = BindingStatus.Unmounting;
   }
 
   disconnect(): void {}
 
   commit() {
-    const { content } = this._value;
+    switch (this._status) {
+      case BindingStatus.Mounting: {
+        const { content } = this._value;
 
-    this._text.nodeValue = content;
+        this._textNode.nodeValue = content;
 
-    if (content !== null) {
-      this._part.node.before(this._text);
-    } else {
-      this._text.remove();
+        if (this._textNode.parentNode === null) {
+          this._part.node.before(this._textNode);
+        }
+
+        break;
+      }
+      case BindingStatus.Unmounting:
+        this._textNode.remove();
+        break;
     }
+
+    this._status = BindingStatus.Committed;
   }
 }
 

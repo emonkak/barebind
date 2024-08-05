@@ -1,6 +1,7 @@
 import {
   type AttributePart,
   type Binding,
+  BindingStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -13,12 +14,6 @@ import {
 import { ensureDirective, reportPart } from '../error.js';
 
 type ElementRef = RefValue<Element | null>;
-
-enum Status {
-  Committed,
-  Mounting,
-  Unmounting,
-}
 
 export function ref(ref: ElementRef | null): Ref {
   return new Ref(ref);
@@ -53,7 +48,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   private _memoizedRef: ElementRef | null = null;
 
-  private _status = Status.Committed;
+  private _status = BindingStatus.Committed;
 
   constructor(directive: Ref, part: AttributePart) {
     this._value = directive;
@@ -77,7 +72,7 @@ export class RefBinding implements Binding<Ref>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestEffect(context, Status.Mounting);
+    this._requestEffect(context, BindingStatus.Mounting);
   }
 
   bind(newValue: Ref, context: UpdateContext<unknown>): void {
@@ -85,14 +80,14 @@ export class RefBinding implements Binding<Ref>, Effect {
       ensureDirective(Ref, newValue, this._part);
     }
     if (newValue.ref !== this._memoizedRef) {
-      this._requestEffect(context, Status.Mounting);
+      this._requestEffect(context, BindingStatus.Mounting);
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedRef !== null) {
-      this._requestEffect(context, Status.Unmounting);
+      this._requestEffect(context, BindingStatus.Unmounting);
     }
   }
 
@@ -100,7 +95,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   commit(): void {
     switch (this._status) {
-      case Status.Mounting: {
+      case BindingStatus.Mounting: {
         const oldRef = this._memoizedRef ?? null;
         const newRef = this._value.ref;
 
@@ -115,7 +110,7 @@ export class RefBinding implements Binding<Ref>, Effect {
         this._memoizedRef = this._value.ref;
         break;
       }
-      case Status.Unmounting: {
+      case BindingStatus.Unmounting: {
         const ref = this._value.ref;
 
         /* istanbul ignore else @preserve */
@@ -128,14 +123,14 @@ export class RefBinding implements Binding<Ref>, Effect {
       }
     }
 
-    this._status = Status.Committed;
+    this._status = BindingStatus.Committed;
   }
 
   private _requestEffect(
     context: UpdateContext<unknown>,
-    newStatus: Status,
+    newStatus: BindingStatus,
   ): void {
-    if (this._status === Status.Committed) {
+    if (this._status === BindingStatus.Committed) {
       context.enqueueLayoutEffect(this);
     }
     this._status = newStatus;

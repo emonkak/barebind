@@ -1,6 +1,7 @@
 import {
   type AttributePart,
   type Binding,
+  BindingStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -13,12 +14,6 @@ import { shallowEqual } from '../compare.js';
 import { ensureDirective, reportPart } from '../error.js';
 
 export type ClassDeclaration = { [key: string]: boolean };
-
-enum Status {
-  Committed,
-  Mounting,
-  Unmounting,
-}
 
 export function classMap(classes: ClassDeclaration): ClassMap {
   return new ClassMap(classes);
@@ -53,7 +48,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   private readonly _part: AttributePart;
 
-  private _status = Status.Committed;
+  private _status = BindingStatus.Committed;
 
   constructor(value: ClassMap, part: AttributePart) {
     this._pendingValue = value;
@@ -77,7 +72,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, Status.Mounting);
+    this._requestMutation(context, BindingStatus.Mounting);
   }
 
   bind(newValue: ClassMap, context: UpdateContext<unknown>): void {
@@ -85,14 +80,14 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
       ensureDirective(ClassMap, newValue, this._part);
     }
     if (!shallowEqual(newValue.classes, this._memoizedClasses)) {
-      this._requestMutation(context, Status.Mounting);
+      this._requestMutation(context, BindingStatus.Mounting);
     }
     this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (Object.keys(this._memoizedClasses).length > 0) {
-      this._requestMutation(context, Status.Unmounting);
+      this._requestMutation(context, BindingStatus.Unmounting);
     }
   }
 
@@ -100,7 +95,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   commit(): void {
     switch (this._status) {
-      case Status.Mounting: {
+      case BindingStatus.Mounting: {
         const { classList } = this._part.node;
         const oldClasses = this._memoizedClasses;
         const newClasses = this._pendingValue.classes;
@@ -119,21 +114,21 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
         this._memoizedClasses = newClasses;
         break;
       }
-      case Status.Unmounting: {
+      case BindingStatus.Unmounting: {
         this._part.node.className = '';
         this._memoizedClasses = {};
         break;
       }
     }
 
-    this._status = Status.Committed;
+    this._status = BindingStatus.Committed;
   }
 
   private _requestMutation(
     context: UpdateContext<unknown>,
-    newStatus: Status,
+    newStatus: BindingStatus,
   ): void {
-    if (this._status === Status.Committed) {
+    if (this._status === BindingStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._status = newStatus;
