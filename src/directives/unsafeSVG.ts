@@ -2,6 +2,7 @@ import {
   type Binding,
   type ChildNodePart,
   type Directive,
+  type DirectiveContext,
   type Part,
   PartType,
   type UpdateContext,
@@ -30,10 +31,7 @@ export class UnsafeSVG implements Directive<UnsafeSVG> {
     return this._content;
   }
 
-  [directiveTag](
-    part: Part,
-    _context: UpdateContext<unknown>,
-  ): UnsafeSVGBinding {
+  [directiveTag](part: Part, _context: DirectiveContext): UnsafeSVGBinding {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'UnsafeSVG directive must be used in a child node, but it is used here:\n' +

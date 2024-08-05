@@ -1,6 +1,7 @@
 import {
   type Binding,
   type ChildNodePart,
+  type DirectiveContext,
   type Effect,
   type Part,
   PartType,
@@ -50,7 +51,7 @@ export class TemplateResult<TData, TContext>
 
   [directiveTag](
     part: Part,
-    _context: UpdateContext<TContext>,
+    _context: DirectiveContext,
   ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(

@@ -2,6 +2,7 @@ import {
   type AttributePart,
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Effect,
   type Part,
   PartType,
@@ -34,7 +35,7 @@ export class Ref implements Directive<Ref> {
     return this._ref;
   }
 
-  [directiveTag](part: Part, _contex: UpdateContext<unknown>): RefBinding {
+  [directiveTag](part: Part, _contex: DirectiveContext): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +

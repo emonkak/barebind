@@ -116,7 +116,7 @@ export class RenderContext {
   html<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): Root<TemplateDirective<TData, RenderContext>> {
+  ): Root<TemplateDirective<TData, RenderContext>, RenderContext> {
     const template = this._host.getHTMLTemplate(tokens, data);
     return new Root(new TemplateResult(template, data));
   }
@@ -148,7 +148,7 @@ export class RenderContext {
   svg<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     ...data: TData
-  ): Root<TemplateDirective<TData, RenderContext>> {
+  ): Root<TemplateDirective<TData, RenderContext>, RenderContext> {
     const template = this._host.getSVGTemplate(tokens, data);
     return new Root(new TemplateResult(template, data));
   }

@@ -2,6 +2,7 @@ import {
   type Binding,
   type ChildNodePart,
   type Directive,
+  type DirectiveContext,
   type Effect,
   type Part,
   PartType,
@@ -62,7 +63,7 @@ export class List<TItem, TKey, TValue>
 
   [directiveTag](
     part: Part,
-    _context: UpdateContext<unknown>,
+    _context: DirectiveContext,
   ): ListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(

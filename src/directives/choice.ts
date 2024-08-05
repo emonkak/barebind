@@ -1,6 +1,7 @@
 import {
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Part,
   type UpdateContext,
   directiveTag,
@@ -47,7 +48,7 @@ export class Choice<TKey, TValue> implements Directive<Choice<TKey, TValue>> {
 
   [directiveTag](
     part: Part,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext,
   ): ChoiceBinding<TKey, TValue> {
     return new ChoiceBinding(this, part, context);
   }
@@ -65,7 +66,7 @@ export class ChoiceBinding<TKey, TValue>
   constructor(
     value: Choice<TKey, TValue>,
     part: Part,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext,
   ) {
     const { key, factory } = value;
     const selection = factory(key);

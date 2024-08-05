@@ -2,6 +2,7 @@ import {
   type AttributePart,
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Effect,
   type Part,
   PartType,
@@ -34,10 +35,7 @@ export class ClassMap implements Directive<ClassMap> {
     return this._classes;
   }
 
-  [directiveTag](
-    part: Part,
-    _context: UpdateContext<unknown>,
-  ): ClassMapBinding {
+  [directiveTag](part: Part, _context: DirectiveContext): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
         'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +

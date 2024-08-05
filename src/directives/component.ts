@@ -3,6 +3,7 @@ import {
   type ChildNodePart,
   type ComponentType,
   type Directive,
+  type DirectiveContext,
   type Effect,
   type Hook,
   HookType,
@@ -27,7 +28,7 @@ enum Status {
 export function component<TProps, TData, TContext>(
   component: ComponentType<TProps, TData, TContext>,
   props: TProps,
-): Root<Component<TProps, TData, TContext>> {
+): Root<Component<TProps, TData, TContext>, TContext> {
   // Component directive should be used with Root directive.
   return new Root(new Component(component, props));
 }
@@ -58,7 +59,7 @@ export class Component<TProps, TData, TContext>
 
   [directiveTag](
     part: Part,
-    _context: UpdateContext<TContext>,
+    _context: DirectiveContext,
   ): ComponentBinding<TProps, TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(

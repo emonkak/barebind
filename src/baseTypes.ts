@@ -17,8 +17,12 @@ export interface Directive<TThis, TContext = unknown> {
   [directiveTag](
     this: TThis,
     part: Part,
-    context: UpdateContext<TContext>,
+    context: DirectiveContext<TContext>,
   ): Binding<TThis, TContext>;
+}
+
+export interface DirectiveContext<TContext = unknown> {
+  get block(): Block<TContext> | null;
 }
 
 export interface Block<TContext> {

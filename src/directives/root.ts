@@ -2,6 +2,7 @@ import {
   type Binding,
   type Block,
   type Directive,
+  type DirectiveContext,
   type Part,
   type UpdateContext,
   directiveTag,
@@ -15,11 +16,13 @@ const FLAG_DIRTY = 1 << 0;
 const FLAG_CONNECTED = 1 << 1;
 const FLAG_UPDATING = 1 << 2;
 
-export function root<TValue>(value: TValue): Root<TValue> {
+export function root<TValue, TContext>(value: TValue): Root<TValue, TContext> {
   return new Root(value);
 }
 
-export class Root<TValue> implements Directive<Root<TValue>> {
+export class Root<TValue, TContext>
+  implements Directive<Root<TValue, TContext>, TContext>
+{
   private _value: TValue;
 
   constructor(value: TValue) {
@@ -36,8 +39,8 @@ export class Root<TValue> implements Directive<Root<TValue>> {
 
   [directiveTag](
     part: Part,
-    context: UpdateContext<unknown>,
-  ): RootBinding<TValue> {
+    context: DirectiveContext<TContext>,
+  ): RootBinding<TValue, TContext> {
     return new RootBinding(this, part, context);
   }
 
@@ -46,30 +49,30 @@ export class Root<TValue> implements Directive<Root<TValue>> {
   }
 }
 
-export class RootBinding<TValue>
-  implements Binding<Root<TValue>>, Block<unknown>
+export class RootBinding<TValue, TContext>
+  implements Binding<Root<TValue, TContext>>, Block<TContext>
 {
-  protected _value: Root<TValue>;
+  protected _value: Root<TValue, TContext>;
 
-  protected readonly _binding: Binding<TValue>;
+  protected readonly _binding: Binding<TValue, TContext>;
 
-  protected readonly _parent: Block<unknown> | null;
+  protected readonly _parent: Block<TContext> | null;
 
   private _priority: TaskPriority = 'user-blocking';
 
   private _flags = FLAG_NONE;
 
   constructor(
-    value: Root<TValue>,
+    value: Root<TValue, TContext>,
     part: Part,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext<TContext>,
   ) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);
     this._parent = context.block;
   }
 
-  get value(): Root<TValue> {
+  get value(): Root<TValue, TContext> {
     return this._value;
   }
 
@@ -109,7 +112,7 @@ export class RootBinding<TValue>
     if (!(this._flags & FLAG_UPDATING)) {
       return false;
     }
-    let current: Block<unknown> | null = this;
+    let current: Block<TContext> | null = this;
     while ((current = current.parent) !== null) {
       if (current.isUpdating) {
         return false;
@@ -122,7 +125,10 @@ export class RootBinding<TValue>
     this._flags &= ~FLAG_UPDATING;
   }
 
-  requestUpdate(priority: TaskPriority, context: UpdateContext<unknown>): void {
+  requestUpdate(
+    priority: TaskPriority,
+    context: UpdateContext<TContext>,
+  ): void {
     if (
       this._flags & FLAG_CONNECTED &&
       (!(this._flags & FLAG_UPDATING) ||
@@ -136,7 +142,7 @@ export class RootBinding<TValue>
     }
   }
 
-  update(context: UpdateContext<unknown>): void {
+  update(context: UpdateContext<TContext>): void {
     if (this._flags & FLAG_DIRTY) {
       this._binding.bind(this._value.value, context);
     } else {
@@ -147,17 +153,20 @@ export class RootBinding<TValue>
     this._flags &= ~(FLAG_DIRTY | FLAG_UPDATING);
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext<TContext>): void {
     this._forceUpdate(context);
   }
 
-  bind(newValue: Root<TValue>, context: UpdateContext<unknown>): void {
+  bind(
+    newValue: Root<TValue, TContext>,
+    context: UpdateContext<TContext>,
+  ): void {
     this._forceUpdate(context);
     this._value = newValue;
     this._flags |= FLAG_DIRTY;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext<TContext>): void {
     this._binding.unbind(context);
 
     this._flags |= FLAG_DIRTY;

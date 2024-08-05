@@ -1,6 +1,7 @@
 import {
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Part,
   type UpdateContext,
   directiveTag,
@@ -76,7 +77,7 @@ export class Condition<TTrue, TFalse>
 
   [directiveTag](
     part: Part,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext,
   ): ConditionBinding<TTrue, TFalse> {
     return new ConditionBinding<TTrue, TFalse>(this, part, context);
   }
@@ -94,7 +95,7 @@ export class ConditionBinding<TTrue, TFalse>
   constructor(
     value: Condition<TTrue, TFalse>,
     part: Part,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext,
   ) {
     const { condition, trueBranch, falseBranch } = value;
     this._value = value;

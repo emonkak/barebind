@@ -3,6 +3,7 @@ import {
   type Block,
   type ChildNodePart,
   type Directive,
+  type DirectiveContext,
   type Effect,
   type EffectPhase,
   type Hook,
@@ -271,7 +272,7 @@ export class TextDirective implements Directive<TextDirective> {
     return this._content;
   }
 
-  [directiveTag](part: Part, _context: UpdateContext<unknown>): TextBinding {
+  [directiveTag](part: Part, _context: DirectiveContext<unknown>): TextBinding {
     return new TextBinding(this, part);
   }
 }

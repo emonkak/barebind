@@ -1,6 +1,7 @@
 import {
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Part,
   type UpdateContext,
   directiveTag,
@@ -16,7 +17,7 @@ export class NoValue implements Directive<NoValue> {
     }
   }
 
-  [directiveTag](part: Part, _context: UpdateContext<unknown>): NoValueBinding {
+  [directiveTag](part: Part, _context: DirectiveContext): NoValueBinding {
     return new NoValueBinding(part);
   }
 }

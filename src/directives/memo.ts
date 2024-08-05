@@ -1,6 +1,7 @@
 import {
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Part,
   type UpdateContext,
   directiveTag,
@@ -40,7 +41,7 @@ export class Memo<T> implements Directive<Memo<T>> {
     return 'Memo(' + nameOf(this._factory()) + ')';
   }
 
-  [directiveTag](part: Part, context: UpdateContext<unknown>): MemoBinding<T> {
+  [directiveTag](part: Part, context: DirectiveContext): MemoBinding<T> {
     return new MemoBinding(this, part, context);
   }
 }
@@ -52,7 +53,7 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   private readonly _binding: Binding<T>;
 
-  constructor(value: Memo<T>, part: Part, context: UpdateContext<unknown>) {
+  constructor(value: Memo<T>, part: Part, context: DirectiveContext) {
     this._value = value;
     this._binding = resolveBinding(value.factory(), part, context);
   }

@@ -1,6 +1,7 @@
 import {
   type AttributePart,
   type Binding,
+  type DirectiveContext,
   type Effect,
   type ElementPart,
   type EventPart,
@@ -520,7 +521,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
 export function resolveBinding<TValue, TContext>(
   value: TValue,
   part: Part,
-  context: UpdateContext<TContext>,
+  context: DirectiveContext<TContext>,
 ): Binding<TValue, TContext> {
   if (isDirective(value)) {
     return value[directiveTag](part, context);

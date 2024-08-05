@@ -1,6 +1,7 @@
 import {
   type Binding,
   type Directive,
+  type DirectiveContext,
   type Part,
   type UpdateContext,
   directiveTag,
@@ -47,10 +48,7 @@ export abstract class Signal<TValue>
     return this.value;
   }
 
-  [directiveTag](
-    part: Part,
-    context: UpdateContext<unknown>,
-  ): SignalBinding<TValue> {
+  [directiveTag](part: Part, context: DirectiveContext): SignalBinding<TValue> {
     return new SignalBinding(this, part, context);
   }
 
@@ -73,11 +71,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   private _subscription: Subscription | null = null;
 
-  constructor(
-    signal: Signal<TValue>,
-    part: Part,
-    context: UpdateContext<unknown>,
-  ) {
+  constructor(signal: Signal<TValue>, part: Part, context: DirectiveContext) {
     this._signal = signal;
     this._binding = resolveBinding(signal.value, part, context);
   }
