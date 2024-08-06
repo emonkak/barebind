@@ -10,7 +10,11 @@ import {
   nameTag,
 } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
-import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
+import {
+  Atom,
+  Computation,
+  SignalBinding,
+} from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '.././mocks.js';
@@ -360,14 +364,14 @@ describe('Atom', () => {
   });
 });
 
-describe('Computed', () => {
+describe('Computation', () => {
   describe('.value', () => {
     it('should produce a memoized value by dependent signals', () => {
       const foo = new Atom(1);
       const bar = new Atom(2);
       const baz = new Atom(3);
 
-      const signal = new Computed(
+      const signal = new Computation(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
         [foo, bar, baz],
       );
@@ -382,7 +386,7 @@ describe('Computed', () => {
       const bar = new Atom(2);
       const baz = new Atom(3);
 
-      const signal = new Computed(
+      const signal = new Computation(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
         [foo, bar, baz],
       );
@@ -414,7 +418,7 @@ describe('Computed', () => {
       const baz = new Atom(3);
       const callback = vi.fn();
 
-      const signal = new Computed(
+      const signal = new Computation(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
         [foo, bar, baz],
       );
@@ -438,7 +442,7 @@ describe('Computed', () => {
       const baz = new Atom(3);
       const callback = vi.fn();
 
-      const signal = new Computed(
+      const signal = new Computation(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
         [foo, bar, baz],
       );
@@ -458,7 +462,7 @@ describe('Computed', () => {
   });
 });
 
-describe('Projected', () => {
+describe('Projection', () => {
   describe('.value', () => {
     it('should apply the function to each values', () => {
       const signal = new Atom(1);

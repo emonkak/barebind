@@ -1,5 +1,5 @@
 import { type RenderContext, usableTag } from '@emonkak/ebit';
-import { Atom, Computed, type Signal } from '@emonkak/ebit/directives.js';
+import { Atom, Computation, type Signal } from '@emonkak/ebit/directives.js';
 
 export interface Todo {
   id: string;
@@ -32,11 +32,11 @@ export class AppState {
   constructor() {
     this.filter$ = new Atom(TodoFilter.ALL);
     this.todos$ = new Atom([] as Atom<Todo>[]);
-    this.activeTodos$ = new Computed(
+    this.activeTodos$ = new Computation(
       (todos) => todos.value.filter((todo$) => !todo$.value.completed),
       [this.todos$],
     );
-    this.visibleTodos$ = new Computed(
+    this.visibleTodos$ = new Computation(
       (todos$, filter$) => {
         switch (filter$.value) {
           case TodoFilter.ALL:
