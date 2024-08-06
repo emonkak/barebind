@@ -3,10 +3,10 @@ import {
   BindingStatus,
   type Block,
   type ChildNodePart,
+  type CommitPhase,
   type Directive,
   type DirectiveContext,
   type Effect,
-  type EffectPhase,
   type Hook,
   type Part,
   type TaskPriority,
@@ -155,7 +155,7 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
     context.finalize();
   }
 
-  flushEffects(effects: Effect[], phase: EffectPhase): void {
+  flushEffects(effects: Effect[], phase: CommitPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(phase);
     }

@@ -1,5 +1,5 @@
 import {
-  EffectPhase,
+  CommitPhase,
   UpdateContext,
   type UpdateHost,
   type UpdatePipeline,
@@ -33,17 +33,17 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     }
 
     if (mutationEffects.length > 0) {
-      host.flushEffects(mutationEffects, EffectPhase.Mutation);
+      host.flushEffects(mutationEffects, CommitPhase.Mutation);
       pipeline.mutationEffects.length = 0;
     }
 
     if (layoutEffects.length > 0) {
-      host.flushEffects(layoutEffects, EffectPhase.Layout);
+      host.flushEffects(layoutEffects, CommitPhase.Layout);
       pipeline.layoutEffects.length = 0;
     }
 
     if (passiveEffects.length > 0) {
-      host.flushEffects(passiveEffects, EffectPhase.Passive);
+      host.flushEffects(passiveEffects, CommitPhase.Passive);
       pipeline.passiveEffects.length = 0;
     }
   }

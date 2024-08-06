@@ -1,5 +1,5 @@
 import {
-  EffectPhase,
+  CommitPhase,
   UpdateContext,
   type UpdateHost,
   type UpdatePipeline,
@@ -139,8 +139,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            host.flushEffects(mutationEffects, EffectPhase.Mutation);
-            host.flushEffects(layoutEffects, EffectPhase.Layout);
+            host.flushEffects(mutationEffects, CommitPhase.Mutation);
+            host.flushEffects(layoutEffects, CommitPhase.Layout);
           } finally {
             this._taskCount.value--;
           }
@@ -158,7 +158,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         () => {
           try {
-            host.flushEffects(passiveEffects, EffectPhase.Passive);
+            host.flushEffects(passiveEffects, CommitPhase.Passive);
           } finally {
             this._taskCount.value--;
           }

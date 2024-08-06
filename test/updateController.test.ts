@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  EffectPhase,
+  CommitPhase,
   type Hook,
   HookType,
   PartType,
@@ -59,12 +59,12 @@ describe('UpdateController', () => {
       const effect2 = {
         commit: vi.fn(),
       };
-      host.flushEffects([effect1, effect2], EffectPhase.Passive);
+      host.flushEffects([effect1, effect2], CommitPhase.Passive);
 
       expect(effect1.commit).toHaveBeenCalledOnce();
-      expect(effect1.commit).toHaveBeenCalledWith(EffectPhase.Passive);
+      expect(effect1.commit).toHaveBeenCalledWith(CommitPhase.Passive);
       expect(effect2.commit).toHaveBeenCalledOnce();
-      expect(effect2.commit).toHaveBeenCalledWith(EffectPhase.Passive);
+      expect(effect2.commit).toHaveBeenCalledWith(CommitPhase.Passive);
     });
   });
 

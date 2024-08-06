@@ -1,8 +1,8 @@
 import {
   type Binding,
   type Block,
+  type CommitPhase,
   type Effect,
-  type EffectPhase,
   type Hook,
   type Part,
   PartType,
@@ -54,7 +54,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
     context.finalize();
   }
 
-  flushEffects(effects: Effect[], phase: EffectPhase): void {
+  flushEffects(effects: Effect[], phase: CommitPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(phase);
     }

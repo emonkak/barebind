@@ -64,7 +64,7 @@ export interface UpdateHost<TContext> {
     pipeline: UpdatePipeline<TContext>,
   ): TContext;
   finishRender(context: TContext): void;
-  flushEffects(effects: Effect[], phase: EffectPhase): void;
+  flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
   getHTMLTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
@@ -117,10 +117,10 @@ export interface TemplateFragment<TData, TContext = unknown> {
 }
 
 export interface Effect {
-  commit(phase: EffectPhase): void;
+  commit(phase: CommitPhase): void;
 }
 
-export enum EffectPhase {
+export enum CommitPhase {
   Mutation,
   Layout,
   Passive,
