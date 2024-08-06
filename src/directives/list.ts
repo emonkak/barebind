@@ -15,7 +15,7 @@ import { ensureDirective, reportPart } from '../error.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 
-export function orderedList<TItem, TKey, TValue>(
+export function list<TItem, TKey, TValue>(
   items: TItem[],
   keySelector: Selector<TItem, TKey>,
   valueSelector: Selector<TItem, TValue>,

@@ -1,10 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import {
-  component,
-  memo,
-  orderedList,
-  when,
-} from '@emonkak/ebit/directives.js';
+import { component, list, memo, when } from '@emonkak/ebit/directives.js';
 
 import { TodoItem } from './TodoItem.js';
 import { AppState } from './state.js';
@@ -43,7 +38,7 @@ export function Main(
         `,
       )}>
       <ul class="todo-list" data-testid="todo-list">
-        <${orderedList(
+        <${list(
           visibleTodos,
           (todo$) => todo$.value.id,
           (todo$) => memo(() => component(TodoItem, { todo$ }), [todo$]),

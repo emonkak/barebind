@@ -1,21 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
-import {
-  ListBinding,
-  inPlaceList,
-  orderedList,
-} from '../../src/directives/list.js';
+import { ListBinding, inPlaceList, list } from '../../src/directives/list.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
-describe('orderedList()', () => {
+describe('list()', () => {
   it('should construst a new list directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
     const keySelector = (item: string) => item;
-    const value = orderedList(items, keySelector, valueSelector);
+    const value = list(items, keySelector, valueSelector);
 
     expect(value.items).toBe(items);
     expect(value.keySelector).toBe(keySelector);
@@ -46,7 +42,7 @@ describe('List', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -69,7 +65,7 @@ describe('List', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -94,7 +90,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -126,7 +122,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -158,12 +154,12 @@ describe('ListBinding', () => {
           const updater = new SyncUpdater();
           const context = new UpdateContext(host, updater, new MockBlock());
 
-          const value1 = orderedList(
+          const value1 = list(
             items1,
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const value2 = orderedList(
+          const value2 = list(
             items2,
             (item) => item,
             (item) => new TextDirective(item),
@@ -209,12 +205,12 @@ describe('ListBinding', () => {
             const updater = new SyncUpdater();
             const context = new UpdateContext(host, updater, new MockBlock());
 
-            const value1 = orderedList(
+            const value1 = list(
               items1!,
               (item) => item,
               (item) => new TextDirective(item),
             );
-            const value2 = orderedList(
+            const value2 = list(
               items2!,
               (item) => item,
               (item) => new TextDirective(item),
@@ -256,12 +252,12 @@ describe('ListBinding', () => {
           const updater = new SyncUpdater();
           const context = new UpdateContext(host, updater, new MockBlock());
 
-          const value1 = orderedList(
+          const value1 = list(
             items1,
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const value2 = orderedList(
+          const value2 = list(
             items2,
             (item) => item,
             (item) => new TextDirective(item),
@@ -370,12 +366,12 @@ describe('ListBinding', () => {
       const context = new UpdateContext(host, updater, new MockBlock());
 
       const items = ['foo', 'bar', 'baz'];
-      const value1 = orderedList(
+      const value1 = list(
         items,
         (item) => item,
         (item) => new TextDirective(item),
       );
-      const value2 = orderedList(
+      const value2 = list(
         items,
         (item) => item,
         (item) => new TextDirective(item),
@@ -403,7 +399,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -430,7 +426,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -458,7 +454,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = orderedList(
+      const value = list(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
