@@ -56,7 +56,7 @@ describe('Ref', () => {
 
 describe('RefBinding', () => {
   describe('.connect()', () => {
-    it('should call a RefCallback with the element', () => {
+    it('should invoke the ref callback with the element', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -77,7 +77,7 @@ describe('RefBinding', () => {
       expect(refFunction).toHaveBeenCalledWith(part.node);
     });
 
-    it('should assign the element to a RefObject', () => {
+    it('should assign the element to the ref object', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -122,7 +122,7 @@ describe('RefBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should call a new RefCallback with the element and call a old RefCallback with null', () => {
+    it('should invoke the new ref callback with the element and invoke a old one with null', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -151,7 +151,7 @@ describe('RefBinding', () => {
       expect(refFunction2).toHaveBeenCalledWith(part.node);
     });
 
-    it('should assign the element to a new RefObject and unassign the element from a old RefObject', () => {
+    it('should assign the element to the new ref object and unassign the element from the old one', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -178,7 +178,7 @@ describe('RefBinding', () => {
       expect(refObject2.current).toBe(part.node);
     });
 
-    it('should skip an update if a ref is the same as the previous one', () => {
+    it('should skip an update if the new ref is the same as the old one', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -202,7 +202,7 @@ describe('RefBinding', () => {
       expect(context.isPending()).toBe(false);
     });
 
-    it('should call the current RefCallback with null if the new ref is null', () => {
+    it('should invoke the old ref callback with null if the new ref is null', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -228,7 +228,7 @@ describe('RefBinding', () => {
       expect(refFunction).toHaveBeenCalledWith(null);
     });
 
-    it('should unassign the element from the current RefObject if the new ref is null', () => {
+    it('should unassign the element from the old ref object if the new ref is null', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -275,7 +275,7 @@ describe('RefBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should call a old RefCallback with null', () => {
+    it('should invoke the old ref callback with null', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -299,7 +299,7 @@ describe('RefBinding', () => {
       expect(refFunction).toHaveBeenCalledWith(null);
     });
 
-    it('should unassign the element from a old RefObject', () => {
+    it('should unassign the element from the old ref object', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -352,6 +352,32 @@ describe('RefBinding', () => {
       const binding = new RefBinding(value, part);
 
       binding.disconnect();
+    });
+
+    it('should cancel invoke ref', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'ref',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const refFunction = vi.fn();
+      const value = ref(refFunction);
+      const binding = new RefBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(refFunction).not.toHaveBeenCalled();
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(refFunction).toHaveBeenCalledOnce();
     });
   });
 });

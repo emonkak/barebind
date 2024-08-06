@@ -75,12 +75,12 @@ describe('UnsafeHTMLBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('<div><span>foo</span>bar</div><!---->');
       expect(binding.startNode).toBeInstanceOf(HTMLElement);
       expect((binding.startNode as HTMLElement).outerHTML).toBe(
         '<div><span>foo</span>bar</div>',
       );
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('<div><span>foo</span>bar</div><!---->');
     });
 
     it('should insert the multiple nodes parsed from an unsafe HTML content before the part', () => {
@@ -100,12 +100,12 @@ describe('UnsafeHTMLBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('<span>foo</span>bar<!---->');
       expect(binding.startNode).toBeInstanceOf(HTMLElement);
       expect((binding.startNode as HTMLElement).outerHTML).toBe(
         '<span>foo</span>',
       );
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('<span>foo</span>bar<!---->');
     });
 
     it('should not insert any nodese if the unsafe HTML content is empty', () => {
@@ -125,9 +125,9 @@ describe('UnsafeHTMLBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('<!---->');
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should do nothing if the update is already scheduled', () => {
@@ -177,14 +177,14 @@ describe('UnsafeHTMLBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('bar<span>baz</span><!---->');
       expect(binding.value).toBe(value2);
       expect(binding.startNode).toBeInstanceOf(Text);
       expect(binding.startNode.nodeValue).toBe('bar');
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('bar<span>baz</span><!---->');
     });
 
-    it('should skip an update if the styles are the same as the previous one', () => {
+    it('should skip an update if new styles are the same as old ones', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -245,10 +245,10 @@ describe('UnsafeHTMLBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('<!---->');
       expect(binding.value).toBe(value);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should skip an update if the current unsafe HTML content is empty', () => {
@@ -284,6 +284,32 @@ describe('UnsafeHTMLBinding', () => {
       const binding = new UnsafeHTMLBinding(value, part);
 
       binding.disconnect();
+    });
+
+    it('should cancel mounting', () => {
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = unsafeHTML('Hello, <strong>World!</strong>');
+      const binding = new UnsafeHTMLBinding(value, part);
+
+      container.appendChild(part.node);
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(container.innerHTML).toBe('<!---->');
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(container.innerHTML).toBe('Hello, <strong>World!</strong><!---->');
     });
   });
 });

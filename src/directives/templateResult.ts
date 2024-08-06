@@ -1,7 +1,7 @@
 import {
   type Binding,
-  BindingStatus,
   type ChildNodePart,
+  CommitStatus,
   type DirectiveContext,
   type Effect,
   type Part,
@@ -101,7 +101,7 @@ export class TemplateResultBinding<TData, TContext>
 
   private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(
     value: AbstractTemplateResult<TData, TContext>,
@@ -132,13 +132,15 @@ export class TemplateResultBinding<TData, TContext>
 
     if (this._pendingFragment !== null) {
       if (this._pendingFragment !== this._memoizedFragment) {
-        this._requestMutation(context, BindingStatus.Mounting);
+        this._requestCommit(context);
+        this._status = CommitStatus.Mounting;
       }
       this._pendingFragment.bind(data, context);
     } else {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
+      this._status = CommitStatus.Mounting;
     }
   }
 
@@ -157,7 +159,8 @@ export class TemplateResultBinding<TData, TContext>
         // Here we use the same template as before. However the fragment may have
         // been unmounted. If so, we have to remount it.
         if (this._pendingFragment !== this._memoizedFragment) {
-          this._requestMutation(context, BindingStatus.Mounting);
+          this._requestCommit(context);
+          this._status = CommitStatus.Mounting;
         }
 
         this._pendingFragment.bind(data, context);
@@ -167,7 +170,8 @@ export class TemplateResultBinding<TData, TContext>
         this._pendingFragment.unbind(context);
 
         // Next, unmount the old fragment and mount the new fragment.
-        this._requestMutation(context, BindingStatus.Mounting);
+        this._requestCommit(context);
+        this._status = CommitStatus.Mounting;
 
         // Finally, render the new template.
         this._pendingFragment = template.render(data, context);
@@ -177,7 +181,8 @@ export class TemplateResultBinding<TData, TContext>
       // The template has never been rendered here. We have to mount the new
       // fragment before rendering the template. This branch will never be
       // executed unless bind() is called before connect().
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Mounting;
 
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
@@ -190,36 +195,35 @@ export class TemplateResultBinding<TData, TContext>
     // Detach data from the current fragment before its unmount.
     this._pendingFragment?.unbind(context);
 
-    this._requestMutation(context, BindingStatus.Unmounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Unmounting;
   }
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
+
+    this._status = CommitStatus.Committed;
   }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting:
+      case CommitStatus.Mounting:
         this._memoizedFragment?.unmount(this._part);
         this._pendingFragment?.mount(this._part);
         this._memoizedFragment = this._pendingFragment;
         break;
-      case BindingStatus.Unmounting:
+      case CommitStatus.Unmounting:
         this._memoizedFragment?.unmount(this._part);
         this._memoizedFragment = null;
         break;
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<TContext>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<TContext>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }

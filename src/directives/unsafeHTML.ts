@@ -1,7 +1,7 @@
 import {
   type Binding,
-  BindingStatus,
   type ChildNodePart,
+  CommitStatus,
   type Directive,
   type DirectiveContext,
   type Part,
@@ -46,7 +46,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
 
   private _childNodes: ChildNode[] = [];
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: UnsafeHTML, part: ChildNodePart) {
     this._value = value;
@@ -70,7 +70,8 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: UnsafeHTML, context: UpdateContext<unknown>): void {
@@ -78,22 +79,26 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
       ensureDirective(UnsafeHTML, newValue, this._part);
     }
     if (newValue.content !== this._memoizedContent) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Mounting;
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedContent !== '') {
-      this._requestMutation(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const { content } = this._value;
 
         for (let i = 0, l = this._childNodes.length; i < l; i++) {
@@ -116,7 +121,7 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
         this._memoizedContent = content;
         break;
       }
-      case BindingStatus.Unmounting: {
+      case CommitStatus.Unmounting: {
         for (let i = 0, l = this._childNodes.length; i < l; i++) {
           this._childNodes[i]!.remove();
         }
@@ -126,16 +131,12 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }

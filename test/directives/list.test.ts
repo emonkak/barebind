@@ -26,7 +26,7 @@ describe('inPlaceList()', () => {
     const value = inPlaceList(items, valueSelector);
 
     expect(value.items).toBe(items);
-    expect(value.keySelector).toBe(null);
+    expect(value.keySelector.call(undefined, 'foo', 1)).toBe(1);
     expect(value.valueSelector).toBe(valueSelector);
   });
 });
@@ -108,6 +108,19 @@ describe('ListBinding', () => {
         'bar',
         'baz',
       ]);
+      expect(
+        binding.bindings.map((binding) => binding.part.node.nodeValue),
+      ).toEqual([
+        'TextDirective@"foo"',
+        'TextDirective@"bar"',
+        'TextDirective@"baz"',
+      ]);
+      expect(
+        binding.bindings.map((binding) => binding.startNode.nodeValue),
+      ).toEqual(['foo', 'bar', 'baz']);
+      expect(binding.bindings.map((binding) => binding.endNode)).toEqual(
+        binding.bindings.map((binding) => binding.part.node),
+      );
       expect(container.innerHTML).toBe(
         'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
       );
@@ -355,37 +368,6 @@ describe('ListBinding', () => {
         'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
       );
     });
-
-    it('should do nothing if the items is the same as previous ones', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const items = ['foo', 'bar', 'baz'];
-      const value1 = list(
-        items,
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const value2 = list(
-        items,
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const binding = new ListBinding(value1, part);
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.bind(value2, context);
-
-      expect(binding.value).toBe(value2);
-      expect(context.isPending()).toBe(false);
-    });
   });
 
   describe('.unbind()', () => {
@@ -475,6 +457,38 @@ describe('ListBinding', () => {
       for (const disconnectSpy of disconnectSpies) {
         expect(disconnectSpy).toHaveBeenCalledOnce();
       }
+      expect(container.innerHTML).toBe(
+        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
+      );
+    });
+
+    it('should not commit pending bindings', () => {
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = list(
+        ['foo', 'bar', 'baz'],
+        (item) => item,
+        (item) => new TextDirective(item),
+      );
+      const binding = new ListBinding(value, part);
+
+      container.appendChild(part.node);
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(container.innerHTML).toBe('<!---->');
+
+      binding.bind(value, context);
+      context.flushUpdate();
+
       expect(container.innerHTML).toBe(
         'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
       );

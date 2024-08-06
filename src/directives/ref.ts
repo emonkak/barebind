@@ -1,7 +1,7 @@
 import {
   type AttributePart,
   type Binding,
-  BindingStatus,
+  CommitStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -48,7 +48,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   private _memoizedRef: ElementRef | null = null;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(directive: Ref, part: AttributePart) {
     this._value = directive;
@@ -72,7 +72,8 @@ export class RefBinding implements Binding<Ref>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestEffect(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: Ref, context: UpdateContext<unknown>): void {
@@ -80,22 +81,26 @@ export class RefBinding implements Binding<Ref>, Effect {
       ensureDirective(Ref, newValue, this._part);
     }
     if (newValue.ref !== this._memoizedRef) {
-      this._requestEffect(context, BindingStatus.Mounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Mounting;
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedRef !== null) {
-      this._requestEffect(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect() {}
+  disconnect() {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const oldRef = this._memoizedRef ?? null;
         const newRef = this._value.ref;
 
@@ -110,7 +115,7 @@ export class RefBinding implements Binding<Ref>, Effect {
         this._memoizedRef = this._value.ref;
         break;
       }
-      case BindingStatus.Unmounting: {
+      case CommitStatus.Unmounting: {
         const ref = this._value.ref;
 
         /* istanbul ignore else @preserve */
@@ -123,17 +128,13 @@ export class RefBinding implements Binding<Ref>, Effect {
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestEffect(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueLayoutEffect(this);
     }
-    this._status = newStatus;
   }
 }
 

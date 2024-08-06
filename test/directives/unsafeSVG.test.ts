@@ -74,6 +74,9 @@ describe('UnsafeSVGBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe(
+        '<g><circle cx="0" cy="0" r="10"></circle><text x="15" y="5">foo</text></g><!---->',
+      );
       expect(binding.startNode).toBeInstanceOf(SVGElement);
       expect((binding.startNode as SVGElement).outerHTML).toBe(
         '<g><circle cx="0" cy="0" r="10"></circle><text x="15" y="5">foo</text></g>',
@@ -82,9 +85,6 @@ describe('UnsafeSVGBinding', () => {
         'http://www.w3.org/2000/svg',
       );
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe(
-        '<g><circle cx="0" cy="0" r="10"></circle><text x="15" y="5">foo</text></g><!---->',
-      );
     });
 
     it('should insert the multiple nodes parsed from an unsafe SVG content before the part', () => {
@@ -106,6 +106,9 @@ describe('UnsafeSVGBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe(
+        '<circle cx="0" cy="0" r="10"></circle><text x="15" y="5">foo</text><!---->',
+      );
       expect(binding.startNode).toBeInstanceOf(SVGElement);
       expect((binding.startNode as SVGElement).outerHTML).toBe(
         '<circle cx="0" cy="0" r="10"></circle>',
@@ -114,9 +117,6 @@ describe('UnsafeSVGBinding', () => {
         'http://www.w3.org/2000/svg',
       );
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe(
-        '<circle cx="0" cy="0" r="10"></circle><text x="15" y="5">foo</text><!---->',
-      );
     });
 
     it('should not insert any nodese if the unsafe SVG content is empty', () => {
@@ -136,9 +136,9 @@ describe('UnsafeSVGBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('<!---->');
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should do nothing if the update is already scheduled', () => {
@@ -192,6 +192,9 @@ describe('UnsafeSVGBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe(
+        '<rect x="0" y="0" width="10" height="10"></rect><text x="15" y="5">bar</text><!---->',
+      );
       expect(binding.value).toBe(value2);
       expect(binding.startNode).toBeInstanceOf(SVGElement);
       expect((binding.startNode as SVGElement).outerHTML).toBe(
@@ -201,12 +204,9 @@ describe('UnsafeSVGBinding', () => {
         'http://www.w3.org/2000/svg',
       );
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe(
-        '<rect x="0" y="0" width="10" height="10"></rect><text x="15" y="5">bar</text><!---->',
-      );
     });
 
-    it('should skip an update if the styles are the same as the previous one', () => {
+    it('should skip an update if new styles are the same as old ones', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -269,10 +269,10 @@ describe('UnsafeSVGBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
+      expect(container.innerHTML).toBe('<!---->');
       expect(binding.value).toBe(value);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should skip an update if the current unsafe SVG content is empty', () => {
@@ -304,10 +304,42 @@ describe('UnsafeSVGBinding', () => {
         node: document.createComment(''),
       } as const;
 
-      const value = unsafeSVG('Hello, <strong>World!</strong>');
+      const value = unsafeSVG(
+        '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
+      );
       const binding = new UnsafeSVGBinding(value, part);
 
       binding.disconnect();
+    });
+
+    it('should cancel mounting', () => {
+      const container = document.createElement('svg');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = unsafeSVG(
+        '<circle cx="0" cy="0" r="10" /><text x="15" y="5">foo</text>',
+      );
+      const binding = new UnsafeSVGBinding(value, part);
+
+      container.appendChild(part.node);
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(container.innerHTML).toBe('<!---->');
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(container.innerHTML).toBe(
+        '<circle cx="0" cy="0" r="10"></circle><text x="15" y="5">foo</text><!---->',
+      );
     });
   });
 });

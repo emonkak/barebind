@@ -78,14 +78,9 @@ describe('StyleMapBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
-      expect(part.node.style).toHaveLength(7);
-      expect(part.node.style.getPropertyValue('--my-css-property')).toBe('1');
-      expect(part.node.style.getPropertyValue('color')).toBe('black');
-      expect(part.node.style.getPropertyValue('margin')).toBe('10px');
-      expect(part.node.style.getPropertyValue('-webkit-filter')).toBe(
-        'blur(8px)',
+      expect(part.node.style.cssText).toBe(
+        '--my-css-property: 1; color: black; margin: 10px; filter: blur(8px);',
       );
-      expect(part.node.style.getPropertyValue('filter')).toBe('blur(8px)');
     });
 
     it('should do nothing if the update is already scheduled', () => {
@@ -142,12 +137,11 @@ describe('StyleMapBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
+      expect(part.node.style.cssText).toBe('padding: 0px;');
       expect(binding.value).toBe(value2);
-      expect(part.node.style).toHaveLength(4);
-      expect(part.node.style.getPropertyValue('padding')).toBe('0px');
     });
 
-    it('should skip an update if the styles are the same as previous ones', () => {
+    it('should skip an update if new styles are the same as old ones', () => {
       const part = {
         type: PartType.Attribute,
         name: 'style',
@@ -221,7 +215,7 @@ describe('StyleMapBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(part.node.style).toHaveLength(0);
+      expect(part.node.style.cssText).toBe('');
     });
 
     it('should skip an update if the current styles are empty', () => {
@@ -251,10 +245,35 @@ describe('StyleMapBinding', () => {
         node: document.createElement('div'),
       } as const;
 
-      const value = styleMap({ display: 'component' });
+      const value = styleMap({ display: 'none' });
       const binding = new StyleMapBinding(value, part);
 
       binding.disconnect();
+    });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'style',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = styleMap({ display: 'none' });
+      const binding = new StyleMapBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(part.node.style.cssText).toBe('');
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(part.node.style.cssText).toBe('display: none;');
     });
   });
 });

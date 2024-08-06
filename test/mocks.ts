@@ -1,9 +1,9 @@
 import {
   type Binding,
-  BindingStatus,
   type Block,
   type ChildNodePart,
   type CommitPhase,
+  CommitStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -210,7 +210,7 @@ export class TextBinding implements Binding<TextDirective>, Effect {
 
   private readonly _part: Part;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   private _textNode: Text = document.createTextNode('');
 
@@ -238,26 +238,34 @@ export class TextBinding implements Binding<TextDirective>, Effect {
   }
 
   bind(newValue: TextDirective, context: UpdateContext<unknown>): void {
-    context.enqueueMutationEffect(this);
+    if (this._status === CommitStatus.Committed) {
+      context.enqueueMutationEffect(this);
+    }
     this._value = newValue;
-    this._status = BindingStatus.Mounting;
+    this._status = CommitStatus.Mounting;
   }
 
   connect(context: UpdateContext<unknown>): void {
-    context.enqueueMutationEffect(this);
-    this._status = BindingStatus.Mounting;
+    if (this._status === CommitStatus.Committed) {
+      context.enqueueMutationEffect(this);
+    }
+    this._status = CommitStatus.Mounting;
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    context.enqueueMutationEffect(this);
-    this._status = BindingStatus.Unmounting;
+    if (this._status === CommitStatus.Committed) {
+      context.enqueueMutationEffect(this);
+    }
+    this._status = CommitStatus.Unmounting;
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit() {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const { content } = this._value;
 
         this._textNode.nodeValue = content;
@@ -268,12 +276,12 @@ export class TextBinding implements Binding<TextDirective>, Effect {
 
         break;
       }
-      case BindingStatus.Unmounting:
+      case CommitStatus.Unmounting:
         this._textNode.remove();
         break;
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 }
 

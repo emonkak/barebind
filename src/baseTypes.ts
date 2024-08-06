@@ -13,12 +13,6 @@ export interface Binding<TValue, TContext = unknown> {
   disconnect(): void;
 }
 
-export enum BindingStatus {
-  Committed,
-  Mounting,
-  Unmounting,
-}
-
 export interface Directive<TThis, TContext = unknown> {
   [directiveTag](
     this: TThis,
@@ -124,6 +118,12 @@ export enum CommitPhase {
   Mutation,
   Layout,
   Passive,
+}
+
+export enum CommitStatus {
+  Committed,
+  Mounting,
+  Unmounting,
 }
 
 export type Part =

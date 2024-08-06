@@ -1,7 +1,7 @@
 import {
   type Binding,
-  BindingStatus,
   type ChildNodePart,
+  CommitStatus,
   type ComponentType,
   type Directive,
   type DirectiveContext,
@@ -87,7 +87,7 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _hooks: Hook[] = [];
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: Component<TProps, TData, TContext>, part: ChildNodePart) {
     this._value = value;
@@ -134,33 +134,34 @@ export class ComponentBinding<TProps, TData, TContext>
 
   unbind(context: UpdateContext<TContext>): void {
     this._pendingFragment?.unbind(context);
-
     this._requestCleanHooks(context);
-
-    this._requestMutation(context, BindingStatus.Unmounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Unmounting;
   }
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
 
     cleanHooks(this._hooks);
+
     this._hooks = [];
+    this._status = CommitStatus.Committed;
   }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting:
+      case CommitStatus.Mounting:
         this._memoizedFragment?.unmount(this._part);
         this._pendingFragment?.mount(this._part);
         this._memoizedFragment = this._pendingFragment;
         break;
-      case BindingStatus.Unmounting:
+      case CommitStatus.Unmounting:
         this._memoizedFragment?.unmount(this._part);
         this._memoizedFragment = null;
         break;
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
   private _triggerRender(
@@ -181,7 +182,8 @@ export class ComponentBinding<TProps, TData, TContext>
         // Here we use the same template as before. However the fragment may have
         // been unmounted. If so, we have to remount it.
         if (this._memoizedFragment !== this._pendingFragment) {
-          this._requestMutation(context, BindingStatus.Mounting);
+          this._requestCommit(context);
+          this._status = CommitStatus.Mounting;
         }
 
         this._pendingFragment.bind(data, context);
@@ -191,7 +193,8 @@ export class ComponentBinding<TProps, TData, TContext>
         this._pendingFragment.unbind(context);
 
         // Next, unmount the old fragment and mount the new fragment.
-        this._requestMutation(context, BindingStatus.Mounting);
+        this._requestCommit(context);
+        this._status = CommitStatus.Mounting;
 
         let newFragment: TemplateFragment<TData, TContext>;
 
@@ -225,7 +228,8 @@ export class ComponentBinding<TProps, TData, TContext>
       // The template has never been rendered here. We have to mount the new
       // fragment before rendering the template. This branch will never be
       // executed unless bind() is called before connect().
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Mounting;
 
       this._pendingFragment = template.render(data, context);
       this._pendingFragment.connect(context);
@@ -241,14 +245,10 @@ export class ComponentBinding<TProps, TData, TContext>
     }
   }
 
-  private _requestMutation(
-    context: UpdateContext<TContext>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<TContext>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }
 

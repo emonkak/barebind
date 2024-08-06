@@ -144,7 +144,7 @@ describe('ClassMapBinding', () => {
       expect(part.node.classList).toContain('bar');
     });
 
-    it('should skip an update if the classes are the same as previous ones', () => {
+    it('should skip an update if the new classes are the same as old ones', () => {
       const part = {
         type: PartType.Attribute,
         name: 'class',
@@ -254,6 +254,33 @@ describe('ClassMapBinding', () => {
       const binding = new ClassMapBinding(value, part);
 
       binding.disconnect();
+    });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'class',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = classMap({
+        foo: true,
+      });
+      const binding = new ClassMapBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(part.node.className).toBe('');
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(part.node.className).toBe('foo');
     });
   });
 });

@@ -1,7 +1,7 @@
 import {
   type AttributePart,
   type Binding,
-  BindingStatus,
+  CommitStatus,
   type DirectiveContext,
   type Effect,
   type ElementPart,
@@ -22,7 +22,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
 
   private readonly _part: AttributePart;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: unknown, part: AttributePart) {
     DEBUG: {
@@ -49,7 +49,8 @@ export class AttributeBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -57,22 +58,26 @@ export class AttributeBinding implements Binding<unknown>, Effect {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._memoizedValue, newValue)) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
       this._pendingValue = newValue;
+      this._status = CommitStatus.Mounting;
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedValue != null) {
-      this._requestMutation(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const { node, name } = this._part;
         const value = this._pendingValue;
 
@@ -89,7 +94,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
         this._memoizedValue = this._pendingValue;
         break;
       }
-      case BindingStatus.Unmounting: {
+      case CommitStatus.Unmounting: {
         const { node, name } = this._part;
         node.removeAttribute(name);
         this._memoizedValue = null;
@@ -97,17 +102,13 @@ export class AttributeBinding implements Binding<unknown>, Effect {
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }
 
@@ -156,10 +157,8 @@ export class ElementBinding implements Binding<unknown> {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
     }
-    if (this._value !== newValue) {
-      this._updateProps(newValue, context);
-      this._value = newValue;
-    }
+    this._updateProps(newValue, context);
+    this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
@@ -215,7 +214,7 @@ export class EventBinding implements Binding<unknown>, Effect {
 
   private readonly _part: EventPart;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: unknown, part: EventPart) {
     DEBUG: {
@@ -242,7 +241,8 @@ export class EventBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -250,14 +250,16 @@ export class EventBinding implements Binding<unknown>, Effect {
       ensureEventListener(newValue, this._part);
     }
     if (newValue !== this._memoizedValue) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
       this._pendingValue = newValue;
+      this._status = CommitStatus.Mounting;
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedValue != null) {
-      this._requestMutation(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
@@ -268,11 +270,13 @@ export class EventBinding implements Binding<unknown>, Effect {
       this._detachLisetener(value);
       this._memoizedValue = null;
     }
+
+    this._status = CommitStatus.Committed;
   }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const oldValue = this._memoizedValue;
         const newValue = this._pendingValue;
 
@@ -297,7 +301,7 @@ export class EventBinding implements Binding<unknown>, Effect {
         this._memoizedValue = this._pendingValue;
         break;
       }
-      case BindingStatus.Unmounting: {
+      case CommitStatus.Unmounting: {
         const value = this._memoizedValue;
 
         /* istanbul ignore else @preserve */
@@ -310,7 +314,7 @@ export class EventBinding implements Binding<unknown>, Effect {
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
   handleEvent(event: Event): void {
@@ -342,14 +346,10 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }
 
@@ -360,7 +360,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
 
   private readonly _part: Part;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: unknown, part: Part) {
     DEBUG: {
@@ -387,7 +387,8 @@ export class NodeBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -395,22 +396,26 @@ export class NodeBinding implements Binding<unknown>, Effect {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._memoizedValue, newValue)) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
       this._pendingValue = newValue;
+      this._status = CommitStatus.Mounting;
     }
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (this._memoizedValue !== null) {
-      this._requestMutation(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting:
+      case CommitStatus.Mounting:
         this._part.node.nodeValue =
           typeof this._pendingValue === 'string'
             ? this._pendingValue
@@ -418,23 +423,19 @@ export class NodeBinding implements Binding<unknown>, Effect {
         this._memoizedValue = this._pendingValue;
         break;
 
-      case BindingStatus.Unmounting:
+      case CommitStatus.Unmounting:
         this._part.node.nodeValue = null;
         this._memoizedValue = null;
         break;
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }
 
@@ -445,7 +446,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
 
   private readonly _part: PropertyPart;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: unknown, part: PropertyPart) {
     DEBUG: {
@@ -472,7 +473,8 @@ export class PropertyBinding implements Binding<unknown>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: unknown, context: UpdateContext<unknown>): void {
@@ -480,18 +482,21 @@ export class PropertyBinding implements Binding<unknown>, Effect {
       ensureNonDirective(newValue, this._part);
     }
     if (!Object.is(this._memoizedValue, newValue)) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
       this._pendingValue = newValue;
+      this._status = CommitStatus.Mounting;
     }
   }
 
   unbind(_context: UpdateContext<unknown>): void {}
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const { node, name } = this._part;
         (node as any)[name] = this._pendingValue;
         this._memoizedValue = this._pendingValue;
@@ -499,17 +504,13 @@ export class PropertyBinding implements Binding<unknown>, Effect {
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }
 

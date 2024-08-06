@@ -1,7 +1,7 @@
 import {
   type AttributePart,
   type Binding,
-  BindingStatus,
+  CommitStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -61,7 +61,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   private _memoizedStyles: StyleDeclaration = {};
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: StyleMap, part: AttributePart) {
     this._value = value;
@@ -85,7 +85,8 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: StyleMap, context: UpdateContext<unknown>): void {
@@ -93,22 +94,26 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
       ensureDirective(StyleMap, newValue, this._part);
     }
     if (!shallowEqual(newValue.styles, this._memoizedStyles)) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Mounting;
     }
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (Object.keys(this._memoizedStyles).length > 0) {
-      this._requestMutation(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const { style } = this._part.node as
           | HTMLElement
           | MathMLElement
@@ -132,7 +137,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
         this._memoizedStyles = newStyles;
         break;
       }
-      case BindingStatus.Unmounting: {
+      case CommitStatus.Unmounting: {
         const { style } = this._part.node as
           | HTMLElement
           | MathMLElement
@@ -142,17 +147,13 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }
 

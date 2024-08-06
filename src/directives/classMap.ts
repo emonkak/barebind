@@ -1,7 +1,7 @@
 import {
   type AttributePart,
   type Binding,
-  BindingStatus,
+  CommitStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -48,7 +48,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   private readonly _part: AttributePart;
 
-  private _status = BindingStatus.Committed;
+  private _status = CommitStatus.Committed;
 
   constructor(value: ClassMap, part: AttributePart) {
     this._pendingValue = value;
@@ -72,7 +72,8 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
   }
 
   connect(context: UpdateContext<unknown>): void {
-    this._requestMutation(context, BindingStatus.Mounting);
+    this._requestCommit(context);
+    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: ClassMap, context: UpdateContext<unknown>): void {
@@ -80,22 +81,26 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
       ensureDirective(ClassMap, newValue, this._part);
     }
     if (!shallowEqual(newValue.classes, this._memoizedClasses)) {
-      this._requestMutation(context, BindingStatus.Mounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Mounting;
     }
     this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<unknown>): void {
     if (Object.keys(this._memoizedClasses).length > 0) {
-      this._requestMutation(context, BindingStatus.Unmounting);
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this._status = CommitStatus.Committed;
+  }
 
   commit(): void {
     switch (this._status) {
-      case BindingStatus.Mounting: {
+      case CommitStatus.Mounting: {
         const { classList } = this._part.node;
         const oldClasses = this._memoizedClasses;
         const newClasses = this._pendingValue.classes;
@@ -114,23 +119,19 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
         this._memoizedClasses = newClasses;
         break;
       }
-      case BindingStatus.Unmounting: {
+      case CommitStatus.Unmounting: {
         this._part.node.className = '';
         this._memoizedClasses = {};
         break;
       }
     }
 
-    this._status = BindingStatus.Committed;
+    this._status = CommitStatus.Committed;
   }
 
-  private _requestMutation(
-    context: UpdateContext<unknown>,
-    newStatus: BindingStatus,
-  ): void {
-    if (this._status === BindingStatus.Committed) {
+  private _requestCommit(context: UpdateContext<unknown>): void {
+    if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-    this._status = newStatus;
   }
 }

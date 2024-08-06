@@ -286,6 +286,31 @@ describe('AttributeBinding', () => {
 
       binding.disconnect();
     });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = 'foo';
+      const binding = new AttributeBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(part.node.getAttribute('class')).toBe(null);
+
+      binding.bind(value, context);
+      context.flushUpdate();
+
+      expect(part.node.getAttribute('class')).toBe(value);
+    });
   });
 });
 
@@ -703,6 +728,33 @@ describe('EventBinding', () => {
       expect(addEventListenerSpy).not.toHaveBeenCalled();
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
     });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.Event,
+        node: document.createElement('div'),
+        name: 'hello',
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = () => {};
+      const binding = new EventBinding(value, part);
+      const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(addEventListenerSpy).not.toHaveBeenCalled();
+
+      binding.bind(value, context);
+      context.flushUpdate();
+
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
+    });
   });
 });
 
@@ -873,6 +925,30 @@ describe('NodeBinding', () => {
 
       binding.disconnect();
     });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = 'foo';
+      const binding = new NodeBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(part.node.nodeValue).toBe('');
+
+      binding.bind(value, context);
+      context.flushUpdate();
+
+      expect(part.node.nodeValue).toBe(value);
+    });
   });
 });
 
@@ -1000,12 +1076,10 @@ describe('PropertyBinding', () => {
       const value = 'foo';
       const binding = new PropertyBinding(value, part);
 
-      const setClassNameSpy = vi.spyOn(part.node, 'className', 'set');
-
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(setClassNameSpy).not.toHaveBeenCalled();
+      expect(part.node.className).toBe('');
     });
   });
 
@@ -1020,11 +1094,34 @@ describe('PropertyBinding', () => {
       const value = 'foo';
       const binding = new PropertyBinding(value, part);
 
-      const setClassNameSpy = vi.spyOn(part.node, 'className', 'set');
-
       binding.disconnect();
 
-      expect(setClassNameSpy).not.toHaveBeenCalled();
+      expect(part.node.className).toBe('');
+    });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = 'foo';
+      const binding = new PropertyBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(part.node.className).toBe('');
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(part.node.className).toBe(value);
     });
   });
 });
@@ -1094,8 +1191,7 @@ describe('ElementBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
-      expect(part.node.getAttribute('class')).toBe('foo');
-      expect(part.node.getAttribute('title')).toBe('bar');
+      expect(part.node.outerHTML).toBe('<div class="foo" title="bar"></div>');
     });
 
     it('should bind element properities by properities starting with "."', () => {
@@ -1116,8 +1212,7 @@ describe('ElementBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
-      expect(part.node.className).toBe('foo');
-      expect(part.node.title).toBe('bar');
+      expect(part.node.outerHTML).toBe('<div class="foo" title="bar"></div>');
     });
 
     it('should bind event listeners by properities starting with "@"', () => {
@@ -1140,6 +1235,7 @@ describe('ElementBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
+      expect(part.node.outerHTML).toBe('<div></div>');
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         'click',
@@ -1150,32 +1246,10 @@ describe('ElementBinding', () => {
         expect.any(EventBinding),
       );
     });
+  });
 
-    it('should not update any binding if the new and old properities are the same', () => {
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = {
-        class: 'foo',
-        title: 'bar',
-      };
-      const binding = new ElementBinding(value, part);
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.bind(value, context);
-      context.flushUpdate();
-
-      expect(context.isPending()).toBe(false);
-    });
-
-    it('should skip properties that are passed the same value as last time', () => {
+  describe('.bind()', () => {
+    it('should skip properities with the same value as old one', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
@@ -1197,19 +1271,18 @@ describe('ElementBinding', () => {
 
       binding.bind(
         {
-          class: 'foo', // same value as last time
+          class: 'foo', // the same value as old one
           title: 'baz',
         },
         context,
       );
       context.flushUpdate();
 
+      expect(part.node.outerHTML).toBe('<div class="foo" title="baz"></div>');
       expect(setAttributeSpy).toHaveBeenCalledTimes(3);
       expect(setAttributeSpy).toHaveBeenNthCalledWith(1, 'class', 'foo');
       expect(setAttributeSpy).toHaveBeenNthCalledWith(2, 'title', 'bar');
       expect(setAttributeSpy).toHaveBeenNthCalledWith(3, 'title', 'baz');
-      expect(part.node.getAttribute('class')).toBe('foo');
-      expect(part.node.getAttribute('title')).toBe('baz');
     });
 
     it('should unbind bindings that no longer exists', () => {
@@ -1233,8 +1306,34 @@ describe('ElementBinding', () => {
       binding.bind({ class: undefined }, context);
       context.flushUpdate();
 
-      expect(part.node.hasAttribute('class')).toBe(false);
-      expect(part.node.hasAttribute('title')).toBe(false);
+      expect(part.node.outerHTML).toBe('<div></div>');
+    });
+
+    it('should reconnect bindings if the new properities are the same as old ones', () => {
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const value = {
+        class: 'foo',
+        title: 'bar',
+      };
+      const binding = new ElementBinding(value, part);
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(part.node.outerHTML).toBe('<div></div>');
+
+      binding.bind(value, context);
+      context.flushUpdate();
+
+      expect(part.node.outerHTML).toBe('<div class="foo" title="bar"></div>');
     });
   });
 
@@ -1260,8 +1359,7 @@ describe('ElementBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(part.node.hasAttribute('class')).toBe(false);
-      expect(part.node.hasAttribute('title')).toBe(false);
+      expect(part.node.outerHTML).toBe('<div></div>');
     });
   });
 

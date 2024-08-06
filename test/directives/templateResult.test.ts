@@ -547,5 +547,47 @@ describe('TemplateResultBinding', () => {
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledOnce();
     });
+
+    it('should cancel mounting', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const context = new UpdateContext(host, updater, block);
+
+      const template = new MockTemplate();
+      const data = {};
+      const value = new LazyTemplateResult(template, data);
+      const fragment = new MockTemplateFragment(value.data);
+      const binding = new TemplateResultBinding(value, part);
+
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
+      const connectSpy = vi.spyOn(fragment, 'connect');
+      const bindSpy = vi.spyOn(fragment, 'bind');
+      const mountSpy = vi.spyOn(fragment, 'mount');
+
+      binding.connect(context);
+      binding.disconnect();
+      context.flushUpdate();
+
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(mountSpy).not.toHaveBeenCalled();
+
+      binding.bind(value, context);
+      context.flushUpdate();
+
+      expect(renderSpy).toHaveBeenCalledOnce();
+      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(data, context);
+      expect(mountSpy).toHaveBeenCalledOnce();
+      expect(mountSpy).toHaveBeenCalledWith(part);
+    });
   });
 });
