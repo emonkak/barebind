@@ -12,7 +12,7 @@ import {
   route,
   wildcard,
 } from '../src/router.js';
-import { UpdateController } from '../src/updateController.js';
+import { UpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock } from './mocks.js';
 
@@ -163,7 +163,7 @@ describe('browserLocation', () => {
 
   it('should return a state represents the current location of the browser', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -184,7 +184,7 @@ describe('browserLocation', () => {
 
   it('should push the new location to the session history by push action', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -218,7 +218,7 @@ describe('browserLocation', () => {
 
   it('should push the new location to the session history by replace action', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -252,7 +252,7 @@ describe('browserLocation', () => {
 
   it('should update the state when the "popstate" event is tiggered', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -287,7 +287,7 @@ describe('browserLocation', () => {
 
   it('should register the current location', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -308,7 +308,7 @@ describe('browserLocation', () => {
 describe('currentLocation', () => {
   it('should throw an error if the current location registered as a context value does not exisit', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -332,7 +332,7 @@ describe('hashLocation', () => {
 
   it('should return a state represents the current location of the browser', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -352,7 +352,7 @@ describe('hashLocation', () => {
 
   it('should push the new location to the session history by push action', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -386,7 +386,7 @@ describe('hashLocation', () => {
 
   it('should push the new location to the session history by replace action', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -420,7 +420,7 @@ describe('hashLocation', () => {
 
   it('should update the state when the "hashchange" event is tiggered', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();
@@ -465,7 +465,7 @@ describe('hashLocation', () => {
 
   it('should register the current location', () => {
     const hooks: Hook[] = [];
-    const host = new UpdateController();
+    const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const pipeline = createUpdatePipeline();

@@ -8,8 +8,8 @@ import {
   PartType,
   type TaskPriority,
   UpdateContext,
-  type UpdateHost,
   type UpdatePipeline,
+  type UpdateRuntime,
   type Updater,
   nameOf,
 } from './baseTypes.js';
@@ -18,12 +18,12 @@ import { RenderContext } from './renderContext.js';
 import { Root } from './root.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 
-export interface UpdateControllerOptions {
+export interface UpdateHostOptions {
   name?: string;
   constants?: Map<unknown, unknown>;
 }
 
-export class UpdateController implements UpdateHost<RenderContext> {
+export class UpdateHost implements UpdateRuntime<RenderContext> {
   private readonly _constants: Map<unknown, unknown>;
 
   private readonly _blockScopes: WeakMap<
@@ -43,7 +43,7 @@ export class UpdateController implements UpdateHost<RenderContext> {
   constructor({
     name = getRandomString(8),
     constants = new Map(),
-  }: UpdateControllerOptions = {}) {
+  }: UpdateHostOptions = {}) {
     this._name = name;
     this._constants = constants;
   }
@@ -76,6 +76,10 @@ export class UpdateController implements UpdateHost<RenderContext> {
     }
   }
 
+  getHostName(): string {
+    return this._name;
+  }
+
   getHTMLTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     data: TData,
@@ -89,10 +93,6 @@ export class UpdateController implements UpdateHost<RenderContext> {
     }
 
     return template;
-  }
-
-  getName(): string {
-    return this._name;
   }
 
   getScopedValue(

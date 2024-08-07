@@ -1,8 +1,8 @@
 import {
   CommitPhase,
   UpdateContext,
-  type UpdateHost,
   type UpdatePipeline,
+  type UpdateRuntime,
   type Updater,
   createUpdatePipeline,
 } from '../baseTypes.js';
@@ -29,7 +29,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   async flushUpdate(
     pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
   ): Promise<void> {
     this._procceingPipelines.add(pipeline);
 
@@ -76,7 +76,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   scheduleUpdate(
     pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
   ): void {
     if (this._procceingPipelines.has(pipeline)) {
       // Block an update while rendering.
@@ -104,7 +104,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private _scheduleBlocks(
     pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
   ): void {
     const { blocks } = pipeline;
 
@@ -131,7 +131,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private _scheduleEffects(
     pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
   ): void {
     const { passiveEffects, mutationEffects, layoutEffects } = pipeline;
 

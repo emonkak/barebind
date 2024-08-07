@@ -13,8 +13,8 @@ import {
   type RefObject,
   type TaskPriority,
   UpdateContext,
-  type UpdateHost,
   type UpdatePipeline,
+  type UpdateRuntime,
   type Updater,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
@@ -50,7 +50,7 @@ export type NewState<TState> = TState extends Function
   : ((prevState: TState) => TState) | TState;
 
 export class RenderContext {
-  private readonly _host: UpdateHost<RenderContext>;
+  private readonly _host: UpdateRuntime<RenderContext>;
 
   private readonly _updater: Updater<RenderContext>;
 
@@ -63,7 +63,7 @@ export class RenderContext {
   private _hookIndex = 0;
 
   constructor(
-    host: UpdateHost<RenderContext>,
+    host: UpdateRuntime<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     hooks: Hook[],
@@ -242,7 +242,7 @@ export class RenderContext {
 
     this._hookIndex++;
 
-    return ':' + this._host.getName() + '-' + currentHook.id + ':';
+    return ':' + this._host.getHostName() + '-' + currentHook.id + ':';
   }
 
   useLayoutEffect(callback: EffectCallback, dependencies?: unknown[]): void {

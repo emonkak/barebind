@@ -50,7 +50,7 @@ export interface UpdatePipeline<TContext> {
   passiveEffects: Effect[];
 }
 
-export interface UpdateHost<TContext> {
+export interface UpdateRuntime<TContext> {
   beginRender(
     updater: Updater<TContext>,
     block: Block<TContext>,
@@ -64,7 +64,7 @@ export interface UpdateHost<TContext> {
     tokens: ReadonlyArray<string>,
     data: TData,
   ): Template<TData>;
-  getName(): string;
+  getHostName(): string;
   getSVGTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     data: TData,
@@ -78,11 +78,11 @@ export interface Updater<TContext> {
   isScheduled(): boolean;
   flushUpdate(
     pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
   ): void;
   scheduleUpdate(
     pipeline: UpdatePipeline<TContext>,
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
   ): void;
   waitForUpdate(): Promise<void>;
 }
@@ -235,7 +235,7 @@ export interface RefObject<T> {
 }
 
 export class UpdateContext<TContext> {
-  private _host: UpdateHost<TContext>;
+  private _host: UpdateRuntime<TContext>;
 
   private _updater: Updater<TContext>;
 
@@ -244,7 +244,7 @@ export class UpdateContext<TContext> {
   private _pipeline: UpdatePipeline<TContext>;
 
   constructor(
-    host: UpdateHost<TContext>,
+    host: UpdateRuntime<TContext>,
     updater: Updater<TContext>,
     block: Block<TContext>,
     pipeline: UpdatePipeline<TContext> = createUpdatePipeline(),
@@ -255,7 +255,7 @@ export class UpdateContext<TContext> {
     this._pipeline = pipeline;
   }
 
-  get host(): UpdateHost<TContext> {
+  get host(): UpdateRuntime<TContext> {
     return this._host;
   }
 

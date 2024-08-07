@@ -9,7 +9,7 @@ import {
   directiveTag,
 } from '../src/baseTypes.js';
 import { Root } from '../src/root.js';
-import { UpdateController } from '../src/updateController.js';
+import { UpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextBinding, TextDirective } from './mocks.js';
 
@@ -33,10 +33,10 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'wheel',
 ];
 
-describe('UpdateController', () => {
+describe('UpdateHost', () => {
   describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const hooks: Hook[] = [];
@@ -52,7 +52,7 @@ describe('UpdateController', () => {
 
   describe('.flushEffects()', () => {
     it('should perform given effects', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const effect1 = {
         commit: vi.fn(),
       };
@@ -70,7 +70,7 @@ describe('UpdateController', () => {
 
   describe('.getCurrentPriority()', () => {
     it('should return "user-visible" if there is no current event', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
 
       vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
 
@@ -78,7 +78,7 @@ describe('UpdateController', () => {
     });
 
     it('should return "user-blocking" if the current event is not continuous', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
 
       const eventMock = vi
         .spyOn(globalThis, 'event', 'get')
@@ -91,7 +91,7 @@ describe('UpdateController', () => {
     it.each(CONTINUOUS_EVENT_TYPES)(
       'should return "user-visible" if the current event is continuous',
       (eventType) => {
-        const host = new UpdateController();
+        const host = new UpdateHost();
 
         const eventMock = vi
           .spyOn(globalThis, 'event', 'get')
@@ -103,9 +103,20 @@ describe('UpdateController', () => {
     );
   });
 
+  describe('.getHostName()', () => {
+    it('should return the unpredictable host name', () => {
+      expect(
+        new UpdateHost({
+          name: '__test__',
+        }).getHostName(),
+      ).toBe('__test__');
+      expect(new UpdateHost().getHostName()).toMatch(/^[0-9a-z]+$/);
+    });
+  });
+
   describe('.getHTMLTemplate()', () => {
     it('should create a HTML template from tokens', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
@@ -114,7 +125,7 @@ describe('UpdateController', () => {
     });
 
     it('should get a HTML template from cache if avaiable', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
@@ -122,20 +133,9 @@ describe('UpdateController', () => {
     });
   });
 
-  describe('.getName()', () => {
-    it('should return the unpredictable host name', () => {
-      expect(
-        new UpdateController({
-          name: '__test__',
-        }).getName(),
-      ).toBe('__test__');
-      expect(new UpdateController().getName()).toMatch(/^[0-9a-z]+$/);
-    });
-  });
-
   describe('.getSVGTemplate()', () => {
     it('should create a SVG template from tokens', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
       const template = host.getSVGTemplate(tokens, data);
 
@@ -147,7 +147,7 @@ describe('UpdateController', () => {
     });
 
     it('should get a SVG template from cache if avaiable', () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getSVGTemplate(tokens, data);
 
@@ -157,7 +157,7 @@ describe('UpdateController', () => {
 
   describe('.getScopedValue()', () => {
     it('should get a scoped value from constants', () => {
-      const host = new UpdateController({ constants: new Map([['foo', 123]]) });
+      const host = new UpdateHost({ constants: new Map([['foo', 123]]) });
       const block = new MockBlock();
 
       expect(host.getScopedValue('foo')).toBe(123);
@@ -165,7 +165,7 @@ describe('UpdateController', () => {
     });
 
     it('should get a scoped value from the block scope', () => {
-      const host = new UpdateController({ constants: new Map([['foo', 123]]) });
+      const host = new UpdateHost({ constants: new Map([['foo', 123]]) });
       const block = new MockBlock();
 
       host.setScopedValue('foo', 456, block);
@@ -176,7 +176,7 @@ describe('UpdateController', () => {
     });
 
     it('should get a scoped value from the parent block scope', () => {
-      const host = new UpdateController({ constants: new Map([['foo', 123]]) });
+      const host = new UpdateHost({ constants: new Map([['foo', 123]]) });
       const parent = new MockBlock();
       const block = new MockBlock(parent);
 
@@ -189,7 +189,7 @@ describe('UpdateController', () => {
   describe('.mount()', () => {
     it('should mount a non root value inside the container', async () => {
       const container = document.createElement('div');
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const updater = new SyncUpdater();
 
       const value = new TextDirective('foo');
@@ -210,7 +210,7 @@ describe('UpdateController', () => {
 
     it('should mount a root value inside the container', async () => {
       const container = document.createElement('div');
-      const host = new UpdateController();
+      const host = new UpdateHost();
       const updater = new SyncUpdater();
 
       const value = new TextDirective('foo');
@@ -237,7 +237,7 @@ describe('UpdateController', () => {
 
   describe('.nextIdentifier()', () => {
     it('should return a next identifier', async () => {
-      const host = new UpdateController();
+      const host = new UpdateHost();
 
       expect(host.nextIdentifier()).toBe(1);
       expect(host.nextIdentifier()).toBe(2);

@@ -13,8 +13,8 @@ import {
   type Template,
   type TemplateFragment,
   type UpdateContext,
-  type UpdateHost,
   type UpdatePipeline,
+  type UpdateRuntime,
   type Updater,
   directiveTag,
 } from '../src/baseTypes.js';
@@ -141,7 +141,7 @@ export class MockTemplateFragment<TData, TContext>
   disconnect(): void {}
 }
 
-export class MockUpdateHost implements UpdateHost<RenderContext> {
+export class MockUpdateHost implements UpdateRuntime<RenderContext> {
   private _idCounter = 0;
 
   beginRender(
@@ -174,7 +174,7 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
     return new MockTemplate();
   }
 
-  getName(): string {
+  getHostName(): string {
     return '__test__';
   }
 
