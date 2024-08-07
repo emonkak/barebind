@@ -186,7 +186,7 @@ export class RenderContext {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(HookType.Effect, currentHook);
+      ensureHookType<EffectHook>(HookType.PassiveEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
         this._pipeline.passiveEffects.push(new InvokeEffectHook(currentHook));
@@ -196,7 +196,7 @@ export class RenderContext {
       currentHook.dependencies = dependencies;
     } else {
       const hook: EffectHook = {
-        type: HookType.Effect,
+        type: HookType.PassiveEffect,
         callback,
         dependencies,
         cleanup: undefined,
@@ -230,7 +230,7 @@ export class RenderContext {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(HookType.Effect, currentHook);
+      ensureHookType<EffectHook>(HookType.LayoutEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
         this._pipeline.layoutEffects.push(new InvokeEffectHook(currentHook));
@@ -240,7 +240,7 @@ export class RenderContext {
       currentHook.dependencies = dependencies;
     } else {
       const hook: EffectHook = {
-        type: HookType.Effect,
+        type: HookType.LayoutEffect,
         callback,
         dependencies,
         cleanup: undefined,

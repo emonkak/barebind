@@ -125,7 +125,7 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._value.type !== newValue.type) {
       // The component type has been changed, so we need to clean hooks before
       // rendering.
-      this._requestCleanHooks(context);
+      this._cleanHooks();
     }
 
     this._triggerRender(newValue, context);
@@ -134,17 +134,14 @@ export class ComponentBinding<TProps, TData, TContext>
 
   unbind(context: UpdateContext<TContext>): void {
     this._pendingFragment?.unbind(context);
-    this._requestCleanHooks(context);
+    this._cleanHooks();
     this._requestCommit(context);
     this._status = CommitStatus.Unmounting;
   }
 
   disconnect(): void {
     this._pendingFragment?.disconnect();
-
-    cleanHooks(this._hooks);
-
-    this._hooks = [];
+    this._cleanHooks();
     this._status = CommitStatus.Committed;
   }
 
@@ -162,6 +159,19 @@ export class ComponentBinding<TProps, TData, TContext>
     }
 
     this._status = CommitStatus.Committed;
+  }
+
+  private _cleanHooks(): void {
+    for (let i = 0, l = this._hooks.length; i < l; i++) {
+      const hook = this._hooks[i]!;
+      if (
+        hook.type === HookType.PassiveEffect ||
+        hook.type === HookType.LayoutEffect
+      ) {
+        hook.cleanup?.();
+      }
+    }
+    this._hooks.length = 0;
   }
 
   private _triggerRender(
@@ -238,37 +248,9 @@ export class ComponentBinding<TProps, TData, TContext>
     this._memoizedTemplate = template;
   }
 
-  private _requestCleanHooks(context: UpdateContext<TContext>): void {
-    if (this._hooks.some((hook) => hook.type === HookType.Effect)) {
-      context.enqueueLayoutEffect(new CleanHooks(this._hooks));
-      this._hooks = [];
-    }
-  }
-
   private _requestCommit(context: UpdateContext<TContext>): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-  }
-}
-
-function cleanHooks(hooks: Hook[]): void {
-  for (let i = 0, l = hooks.length; i < l; i++) {
-    const hook = hooks[i]!;
-    if (hook.type === HookType.Effect) {
-      hook.cleanup?.();
-    }
-  }
-}
-
-class CleanHooks implements Effect {
-  private _hooks: Hook[];
-
-  constructor(hooks: Hook[]) {
-    this._hooks = hooks;
-  }
-
-  commit() {
-    cleanHooks(this._hooks);
   }
 }

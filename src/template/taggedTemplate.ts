@@ -1,7 +1,6 @@
 import {
   type Binding,
   type ChildNodePart,
-  type Effect,
   type Part,
   PartType,
   type Template,
@@ -268,8 +267,6 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
   }
 
   unbind(context: UpdateContext<unknown>): void {
-    const disconnectingBindings = [];
-
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       const part = binding.part;
@@ -282,14 +279,8 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
         binding.unbind(context);
       } else {
         // Otherwise, it does not need to be unbound.
-        disconnectingBindings.push(binding);
+        binding.disconnect();
       }
-    }
-
-    if (disconnectingBindings.length > 0) {
-      context.enqueueLayoutEffect(
-        new DisconenctBindings(disconnectingBindings),
-      );
     }
   }
 
@@ -324,20 +315,6 @@ export function getMarker(): string {
 
 export function isValidMarker(marker: string): boolean {
   return MARKER_REGEXP.test(marker);
-}
-
-class DisconenctBindings implements Effect {
-  private _bindings: Binding<unknown>[];
-
-  constructor(bindings: Binding<unknown>[]) {
-    this._bindings = bindings;
-  }
-
-  commit() {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.disconnect();
-    }
-  }
 }
 
 function ensureValidMarker(marker: string): void {

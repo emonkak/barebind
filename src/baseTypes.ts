@@ -183,14 +183,15 @@ export type Hook =
   | FinalizerHook;
 
 export enum HookType {
-  Effect,
+  LayoutEffect,
+  PassiveEffect,
   Memo,
   Reducer,
   Finalizer,
 }
 
 export interface EffectHook {
-  type: HookType.Effect;
+  type: HookType.LayoutEffect | HookType.PassiveEffect;
   callback: EffectCallback;
   cleanup: Cleanup | void;
   dependencies: unknown[] | undefined;

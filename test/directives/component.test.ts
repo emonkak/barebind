@@ -615,17 +615,20 @@ describe('ComponentBinding', () => {
       const block = new MockBlock();
       const context = new UpdateContext<RenderContext>(host, updater, block);
 
-      const cleanupFn = vi.fn();
+      const cleanup1Fn = vi.fn();
+      const cleanup2Fn = vi.fn();
       const value1 = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
-          context.useEffect(() => cleanupFn);
+          context.useEffect(() => cleanup1Fn);
+          context.useLayoutEffect(() => cleanup2Fn);
           return new TemplateResult(new MockTemplate(), {});
         },
         {},
       );
       const value2 = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
-          context.useEffect(() => cleanupFn);
+          context.useEffect(() => cleanup1Fn);
+          context.useLayoutEffect(() => cleanup2Fn);
           return new TemplateResult(new MockTemplate(), {});
         },
         {},
@@ -638,7 +641,8 @@ describe('ComponentBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
-      expect(cleanupFn).toHaveBeenCalledOnce();
+      expect(cleanup1Fn).toHaveBeenCalledOnce();
+      expect(cleanup2Fn).toHaveBeenCalledOnce();
     });
   });
 
@@ -688,10 +692,12 @@ describe('ComponentBinding', () => {
       const block = new MockBlock();
       const context = new UpdateContext<RenderContext>(host, updater, block);
 
-      const cleanupFn = vi.fn();
+      const cleanup1Fn = vi.fn();
+      const cleanup2Fn = vi.fn();
       const directive = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
-          context.useEffect(() => cleanupFn);
+          context.useEffect(() => cleanup1Fn);
+          context.useLayoutEffect(() => cleanup2Fn);
           return new TemplateResult(new MockTemplate(), {});
         },
         {},
@@ -708,7 +714,8 @@ describe('ComponentBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(cleanupFn).toHaveBeenCalledOnce();
+      expect(cleanup1Fn).toHaveBeenCalledOnce();
+      expect(cleanup2Fn).toHaveBeenCalledOnce();
     });
   });
 
@@ -740,6 +747,37 @@ describe('ComponentBinding', () => {
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(data, context);
       expect(disconnectSpy).toHaveBeenCalledOnce();
+    });
+
+    it('should clean hooks', () => {
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const context = new UpdateContext<RenderContext>(host, updater, block);
+
+      const cleanup1Fn = vi.fn();
+      const cleanup2Fn = vi.fn();
+      const value = new Component<{}, unknown, RenderContext>(
+        (_props, context) => {
+          context.useEffect(() => cleanup1Fn);
+          context.useLayoutEffect(() => cleanup2Fn);
+          return new TemplateResult(new MockTemplate(), {});
+        },
+        {},
+      );
+      const binding = new ComponentBinding(value, part);
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      binding.disconnect();
+
+      expect(cleanup1Fn).toHaveBeenCalledOnce();
+      expect(cleanup2Fn).toHaveBeenCalledOnce();
     });
 
     it('should cancel mounting', () => {

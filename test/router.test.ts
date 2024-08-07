@@ -505,7 +505,10 @@ describe('integer()', () => {
 function cleanHooks(hooks: Hook[]): void {
   for (let i = 0, l = hooks.length; i < l; i++) {
     const hook = hooks[i]!;
-    if (hook.type === HookType.Effect) {
+    if (
+      hook.type === HookType.PassiveEffect ||
+      hook.type === HookType.LayoutEffect
+    ) {
       hook.cleanup?.();
     }
   }

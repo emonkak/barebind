@@ -263,7 +263,7 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     this._status = CommitStatus.Committed;
   }
 
-  commit() {
+  commit(): void {
     switch (this._status) {
       case CommitStatus.Mounting: {
         const { content } = this._value;
