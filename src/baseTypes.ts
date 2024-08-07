@@ -191,6 +191,7 @@ export enum HookType {
 
 export interface EffectHook {
   type: HookType.Effect;
+  callback: EffectCallback;
   cleanup: Cleanup | void;
   dependencies: unknown[] | undefined;
 }

@@ -189,20 +189,20 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.Effect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._pipeline.passiveEffects.push(
-          new InvokeEffectHook(currentHook, callback),
-        );
+        this._pipeline.passiveEffects.push(new InvokeEffectHook(currentHook));
       }
 
+      currentHook.callback = callback;
       currentHook.dependencies = dependencies;
     } else {
       const hook: EffectHook = {
         type: HookType.Effect,
+        callback,
         dependencies,
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._pipeline.passiveEffects.push(new InvokeEffectHook(hook, callback));
+      this._pipeline.passiveEffects.push(new InvokeEffectHook(hook));
     }
 
     this._hookIndex++;
@@ -233,20 +233,20 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.Effect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._pipeline.layoutEffects.push(
-          new InvokeEffectHook(currentHook, callback),
-        );
+        this._pipeline.layoutEffects.push(new InvokeEffectHook(currentHook));
       }
 
+      currentHook.callback = callback;
       currentHook.dependencies = dependencies;
     } else {
       const hook: EffectHook = {
         type: HookType.Effect,
+        callback,
         dependencies,
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._pipeline.layoutEffects.push(new InvokeEffectHook(hook, callback));
+      this._pipeline.layoutEffects.push(new InvokeEffectHook(hook));
     }
 
     this._hookIndex++;
@@ -342,16 +342,13 @@ export class RenderContext {
 class InvokeEffectHook implements Effect {
   private readonly _hook: EffectHook;
 
-  private readonly _callback: () => void;
-
-  constructor(hook: EffectHook, callback: () => void) {
+  constructor(hook: EffectHook) {
     this._hook = hook;
-    this._callback = callback;
   }
 
   commit(): void {
-    const callback = this._callback;
-    this._hook.cleanup?.();
+    const { cleanup, callback } = this._hook;
+    cleanup?.();
     this._hook.cleanup = callback();
   }
 }
