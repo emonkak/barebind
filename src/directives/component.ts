@@ -239,7 +239,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   private _requestCleanHooks(context: UpdateContext<TContext>): void {
-    if (this._hooks.length > 0) {
+    if (this._hooks.some((hook) => hook.type === HookType.Effect)) {
       context.enqueueLayoutEffect(new CleanHooks(this._hooks));
       this._hooks = [];
     }
