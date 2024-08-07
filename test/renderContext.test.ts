@@ -475,6 +475,28 @@ describe('RenderContext', () => {
     });
   });
 
+  describe('.useId()', () => {
+    it('should return a unique identifier', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const pipeline = createUpdatePipeline();
+
+      let context = new RenderContext(host, updater, block, hooks, pipeline);
+
+      const id1 = context.useId();
+      const id2 = context.useId();
+      expect(id1).toBe(':__test__-1:');
+      expect(id2).toBe(':__test__-2:');
+
+      context = new RenderContext(host, updater, block, hooks, pipeline);
+
+      expect(context.useId()).toBe(id1);
+      expect(context.useId()).toBe(id2);
+    });
+  });
+
   describe('.useLayoutEffect()', () => {
     it('should perform a cleanup function when a new effect is enqueued', () => {
       const host = new MockUpdateHost();

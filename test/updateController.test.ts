@@ -122,6 +122,17 @@ describe('UpdateController', () => {
     });
   });
 
+  describe('.getName()', () => {
+    it('should return the unpredictable host name', () => {
+      expect(
+        new UpdateController({
+          name: '__test__',
+        }).getName(),
+      ).toBe('__test__');
+      expect(new UpdateController().getName()).toMatch(/^[0-9a-z]+$/);
+    });
+  });
+
   describe('.getSVGTemplate()', () => {
     it('should create a SVG template from tokens', () => {
       const host = new UpdateController();
@@ -221,6 +232,16 @@ describe('UpdateController', () => {
       await updater.waitForUpdate();
 
       expect(container.innerHTML).toBe('foo<!--TextDirective-->');
+    });
+  });
+
+  describe('.nextIdentifier()', () => {
+    it('should return a next identifier', async () => {
+      const host = new UpdateController();
+
+      expect(host.nextIdentifier()).toBe(1);
+      expect(host.nextIdentifier()).toBe(2);
+      expect(host.nextIdentifier()).toBe(3);
     });
   });
 });

@@ -28,7 +28,7 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-const MARKER = getMarker();
+const MARKER = getMarker('__test__');
 
 describe('TaggedTemplate', () => {
   describe('.parseHTML()', () => {
@@ -711,13 +711,13 @@ describe('TaggedTemplateFragment', () => {
 
 describe('getMarker()', () => {
   it('returns a valid marker string', () => {
-    expect(isValidMarker(getMarker())).toBe(true);
+    expect(isValidMarker(getMarker('__test__'))).toBe(true);
 
     // force randomUUID() polyfill.
     const originalRandomUUID = crypto.randomUUID;
     try {
       (crypto as any).randomUUID = null;
-      expect(isValidMarker(getMarker())).toBe(true);
+      expect(isValidMarker(getMarker('__test__'))).toBe(true);
     } finally {
       crypto.randomUUID = originalRandomUUID;
     }

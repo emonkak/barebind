@@ -64,11 +64,13 @@ export interface UpdateHost<TContext> {
     tokens: ReadonlyArray<string>,
     data: TData,
   ): Template<TData>;
+  getName(): string;
   getSVGTemplate<TData extends readonly any[]>(
     tokens: ReadonlyArray<string>,
     data: TData,
   ): Template<TData>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
+  nextIdentifier(): number;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
 }
 
@@ -178,6 +180,7 @@ export interface NodePart {
 
 export type Hook =
   | EffectHook
+  | IdentifierHook
   | MemoHook<any>
   | ReducerHook<any, any>
   | FinalizerHook;
@@ -185,6 +188,7 @@ export type Hook =
 export enum HookType {
   LayoutEffect,
   PassiveEffect,
+  Identifier,
   Memo,
   Reducer,
   Finalizer,
@@ -195,6 +199,11 @@ export interface EffectHook {
   callback: EffectCallback;
   cleanup: Cleanup | void;
   dependencies: unknown[] | undefined;
+}
+
+export interface IdentifierHook {
+  type: HookType.Identifier;
+  id: number;
 }
 
 export interface MemoHook<TResult> {

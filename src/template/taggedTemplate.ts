@@ -56,9 +56,7 @@ export interface PropertyHole {
 //   case, the tag is treated as a comment.
 //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
 // - A marker is lowercase to match attribute names.
-const MARKER_REGEXP = /^\?[0-9a-z]{14}\?$/;
-
-const RANDOM_STRING_CHARACTERS = 'abcdefghijklmnopqrstuvwxyz0123456789';
+const MARKER_REGEXP = /^\?{2}[0-9a-z_-]+\?{2}$/;
 
 export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
   implements Template<TData>
@@ -309,8 +307,8 @@ export class TaggedTemplateFragment<TData extends readonly any[]>
   }
 }
 
-export function getMarker(): string {
-  return '?' + getRandomString(14) + '?';
+export function getMarker(secretString: string): string {
+  return '??' + secretString + '??';
 }
 
 export function isValidMarker(marker: string): boolean {
@@ -321,13 +319,6 @@ function ensureValidMarker(marker: string): void {
   if (!isValidMarker(marker)) {
     throw new Error(`The marker is in an invalid format: ${marker}`);
   }
-}
-
-function getRandomString(length: number): string {
-  return Array.from(
-    crypto.getRandomValues(new Uint8Array(length)),
-    (byte) => RANDOM_STRING_CHARACTERS[byte % RANDOM_STRING_CHARACTERS.length],
-  ).join('');
 }
 
 function parseAttribtues(

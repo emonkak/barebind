@@ -19,6 +19,7 @@ import { Root } from './root.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 
 export interface UpdateControllerOptions {
+  name?: string;
   constants?: Map<unknown, unknown>;
 }
 
@@ -35,9 +36,15 @@ export class UpdateController implements UpdateHost<RenderContext> {
     TaggedTemplate<readonly any[]>
   > = new WeakMap();
 
-  private readonly _marker: string = getMarker();
+  private _name: string;
 
-  constructor({ constants = new Map() }: UpdateControllerOptions = {}) {
+  private _idCounter = 0;
+
+  constructor({
+    name = getRandomString(8),
+    constants = new Map(),
+  }: UpdateControllerOptions = {}) {
+    this._name = name;
     this._constants = constants;
   }
 
@@ -76,25 +83,16 @@ export class UpdateController implements UpdateHost<RenderContext> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
-      template = TaggedTemplate.parseHTML(tokens, data, this._marker);
+      const marker = getMarker(this._name);
+      template = TaggedTemplate.parseHTML(tokens, data, marker);
       this._cachedTemplates.set(tokens, template);
     }
 
     return template;
   }
 
-  getSVGTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
-    data: TData,
-  ): TaggedTemplate<TData> {
-    let template = this._cachedTemplates.get(tokens);
-
-    if (template === undefined) {
-      template = TaggedTemplate.parseSVG(tokens, data, this._marker);
-      this._cachedTemplates.set(tokens, template);
-    }
-
-    return template;
+  getName(): string {
+    return this._name;
   }
 
   getScopedValue(
@@ -110,6 +108,21 @@ export class UpdateController implements UpdateHost<RenderContext> {
       currentScope = currentScope.parent;
     }
     return this._constants.get(key);
+  }
+
+  getSVGTemplate<TData extends readonly any[]>(
+    tokens: ReadonlyArray<string>,
+    data: TData,
+  ): TaggedTemplate<TData> {
+    let template = this._cachedTemplates.get(tokens);
+
+    if (template === undefined) {
+      const marker = getMarker(this._name);
+      template = TaggedTemplate.parseSVG(tokens, data, marker);
+      this._cachedTemplates.set(tokens, template);
+    }
+
+    return template;
   }
 
   mount<TValue>(
@@ -141,6 +154,10 @@ export class UpdateController implements UpdateHost<RenderContext> {
     return binding;
   }
 
+  nextIdentifier(): number {
+    return ++this._idCounter;
+  }
+
   setScopedValue(
     key: unknown,
     value: unknown,
@@ -155,6 +172,12 @@ export class UpdateController implements UpdateHost<RenderContext> {
       this._blockScopes.set(block, namespace);
     }
   }
+}
+
+function getRandomString(length: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
+    (byte % 36).toString(36),
+  ).join('');
 }
 
 function isContinuousEvent(event: Event): boolean {

@@ -7,6 +7,7 @@ import {
   type FinalizerHook,
   type Hook,
   HookType,
+  type IdentifierHook,
   type MemoHook,
   type ReducerHook,
   type RefObject,
@@ -224,6 +225,24 @@ export class RenderContext {
       const currentHandler = handlerRef.current!;
       return currentHandler.call(this, args);
     }, []);
+  }
+
+  useId(): string {
+    let currentHook = this._hooks[this._hookIndex];
+
+    if (currentHook !== undefined) {
+      ensureHookType<IdentifierHook>(HookType.Identifier, currentHook);
+    } else {
+      currentHook = {
+        type: HookType.Identifier,
+        id: this._host.nextIdentifier(),
+      };
+      this._hooks.push(currentHook);
+    }
+
+    this._hookIndex++;
+
+    return ':' + this._host.getName() + '-' + currentHook.id + ':';
   }
 
   useLayoutEffect(callback: EffectCallback, dependencies?: unknown[]): void {

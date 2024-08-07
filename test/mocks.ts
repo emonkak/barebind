@@ -142,6 +142,8 @@ export class MockTemplateFragment<TData, TContext>
 }
 
 export class MockUpdateHost implements UpdateHost<RenderContext> {
+  private _idCounter = 0;
+
   beginRender(
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
@@ -172,6 +174,10 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
     return new MockTemplate();
   }
 
+  getName(): string {
+    return '__test__';
+  }
+
   getSVGTemplate<TData extends readonly any[]>(
     _tokens: ReadonlyArray<string>,
     _data: TData,
@@ -184,6 +190,10 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
     _block: Block<RenderContext> | null = null,
   ): unknown {
     return undefined;
+  }
+
+  nextIdentifier(): number {
+    return ++this._idCounter;
   }
 
   setScopedValue(
