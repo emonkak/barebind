@@ -265,12 +265,12 @@ export class UpdateContext<TContext> {
     this._pipeline.blocks.push(block);
   }
 
-  enqueueLayoutEffect(effect: Effect): void {
-    this._pipeline.layoutEffects.push(effect);
-  }
-
   enqueueMutationEffect(effect: Effect): void {
     this._pipeline.mutationEffects.push(effect);
+  }
+
+  enqueueLayoutEffect(effect: Effect): void {
+    this._pipeline.layoutEffects.push(effect);
   }
 
   enqueuePassiveEffect(effect: Effect): void {

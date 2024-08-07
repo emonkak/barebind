@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createUpdatePipeline } from '../../src/baseTypes.js';
+import { CommitPhase, createUpdatePipeline } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '../mocks.js';
 
@@ -83,8 +83,11 @@ describe('SyncUpdater', () => {
       await updater.waitForUpdate();
 
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
+      expect(mutationEffect.commit).toHaveBeenCalledWith(CommitPhase.Mutation);
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
+      expect(layoutEffect.commit).toHaveBeenCalledWith(CommitPhase.Layout);
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
+      expect(passiveEffect.commit).toHaveBeenCalledWith(CommitPhase.Passive);
       expect(updateSpy).toHaveBeenCalledOnce();
     });
 
@@ -135,8 +138,11 @@ describe('SyncUpdater', () => {
       await updater.waitForUpdate();
 
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
+      expect(mutationEffect.commit).toHaveBeenCalledWith(CommitPhase.Mutation);
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
+      expect(layoutEffect.commit).toHaveBeenCalledWith(CommitPhase.Layout);
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
+      expect(passiveEffect.commit).toHaveBeenCalledWith(CommitPhase.Passive);
     });
   });
 });

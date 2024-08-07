@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createUpdatePipeline } from '../../src/baseTypes.js';
+import { CommitPhase, createUpdatePipeline } from '../../src/baseTypes.js';
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
 import { MockBlock, MockScheduler, MockUpdateHost } from '../mocks.js';
 
@@ -115,8 +115,11 @@ describe('ConcurrentUpdater', () => {
       await updater.waitForUpdate();
 
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
+      expect(mutationEffect.commit).toHaveBeenCalledWith(CommitPhase.Mutation);
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
+      expect(layoutEffect.commit).toHaveBeenCalledWith(CommitPhase.Layout);
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
+      expect(passiveEffect.commit).toHaveBeenCalledWith(CommitPhase.Passive);
       expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
       expect(updateSpy).toHaveBeenCalledOnce();
     });
