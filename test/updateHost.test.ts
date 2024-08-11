@@ -195,13 +195,13 @@ describe('UpdateHost', () => {
       const value = new TextDirective('foo');
 
       const directiveSpy = vi.spyOn(value, directiveTag);
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
 
       const binding = host.mount(value, container, updater);
 
       expect(binding).toBeInstanceOf(TextBinding);
       expect(directiveSpy).toHaveBeenCalledOnce();
-      expect(scheduleUpdateSpy).toHaveBeenCalled();
+      expect(flushUpdateSpy).toHaveBeenCalled();
 
       await updater.waitForUpdate();
 
@@ -220,14 +220,14 @@ describe('UpdateHost', () => {
         .mockImplementation(function (this: typeof value, part, context) {
           return new Root(new TextBinding(this, part), context);
         });
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
 
       const binding = host.mount(value, container, updater);
 
       expect(binding).toBeInstanceOf(Root);
       expect(binding.value).toBe(value);
       expect(directiveSpy).toHaveBeenCalledOnce();
-      expect(scheduleUpdateSpy).toHaveBeenCalled();
+      expect(flushUpdateSpy).toHaveBeenCalled();
 
       await updater.waitForUpdate();
 

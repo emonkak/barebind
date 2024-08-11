@@ -149,7 +149,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
 
     binding.connect(updateContext);
 
-    updateContext.scheduleUpdate();
+    updateContext.flushUpdate();
 
     return binding;
   }
