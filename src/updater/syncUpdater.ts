@@ -1,19 +1,19 @@
 import {
   CommitPhase,
   UpdateContext,
-  type UpdatePipeline,
+  type UpdateQueue,
   type UpdateRuntime,
   type Updater,
 } from '../baseTypes.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
-  private readonly _pendingPipelines: UpdatePipeline<TContext>[] = [];
+  private readonly _pendingPipelines: UpdateQueue<TContext>[] = [];
 
   flushUpdate(
-    pipeline: UpdatePipeline<TContext>,
+    queue: UpdateQueue<TContext>,
     host: UpdateRuntime<TContext>,
   ): void {
-    const { blocks, mutationEffects, layoutEffects, passiveEffects } = pipeline;
+    const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;
 
     try {
       // block.length may be grow.
@@ -24,27 +24,27 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
             block.cancelUpdate();
             continue;
           }
-          const context = new UpdateContext(host, this, block, pipeline);
+          const context = new UpdateContext(host, this, block, queue);
           block.update(context);
         } while (++i < l);
       }
     } finally {
-      pipeline.blocks.length = 0;
+      queue.blocks.length = 0;
     }
 
     if (mutationEffects.length > 0) {
       host.flushEffects(mutationEffects, CommitPhase.Mutation);
-      pipeline.mutationEffects.length = 0;
+      queue.mutationEffects.length = 0;
     }
 
     if (layoutEffects.length > 0) {
       host.flushEffects(layoutEffects, CommitPhase.Layout);
-      pipeline.layoutEffects.length = 0;
+      queue.layoutEffects.length = 0;
     }
 
     if (passiveEffects.length > 0) {
       host.flushEffects(passiveEffects, CommitPhase.Passive);
-      pipeline.passiveEffects.length = 0;
+      queue.passiveEffects.length = 0;
     }
   }
 
@@ -53,7 +53,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   }
 
   scheduleUpdate(
-    pipeline: UpdatePipeline<TContext>,
+    queue: UpdateQueue<TContext>,
     host: UpdateRuntime<TContext>,
   ): void {
     if (this._pendingPipelines.length === 0) {
@@ -64,7 +64,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
         this._pendingPipelines.length = 0;
       });
     }
-    this._pendingPipelines.push(pipeline);
+    this._pendingPipelines.push(queue);
   }
 
   waitForUpdate(): Promise<void> {

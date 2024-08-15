@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CommitPhase, createUpdatePipeline } from '../../src/baseTypes.js';
+import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '../mocks.js';
 
@@ -10,11 +10,11 @@ describe('SyncUpdater', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
 
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate(pipeline, host);
+      updater.scheduleUpdate(queue, host);
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
@@ -44,12 +44,12 @@ describe('SyncUpdater', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
 
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      updater.scheduleUpdate(pipeline, host);
-      updater.scheduleUpdate(pipeline, host);
+      updater.scheduleUpdate(queue, host);
+      updater.scheduleUpdate(queue, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -60,7 +60,7 @@ describe('SyncUpdater', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
@@ -75,8 +75,8 @@ describe('SyncUpdater', () => {
         });
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      pipeline.blocks.push(block);
-      updater.scheduleUpdate(pipeline, host);
+      queue.blocks.push(block);
+      updater.scheduleUpdate(queue, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -95,7 +95,7 @@ describe('SyncUpdater', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const block = new MockBlock();
 
       const updateSpy = vi.spyOn(block, 'update');
@@ -105,8 +105,8 @@ describe('SyncUpdater', () => {
       const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      pipeline.blocks.push(block);
-      updater.scheduleUpdate(pipeline, host);
+      queue.blocks.push(block);
+      updater.scheduleUpdate(queue, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -121,17 +121,17 @@ describe('SyncUpdater', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
 
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      pipeline.mutationEffects.push(mutationEffect);
-      pipeline.layoutEffects.push(layoutEffect);
-      pipeline.passiveEffects.push(passiveEffect);
-      updater.scheduleUpdate(pipeline, host);
+      queue.mutationEffects.push(mutationEffect);
+      queue.layoutEffects.push(layoutEffect);
+      queue.passiveEffects.push(passiveEffect);
+      updater.scheduleUpdate(queue, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 

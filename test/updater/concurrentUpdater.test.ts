@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CommitPhase, createUpdatePipeline } from '../../src/baseTypes.js';
+import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
 import { MockBlock, MockScheduler, MockUpdateHost } from '../mocks.js';
 
@@ -19,13 +19,13 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
 
-      pipeline.blocks.push(new MockBlock());
+      queue.blocks.push(new MockBlock());
 
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate(pipeline, host);
+      updater.scheduleUpdate(queue, host);
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
@@ -60,10 +60,10 @@ describe('ConcurrentUpdater', () => {
           scheduler,
         });
 
-        const pipeline = createUpdatePipeline();
+        const queue = createUpdateQueue();
         const block = new MockBlock();
 
-        pipeline.blocks.push(block);
+        queue.blocks.push(block);
 
         const getPrioritySpy = vi
           .spyOn(block, 'priority', 'get')
@@ -71,7 +71,7 @@ describe('ConcurrentUpdater', () => {
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
         const updateSpy = vi.spyOn(block, 'update');
 
-        updater.scheduleUpdate(pipeline, host);
+        updater.scheduleUpdate(queue, host);
 
         expect(getPrioritySpy).toHaveBeenCalledOnce();
         expect(requestCallbackSpy).toHaveBeenCalledOnce();
@@ -93,7 +93,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
@@ -109,8 +109,8 @@ describe('ConcurrentUpdater', () => {
           context.scheduleUpdate();
         });
 
-      pipeline.blocks.push(block);
-      updater.scheduleUpdate(pipeline, host);
+      queue.blocks.push(block);
+      updater.scheduleUpdate(queue, host);
 
       await updater.waitForUpdate();
 
@@ -131,15 +131,15 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
-      pipeline.mutationEffects.push(mutationEffect);
-      pipeline.layoutEffects.push(layoutEffect);
-      updater.scheduleUpdate(pipeline, host);
+      queue.mutationEffects.push(mutationEffect);
+      queue.layoutEffects.push(layoutEffect);
+      updater.scheduleUpdate(queue, host);
 
       await updater.waitForUpdate();
 
@@ -158,13 +158,13 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const passiveEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
-      pipeline.passiveEffects.push(passiveEffect);
-      updater.scheduleUpdate(pipeline, host);
+      queue.passiveEffects.push(passiveEffect);
+      updater.scheduleUpdate(queue, host);
 
       await updater.waitForUpdate();
 
@@ -182,7 +182,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const block = new MockBlock();
 
       const updateSpy = vi.spyOn(block, 'update');
@@ -191,8 +191,8 @@ describe('ConcurrentUpdater', () => {
         .mockReturnValue(false);
       const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
 
-      pipeline.blocks.push(block);
-      updater.scheduleUpdate(pipeline, host);
+      queue.blocks.push(block);
+      updater.scheduleUpdate(queue, host);
 
       await updater.waitForUpdate();
 
@@ -201,14 +201,14 @@ describe('ConcurrentUpdater', () => {
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
-    it('should block an update while the update pipeline is running', async () => {
+    it('should block an update while the update queue is running', async () => {
       const host = new MockUpdateHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const block = new MockBlock();
 
       const updateSpy = vi
@@ -217,8 +217,8 @@ describe('ConcurrentUpdater', () => {
           context.scheduleUpdate();
         });
 
-      pipeline.blocks.push(block);
-      updater.scheduleUpdate(pipeline, host);
+      queue.blocks.push(block);
+      updater.scheduleUpdate(queue, host);
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
@@ -235,7 +235,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
       const block1 = new MockBlock();
       const block2 = new MockBlock();
       let ticks = 0;
@@ -253,9 +253,9 @@ describe('ConcurrentUpdater', () => {
       const update1Spy = vi.spyOn(block1, 'update');
       const update2Spy = vi.spyOn(block1, 'update');
 
-      pipeline.blocks.push(block1);
-      pipeline.blocks.push(block2);
-      updater.scheduleUpdate(pipeline, host);
+      queue.blocks.push(block1);
+      queue.blocks.push(block2);
+      updater.scheduleUpdate(queue, host);
 
       await updater.waitForUpdate();
 

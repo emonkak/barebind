@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { type Hook, HookType, createUpdatePipeline } from '../src/baseTypes.js';
+import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext } from '../src/renderContext.js';
 import {
   RelativeURL,
@@ -166,16 +166,16 @@ describe('browserLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
 
     history.replaceState(state, '', '/articles/123');
 
-    const context = new RenderContext(host, updater, block, hooks, pipeline);
+    const context = new RenderContext(host, updater, block, hooks, queue);
     const [locationState] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(window.location.pathname).toBe('/articles/123');
     expect(locationState.url.pathname).toBe('/articles/123');
@@ -187,15 +187,15 @@ describe('browserLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
 
-    let context = new RenderContext(host, updater, block, hooks, pipeline);
+    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, historyActions] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     historyActions.push(new RelativeURL('/articles/123'));
     expect(window.location.pathname).toBe('/articles/123');
@@ -207,10 +207,10 @@ describe('browserLocation', () => {
     expect(history.state).toStrictEqual(state);
     expect(pushStateSpy).toHaveBeenCalledTimes(2);
 
-    context = new RenderContext(host, updater, block, hooks, pipeline);
+    context = new RenderContext(host, updater, block, hooks, queue);
     [locationState, historyActions] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(locationState.url.pathname).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
@@ -221,15 +221,15 @@ describe('browserLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    let context = new RenderContext(host, updater, block, hooks, pipeline);
+    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, historyActions] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     historyActions.replace(new RelativeURL('/articles/123'));
     expect(window.location.pathname).toBe('/articles/123');
@@ -241,10 +241,10 @@ describe('browserLocation', () => {
     expect(history.state).toStrictEqual(state);
     expect(replaceStateSpy).toHaveBeenCalledTimes(2);
 
-    context = new RenderContext(host, updater, block, hooks, pipeline);
+    context = new RenderContext(host, updater, block, hooks, queue);
     [locationState, historyActions] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(locationState.url.pathname).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
@@ -255,25 +255,25 @@ describe('browserLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
-    let context = new RenderContext(host, updater, block, hooks, pipeline);
+    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     history.replaceState(state, '', '/articles/123');
     dispatchEvent(new PopStateEvent('popstate', { state: state }));
 
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
-    context = new RenderContext(host, updater, block, hooks, pipeline);
+    context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(window.location.pathname).toBe('/articles/123');
     expect(locationState.url.pathname).toBe('/articles/123');
@@ -290,9 +290,9 @@ describe('browserLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
-    const context = new RenderContext(host, updater, block, hooks, pipeline);
+    const context = new RenderContext(host, updater, block, hooks, queue);
     const [locationState, history] = context.use(browserLocation);
 
     expect(context.use(currentLocation)).toStrictEqual([
@@ -301,7 +301,7 @@ describe('browserLocation', () => {
     ]);
 
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
   });
 });
 
@@ -311,9 +311,9 @@ describe('currentLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
-    const context = new RenderContext(host, updater, block, hooks, pipeline);
+    const context = new RenderContext(host, updater, block, hooks, queue);
 
     expect(() => context.use(currentLocation)).toThrow(
       'A context value for the current location does not exist,',
@@ -335,16 +335,16 @@ describe('hashLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
 
     history.replaceState(state, '', '#/articles/123');
 
-    const context = new RenderContext(host, updater, block, hooks, pipeline);
+    const context = new RenderContext(host, updater, block, hooks, queue);
     const [locationState] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(window.location.hash).toBe('#/articles/123');
     expect(locationState.url.pathname).toBe('/articles/123');
@@ -355,15 +355,15 @@ describe('hashLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
 
-    let context = new RenderContext(host, updater, block, hooks, pipeline);
+    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, historyActions] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     historyActions.push(new RelativeURL('/articles/123'));
     expect(window.location.hash).toBe('#/articles/123');
@@ -375,10 +375,10 @@ describe('hashLocation', () => {
     expect(history.state).toStrictEqual(state);
     expect(pushStateSpy).toHaveBeenCalledTimes(2);
 
-    context = new RenderContext(host, updater, block, hooks, pipeline);
+    context = new RenderContext(host, updater, block, hooks, queue);
     [locationState, historyActions] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(locationState.url.pathname).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
@@ -389,15 +389,15 @@ describe('hashLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    let context = new RenderContext(host, updater, block, hooks, pipeline);
+    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, historyActions] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     historyActions.replace(new RelativeURL('/articles/123'));
     expect(window.location.hash).toBe('#/articles/123');
@@ -409,10 +409,10 @@ describe('hashLocation', () => {
     expect(history.state).toStrictEqual(state);
     expect(replaceStateSpy).toHaveBeenCalledTimes(2);
 
-    context = new RenderContext(host, updater, block, hooks, pipeline);
+    context = new RenderContext(host, updater, block, hooks, queue);
     [locationState, historyActions] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(locationState.url.pathname).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
@@ -423,15 +423,15 @@ describe('hashLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
-    let context = new RenderContext(host, updater, block, hooks, pipeline);
+    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     history.replaceState(state, '', '#/articles/123');
     dispatchEvent(
@@ -443,10 +443,10 @@ describe('hashLocation', () => {
 
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
-    context = new RenderContext(host, updater, block, hooks, pipeline);
+    context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
 
     expect(window.location.hash).toBe('#/articles/123');
     expect(locationState.url.pathname).toBe('/articles/123');
@@ -468,9 +468,9 @@ describe('hashLocation', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const pipeline = createUpdatePipeline();
+    const queue = createUpdateQueue();
 
-    const context = new RenderContext(host, updater, block, hooks, pipeline);
+    const context = new RenderContext(host, updater, block, hooks, queue);
     const [locationState, historyActions] = context.use(hashLocation);
 
     expect(context.use(currentLocation)).toStrictEqual([
@@ -479,7 +479,7 @@ describe('hashLocation', () => {
     ]);
 
     context.finalize();
-    updater.flushUpdate(pipeline, host);
+    updater.flushUpdate(queue, host);
   });
 });
 

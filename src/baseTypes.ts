@@ -43,7 +43,7 @@ export type ComponentType<TProps, TData, TContext> = (
   context: TContext,
 ) => TemplateDirective<TData, TContext>;
 
-export interface UpdatePipeline<TContext> {
+export interface UpdateQueue<TContext> {
   blocks: Block<TContext>[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
@@ -55,7 +55,7 @@ export interface UpdateRuntime<TContext> {
     updater: Updater<TContext>,
     block: Block<TContext>,
     hooks: Hook[],
-    pipeline: UpdatePipeline<TContext>,
+    queue: UpdateQueue<TContext>,
   ): TContext;
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
@@ -77,11 +77,11 @@ export interface UpdateRuntime<TContext> {
 export interface Updater<TContext> {
   isScheduled(): boolean;
   flushUpdate(
-    pipeline: UpdatePipeline<TContext>,
+    queue: UpdateQueue<TContext>,
     host: UpdateRuntime<TContext>,
   ): void;
   scheduleUpdate(
-    pipeline: UpdatePipeline<TContext>,
+    queue: UpdateQueue<TContext>,
     host: UpdateRuntime<TContext>,
   ): void;
   waitForUpdate(): Promise<void>;
@@ -241,18 +241,18 @@ export class UpdateContext<TContext> {
 
   private _block: Block<TContext>;
 
-  private _pipeline: UpdatePipeline<TContext>;
+  private _queue: UpdateQueue<TContext>;
 
   constructor(
     host: UpdateRuntime<TContext>,
     updater: Updater<TContext>,
     block: Block<TContext>,
-    pipeline: UpdatePipeline<TContext> = createUpdatePipeline(),
+    queue: UpdateQueue<TContext> = createUpdateQueue(),
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
-    this._pipeline = pipeline;
+    this._queue = queue;
   }
 
   get host(): UpdateRuntime<TContext> {
@@ -267,37 +267,37 @@ export class UpdateContext<TContext> {
     return this._block;
   }
 
-  get pipeline(): UpdatePipeline<TContext> {
-    return this._pipeline;
+  get queue(): UpdateQueue<TContext> {
+    return this._queue;
   }
 
   enqueueBlock(block: Block<TContext>): void {
-    this._pipeline.blocks.push(block);
+    this._queue.blocks.push(block);
   }
 
   enqueueMutationEffect(effect: Effect): void {
-    this._pipeline.mutationEffects.push(effect);
+    this._queue.mutationEffects.push(effect);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
-    this._pipeline.layoutEffects.push(effect);
+    this._queue.layoutEffects.push(effect);
   }
 
   enqueuePassiveEffect(effect: Effect): void {
-    this._pipeline.passiveEffects.push(effect);
+    this._queue.passiveEffects.push(effect);
   }
 
   flushUpdate(): void {
-    this._updater.flushUpdate(this._pipeline, this._host);
+    this._updater.flushUpdate(this._queue, this._host);
   }
 
   isPending(): boolean {
     return (
       this._updater.isScheduled() ||
-      this._pipeline.blocks.length > 0 ||
-      this._pipeline.mutationEffects.length > 0 ||
-      this._pipeline.layoutEffects.length > 0 ||
-      this._pipeline.passiveEffects.length > 0
+      this._queue.blocks.length > 0 ||
+      this._queue.mutationEffects.length > 0 ||
+      this._queue.layoutEffects.length > 0 ||
+      this._queue.passiveEffects.length > 0
     );
   }
 
@@ -310,7 +310,7 @@ export class UpdateContext<TContext> {
       this._updater,
       this._block,
       hooks,
-      this._pipeline,
+      this._queue,
     );
     const result = type(props, context);
 
@@ -320,16 +320,16 @@ export class UpdateContext<TContext> {
   }
 
   scheduleUpdate(): void {
-    this._updater.scheduleUpdate(this._pipeline, this._host);
+    this._updater.scheduleUpdate(this._queue, this._host);
   }
 }
 
-export function createUpdatePipeline<TContext>(
+export function createUpdateQueue<TContext>(
   blocks: Block<TContext>[] = [],
   mutationEffects: Effect[] = [],
   layoutEffects: Effect[] = [],
   passiveEffects: Effect[] = [],
-): UpdatePipeline<TContext> {
+): UpdateQueue<TContext> {
   return {
     blocks,
     mutationEffects,

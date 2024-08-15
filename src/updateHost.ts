@@ -8,7 +8,7 @@ import {
   PartType,
   type TaskPriority,
   UpdateContext,
-  type UpdatePipeline,
+  type UpdateQueue,
   type UpdateRuntime,
   type Updater,
   nameOf,
@@ -52,9 +52,9 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     hooks: Hook[],
-    pipeline: UpdatePipeline<RenderContext>,
+    queue: UpdateQueue<RenderContext>,
   ): RenderContext {
-    return new RenderContext(this, updater, block, hooks, pipeline);
+    return new RenderContext(this, updater, block, hooks, queue);
   }
 
   finishRender(context: RenderContext): void {

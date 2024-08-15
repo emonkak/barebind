@@ -5,7 +5,7 @@ import {
   HookType,
   PartType,
   UpdateContext,
-  createUpdatePipeline,
+  createUpdateQueue,
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
@@ -81,15 +81,15 @@ describe('Signal', () => {
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const hooks: Hook[] = [];
-      const pipeline = createUpdatePipeline();
-      const context = new RenderContext(host, updater, block, hooks, pipeline);
+      const queue = createUpdateQueue();
+      const context = new RenderContext(host, updater, block, hooks, queue);
 
       const signal = new Atom('foo');
       const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       expect(context.use(signal)).toBe('foo');
       context.finalize();
-      updater.flushUpdate(pipeline, host);
+      updater.flushUpdate(queue, host);
 
       expect(requstUpdateSpy).not.toHaveBeenCalled();
 

@@ -5,7 +5,7 @@ import {
   type Hook,
   HookType,
   PartType,
-  createUpdatePipeline,
+  createUpdateQueue,
   directiveTag,
 } from '../src/baseTypes.js';
 import { Root } from '../src/root.js';
@@ -40,9 +40,9 @@ describe('UpdateHost', () => {
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const hooks: Hook[] = [];
-      const pipeline = createUpdatePipeline();
+      const queue = createUpdateQueue();
 
-      const context = host.beginRender(updater, block, hooks, pipeline);
+      const context = host.beginRender(updater, block, hooks, queue);
 
       host.finishRender(context);
 

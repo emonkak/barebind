@@ -564,7 +564,7 @@ describe('Root', () => {
           host,
           updater,
           block: block,
-          pipeline: context.pipeline,
+          queue: context.queue,
         }),
       );
     });

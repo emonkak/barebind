@@ -13,7 +13,7 @@ import {
   type RefObject,
   type TaskPriority,
   UpdateContext,
-  type UpdatePipeline,
+  type UpdateQueue,
   type UpdateRuntime,
   type Updater,
 } from './baseTypes.js';
@@ -58,7 +58,7 @@ export class RenderContext {
 
   private readonly _hooks: Hook[];
 
-  private readonly _pipeline: UpdatePipeline<RenderContext>;
+  private readonly _queue: UpdateQueue<RenderContext>;
 
   private _hookIndex = 0;
 
@@ -67,13 +67,13 @@ export class RenderContext {
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     hooks: Hook[],
-    pipeline: UpdatePipeline<RenderContext>,
+    queue: UpdateQueue<RenderContext>,
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
     this._hooks = hooks;
-    this._pipeline = pipeline;
+    this._queue = queue;
   }
 
   childNode<T>(value: T): TemplateResult<T, RenderContext> {
@@ -135,7 +135,7 @@ export class RenderContext {
       this._host,
       this._updater,
       this._block,
-      this._pipeline,
+      this._queue,
     );
     this._block.requestUpdate(
       priority ?? this._host.getCurrentPriority(),
@@ -190,7 +190,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.PassiveEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._pipeline.passiveEffects.push(new InvokeEffectHook(currentHook));
+        this._queue.passiveEffects.push(new InvokeEffectHook(currentHook));
       }
 
       currentHook.callback = callback;
@@ -203,7 +203,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._pipeline.passiveEffects.push(new InvokeEffectHook(hook));
+      this._queue.passiveEffects.push(new InvokeEffectHook(hook));
     }
 
     this._hookIndex++;
@@ -252,7 +252,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.LayoutEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._pipeline.layoutEffects.push(new InvokeEffectHook(currentHook));
+        this._queue.layoutEffects.push(new InvokeEffectHook(currentHook));
       }
 
       currentHook.callback = callback;
@@ -265,7 +265,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._pipeline.layoutEffects.push(new InvokeEffectHook(hook));
+      this._queue.layoutEffects.push(new InvokeEffectHook(hook));
     }
 
     this._hookIndex++;
