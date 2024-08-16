@@ -3,7 +3,7 @@ import {
   type Atom,
   classMap,
   component,
-  condition,
+  ifElse,
 } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
@@ -51,7 +51,7 @@ export function TodoItem(
       class=${classMap({ completed: todo.completed })}
       data-testid="todo-item">
       <div class="view">
-        <${condition(
+        <${ifElse(
           isEditing,
           () =>
             component(TodoInput, {

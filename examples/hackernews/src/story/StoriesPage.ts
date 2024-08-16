@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { component, condition, list } from '@emonkak/ebit/directives.js';
+import { component, ifElse, list } from '@emonkak/ebit/directives.js';
 import { navigateHandler } from '@emonkak/ebit/router.js';
 
 import { StoryState, type StoryType } from '../state.js';
@@ -31,7 +31,7 @@ export function StoriesPage(
   return context.html`
     <div class="story-view">
       <div class="story-list-nav">
-        <${condition(
+        <${ifElse(
           !isLoading && page > 1,
           () => context.html`
             <a
@@ -50,7 +50,7 @@ export function StoriesPage(
           `,
         )}>
         <span>page ${page}</span>
-        <${condition(
+        <${ifElse(
           !isLoading && stories.length >= STORIES_PER_PAGE,
           () => context.html`
             <a

@@ -12,65 +12,63 @@ import { resolveBinding } from '../binding.js';
 import { ensureDirective } from '../error.js';
 import { NoValue } from './noValue.js';
 
-export function condition<TTrue, TFalse>(
+export function ifElse<TTrue, TFalse>(
   condition: boolean,
-  trueBranch: () => TTrue,
-  falseBranch: () => TFalse,
-): Condition<TTrue, TFalse> {
-  return new Condition(condition, trueBranch, falseBranch);
+  trueCase: () => TTrue,
+  falseCase: () => TFalse,
+): IfElse<TTrue, TFalse> {
+  return new IfElse(condition, trueCase, falseCase);
 }
 
 export function when<TTrue>(
   condition: boolean,
-  trueBranch: () => TTrue,
-): Condition<TTrue, NoValue> {
-  return new Condition(condition, trueBranch, () => NoValue.instance);
+  trueCase: () => TTrue,
+): IfElse<TTrue, NoValue> {
+  return new IfElse(condition, trueCase, () => NoValue.instance);
 }
 
 export function unless<TFalse>(
   condition: boolean,
-  falseBranch: () => TFalse,
-): Condition<NoValue, TFalse> {
-  return new Condition(condition, () => NoValue.instance, falseBranch);
+  falseCase: () => TFalse,
+): IfElse<NoValue, TFalse> {
+  return new IfElse(condition, () => NoValue.instance, falseCase);
 }
 
-export class Condition<TTrue, TFalse>
-  implements Directive<Condition<TTrue, TFalse>>
-{
+export class IfElse<TTrue, TFalse> implements Directive<IfElse<TTrue, TFalse>> {
   private readonly _condition: boolean;
 
-  private readonly _trueBranch: () => TTrue;
+  private readonly _trueCase: () => TTrue;
 
-  private readonly _falseBranch: () => TFalse;
+  private readonly _falseCase: () => TFalse;
 
   constructor(
     condition: boolean,
-    trueBranch: () => TTrue,
-    falseBranch: () => TFalse,
+    trueCase: () => TTrue,
+    falseCase: () => TFalse,
   ) {
     this._condition = condition;
-    this._trueBranch = trueBranch;
-    this._falseBranch = falseBranch;
+    this._trueCase = trueCase;
+    this._falseCase = falseCase;
   }
 
   get condition(): boolean {
     return this._condition;
   }
 
-  get trueBranch(): () => TTrue {
-    return this._trueBranch;
+  get trueCase(): () => TTrue {
+    return this._trueCase;
   }
 
-  get falseBranch(): () => TFalse {
-    return this._falseBranch;
+  get falseCase(): () => TFalse {
+    return this._falseCase;
   }
 
   get [nameTag](): string {
     return (
-      'Condition(' +
+      'IfElse(' +
       this._condition +
       ', ' +
-      nameOf(this._condition ? this._trueBranch() : this._falseBranch()) +
+      nameOf(this._condition ? this._trueCase() : this._falseCase()) +
       ')'
     );
   }
@@ -78,37 +76,37 @@ export class Condition<TTrue, TFalse>
   [directiveTag](
     part: Part,
     context: DirectiveContext,
-  ): ConditionBinding<TTrue, TFalse> {
-    return new ConditionBinding<TTrue, TFalse>(this, part, context);
+  ): IfElseBinding<TTrue, TFalse> {
+    return new IfElseBinding<TTrue, TFalse>(this, part, context);
   }
 }
 
-export class ConditionBinding<TTrue, TFalse>
-  implements Binding<Condition<TTrue, TFalse>>
+export class IfElseBinding<TTrue, TFalse>
+  implements Binding<IfElse<TTrue, TFalse>>
 {
-  private _value: Condition<TTrue, TFalse>;
+  private _value: IfElse<TTrue, TFalse>;
 
   private _trueBinding: Binding<TTrue> | null = null;
 
   private _falseBinding: Binding<TFalse> | null = null;
 
   constructor(
-    value: Condition<TTrue, TFalse>,
+    value: IfElse<TTrue, TFalse>,
     part: Part,
     context: DirectiveContext,
   ) {
-    const { condition, trueBranch, falseBranch } = value;
+    const { condition, trueCase, falseCase } = value;
     this._value = value;
     if (condition) {
-      this._trueBinding = resolveBinding(trueBranch(), part, context);
+      this._trueBinding = resolveBinding(trueCase(), part, context);
       this._falseBinding = null;
     } else {
       this._trueBinding = null;
-      this._falseBinding = resolveBinding(falseBranch(), part, context);
+      this._falseBinding = resolveBinding(falseCase(), part, context);
     }
   }
 
-  get value(): Condition<TTrue, TFalse> {
+  get value(): IfElse<TTrue, TFalse> {
     return this._value;
   }
 
@@ -132,31 +130,28 @@ export class ConditionBinding<TTrue, TFalse>
     this.currentBinding.connect(context);
   }
 
-  bind(
-    newValue: Condition<TTrue, TFalse>,
-    context: UpdateContext<unknown>,
-  ): void {
+  bind(newValue: IfElse<TTrue, TFalse>, context: UpdateContext<unknown>): void {
     DEBUG: {
-      ensureDirective(Condition, newValue, this.currentBinding.part);
+      ensureDirective(IfElse, newValue, this.currentBinding.part);
     }
 
     const oldValue = this._value;
-    const { condition, trueBranch, falseBranch } = newValue;
+    const { condition, trueCase, falseCase } = newValue;
 
     if (oldValue.condition === condition) {
       if (condition) {
-        this._trueBinding!.bind(trueBranch(), context);
+        this._trueBinding!.bind(trueCase(), context);
       } else {
-        this._falseBinding!.bind(falseBranch(), context);
+        this._falseBinding!.bind(falseCase(), context);
       }
     } else {
       if (condition) {
         this._falseBinding!.unbind(context);
         if (this._trueBinding !== null) {
-          this._trueBinding.bind(trueBranch(), context);
+          this._trueBinding.bind(trueCase(), context);
         } else {
           this._trueBinding = resolveBinding(
-            trueBranch(),
+            trueCase(),
             this._falseBinding!.part,
             context,
           );
@@ -165,10 +160,10 @@ export class ConditionBinding<TTrue, TFalse>
       } else {
         this._trueBinding!.unbind(context);
         if (this._falseBinding !== null) {
-          this._falseBinding.bind(falseBranch(), context);
+          this._falseBinding.bind(falseCase(), context);
         } else {
           this._falseBinding = resolveBinding(
-            falseBranch(),
+            falseCase(),
             this._trueBinding!.part,
             context,
           );

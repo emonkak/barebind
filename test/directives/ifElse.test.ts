@@ -9,11 +9,11 @@ import {
 import { NodeBinding } from '../../src/binding.js';
 import { NoValue } from '../../src/directives.js';
 import {
-  ConditionBinding,
-  condition as conditionDirective,
+  IfElseBinding,
+  ifElse,
   unless,
   when,
-} from '../../src/directives/condition.js';
+} from '../../src/directives/ifElse.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -22,65 +22,65 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-describe('condition()', () => {
-  it('should construct a new Condition directive', () => {
+describe('ifElse()', () => {
+  it('should construct a new IfElse directive', () => {
     const condition = true;
-    const trueBranch = () => 'foo';
-    const falseBranch = () => 'bar';
-    const value = conditionDirective(condition, trueBranch, falseBranch);
+    const trueCase = () => 'foo';
+    const falseCase = () => 'bar';
+    const value = ifElse(condition, trueCase, falseCase);
 
     expect(value.condition).toBe(condition);
-    expect(value.trueBranch).toBe(trueBranch);
-    expect(value.falseBranch).toBe(falseBranch);
+    expect(value.trueCase).toBe(trueCase);
+    expect(value.falseCase).toBe(falseCase);
   });
 });
 
 describe('when()', () => {
-  it('should construct a new Condition without false case', () => {
+  it('should construct a new IfElse directive without false case', () => {
     const condition = true;
-    const trueBranch = () => 'foo';
-    const value = when(condition, trueBranch);
+    const trueCase = () => 'foo';
+    const value = when(condition, trueCase);
 
     expect(value.condition).toBe(condition);
-    expect(value.trueBranch).toBe(trueBranch);
-    expect(value.falseBranch()).toBe(NoValue.instance);
+    expect(value.trueCase).toBe(trueCase);
+    expect(value.falseCase()).toBe(NoValue.instance);
   });
 });
 
 describe('unless()', () => {
-  it('should construct a new Condition without true case', () => {
+  it('should construct a new IfElse directive without true case', () => {
     const condition = true;
-    const falseBranch = () => 'bar';
-    const value = unless(condition, falseBranch);
+    const falseCase = () => 'bar';
+    const value = unless(condition, falseCase);
 
     expect(value.condition).toBe(condition);
-    expect(value.trueBranch()).toBe(NoValue.instance);
-    expect(value.falseBranch).toBe(falseBranch);
+    expect(value.trueCase()).toBe(NoValue.instance);
+    expect(value.falseCase).toBe(falseCase);
   });
 });
 
-describe('Condition', () => {
+describe('IfElse', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
       expect(
-        conditionDirective(
+        ifElse(
           true,
           () => 'foo',
           () => 'bar',
         )[nameTag],
-      ).toBe('Condition(true, "foo")');
+      ).toBe('IfElse(true, "foo")');
       expect(
-        conditionDirective(
+        ifElse(
           false,
           () => 'foo',
           () => 'bar',
         )[nameTag],
-      ).toBe('Condition(false, "bar")');
+      ).toBe('IfElse(false, "bar")');
     });
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new ConditionBinding from a non-directive value', () => {
+    it('should return a new IfElseBinding from a non-directive value', () => {
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -89,7 +89,7 @@ describe('Condition', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = conditionDirective(
+      const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
@@ -111,7 +111,7 @@ describe('Condition', () => {
       expect(getEndNode).toHaveBeenCalledOnce();
     });
 
-    it('should return a new ConditionBinding from a directive value', () => {
+    it('should return a new IfElseBinding from a directive value', () => {
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -122,7 +122,7 @@ describe('Condition', () => {
 
       const trueDirective = new TextDirective();
       const falseDirective = new TextDirective();
-      const value = conditionDirective(
+      const value = ifElse(
         false,
         () => trueDirective,
         () => falseDirective,
@@ -146,7 +146,7 @@ describe('Condition', () => {
   });
 });
 
-describe('ConditionBinding', () => {
+describe('IfElseBinding', () => {
   describe('.connect()', () => {
     it('should connecty the current binding', () => {
       const part = {
@@ -157,12 +157,12 @@ describe('ConditionBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = conditionDirective(
+      const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
-      const binding = new ConditionBinding(value, part, context);
+      const binding = new IfElseBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
 
@@ -188,12 +188,12 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value = conditionDirective(
+      const value = ifElse(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const binding = new ConditionBinding(value, part, context);
+      const binding = new IfElseBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
@@ -223,12 +223,12 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value = conditionDirective(
+      const value = ifElse(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const binding = new ConditionBinding(value, part, context);
+      const binding = new IfElseBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
 
@@ -258,17 +258,17 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = conditionDirective(
+      const value1 = ifElse(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const value2 = conditionDirective(
+      const value2 = ifElse(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const binding = new ConditionBinding(value1, part, context);
+      const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -300,17 +300,17 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = conditionDirective(
+      const value1 = ifElse(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const value2 = conditionDirective(
+      const value2 = ifElse(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const binding = new ConditionBinding(value1, part, context);
+      const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -342,17 +342,17 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = conditionDirective(
+      const value1 = ifElse(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const value2 = conditionDirective(
+      const value2 = ifElse(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const binding = new ConditionBinding(value1, part, context);
+      const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -387,17 +387,17 @@ describe('ConditionBinding', () => {
       const falseDirective = new TextDirective();
       const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
       const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = conditionDirective(
+      const value1 = ifElse(
         false,
         () => trueDirective,
         () => falseDirective,
       );
-      const value2 = conditionDirective(
+      const value2 = ifElse(
         true,
         () => trueDirective,
         () => falseDirective,
       );
-      const binding = new ConditionBinding(value1, part, context);
+      const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -428,17 +428,17 @@ describe('ConditionBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = conditionDirective(
+      const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
-      const binding = new ConditionBinding(value, part, context);
+      const binding = new IfElseBinding(value, part, context);
 
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of Condition directive, but got "null".',
+        'A value must be a instance of IfElse directive, but got "null".',
       );
     });
   });
@@ -453,12 +453,12 @@ describe('ConditionBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = conditionDirective(
+      const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
-      const binding = new ConditionBinding(value, part, context);
+      const binding = new IfElseBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
 
@@ -479,12 +479,12 @@ describe('ConditionBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = conditionDirective(
+      const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
-      const binding = new ConditionBinding(value, part, context);
+      const binding = new IfElseBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 

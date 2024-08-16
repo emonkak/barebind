@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { condition, when } from '@emonkak/ebit/directives.js';
+import { ifElse, when } from '@emonkak/ebit/directives.js';
 import { navigateHandler } from '@emonkak/ebit/router.js';
 
 import type { Story } from '../state.js';
@@ -18,7 +18,7 @@ export function StoryView(
     <li class="story-item">
       <div class="score">${story.points}</div>
       <div class="title">
-        <${condition(
+        <${ifElse(
           story.url.startsWith('item?id='),
           () =>
             context.html`<a href=${`/items/${story.id}`} @click=${handleNavigate}>${story.title}</a>`,
@@ -31,7 +31,7 @@ export function StoryView(
         )}>
       </div>
       <div class="meta">
-        <${condition(
+        <${ifElse(
           story.type === 'job',
           () =>
             context.html`<a href=${`/items/${story.id}`} @click=${handleNavigate}>${story.time_ago}</a>`,
