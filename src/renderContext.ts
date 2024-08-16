@@ -41,11 +41,11 @@ export interface UsableObject<TResult, TContext> {
 
 export type UsableCallback<TResult, TContext> = (context: TContext) => TResult;
 
-export type InitialState<TState> = TState extends Function
+export type InitialState<TState> = [TState] extends [Function]
   ? () => TState
   : (() => TState) | TState;
 
-export type NewState<TState> = TState extends Function
+export type NewState<TState> = [TState] extends [Function]
   ? (prevState: TState) => TState
   : ((prevState: TState) => TState) | TState;
 
