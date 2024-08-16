@@ -9,6 +9,7 @@ import {
   currentLocation,
   hashLocation,
   integer,
+  navigateHandler,
   route,
   wildcard,
 } from '../src/router.js';
@@ -293,11 +294,11 @@ describe('browserLocation', () => {
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState, history] = context.use(browserLocation);
+    const [locationState, historyActions] = context.use(browserLocation);
 
     expect(context.use(currentLocation)).toStrictEqual([
       locationState,
-      history,
+      historyActions,
     ]);
 
     context.finalize();
@@ -480,6 +481,77 @@ describe('hashLocation', () => {
 
     context.finalize();
     updater.flushUpdate(queue, host);
+  });
+});
+
+describe('navigateHandler', () => {
+  const originalState = history.state;
+  const originalUrl = location.href;
+
+  afterEach(() => {
+    history.replaceState(originalState, '', originalUrl);
+    vi.restoreAllMocks();
+  });
+
+  it('should push the href attribute as a URL', () => {
+    const hooks: Hook[] = [];
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const queue = createUpdateQueue();
+
+    const context = new RenderContext(host, updater, block, hooks, queue);
+    const [, historyActions] = context.use(browserLocation);
+    const handleNavigate = context.use(navigateHandler());
+
+    const pushSpy = vi.spyOn(historyActions, 'push');
+    const replaceSpy = vi.spyOn(historyActions, 'replace');
+    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+    const anchor = document.createElement('a');
+    anchor.setAttribute('href', '/foo');
+    anchor.addEventListener('click', handleNavigate);
+    anchor.click();
+
+    expect(pushSpy).toHaveBeenCalledOnce();
+    expect(pushSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/foo' }),
+      undefined,
+    );
+    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should replace the href attribute as a URL', () => {
+    const hooks: Hook[] = [];
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const queue = createUpdateQueue();
+
+    const context = new RenderContext(host, updater, block, hooks, queue);
+    const state = {};
+    const [, historyActions] = context.use(browserLocation);
+    const handleNavigate = context.use(
+      navigateHandler({ mode: 'replace', state, urlAttribute: 'data-to' }),
+    );
+
+    const pushSpy = vi.spyOn(historyActions, 'push');
+    const replaceSpy = vi.spyOn(historyActions, 'replace');
+    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+    const anchor = document.createElement('a');
+    anchor.setAttribute('data-to', '/foo');
+    anchor.addEventListener('click', handleNavigate);
+    anchor.click();
+
+    expect(pushSpy).not.toHaveBeenCalled();
+    expect(replaceSpy).toHaveBeenCalledOnce();
+    expect(replaceSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ pathname: '/foo' }),
+      state,
+    );
+    expect(requestUpdateSpy).toHaveBeenCalledOnce();
   });
 });
 

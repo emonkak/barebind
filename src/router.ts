@@ -1,4 +1,4 @@
-import type { RenderContext } from './renderContext.js';
+import type { RenderContext, UsableCallback } from './renderContext.js';
 
 export interface Route<
   TResult,
@@ -260,6 +260,37 @@ export function hashLocation(
   context.setContextValue(currentLocation, [locationState, historyActions]);
 
   return [locationState, historyActions];
+}
+
+export interface NavigateHandlerOptions {
+  mode?: 'push' | 'replace';
+  state?: unknown;
+  urlAttribute?: string;
+}
+
+export function navigateHandler({
+  mode = 'push',
+  state,
+  urlAttribute = 'href',
+}: NavigateHandlerOptions = {}): UsableCallback<
+  (event: Event) => void,
+  RenderContext
+> {
+  return (context: RenderContext) => {
+    const [, historyActions] = context.use(currentLocation);
+
+    return context.useCallback(
+      (event: Event) => {
+        event.preventDefault();
+        const target = event.currentTarget as Element;
+        const navigate = historyActions[mode];
+        const url = RelativeURL.fromString(target.getAttribute(urlAttribute)!);
+        navigate(url, state);
+        return false;
+      },
+      [mode, state, urlAttribute, historyActions],
+    );
+  };
 }
 
 export function integer(component: string): number | null {
