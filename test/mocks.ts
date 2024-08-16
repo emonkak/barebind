@@ -278,7 +278,7 @@ export class TextBinding implements Binding<TextDirective>, Effect {
       case CommitStatus.Mounting: {
         const { content } = this._value;
 
-        this._textNode.nodeValue = content;
+        this._textNode.data = content;
 
         if (this._textNode.parentNode === null) {
           this._part.node.before(this._textNode);
@@ -296,13 +296,13 @@ export class TextBinding implements Binding<TextDirective>, Effect {
 }
 
 export class TextDirective implements Directive<TextDirective> {
-  private _content: string | null;
+  private _content: string;
 
-  constructor(content: string | null = null) {
+  constructor(content = '') {
     this._content = content;
   }
 
-  get content(): string | null {
+  get content(): string {
     return this._content;
   }
 

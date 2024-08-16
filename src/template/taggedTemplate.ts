@@ -237,7 +237,10 @@ export class TaggedTemplateView<TData extends ReadonlyArray<any>>
   }
 
   get startNode(): ChildNode | null {
-    return this._childNodes[0] ?? null;
+    return this._bindings.length > 0 &&
+      this._childNodes[0] === this._bindings[0]!.part.node
+      ? this._bindings[0]!.startNode
+      : this._childNodes[0] ?? null;
   }
 
   get endNode(): ChildNode | null {

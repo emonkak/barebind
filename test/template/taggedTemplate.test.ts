@@ -33,7 +33,7 @@ const MARKER = getMarker('__test__');
 describe('TaggedTemplate', () => {
   describe('.parseHTML()', () => {
     it('should parse holes inside attributes', () => {
-      const [template] = html`
+      const { template } = html`
         <div class="container" id=${0} .innerHTML=${1} @click=${2}></div>
       `;
       expect(template.holes).toEqual([
@@ -45,7 +45,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside double-quoted attributes', () => {
-      const [template] = html`
+      const { template } = html`
         <div class="container" id="${0}" .innerHTML="${1}" @click="${2}"></div>
       `;
       expect(template.holes).toEqual([
@@ -57,7 +57,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside single-quoted attributes', () => {
-      const [template] = html`
+      const { template } = html`
         <div class="container" id='${0}' .innerHTML='${1}' @click='${2}'></div>
       `;
       expect(template.holes).toEqual([
@@ -69,7 +69,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside attributes with whitespaces', () => {
-      const [template] = html`
+      const { template } = html`
         <div class="container" id= "${0}" .innerHTML ="${1}" @click = "${2}"></div>
       `;
       expect(template.holes).toEqual([
@@ -81,7 +81,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse a hole inside a tag name', () => {
-      const [template] = html`
+      const { template } = html`
         <${0}>
         <${1} >
         <${2}/>
@@ -104,7 +104,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside elements', () => {
-      const [template] = html`
+      const { template } = html`
         <div id="foo" ${0}></div>
         <div ${1} id="foo"></div>
         <div id="foo" ${2} class="bar"></div>
@@ -124,7 +124,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse holes inside descendants', () => {
-      const [template] = html`
+      const { template } = html`
         <ul>
           <li>${1}</li>
           <li>${2}</li>
@@ -145,7 +145,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse multiple holes inside a child', () => {
-      const [template] = html`
+      const { template } = html`
         <div>[${0}, ${1}]</div>
         <div>${0}, ${1}</div>
       `;
@@ -164,7 +164,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse a hole inside a comment as ChildNodeHole', () => {
-      const [template] = html`
+      const { template } = html`
         <!--${0}-->
         <!--${1}/-->
         <!-- ${2} -->
@@ -187,7 +187,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('should parse a hole inside a tag with leading spaces as NodeHole', () => {
-      const [template] = html`
+      const { template } = html`
         < ${0}>
         < ${0}/>
       `;
@@ -304,7 +304,7 @@ describe('TaggedTemplate', () => {
 
   describe('.parseSVG()', () => {
     it('should parse holes inside attributes', () => {
-      const [template] = svg`
+      const { template } = svg`
         <circle fill="black" cx=${0} cy=${1} r=${2} />
       `;
       expect(template.holes).toEqual([
@@ -330,7 +330,7 @@ describe('TaggedTemplate', () => {
 
   describe('.render()', () => {
     it('should return a new TaggedTemplateView', () => {
-      const [template, values] = html`
+      const { template, data } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
@@ -339,12 +339,12 @@ describe('TaggedTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       expect(context.isPending()).toBe(false);
       expect(view).toBeInstanceOf(TaggedTemplateView);
-      expect(view.bindings).toHaveLength(values.length);
-      expect(view.bindings.map((binding) => binding.value)).toEqual(values);
+      expect(view.bindings).toHaveLength(data.length);
+      expect(view.bindings.map((binding) => binding.value)).toEqual(data);
       expect(view.bindings[0]).toBeInstanceOf(AttributeBinding);
       expect(view.bindings[0]?.part).toMatchObject({
         type: PartType.Attribute,
@@ -398,7 +398,7 @@ describe('TaggedTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const [template] = html`<div></div>`;
+      const { template } = html`<div></div>`;
       const view = template.render([], context);
 
       expect(view).toBeInstanceOf(TaggedTemplateView);
@@ -412,7 +412,7 @@ describe('TaggedTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const [template] = html``;
+      const { template } = html``;
       const view = template.render([], context);
 
       expect(view).toBeInstanceOf(TaggedTemplateView);
@@ -422,26 +422,54 @@ describe('TaggedTemplate', () => {
       expect(view.endNode).toBeNull();
     });
 
+    it('should return a TaggedTemplateView with a single value', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+      const { template, data } = html`${new TextDirective('foo')}`;
+      const view = template.render(data, context);
+
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+
+      container.appendChild(part.node);
+      view.connect(context);
+      view.mount(part);
+      context.flushUpdate();
+
+      expect(view).toBeInstanceOf(TaggedTemplateView);
+      expect(view.bindings).toHaveLength(1);
+      expect(view.bindings[0]).toBeInstanceOf(TextBinding);
+      expect(view.bindings[0]!.value).toBe(data[0]);
+      expect(view.childNodes).toStrictEqual([view.bindings[0]!.part.node]);
+      expect(view.startNode).toBeInstanceOf(Text);
+      expect(view.startNode!.nodeValue).toBe('foo');
+      expect(view.endNode).toBe(view.bindings[0]!.part.node);
+    });
+
     it('should throw an error if the number of holes and values do not match', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const [template, values] = html`
+      const { template, data } = html`
         <div class=${'foo'} class=${'bar'}></div>
       `;
 
       expect(() => {
-        template.render(values, context);
+        template.render(data, context);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
   });
 
   describe('.isSameTemplate()', () => {
     it('should return whether the template is the same as the other template', () => {
-      const [template1] = html`
+      const { template: template1 } = html`
         <div></div>
       `;
-      const [template2] = html`
+      const { template: template2 } = html`
         <div></div>
       `;
 
@@ -457,7 +485,7 @@ describe('TaggedTemplate', () => {
 describe('TaggedTemplateView', () => {
   describe('.connect()', () => {
     it('should connect bindings in the view', () => {
-      const [template, values] = html`
+      const { template, data } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
@@ -466,7 +494,7 @@ describe('TaggedTemplateView', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       view.connect(context);
       context.flushUpdate();
@@ -483,13 +511,13 @@ describe('TaggedTemplateView', () => {
 
   describe('.bind()', () => {
     it('should bind values corresponding to bindings in the view', () => {
-      const [template, values] = html`
+      const { template, data } = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       view.connect(context);
       context.flushUpdate();
@@ -511,19 +539,19 @@ describe('TaggedTemplateView', () => {
 
   describe('.unbind()', () => {
     it('should unbind top-level bindings in the view and other bindings are disconnected', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const [template, values] = html`
+      const { template, data } = html`
         ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
       `;
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -567,19 +595,19 @@ describe('TaggedTemplateView', () => {
     });
 
     it('should only unbind top-level bindings in the view', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const [template, values] = html`
+      const { template, data } = html`
         ${'foo'}<div></div><!--${'baz'}-->
       `;
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -620,10 +648,10 @@ describe('TaggedTemplateView', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const [template, values] = html`
+      const { template, data } = html`
         <p>Count: ${0}</p>
       `;
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       expect(() => {
         view.bind([] as any, context);
@@ -634,7 +662,7 @@ describe('TaggedTemplateView', () => {
   describe('.disconnect()', () => {
     it('should disconnect bindings in the view', () => {
       const value = new TextDirective();
-      const [template, values] = html`
+      const { template, data } = html`
         <div>${value}</div>
       `;
       const host = new MockUpdateHost();
@@ -651,7 +679,7 @@ describe('TaggedTemplateView', () => {
         });
         return binding;
       });
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       expect(disconnects).toBe(0);
 
@@ -663,19 +691,19 @@ describe('TaggedTemplateView', () => {
 
   describe('.mount()', () => {
     it('should mount child nodes before the part node', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const [template, values] = html`
+      const { template, data } = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -695,19 +723,19 @@ describe('TaggedTemplateView', () => {
 
   describe('.unmount()', () => {
     it('should not remove child nodes if a different part is given', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const [template, values] = html`
+      const { template, data } = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const view = template.render(values, context);
+      const view = template.render(data, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -746,16 +774,16 @@ describe('getMarker()', () => {
 
 function html<TData extends readonly any[]>(
   tokens: TemplateStringsArray,
-  ...values: TData
-): [TaggedTemplate<TData>, TData] {
-  return [TaggedTemplate.parseHTML(tokens, values, MARKER), values];
+  ...data: TData
+): { template: TaggedTemplate<TData>; data: TData } {
+  return { template: TaggedTemplate.parseHTML(tokens, data, MARKER), data };
 }
 
 function svg<const TData extends readonly any[]>(
   tokens: TemplateStringsArray,
-  ...values: TData
-): [TaggedTemplate<TData>, TData] {
-  return [TaggedTemplate.parseSVG(tokens, values, MARKER), values];
+  ...data: TData
+): { template: TaggedTemplate<TData>; data: TData } {
+  return { template: TaggedTemplate.parseSVG(tokens, data, MARKER), data };
 }
 
 function toHTML(node: Node): string {
