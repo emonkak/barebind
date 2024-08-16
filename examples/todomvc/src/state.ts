@@ -13,25 +13,26 @@ export enum TodoFilter {
   COMPLETED,
 }
 
-export class AppState {
-  readonly todos$: Atom<Atom<Todo>[]>;
-  readonly filter$: Atom<TodoFilter>;
+export class TodoState {
+  readonly todos$: Atom<Atom<Todo>[]> = new Atom([]);
+
+  readonly filter$: Atom<TodoFilter> = new Atom(TodoFilter.ALL);
+
   readonly activeTodos$: Signal<Atom<Todo>[]>;
+
   readonly visibleTodos$: Signal<Atom<Todo>[]>;
 
-  static [usableTag](context: RenderContext): AppState {
-    const state = context.getContextValue(AppState);
-    if (!(state instanceof AppState)) {
+  static [usableTag](context: RenderContext): TodoState {
+    const state = context.getContextValue(TodoState);
+    if (!(state instanceof TodoState)) {
       throw new Error(
-        'A context value for AppState does not exist, please ensure it is registered by context.use(yourAppState).',
+        'A context value for TodoState does not exist, please ensure it is registered by context.use(...).',
       );
     }
     return state;
   }
 
   constructor() {
-    this.filter$ = new Atom(TodoFilter.ALL);
-    this.todos$ = new Atom([] as Atom<Todo>[]);
     this.activeTodos$ = new Computation(
       (todos) => todos.value.filter((todo$) => !todo$.value.completed),
       [this.todos$],
@@ -52,7 +53,7 @@ export class AppState {
   }
 
   [usableTag](context: RenderContext): void {
-    context.setContextValue(AppState, this);
+    context.setContextValue(TodoState, this);
   }
 
   addTodo(title: string): void {

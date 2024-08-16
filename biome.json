@@ -13,7 +13,8 @@
   "linter": {
     "rules": {
       "complexity": {
-        "noBannedTypes": "off"
+        "noBannedTypes": "off",
+        "noThisInStatic": "off"
       },
       "correctness": {
         "noUnusedLabels": "off"

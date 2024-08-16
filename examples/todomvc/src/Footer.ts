@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { classMap } from '@emonkak/ebit/directives.js';
 
-import { AppState, TodoFilter } from './state.js';
+import { TodoFilter, TodoState } from './state.js';
 
 export interface FooterProps {}
 
@@ -9,7 +9,7 @@ export function Footer(
   _props: FooterProps,
   context: RenderContext,
 ): TemplateDirective {
-  const state = context.use(AppState);
+  const state = context.use(TodoState);
   const { todos$, activeTodos$, filter$ } = state;
   const todos = context.use(todos$);
   const activeTodos = context.use(activeTodos$);

@@ -4,10 +4,10 @@ import { component } from '@emonkak/ebit/directives.js';
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';
 import { Main } from './Main.js';
-import type { AppState } from './state.js';
+import type { TodoState } from './state.js';
 
 interface AppProps {
-  state: AppState;
+  state: TodoState;
 }
 
 export function App(

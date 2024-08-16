@@ -7,7 +7,7 @@ import {
 } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
-import { AppState, type Todo } from './state.js';
+import { type Todo, TodoState } from './state.js';
 
 export interface TodoItemProps {
   todo$: Atom<Todo>;
@@ -18,7 +18,7 @@ export function TodoItem(
   context: RenderContext,
 ): TemplateDirective {
   const [isEditing, setIsEditing] = context.useState(false);
-  const state = context.use(AppState);
+  const state = context.use(TodoState);
   const todo = context.use(todo$);
 
   const handleStartEditing = () => {
