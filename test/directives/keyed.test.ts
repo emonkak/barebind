@@ -7,7 +7,7 @@ import {
   nameTag,
 } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
-import { Choice, ChoiceBinding, choice } from '../../src/directives/choice.js';
+import { Keyed, KeyedBinding, keyed } from '../../src/directives/keyed.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -16,27 +16,26 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-describe('choice()', () => {
-  it('should construct a new Choice directive', () => {
+describe('keyed()', () => {
+  it('should construct a new Keyed directive', () => {
     const key = 'foo';
-    const factory = () => new TextDirective();
-    const value = choice(key, factory);
+    const value = new TextDirective();
+    const keyedValue = keyed(key, value);
 
-    expect(value.key).toBe(key);
-    expect(value.factory).toBe(factory);
+    expect(keyedValue.key).toBe(key);
+    expect(keyedValue.value).toBe(value);
   });
 });
 
-describe('Choice', () => {
+describe('Keyed', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(choice('foo', (key) => key)[nameTag]).toBe('Choice("foo", "foo")');
-      expect(choice('bar', (key) => key)[nameTag]).toBe('Choice("bar", "bar")');
+      expect(keyed('foo', 'bar')[nameTag]).toBe('Keyed("foo", "bar")');
     });
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new ChoiceBinding from a non-directive value', () => {
+    it('should return a new KeyedBinding from a non-directive value', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -45,8 +44,7 @@ describe('Choice', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const factory = vi.fn((key: 'foo' | 'bar') => key);
-      const value = choice('foo', factory);
+      const value = keyed('foo', 'bar');
       const binding = value[directiveTag](part, context);
 
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
@@ -58,15 +56,13 @@ describe('Choice', () => {
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.binding).toBeInstanceOf(NodeBinding);
-      expect(binding.binding.value).toBe('foo');
-      expect(factory).toHaveBeenCalledOnce();
-      expect(factory).toHaveBeenCalledWith('foo');
+      expect(binding.binding.value).toBe('bar');
       expect(getPartSpy).toHaveBeenCalledOnce();
       expect(getStartNodeSpy).toHaveBeenCalledOnce();
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return a new ChoiceBinding from a directive value', () => {
+    it('should return a new KeyedBinding from a directive value', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -75,17 +71,7 @@ describe('Choice', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fooDirective = new TextDirective();
-      const barDirective = new TextDirective();
-      const factory = vi.fn((key: 'foo' | 'bar') => {
-        switch (key) {
-          case 'foo':
-            return fooDirective;
-          case 'bar':
-            return barDirective;
-        }
-      });
-      const value = choice('foo', factory);
+      const value = keyed('foo', new TextDirective());
       const binding = value[directiveTag](part, context);
 
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
@@ -97,9 +83,7 @@ describe('Choice', () => {
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.binding).toBeInstanceOf(TextBinding);
-      expect(binding.binding.value).toBe(fooDirective);
-      expect(factory).toHaveBeenCalledOnce();
-      expect(factory).toHaveBeenCalledWith('foo');
+      expect(binding.binding.value).toBe(value.value);
       expect(getPartSpy).toHaveBeenCalledOnce();
       expect(getStartNodeSpy).toHaveBeenCalledOnce();
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
@@ -107,7 +91,7 @@ describe('Choice', () => {
   });
 });
 
-describe('ChoiceBinding', () => {
+describe('KeyedBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
       const part = {
@@ -118,8 +102,8 @@ describe('ChoiceBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = choice('foo', () => new TextDirective());
-      const binding = new ChoiceBinding(value, part, context);
+      const value = keyed('foo', new TextDirective());
+      const binding = new KeyedBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
 
@@ -141,20 +125,8 @@ describe('ChoiceBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fooDirective = new TextDirective();
-      const barDirective = new TextDirective();
-      const fooDirectiveSpy = vi.spyOn(fooDirective, directiveTag);
-      const barDirectiveSpy = vi.spyOn(barDirective, directiveTag);
-      const factory = vi.fn((key: 'foo' | 'bar') => {
-        switch (key) {
-          case 'foo':
-            return fooDirective;
-          case 'bar':
-            return barDirective;
-        }
-      });
-      const value = new Choice<'foo' | 'bar', TextDirective>('foo', factory);
-      const binding = new ChoiceBinding(value, part, context);
+      const value = new Keyed('foo', new TextDirective());
+      const binding = new KeyedBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
 
@@ -164,14 +136,8 @@ describe('ChoiceBinding', () => {
       binding.bind(value, context);
       context.flushUpdate();
 
-      expect(binding.binding.value).toBe(fooDirective);
-      expect(fooDirectiveSpy).toHaveBeenCalledOnce();
-      expect(barDirectiveSpy).not.toHaveBeenCalled();
-      expect(factory).toHaveBeenCalledTimes(2);
-      expect(factory).toHaveBeenNthCalledWith(1, 'foo');
-      expect(factory).toHaveBeenNthCalledWith(2, 'foo');
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(barDirective, context);
+      expect(bindSpy).toHaveBeenCalledWith(value.value, context);
     });
 
     it('should connect a new binding and unbind the old binidng if the key changes', () => {
@@ -183,21 +149,9 @@ describe('ChoiceBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fooDirective = new TextDirective();
-      const barDirective = new TextDirective();
-      const fooDirectiveSpy = vi.spyOn(fooDirective, directiveTag);
-      const barDirectiveSpy = vi.spyOn(barDirective, directiveTag);
-      const factory = vi.fn((key: 'foo' | 'bar') => {
-        switch (key) {
-          case 'foo':
-            return fooDirective;
-          case 'bar':
-            return barDirective;
-        }
-      });
-      const value1 = new Choice<'foo' | 'bar', TextDirective>('foo', factory);
-      const value2 = new Choice<'foo' | 'bar', TextDirective>('bar', factory);
-      const binding = new ChoiceBinding(value1, part, context);
+      const value1 = new Keyed('foo', new TextDirective());
+      const value2 = new Keyed('bar', new TextDirective());
+      const binding = new KeyedBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -208,18 +162,13 @@ describe('ChoiceBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
-      expect(binding.binding.value).toBe(barDirective);
-      expect(fooDirectiveSpy).toHaveBeenCalledOnce();
-      expect(barDirectiveSpy).toHaveBeenCalledOnce();
-      expect(factory).toHaveBeenCalledTimes(2);
-      expect(factory).toHaveBeenNthCalledWith(1, 'foo');
-      expect(factory).toHaveBeenNthCalledWith(2, 'bar');
+      expect(binding.binding.value).toBe(value2.value);
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
-    it('should memoize the old binding if the key changes', () => {
+    it('should throw an error if the new value is not Keyed directive', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -228,62 +177,13 @@ describe('ChoiceBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fooDirective = new TextDirective();
-      const barDirective = new TextDirective();
-      const fooDirectiveSpy = vi.spyOn(fooDirective, directiveTag);
-      const barDirectiveSpy = vi.spyOn(barDirective, directiveTag);
-      const factory = vi.fn((key: 'foo' | 'bar') => {
-        switch (key) {
-          case 'foo':
-            return fooDirective;
-          case 'bar':
-            return barDirective;
-        }
-      });
-      const value1 = new Choice<'foo' | 'bar', TextDirective>('foo', factory);
-      const value2 = new Choice<'foo' | 'bar', TextDirective>('bar', factory);
-      const binding = new ChoiceBinding(value1, part, context);
-
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.bind(value2, context);
-      context.flushUpdate();
-
-      binding.bind(value1, context);
-      context.flushUpdate();
-
-      expect(binding.binding.value).toBe(fooDirective);
-      expect(fooDirectiveSpy).toHaveBeenCalledOnce();
-      expect(barDirectiveSpy).toHaveBeenCalledOnce();
-      expect(factory).toHaveBeenCalledTimes(3);
-      expect(factory).toHaveBeenNthCalledWith(1, 'foo');
-      expect(factory).toHaveBeenNthCalledWith(2, 'bar');
-      expect(factory).toHaveBeenNthCalledWith(3, 'foo');
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unbindSpy).toHaveBeenCalledWith(context);
-    });
-
-    it('should throw an error if the new value is not Choice directive', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = choice('foo', () => new TextDirective());
-      const binding = new ChoiceBinding(value, part, context);
+      const value = keyed('foo', new TextDirective());
+      const binding = new KeyedBinding(value, part, context);
 
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of Choice directive, but got "null".',
+        'A value must be a instance of Keyed directive, but got "null".',
       );
     });
   });
@@ -298,8 +198,8 @@ describe('ChoiceBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = choice('foo', () => new TextDirective());
-      const binding = new ChoiceBinding(value, part, context);
+      const value = keyed('foo', () => new TextDirective());
+      const binding = new KeyedBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
@@ -320,8 +220,8 @@ describe('ChoiceBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = choice('foo', () => new TextDirective());
-      const binding = new ChoiceBinding(value, part, context);
+      const value = keyed('foo', () => new TextDirective());
+      const binding = new KeyedBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 

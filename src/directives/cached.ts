@@ -11,70 +11,62 @@ import {
 import { resolveBinding } from '../binding.js';
 import { ensureDirective } from '../error.js';
 
-export function choice<TKey, TValue>(
+export function cached<TKey, TValue>(
   key: TKey,
-  factory: (key: TKey) => TValue,
-): Choice<TKey, TValue> {
-  return new Choice(key, factory);
+  value: TValue,
+): Cached<TKey, TValue> {
+  return new Cached(key, value);
 }
 
-export class Choice<TKey, TValue> implements Directive<Choice<TKey, TValue>> {
+export class Cached<TKey, TValue> implements Directive<Cached<TKey, TValue>> {
   private readonly _key: TKey;
 
-  private readonly _factory: (key: TKey) => TValue;
+  private readonly _value: TValue;
 
-  constructor(key: TKey, factory: (key: TKey) => TValue) {
+  constructor(key: TKey, value: TValue) {
     this._key = key;
-    this._factory = factory;
+    this._value = value;
   }
 
   get key(): TKey {
     return this._key;
   }
 
-  get factory(): (key: TKey) => TValue {
-    return this._factory;
+  get value(): TValue {
+    return this._value;
   }
 
   get [nameTag](): string {
-    return (
-      'Choice(' +
-      nameOf(this._key) +
-      ', ' +
-      nameOf(this._factory(this._key)) +
-      ')'
-    );
+    return 'Cached(' + nameOf(this._key) + ', ' + nameOf(this._value) + ')';
   }
 
   [directiveTag](
     part: Part,
     context: DirectiveContext,
-  ): ChoiceBinding<TKey, TValue> {
-    return new ChoiceBinding(this, part, context);
+  ): CachedBinding<TKey, TValue> {
+    return new CachedBinding(this, part, context);
   }
 }
 
-export class ChoiceBinding<TKey, TValue>
-  implements Binding<Choice<TKey, TValue>>
+export class CachedBinding<TKey, TValue>
+  implements Binding<Cached<TKey, TValue>>
 {
-  private _value: Choice<TKey, TValue>;
+  private _value: Cached<TKey, TValue>;
 
   private _binding: Binding<TValue>;
 
   private _cachedBindings: Map<TKey, Binding<TValue>> = new Map();
 
   constructor(
-    value: Choice<TKey, TValue>,
+    value: Cached<TKey, TValue>,
     part: Part,
     context: DirectiveContext,
   ) {
-    const { key, factory } = value;
-    const selection = factory(key);
     this._value = value;
-    this._binding = resolveBinding(selection, part, context);
+    this._binding = resolveBinding(value.value, part, context);
   }
 
-  get value(): Choice<TKey, TValue> {
+  get value(): Cached<TKey, TValue> {
     return this._value;
   }
 
@@ -98,31 +90,33 @@ export class ChoiceBinding<TKey, TValue>
     this._binding.connect(context);
   }
 
-  bind(newValue: Choice<TKey, TValue>, context: UpdateContext<unknown>): void {
+  bind(newValue: Cached<TKey, TValue>, context: UpdateContext<unknown>): void {
     DEBUG: {
-      ensureDirective(Choice, newValue, this._binding.part);
+      ensureDirective(Cached, newValue, this._binding.part);
     }
 
     const oldValue = this._value;
-    const { key, factory } = newValue;
-    const selection = factory(key);
 
     if (Object.is(oldValue.key, newValue.key)) {
-      this._binding.bind(selection, context);
+      this._binding.bind(newValue.value, context);
     } else {
       this._binding.unbind(context);
 
       // Remenber the old binding for future updates.
       this._cachedBindings.set(oldValue.key, this._binding);
 
-      const cachedBinding = this._cachedBindings.get(key);
+      const cachedBinding = this._cachedBindings.get(newValue.key);
       if (cachedBinding !== undefined) {
-        cachedBinding.bind(selection, context);
+        cachedBinding.bind(newValue.value, context);
         this._binding = cachedBinding;
       } else {
-        const binding = resolveBinding(selection, this._binding.part, context);
-        binding.connect(context);
-        this._binding = binding;
+        const newBinding = resolveBinding(
+          newValue.value,
+          this._binding.part,
+          context,
+        );
+        newBinding.connect(context);
+        this._binding = newBinding;
       }
     }
 

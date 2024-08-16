@@ -26,7 +26,7 @@ export function ensureDirective<
         expectedClass.name +
         ' directive, but got "' +
         nameOf(actualValue) +
-        '". Consider using choice(), condition() or dynamic() directive instead.\n' +
+        '". Consider using cached(), condition() or dynamic() directive instead.\n' +
         reportPart(part),
     );
   }
@@ -37,7 +37,7 @@ export function ensureNonDirective(value: unknown, part: Part): void {
     throw new Error(
       'A value must not be a directive, but got "' +
         nameOf(value) +
-        '". Consider using choice(), condition() or dynamic() directive instead.\n' +
+        '". Consider using cached(), condition() or dynamic() directive instead.\n' +
         reportPart(part),
     );
   }
