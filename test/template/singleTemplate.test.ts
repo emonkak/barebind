@@ -88,7 +88,7 @@ describe('TextTemplate', () => {
 
 describe('SingleTemplateView', () => {
   describe('.connect()', () => {
-    it('should bind values to element and child binding', () => {
+    it('should connect the binding', () => {
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -97,7 +97,8 @@ describe('SingleTemplateView', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const view = new SingleTemplateView('foo', part, context);
+      const binding = new NodeBinding('foo', part);
+      const view = new SingleTemplateView(binding);
 
       view.connect(context);
       context.flushUpdate();
@@ -118,6 +119,10 @@ describe('SingleTemplateView', () => {
 
   describe('.mount()', () => {
     it('should mount the node before the part node', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
       const container = document.createElement('div');
       const containerPart = {
         type: PartType.ChildNode,
@@ -127,10 +132,8 @@ describe('SingleTemplateView', () => {
         type: PartType.Node,
         node: document.createTextNode('foo'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-      const view = new SingleTemplateView('foo', viewPart, context);
+      const binding = new NodeBinding('foo', viewPart);
+      const view = new SingleTemplateView(binding);
 
       container.appendChild(containerPart.node);
       view.connect(context);
@@ -150,6 +153,10 @@ describe('SingleTemplateView', () => {
 
   describe('.unmount()', () => {
     it('should not remove the node if a different part is given', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
       const container = document.createElement('div');
       const containerPart = {
         type: PartType.ChildNode,
@@ -159,11 +166,8 @@ describe('SingleTemplateView', () => {
         type: PartType.Node,
         node: document.createTextNode('foo'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const view = new SingleTemplateView('foo', viewPart, context);
+      const binding = new NodeBinding('foo', viewPart);
+      const view = new SingleTemplateView(binding);
 
       container.appendChild(containerPart.node);
 
@@ -184,16 +188,13 @@ describe('SingleTemplateView', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should disconnect from the binding', () => {
+    it('should disconnect the binding', () => {
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const view = new SingleTemplateView('foo', part, context);
+      const binding = new NodeBinding('foo', part);
+      const view = new SingleTemplateView(binding);
 
       const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
 

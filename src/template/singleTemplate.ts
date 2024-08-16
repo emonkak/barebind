@@ -1,7 +1,6 @@
 import {
   type Binding,
   type ChildNodePart,
-  type Part,
   PartType,
   type Template,
   type TemplateView,
@@ -27,12 +26,13 @@ export class ChildNodeTemplate<T> implements Template<T> {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
+    const binding = resolveBinding(data, part, context);
 
     DEBUG: {
       part.node.nodeValue = nameOf(data);
     }
 
-    return new SingleTemplateView(data, part, context);
+    return new SingleTemplateView(binding);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -54,8 +54,8 @@ export class TextTemplate<T> implements Template<T> {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
-
-    return new SingleTemplateView(data, part, context);
+    const binding = resolveBinding(data, part, context);
+    return new SingleTemplateView(binding);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -66,8 +66,8 @@ export class TextTemplate<T> implements Template<T> {
 export class SingleTemplateView<T> implements TemplateView<T> {
   private readonly _binding: Binding<T>;
 
-  constructor(data: T, part: Part, context: UpdateContext<unknown>) {
-    this._binding = resolveBinding(data, part, context);
+  constructor(binding: Binding<T>) {
+    this._binding = binding;
   }
 
   get startNode(): ChildNode {
