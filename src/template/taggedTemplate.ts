@@ -58,10 +58,20 @@ export interface PropertyHole {
 // - A marker is lowercase to match attribute names.
 const MARKER_REGEXP = /^\?{2}[0-9a-z_-]+\?{2}$/;
 
-export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
+// https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
+const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
+// https://infra.spec.whatwg.org/#ascii-whitespace
+const WHITESPACE_CHARS = String.raw`[\t\n\f\r ]`;
+
+const ATTRIBUTE_NAME_REGEXP = new RegExp(
+  `(${ATTRIBUTE_NAME_CHARS}+)${WHITESPACE_CHARS}*=${WHITESPACE_CHARS}*["']?$`,
+  'u',
+);
+
+export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
   implements Template<TData>
 {
-  static parseHTML<TData extends readonly any[]>(
+  static parseHTML<TData extends ReadonlyArray<any>>(
     tokens: ReadonlyArray<string>,
     values: TData,
     marker: string,
@@ -71,11 +81,11 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
     }
     const template = document.createElement('template');
     template.innerHTML = tokens.join(marker).trim();
-    const holes = parseChildren(template.content, values, marker);
+    const holes = parseChildren(template.content, tokens, values, marker);
     return new TaggedTemplate(template, holes);
   }
 
-  static parseSVG<TData extends readonly any[]>(
+  static parseSVG<TData extends ReadonlyArray<any>>(
     tokens: ReadonlyArray<string>,
     values: TData,
     marker: string,
@@ -88,7 +98,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
     template.content.replaceChildren(
       ...template.content.firstChild!.childNodes,
     );
-    const holes = parseChildren(template.content, values, marker);
+    const holes = parseChildren(template.content, tokens, values, marker);
     return new TaggedTemplate(template, holes);
   }
 
@@ -117,7 +127,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
 
     if (holes.length !== data.length) {
       throw new Error(
-        `The number of holes was ${holes.length}, but the number of data was ${data.length}. There may be multiple holes indicating the same attribute.`,
+        'The number of holes and the number of values do not match. There may be multiple holes indicating the same attribute.',
       );
     }
 
@@ -210,7 +220,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
   }
 }
 
-export class TaggedTemplateFragment<TData extends readonly any[]>
+export class TaggedTemplateFragment<TData extends ReadonlyArray<any>>
   implements TemplateFragment<TData>
 {
   private readonly _bindings: Binding<unknown>[];
@@ -321,8 +331,13 @@ function ensureValidMarker(marker: string): void {
   }
 }
 
+function extractRealAttributeName(token: string): string | undefined {
+  return ATTRIBUTE_NAME_REGEXP.exec(token)?.[1];
+}
+
 function parseAttribtues(
   element: Element,
+  tokens: ReadonlyArray<string>,
   marker: string,
   holes: Hole[],
   index: number,
@@ -341,23 +356,33 @@ function parseAttribtues(
         index,
       });
     } else if (value === marker) {
-      if (name.length > 1 && name[0] === '@') {
+      const realName = extractRealAttributeName(tokens[holes.length]!);
+
+      DEBUG: {
+        if (realName?.toLowerCase() !== name) {
+          throw new Error(
+            `The real attribute name must be "${name}", but got "${realName}". The attribute may be duplicated.`,
+          );
+        }
+      }
+
+      if (realName.length > 1 && realName[0] === '@') {
         holes.push({
           type: PartType.Event,
           index,
-          name: name.slice(1),
+          name: realName.slice(1),
         });
-      } else if (name.length > 1 && name[0] === '.') {
+      } else if (realName.length > 1 && realName[0] === '.') {
         holes.push({
           type: PartType.Property,
           index,
-          name: name.slice(1),
+          name: realName.slice(1),
         });
       } else {
         holes.push({
           type: PartType.Attribute,
           index,
-          name,
+          name: realName,
         });
       }
     } else {
@@ -388,6 +413,7 @@ function parseAttribtues(
 
 function parseChildren(
   rootNode: Node,
+  tokens: ReadonlyArray<string>,
   values: ReadonlyArray<unknown>,
   marker: string,
 ): Hole[] {
@@ -412,7 +438,7 @@ function parseChildren(
             );
           }
         }
-        parseAttribtues(currentNode as Element, marker, holes, index);
+        parseAttribtues(currentNode as Element, tokens, marker, holes, index);
         break;
       }
       case Node.COMMENT_NODE: {

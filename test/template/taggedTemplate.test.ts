@@ -34,38 +34,50 @@ describe('TaggedTemplate', () => {
   describe('.parseHTML()', () => {
     it('should parse holes inside attributes', () => {
       const [template] = html`
-        <input type="checkbox" id=${0} .value=${1} @change=${2}>
+        <div class="container" id=${0} .innerHTML=${1} @click=${2}></div>
       `;
       expect(template.holes).toEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
-        { type: PartType.Property, name: 'value', index: 0 },
-        { type: PartType.Event, name: 'change', index: 0 },
+        { type: PartType.Property, name: 'innerHTML', index: 0 },
+        { type: PartType.Event, name: 'click', index: 0 },
       ]);
-      expect(template.element.innerHTML).toBe('<input type="checkbox">');
+      expect(template.element.innerHTML).toBe('<div class="container"></div>');
     });
 
     it('should parse holes inside double-quoted attributes', () => {
       const [template] = html`
-        <input type="checkbox" id="${0}" .value="${1}" @change="${2}">
+        <div class="container" id="${0}" .innerHTML="${1}" @click="${2}"></div>
       `;
       expect(template.holes).toEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
-        { type: PartType.Property, name: 'value', index: 0 },
-        { type: PartType.Event, name: 'change', index: 0 },
+        { type: PartType.Property, name: 'innerHTML', index: 0 },
+        { type: PartType.Event, name: 'click', index: 0 },
       ]);
-      expect(template.element.innerHTML).toBe('<input type="checkbox">');
+      expect(template.element.innerHTML).toBe('<div class="container"></div>');
     });
 
     it('should parse holes inside single-quoted attributes', () => {
       const [template] = html`
-        <input type="checkbox" id='${0}' .value='${1}' @change='${2}'>
+        <div class="container" id='${0}' .innerHTML='${1}' @click='${2}'></div>
       `;
       expect(template.holes).toEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
-        { type: PartType.Property, name: 'value', index: 0 },
-        { type: PartType.Event, name: 'change', index: 0 },
+        { type: PartType.Property, name: 'innerHTML', index: 0 },
+        { type: PartType.Event, name: 'click', index: 0 },
       ]);
-      expect(template.element.innerHTML).toBe('<input type="checkbox">');
+      expect(template.element.innerHTML).toBe('<div class="container"></div>');
+    });
+
+    it('should parse holes inside attributes with whitespaces', () => {
+      const [template] = html`
+        <div class="container" id= "${0}" .innerHTML ="${1}" @click = "${2}"></div>
+      `;
+      expect(template.holes).toEqual([
+        { type: PartType.Attribute, name: 'id', index: 0 },
+        { type: PartType.Property, name: 'innerHTML', index: 0 },
+        { type: PartType.Event, name: 'click', index: 0 },
+      ]);
+      expect(template.element.innerHTML).toBe('<div class="container"></div>');
     });
 
     it('should parse a hole inside a tag name', () => {
@@ -279,6 +291,14 @@ describe('TaggedTemplate', () => {
       }).toThrow(
         'Expressions inside a comment must make up the entire comment value:',
       );
+    });
+
+    it('should throw an error when there is a duplicated attribute', () => {
+      expect(() => {
+        html`
+          <div class="foo" class=${0} id=${1}></div>
+        `;
+      }).toThrow(`The real attribute name must be "id", but got "class".`);
     });
   });
 
