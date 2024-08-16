@@ -4,7 +4,7 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { ElementBinding } from '../../src/binding.js';
 import {
   ElementTemplate,
-  ElementTemplateFragment,
+  ElementTemplateView,
 } from '../../src/template/elementTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -16,14 +16,14 @@ import {
 
 describe('ElementTemplate', () => {
   describe('.render()', () => {
-    it('should return SingleTemplateFragment initialized with NodeBinding', () => {
+    it('should return SingleTemplateView initialized with NodeBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
       const elementValue = { class: 'foo' };
       const childNodeValue = new TextDirective('bar');
-      const fragment = new ElementTemplate('div').render(
+      const view = new ElementTemplate('div').render(
         {
           elementValue,
           childNodeValue,
@@ -32,21 +32,21 @@ describe('ElementTemplate', () => {
       );
 
       expect(context.isPending()).toBe(false);
-      expect(fragment.elementBinding).toBeInstanceOf(ElementBinding);
-      expect(fragment.elementBinding.value).toBe(elementValue);
-      expect(fragment.elementBinding.part).toMatchObject({
+      expect(view.elementBinding).toBeInstanceOf(ElementBinding);
+      expect(view.elementBinding.value).toBe(elementValue);
+      expect(view.elementBinding.part).toMatchObject({
         type: PartType.Element,
         node: expect.any(Element),
       });
-      expect(fragment.elementBinding.part.node.nodeName).toBe('DIV');
-      expect(fragment.childNodeBinding).toBeInstanceOf(TextBinding);
-      expect(fragment.childNodeBinding.value).toBe(childNodeValue);
-      expect(fragment.childNodeBinding.part).toMatchObject({
+      expect(view.elementBinding.part.node.nodeName).toBe('DIV');
+      expect(view.childNodeBinding).toBeInstanceOf(TextBinding);
+      expect(view.childNodeBinding.value).toBe(childNodeValue);
+      expect(view.childNodeBinding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
       });
-      expect(fragment.startNode).toBe(fragment.elementBinding.startNode);
-      expect(fragment.endNode).toBe(fragment.elementBinding.endNode);
+      expect(view.startNode).toBe(view.elementBinding.startNode);
+      expect(view.endNode).toBe(view.elementBinding.endNode);
     });
   });
 
@@ -70,40 +70,40 @@ describe('ElementTemplate', () => {
   });
 });
 
-describe('ElementTemplateFragment', () => {
+describe('ElementTemplateView', () => {
   describe('.connect()', () => {
     it('should bind values to element and child binding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new ElementTemplateFragment(
+      const view = new ElementTemplateView(
         'div',
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
         context,
       );
 
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
-      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
+      expect((view.elementBinding.part.node as Element).outerHTML).toBe(
         '<div class="foo"><!--bar--></div>',
       );
 
-      fragment.bind(
+      view.bind(
         { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
         context,
       );
       context.flushUpdate();
 
-      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
+      expect((view.elementBinding.part.node as Element).outerHTML).toBe(
         '<div class="bar"><!--baz--></div>',
       );
 
-      fragment.unbind(context);
+      view.unbind(context);
       context.flushUpdate();
 
-      expect((fragment.elementBinding.part.node as Element).outerHTML).toBe(
+      expect((view.elementBinding.part.node as Element).outerHTML).toBe(
         '<div><!----></div>',
       );
     });
@@ -120,7 +120,7 @@ describe('ElementTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new ElementTemplateFragment(
+      const view = new ElementTemplateView(
         'div',
         {
           elementValue: { class: 'foo' },
@@ -130,18 +130,18 @@ describe('ElementTemplateFragment', () => {
       );
 
       container.appendChild(part.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
+      view.mount(part);
 
       expect(container.innerHTML).toBe(
         '<div class="foo">bar<!--TextDirective--></div><!---->',
       );
 
-      fragment.unmount(part);
+      view.unmount(part);
 
       expect(container.innerHTML).toBe('<!---->');
     });
@@ -158,7 +158,7 @@ describe('ElementTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new ElementTemplateFragment(
+      const view = new ElementTemplateView(
         'div',
         {
           elementValue: { class: 'foo' },
@@ -168,18 +168,18 @@ describe('ElementTemplateFragment', () => {
       );
 
       container.appendChild(part.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
+      view.mount(part);
 
       expect(container.innerHTML).toBe(
         '<div class="foo">bar<!--TextDirective--></div><!---->',
       );
 
-      fragment.unmount({
+      view.unmount({
         type: PartType.ChildNode,
         node: document.createComment(''),
       });
@@ -196,22 +196,22 @@ describe('ElementTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new ElementTemplateFragment(
+      const view = new ElementTemplateView(
         'div',
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
         context,
       );
 
       const elementBindingDisconnectSpy = vi.spyOn(
-        fragment.elementBinding,
+        view.elementBinding,
         'disconnect',
       );
       const childNodeBindingDisconnectSpy = vi.spyOn(
-        fragment.childNodeBinding,
+        view.childNodeBinding,
         'disconnect',
       );
 
-      fragment.disconnect();
+      view.disconnect();
 
       expect(elementBindingDisconnectSpy).toHaveBeenCalledOnce();
       expect(childNodeBindingDisconnectSpy).toHaveBeenCalledOnce();

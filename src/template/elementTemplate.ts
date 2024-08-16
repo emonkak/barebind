@@ -3,7 +3,7 @@ import {
   type ChildNodePart,
   PartType,
   type Template,
-  type TemplateFragment,
+  type TemplateView,
   type UpdateContext,
   nameOf,
 } from '../baseTypes.js';
@@ -26,8 +26,8 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
   render(
     data: ElementData<TElementValue, TChildNodeValue>,
     context: UpdateContext<unknown>,
-  ): ElementTemplateFragment<TElementValue, TChildNodeValue> {
-    return new ElementTemplateFragment(this._type, data, context);
+  ): ElementTemplateView<TElementValue, TChildNodeValue> {
+    return new ElementTemplateView(this._type, data, context);
   }
 
   isSameTemplate(
@@ -40,8 +40,8 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
   }
 }
 
-export class ElementTemplateFragment<TElementValue, TChildNodeValue>
-  implements TemplateFragment<ElementData<TElementValue, TChildNodeValue>>
+export class ElementTemplateView<TElementValue, TChildNodeValue>
+  implements TemplateView<ElementData<TElementValue, TChildNodeValue>>
 {
   private readonly _elementBinding: Binding<TElementValue>;
 

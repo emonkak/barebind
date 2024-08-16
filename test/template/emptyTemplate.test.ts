@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import {
   EmptyTemplate,
-  EmptyTemplateFragment,
+  EmptyTemplateView,
 } from '../../src/template/emptyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '../mocks.js';
@@ -18,16 +18,16 @@ describe('EmptyTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new EmptyTemplateFragment', () => {
+    it('should return a new EmptyTemplateView', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = EmptyTemplate.instance.render(null, context);
+      const view = EmptyTemplate.instance.render(null, context);
 
       expect(context.isPending()).toBe(false);
-      expect(fragment.startNode).toBe(null);
-      expect(fragment.endNode).toBe(null);
+      expect(view.startNode).toBe(null);
+      expect(view.endNode).toBe(null);
     });
   });
 
@@ -40,16 +40,16 @@ describe('EmptyTemplate', () => {
   });
 });
 
-describe('EmptyTemplateFragment', () => {
+describe('EmptyTemplateView', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new EmptyTemplateFragment();
+      const view = new EmptyTemplateView();
 
-      fragment.connect(context);
+      view.connect(context);
 
       expect(context.isPending()).toBe(false);
     });
@@ -61,9 +61,9 @@ describe('EmptyTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new EmptyTemplateFragment();
+      const view = new EmptyTemplateView();
 
-      fragment.bind(null, context);
+      view.bind(null, context);
 
       expect(context.isPending()).toBe(false);
     });
@@ -75,9 +75,9 @@ describe('EmptyTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new EmptyTemplateFragment();
+      const view = new EmptyTemplateView();
 
-      fragment.unbind(context);
+      view.unbind(context);
 
       expect(context.isPending()).toBe(false);
     });
@@ -91,17 +91,17 @@ describe('EmptyTemplateFragment', () => {
         node: document.createComment(''),
       } as const;
 
-      const fragment = new EmptyTemplateFragment();
+      const view = new EmptyTemplateView();
 
       container.appendChild(part.node);
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
+      view.mount(part);
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.unmount(part);
+      view.unmount(part);
 
       expect(container.innerHTML).toBe('<!---->');
     });
@@ -109,9 +109,9 @@ describe('EmptyTemplateFragment', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
-      const fragment = new EmptyTemplateFragment();
+      const view = new EmptyTemplateView();
 
-      fragment.disconnect();
+      view.disconnect();
     });
   });
 });

@@ -11,7 +11,7 @@ import {
   type Part,
   type TaskPriority,
   type Template,
-  type TemplateFragment,
+  type TemplateView,
   type UpdateContext,
   type UpdateQueue,
   type UpdateRuntime,
@@ -93,8 +93,8 @@ export class MockTemplate<TData, TContext>
   render(
     data: TData,
     _context: UpdateContext<TContext>,
-  ): MockTemplateFragment<TData, TContext> {
-    return new MockTemplateFragment(data);
+  ): MockTemplateView<TData, TContext> {
+    return new MockTemplateView(data);
   }
 
   isSameTemplate(other: Template<TData, TContext>): boolean {
@@ -102,8 +102,8 @@ export class MockTemplate<TData, TContext>
   }
 }
 
-export class MockTemplateFragment<TData, TContext>
-  implements TemplateFragment<TData, TContext>
+export class MockTemplateView<TData, TContext>
+  implements TemplateView<TData, TContext>
 {
   private _data: TData;
 

@@ -8,7 +8,7 @@ import {
   PartType,
   type Template,
   type TemplateDirective,
-  type TemplateFragment,
+  type TemplateView,
   type UpdateContext,
   directiveTag,
   nameOf,
@@ -97,9 +97,9 @@ export class TemplateResultBinding<TData, TContext>
 
   private readonly _part: ChildNodePart;
 
-  private _pendingFragment: TemplateFragment<TData, TContext> | null = null;
+  private _pendingView: TemplateView<TData, TContext> | null = null;
 
-  private _memoizedFragment: TemplateFragment<TData, TContext> | null = null;
+  private _memoizedView: TemplateView<TData, TContext> | null = null;
 
   private _status = CommitStatus.Committed;
 
@@ -120,7 +120,7 @@ export class TemplateResultBinding<TData, TContext>
   }
 
   get startNode(): ChildNode {
-    return this._memoizedFragment?.startNode ?? this._part.node;
+    return this._memoizedView?.startNode ?? this._part.node;
   }
 
   get endNode(): ChildNode {
@@ -130,16 +130,16 @@ export class TemplateResultBinding<TData, TContext>
   connect(context: UpdateContext<TContext>): void {
     const { template, data } = this._value;
 
-    if (this._pendingFragment !== null) {
-      if (this._pendingFragment !== this._memoizedFragment) {
+    if (this._pendingView !== null) {
+      if (this._pendingView !== this._memoizedView) {
         this._requestCommit(context);
         this._status = CommitStatus.Mounting;
       }
-      this._pendingFragment.bind(data, context);
+      this._pendingView.bind(data, context);
     } else {
       this._requestCommit(context);
-      this._pendingFragment = template.render(data, context);
-      this._pendingFragment.connect(context);
+      this._pendingView = template.render(data, context);
+      this._pendingView.connect(context);
       this._status = CommitStatus.Mounting;
     }
   }
@@ -154,53 +154,53 @@ export class TemplateResultBinding<TData, TContext>
 
     const { template, data } = newValue;
 
-    if (this._pendingFragment !== null) {
+    if (this._pendingView !== null) {
       if (this._value.template.isSameTemplate(template)) {
-        // Here we use the same template as before. However the fragment may have
+        // Here we use the same template as before. However the view may have
         // been unmounted. If so, we have to remount it.
-        if (this._pendingFragment !== this._memoizedFragment) {
+        if (this._pendingView !== this._memoizedView) {
           this._requestCommit(context);
           this._status = CommitStatus.Mounting;
         }
 
-        this._pendingFragment.bind(data, context);
+        this._pendingView.bind(data, context);
       } else {
-        // Here the template has been changed, so first, we unbind data from the current
-        // fragment.
-        this._pendingFragment.unbind(context);
+        // Here the template has been changed, so first, we unbind data from
+        // the current view.
+        this._pendingView.unbind(context);
 
-        // Next, unmount the old fragment and mount the new fragment.
+        // Next, unmount the old view and mount the new view.
         this._requestCommit(context);
         this._status = CommitStatus.Mounting;
 
         // Finally, render the new template.
-        this._pendingFragment = template.render(data, context);
-        this._pendingFragment.connect(context);
+        this._pendingView = template.render(data, context);
+        this._pendingView.connect(context);
       }
     } else {
       // The template has never been rendered here. We have to mount the new
-      // fragment before rendering the template. This branch will never be
-      // executed unless bind() is called before connect().
+      // view before rendering the template. This branch will never be executed
+      // unless bind() is called before connect().
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
 
-      this._pendingFragment = template.render(data, context);
-      this._pendingFragment.connect(context);
+      this._pendingView = template.render(data, context);
+      this._pendingView.connect(context);
     }
 
     this._value = newValue;
   }
 
   unbind(context: UpdateContext<TContext>): void {
-    // Detach data from the current fragment before its unmount.
-    this._pendingFragment?.unbind(context);
+    // Detach data from the current view before its unmount.
+    this._pendingView?.unbind(context);
 
     this._requestCommit(context);
     this._status = CommitStatus.Unmounting;
   }
 
   disconnect(): void {
-    this._pendingFragment?.disconnect();
+    this._pendingView?.disconnect();
 
     this._status = CommitStatus.Committed;
   }
@@ -208,13 +208,13 @@ export class TemplateResultBinding<TData, TContext>
   commit(): void {
     switch (this._status) {
       case CommitStatus.Mounting:
-        this._memoizedFragment?.unmount(this._part);
-        this._pendingFragment?.mount(this._part);
-        this._memoizedFragment = this._pendingFragment;
+        this._memoizedView?.unmount(this._part);
+        this._pendingView?.mount(this._part);
+        this._memoizedView = this._pendingView;
         break;
       case CommitStatus.Unmounting:
-        this._memoizedFragment?.unmount(this._part);
-        this._memoizedFragment = null;
+        this._memoizedView?.unmount(this._part);
+        this._memoizedView = null;
         break;
     }
 

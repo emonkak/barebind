@@ -1,7 +1,7 @@
 import type {
   ChildNodePart,
   Template,
-  TemplateFragment,
+  TemplateView,
   UpdateContext,
 } from '../baseTypes.js';
 
@@ -14,8 +14,8 @@ export class EmptyTemplate implements Template<null> {
     }
   }
 
-  render(_data: null, _context: UpdateContext<unknown>): EmptyTemplateFragment {
-    return new EmptyTemplateFragment();
+  render(_data: null, _context: UpdateContext<unknown>): EmptyTemplateView {
+    return new EmptyTemplateView();
   }
 
   isSameTemplate(other: Template<null>): boolean {
@@ -23,7 +23,7 @@ export class EmptyTemplate implements Template<null> {
   }
 }
 
-export class EmptyTemplateFragment implements TemplateFragment<null> {
+export class EmptyTemplateView implements TemplateView<null> {
   get startNode(): null {
     return null;
   }

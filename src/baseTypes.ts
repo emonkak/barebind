@@ -91,7 +91,7 @@ export interface Template<TData, TContext = unknown> {
   render(
     data: TData,
     context: UpdateContext<TContext>,
-  ): TemplateFragment<TData, TContext>;
+  ): TemplateView<TData, TContext>;
   isSameTemplate(other: Template<TData, TContext>): boolean;
 }
 
@@ -101,7 +101,7 @@ export interface TemplateDirective<TData = unknown, TContext = unknown>
   get data(): TData;
 }
 
-export interface TemplateFragment<TData, TContext = unknown> {
+export interface TemplateView<TData, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
   connect(context: UpdateContext<TContext>): void;

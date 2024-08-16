@@ -16,7 +16,7 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockTemplate,
-  MockTemplateFragment,
+  MockTemplateView,
   MockUpdateHost,
 } from '../mocks.js';
 
@@ -99,16 +99,12 @@ describe('ComponentBinding', () => {
 
       const data = {};
       const template = new MockTemplate();
-      const fragment = new MockTemplateFragment(data, [
-        document.createComment(''),
-      ]);
+      const view = new MockTemplateView(data, [document.createComment('')]);
       const value = new Component(() => new TemplateResult(template, data), {});
       const binding = new ComponentBinding(value, part);
 
-      const renderSpy = vi
-        .spyOn(template, 'render')
-        .mockReturnValueOnce(fragment);
-      const mountSpy = vi.spyOn(fragment, 'mount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValueOnce(view);
+      const mountSpy = vi.spyOn(view, 'mount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -120,7 +116,7 @@ describe('ComponentBinding', () => {
       expect(renderSpy).toHaveBeenCalledWith(data, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
@@ -151,7 +147,7 @@ describe('ComponentBinding', () => {
       expect(requstUpdateSpy).toHaveBeenCalledWith('user-blocking', context);
     });
 
-    it('should remount the fragment if it is unmounted', () => {
+    it('should remount the view if it is unmounted', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -163,20 +159,16 @@ describe('ComponentBinding', () => {
 
       const data = {};
       const template = new MockTemplate();
-      const fragment = new MockTemplateFragment(data, [
-        document.createComment(''),
-      ]);
+      const view = new MockTemplateView(data, [document.createComment('')]);
       const value = new Component(() => new TemplateResult(template, data), {});
       const binding = new ComponentBinding(value, part);
 
-      const renderSpy = vi
-        .spyOn(template, 'render')
-        .mockReturnValueOnce(fragment);
-      const connectSpy = vi.spyOn(fragment, 'connect');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-      const unbindSpy = vi.spyOn(fragment, 'unbind');
-      const mountSpy = vi.spyOn(fragment, 'mount');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValueOnce(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const bindSpy = vi.spyOn(view, 'bind');
+      const unbindSpy = vi.spyOn(view, 'unbind');
+      const mountSpy = vi.spyOn(view, 'mount');
+      const unmountSpy = vi.spyOn(view, 'unmount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -199,13 +191,13 @@ describe('ComponentBinding', () => {
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(unmountSpy).toHaveBeenCalledOnce();
       expect(unmountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
   });
 
   describe('.bind()', () => {
-    it('should bind data to the current fragment if it is a renderd from the same template', () => {
+    it('should bind data to the current view if it is a renderd from the same template', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -218,9 +210,7 @@ describe('ComponentBinding', () => {
       const data1 = {};
       const data2 = {};
       const template = new MockTemplate();
-      const fragment = new MockTemplateFragment(data1, [
-        document.createComment(''),
-      ]);
+      const view = new MockTemplateView(data1, [document.createComment('')]);
       const value1 = new Component(
         () => new TemplateResult(template, data1),
         {},
@@ -231,12 +221,10 @@ describe('ComponentBinding', () => {
       );
       const binding = new ComponentBinding(value1, part);
 
-      const renderSpy = vi
-        .spyOn(template, 'render')
-        .mockReturnValueOnce(fragment);
-      const connectSpy = vi.spyOn(fragment, 'connect');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-      const mountSpy = vi.spyOn(fragment, 'mount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValueOnce(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const bindSpy = vi.spyOn(view, 'bind');
+      const mountSpy = vi.spyOn(view, 'mount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -252,11 +240,11 @@ describe('ComponentBinding', () => {
       expect(bindSpy).toHaveBeenCalledWith(data2, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should unbind data from the current fragment if it is a renderd from a different template', () => {
+    it('should unbind data from the current view if it is a renderd from a different template', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -272,15 +260,9 @@ describe('ComponentBinding', () => {
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
       const template3 = new MockTemplate();
-      const fragment1 = new MockTemplateFragment(data1, [
-        document.createComment(''),
-      ]);
-      const fragment2 = new MockTemplateFragment(data2, [
-        document.createComment(''),
-      ]);
-      const fragment3 = new MockTemplateFragment(data3, [
-        document.createComment(''),
-      ]);
+      const view1 = new MockTemplateView(data1, [document.createComment('')]);
+      const view2 = new MockTemplateView(data2, [document.createComment('')]);
+      const view3 = new MockTemplateView(data3, [document.createComment('')]);
       const value1 = new Component(
         () => new TemplateResult(template1, data1),
         {},
@@ -297,25 +279,25 @@ describe('ComponentBinding', () => {
 
       const render1Spy = vi
         .spyOn(template1, 'render')
-        .mockReturnValueOnce(fragment1);
+        .mockReturnValueOnce(view1);
       const render2Spy = vi
         .spyOn(template2, 'render')
-        .mockReturnValueOnce(fragment2);
+        .mockReturnValueOnce(view2);
       const render3Spy = vi
         .spyOn(template3, 'render')
-        .mockReturnValueOnce(fragment3);
-      const connect1Spy = vi.spyOn(fragment1, 'connect');
-      const connect2Spy = vi.spyOn(fragment2, 'connect');
-      const connect3Spy = vi.spyOn(fragment3, 'connect');
-      const unbind1Spy = vi.spyOn(fragment1, 'unbind');
-      const unbind2Spy = vi.spyOn(fragment2, 'unbind');
-      const unbind3Spy = vi.spyOn(fragment3, 'unbind');
-      const mount1Spy = vi.spyOn(fragment1, 'mount');
-      const mount2Spy = vi.spyOn(fragment2, 'mount');
-      const mount3Spy = vi.spyOn(fragment3, 'mount');
-      const unmount1Spy = vi.spyOn(fragment1, 'unmount');
-      const unmount2Spy = vi.spyOn(fragment2, 'unmount');
-      const unmount3Spy = vi.spyOn(fragment3, 'unmount');
+        .mockReturnValueOnce(view3);
+      const connect1Spy = vi.spyOn(view1, 'connect');
+      const connect2Spy = vi.spyOn(view2, 'connect');
+      const connect3Spy = vi.spyOn(view3, 'connect');
+      const unbind1Spy = vi.spyOn(view1, 'unbind');
+      const unbind2Spy = vi.spyOn(view2, 'unbind');
+      const unbind3Spy = vi.spyOn(view3, 'unbind');
+      const mount1Spy = vi.spyOn(view1, 'mount');
+      const mount2Spy = vi.spyOn(view2, 'mount');
+      const mount3Spy = vi.spyOn(view3, 'mount');
+      const unmount1Spy = vi.spyOn(view1, 'unmount');
+      const unmount2Spy = vi.spyOn(view2, 'unmount');
+      const unmount3Spy = vi.spyOn(view3, 'unmount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -351,7 +333,7 @@ describe('ComponentBinding', () => {
       expect(unmount1Spy).toHaveBeenCalledWith(part);
       expect(unmount2Spy).toHaveBeenCalledOnce();
       expect(unmount3Spy).not.toHaveBeenCalled();
-      expect(binding.startNode).toBe(fragment3.startNode);
+      expect(binding.startNode).toBe(view3.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
@@ -368,9 +350,7 @@ describe('ComponentBinding', () => {
       const data1 = {};
       const data2 = {};
       const template = new MockTemplate();
-      const fragment = new MockTemplateFragment(data1, [
-        document.createComment(''),
-      ]);
+      const view = new MockTemplateView(data1, [document.createComment('')]);
       const value1 = new Component(
         () => new TemplateResult(template, data1),
         {},
@@ -381,12 +361,10 @@ describe('ComponentBinding', () => {
       );
       const binding = new ComponentBinding(value1, part);
 
-      const renderSpy = vi
-        .spyOn(template, 'render')
-        .mockReturnValueOnce(fragment);
-      const connectSpy = vi.spyOn(fragment, 'connect');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-      const mountSpy = vi.spyOn(fragment, 'mount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValueOnce(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const bindSpy = vi.spyOn(view, 'bind');
+      const mountSpy = vi.spyOn(view, 'mount');
 
       binding.bind(value2, context);
       context.flushUpdate();
@@ -398,11 +376,11 @@ describe('ComponentBinding', () => {
       expect(bindSpy).not.toHaveBeenCalled();
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should only mount the last rendered fragment if there is multiple renderings durling a transation', () => {
+    it('should only mount the last rendered view if there is multiple renderings durling a transation', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -416,12 +394,8 @@ describe('ComponentBinding', () => {
       const data2 = { name: 'bar' };
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
-      const fragment1 = new MockTemplateFragment(data1, [
-        document.createComment(''),
-      ]);
-      const fragment2 = new MockTemplateFragment(data2, [
-        document.createComment(''),
-      ]);
+      const view1 = new MockTemplateView(data1, [document.createComment('')]);
+      const view2 = new MockTemplateView(data2, [document.createComment('')]);
       const value1 = new Component(
         () => new TemplateResult(template1, data1),
         {},
@@ -434,20 +408,20 @@ describe('ComponentBinding', () => {
 
       const render1Spy = vi
         .spyOn(template1, 'render')
-        .mockReturnValueOnce(fragment1);
+        .mockReturnValueOnce(view1);
       const render2Spy = vi
         .spyOn(template2, 'render')
-        .mockReturnValueOnce(fragment2);
-      const connect1Spy = vi.spyOn(fragment1, 'connect');
-      const connect2Spy = vi.spyOn(fragment2, 'connect');
-      const bind1Spy = vi.spyOn(fragment1, 'bind');
-      const bind2Spy = vi.spyOn(fragment2, 'bind');
-      const unbind1Spy = vi.spyOn(fragment1, 'unbind');
-      const unbind2Spy = vi.spyOn(fragment2, 'unbind');
-      const mount1Spy = vi.spyOn(fragment1, 'mount');
-      const mount2Spy = vi.spyOn(fragment2, 'mount');
-      const unmount1Spy = vi.spyOn(fragment1, 'unmount');
-      const unmount2Spy = vi.spyOn(fragment2, 'unmount');
+        .mockReturnValueOnce(view2);
+      const connect1Spy = vi.spyOn(view1, 'connect');
+      const connect2Spy = vi.spyOn(view2, 'connect');
+      const bind1Spy = vi.spyOn(view1, 'bind');
+      const bind2Spy = vi.spyOn(view2, 'bind');
+      const unbind1Spy = vi.spyOn(view1, 'unbind');
+      const unbind2Spy = vi.spyOn(view2, 'unbind');
+      const mount1Spy = vi.spyOn(view1, 'mount');
+      const mount2Spy = vi.spyOn(view2, 'mount');
+      const unmount1Spy = vi.spyOn(view1, 'unmount');
+      const unmount2Spy = vi.spyOn(view2, 'unmount');
 
       binding.connect(context);
       binding.bind(value2, context);
@@ -470,11 +444,11 @@ describe('ComponentBinding', () => {
       expect(mount2Spy).toHaveBeenCalledWith(part);
       expect(unmount1Spy).not.toHaveBeenCalled();
       expect(unmount2Spy).not.toHaveBeenCalled();
-      expect(binding.startNode).toBe(fragment2.startNode);
+      expect(binding.startNode).toBe(view2.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should remount the fragment if it is unmounted', () => {
+    it('should remount the view if it is unmounted', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -486,20 +460,16 @@ describe('ComponentBinding', () => {
 
       const data = {};
       const template = new MockTemplate();
-      const fragment = new MockTemplateFragment(data, [
-        document.createComment(''),
-      ]);
+      const view = new MockTemplateView(data, [document.createComment('')]);
       const value = new Component(() => new TemplateResult(template, data), {});
       const binding = new ComponentBinding(value, part);
 
-      const renderSpy = vi
-        .spyOn(template, 'render')
-        .mockReturnValueOnce(fragment);
-      const connectSpy = vi.spyOn(fragment, 'connect');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-      const unbindSpy = vi.spyOn(fragment, 'unbind');
-      const mountSpy = vi.spyOn(fragment, 'mount');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValueOnce(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const bindSpy = vi.spyOn(view, 'bind');
+      const unbindSpy = vi.spyOn(view, 'unbind');
+      const mountSpy = vi.spyOn(view, 'mount');
+      const unmountSpy = vi.spyOn(view, 'unmount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -522,11 +492,11 @@ describe('ComponentBinding', () => {
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(unmountSpy).toHaveBeenCalledOnce();
       expect(unmountSpy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(fragment.startNode);
+      expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should reuse the fragment cached from previous renderings', () => {
+    it('should reuse the view cached from previous renderings', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -540,12 +510,8 @@ describe('ComponentBinding', () => {
       const template2 = new MockTemplate();
       const data1 = {};
       const data2 = {};
-      const fragment1 = new MockTemplateFragment(data1, [
-        document.createComment(''),
-      ]);
-      const fragment2 = new MockTemplateFragment(data2, [
-        document.createComment(''),
-      ]);
+      const view1 = new MockTemplateView(data1, [document.createComment('')]);
+      const view2 = new MockTemplateView(data2, [document.createComment('')]);
       const value1 = new Component(
         () => new TemplateResult(template1, data1),
         {},
@@ -556,20 +522,16 @@ describe('ComponentBinding', () => {
       );
       const binding = new ComponentBinding(value1, part);
 
-      const render1Spy = vi
-        .spyOn(template1, 'render')
-        .mockReturnValue(fragment1);
-      const render2Spy = vi
-        .spyOn(template2, 'render')
-        .mockReturnValue(fragment2);
-      const connect1Spy = vi.spyOn(fragment1, 'connect');
-      const connect2Spy = vi.spyOn(fragment2, 'connect');
-      const unbind1Spy = vi.spyOn(fragment1, 'unbind');
-      const unbind2Spy = vi.spyOn(fragment2, 'unbind');
-      const mount1Spy = vi.spyOn(fragment1, 'mount');
-      const mount2Spy = vi.spyOn(fragment2, 'mount');
-      const unmount1Spy = vi.spyOn(fragment1, 'unmount');
-      const unmount2Spy = vi.spyOn(fragment2, 'unmount');
+      const render1Spy = vi.spyOn(template1, 'render').mockReturnValue(view1);
+      const render2Spy = vi.spyOn(template2, 'render').mockReturnValue(view2);
+      const connect1Spy = vi.spyOn(view1, 'connect');
+      const connect2Spy = vi.spyOn(view2, 'connect');
+      const unbind1Spy = vi.spyOn(view1, 'unbind');
+      const unbind2Spy = vi.spyOn(view2, 'unbind');
+      const mount1Spy = vi.spyOn(view1, 'mount');
+      const mount2Spy = vi.spyOn(view2, 'mount');
+      const unmount1Spy = vi.spyOn(view1, 'unmount');
+      const unmount2Spy = vi.spyOn(view2, 'unmount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -601,7 +563,7 @@ describe('ComponentBinding', () => {
       expect(unmount1Spy).toHaveBeenCalledWith(part);
       expect(unmount2Spy).toHaveBeenCalledOnce();
       expect(unmount2Spy).toHaveBeenCalledWith(part);
-      expect(binding.startNode).toBe(fragment1.startNode);
+      expect(binding.startNode).toBe(view1.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
@@ -647,7 +609,7 @@ describe('ComponentBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should unmount the memoized fragment', () => {
+    it('should unmount the memoized view', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -659,14 +621,14 @@ describe('ComponentBinding', () => {
 
       const template = new MockTemplate();
       const data = {};
-      const fragment = new MockTemplateFragment(data);
+      const view = new MockTemplateView(data);
       const value = new Component(() => new TemplateResult(template, data), {});
       const binding = new ComponentBinding(value, part);
 
-      const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
-      const connectSpy = vi.spyOn(fragment, 'connect');
-      const unbindSpy = vi.spyOn(fragment, 'unbind');
-      const unmountSpy = vi.spyOn(fragment, 'unmount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValue(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const unbindSpy = vi.spyOn(view, 'unbind');
+      const unmountSpy = vi.spyOn(view, 'unmount');
 
       binding.connect(context);
       context.flushUpdate();
@@ -720,7 +682,7 @@ describe('ComponentBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should disconnect the current fragment', () => {
+    it('should disconnect the current view', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -732,12 +694,12 @@ describe('ComponentBinding', () => {
 
       const template = new MockTemplate();
       const data = {};
-      const fragment = new MockTemplateFragment(data);
+      const view = new MockTemplateView(data);
       const value = new Component(() => new TemplateResult(template, data), {});
       const binding = new ComponentBinding(value, part);
 
-      const renderSpy = vi.spyOn(template, 'render').mockReturnValue(fragment);
-      const disconnectSpy = vi.spyOn(fragment, 'disconnect');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValue(view);
+      const disconnectSpy = vi.spyOn(view, 'disconnect');
 
       binding.connect(context);
       context.flushUpdate();
@@ -792,16 +754,14 @@ describe('ComponentBinding', () => {
 
       const template = new MockTemplate();
       const data = {};
-      const fragment = new MockTemplateFragment(data);
+      const view = new MockTemplateView(data);
       const value = new Component(() => new TemplateResult(template, data), {});
       const binding = new ComponentBinding(value, part);
 
-      const renderSpy = vi
-        .spyOn(template, 'render')
-        .mockReturnValueOnce(fragment);
-      const connectSpy = vi.spyOn(fragment, 'connect');
-      const bindSpy = vi.spyOn(fragment, 'bind');
-      const mountSpy = vi.spyOn(fragment, 'mount');
+      const renderSpy = vi.spyOn(template, 'render').mockReturnValueOnce(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const bindSpy = vi.spyOn(view, 'bind');
+      const mountSpy = vi.spyOn(view, 'mount');
 
       binding.connect(context);
       binding.disconnect();

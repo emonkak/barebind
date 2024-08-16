@@ -11,7 +11,7 @@ import {
   type Part,
   PartType,
   type Template,
-  type TemplateFragment,
+  type TemplateView,
   type UpdateContext,
   directiveTag,
   nameOf,
@@ -74,15 +74,15 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private readonly _part: ChildNodePart;
 
-  private _pendingFragment: TemplateFragment<unknown, TContext> | null = null;
+  private _pendingView: TemplateView<unknown, TContext> | null = null;
 
-  private _memoizedFragment: TemplateFragment<unknown, TContext> | null = null;
+  private _memoizedView: TemplateView<unknown, TContext> | null = null;
 
   private _memoizedTemplate: Template<unknown, TContext> | null = null;
 
-  private _cachedFragments: WeakMap<
+  private _cachedViews: WeakMap<
     Template<unknown, TContext>,
-    TemplateFragment<unknown, TContext>
+    TemplateView<unknown, TContext>
   > | null = null;
 
   private _hooks: Hook[] = [];
@@ -103,7 +103,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   get startNode(): ChildNode {
-    return this._memoizedFragment?.startNode ?? this._part.node;
+    return this._memoizedView?.startNode ?? this._part.node;
   }
 
   get endNode(): ChildNode {
@@ -133,14 +133,14 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   unbind(context: UpdateContext<TContext>): void {
-    this._pendingFragment?.unbind(context);
+    this._pendingView?.unbind(context);
     this._cleanHooks();
     this._requestCommit(context);
     this._status = CommitStatus.Unmounting;
   }
 
   disconnect(): void {
-    this._pendingFragment?.disconnect();
+    this._pendingView?.disconnect();
     this._cleanHooks();
     this._status = CommitStatus.Committed;
   }
@@ -148,13 +148,13 @@ export class ComponentBinding<TProps, TData, TContext>
   commit(): void {
     switch (this._status) {
       case CommitStatus.Mounting:
-        this._memoizedFragment?.unmount(this._part);
-        this._pendingFragment?.mount(this._part);
-        this._memoizedFragment = this._pendingFragment;
+        this._memoizedView?.unmount(this._part);
+        this._pendingView?.mount(this._part);
+        this._memoizedView = this._pendingView;
         break;
       case CommitStatus.Unmounting:
-        this._memoizedFragment?.unmount(this._part);
-        this._memoizedFragment = null;
+        this._memoizedView?.unmount(this._part);
+        this._memoizedView = null;
         break;
     }
 
@@ -185,64 +185,61 @@ export class ComponentBinding<TProps, TData, TContext>
       this._hooks,
     );
 
-    if (this._pendingFragment !== null) {
-      // Safety: If a pending fragment exists, there will always be a memoized
+    if (this._pendingView !== null) {
+      // Safety: If a pending view exists, there will always be a memoized
       // template.
       if (this._memoizedTemplate!.isSameTemplate(template)) {
-        // Here we use the same template as before. However the fragment may have
+        // Here we use the same template as before. However the view may have
         // been unmounted. If so, we have to remount it.
-        if (this._memoizedFragment !== this._pendingFragment) {
+        if (this._memoizedView !== this._pendingView) {
           this._requestCommit(context);
           this._status = CommitStatus.Mounting;
         }
 
-        this._pendingFragment.bind(data, context);
+        this._pendingView.bind(data, context);
       } else {
-        // Here the template has been changed, so first, we unbind data from the current
-        // fragment.
-        this._pendingFragment.unbind(context);
+        // Here the template has been changed, so first, we unbind data from the
+        // current view.
+        this._pendingView.unbind(context);
 
-        // Next, unmount the old fragment and mount the new fragment.
+        // Next, unmount the old view and mount the new view.
         this._requestCommit(context);
         this._status = CommitStatus.Mounting;
 
-        let newFragment: TemplateFragment<TData, TContext>;
+        let newView: TemplateView<TData, TContext>;
 
         // Finally, render the new template.
-        if (this._cachedFragments !== null) {
-          const cachedFragment = this._cachedFragments.get(template);
-          if (cachedFragment !== undefined) {
-            cachedFragment.bind(data, context);
-            newFragment = cachedFragment;
+        if (this._cachedViews !== null) {
+          const cachedView = this._cachedViews.get(template);
+          if (cachedView !== undefined) {
+            cachedView.bind(data, context);
+            newView = cachedView;
           } else {
-            newFragment = template.render(data, context);
-            newFragment.connect(context);
+            newView = template.render(data, context);
+            newView.connect(context);
           }
         } else {
           // It is rare that different templates are returned, so we defer
-          // creating fragment caches.
-          this._cachedFragments = new WeakMap();
-          newFragment = template.render(data, context);
-          newFragment.connect(context);
+          // creating view caches.
+          this._cachedViews = new WeakMap();
+          newView = template.render(data, context);
+          newView.connect(context);
         }
 
-        // Remember the previous fragment for future renderings.
-        this._cachedFragments.set(
-          this._memoizedTemplate!,
-          this._pendingFragment,
-        );
+        // Remember the previous view for future renderings.
+        this._cachedViews.set(this._memoizedTemplate!, this._pendingView);
 
-        this._pendingFragment = newFragment;
+        this._pendingView = newView;
       }
     } else {
       // The template has never been rendered here. We have to mount the new
-      // fragment before rendering the template. This branch will never be
-      // executed unless bind() is called before connect().
+      // view before rendering the template. This branch will never be executed
+      // unless bind() is called before connect().
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
 
-      this._pendingFragment = template.render(data, context);
-      this._pendingFragment.connect(context);
+      this._pendingView = template.render(data, context);
+      this._pendingView.connect(context);
     }
 
     this._memoizedTemplate = template;

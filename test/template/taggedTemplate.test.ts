@@ -16,7 +16,7 @@ import {
 } from '../../src/binding.js';
 import {
   TaggedTemplate,
-  TaggedTemplateFragment,
+  TaggedTemplateView,
   getMarker,
   isValidMarker,
 } from '../../src/template/taggedTemplate.js';
@@ -329,7 +329,7 @@ describe('TaggedTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new TaggedTemplateFragment', () => {
+    it('should return a new TaggedTemplateView', () => {
       const [template, values] = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
@@ -339,53 +339,53 @@ describe('TaggedTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       expect(context.isPending()).toBe(false);
-      expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
-      expect(fragment.bindings).toHaveLength(values.length);
-      expect(fragment.bindings.map((binding) => binding.value)).toEqual(values);
-      expect(fragment.bindings[0]).toBeInstanceOf(AttributeBinding);
-      expect(fragment.bindings[0]?.part).toMatchObject({
+      expect(view).toBeInstanceOf(TaggedTemplateView);
+      expect(view.bindings).toHaveLength(values.length);
+      expect(view.bindings.map((binding) => binding.value)).toEqual(values);
+      expect(view.bindings[0]).toBeInstanceOf(AttributeBinding);
+      expect(view.bindings[0]?.part).toMatchObject({
         type: PartType.Attribute,
         name: 'class',
       });
-      expect(fragment.bindings[1]).toBeInstanceOf(NodeBinding);
-      expect(fragment.bindings[1]?.part).toMatchObject({
+      expect(view.bindings[1]).toBeInstanceOf(NodeBinding);
+      expect(view.bindings[1]?.part).toMatchObject({
         type: PartType.ChildNode,
       });
-      expect(fragment.bindings[2]).toBeInstanceOf(PropertyBinding);
-      expect(fragment.bindings[2]?.part).toMatchObject({
+      expect(view.bindings[2]).toBeInstanceOf(PropertyBinding);
+      expect(view.bindings[2]?.part).toMatchObject({
         type: PartType.Property,
         name: 'value',
       });
-      expect(fragment.bindings[3]).toBeInstanceOf(EventBinding);
-      expect(fragment.bindings[3]?.part).toMatchObject({
+      expect(view.bindings[3]).toBeInstanceOf(EventBinding);
+      expect(view.bindings[3]?.part).toMatchObject({
         type: PartType.Event,
         name: 'onchange',
       });
-      expect(fragment.bindings[4]).toBeInstanceOf(ElementBinding);
-      expect(fragment.bindings[4]?.part).toMatchObject({
+      expect(view.bindings[4]).toBeInstanceOf(ElementBinding);
+      expect(view.bindings[4]?.part).toMatchObject({
         type: PartType.Element,
       });
-      expect(fragment.bindings[5]).toBeInstanceOf(TextBinding);
-      expect(fragment.bindings[5]?.part).toMatchObject({
+      expect(view.bindings[5]).toBeInstanceOf(TextBinding);
+      expect(view.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         `
         <div>
           <!--"bar"-->
           <input type="text"><span></span>
         </div>`.trim(),
       ]);
-      expect(fragment.startNode).toBe(fragment.childNodes[0]);
-      expect(fragment.endNode).toBe(fragment.childNodes[0]);
+      expect(view.startNode).toBe(view.childNodes[0]);
+      expect(view.endNode).toBe(view.childNodes[0]);
 
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         `
         <div class="foo">
           <!--bar-->
@@ -394,32 +394,32 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should return a TaggedTemplateFragment without bindings', () => {
+    it('should return a TaggedTemplateView without bindings', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
       const [template] = html`<div></div>`;
-      const fragment = template.render([], context);
+      const view = template.render([], context);
 
-      expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
-      expect(fragment.bindings).toHaveLength(0);
-      expect(fragment.childNodes.map(toHTML)).toEqual(['<div></div>']);
-      expect(fragment.startNode).toBe(fragment.childNodes[0]);
-      expect(fragment.endNode).toBe(fragment.childNodes[0]);
+      expect(view).toBeInstanceOf(TaggedTemplateView);
+      expect(view.bindings).toHaveLength(0);
+      expect(view.childNodes.map(toHTML)).toEqual(['<div></div>']);
+      expect(view.startNode).toBe(view.childNodes[0]);
+      expect(view.endNode).toBe(view.childNodes[0]);
     });
 
-    it('should return a TaggedTemplateFragment with a empty template', () => {
+    it('should return a TaggedTemplateView with a empty template', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
       const [template] = html``;
-      const fragment = template.render([], context);
+      const view = template.render([], context);
 
-      expect(fragment).toBeInstanceOf(TaggedTemplateFragment);
-      expect(fragment.bindings).toHaveLength(0);
-      expect(fragment.childNodes).toHaveLength(0);
-      expect(fragment.startNode).toBeNull();
-      expect(fragment.endNode).toBeNull();
+      expect(view).toBeInstanceOf(TaggedTemplateView);
+      expect(view.bindings).toHaveLength(0);
+      expect(view.childNodes).toHaveLength(0);
+      expect(view.startNode).toBeNull();
+      expect(view.endNode).toBeNull();
     });
 
     it('should throw an error if the number of holes and values do not match', () => {
@@ -454,9 +454,9 @@ describe('TaggedTemplate', () => {
   });
 });
 
-describe('TaggedTemplateFragment', () => {
+describe('TaggedTemplateView', () => {
   describe('.connect()', () => {
-    it('should connect bindings in the fragment', () => {
+    it('should connect bindings in the view', () => {
       const [template, values] = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
@@ -466,12 +466,12 @@ describe('TaggedTemplateFragment', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         `
         <div class="foo">
           <!--bar-->
@@ -482,27 +482,27 @@ describe('TaggedTemplateFragment', () => {
   });
 
   describe('.bind()', () => {
-    it('should bind values corresponding to bindings in the fragment', () => {
+    it('should bind values corresponding to bindings in the view', () => {
       const [template, values] = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         '<div class="foo">bar</div>',
         '<!--baz-->',
       ]);
 
-      fragment.bind(['bar', 'baz', 'qux'], context);
+      view.bind(['bar', 'baz', 'qux'], context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         '<div class="bar">baz</div>',
         '<!--qux-->',
       ]);
@@ -510,7 +510,7 @@ describe('TaggedTemplateFragment', () => {
   });
 
   describe('.unbind()', () => {
-    it('should unbind top-level bindings in the fragment and other bindings are disconnected', () => {
+    it('should unbind top-level bindings in the view and other bindings are disconnected', () => {
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -523,15 +523,15 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
       `;
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
-      fragment.mount(part);
+      view.mount(part);
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         'foo',
         '<div class="bar">baz</div>',
         '<!--qux-->',
@@ -540,17 +540,17 @@ describe('TaggedTemplateFragment', () => {
         'foo<div class="bar">baz</div><!--qux--><!---->',
       );
 
-      const unbindSpies = fragment.bindings.map((binding) =>
+      const unbindSpies = view.bindings.map((binding) =>
         vi.spyOn(binding, 'unbind'),
       );
-      const disconnectSpies = fragment.bindings.map((binding) =>
+      const disconnectSpies = view.bindings.map((binding) =>
         vi.spyOn(binding, 'disconnect'),
       );
 
-      fragment.unbind(context);
+      view.unbind(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         '',
         '<div class="bar">baz</div>',
         '<!---->',
@@ -566,7 +566,7 @@ describe('TaggedTemplateFragment', () => {
       ]);
     });
 
-    it('should only unbind top-level bindings in the fragment', () => {
+    it('should only unbind top-level bindings in the view', () => {
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
@@ -579,32 +579,32 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         ${'foo'}<div></div><!--${'baz'}-->
       `;
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
-      fragment.mount(part);
+      view.mount(part);
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         'foo',
         '<div></div>',
         '<!--baz-->',
       ]);
       expect(container.innerHTML).toBe('foo<div></div><!--baz--><!---->');
 
-      const unbindSpies = fragment.bindings.map((binding) =>
+      const unbindSpies = view.bindings.map((binding) =>
         vi.spyOn(binding, 'unbind'),
       );
-      const disconnectSpies = fragment.bindings.map((binding) =>
+      const disconnectSpies = view.bindings.map((binding) =>
         vi.spyOn(binding, 'disconnect'),
       );
 
-      fragment.unbind(context);
+      view.unbind(context);
       context.flushUpdate();
 
-      expect(fragment.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toEqual([
         '',
         '<div></div>',
         '<!---->',
@@ -623,16 +623,16 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <p>Count: ${0}</p>
       `;
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       expect(() => {
-        fragment.bind([] as any, context);
+        view.bind([] as any, context);
       }).toThrow('The number of new data must be 1, but got 0.');
     });
   });
 
   describe('.disconnect()', () => {
-    it('should disconnect bindings in the fragment', () => {
+    it('should disconnect bindings in the view', () => {
       const value = new TextDirective();
       const [template, values] = html`
         <div>${value}</div>
@@ -651,11 +651,11 @@ describe('TaggedTemplateFragment', () => {
         });
         return binding;
       });
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       expect(disconnects).toBe(0);
 
-      fragment.disconnect();
+      view.disconnect();
 
       expect(disconnects).toBe(1);
     });
@@ -675,19 +675,19 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
+      view.mount(part);
 
       expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
 
-      fragment.unmount(part);
+      view.unmount(part);
 
       expect(container.innerHTML).toBe('<!---->');
     });
@@ -707,19 +707,19 @@ describe('TaggedTemplateFragment', () => {
       const [template, values] = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const fragment = template.render(values, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(part);
+      view.mount(part);
 
       expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
 
-      fragment.unmount({
+      view.unmount({
         type: PartType.ChildNode,
         node: document.createComment(''),
       });

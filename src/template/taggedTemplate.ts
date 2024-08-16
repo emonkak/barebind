@@ -4,7 +4,7 @@ import {
   type Part,
   PartType,
   type Template,
-  type TemplateFragment,
+  type TemplateView,
   type UpdateContext,
   nameOf,
 } from '../baseTypes.js';
@@ -122,7 +122,7 @@ export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
   render(
     data: TData,
     context: UpdateContext<unknown>,
-  ): TaggedTemplateFragment<TData> {
+  ): TaggedTemplateView<TData> {
     const holes = this._holes;
 
     if (holes.length !== data.length) {
@@ -212,7 +212,7 @@ export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
     // Detach child nodes from the DocumentFragment.
     fragment.replaceChildren();
 
-    return new TaggedTemplateFragment(bindings, childNodes);
+    return new TaggedTemplateView(bindings, childNodes);
   }
 
   isSameTemplate(other: Template<TData>): boolean {
@@ -220,8 +220,8 @@ export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
   }
 }
 
-export class TaggedTemplateFragment<TData extends ReadonlyArray<any>>
-  implements TemplateFragment<TData>
+export class TaggedTemplateView<TData extends ReadonlyArray<any>>
+  implements TemplateView<TData>
 {
   private readonly _bindings: Binding<unknown>[];
 

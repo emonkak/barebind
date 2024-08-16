@@ -4,7 +4,7 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
 import {
   ChildNodeTemplate,
-  SingleTemplateFragment,
+  SingleTemplateView,
   TextTemplate,
 } from '../../src/template/singleTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -20,23 +20,23 @@ describe('ChildNodeTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new SingleTemplateFragment', () => {
+    it('should return a new SingleTemplateView', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = ChildNodeTemplate.instance.render('foo', context);
+      const view = ChildNodeTemplate.instance.render('foo', context);
 
       context.flushUpdate();
 
-      expect(fragment.binding).toBeInstanceOf(NodeBinding);
-      expect(fragment.binding.part).toMatchObject({
+      expect(view.binding).toBeInstanceOf(NodeBinding);
+      expect(view.binding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
       });
-      expect(fragment.binding.part.node.nodeValue).toBe('"foo"');
-      expect(fragment.startNode).toBe(fragment.binding.startNode);
-      expect(fragment.endNode).toBe(fragment.binding.endNode);
+      expect(view.binding.part.node.nodeValue).toBe('"foo"');
+      expect(view.startNode).toBe(view.binding.startNode);
+      expect(view.endNode).toBe(view.binding.endNode);
     });
   });
 
@@ -59,21 +59,21 @@ describe('TextTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return SingleTemplateFragment', () => {
+    it('should return SingleTemplateView', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = TextTemplate.instance.render('foo', context);
+      const view = TextTemplate.instance.render('foo', context);
 
-      expect(fragment.binding).toBeInstanceOf(NodeBinding);
-      expect(fragment.binding.value).toBe('foo');
-      expect(fragment.binding.part).toMatchObject({
+      expect(view.binding).toBeInstanceOf(NodeBinding);
+      expect(view.binding.value).toBe('foo');
+      expect(view.binding.part).toMatchObject({
         type: PartType.Node,
         node: expect.any(Text),
       });
-      expect(fragment.startNode).toBe(fragment.binding.startNode);
-      expect(fragment.endNode).toBe(fragment.binding.endNode);
+      expect(view.startNode).toBe(view.binding.startNode);
+      expect(view.endNode).toBe(view.binding.endNode);
     });
   });
 
@@ -86,7 +86,7 @@ describe('TextTemplate', () => {
   });
 });
 
-describe('SingleTemplateFragment', () => {
+describe('SingleTemplateView', () => {
   describe('.connect()', () => {
     it('should bind values to element and child binding', () => {
       const part = {
@@ -97,19 +97,19 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new SingleTemplateFragment('foo', part, context);
+      const view = new SingleTemplateView('foo', part, context);
 
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('foo');
 
-      fragment.bind('bar', context);
+      view.bind('bar', context);
       context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('bar');
 
-      fragment.unbind(context);
+      view.unbind(context);
       context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('');
@@ -123,26 +123,26 @@ describe('SingleTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const fragmentPart = {
+      const viewPart = {
         type: PartType.Node,
         node: document.createTextNode('foo'),
       } as const;
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
+      const view = new SingleTemplateView('foo', viewPart, context);
 
       container.appendChild(containerPart.node);
-      fragment.connect(context);
+      view.connect(context);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(containerPart);
+      view.mount(containerPart);
 
       expect(container.innerHTML).toBe('foo<!---->');
 
-      fragment.unmount(containerPart);
+      view.unmount(containerPart);
 
       expect(container.innerHTML).toBe('<!---->');
     });
@@ -155,7 +155,7 @@ describe('SingleTemplateFragment', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const fragmentPart = {
+      const viewPart = {
         type: PartType.Node,
         node: document.createTextNode('foo'),
       } as const;
@@ -163,18 +163,18 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new SingleTemplateFragment('foo', fragmentPart, context);
+      const view = new SingleTemplateView('foo', viewPart, context);
 
       container.appendChild(containerPart.node);
 
       expect(container.innerHTML).toBe('<!---->');
 
-      fragment.mount(containerPart);
+      view.mount(containerPart);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('foo<!---->');
 
-      fragment.unmount({
+      view.unmount({
         type: PartType.ChildNode,
         node: document.createComment(''),
       });
@@ -193,11 +193,11 @@ describe('SingleTemplateFragment', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const fragment = new SingleTemplateFragment('foo', part, context);
+      const view = new SingleTemplateView('foo', part, context);
 
-      const disconnectSpy = vi.spyOn(fragment.binding, 'disconnect');
+      const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
 
-      fragment.disconnect();
+      view.disconnect();
 
       expect(disconnectSpy).toHaveBeenCalledOnce();
     });

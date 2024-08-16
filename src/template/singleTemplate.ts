@@ -4,7 +4,7 @@ import {
   type Part,
   PartType,
   type Template,
-  type TemplateFragment,
+  type TemplateView,
   type UpdateContext,
   nameOf,
 } from '../baseTypes.js';
@@ -22,7 +22,7 @@ export class ChildNodeTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: UpdateContext<unknown>): SingleTemplateFragment<T> {
+  render(data: T, context: UpdateContext<unknown>): SingleTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -32,7 +32,7 @@ export class ChildNodeTemplate<T> implements Template<T> {
       part.node.nodeValue = nameOf(data);
     }
 
-    return new SingleTemplateFragment(data, part, context);
+    return new SingleTemplateView(data, part, context);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -49,13 +49,13 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: UpdateContext<unknown>): SingleTemplateFragment<T> {
+  render(data: T, context: UpdateContext<unknown>): SingleTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
 
-    return new SingleTemplateFragment(data, part, context);
+    return new SingleTemplateView(data, part, context);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -63,7 +63,7 @@ export class TextTemplate<T> implements Template<T> {
   }
 }
 
-export class SingleTemplateFragment<T> implements TemplateFragment<T> {
+export class SingleTemplateView<T> implements TemplateView<T> {
   private readonly _binding: Binding<T>;
 
   constructor(data: T, part: Part, context: UpdateContext<unknown>) {
