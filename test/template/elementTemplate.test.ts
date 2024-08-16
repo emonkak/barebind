@@ -2,10 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { ElementBinding } from '../../src/binding.js';
-import {
-  ElementTemplate,
-  ElementTemplateView,
-} from '../../src/template/elementTemplate.js';
+import { ElementTemplate } from '../../src/template/elementTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -16,7 +13,7 @@ import {
 
 describe('ElementTemplate', () => {
   describe('.render()', () => {
-    it('should return SingleTemplateView initialized with NodeBinding', () => {
+    it('should return ElementTemplateView initialized with NodeBinding', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
@@ -72,13 +69,12 @@ describe('ElementTemplate', () => {
 
 describe('ElementTemplateView', () => {
   describe('.connect()', () => {
-    it('should bind values to element and child binding', () => {
+    it('should connect the element and child bindings', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const view = new ElementTemplateView(
-        'div',
+      const view = new ElementTemplate('div').render(
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
         context,
       );
@@ -120,8 +116,7 @@ describe('ElementTemplateView', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const view = new ElementTemplateView(
-        'div',
+      const view = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
           childNodeValue: new TextDirective('bar'),
@@ -158,8 +153,7 @@ describe('ElementTemplateView', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const view = new ElementTemplateView(
-        'div',
+      const view = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
           childNodeValue: new TextDirective('bar'),
@@ -191,13 +185,12 @@ describe('ElementTemplateView', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should disconnect from the binding', () => {
+    it('should disconnect the element and child bindings', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const view = new ElementTemplateView(
-        'div',
+      const view = new ElementTemplate('div').render(
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
         context,
       );

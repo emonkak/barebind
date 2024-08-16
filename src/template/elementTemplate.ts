@@ -27,7 +27,33 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
     data: ElementData<TElementValue, TChildNodeValue>,
     context: UpdateContext<unknown>,
   ): ElementTemplateView<TElementValue, TChildNodeValue> {
-    return new ElementTemplateView(this._type, data, context);
+    const elementPart = {
+      type: PartType.Element,
+      node: document.createElement(this._type),
+    } as const;
+    const childNodePart = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+
+    DEBUG: {
+      childNodePart.node.data = nameOf(data.childNodeValue);
+    }
+
+    elementPart.node.appendChild(childNodePart.node);
+
+    const elementBinding = resolveBinding(
+      data.elementValue,
+      elementPart,
+      context,
+    );
+    const childNodeBinding = resolveBinding(
+      data.childNodeValue,
+      childNodePart,
+      context,
+    );
+
+    return new ElementTemplateView(elementBinding, childNodeBinding);
   }
 
   isSameTemplate(
@@ -48,35 +74,11 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
   private readonly _childNodeBinding: Binding<TChildNodeValue>;
 
   constructor(
-    type: string,
-    data: ElementData<TElementValue, TChildNodeValue>,
-    context: UpdateContext<unknown>,
+    elementBinding: Binding<TElementValue>,
+    childNodeBinding: Binding<TChildNodeValue>,
   ) {
-    const elementPart = {
-      type: PartType.Element,
-      node: document.createElement(type),
-    } as const;
-    const childNodePart = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-
-    DEBUG: {
-      childNodePart.node.data = nameOf(data.childNodeValue);
-    }
-
-    elementPart.node.appendChild(childNodePart.node);
-
-    this._elementBinding = resolveBinding(
-      data.elementValue,
-      elementPart,
-      context,
-    );
-    this._childNodeBinding = resolveBinding(
-      data.childNodeValue,
-      childNodePart,
-      context,
-    );
+    this._elementBinding = elementBinding;
+    this._childNodeBinding = childNodeBinding;
   }
 
   get elementBinding(): Binding<TElementValue> {
