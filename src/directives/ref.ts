@@ -94,7 +94,14 @@ export class RefBinding implements Binding<Ref>, Effect {
     }
   }
 
-  disconnect() {
+  disconnect(): void {
+    const { ref } = this._value;
+
+    if (ref !== null) {
+      invokeRef(ref, null);
+    }
+
+    this._memoizedRef = null;
     this._status = CommitStatus.Committed;
   }
 
@@ -116,7 +123,7 @@ export class RefBinding implements Binding<Ref>, Effect {
         break;
       }
       case CommitStatus.Unmounting: {
-        const ref = this._value.ref;
+        const { ref } = this._value;
 
         /* istanbul ignore else @preserve */
         if (ref !== null) {

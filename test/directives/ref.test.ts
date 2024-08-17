@@ -7,10 +7,10 @@ import { MockBlock, MockUpdateHost } from '../mocks.js';
 
 describe('ref()', () => {
   it('should construct a new Ref directive', () => {
-    const refFunction = () => {};
-    const value = ref(refFunction);
+    const refCallback = () => {};
+    const value = ref(refCallback);
 
-    expect(value.ref).toBe(refFunction);
+    expect(value.ref).toBe(refCallback);
   });
 });
 
@@ -66,15 +66,15 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refFunction = vi.fn();
-      const value = ref(refFunction);
+      const refCallback = vi.fn();
+      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
       context.flushUpdate();
 
-      expect(refFunction).toHaveBeenCalledOnce();
-      expect(refFunction).toHaveBeenCalledWith(part.node);
+      expect(refCallback).toHaveBeenCalledOnce();
+      expect(refCallback).toHaveBeenCalledWith(part.node);
     });
 
     it('should assign the element to the ref object', () => {
@@ -132,10 +132,10 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refFunction1 = vi.fn();
-      const refFunction2 = vi.fn();
-      const value1 = ref(refFunction1);
-      const value2 = ref(refFunction2);
+      const refCallback1 = vi.fn();
+      const refCallback2 = vi.fn();
+      const value1 = ref(refCallback1);
+      const value2 = ref(refCallback2);
       const binding = new RefBinding(value1, part);
 
       binding.connect(context);
@@ -145,10 +145,10 @@ describe('RefBinding', () => {
       context.flushUpdate();
 
       expect(binding.value).toBe(value2);
-      expect(refFunction1).toHaveBeenCalledTimes(2);
-      expect(refFunction1).toHaveBeenCalledWith(null);
-      expect(refFunction2).toHaveBeenCalledOnce();
-      expect(refFunction2).toHaveBeenCalledWith(part.node);
+      expect(refCallback1).toHaveBeenCalledTimes(2);
+      expect(refCallback1).toHaveBeenCalledWith(null);
+      expect(refCallback2).toHaveBeenCalledOnce();
+      expect(refCallback2).toHaveBeenCalledWith(part.node);
     });
 
     it('should assign the element to the new ref object and unassign the element from the old one', () => {
@@ -212,8 +212,8 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refFunction = vi.fn();
-      const value1 = ref(refFunction);
+      const refCallback = vi.fn();
+      const value1 = ref(refCallback);
       const value2 = ref(null);
       const binding = new RefBinding(value1, part);
 
@@ -224,8 +224,8 @@ describe('RefBinding', () => {
       context.flushUpdate();
 
       expect(binding.value).toBe(value2);
-      expect(refFunction).toHaveBeenCalledTimes(2);
-      expect(refFunction).toHaveBeenCalledWith(null);
+      expect(refCallback).toHaveBeenCalledTimes(2);
+      expect(refCallback).toHaveBeenCalledWith(null);
     });
 
     it('should unassign the element from the old ref object if the new ref is null', () => {
@@ -285,8 +285,8 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refFunction = vi.fn();
-      const value = ref(refFunction);
+      const refCallback = vi.fn();
+      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
@@ -295,8 +295,8 @@ describe('RefBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(refFunction).toHaveBeenCalledTimes(2);
-      expect(refFunction).toHaveBeenCalledWith(null);
+      expect(refCallback).toHaveBeenCalledTimes(2);
+      expect(refCallback).toHaveBeenCalledWith(null);
     });
 
     it('should unassign the element from the old ref object', () => {
@@ -341,20 +341,7 @@ describe('RefBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should do nothing', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'ref',
-        node: document.createElement('div'),
-      } as const;
-
-      const value = ref(() => {});
-      const binding = new RefBinding(value, part);
-
-      binding.disconnect();
-    });
-
-    it('should cancel invoke ref', () => {
+    it('should invoke the ref callback with null', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -364,20 +351,64 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refFunction = vi.fn();
-      const value = ref(refFunction);
+      const refCallback = vi.fn();
+      const value = ref(refCallback);
+      const binding = new RefBinding(value, part);
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      binding.disconnect();
+
+      expect(refCallback).toHaveBeenCalledTimes(2);
+      expect(refCallback).toHaveBeenNthCalledWith(1, part.node);
+      expect(refCallback).toHaveBeenNthCalledWith(2, null);
+    });
+
+    it('should invoke the ref object with null', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'ref',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const refObject = { current: null };
+      const value = ref(refObject);
+      const binding = new RefBinding(value, part);
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(refObject.current).toBe(part.node);
+
+      binding.disconnect();
+
+      expect(refObject.current).toBe(null);
+    });
+
+    it('should cancel the pending effect', () => {
+      const part = {
+        type: PartType.Attribute,
+        name: 'ref',
+        node: document.createElement('div'),
+      } as const;
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const context = new UpdateContext(host, updater, new MockBlock());
+
+      const refCallback = vi.fn();
+      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
       binding.disconnect();
       context.flushUpdate();
 
-      expect(refFunction).not.toHaveBeenCalled();
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(refFunction).toHaveBeenCalledOnce();
+      expect(refCallback).toHaveBeenCalledOnce();
+      expect(refCallback).toHaveBeenCalledWith(null);
     });
   });
 });
