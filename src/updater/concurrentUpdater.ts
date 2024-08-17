@@ -135,12 +135,11 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   ): void {
     const { passiveEffects, mutationEffects, layoutEffects } = queue;
 
-    if (mutationEffects.length > 0 || layoutEffects.length > 0) {
+    if (mutationEffects.length > 0) {
       this._scheduler.requestCallback(
         () => {
           try {
             host.flushEffects(mutationEffects, CommitPhase.Mutation);
-            host.flushEffects(layoutEffects, CommitPhase.Layout);
           } finally {
             this._taskCount.value--;
           }
@@ -149,6 +148,22 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       );
 
       queue.mutationEffects = [];
+
+      this._taskCount.value++;
+    }
+
+    if (layoutEffects.length > 0) {
+      this._scheduler.requestCallback(
+        () => {
+          try {
+            host.flushEffects(layoutEffects, CommitPhase.Layout);
+          } finally {
+            this._taskCount.value--;
+          }
+        },
+        { priority: 'user-blocking' },
+      );
+
       queue.layoutEffects = [];
 
       this._taskCount.value++;

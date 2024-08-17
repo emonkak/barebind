@@ -120,7 +120,7 @@ describe('ConcurrentUpdater', () => {
       expect(layoutEffect.commit).toHaveBeenCalledWith(CommitPhase.Layout);
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledWith(CommitPhase.Passive);
-      expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
       expect(updateSpy).toHaveBeenCalledOnce();
     });
 
@@ -145,7 +145,7 @@ describe('ConcurrentUpdater', () => {
 
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
-      expect(requestCallbackSpy).toHaveBeenCalledOnce();
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
       expect(requestCallbackSpy).toHaveBeenCalledWith(expect.any(Function), {
         priority: 'user-blocking',
       });
