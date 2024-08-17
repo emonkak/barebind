@@ -22,19 +22,19 @@ const FLAG_INSERTING = 1 << 1;
 const FLAG_MOVING = 1 << 2;
 const FLAG_REMOVING = 1 << 3;
 
-export function list<TItem, TKey, TValue>(
+export function list<TItem, TValue>(
+  items: TItem[],
+  valueSelector: Selector<TItem, TValue>,
+): List<TItem, number, TValue> {
+  return new List(items, indexSelector, valueSelector);
+}
+
+export function keyedList<TItem, TKey, TValue>(
   items: TItem[],
   keySelector: Selector<TItem, TKey>,
   valueSelector: Selector<TItem, TValue>,
 ): List<TItem, TKey, TValue> {
   return new List(items, keySelector, valueSelector);
-}
-
-export function inPlaceList<TItem, TValue>(
-  items: TItem[],
-  valueSelector: Selector<TItem, TValue>,
-): List<TItem, number, TValue> {
-  return new List(items, indexSelector, valueSelector);
 }
 
 export class List<TItem, TKey, TValue>

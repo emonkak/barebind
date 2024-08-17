@@ -1,32 +1,32 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
-import { ListBinding, inPlaceList, list } from '../../src/directives/list.js';
+import { ListBinding, keyedList, list } from '../../src/directives/list.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('list()', () => {
-  it('should construst a new list directive', () => {
+  it('should construct a new List directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
-    const keySelector = (item: string) => item;
-    const value = list(items, keySelector, valueSelector);
+    const value = list(items, valueSelector);
 
     expect(value.items).toBe(items);
-    expect(value.keySelector).toBe(keySelector);
+    expect(value.keySelector.call(undefined, 'foo', 1)).toBe(1);
     expect(value.valueSelector).toBe(valueSelector);
   });
 });
 
-describe('inPlaceList()', () => {
-  it('should construst a new list directive', () => {
+describe('keyedList()', () => {
+  it('should construct a new List directive with key selector', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
-    const value = inPlaceList(items, valueSelector);
+    const keySelector = (item: string) => item;
+    const value = keyedList(items, keySelector, valueSelector);
 
     expect(value.items).toBe(items);
-    expect(value.keySelector.call(undefined, 'foo', 1)).toBe(1);
+    expect(value.keySelector).toBe(keySelector);
     expect(value.valueSelector).toBe(valueSelector);
   });
 });
@@ -42,7 +42,7 @@ describe('List', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -65,7 +65,7 @@ describe('List', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -90,7 +90,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -135,7 +135,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -167,12 +167,12 @@ describe('ListBinding', () => {
           const updater = new SyncUpdater();
           const context = new UpdateContext(host, updater, new MockBlock());
 
-          const value1 = list(
+          const value1 = keyedList(
             items1,
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const value2 = list(
+          const value2 = keyedList(
             items2,
             (item) => item,
             (item) => new TextDirective(item),
@@ -218,12 +218,12 @@ describe('ListBinding', () => {
             const updater = new SyncUpdater();
             const context = new UpdateContext(host, updater, new MockBlock());
 
-            const value1 = list(
+            const value1 = keyedList(
               items1!,
               (item) => item,
               (item) => new TextDirective(item),
             );
-            const value2 = list(
+            const value2 = keyedList(
               items2!,
               (item) => item,
               (item) => new TextDirective(item),
@@ -265,12 +265,12 @@ describe('ListBinding', () => {
           const updater = new SyncUpdater();
           const context = new UpdateContext(host, updater, new MockBlock());
 
-          const value1 = list(
+          const value1 = keyedList(
             items1,
             (item) => item,
             (item) => new TextDirective(item),
           );
-          const value2 = list(
+          const value2 = keyedList(
             items2,
             (item) => item,
             (item) => new TextDirective(item),
@@ -307,11 +307,11 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value1 = inPlaceList(
+      const value1 = list(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
-      const value2 = inPlaceList(
+      const value2 = list(
         ['qux', 'baz', 'bar', 'foo'],
         (item) => new TextDirective(item),
       );
@@ -343,14 +343,11 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value1 = inPlaceList(
+      const value1 = list(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
-      const value2 = inPlaceList(
-        ['bar', 'foo'],
-        (item) => new TextDirective(item),
-      );
+      const value2 = list(['bar', 'foo'], (item) => new TextDirective(item));
       const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
@@ -381,7 +378,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -408,7 +405,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
@@ -436,7 +433,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
@@ -472,7 +469,7 @@ describe('ListBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = list(
+      const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),

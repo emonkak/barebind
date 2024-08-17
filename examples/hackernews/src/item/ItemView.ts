@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { component, list, when } from '@emonkak/ebit/directives.js';
+import { component, keyedList, when } from '@emonkak/ebit/directives.js';
 import { navigateHandler } from '@emonkak/ebit/router.js';
 
 import type { Item } from '../state.js';
@@ -33,7 +33,7 @@ export function ItemView(
           ${item.comments_count > 0 ? item.comments_count + ' comments' : 'No comments yet.'}
         </div>
         <ul class="comment-children">
-          <${list(
+          <${keyedList(
             item.comments,
             (comment) => comment.id,
             (comment) => component(CommentView, { comment }),

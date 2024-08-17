@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { component, ifElse, list } from '@emonkak/ebit/directives.js';
+import { component, ifElse, keyedList } from '@emonkak/ebit/directives.js';
 import { navigateHandler } from '@emonkak/ebit/router.js';
 
 import { StoryState, type StoryType } from '../state.js';
@@ -71,7 +71,7 @@ export function StoriesPage(
       </div>
       <main class="story-list">
         <ul>
-          <${list(
+          <${keyedList(
             stories,
             (story) => story.id,
             (story) => component(StoryView, { story }),

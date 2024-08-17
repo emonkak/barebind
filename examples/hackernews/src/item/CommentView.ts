@@ -1,5 +1,10 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { classMap, component, list, when } from '@emonkak/ebit/directives.js';
+import {
+  classMap,
+  component,
+  keyedList,
+  when,
+} from '@emonkak/ebit/directives.js';
 
 import type { Comment } from '../state.js';
 
@@ -36,7 +41,7 @@ export function CommentView(
             isOpened,
             () => context.html`
               <ul class="comment-children">
-                <${list(
+                <${keyedList(
                   comment.comments,
                   (comment) => comment.id,
                   (comment) => component(CommentView, { comment }),

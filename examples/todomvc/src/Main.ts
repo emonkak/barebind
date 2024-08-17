@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { component, list, memo, when } from '@emonkak/ebit/directives.js';
+import { component, keyedList, memo, when } from '@emonkak/ebit/directives.js';
 
 import { TodoItem } from './TodoItem.js';
 import { TodoState } from './state.js';
@@ -38,7 +38,7 @@ export function Main(
         `,
       )}>
       <ul class="todo-list" data-testid="todo-list">
-        <${list(
+        <${keyedList(
           visibleTodos,
           (todo$) => todo$.value.id,
           (todo$) => memo(() => component(TodoItem, { todo$ }), [todo$]),
