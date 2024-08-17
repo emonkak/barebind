@@ -24,38 +24,47 @@ import {
 
 describe('ifElse()', () => {
   it('should construct a new IfElse directive', () => {
-    const condition = true;
     const trueCase = () => 'foo';
     const falseCase = () => 'bar';
-    const value = ifElse(condition, trueCase, falseCase);
 
-    expect(value.condition).toBe(condition);
-    expect(value.trueCase).toBe(trueCase);
-    expect(value.falseCase).toBe(falseCase);
+    expect(ifElse(true, trueCase, falseCase).conditional).toStrictEqual({
+      condition: true,
+      value: 'foo',
+    });
+    expect(ifElse(false, trueCase, falseCase).conditional).toStrictEqual({
+      condition: false,
+      value: 'bar',
+    });
   });
 });
 
 describe('when()', () => {
   it('should construct a new IfElse directive without false case', () => {
-    const condition = true;
     const trueCase = () => 'foo';
-    const value = when(condition, trueCase);
 
-    expect(value.condition).toBe(condition);
-    expect(value.trueCase).toBe(trueCase);
-    expect(value.falseCase()).toBe(NoValue.instance);
+    expect(when(true, trueCase).conditional).toStrictEqual({
+      condition: true,
+      value: 'foo',
+    });
+    expect(when(false, trueCase).conditional).toStrictEqual({
+      condition: false,
+      value: NoValue.instance,
+    });
   });
 });
 
 describe('unless()', () => {
   it('should construct a new IfElse directive without true case', () => {
-    const condition = true;
-    const falseCase = () => 'bar';
-    const value = unless(condition, falseCase);
+    const falseCase = () => 'foo';
 
-    expect(value.condition).toBe(condition);
-    expect(value.trueCase()).toBe(NoValue.instance);
-    expect(value.falseCase).toBe(falseCase);
+    expect(unless(true, falseCase).conditional).toStrictEqual({
+      condition: true,
+      value: NoValue.instance,
+    });
+    expect(unless(false, falseCase).conditional).toStrictEqual({
+      condition: false,
+      value: 'foo',
+    });
   });
 });
 

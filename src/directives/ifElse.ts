@@ -12,63 +12,64 @@ import { resolveBinding } from '../binding.js';
 import { ensureDirective } from '../error.js';
 import { NoValue } from './noValue.js';
 
+type Conditional<TTrue, TFalse> =
+  | {
+      condition: true;
+      value: TTrue;
+    }
+  | {
+      condition: false;
+      value: TFalse;
+    };
+
 export function ifElse<TTrue, TFalse>(
   condition: boolean,
   trueCase: () => TTrue,
   falseCase: () => TFalse,
 ): IfElse<TTrue, TFalse> {
-  return new IfElse(condition, trueCase, falseCase);
+  const conditional: Conditional<TTrue, TFalse> = condition
+    ? { condition: true, value: trueCase() }
+    : { condition: false, value: falseCase() };
+  return new IfElse(conditional);
 }
 
 export function when<TTrue>(
   condition: boolean,
   trueCase: () => TTrue,
 ): IfElse<TTrue, NoValue> {
-  return new IfElse(condition, trueCase, () => NoValue.instance);
+  const conditional: Conditional<TTrue, NoValue> = condition
+    ? { condition: true, value: trueCase() }
+    : { condition: false, value: NoValue.instance };
+  return new IfElse(conditional);
 }
 
 export function unless<TFalse>(
   condition: boolean,
   falseCase: () => TFalse,
 ): IfElse<NoValue, TFalse> {
-  return new IfElse(condition, () => NoValue.instance, falseCase);
+  const conditional: Conditional<NoValue, TFalse> = condition
+    ? { condition: true, value: NoValue.instance }
+    : { condition: false, value: falseCase() };
+  return new IfElse(conditional);
 }
 
 export class IfElse<TTrue, TFalse> implements Directive<IfElse<TTrue, TFalse>> {
-  private readonly _condition: boolean;
+  private readonly _conditional: Conditional<TTrue, TFalse>;
 
-  private readonly _trueCase: () => TTrue;
-
-  private readonly _falseCase: () => TFalse;
-
-  constructor(
-    condition: boolean,
-    trueCase: () => TTrue,
-    falseCase: () => TFalse,
-  ) {
-    this._condition = condition;
-    this._trueCase = trueCase;
-    this._falseCase = falseCase;
+  constructor(conditional: Conditional<TTrue, TFalse>) {
+    this._conditional = conditional;
   }
 
-  get condition(): boolean {
-    return this._condition;
-  }
-
-  get trueCase(): () => TTrue {
-    return this._trueCase;
-  }
-
-  get falseCase(): () => TFalse {
-    return this._falseCase;
+  get conditional(): Conditional<TTrue, TFalse> {
+    return this._conditional;
   }
 
   get [nameTag](): string {
     return (
       'IfElse(' +
-      this._condition +
+      this._conditional.condition +
       ', ' +
-      nameOf(this._condition ? this._trueCase() : this._falseCase()) +
+      nameOf(this._conditional.value) +
       ')'
     );
   }
@@ -95,14 +96,21 @@ export class IfElseBinding<TTrue, TFalse>
     part: Part,
     context: DirectiveContext,
   ) {
-    const { condition, trueCase, falseCase } = value;
     this._value = value;
-    if (condition) {
-      this._trueBinding = resolveBinding(trueCase(), part, context);
+    if (value.conditional.condition) {
+      this._trueBinding = resolveBinding(
+        value.conditional.value,
+        part,
+        context,
+      );
       this._falseBinding = null;
     } else {
       this._trueBinding = null;
-      this._falseBinding = resolveBinding(falseCase(), part, context);
+      this._falseBinding = resolveBinding(
+        value.conditional.value,
+        part,
+        context,
+      );
     }
   }
 
@@ -123,7 +131,9 @@ export class IfElseBinding<TTrue, TFalse>
   }
 
   get currentBinding(): Binding<TTrue> | Binding<TFalse> {
-    return this._value.condition ? this._trueBinding! : this._falseBinding!;
+    return this._value.conditional.condition
+      ? this._trueBinding!
+      : this._falseBinding!;
   }
 
   connect(context: UpdateContext<unknown>): void {
@@ -135,23 +145,23 @@ export class IfElseBinding<TTrue, TFalse>
       ensureDirective(IfElse, newValue, this.currentBinding.part);
     }
 
-    const oldValue = this._value;
-    const { condition, trueCase, falseCase } = newValue;
+    const oldConditional = this._value.conditional;
+    const newConditional = newValue.conditional;
 
-    if (oldValue.condition === condition) {
-      if (condition) {
-        this._trueBinding!.bind(trueCase(), context);
+    if (oldConditional.condition === newConditional.condition) {
+      if (newConditional.condition) {
+        this._trueBinding!.bind(newConditional.value, context);
       } else {
-        this._falseBinding!.bind(falseCase(), context);
+        this._falseBinding!.bind(newConditional.value, context);
       }
     } else {
-      if (condition) {
+      if (newConditional.condition) {
         this._falseBinding!.unbind(context);
         if (this._trueBinding !== null) {
-          this._trueBinding.bind(trueCase(), context);
+          this._trueBinding.bind(newConditional.value, context);
         } else {
           this._trueBinding = resolveBinding(
-            trueCase(),
+            newConditional.value,
             this._falseBinding!.part,
             context,
           );
@@ -160,10 +170,10 @@ export class IfElseBinding<TTrue, TFalse>
       } else {
         this._trueBinding!.unbind(context);
         if (this._falseBinding !== null) {
-          this._falseBinding.bind(falseCase(), context);
+          this._falseBinding.bind(newConditional.value, context);
         } else {
           this._falseBinding = resolveBinding(
-            falseCase(),
+            newConditional.value,
             this._trueBinding!.part,
             context,
           );
