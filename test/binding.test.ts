@@ -548,7 +548,7 @@ describe('EventBinding', () => {
       const binding = new EventBinding(null, part);
 
       expect(() => {
-        binding.bind({}, context);
+        binding.bind({} as any, context);
       }).toThrow(
         'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
       );

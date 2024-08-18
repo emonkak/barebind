@@ -204,7 +204,11 @@ export class ElementBinding implements Binding<SpreadProps> {
   }
 }
 
-export class EventBinding implements Binding<unknown>, Effect {
+export class EventBinding
+  implements
+    Binding<EventListenerOrEventListenerObject | null | undefined>,
+    Effect
+{
   private _pendingValue: EventListenerOrEventListenerObject | null | undefined;
 
   private _memoizedValue:
@@ -224,7 +228,7 @@ export class EventBinding implements Binding<unknown>, Effect {
     this._part = part;
   }
 
-  get value(): unknown {
+  get value(): EventListenerOrEventListenerObject | null | undefined {
     return this._pendingValue;
   }
 
@@ -245,7 +249,10 @@ export class EventBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext<unknown>): void {
+  bind(
+    newValue: EventListenerOrEventListenerObject | null | undefined,
+    context: UpdateContext<unknown>,
+  ): void {
     DEBUG: {
       ensureEventListener(newValue, this._part);
     }
@@ -326,7 +333,7 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  private _attachLisetener(listener: EventListenerOrEventListenerObject) {
+  private _attachLisetener(listener: EventListenerOrEventListenerObject): void {
     const { node, name } = this._part;
 
     if (typeof listener === 'function') {
@@ -336,7 +343,7 @@ export class EventBinding implements Binding<unknown>, Effect {
     }
   }
 
-  private _detachLisetener(listener: EventListenerOrEventListenerObject) {
+  private _detachLisetener(listener: EventListenerOrEventListenerObject): void {
     const { node, name } = this._part;
 
     if (typeof listener === 'function') {
