@@ -1,11 +1,15 @@
-interface Navigator {
-  scheduling: Scheduling;
+declare global {
+  interface Navigator {
+    scheduling: Scheduling;
+  }
+
+  interface Scheduling {
+    isInputPending(options?: SchedulingisInputPendingOptions): boolean;
+  }
+
+  interface SchedulingisInputPendingOptions {
+    includeContinuous?: boolean;
+  }
 }
 
-interface Scheduling {
-  isInputPending(options?: SchedulingisInputPendingOptions): boolean;
-}
-
-interface SchedulingisInputPendingOptions {
-  includeContinuous?: boolean;
-}
+export type {};

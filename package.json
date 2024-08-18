@@ -1,19 +1,33 @@
 {
   "name": "@emonkak/ebit",
   "version": "0.0.0",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "exports": {
     ".": {
-      "import": "./lib/index.js",
-      "types": "./lib/index.d.ts"
+      "import": "./src/index.ts"
     },
     "./directives.js": {
-      "import": "./lib/directives.js",
-      "types": "./lib/directives.d.ts"
+      "import": "./src/directives.ts"
     },
     "./router.js": {
-      "import": "./lib/router.js",
-      "types": "./lib/router.d.ts"
+      "import": "./src/router.ts"
+    }
+  },
+  "publishConfig": {
+    "types": "./lib/index.d.ts",
+    "exports": {
+      ".": {
+        "import": "./lib/index.js",
+        "types": "./lib/index.d.ts"
+      },
+      "./directives.js": {
+        "import": "./lib/directives.js",
+        "types": "./lib/directives.d.ts"
+      },
+      "./router.js": {
+        "import": "./lib/router.js",
+        "types": "./lib/router.d.ts"
+      }
     }
   },
   "type": "module",

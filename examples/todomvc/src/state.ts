@@ -14,9 +14,9 @@ export enum TodoFilter {
 }
 
 export class TodoState {
-  readonly todos$: Atom<Atom<Todo>[]> = new Atom([]);
+  readonly todos$ = new Atom<Atom<Todo>[]>([]);
 
-  readonly filter$: Atom<TodoFilter> = new Atom(TodoFilter.ALL);
+  readonly filter$ = new Atom(TodoFilter.ALL);
 
   readonly activeTodos$: Signal<Atom<Todo>[]>;
 
@@ -58,7 +58,7 @@ export class TodoState {
 
   addTodo(title: string): void {
     this.todos$.value = this.todos$.value.concat(
-      new Atom({
+      new Atom<Todo>({
         id: getUUID(),
         title,
         completed: false,

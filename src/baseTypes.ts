@@ -1,3 +1,5 @@
+import type {} from './typings/scheduler.js';
+
 export const directiveTag = Symbol('Directive');
 
 export const nameTag = Symbol('Name');
@@ -35,8 +37,8 @@ export interface Block<TContext> {
   update(context: UpdateContext<TContext>): void;
 }
 
-// Reexport TaskPriority in Scheduler API.
-export type TaskPriority = 'user-blocking' | 'user-visible' | 'background';
+// Re-export TaskPriority in Scheduler API.
+export type TaskPriority = globalThis.TaskPriority;
 
 export type ComponentType<TProps, TData, TContext> = (
   props: TProps,

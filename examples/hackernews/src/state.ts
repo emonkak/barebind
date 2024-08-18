@@ -20,13 +20,13 @@ const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';
 
 export class StoryState {
-  readonly stories$: Atom<Story[]> = new Atom([]);
+  readonly stories$ = new Atom<Story[]>([]);
 
-  readonly type$: Atom<StoryType | null> = new Atom(null);
+  readonly type$ = new Atom<StoryType | null>(null);
 
-  readonly page$: Atom<number> = new Atom(0);
+  readonly page$ = new Atom(0);
 
-  readonly isLoading$: Atom<boolean> = new Atom(false);
+  readonly isLoading$ = new Atom(false);
 
   static [usableTag](context: RenderContext): StoryState {
     const state = context.getContextValue(this);
@@ -88,11 +88,11 @@ export interface Comment {
 }
 
 export class ItemState {
-  readonly item$: Atom<Item | null> = new Atom(null);
+  readonly item$ = new Atom<Item | null>(null);
 
-  readonly isLoading$: Atom<boolean> = new Atom(false);
+  readonly isLoading$ = new Atom(false);
 
-  readonly error$: Atom<Error | null> = new Atom(null);
+  readonly error$ = new Atom<Error | null>(null);
 
   static [usableTag](context: RenderContext): ItemState {
     const state = context.getContextValue(this);
@@ -137,11 +137,11 @@ export interface User {
 }
 
 export class UserState {
-  readonly user$: Atom<User | null> = new Atom(null);
+  readonly user$ = new Atom<User | null>(null);
 
-  readonly isLoading$: Atom<boolean> = new Atom(false);
+  readonly isLoading$ = new Atom(false);
 
-  readonly error$: Atom<Error | null> = new Atom(null);
+  readonly error$ = new Atom<Error | null>(null);
 
   static [usableTag](context: RenderContext): UserState {
     const state = context.getContextValue(this);

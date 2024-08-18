@@ -17,6 +17,7 @@ import { resolveBinding } from './binding.js';
 import { RenderContext } from './renderContext.js';
 import { Root } from './root.js';
 import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
+import type {} from './typings/deprecatedEvent.js';
 
 export interface UpdateHostOptions {
   name?: string;

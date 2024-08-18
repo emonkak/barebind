@@ -3,6 +3,7 @@ import type {
   Block,
   DirectiveContext,
   Part,
+  TaskPriority,
   UpdateContext,
 } from './baseTypes.js';
 
