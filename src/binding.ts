@@ -114,7 +114,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
 
 type SpreadProps = { [key: string]: unknown };
 
-export class ElementBinding implements Binding<unknown> {
+export class ElementBinding implements Binding<SpreadProps> {
   private _value: SpreadProps;
 
   private readonly _part: ElementPart;
@@ -129,7 +129,7 @@ export class ElementBinding implements Binding<unknown> {
     this._part = part;
   }
 
-  get value(): unknown {
+  get value(): SpreadProps {
     return this._value;
   }
 
@@ -153,7 +153,7 @@ export class ElementBinding implements Binding<unknown> {
     this._updateProps(this._value, context);
   }
 
-  bind(newValue: unknown, context: UpdateContext<unknown>): void {
+  bind(newValue: SpreadProps, context: UpdateContext<unknown>): void {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
     }

@@ -1167,7 +1167,7 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(value, part);
 
       expect(() => {
-        binding.bind(null, context);
+        binding.bind(null as any, context);
       }).toThrow('A value of ElementBinding must be an object,');
     });
   });
