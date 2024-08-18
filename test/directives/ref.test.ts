@@ -202,57 +202,6 @@ describe('RefBinding', () => {
       expect(context.isPending()).toBe(false);
     });
 
-    it('should invoke the old ref callback with null if the new ref is null', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'ref',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refCallback = vi.fn();
-      const value1 = ref(refCallback);
-      const value2 = ref(null);
-      const binding = new RefBinding(value1, part);
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.bind(value2, context);
-      context.flushUpdate();
-
-      expect(binding.value).toBe(value2);
-      expect(refCallback).toHaveBeenCalledTimes(2);
-      expect(refCallback).toHaveBeenCalledWith(null);
-    });
-
-    it('should unassign the element from the old ref object if the new ref is null', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'ref',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refObject = { current: null };
-      const value1 = ref(refObject);
-      const value2 = ref(null);
-      const binding = new RefBinding(value1, part);
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.bind(value2, context);
-      context.flushUpdate();
-
-      expect(binding.value).toBe(value2);
-      expect(refObject.current).toBe(null);
-    });
-
     it('should throw an error if the new value is not Ref directive', () => {
       const part = {
         type: PartType.Attribute,
@@ -322,8 +271,8 @@ describe('RefBinding', () => {
       expect(refObject.current).toBe(null);
     });
 
-    it('should do nothing if there is no ref', () => {
-      const value = ref(null);
+    it('should do nothing if there is no memoized ref', () => {
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'ref',

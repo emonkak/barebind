@@ -15,18 +15,18 @@ import { ensureDirective, reportPart } from '../error.js';
 
 type ElementRef = RefValue<Element | null>;
 
-export function ref(ref: ElementRef | null): Ref {
+export function ref(ref: ElementRef): Ref {
   return new Ref(ref);
 }
 
 export class Ref implements Directive<Ref> {
-  private readonly _ref: ElementRef | null;
+  private readonly _ref: ElementRef;
 
-  constructor(ref: ElementRef | null) {
+  constructor(ref: ElementRef) {
     this._ref = ref;
   }
 
-  get ref(): ElementRef | null {
+  get ref(): ElementRef {
     return this._ref;
   }
 
@@ -96,11 +96,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   disconnect(): void {
     const { ref } = this._value;
-
-    if (ref !== null) {
-      invokeRef(ref, null);
-    }
-
+    invokeRef(ref, null);
     this._memoizedRef = null;
     this._status = CommitStatus.Committed;
   }
@@ -110,26 +106,16 @@ export class RefBinding implements Binding<Ref>, Effect {
       case CommitStatus.Mounting: {
         const oldRef = this._memoizedRef ?? null;
         const newRef = this._value.ref;
-
         if (oldRef !== null) {
           invokeRef(oldRef, null);
         }
-
-        if (newRef !== null) {
-          invokeRef(newRef, this._part.node);
-        }
-
+        invokeRef(newRef, this._part.node);
         this._memoizedRef = this._value.ref;
         break;
       }
       case CommitStatus.Unmounting: {
         const { ref } = this._value;
-
-        /* istanbul ignore else @preserve */
-        if (ref !== null) {
-          invokeRef(ref, null);
-        }
-
+        invokeRef(ref, null);
         this._memoizedRef = null;
         break;
       }
