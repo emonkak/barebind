@@ -1,6 +1,6 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { component, keyedList, when } from '@emonkak/ebit/directives.js';
-import { navigateHandler } from '@emonkak/ebit/router.js';
+import { linkClickHandler } from '@emonkak/ebit/router.js';
 
 import type { Item } from '../state.js';
 import { CommentView } from './CommentView.js';
@@ -13,7 +13,7 @@ export function ItemView(
   { item }: ItemProps,
   context: RenderContext,
 ): TemplateDirective {
-  const handleNavigate = context.use(navigateHandler());
+  const handleLinkClick = context.use(linkClickHandler());
 
   return context.html`
     <div class="item-view">
@@ -24,7 +24,7 @@ export function ItemView(
         <${when(!!item.domain, () => context.html`<span class="host">(${item.domain})</span>`)}>
         <div class="meta">
           ${item.points} points | by
-          ${' '}<a href=${`/users/${item.user}`} @click=${handleNavigate}>${item.user}</a>
+          ${' '}<a href=${`/users/${item.user}`} @click=${handleLinkClick}>${item.user}</a>
           ${' '}${item.time_ago} ago
         </div>
       </div>

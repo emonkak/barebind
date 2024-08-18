@@ -28,20 +28,17 @@ export type Handler<TArgs extends any[], TResult> = (
   state: unknown,
 ) => TResult;
 
+export interface LocationState {
+  readonly url: RelativeURL;
+  readonly state: unknown;
+  push(url: RelativeURL, state?: unknown): void;
+  replace(url: RelativeURL, state?: unknown): void;
+}
+
 export interface LocationLike {
   pathname: string;
   search: string;
   hash: string;
-}
-
-export interface LocationState {
-  url: RelativeURL;
-  state: unknown;
-}
-
-export interface HistoryActions {
-  push(url: RelativeURL, state?: unknown): void;
-  replace(url: RelativeURL, state?: unknown): void;
 }
 
 type ExtractArgs<TPatterns> = TPatterns extends []
@@ -118,6 +115,19 @@ export class RelativeURL {
 
   private readonly _hash: string;
 
+  static from(value: RelativeURL | URL | LocationLike | string): RelativeURL {
+    if (value instanceof RelativeURL) {
+      return value;
+    }
+    if (value instanceof URL) {
+      return RelativeURL.fromURL(value);
+    }
+    if (typeof value === 'object') {
+      return RelativeURL.fromLocation(value);
+    }
+    return RelativeURL.fromString(value);
+  }
+
   static fromString(urlString: string): RelativeURL {
     // SAFETY: Relative URLs can always be safely initialized.
     return RelativeURL.fromURL(new URL(urlString, 'file:'));
@@ -170,33 +180,35 @@ export class RelativeURL {
   }
 }
 
-export function browserLocation(
-  context: RenderContext,
-): [LocationState, HistoryActions] {
+export function browserLocation(context: RenderContext): LocationState {
   const [locationState, setLocationState] = context.useState(() => ({
     url: RelativeURL.fromLocation(location),
     state: history.state,
+    push: (url: RelativeURL, state: unknown = null) => {
+      history.pushState(state, '', url.toString());
+      setLocationState((prevLocationState) => ({
+        ...prevLocationState,
+        url,
+        state,
+      }));
+    },
+    replace: (url: RelativeURL, state: unknown = null) => {
+      history.replaceState(state, '', url.toString());
+      setLocationState((prevLocationState) => ({
+        ...prevLocationState,
+        url,
+        state,
+      }));
+    },
   }));
-  const historyActions = context.useMemo(
-    () => ({
-      push: (url: RelativeURL, state: unknown = null) => {
-        history.pushState(state, '', url.toString());
-        setLocationState({ url, state });
-      },
-      replace: (url: RelativeURL, state: unknown = null) => {
-        history.replaceState(state, '', url.toString());
-        setLocationState({ url, state });
-      },
-    }),
-    [],
-  );
 
   context.useEffect(() => {
     const listener = (event: PopStateEvent) => {
-      setLocationState({
+      setLocationState((prevLocationState) => ({
+        ...prevLocationState,
         url: RelativeURL.fromLocation(location),
         state: event.state,
-      });
+      }));
     };
     addEventListener('popstate', listener);
     return () => {
@@ -204,14 +216,12 @@ export function browserLocation(
     };
   }, []);
 
-  context.setContextValue(currentLocation, [locationState, historyActions]);
+  context.setContextValue(currentLocation, locationState);
 
-  return [locationState, historyActions];
+  return locationState;
 }
 
-export function currentLocation(
-  context: RenderContext,
-): [LocationState, HistoryActions] {
+export function currentLocation(context: RenderContext): LocationState {
   const value = context.getContextValue(currentLocation);
 
   if (value == null) {
@@ -220,36 +230,38 @@ export function currentLocation(
     );
   }
 
-  return value as [LocationState, HistoryActions];
+  return value as LocationState;
 }
 
-export function hashLocation(
-  context: RenderContext,
-): [LocationState, HistoryActions] {
+export function hashLocation(context: RenderContext): LocationState {
   const [locationState, setLocationState] = context.useState(() => ({
     url: RelativeURL.fromString(location.hash.slice(1)),
     state: history.state,
+    push: (url: RelativeURL, state: unknown = null) => {
+      history.pushState(state, '', '#' + url.toString());
+      setLocationState((prevLocationState) => ({
+        ...prevLocationState,
+        url,
+        state,
+      }));
+    },
+    replace: (url: RelativeURL, state: unknown = null) => {
+      history.replaceState(state, '', '#' + url.toString());
+      setLocationState((prevLocationState) => ({
+        ...prevLocationState,
+        url,
+        state,
+      }));
+    },
   }));
-  const historyActions = context.useMemo(
-    () => ({
-      push: (url: RelativeURL, state: unknown = null) => {
-        history.pushState(state, '', '#' + url.toString());
-        setLocationState({ url, state });
-      },
-      replace: (url: RelativeURL, state: unknown = null) => {
-        history.replaceState(state, '', '#' + url.toString());
-        setLocationState({ url, state });
-      },
-    }),
-    [],
-  );
 
   context.useEffect(() => {
     const listener = () => {
-      setLocationState({
+      setLocationState((prevLocationState) => ({
+        ...prevLocationState,
         url: RelativeURL.fromString(location.hash.slice(1)),
         state: history.state,
-      });
+      }));
     };
     addEventListener('hashchange', listener);
     return () => {
@@ -257,38 +269,51 @@ export function hashLocation(
     };
   }, []);
 
-  context.setContextValue(currentLocation, [locationState, historyActions]);
+  context.setContextValue(currentLocation, locationState);
 
-  return [locationState, historyActions];
+  return locationState;
 }
 
-export interface NavigateHandlerOptions {
-  mode?: 'push' | 'replace';
+export interface LinkClickHandlerOptions {
+  url?: RelativeURL | URL | LocationLike | string;
   state?: unknown;
-  urlAttribute?: string;
+  replace?: boolean;
 }
 
-export function navigateHandler({
-  mode = 'push',
+export function linkClickHandler({
+  url,
   state,
-  urlAttribute = 'href',
-}: NavigateHandlerOptions = {}): UsableCallback<
-  (event: Event) => void,
+  replace = false,
+}: LinkClickHandlerOptions = {}): UsableCallback<
+  (event: MouseEvent) => void,
   RenderContext
 > {
   return (context: RenderContext) => {
-    const [, historyActions] = context.use(currentLocation);
+    const locationState = context.use(currentLocation);
 
     return context.useCallback(
-      (event: Event) => {
+      (event: MouseEvent) => {
+        if (
+          event.altKey ||
+          event.ctrlKey ||
+          event.metaKey ||
+          event.shiftKey ||
+          event.button !== 0 ||
+          event.defaultPrevented
+        ) {
+          return;
+        }
         event.preventDefault();
-        const target = event.currentTarget as Element;
-        const navigate = historyActions[mode];
-        const url = RelativeURL.fromString(target.getAttribute(urlAttribute)!);
-        navigate(url, state);
-        return false;
+        const navigate = replace ? locationState.replace : locationState.push;
+        const destination =
+          url !== undefined
+            ? RelativeURL.from(url)
+            : RelativeURL.fromLocation(
+                event.currentTarget as HTMLAnchorElement,
+              );
+        navigate(destination, state);
       },
-      [mode, state, urlAttribute, historyActions],
+      [url, state, replace],
     );
   };
 }

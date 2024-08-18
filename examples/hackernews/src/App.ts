@@ -17,7 +17,7 @@ export function App(
   { userState, itemState, storyState }: AppProps,
   context: RenderContext,
 ): TemplateDirective {
-  const [locationState] = context.use(hashLocation);
+  const locationState = context.use(hashLocation);
   const page =
     router.dispatch(locationState.url, locationState.state) ??
     component(NotFound, { url: locationState.url });

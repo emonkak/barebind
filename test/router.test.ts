@@ -9,7 +9,7 @@ import {
   currentLocation,
   hashLocation,
   integer,
-  navigateHandler,
+  linkClickHandler,
   route,
   wildcard,
 } from '../src/router.js';
@@ -112,6 +112,32 @@ describe('Router', () => {
 });
 
 describe('RelativeURL', () => {
+  describe('.from()', () => {
+    it.each([
+      [new RelativeURL('/foo', new URLSearchParams('?bar=123'), '#baz')],
+      [new URL('/foo?bar=123#baz', 'file:')],
+      [
+        {
+          pathname: '/foo',
+          search: '?bar=123',
+          hash: '#baz',
+        },
+      ],
+      ['/foo?bar=123#baz'],
+    ])(
+      'should construct a new RelativeURL from the url like value',
+      (value) => {
+        const url = RelativeURL.from(value);
+        expect(url.pathname).toBe('/foo');
+        expect(url.search).toBe('?bar=123');
+        expect(url.searchParams.toString()).toBe('bar=123');
+        expect(url.hash).toBe('#baz');
+        expect(url.toString()).toBe('/foo?bar=123#baz');
+        expect(url.toJSON()).toBe('/foo?bar=123#baz');
+      },
+    );
+  });
+
   describe('.fromString()', () => {
     it('should construct a new RelativeURL from the String', () => {
       const url = RelativeURL.fromString('/foo?bar=123#baz');
@@ -136,7 +162,7 @@ describe('RelativeURL', () => {
     });
   });
 
-  describe('.fromURL()', () => {
+  describe('.fromLocation()', () => {
     it('should construct a new RelativeURL from the LocationLike', () => {
       const url = RelativeURL.fromLocation({
         pathname: '/foo',
@@ -163,10 +189,10 @@ describe('browserLocation', () => {
   });
 
   it('should return a state represents the current location of the browser', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
@@ -174,7 +200,7 @@ describe('browserLocation', () => {
     history.replaceState(state, '', '/articles/123');
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState] = context.use(browserLocation);
+    const locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -184,32 +210,32 @@ describe('browserLocation', () => {
   });
 
   it('should push the new location to the session history by push action', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, historyActions] = context.use(browserLocation);
+    let locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    historyActions.push(new RelativeURL('/articles/123'));
+    locationState.push(new RelativeURL('/articles/123'));
     expect(window.location.pathname).toBe('/articles/123');
     expect(history.state).toBe(null);
     expect(pushStateSpy).toHaveBeenCalledTimes(1);
 
-    historyActions.push(new RelativeURL('/articles/456'), state);
+    locationState.push(new RelativeURL('/articles/456'), state);
     expect(window.location.pathname).toBe('/articles/456');
     expect(history.state).toStrictEqual(state);
     expect(pushStateSpy).toHaveBeenCalledTimes(2);
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState, historyActions] = context.use(browserLocation);
+    locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -218,32 +244,32 @@ describe('browserLocation', () => {
   });
 
   it('should push the new location to the session history by replace action', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, historyActions] = context.use(browserLocation);
+    let locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    historyActions.replace(new RelativeURL('/articles/123'));
+    locationState.replace(new RelativeURL('/articles/123'));
     expect(window.location.pathname).toBe('/articles/123');
     expect(history.state).toBe(null);
     expect(replaceStateSpy).toHaveBeenCalledTimes(1);
 
-    historyActions.replace(new RelativeURL('/articles/456'), state);
+    locationState.replace(new RelativeURL('/articles/456'), state);
     expect(window.location.pathname).toBe('/articles/456');
     expect(history.state).toStrictEqual(state);
     expect(replaceStateSpy).toHaveBeenCalledTimes(2);
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState, historyActions] = context.use(browserLocation);
+    locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -252,17 +278,17 @@ describe('browserLocation', () => {
   });
 
   it('should update the state when the "popstate" event is tiggered', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState] = context.use(browserLocation);
+    let locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -272,7 +298,7 @@ describe('browserLocation', () => {
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState] = context.use(browserLocation);
+    locationState = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -287,19 +313,16 @@ describe('browserLocation', () => {
   });
 
   it('should register the current location', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState, historyActions] = context.use(browserLocation);
+    const locationState = context.use(browserLocation);
 
-    expect(context.use(currentLocation)).toStrictEqual([
-      locationState,
-      historyActions,
-    ]);
+    expect(context.use(currentLocation)).toStrictEqual(locationState);
 
     context.finalize();
     updater.flushUpdate(queue, host);
@@ -308,10 +331,10 @@ describe('browserLocation', () => {
 
 describe('currentLocation', () => {
   it('should throw an error if the current location registered as a context value does not exisit', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
@@ -332,10 +355,10 @@ describe('hashLocation', () => {
   });
 
   it('should return a state represents the current location of the browser', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
@@ -343,7 +366,7 @@ describe('hashLocation', () => {
     history.replaceState(state, '', '#/articles/123');
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState] = context.use(hashLocation);
+    const locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -352,32 +375,32 @@ describe('hashLocation', () => {
   });
 
   it('should push the new location to the session history by push action', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, historyActions] = context.use(hashLocation);
+    let locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    historyActions.push(new RelativeURL('/articles/123'));
+    locationState.push(new RelativeURL('/articles/123'));
     expect(window.location.hash).toBe('#/articles/123');
     expect(history.state).toBe(null);
     expect(pushStateSpy).toHaveBeenCalledTimes(1);
 
-    historyActions.push(new RelativeURL('/articles/456'), state);
+    locationState.push(new RelativeURL('/articles/456'), state);
     expect(window.location.hash).toBe('#/articles/456');
     expect(history.state).toStrictEqual(state);
     expect(pushStateSpy).toHaveBeenCalledTimes(2);
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState, historyActions] = context.use(hashLocation);
+    locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -386,32 +409,32 @@ describe('hashLocation', () => {
   });
 
   it('should push the new location to the session history by replace action', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, historyActions] = context.use(hashLocation);
+    let locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    historyActions.replace(new RelativeURL('/articles/123'));
+    locationState.replace(new RelativeURL('/articles/123'));
     expect(window.location.hash).toBe('#/articles/123');
     expect(history.state).toBe(null);
     expect(replaceStateSpy).toHaveBeenCalledTimes(1);
 
-    historyActions.replace(new RelativeURL('/articles/456'), state);
+    locationState.replace(new RelativeURL('/articles/456'), state);
     expect(window.location.hash).toBe('#/articles/456');
     expect(history.state).toStrictEqual(state);
     expect(replaceStateSpy).toHaveBeenCalledTimes(2);
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState, historyActions] = context.use(hashLocation);
+    locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -420,17 +443,17 @@ describe('hashLocation', () => {
   });
 
   it('should update the state when the "hashchange" event is tiggered', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState] = context.use(hashLocation);
+    let locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -445,7 +468,7 @@ describe('hashLocation', () => {
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState] = context.use(hashLocation);
+    locationState = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -465,26 +488,23 @@ describe('hashLocation', () => {
   });
 
   it('should register the current location', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState, historyActions] = context.use(hashLocation);
+    const locationState = context.use(hashLocation);
 
-    expect(context.use(currentLocation)).toStrictEqual([
-      locationState,
-      historyActions,
-    ]);
+    expect(context.use(currentLocation)).toStrictEqual(locationState);
 
     context.finalize();
     updater.flushUpdate(queue, host);
   });
 });
 
-describe('navigateHandler', () => {
+describe('linkClickHandler', () => {
   const originalState = history.state;
   const originalUrl = location.href;
 
@@ -494,24 +514,24 @@ describe('navigateHandler', () => {
   });
 
   it('should push the href attribute as a URL', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [, historyActions] = context.use(browserLocation);
-    const handleNavigate = context.use(navigateHandler());
+    const locationState = context.use(browserLocation);
+    const handleLinkClick = vi.fn(context.use(linkClickHandler()));
 
-    const pushSpy = vi.spyOn(historyActions, 'push');
-    const replaceSpy = vi.spyOn(historyActions, 'replace');
+    const pushSpy = vi.spyOn(locationState, 'push');
+    const replaceSpy = vi.spyOn(locationState, 'replace');
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
-    const anchor = document.createElement('a');
-    anchor.setAttribute('href', '/foo');
-    anchor.addEventListener('click', handleNavigate);
-    anchor.click();
+    const element = document.createElement('a');
+    element.setAttribute('href', '/foo');
+    element.addEventListener('click', handleLinkClick);
+    element.click();
 
     expect(pushSpy).toHaveBeenCalledOnce();
     expect(pushSpy).toHaveBeenCalledWith(
@@ -523,28 +543,29 @@ describe('navigateHandler', () => {
   });
 
   it('should replace the href attribute as a URL', () => {
-    const hooks: Hook[] = [];
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
+    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
     const state = {};
-    const [, historyActions] = context.use(browserLocation);
-    const handleNavigate = context.use(
-      navigateHandler({ mode: 'replace', state, urlAttribute: 'data-to' }),
+    const locationState = context.use(browserLocation);
+    const handleLinkClick = vi.fn(
+      context.use(linkClickHandler({ url: '/foo', state, replace: true })),
     );
 
-    const pushSpy = vi.spyOn(historyActions, 'push');
-    const replaceSpy = vi.spyOn(historyActions, 'replace');
+    const pushSpy = vi.spyOn(locationState, 'push');
+    const replaceSpy = vi.spyOn(locationState, 'replace');
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
-    const anchor = document.createElement('a');
-    anchor.setAttribute('data-to', '/foo');
-    anchor.addEventListener('click', handleNavigate);
-    anchor.click();
+    const element = document.createElement('a');
+    element.setAttribute('href', '#/foo');
+    element.addEventListener('click', handleLinkClick);
+    element.click();
 
+    expect(handleLinkClick).toHaveBeenCalledOnce();
     expect(pushSpy).not.toHaveBeenCalled();
     expect(replaceSpy).toHaveBeenCalledOnce();
     expect(replaceSpy).toHaveBeenCalledWith(
@@ -552,6 +573,71 @@ describe('navigateHandler', () => {
       state,
     );
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [{ altKey: true }],
+    [{ ctrlKey: true }],
+    [{ metaKey: true }],
+    [{ shiftKey: true }],
+    [{ button: 1 }],
+  ])(
+    'should ignore the event if any modifier keys or a button other than left button is pressed',
+    (eventInit) => {
+      const host = new UpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      const context = new RenderContext(host, updater, block, hooks, queue);
+      const locationState = context.use(browserLocation);
+      const handleLinkClick = vi.fn(
+        context.use(linkClickHandler({ url: '/foo' })),
+      );
+
+      const pushSpy = vi.spyOn(locationState, 'push');
+      const replaceSpy = vi.spyOn(locationState, 'replace');
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+      const element = document.createElement('a');
+      element.addEventListener('click', handleLinkClick);
+      element.dispatchEvent(new MouseEvent('click', eventInit));
+
+      expect(handleLinkClick).toHaveBeenCalledOnce();
+      expect(pushSpy).not.toHaveBeenCalled();
+      expect(replaceSpy).not.toHaveBeenCalled();
+      expect(requestUpdateSpy).not.toHaveBeenCalled();
+    },
+  );
+
+  it('should ignore the event if it is cancelled', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const hooks: Hook[] = [];
+    const queue = createUpdateQueue();
+
+    const context = new RenderContext(host, updater, block, hooks, queue);
+    const locationState = context.use(browserLocation);
+    const handleLinkClick = vi.fn(
+      context.use(linkClickHandler({ url: '/foo' })),
+    );
+
+    const pushSpy = vi.spyOn(locationState, 'push');
+    const replaceSpy = vi.spyOn(locationState, 'replace');
+    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+    const element = document.createElement('a');
+    const event = new MouseEvent('click', { cancelable: true });
+    event.preventDefault();
+    element.addEventListener('click', handleLinkClick);
+    element.dispatchEvent(event);
+
+    expect(handleLinkClick).toHaveBeenCalledOnce();
+    expect(pushSpy).not.toHaveBeenCalled();
+    expect(replaceSpy).not.toHaveBeenCalled();
+    expect(requestUpdateSpy).not.toHaveBeenCalled();
   });
 });
 
