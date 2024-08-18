@@ -18,7 +18,9 @@ export function UserPage(
   const isLoading = context.use(state.isLoading$);
 
   context.useEffect(() => {
-    state.fetchUser(id);
+    if (state.user$.value === null || state.user$.value.id !== id) {
+      state.fetchUser(id);
+    }
   }, [id]);
 
   if (!isLoading && error !== null) {

@@ -18,7 +18,9 @@ export function ItemPage(
   const isLoading = context.use(state.isLoading$);
 
   context.useEffect(() => {
-    state.fetchItem(id);
+    if (state.item$.value === null || state.item$.value.id !== id) {
+      state.fetchItem(id);
+    }
   }, [id]);
 
   if (!isLoading && error !== null) {
