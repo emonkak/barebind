@@ -22,7 +22,7 @@ export function App(
   { userState, itemState, storyState }: AppProps,
   context: RenderContext,
 ): TemplateDirective {
-  const [locationState, navigate] = context.use(hashLocation);
+  const [locationState, locationActions] = context.use(hashLocation);
   const page =
     router.match(locationState.url, locationState.state) ??
     component(NotFound, { url: locationState.url });
@@ -32,8 +32,8 @@ export function App(
   context.use(userState);
 
   context.useLayoutEffect(() => {
-    const handleLinkClick = createLinkClickHandler(navigate);
-    const handleFormSubmit = createFormSubmitHandler(navigate);
+    const handleLinkClick = createLinkClickHandler(locationActions);
+    const handleFormSubmit = createFormSubmitHandler(locationActions);
     addEventListener('click', handleLinkClick);
     addEventListener('submit', handleFormSubmit);
     return () => {

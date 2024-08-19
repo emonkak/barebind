@@ -35,10 +35,9 @@ export interface LocationState {
   readonly reason: NavigateReason;
 }
 
-export type NavigateFunction = (
-  url: RelativeURL,
-  options?: NavigateOptions,
-) => void;
+export interface LocationActions {
+  navigate(url: RelativeURL, options?: NavigateOptions): void;
+}
 
 export enum NavigateReason {
   Load,
@@ -204,7 +203,7 @@ export class RelativeURL {
 
 export function browserLocation(
   context: RenderContext,
-): readonly [LocationState, NavigateFunction] {
+): readonly [LocationState, LocationActions] {
   const [locationState, setLocationState] = context.useState<LocationState>(
     () => ({
       url: RelativeURL.fromLocation(location),
@@ -213,31 +212,32 @@ export function browserLocation(
       reason: NavigateReason.Load,
     }),
   );
-
-  const navigate = context.useCallback(
-    (
-      url: RelativeURL,
-      {
-        replace = false,
-        scrollReset = true,
-        state = null,
-      }: NavigateOptions = {},
-    ) => {
-      let reason: NavigateReason;
-      if (replace) {
-        history.replaceState(state, '', url.toString());
-        reason = NavigateReason.Replace;
-      } else {
-        history.pushState(state, '', url.toString());
-        reason = NavigateReason.Push;
-      }
-      setLocationState({
-        url,
-        state,
-        scrollReset,
-        reason,
-      });
-    },
+  const locationActions = context.useMemo<LocationActions>(
+    () => ({
+      navigate: (
+        url: RelativeURL,
+        {
+          replace = false,
+          scrollReset = true,
+          state = null,
+        }: NavigateOptions = {},
+      ) => {
+        let reason: NavigateReason;
+        if (replace) {
+          history.replaceState(state, '', url.toString());
+          reason = NavigateReason.Replace;
+        } else {
+          history.pushState(state, '', url.toString());
+          reason = NavigateReason.Push;
+        }
+        setLocationState({
+          url,
+          state,
+          scrollReset,
+          reason,
+        });
+      },
+    }),
     [],
   );
 
@@ -256,7 +256,7 @@ export function browserLocation(
     };
   }, []);
 
-  const value = [locationState, navigate] as const;
+  const value = [locationState, locationActions] as const;
 
   context.setContextValue(currentLocation, value);
 
@@ -265,7 +265,7 @@ export function browserLocation(
 
 export function currentLocation(
   context: RenderContext,
-): readonly [LocationState, NavigateFunction] {
+): readonly [LocationState, LocationActions] {
   const value = context.getContextValue(currentLocation);
 
   if (value == null) {
@@ -274,12 +274,12 @@ export function currentLocation(
     );
   }
 
-  return value as [LocationState, NavigateFunction];
+  return value as [LocationState, LocationActions];
 }
 
 export function hashLocation(
   context: RenderContext,
-): readonly [LocationState, NavigateFunction] {
+): readonly [LocationState, LocationActions] {
   const [locationState, setLocationState] = context.useState<LocationState>(
     () => ({
       url: RelativeURL.fromString(location.hash.slice(1)),
@@ -288,31 +288,32 @@ export function hashLocation(
       reason: NavigateReason.Load,
     }),
   );
-
-  const navigate = context.useCallback(
-    (
-      url: RelativeURL,
-      {
-        replace = false,
-        scrollReset = true,
-        state = null,
-      }: NavigateOptions = {},
-    ) => {
-      let reason: NavigateReason;
-      if (replace) {
-        history.replaceState(state, '', '#' + url.toString());
-        reason = NavigateReason.Replace;
-      } else {
-        history.pushState(state, '', '#' + url.toString());
-        reason = NavigateReason.Push;
-      }
-      setLocationState({
-        url,
-        state,
-        scrollReset,
-        reason,
-      });
-    },
+  const locationActions = context.useMemo<LocationActions>(
+    () => ({
+      navigate: (
+        url: RelativeURL,
+        {
+          replace = false,
+          scrollReset = true,
+          state = null,
+        }: NavigateOptions = {},
+      ) => {
+        let reason: NavigateReason;
+        if (replace) {
+          history.replaceState(state, '', '#' + url.toString());
+          reason = NavigateReason.Replace;
+        } else {
+          history.pushState(state, '', '#' + url.toString());
+          reason = NavigateReason.Push;
+        }
+        setLocationState({
+          url,
+          state,
+          scrollReset,
+          reason,
+        });
+      },
+    }),
     [],
   );
 
@@ -331,16 +332,16 @@ export function hashLocation(
     };
   }, []);
 
-  const value = [locationState, navigate] as const;
+  const value = [locationState, locationActions] as const;
 
   context.setContextValue(currentLocation, value);
 
   return value;
 }
 
-export function createFormSubmitHandler(
-  navigate: NavigateFunction,
-): (event: SubmitEvent) => void {
+export function createFormSubmitHandler({
+  navigate,
+}: LocationActions): (event: SubmitEvent) => void {
   return (event) => {
     if (event.defaultPrevented) {
       return;
@@ -386,9 +387,9 @@ export function createFormSubmitHandler(
   };
 }
 
-export function createLinkClickHandler(
-  navigate: NavigateFunction,
-): (event: MouseEvent) => void {
+export function createLinkClickHandler({
+  navigate,
+}: LocationActions): (event: MouseEvent) => void {
   return (event) => {
     if (
       event.altKey ||
@@ -402,15 +403,16 @@ export function createLinkClickHandler(
     }
     // Find a link element excluding nodes in closed shadow trees by
     // composedPath().
-    const link = (event.composedPath() as Element[]).find(isLinkElement);
-    if (link === undefined || link.origin !== location.origin) {
+    const element = (event.composedPath() as Element[]).find(isLinkElement);
+    if (element === undefined || element.origin !== location.origin) {
       return;
     }
     event.preventDefault();
-    const url = RelativeURL.fromLocation(link);
+    const url = RelativeURL.fromLocation(element);
     const replace =
-      link.hasAttribute('data-link-replace') || link.href === location.href;
-    const scrollReset = !link.hasAttribute('data-link-no-scroll-reset');
+      element.hasAttribute('data-link-replace') ||
+      element.href === location.href;
+    const scrollReset = !element.hasAttribute('data-link-no-scroll-reset');
     navigate(url, { replace, scrollReset });
   };
 }

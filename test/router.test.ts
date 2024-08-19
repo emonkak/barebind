@@ -221,7 +221,7 @@ describe('browserLocation', () => {
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, navigate] = context.use(browserLocation);
+    let [locationState, { navigate }] = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -251,7 +251,7 @@ describe('browserLocation', () => {
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, navigate] = context.use(browserLocation);
+    let [locationState, { navigate }] = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -389,7 +389,7 @@ describe('hashLocation', () => {
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, navigate] = context.use(hashLocation);
+    let [locationState, { navigate }] = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -419,7 +419,7 @@ describe('hashLocation', () => {
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState, navigate] = context.use(hashLocation);
+    let [locationState, { navigate }] = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -508,10 +508,10 @@ describe('createFormSubmitHandler', () => {
       cancelable: true,
     });
 
-    const navigateSpy = vi.fn();
-    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
-    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.addEventListener('submit', formSubmitHandler);
     form.setAttribute('method', 'GET');
     form.setAttribute('action', '/foo?bar=123#baz');
     form.innerHTML = `
@@ -519,8 +519,8 @@ describe('createFormSubmitHandler', () => {
     `;
     form.dispatchEvent(event);
 
-    expect(navigateSpy).toHaveBeenCalledOnce();
-    expect(navigateSpy).toHaveBeenCalledWith(
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: '/foo',
         search: '?qux=456',
@@ -528,16 +528,16 @@ describe('createFormSubmitHandler', () => {
       }),
       { replace: false, scrollReset: true },
     );
-    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
   it('should push a new location when the from is submitted by the button', () => {
-    const navigateSpy = vi.fn();
-    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     const form = document.createElement('form');
-    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.addEventListener('submit', formSubmitHandler);
     form.setAttribute('method', 'POST');
     form.setAttribute('action', '/');
     form.innerHTML = `
@@ -551,8 +551,8 @@ describe('createFormSubmitHandler', () => {
     });
     form.dispatchEvent(event);
 
-    expect(navigateSpy).toHaveBeenCalledOnce();
-    expect(navigateSpy).toHaveBeenCalledWith(
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: '/foo',
         search: '?qux=123',
@@ -560,7 +560,7 @@ describe('createFormSubmitHandler', () => {
       }),
       { replace: false, scrollReset: true },
     );
-    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -571,10 +571,10 @@ describe('createFormSubmitHandler', () => {
       cancelable: true,
     });
 
-    const navigateSpy = vi.fn();
-    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
-    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.addEventListener('submit', formSubmitHandler);
     form.setAttribute('method', 'GET');
     form.setAttribute('action', '/foo?bar=123#baz');
     form.setAttribute('data-link-replace', '');
@@ -584,8 +584,8 @@ describe('createFormSubmitHandler', () => {
     `;
     form.dispatchEvent(event);
 
-    expect(navigateSpy).toHaveBeenCalledOnce();
-    expect(navigateSpy).toHaveBeenCalledWith(
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: '/foo',
         search: '?qux=456',
@@ -593,7 +593,7 @@ describe('createFormSubmitHandler', () => {
       }),
       { replace: true, scrollReset: false },
     );
-    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -604,17 +604,17 @@ describe('createFormSubmitHandler', () => {
       cancelable: true,
     });
 
-    const navigateSpy = vi.fn();
-    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     event.preventDefault();
-    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.addEventListener('submit', formSubmitHandler);
     form.setAttribute('method', 'GET');
     form.setAttribute('action', '/foo?bar#baz');
     form.dispatchEvent(event);
 
-    expect(navigateSpy).not.toHaveBeenCalled();
-    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -625,16 +625,16 @@ describe('createFormSubmitHandler', () => {
       cancelable: true,
     });
 
-    const navigateSpy = vi.fn();
-    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
-    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.addEventListener('submit', formSubmitHandler);
     form.setAttribute('method', 'POST');
     form.setAttribute('action', '/foo?bar#baz');
     form.dispatchEvent(event);
 
-    expect(navigateSpy).not.toHaveBeenCalled();
-    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(false);
   });
 
@@ -645,16 +645,16 @@ describe('createFormSubmitHandler', () => {
       cancelable: true,
     });
 
-    const navigateSpy = vi.fn();
-    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
-    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.addEventListener('submit', formSubmitHandler);
     form.setAttribute('method', 'GET');
     form.setAttribute('action', 'https://example.com');
     form.dispatchEvent(event);
 
-    expect(navigateSpy).not.toHaveBeenCalled();
-    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(false);
   });
 });
@@ -668,16 +668,16 @@ describe('createLinkClickHandler', () => {
       cancelable: true,
     });
 
-    const navigateSpy = vi.fn();
-    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
-    container.addEventListener('click', linkClickHandlerSpy);
+    container.addEventListener('click', linkClickHandler);
     container.appendChild(element);
     element.setAttribute('href', '/foo?bar=123#baz');
     element.dispatchEvent(event);
 
-    expect(navigateSpy).toHaveBeenCalledOnce();
-    expect(navigateSpy).toHaveBeenCalledWith(
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: '/foo',
         search: '?bar=123',
@@ -685,7 +685,7 @@ describe('createLinkClickHandler', () => {
       }),
       { replace: false, scrollReset: true },
     );
-    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -696,18 +696,18 @@ describe('createLinkClickHandler', () => {
       bubbles: true,
       cancelable: true,
     });
-    const navigateSpy = vi.fn();
-    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     container.appendChild(element);
-    container.addEventListener('click', linkClickHandlerSpy);
+    container.addEventListener('click', linkClickHandler);
     element.setAttribute('href', '/foo?bar=123#baz');
     element.setAttribute('data-link-replace', '');
     element.setAttribute('data-link-no-scroll-reset', '');
     element.dispatchEvent(event);
 
-    expect(navigateSpy).toHaveBeenCalledOnce();
-    expect(navigateSpy).toHaveBeenCalledWith(
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: '/foo',
         search: '?bar=123',
@@ -715,7 +715,7 @@ describe('createLinkClickHandler', () => {
       }),
       { replace: true, scrollReset: false },
     );
-    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -732,15 +732,15 @@ describe('createLinkClickHandler', () => {
       const element = document.createElement('a');
       const event = new MouseEvent('click', eventInit);
 
-      const navigateSpy = vi.fn();
-      const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+      const navigate = vi.fn();
+      const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
       container.appendChild(element);
-      container.addEventListener('click', linkClickHandlerSpy);
+      container.addEventListener('click', linkClickHandler);
       element.dispatchEvent(event);
 
-      expect(navigateSpy).not.toHaveBeenCalled();
-      expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+      expect(navigate).not.toHaveBeenCalled();
+      expect(linkClickHandler).toHaveBeenCalledOnce();
       expect(event.defaultPrevented).toBe(false);
     },
   );
@@ -750,17 +750,17 @@ describe('createLinkClickHandler', () => {
     const element = document.createElement('a');
     const event = new MouseEvent('click', { cancelable: true, bubbles: true });
 
-    const navigateSpy = vi.fn();
-    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     event.preventDefault();
     container.appendChild(element);
-    container.addEventListener('click', linkClickHandlerSpy);
+    container.addEventListener('click', linkClickHandler);
     element.setAttribute('href', '/foo');
     element.dispatchEvent(event);
 
-    expect(navigateSpy).not.toHaveBeenCalled();
-    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
   });
 
@@ -772,15 +772,15 @@ describe('createLinkClickHandler', () => {
       bubbles: true,
     });
 
-    const navigateSpy = vi.fn();
-    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     container.appendChild(element);
-    container.addEventListener('click', linkClickHandlerSpy);
+    container.addEventListener('click', linkClickHandler);
     element.dispatchEvent(event);
 
-    expect(navigateSpy).not.toHaveBeenCalled();
-    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(navigate).not.toHaveBeenCalled();
+    expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(false);
   });
 });
