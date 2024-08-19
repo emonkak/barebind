@@ -36,51 +36,47 @@ describe('Router', () => {
     route(['tags', wildcard], ([label]) => `showTag(${label})`),
   ]);
 
-  describe('.dispatch()', () => {
-    it('should dispatch the handler that matches the URL', () => {
-      expect(basicRouter.dispatch(new RelativeURL(''))).toBe('index');
-      expect(basicRouter.dispatch(new RelativeURL('/'))).toBe('index');
-      expect(basicRouter.dispatch(new RelativeURL('/articles/123'))).toBe(
+  describe('.match()', () => {
+    it('should return the handler that matches the URL', () => {
+      expect(basicRouter.match(new RelativeURL(''))).toBe('index');
+      expect(basicRouter.match(new RelativeURL('/'))).toBe('index');
+      expect(basicRouter.match(new RelativeURL('/articles/123'))).toBe(
         'showArticle(123)',
       );
-      expect(basicRouter.dispatch(new RelativeURL('/articles/123/edit'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/articles/123/edit'))).toBe(
         'editArticle(123)',
       );
-      expect(basicRouter.dispatch(new RelativeURL('/tags'))).toBe('indexTags');
-      expect(basicRouter.dispatch(new RelativeURL('/tags/'))).toBe('showTag()');
-      expect(basicRouter.dispatch(new RelativeURL('/tags/javascript'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/tags'))).toBe('indexTags');
+      expect(basicRouter.match(new RelativeURL('/tags/'))).toBe('showTag()');
+      expect(basicRouter.match(new RelativeURL('/tags/javascript'))).toBe(
         'showTag(javascript)',
       );
-      expect(basicRouter.dispatch(new RelativeURL('/categories'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/categories'))).toBe(
         'indexCategories',
       );
-      expect(basicRouter.dispatch(new RelativeURL('/categories/'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/categories/'))).toBe(
         'indexCategories',
       );
-      expect(basicRouter.dispatch(new RelativeURL('/categories/123'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/categories/123'))).toBe(
         'showCategory(123)',
       );
     });
 
     it('should return null if the route restricts a trailing slash', () => {
-      expect(basicRouter.dispatch(new RelativeURL('/articles/123/'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/articles/123/'))).toBe(null);
+      expect(basicRouter.match(new RelativeURL('/articles/123/edit/'))).toBe(
         null,
       );
-      expect(basicRouter.dispatch(new RelativeURL('/articles/123/edit/'))).toBe(
-        null,
-      );
-      expect(basicRouter.dispatch(new RelativeURL('/tags/javascript/'))).toBe(
+      expect(basicRouter.match(new RelativeURL('/tags/javascript/'))).toBe(
         null,
       );
     });
 
     it('should return null if there is no route matches the URL', () => {
-      expect(basicRouter.dispatch(new RelativeURL('/articles'))).toBe(null);
-      expect(basicRouter.dispatch(new RelativeURL('/articles/'))).toBe(null);
-      expect(basicRouter.dispatch(new RelativeURL('/categories/abc/'))).toBe(
-        null,
-      );
-      expect(basicRouter.dispatch(new RelativeURL('/not_found'))).toBe(null);
+      expect(basicRouter.match(new RelativeURL('/articles'))).toBe(null);
+      expect(basicRouter.match(new RelativeURL('/articles/'))).toBe(null);
+      expect(basicRouter.match(new RelativeURL('/categories/abc/'))).toBe(null);
+      expect(basicRouter.match(new RelativeURL('/not_found'))).toBe(null);
     });
 
     it('should dispatch a handler with args, url and state', () => {
@@ -94,7 +90,7 @@ describe('Router', () => {
       const url = new RelativeURL('/articles/123/comments/456');
       const state = {};
 
-      expect(router.dispatch(url, state)).toBe('showArticleComment(123, 456)');
+      expect(router.match(url, state)).toBe('showArticleComment(123, 456)');
       expect(handler).toHaveBeenCalledOnce();
       expect(handler).toHaveBeenCalledWith(['123', 456], url, state);
     });
@@ -107,7 +103,7 @@ describe('Router', () => {
       const url = new RelativeURL('/articles/123');
       const state = {};
 
-      expect(router.dispatch(url, state)).toBe('showArticle(123)');
+      expect(router.match(url, state)).toBe('showArticle(123)');
       expect(pattern).toHaveBeenCalledOnce();
       expect(pattern).toHaveBeenCalledWith('123', url, state);
     });

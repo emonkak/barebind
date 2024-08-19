@@ -88,7 +88,7 @@ export class Router<TResult> {
     this._routes = routes;
   }
 
-  dispatch(url: RelativeURL, state: unknown = null): TResult | null {
+  match(url: RelativeURL, state: unknown = null): TResult | null {
     const path = url.pathname;
     const pathWithoutInitialSlash = path[0] === '/' ? path.slice(1) : path;
     const components = pathWithoutInitialSlash.split('/');

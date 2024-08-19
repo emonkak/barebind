@@ -24,7 +24,7 @@ export function App(
 ): TemplateDirective {
   const [locationState, navigate] = context.use(hashLocation);
   const page =
-    router.dispatch(locationState.url, locationState.state) ??
+    router.match(locationState.url, locationState.state) ??
     component(NotFound, { url: locationState.url });
 
   context.use(itemState);
