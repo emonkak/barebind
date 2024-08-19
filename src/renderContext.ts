@@ -298,7 +298,7 @@ export class RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): [TState, (action: TAction, priority?: TaskPriority) => void] {
+  ): readonly [TState, (action: TAction, priority?: TaskPriority) => void] {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -334,7 +334,10 @@ export class RenderContext {
 
   useState<TState>(
     initialState: InitialState<TState>,
-  ): [TState, (newState: NewState<TState>, priority?: TaskPriority) => void] {
+  ): readonly [
+    TState,
+    (newState: NewState<TState>, priority?: TaskPriority) => void,
+  ] {
     return this.useReducer(
       (state, action) =>
         typeof action === 'function' ? action(state) : action,
