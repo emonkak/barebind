@@ -1,6 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { component, ifElse, keyedList } from '@emonkak/ebit/directives.js';
-import { linkClickHandler } from '@emonkak/ebit/router.js';
 
 import { StoryState, type StoryType } from '../state.js';
 import { StoryView } from './StoryView.js';
@@ -26,8 +25,6 @@ export function StoriesPage(
     }
   }, [type, page]);
 
-  const handleLinkClick = context.use(linkClickHandler());
-
   return context.html`
     <div class="story-view">
       <div class="story-list-nav">
@@ -38,7 +35,6 @@ export function StoriesPage(
               class="page-link"
               href=${`/${storyTypeToPathName(type)}/${page - 1}`}
               aria-label="Previous Page"
-              @click=${handleLinkClick}
             >
               &lt; prev
             </a>
@@ -57,7 +53,6 @@ export function StoriesPage(
               class="page-link"
               href=${`/${storyTypeToPathName(type)}/${page + 1}`}
               aria-label="Next Page"
-              @click=${handleLinkClick}
             >
               more &gt;
             </a>

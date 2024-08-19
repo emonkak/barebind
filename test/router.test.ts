@@ -3,13 +3,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext } from '../src/renderContext.js';
 import {
+  NavigateReason,
   RelativeURL,
   Router,
   browserLocation,
+  createFormSubmitHandler,
+  createLinkClickHandler,
   currentLocation,
   hashLocation,
   integer,
-  linkClickHandler,
+  resetScrollPosition,
   route,
   wildcard,
 } from '../src/router.js';
@@ -114,7 +117,7 @@ describe('Router', () => {
 describe('RelativeURL', () => {
   describe('.from()', () => {
     it.each([
-      [new RelativeURL('/foo', new URLSearchParams('?bar=123'), '#baz')],
+      [new RelativeURL('/foo', '?bar=123', '#baz')],
       [new URL('/foo?bar=123#baz', 'file:')],
       [
         {
@@ -182,17 +185,18 @@ describe('RelativeURL', () => {
 describe('browserLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
+  const hooks: Hook[] = [];
 
   afterEach(() => {
+    cleanHooks(hooks);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
 
-  it('should return a state represents the current location of the browser', () => {
+  it('should return the current location of the browser', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
@@ -200,95 +204,89 @@ describe('browserLocation', () => {
     history.replaceState(state, '', '/articles/123');
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const locationState = context.use(browserLocation);
+    const [locationState] = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    expect(window.location.pathname).toBe('/articles/123');
-    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(location.pathname).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.scrollReset).toBe(false);
+    expect(locationState.reason).toBe(NavigateReason.Load);
   });
 
-  it('should push the new location to the session history by push action', () => {
+  it('should push the a location to the history', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
+    const queue = createUpdateQueue();
+
+    const pushStateSpy = vi.spyOn(history, 'pushState');
+    const replaceStateSpy = vi.spyOn(history, 'replaceState');
+
+    let context = new RenderContext(host, updater, block, hooks, queue);
+    let [locationState, navigate] = context.use(browserLocation);
+    context.finalize();
+    updater.flushUpdate(queue, host);
+
+    navigate(new RelativeURL('/articles/456'));
+
+    context = new RenderContext(host, updater, block, hooks, queue);
+    [locationState] = context.use(browserLocation);
+
+    expect(location.pathname).toBe('/articles/456');
+    expect(history.state).toBe(null);
+    expect(pushStateSpy).toHaveBeenCalledOnce();
+    expect(replaceStateSpy).not.toHaveBeenCalled();
+    expect(locationState.url.toString()).toBe('/articles/456');
+    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.scrollReset).toBe(true);
+    expect(locationState.reason).toBe(NavigateReason.Push);
+  });
+
+  it('should replace the new location to the session', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
-
-    let context = new RenderContext(host, updater, block, hooks, queue);
-    let locationState = context.use(browserLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
-    locationState.push(new RelativeURL('/articles/123'));
-    expect(window.location.pathname).toBe('/articles/123');
-    expect(history.state).toBe(null);
-    expect(pushStateSpy).toHaveBeenCalledTimes(1);
-
-    locationState.push(new RelativeURL('/articles/456'), state);
-    expect(window.location.pathname).toBe('/articles/456');
-    expect(history.state).toStrictEqual(state);
-    expect(pushStateSpy).toHaveBeenCalledTimes(2);
-
-    context = new RenderContext(host, updater, block, hooks, queue);
-    locationState = context.use(browserLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
-    expect(locationState.url.pathname).toBe('/articles/456');
-    expect(locationState.state).toStrictEqual(history.state);
-  });
-
-  it('should push the new location to the session history by replace action', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const hooks: Hook[] = [];
-    const queue = createUpdateQueue();
-
-    const state = { key: 'foo' };
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let locationState = context.use(browserLocation);
+    let [locationState, navigate] = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    locationState.replace(new RelativeURL('/articles/123'));
-    expect(window.location.pathname).toBe('/articles/123');
-    expect(history.state).toBe(null);
-    expect(replaceStateSpy).toHaveBeenCalledTimes(1);
-
-    locationState.replace(new RelativeURL('/articles/456'), state);
-    expect(window.location.pathname).toBe('/articles/456');
-    expect(history.state).toStrictEqual(state);
-    expect(replaceStateSpy).toHaveBeenCalledTimes(2);
+    navigate(new RelativeURL('/articles/123'), { replace: true, state });
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    locationState = context.use(browserLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
+    [locationState] = context.use(browserLocation);
 
-    expect(locationState.url.pathname).toBe('/articles/456');
+    expect(location.pathname).toBe('/articles/123');
+    expect(history.state).toStrictEqual(state);
+    expect(pushStateSpy).not.toHaveBeenCalled();
+    expect(replaceStateSpy).toHaveBeenCalledOnce();
+    expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.scrollReset).toBe(true);
+    expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
   it('should update the state when the "popstate" event is tiggered', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let locationState = context.use(browserLocation);
+    let [locationState] = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -298,25 +296,32 @@ describe('browserLocation', () => {
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    locationState = context.use(browserLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
+    [locationState] = context.use(browserLocation);
 
-    expect(window.location.pathname).toBe('/articles/123');
-    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(location.pathname).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
+    expect(locationState.scrollReset).toBe(false);
+    expect(locationState.reason).toBe(NavigateReason.Pop);
 
     cleanHooks(hooks);
-    dispatchEvent(new PopStateEvent('popstate', { state: state }));
 
-    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+    expect(addEventListenerSpy).toHaveBeenCalledOnce();
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'popstate',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'popstate',
+      expect.any(Function),
+    );
   });
 
   it('should register the current location', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
@@ -330,7 +335,7 @@ describe('browserLocation', () => {
 });
 
 describe('currentLocation', () => {
-  it('should throw an error if the current location registered as a context value does not exisit', () => {
+  it('should throw an error if the current location is not registered', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -348,17 +353,18 @@ describe('currentLocation', () => {
 describe('hashLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
+  const hooks: Hook[] = [];
 
   afterEach(() => {
+    cleanHooks(hooks);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
 
-  it('should return a state represents the current location of the browser', () => {
+  it('should return the current location by the fragment identifier', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
@@ -366,94 +372,89 @@ describe('hashLocation', () => {
     history.replaceState(state, '', '#/articles/123');
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const locationState = context.use(hashLocation);
+    const [locationState] = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    expect(window.location.hash).toBe('#/articles/123');
-    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(location.hash).toBe('#/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.state).toStrictEqual(state);
+    expect(locationState.scrollReset).toBe(false);
+    expect(locationState.reason).toBe(NavigateReason.Load);
   });
 
-  it('should push the new location to the session history by push action', () => {
+  it('should push a new location to the fragment identifier', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
+    const queue = createUpdateQueue();
+
+    const pushStateSpy = vi.spyOn(history, 'pushState');
+    const replaceStateSpy = vi.spyOn(history, 'replaceState');
+
+    let context = new RenderContext(host, updater, block, hooks, queue);
+    let [locationState, navigate] = context.use(hashLocation);
+    context.finalize();
+    updater.flushUpdate(queue, host);
+
+    navigate(new RelativeURL('/articles/456'));
+
+    context = new RenderContext(host, updater, block, hooks, queue);
+    [locationState] = context.use(hashLocation);
+
+    expect(location.hash).toBe('#/articles/456');
+    expect(history.state).toBe(null);
+    expect(pushStateSpy).toHaveBeenCalledOnce();
+    expect(replaceStateSpy).not.toHaveBeenCalled();
+    expect(locationState.url.toString()).toBe('/articles/456');
+    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.scrollReset).toBe(true);
+    expect(locationState.reason).toBe(NavigateReason.Push);
+  });
+
+  it('should replace a new location to the fragment identifier', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
-
-    let context = new RenderContext(host, updater, block, hooks, queue);
-    let locationState = context.use(hashLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
-    locationState.push(new RelativeURL('/articles/123'));
-    expect(window.location.hash).toBe('#/articles/123');
-    expect(history.state).toBe(null);
-    expect(pushStateSpy).toHaveBeenCalledTimes(1);
-
-    locationState.push(new RelativeURL('/articles/456'), state);
-    expect(window.location.hash).toBe('#/articles/456');
-    expect(history.state).toStrictEqual(state);
-    expect(pushStateSpy).toHaveBeenCalledTimes(2);
-
-    context = new RenderContext(host, updater, block, hooks, queue);
-    locationState = context.use(hashLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
-    expect(locationState.url.pathname).toBe('/articles/456');
-    expect(locationState.state).toStrictEqual(history.state);
-  });
-
-  it('should push the new location to the session history by replace action', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const hooks: Hook[] = [];
-    const queue = createUpdateQueue();
-
-    const state = { key: 'foo' };
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let locationState = context.use(hashLocation);
+    let [locationState, navigate] = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    locationState.replace(new RelativeURL('/articles/123'));
-    expect(window.location.hash).toBe('#/articles/123');
-    expect(history.state).toBe(null);
-    expect(replaceStateSpy).toHaveBeenCalledTimes(1);
-
-    locationState.replace(new RelativeURL('/articles/456'), state);
-    expect(window.location.hash).toBe('#/articles/456');
-    expect(history.state).toStrictEqual(state);
-    expect(replaceStateSpy).toHaveBeenCalledTimes(2);
+    navigate(new RelativeURL('/articles/123'), { replace: true, state });
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    locationState = context.use(hashLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
+    [locationState] = context.use(hashLocation);
 
-    expect(locationState.url.pathname).toBe('/articles/456');
+    expect(location.hash).toBe('#/articles/123');
+    expect(history.state).toStrictEqual(state);
+    expect(pushStateSpy).not.toHaveBeenCalled();
+    expect(replaceStateSpy).toHaveBeenCalledOnce();
+    expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.scrollReset).toBe(true);
+    expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
   it('should update the state when the "hashchange" event is tiggered', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     let context = new RenderContext(host, updater, block, hooks, queue);
-    let locationState = context.use(hashLocation);
+    let [locationState] = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
@@ -468,195 +469,390 @@ describe('hashLocation', () => {
     expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
     context = new RenderContext(host, updater, block, hooks, queue);
-    locationState = context.use(hashLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
+    [locationState] = context.use(hashLocation);
 
-    expect(window.location.hash).toBe('#/articles/123');
-    expect(locationState.url.pathname).toBe('/articles/123');
+    expect(location.hash).toBe('#/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
+    expect(locationState.scrollReset).toBe(false);
+    expect(locationState.reason).toBe(NavigateReason.Pop);
 
     cleanHooks(hooks);
-    dispatchEvent(
-      new HashChangeEvent('hashchange', {
-        oldURL: '#/articles/123',
-        newURL: '#/articles/456',
-      }),
-    );
 
-    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+    expect(addEventListenerSpy).toHaveBeenCalledOnce();
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'hashchange',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'hashchange',
+      expect.any(Function),
+    );
   });
 
   it('should register the current location', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
-    const hooks: Hook[] = [];
     const queue = createUpdateQueue();
 
     const context = new RenderContext(host, updater, block, hooks, queue);
     const locationState = context.use(hashLocation);
 
     expect(context.use(currentLocation)).toStrictEqual(locationState);
-
-    context.finalize();
-    updater.flushUpdate(queue, host);
   });
 });
 
-describe('linkClickHandler', () => {
-  const originalState = history.state;
-  const originalUrl = location.href;
+describe('createFormSubmitHandler', () => {
+  it('should push a new location when the from is submitted', () => {
+    const form = document.createElement('form');
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
 
-  afterEach(() => {
-    history.replaceState(originalState, '', originalUrl);
-    vi.restoreAllMocks();
+    const navigateSpy = vi.fn();
+    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+
+    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.setAttribute('method', 'GET');
+    form.setAttribute('action', '/foo?bar=123#baz');
+    form.innerHTML = `
+      <input type="hidden" name="qux" value="456">
+    `;
+    form.dispatchEvent(event);
+
+    expect(navigateSpy).toHaveBeenCalledOnce();
+    expect(navigateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?qux=456',
+        hash: '#baz',
+      }),
+      { replace: false, scrollReset: true },
+    );
+    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
   });
 
-  it('should push the href attribute as a URL', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const hooks: Hook[] = [];
-    const queue = createUpdateQueue();
+  it('should push a new location when the from is submitted by the button', () => {
+    const navigateSpy = vi.fn();
+    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
 
-    const context = new RenderContext(host, updater, block, hooks, queue);
-    const locationState = context.use(browserLocation);
-    const handleLinkClick = vi.fn(context.use(linkClickHandler()));
+    const form = document.createElement('form');
+    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.setAttribute('method', 'POST');
+    form.setAttribute('action', '/');
+    form.innerHTML = `
+      <button type="submit" formmethod="get" formaction="/foo?bar#baz" name="qux" value="123"></button>
+    `;
 
-    const pushSpy = vi.spyOn(locationState, 'push');
-    const replaceSpy = vi.spyOn(locationState, 'replace');
-    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+      submitter: form.querySelector('button'),
+    });
+    form.dispatchEvent(event);
 
-    const element = document.createElement('a');
-    element.setAttribute('href', '/foo');
-    element.addEventListener('click', handleLinkClick);
-    element.click();
-
-    expect(pushSpy).toHaveBeenCalledOnce();
-    expect(pushSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: '/foo' }),
-      undefined,
+    expect(navigateSpy).toHaveBeenCalledOnce();
+    expect(navigateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?qux=123',
+        hash: '#baz',
+      }),
+      { replace: false, scrollReset: true },
     );
-    expect(replaceSpy).not.toHaveBeenCalled();
-    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
   });
 
-  it('should replace the href attribute as a URL', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const hooks: Hook[] = [];
-    const queue = createUpdateQueue();
+  it('should replace a new location when the form is submitted', () => {
+    const form = document.createElement('form');
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
 
-    const context = new RenderContext(host, updater, block, hooks, queue);
-    const state = {};
-    const locationState = context.use(browserLocation);
-    const handleLinkClick = vi.fn(
-      context.use(linkClickHandler({ url: '/foo', state, replace: true })),
+    const navigateSpy = vi.fn();
+    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+
+    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.setAttribute('method', 'GET');
+    form.setAttribute('action', '/foo?bar=123#baz');
+    form.setAttribute('data-link-replace', '');
+    form.setAttribute('data-link-no-scroll-reset', '');
+    form.innerHTML = `
+      <input type="hidden" name="qux" value="456">
+    `;
+    form.dispatchEvent(event);
+
+    expect(navigateSpy).toHaveBeenCalledOnce();
+    expect(navigateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?qux=456',
+        hash: '#baz',
+      }),
+      { replace: true, scrollReset: false },
     );
+    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
 
-    const pushSpy = vi.spyOn(locationState, 'push');
-    const replaceSpy = vi.spyOn(locationState, 'replace');
-    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+  it('should ignore the event if its default action is prevented', () => {
+    const form = document.createElement('form');
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
 
+    const navigateSpy = vi.fn();
+    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+
+    event.preventDefault();
+    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.setAttribute('method', 'GET');
+    form.setAttribute('action', '/foo?bar#baz');
+    form.dispatchEvent(event);
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should ignore the event if the form method is not "GET"', () => {
+    const form = document.createElement('form');
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const navigateSpy = vi.fn();
+    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+
+    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.setAttribute('method', 'POST');
+    form.setAttribute('action', '/foo?bar#baz');
+    form.dispatchEvent(event);
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('should ignore the event If the origin of the action is different from the current location', () => {
+    const form = document.createElement('form');
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const navigateSpy = vi.fn();
+    const formSubmitHandlerSpy = vi.fn(createFormSubmitHandler(navigateSpy));
+
+    form.addEventListener('submit', formSubmitHandlerSpy);
+    form.setAttribute('method', 'GET');
+    form.setAttribute('action', 'https://example.com');
+    form.dispatchEvent(event);
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(formSubmitHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(false);
+  });
+});
+
+describe('createLinkClickHandler', () => {
+  it('should push a new location when the link is clicked', () => {
+    const container = document.createElement('div');
     const element = document.createElement('a');
-    element.setAttribute('href', '#/foo');
-    element.addEventListener('click', handleLinkClick);
-    element.click();
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
 
-    expect(handleLinkClick).toHaveBeenCalledOnce();
-    expect(pushSpy).not.toHaveBeenCalled();
-    expect(replaceSpy).toHaveBeenCalledOnce();
-    expect(replaceSpy).toHaveBeenCalledWith(
-      expect.objectContaining({ pathname: '/foo' }),
-      state,
+    const navigateSpy = vi.fn();
+    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+
+    container.addEventListener('click', linkClickHandlerSpy);
+    container.appendChild(element);
+    element.setAttribute('href', '/foo?bar=123#baz');
+    element.dispatchEvent(event);
+
+    expect(navigateSpy).toHaveBeenCalledOnce();
+    expect(navigateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?bar=123',
+        hash: '#baz',
+      }),
+      { replace: false, scrollReset: true },
     );
-    expect(requestUpdateSpy).toHaveBeenCalledOnce();
+    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should replace a new location when the link is clicked', () => {
+    const container = document.createElement('div');
+    const element = document.createElement('a');
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+    const navigateSpy = vi.fn();
+    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandlerSpy);
+    element.setAttribute('href', '/foo?bar=123#baz');
+    element.setAttribute('data-link-replace', '');
+    element.setAttribute('data-link-no-scroll-reset', '');
+    element.dispatchEvent(event);
+
+    expect(navigateSpy).toHaveBeenCalledOnce();
+    expect(navigateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?bar=123',
+        hash: '#baz',
+      }),
+      { replace: true, scrollReset: false },
+    );
+    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
   });
 
   it.each([
-    [{ altKey: true }],
-    [{ ctrlKey: true }],
-    [{ metaKey: true }],
-    [{ shiftKey: true }],
-    [{ button: 1 }],
+    [{ altKey: true, bubbles: true }],
+    [{ ctrlKey: true, bubbles: true }],
+    [{ metaKey: true, bubbles: true }],
+    [{ shiftKey: true, bubbles: true }],
+    [{ button: 1, bubbles: true }],
   ])(
     'should ignore the event if any modifier keys or a button other than left button is pressed',
     (eventInit) => {
-      const host = new UpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
-
-      const context = new RenderContext(host, updater, block, hooks, queue);
-      const locationState = context.use(browserLocation);
-      const handleLinkClick = vi.fn(
-        context.use(linkClickHandler({ url: '/foo' })),
-      );
-
-      const pushSpy = vi.spyOn(locationState, 'push');
-      const replaceSpy = vi.spyOn(locationState, 'replace');
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-
+      const container = document.createElement('div');
       const element = document.createElement('a');
-      element.addEventListener('click', handleLinkClick);
-      element.dispatchEvent(new MouseEvent('click', eventInit));
+      const event = new MouseEvent('click', eventInit);
 
-      expect(handleLinkClick).toHaveBeenCalledOnce();
-      expect(pushSpy).not.toHaveBeenCalled();
-      expect(replaceSpy).not.toHaveBeenCalled();
-      expect(requestUpdateSpy).not.toHaveBeenCalled();
+      const navigateSpy = vi.fn();
+      const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+
+      container.appendChild(element);
+      container.addEventListener('click', linkClickHandlerSpy);
+      element.dispatchEvent(event);
+
+      expect(navigateSpy).not.toHaveBeenCalled();
+      expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+      expect(event.defaultPrevented).toBe(false);
     },
   );
 
-  it('should ignore the event if it is cancelled', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const hooks: Hook[] = [];
-    const queue = createUpdateQueue();
-
-    const context = new RenderContext(host, updater, block, hooks, queue);
-    const locationState = context.use(browserLocation);
-    const handleLinkClick = vi.fn(
-      context.use(linkClickHandler({ url: '/foo' })),
-    );
-
-    const pushSpy = vi.spyOn(locationState, 'push');
-    const replaceSpy = vi.spyOn(locationState, 'replace');
-    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-
+  it('should ignore the event if its default action is prevented', () => {
+    const container = document.createElement('div');
     const element = document.createElement('a');
-    const event = new MouseEvent('click', { cancelable: true });
+    const event = new MouseEvent('click', { cancelable: true, bubbles: true });
+
+    const navigateSpy = vi.fn();
+    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+
     event.preventDefault();
-    element.addEventListener('click', handleLinkClick);
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandlerSpy);
+    element.setAttribute('href', '/foo');
     element.dispatchEvent(event);
 
-    expect(handleLinkClick).toHaveBeenCalledOnce();
-    expect(pushSpy).not.toHaveBeenCalled();
-    expect(replaceSpy).not.toHaveBeenCalled();
-    expect(requestUpdateSpy).not.toHaveBeenCalled();
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should ignore the event if the target is not valid as a link', () => {
+    const container = document.createElement('div');
+    const element = document.createElement('button');
+    const event = new MouseEvent('click', {
+      cancelable: true,
+      bubbles: true,
+    });
+
+    const navigateSpy = vi.fn();
+    const linkClickHandlerSpy = vi.fn(createLinkClickHandler(navigateSpy));
+
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandlerSpy);
+    element.dispatchEvent(event);
+
+    expect(navigateSpy).not.toHaveBeenCalled();
+    expect(linkClickHandlerSpy).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(false);
   });
 });
 
-describe('integer()', () => {
-  it('should convert the given string to a integer number', () => {
-    expect(integer('123')).toBe(123);
-    expect(integer('123.4')).toBe(null);
-    expect(integer('123a')).toBe(null);
-    expect(integer('-123')).toBe(-123);
-    expect(integer('-123.4')).toBe(null);
-    expect(integer('-123a')).toBe(null);
-    expect(integer('010')).toBe(null);
-    expect(integer('0b10')).toBe(null);
-    expect(integer('0o10')).toBe(null);
-    expect(integer('0x10')).toBe(null);
-    expect(integer('1_000')).toBe(null);
-    expect(integer('1e100')).toBe(null);
-    expect(integer('abc')).toBe(null);
-    expect(integer('')).toBe(null);
+describe('resetScrollPosition', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should scroll to the top', () => {
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+
+    resetScrollPosition({
+      url: new RelativeURL('/foo'),
+      state: null,
+      scrollReset: true,
+      reason: NavigateReason.Load,
+    });
+
+    expect(scrollToSpy).toHaveBeenCalled();
+    expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
+  });
+
+  it('should scroll to the top if there is not the element indicating hash', () => {
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+
+    resetScrollPosition({
+      url: new RelativeURL('/foo', '', '#bar'),
+      state: null,
+      scrollReset: true,
+      reason: NavigateReason.Load,
+    });
+
+    expect(scrollToSpy).toHaveBeenCalled();
+  });
+
+  it('should scroll to the element indicating hash', () => {
+    const element = document.createElement('div');
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+    const scrollIntoViewSpy = vi.spyOn(element, 'scrollIntoView');
+
+    element.setAttribute('id', 'bar');
+    document.body.appendChild(element);
+
+    resetScrollPosition({
+      url: new RelativeURL('/foo', '', '#bar'),
+      state: null,
+      scrollReset: true,
+      reason: NavigateReason.Load,
+    });
+
+    document.body.removeChild(element);
+
+    expect(scrollToSpy).not.toHaveBeenCalled();
+    expect(scrollIntoViewSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should do nothing if scroll reset is disabled', () => {
+    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+
+    resetScrollPosition({
+      url: new RelativeURL('/foo'),
+      state: null,
+      scrollReset: false,
+      reason: NavigateReason.Load,
+    });
+
+    expect(scrollToSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -670,4 +866,5 @@ function cleanHooks(hooks: Hook[]): void {
       hook.cleanup?.();
     }
   }
+  hooks.length = 0;
 }

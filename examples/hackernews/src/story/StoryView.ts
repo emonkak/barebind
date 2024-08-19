@@ -1,6 +1,5 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { ifElse, when } from '@emonkak/ebit/directives.js';
-import { linkClickHandler } from '@emonkak/ebit/router.js';
 
 import type { Story } from '../state.js';
 
@@ -12,8 +11,6 @@ export function StoryView(
   { story }: StoryProps,
   context: RenderContext,
 ): TemplateDirective {
-  const handleLinkClick = context.use(linkClickHandler());
-
   return context.html`
     <li class="story-item">
       <div class="score">${story.points}</div>
@@ -21,7 +18,7 @@ export function StoryView(
         <${ifElse(
           story.url.startsWith('item?id='),
           () =>
-            context.html`<a href=${`/items/${story.id}`} @click=${handleLinkClick}>${story.title}</a>`,
+            context.html`<a href=${`/items/${story.id}`}>${story.title}</a>`,
           () => context.html`
             <a href=${story.url} target="_blank" rel="noreferrer">
               ${story.title}
@@ -34,11 +31,11 @@ export function StoryView(
         <${ifElse(
           story.type === 'job',
           () =>
-            context.html`<a href=${`/items/${story.id}`} @click=${handleLinkClick}>${story.time_ago}</a>`,
+            context.html`<a href=${`/items/${story.id}`}>${story.time_ago}</a>`,
           () => context.html`
-            by <a href=${`/users/${story.user}`} @click=${handleLinkClick}>${story.user}</a>${' '}
+            by <a href=${`/users/${story.user}`}>${story.user}</a>${' '}
             ${story.time_ago}${' | '}
-            <a href=${`/items/${story.id}`} @click=${handleLinkClick}>
+            <a href=${`/items/${story.id}`}>
               ${story.comments_count ? `${story.comments_count} comments` : 'discuss'}
             </a>
           `,

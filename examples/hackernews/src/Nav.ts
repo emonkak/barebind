@@ -1,27 +1,24 @@
 import type { RenderContext } from '@emonkak/ebit';
-import { linkClickHandler } from '@emonkak/ebit/router.js';
 
 export interface NavProps {}
 
 export function Nav(_props: NavProps, context: RenderContext) {
-  const handleLinkClick = context.use(linkClickHandler());
-
   return context.html`
     <header class="header">
       <nav class="inner">
-        <a href="/" @click=${handleLinkClick}>
+        <a href="/">
           <strong>HN</strong>
         </a>
-        <a href="/new" @click=${handleLinkClick}>
+        <a href="/new">
           <strong>New</strong>
         </a>
-        <a href="/show" @click=${handleLinkClick}>
+        <a href="/show">
           <strong>Show</strong>
         </a>
-        <a href="/ask" @click=${handleLinkClick}>
+        <a href="/ask">
           <strong>Ask</strong>
         </a>
-        <a href="/jobs" @click=${handleLinkClick}>
+        <a href="/jobs">
           <strong>Jobs</strong>
         </a>
         <a class="github" href="http://github.com/emonkak/ebit" target="_blank">

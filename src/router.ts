@@ -1,4 +1,4 @@
-import type { RenderContext, UsableCallback } from './renderContext.js';
+import type { RenderContext } from './renderContext.js';
 
 export interface Route<
   TResult,
@@ -31,14 +31,36 @@ export type Handler<TArgs extends any[], TResult> = (
 export interface LocationState {
   readonly url: RelativeURL;
   readonly state: unknown;
-  push(url: RelativeURL, state?: unknown): void;
-  replace(url: RelativeURL, state?: unknown): void;
+  readonly scrollReset: boolean;
+  readonly reason: NavigateReason;
+}
+
+export type NavigateFunction = (
+  url: RelativeURL,
+  options?: NavigateOptions,
+) => void;
+
+export enum NavigateReason {
+  Load,
+  Pop,
+  Push,
+  Replace,
+}
+
+export interface NavigateOptions {
+  replace?: boolean;
+  scrollReset?: boolean;
+  state?: unknown;
 }
 
 export interface LocationLike {
   pathname: string;
   search: string;
   hash: string;
+}
+
+export interface LinkClickHandlerOptions {
+  container?: GlobalEventHandlers;
 }
 
 type ExtractArgs<TPatterns> = TPatterns extends []
@@ -135,7 +157,7 @@ export class RelativeURL {
 
   static fromLocation(location: LocationLike) {
     const { pathname, search, hash } = location;
-    return new RelativeURL(pathname, new URLSearchParams(search), hash);
+    return new RelativeURL(pathname, search, hash);
   }
 
   static fromURL(url: URL): RelativeURL {
@@ -145,11 +167,11 @@ export class RelativeURL {
 
   constructor(
     pathname: string,
-    searchParams: URLSearchParams = new URLSearchParams(),
+    search: ConstructorParameters<typeof URLSearchParams>[0] = '',
     hash = '',
   ) {
     this._pathname = pathname;
-    this._searchParams = searchParams;
+    this._searchParams = new URLSearchParams(search);
     this._hash = hash;
   }
 
@@ -180,48 +202,70 @@ export class RelativeURL {
   }
 }
 
-export function browserLocation(context: RenderContext): LocationState {
-  const [locationState, setLocationState] = context.useState(() => ({
-    url: RelativeURL.fromLocation(location),
-    state: history.state,
-    push: (url: RelativeURL, state: unknown = null) => {
-      history.pushState(state, '', url.toString());
-      setLocationState((prevLocationState) => ({
-        ...prevLocationState,
+export function browserLocation(
+  context: RenderContext,
+): readonly [LocationState, NavigateFunction] {
+  const [locationState, setLocationState] = context.useState<LocationState>(
+    () => ({
+      url: RelativeURL.fromLocation(location),
+      state: history.state,
+      scrollReset: false,
+      reason: NavigateReason.Load,
+    }),
+  );
+
+  const navigate = context.useCallback(
+    (
+      url: RelativeURL,
+      {
+        replace = false,
+        scrollReset = true,
+        state = null,
+      }: NavigateOptions = {},
+    ) => {
+      let reason: NavigateReason;
+      if (replace) {
+        history.replaceState(state, '', url.toString());
+        reason = NavigateReason.Replace;
+      } else {
+        history.pushState(state, '', url.toString());
+        reason = NavigateReason.Push;
+      }
+      setLocationState({
         url,
         state,
-      }));
+        scrollReset,
+        reason,
+      });
     },
-    replace: (url: RelativeURL, state: unknown = null) => {
-      history.replaceState(state, '', url.toString());
-      setLocationState((prevLocationState) => ({
-        ...prevLocationState,
-        url,
-        state,
-      }));
-    },
-  }));
+    [],
+  );
 
   context.useEffect(() => {
-    const listener = (event: PopStateEvent) => {
-      setLocationState((prevLocationState) => ({
-        ...prevLocationState,
+    const popStateHandler = (event: PopStateEvent) => {
+      setLocationState({
         url: RelativeURL.fromLocation(location),
         state: event.state,
-      }));
+        scrollReset: history.scrollRestoration === 'manual',
+        reason: NavigateReason.Pop,
+      });
     };
-    addEventListener('popstate', listener);
+    addEventListener('popstate', popStateHandler);
     return () => {
-      removeEventListener('popstate', listener);
+      removeEventListener('popstate', popStateHandler);
     };
   }, []);
 
-  context.setContextValue(currentLocation, locationState);
+  const value = [locationState, navigate] as const;
 
-  return locationState;
+  context.setContextValue(currentLocation, value);
+
+  return value;
 }
 
-export function currentLocation(context: RenderContext): LocationState {
+export function currentLocation(
+  context: RenderContext,
+): readonly [LocationState, NavigateFunction] {
   const value = context.getContextValue(currentLocation);
 
   if (value == null) {
@@ -230,92 +274,165 @@ export function currentLocation(context: RenderContext): LocationState {
     );
   }
 
-  return value as LocationState;
+  return value as [LocationState, NavigateFunction];
 }
 
-export function hashLocation(context: RenderContext): LocationState {
-  const [locationState, setLocationState] = context.useState(() => ({
-    url: RelativeURL.fromString(location.hash.slice(1)),
-    state: history.state,
-    push: (url: RelativeURL, state: unknown = null) => {
-      history.pushState(state, '', '#' + url.toString());
-      setLocationState((prevLocationState) => ({
-        ...prevLocationState,
+export function hashLocation(
+  context: RenderContext,
+): readonly [LocationState, NavigateFunction] {
+  const [locationState, setLocationState] = context.useState<LocationState>(
+    () => ({
+      url: RelativeURL.fromString(location.hash.slice(1)),
+      state: history.state,
+      scrollReset: false,
+      reason: NavigateReason.Load,
+    }),
+  );
+
+  const navigate = context.useCallback(
+    (
+      url: RelativeURL,
+      {
+        replace = false,
+        scrollReset = true,
+        state = null,
+      }: NavigateOptions = {},
+    ) => {
+      let reason: NavigateReason;
+      if (replace) {
+        history.replaceState(state, '', '#' + url.toString());
+        reason = NavigateReason.Replace;
+      } else {
+        history.pushState(state, '', '#' + url.toString());
+        reason = NavigateReason.Push;
+      }
+      setLocationState({
         url,
         state,
-      }));
+        scrollReset,
+        reason,
+      });
     },
-    replace: (url: RelativeURL, state: unknown = null) => {
-      history.replaceState(state, '', '#' + url.toString());
-      setLocationState((prevLocationState) => ({
-        ...prevLocationState,
-        url,
-        state,
-      }));
-    },
-  }));
+    [],
+  );
 
   context.useEffect(() => {
-    const listener = () => {
-      setLocationState((prevLocationState) => ({
-        ...prevLocationState,
+    const hashChangeHandler = () => {
+      setLocationState({
         url: RelativeURL.fromString(location.hash.slice(1)),
         state: history.state,
-      }));
+        scrollReset: history.scrollRestoration === 'manual',
+        reason: NavigateReason.Pop,
+      });
     };
-    addEventListener('hashchange', listener);
+    addEventListener('hashchange', hashChangeHandler);
     return () => {
-      removeEventListener('hashchange', listener);
+      removeEventListener('hashchange', hashChangeHandler);
     };
   }, []);
 
-  context.setContextValue(currentLocation, locationState);
+  const value = [locationState, navigate] as const;
 
-  return locationState;
+  context.setContextValue(currentLocation, value);
+
+  return value;
 }
 
-export interface LinkClickHandlerOptions {
-  url?: RelativeURL | URL | LocationLike | string;
-  state?: unknown;
-  replace?: boolean;
-}
+export function createFormSubmitHandler(
+  navigate: NavigateFunction,
+): (event: SubmitEvent) => void {
+  return (event) => {
+    if (event.defaultPrevented) {
+      return;
+    }
 
-export function linkClickHandler({
-  url,
-  state,
-  replace = false,
-}: LinkClickHandlerOptions = {}): UsableCallback<
-  (event: MouseEvent) => void,
-  RenderContext
-> {
-  return (context: RenderContext) => {
-    const locationState = context.use(currentLocation);
+    const form = event.target as HTMLFormElement;
+    const submitter = event.submitter as
+      | HTMLButtonElement
+      | HTMLInputElement
+      | null;
+    const method = submitter?.formMethod ?? form.method;
 
-    return context.useCallback(
-      (event: MouseEvent) => {
-        if (
-          event.altKey ||
-          event.ctrlKey ||
-          event.metaKey ||
-          event.shiftKey ||
-          event.button !== 0 ||
-          event.defaultPrevented
-        ) {
-          return;
-        }
-        event.preventDefault();
-        const navigate = replace ? locationState.replace : locationState.push;
-        const destination =
-          url !== undefined
-            ? RelativeURL.from(url)
-            : RelativeURL.fromLocation(
-                event.currentTarget as HTMLAnchorElement,
-              );
-        navigate(destination, state);
-      },
-      [url, state, replace],
+    if (method !== 'get') {
+      return;
+    }
+
+    const actionUrl = new URL(
+      submitter?.hasAttribute('formaction')
+        ? submitter.formAction
+        : form.action,
     );
+    if (actionUrl.origin !== location.origin) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const searchParams = new URLSearchParams(
+      new FormData(form, submitter) as any,
+    );
+    const url = new RelativeURL(
+      actionUrl.pathname,
+      searchParams,
+      actionUrl.hash,
+    );
+    const replace =
+      form.hasAttribute('data-link-replace') ||
+      url.toString() === location.href;
+    const scrollReset = !form.hasAttribute('data-link-no-scroll-reset');
+
+    navigate(url, { replace, scrollReset });
   };
+}
+
+export function createLinkClickHandler(
+  navigate: NavigateFunction,
+): (event: MouseEvent) => void {
+  return (event) => {
+    if (
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.button !== 0 ||
+      event.defaultPrevented
+    ) {
+      return;
+    }
+    // Find a link element excluding nodes in closed shadow trees by
+    // composedPath().
+    const link = (event.composedPath() as Element[]).find(isLinkElement);
+    if (link === undefined || link.origin !== location.origin) {
+      return;
+    }
+    event.preventDefault();
+    const url = RelativeURL.fromLocation(link);
+    const replace =
+      link.hasAttribute('data-link-replace') || link.href === location.href;
+    const scrollReset = !link.hasAttribute('data-link-no-scroll-reset');
+    navigate(url, { replace, scrollReset });
+  };
+}
+
+export function resetScrollPosition(locationState: LocationState): void {
+  const { url, scrollReset } = locationState;
+
+  if (!scrollReset) {
+    return;
+  }
+
+  if (url.hash !== '') {
+    const hash = decodeURIComponent(url.hash.slice(1));
+    const element = document.getElementById(hash);
+
+    if (element !== null) {
+      element.scrollIntoView();
+      return;
+    }
+  }
+
+  scrollTo(0, 0);
 }
 
 export function integer(component: string): number | null {
@@ -382,4 +499,14 @@ function extractArgs<TPatterns extends Pattern[]>(
     }
   }
   return args as ExtractArgs<TPatterns>;
+}
+
+function isLinkElement(element: Element): element is HTMLAnchorElement {
+  return (
+    element.tagName === 'A' &&
+    element.hasAttribute('href') &&
+    !element.hasAttribute('target') &&
+    !element.hasAttribute('download') &&
+    element.getAttribute('rel') !== 'external'
+  );
 }
