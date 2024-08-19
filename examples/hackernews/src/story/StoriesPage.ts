@@ -33,7 +33,7 @@ export function StoriesPage(
           () => context.html`
             <a
               class="page-link"
-              href=${`/${storyTypeToPathName(type)}/${page - 1}`}
+              href=${`#/${storyTypeToPathName(type)}/${page - 1}`}
               aria-label="Previous Page"
             >
               &lt; prev
@@ -51,7 +51,7 @@ export function StoriesPage(
           () => context.html`
             <a
               class="page-link"
-              href=${`/${storyTypeToPathName(type)}/${page + 1}`}
+              href=${`#/${storyTypeToPathName(type)}/${page + 1}`}
               aria-label="Next Page"
             >
               more &gt;

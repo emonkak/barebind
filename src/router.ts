@@ -36,6 +36,7 @@ export interface LocationState {
 }
 
 export interface LocationActions {
+  getCurrentURL(): RelativeURL;
   navigate(url: RelativeURL, options?: NavigateOptions): void;
 }
 
@@ -56,10 +57,6 @@ export interface LocationLike {
   pathname: string;
   search: string;
   hash: string;
-}
-
-export interface LinkClickHandlerOptions {
-  container?: GlobalEventHandlers;
 }
 
 type ExtractArgs<TPatterns> = TPatterns extends []
@@ -214,6 +211,7 @@ export function browserLocation(
   );
   const locationActions = context.useMemo<LocationActions>(
     () => ({
+      getCurrentURL: () => RelativeURL.fromLocation(location),
       navigate: (
         url: RelativeURL,
         {
@@ -241,8 +239,8 @@ export function browserLocation(
     [],
   );
 
-  context.useEffect(() => {
-    const popStateHandler = (event: PopStateEvent) => {
+  context.useLayoutEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
       setLocationState({
         url: RelativeURL.fromLocation(location),
         state: event.state,
@@ -250,9 +248,15 @@ export function browserLocation(
         reason: NavigateReason.Pop,
       });
     };
-    addEventListener('popstate', popStateHandler);
+    const handleClick = createLinkClickHandler(locationActions);
+    const handleSubmit = createFormSubmitHandler(locationActions);
+    addEventListener('popstate', handlePopState);
+    addEventListener('click', handleClick);
+    addEventListener('submit', handleSubmit);
     return () => {
-      removeEventListener('popstate', popStateHandler);
+      removeEventListener('popstate', handlePopState);
+      removeEventListener('click', handleClick);
+      removeEventListener('submit', handleSubmit);
     };
   }, []);
 
@@ -282,7 +286,7 @@ export function hashLocation(
 ): readonly [LocationState, LocationActions] {
   const [locationState, setLocationState] = context.useState<LocationState>(
     () => ({
-      url: RelativeURL.fromString(location.hash.slice(1)),
+      url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
       state: history.state,
       scrollReset: false,
       reason: NavigateReason.Load,
@@ -290,6 +294,8 @@ export function hashLocation(
   );
   const locationActions = context.useMemo<LocationActions>(
     () => ({
+      getCurrentURL: () =>
+        RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
       navigate: (
         url: RelativeURL,
         {
@@ -317,12 +323,12 @@ export function hashLocation(
     [],
   );
 
-  context.useEffect(() => {
+  context.useLayoutEffect(() => {
     const hashChangeHandler = () => {
       setLocationState({
-        url: RelativeURL.fromString(location.hash.slice(1)),
+        url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
         state: history.state,
-        scrollReset: history.scrollRestoration === 'manual',
+        scrollReset: true,
         reason: NavigateReason.Pop,
       });
     };
@@ -339,6 +345,9 @@ export function hashLocation(
   return value;
 }
 
+/**
+ * @internal
+ */
 export function createFormSubmitHandler({
   navigate,
 }: LocationActions): (event: SubmitEvent) => void {
@@ -352,31 +361,25 @@ export function createFormSubmitHandler({
       | HTMLButtonElement
       | HTMLInputElement
       | null;
-    const method = submitter?.formMethod ?? form.method;
 
+    const method = submitter?.formMethod ?? form.method;
     if (method !== 'get') {
       return;
     }
 
-    const actionUrl = new URL(
-      submitter?.hasAttribute('formaction')
-        ? submitter.formAction
-        : form.action,
-    );
-    if (actionUrl.origin !== location.origin) {
+    const action = new URL(submitter?.formAction ?? form.action);
+    if (action.origin !== location.origin) {
       return;
     }
 
     event.preventDefault();
     event.stopPropagation();
 
-    const searchParams = new URLSearchParams(
-      new FormData(form, submitter) as any,
-    );
+    // Action's search params are replaced with form data.
     const url = new RelativeURL(
-      actionUrl.pathname,
-      searchParams,
-      actionUrl.hash,
+      action.pathname,
+      new FormData(form, submitter) as any,
+      action.hash,
     );
     const replace =
       form.hasAttribute('data-link-replace') ||
@@ -387,6 +390,9 @@ export function createFormSubmitHandler({
   };
 }
 
+/**
+ * @internal
+ */
 export function createLinkClickHandler({
   navigate,
 }: LocationActions): (event: MouseEvent) => void {
@@ -401,18 +407,26 @@ export function createLinkClickHandler({
     ) {
       return;
     }
+
     // Find a link element excluding nodes in closed shadow trees by
     // composedPath().
     const element = (event.composedPath() as Element[]).find(isLinkElement);
-    if (element === undefined || element.origin !== location.origin) {
+    if (
+      element === undefined ||
+      element.origin !== location.origin ||
+      element.getAttribute('href')!.startsWith('#')
+    ) {
       return;
     }
+
     event.preventDefault();
+
     const url = RelativeURL.fromLocation(element);
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.href === location.href;
     const scrollReset = !element.hasAttribute('data-link-no-scroll-reset');
+
     navigate(url, { replace, scrollReset });
   };
 }
@@ -425,8 +439,8 @@ export function resetScrollPosition(locationState: LocationState): void {
   }
 
   if (url.hash !== '') {
-    const hash = decodeURIComponent(url.hash.slice(1));
-    const element = document.getElementById(hash);
+    const id = decodeURIComponent(url.hash.slice(1));
+    const element = document.getElementById(id);
 
     if (element !== null) {
       element.scrollIntoView();

@@ -21,7 +21,7 @@ export function ItemView(
         <${when(!!item.domain, () => context.html`<span class="host">(${item.domain})</span>`)}>
         <div class="meta">
           ${item.points} points | by
-          ${' '}<a href=${`/users/${item.user}`}>${item.user}</a>
+          ${' '}<a href=${`#/users/${item.user}`}>${item.user}</a>
           ${' '}${item.time_ago} ago
         </div>
       </div>

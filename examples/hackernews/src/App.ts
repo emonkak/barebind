@@ -1,11 +1,6 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import { component, memo } from '@emonkak/ebit/directives.js';
-import {
-  createFormSubmitHandler,
-  createLinkClickHandler,
-  hashLocation,
-  resetScrollPosition,
-} from '@emonkak/ebit/router.js';
+import { hashLocation, resetScrollPosition } from '@emonkak/ebit/router.js';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
@@ -22,7 +17,7 @@ export function App(
   { userState, itemState, storyState }: AppProps,
   context: RenderContext,
 ): TemplateDirective {
-  const [locationState, locationActions] = context.use(hashLocation);
+  const [locationState] = context.use(hashLocation);
   const page =
     router.match(locationState.url, locationState.state) ??
     component(NotFound, { url: locationState.url });
@@ -30,17 +25,6 @@ export function App(
   context.use(itemState);
   context.use(storyState);
   context.use(userState);
-
-  context.useLayoutEffect(() => {
-    const handleLinkClick = createLinkClickHandler(locationActions);
-    const handleFormSubmit = createFormSubmitHandler(locationActions);
-    addEventListener('click', handleLinkClick);
-    addEventListener('submit', handleFormSubmit);
-    return () => {
-      removeEventListener('click', handleLinkClick);
-      removeEventListener('submit', handleFormSubmit);
-    };
-  }, []);
 
   context.useLayoutEffect(() => {
     resetScrollPosition(locationState);

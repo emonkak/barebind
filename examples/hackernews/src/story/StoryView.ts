@@ -18,7 +18,7 @@ export function StoryView(
         <${ifElse(
           story.url.startsWith('item?id='),
           () =>
-            context.html`<a href=${`/items/${story.id}`}>${story.title}</a>`,
+            context.html`<a href=${`#/items/${story.id}`}>${story.title}</a>`,
           () => context.html`
             <a href=${story.url} target="_blank" rel="noreferrer">
               ${story.title}
@@ -31,11 +31,11 @@ export function StoryView(
         <${ifElse(
           story.type === 'job',
           () =>
-            context.html`<a href=${`/items/${story.id}`}>${story.time_ago}</a>`,
+            context.html`<a href=${`#/items/${story.id}`}>${story.time_ago}</a>`,
           () => context.html`
-            by <a href=${`/users/${story.user}`}>${story.user}</a>${' '}
+            by <a href=${`#/users/${story.user}`}>${story.user}</a>${' '}
             ${story.time_ago}${' | '}
-            <a href=${`/items/${story.id}`}>
+            <a href=${`#/items/${story.id}`}>
               ${story.comments_count ? `${story.comments_count} comments` : 'discuss'}
             </a>
           `,

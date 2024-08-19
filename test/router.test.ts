@@ -200,12 +200,13 @@ describe('browserLocation', () => {
     history.replaceState(state, '', '/articles/123');
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState] = context.use(browserLocation);
+    const [locationState, { getCurrentURL }] = context.use(browserLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
     expect(location.pathname).toBe('/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.url.toString()).toEqual(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(history.state);
     expect(locationState.scrollReset).toBe(false);
     expect(locationState.reason).toBe(NavigateReason.Load);
@@ -270,7 +271,7 @@ describe('browserLocation', () => {
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
-  it('should update the state when the "popstate" event is tiggered', () => {
+  it('should update the state when the "popstate" event is triggered', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -302,14 +303,93 @@ describe('browserLocation', () => {
 
     cleanHooks(hooks);
 
-    expect(addEventListenerSpy).toHaveBeenCalledOnce();
+    expect(addEventListenerSpy).toHaveBeenCalled();
     expect(addEventListenerSpy).toHaveBeenCalledWith(
       'popstate',
       expect.any(Function),
     );
-    expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+    expect(removeEventListenerSpy).toHaveBeenCalled();
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       'popstate',
+      expect.any(Function),
+    );
+  });
+
+  it('should update the state when the "click" event is triggered', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const queue = createUpdateQueue();
+
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    const context = new RenderContext(host, updater, block, hooks, queue);
+    const [, locationActions] = context.use(browserLocation);
+    context.finalize();
+    updater.flushUpdate(queue, host);
+
+    const element = createElement('a', { href: '/articles/123' });
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+
+    document.body.appendChild(element);
+    element.dispatchEvent(event);
+    document.body.removeChild(element);
+
+    expect(location.pathname).toBe('/articles/123');
+    expect(locationActions.getCurrentURL().toString()).toBe('/articles/123');
+
+    cleanHooks(hooks);
+
+    expect(addEventListenerSpy).toHaveBeenCalled();
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalled();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function),
+    );
+  });
+
+  it('should update the state when the "submit" event is triggered', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const queue = createUpdateQueue();
+
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    const context = new RenderContext(host, updater, block, hooks, queue);
+    const [, locationActions] = context.use(browserLocation);
+    context.finalize();
+    updater.flushUpdate(queue, host);
+
+    const element = createElement('form', {
+      method: 'GET',
+      action: '/articles/123',
+    });
+    const event = new MouseEvent('submit', { bubbles: true, cancelable: true });
+
+    document.body.appendChild(element);
+    element.dispatchEvent(event);
+    document.body.removeChild(element);
+
+    expect(location.pathname).toBe('/articles/123');
+    expect(locationActions.getCurrentURL().toString()).toBe('/articles/123');
+
+    cleanHooks(hooks);
+
+    expect(addEventListenerSpy).toHaveBeenCalled();
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'submit',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalled();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'submit',
       expect.any(Function),
     );
   });
@@ -368,12 +448,13 @@ describe('hashLocation', () => {
     history.replaceState(state, '', '#/articles/123');
 
     const context = new RenderContext(host, updater, block, hooks, queue);
-    const [locationState] = context.use(hashLocation);
+    const [locationState, { getCurrentURL }] = context.use(hashLocation);
     context.finalize();
     updater.flushUpdate(queue, host);
 
     expect(location.hash).toBe('#/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(state);
     expect(locationState.scrollReset).toBe(false);
     expect(locationState.reason).toBe(NavigateReason.Load);
@@ -470,7 +551,7 @@ describe('hashLocation', () => {
     expect(location.hash).toBe('#/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.scrollReset).toBe(false);
+    expect(locationState.scrollReset).toBe(true);
     expect(locationState.reason).toBe(NavigateReason.Pop);
 
     cleanHooks(hooks);
@@ -502,21 +583,28 @@ describe('hashLocation', () => {
 
 describe('createFormSubmitHandler', () => {
   it('should push a new location when the from is submitted', () => {
-    const form = document.createElement('form');
+    const form = createElement(
+      'form',
+      {
+        method: 'GET',
+        action: '/foo?bar=123#baz',
+      },
+      [createElement('input', { type: 'hidden', name: 'qux', value: '456' })],
+    );
     const event = new SubmitEvent('submit', {
       bubbles: true,
       cancelable: true,
     });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
 
     form.addEventListener('submit', formSubmitHandler);
-    form.setAttribute('method', 'GET');
-    form.setAttribute('action', '/foo?bar=123#baz');
-    form.innerHTML = `
-      <input type="hidden" name="qux" value="456">
-    `;
     form.dispatchEvent(event);
 
     expect(navigate).toHaveBeenCalledOnce();
@@ -533,29 +621,44 @@ describe('createFormSubmitHandler', () => {
   });
 
   it('should push a new location when the from is submitted by the button', () => {
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
-
-    const form = document.createElement('form');
-    form.addEventListener('submit', formSubmitHandler);
-    form.setAttribute('method', 'POST');
-    form.setAttribute('action', '/');
-    form.innerHTML = `
-      <button type="submit" formmethod="get" formaction="/foo?bar#baz" name="qux" value="123"></button>
-    `;
-
+    const form = createElement(
+      'form',
+      {
+        method: 'POST',
+        action: '/',
+      },
+      [
+        createElement('button', {
+          type: 'submit',
+          formmethod: 'GET',
+          formaction: '/foo?bar=123#baz',
+          name: 'qux',
+          value: '456',
+        }),
+      ],
+    );
     const event = new SubmitEvent('submit', {
       bubbles: true,
       cancelable: true,
       submitter: form.querySelector('button'),
     });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    form.addEventListener('submit', formSubmitHandler);
     form.dispatchEvent(event);
 
     expect(navigate).toHaveBeenCalledOnce();
     expect(navigate).toHaveBeenCalledWith(
       expect.objectContaining({
         pathname: '/foo',
-        search: '?qux=123',
+        search: '?qux=456',
         hash: '#baz',
       }),
       { replace: false, scrollReset: true },
@@ -565,23 +668,36 @@ describe('createFormSubmitHandler', () => {
   });
 
   it('should replace a new location when the form is submitted', () => {
-    const form = document.createElement('form');
+    const form = createElement(
+      'form',
+      {
+        method: 'GET',
+        action: '/foo?bar=123#baz',
+        'data-link-replace': '',
+        'data-link-no-scroll-reset': '',
+      },
+      [
+        createElement('input', {
+          type: 'hidden',
+          name: 'qux',
+          value: '456',
+        }),
+      ],
+    );
     const event = new SubmitEvent('submit', {
       bubbles: true,
       cancelable: true,
     });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
 
     form.addEventListener('submit', formSubmitHandler);
-    form.setAttribute('method', 'GET');
-    form.setAttribute('action', '/foo?bar=123#baz');
-    form.setAttribute('data-link-replace', '');
-    form.setAttribute('data-link-no-scroll-reset', '');
-    form.innerHTML = `
-      <input type="hidden" name="qux" value="456">
-    `;
     form.dispatchEvent(event);
 
     expect(navigate).toHaveBeenCalledOnce();
@@ -598,19 +714,25 @@ describe('createFormSubmitHandler', () => {
   });
 
   it('should ignore the event if its default action is prevented', () => {
-    const form = document.createElement('form');
+    const form = createElement('form', {
+      method: 'GET',
+      action: '/foo?bar=123#baz',
+    });
     const event = new SubmitEvent('submit', {
       bubbles: true,
       cancelable: true,
     });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
 
     event.preventDefault();
     form.addEventListener('submit', formSubmitHandler);
-    form.setAttribute('method', 'GET');
-    form.setAttribute('action', '/foo?bar#baz');
     form.dispatchEvent(event);
 
     expect(navigate).not.toHaveBeenCalled();
@@ -619,18 +741,24 @@ describe('createFormSubmitHandler', () => {
   });
 
   it('should ignore the event if the form method is not "GET"', () => {
-    const form = document.createElement('form');
+    const form = createElement('form', {
+      method: 'POST',
+      action: '/foo?bar=123#baz',
+    });
     const event = new SubmitEvent('submit', {
       bubbles: true,
       cancelable: true,
     });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
 
     form.addEventListener('submit', formSubmitHandler);
-    form.setAttribute('method', 'POST');
-    form.setAttribute('action', '/foo?bar#baz');
     form.dispatchEvent(event);
 
     expect(navigate).not.toHaveBeenCalled();
@@ -639,18 +767,24 @@ describe('createFormSubmitHandler', () => {
   });
 
   it('should ignore the event If the origin of the action is different from the current location', () => {
-    const form = document.createElement('form');
+    const form = createElement('form', {
+      method: 'GET',
+      action: 'https://example.com',
+    });
     const event = new SubmitEvent('submit', {
       bubbles: true,
       cancelable: true,
     });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
 
     form.addEventListener('submit', formSubmitHandler);
-    form.setAttribute('method', 'GET');
-    form.setAttribute('action', 'https://example.com');
     form.dispatchEvent(event);
 
     expect(navigate).not.toHaveBeenCalled();
@@ -660,20 +794,26 @@ describe('createFormSubmitHandler', () => {
 });
 
 describe('createLinkClickHandler', () => {
-  it('should push a new location when the link is clicked', () => {
-    const container = document.createElement('div');
-    const element = document.createElement('a');
+  it('should push a new URL', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: '/foo?bar=123#baz',
+    });
     const event = new MouseEvent('click', {
       bubbles: true,
       cancelable: true,
     });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
+    const linkClickHandler = vi.fn(
+      createLinkClickHandler({ getCurrentURL, navigate }),
+    );
 
     container.addEventListener('click', linkClickHandler);
     container.appendChild(element);
-    element.setAttribute('href', '/foo?bar=123#baz');
     element.dispatchEvent(event);
 
     expect(navigate).toHaveBeenCalledOnce();
@@ -686,24 +826,32 @@ describe('createLinkClickHandler', () => {
       { replace: false, scrollReset: true },
     );
     expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('should replace a new location when the link is clicked', () => {
-    const container = document.createElement('div');
-    const element = document.createElement('a');
+  it('should replace the URL with a new one if the element has "data-link-replace" attribute', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: '/foo?bar=123#baz',
+      'data-link-replace': '',
+      'data-link-no-scroll-reset': '',
+    });
     const event = new MouseEvent('click', {
       bubbles: true,
       cancelable: true,
     });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
+    const linkClickHandler = vi.fn(
+      createLinkClickHandler({ getCurrentURL, navigate }),
+    );
 
     container.appendChild(element);
     container.addEventListener('click', linkClickHandler);
-    element.setAttribute('href', '/foo?bar=123#baz');
-    element.setAttribute('data-link-replace', '');
-    element.setAttribute('data-link-no-scroll-reset', '');
     element.dispatchEvent(event);
 
     expect(navigate).toHaveBeenCalledOnce();
@@ -716,7 +864,73 @@ describe('createLinkClickHandler', () => {
       { replace: true, scrollReset: false },
     );
     expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should replace the URL with the same one if it has not changed', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: location.href,
+    });
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(
+      createLinkClickHandler({ getCurrentURL, navigate }),
+    );
+
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandler);
+    element.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: location.pathname,
+        search: location.search,
+        hash: location.hash,
+      }),
+      { replace: true, scrollReset: true },
+    );
+    expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should ignore the event if the new URL only differs by hash', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: '#foo?bar=123#baz',
+    });
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(
+      createLinkClickHandler({ getCurrentURL, navigate }),
+    );
+
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandler);
+    element.dispatchEvent(event);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
+    expect(location.hash).toBe(element.hash);
+    expect(event.defaultPrevented).toBe(false);
   });
 
   it.each([
@@ -728,12 +942,17 @@ describe('createLinkClickHandler', () => {
   ])(
     'should ignore the event if any modifier keys or a button other than left button is pressed',
     (eventInit) => {
-      const container = document.createElement('div');
-      const element = document.createElement('a');
+      const container = createElement('div');
+      const element = createElement('a');
       const event = new MouseEvent('click', eventInit);
 
+      const getCurrentURL = vi
+        .fn()
+        .mockImplementation(() => RelativeURL.fromLocation(location));
       const navigate = vi.fn();
-      const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
+      const linkClickHandler = vi.fn(
+        createLinkClickHandler({ getCurrentURL, navigate }),
+      );
 
       container.appendChild(element);
       container.addEventListener('click', linkClickHandler);
@@ -741,48 +960,76 @@ describe('createLinkClickHandler', () => {
 
       expect(navigate).not.toHaveBeenCalled();
       expect(linkClickHandler).toHaveBeenCalledOnce();
+      expect(linkClickHandler).toHaveBeenCalledWith(event);
       expect(event.defaultPrevented).toBe(false);
     },
   );
 
   it('should ignore the event if its default action is prevented', () => {
-    const container = document.createElement('div');
-    const element = document.createElement('a');
+    const container = createElement('div');
+    const element = createElement('a', { href: '/foo' });
     const event = new MouseEvent('click', { cancelable: true, bubbles: true });
 
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
-    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
+    const linkClickHandler = vi.fn(
+      createLinkClickHandler({ getCurrentURL, navigate }),
+    );
 
     event.preventDefault();
     container.appendChild(element);
     container.addEventListener('click', linkClickHandler);
-    element.setAttribute('href', '/foo');
     element.dispatchEvent(event);
 
     expect(navigate).not.toHaveBeenCalled();
     expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
     expect(event.defaultPrevented).toBe(true);
   });
 
-  it('should ignore the event if the target is not valid as a link', () => {
-    const container = document.createElement('div');
-    const element = document.createElement('button');
-    const event = new MouseEvent('click', {
-      cancelable: true,
-      bubbles: true,
-    });
+  it.each([
+    ['a', { href: '/foo', download: '' }],
+    ['a', { href: '/foo', rel: 'external' }],
+    ['a', { href: '/foo', target: '_blank' }],
+    ['a', {}],
+    ['button', {}],
+  ] as const)(
+    'should ignore the event if the target is not valid as a link',
+    (tagName, attribues) => {
+      const cancelWrapper = createElement('div');
+      const container = createElement('div');
+      const element = createElement(tagName, attribues);
+      const event = new MouseEvent('click', {
+        cancelable: true,
+        bubbles: true,
+      });
 
-    const navigate = vi.fn();
-    const linkClickHandler = vi.fn(createLinkClickHandler({ navigate }));
+      const getCurrentURL = vi
+        .fn()
+        .mockImplementation(() => RelativeURL.fromLocation(location));
+      const navigate = vi.fn();
+      const linkClickHandler = vi.fn(
+        createLinkClickHandler({ getCurrentURL, navigate }),
+      );
+      const cancelHandler = vi.fn((event: Event) => {
+        event.preventDefault();
+      });
 
-    container.appendChild(element);
-    container.addEventListener('click', linkClickHandler);
-    element.dispatchEvent(event);
+      cancelWrapper.appendChild(container);
+      cancelWrapper.addEventListener('click', cancelHandler);
+      container.appendChild(element);
+      container.addEventListener('click', linkClickHandler);
+      element.dispatchEvent(event);
 
-    expect(navigate).not.toHaveBeenCalled();
-    expect(linkClickHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(false);
-  });
+      expect(navigate).not.toHaveBeenCalled();
+      expect(linkClickHandler).toHaveBeenCalledOnce();
+      expect(linkClickHandler).toHaveBeenCalledWith(event);
+      expect(cancelHandler).toHaveBeenCalledOnce();
+      expect(cancelHandler).toHaveBeenCalledWith(event);
+    },
+  );
 });
 
 describe('resetScrollPosition', () => {
@@ -818,11 +1065,12 @@ describe('resetScrollPosition', () => {
   });
 
   it('should scroll to the element indicating hash', () => {
-    const element = document.createElement('div');
+    const element = createElement('div', {
+      id: 'bar',
+    });
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
     const scrollIntoViewSpy = vi.spyOn(element, 'scrollIntoView');
 
-    element.setAttribute('id', 'bar');
     document.body.appendChild(element);
 
     resetScrollPosition({
@@ -863,4 +1111,19 @@ function cleanHooks(hooks: Hook[]): void {
     }
   }
   hooks.length = 0;
+}
+
+function createElement<const T extends keyof HTMLElementTagNameMap>(
+  tagName: T,
+  attribues: { [key: string]: string } = {},
+  children: Element[] = [],
+): HTMLElementTagNameMap[T] {
+  const element = document.createElement(tagName);
+  for (const key in attribues) {
+    element.setAttribute(key, attribues[key]!);
+  }
+  for (const child of children) {
+    element.appendChild(child);
+  }
+  return element;
 }
