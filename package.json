@@ -11,6 +11,9 @@
     },
     "./router.js": {
       "import": "./src/router.ts"
+    },
+    "./location.js": {
+      "import": "./src/location.ts"
     }
   },
   "publishConfig": {
@@ -23,6 +26,10 @@
       "./directives.js": {
         "import": "./lib/directives.js",
         "types": "./lib/directives.d.ts"
+      },
+      "./location.js": {
+        "import": "./lib/location.js",
+        "types": "./lib/location.d.ts"
       },
       "./router.js": {
         "import": "./lib/router.js",
