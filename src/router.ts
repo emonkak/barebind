@@ -17,10 +17,13 @@ export interface Route<
   >[];
 }
 
-export type Pattern =
-  | string
-  | RegExp
-  | ((component: string, url: RelativeURL, state: unknown) => any);
+export type Pattern = string | Matcher<unknown>;
+
+export type Matcher<T> = (
+  component: string,
+  url: RelativeURL,
+  state: unknown,
+) => T | null;
 
 export type Handler<TArgs extends any[], TResult> = (
   args: TArgs,
@@ -36,15 +39,9 @@ type ExtractArgs<TPatterns> = TPatterns extends []
 
 type Match<TPattern> = TPattern extends string
   ? []
-  : TPattern extends RegExp
-    ? [string]
-    : TPattern extends (
-          component: string,
-          url: RelativeURL,
-          stae: unknown,
-        ) => NonNullable<infer TResult> | null
-      ? [TResult]
-      : never;
+  : TPattern extends Matcher<infer T>
+    ? [T]
+    : [];
 
 export class Router<TResult> {
   private readonly _routes: Route<TResult>[] = [];
@@ -100,21 +97,18 @@ export function integer(component: string): number | null {
   return n.toString() === component ? n : null;
 }
 
+export function regexp(pattern: RegExp): Matcher<string> {
+  return (component: string) => component.match(pattern)?.[0] ?? null;
+}
+
 export function route<
   TResult,
   const TPatterns extends Pattern[] = Pattern[],
   const TInheritArgs extends unknown[] = [],
 >(
   patterns: TPatterns,
-  handler: Handler<
-    [...TInheritArgs, ...ExtractArgs<TPatterns>],
-    TResult
-  > | null,
-  childRoutes: Route<
-    TResult,
-    Pattern[],
-    [...TInheritArgs, ...ExtractArgs<TPatterns>]
-  >[] = [],
+  handler: Route<TResult, TPatterns, TInheritArgs>['handler'],
+  childRoutes: Route<TResult, TPatterns, TInheritArgs>['childRoutes'] = [],
 ): Route<TResult, TPatterns, TInheritArgs> {
   return {
     patterns,
@@ -144,18 +138,12 @@ function extractArgs<TPatterns extends Pattern[]>(
       if (pattern !== component) {
         return null;
       }
-    } else if (typeof pattern === 'function') {
-      const match = pattern(component, url, state);
-      if (match == null) {
-        return null;
-      }
-      args.push(match);
     } else {
-      const match = component.match(pattern);
-      if (match === null) {
+      const value = pattern(component, url, state);
+      if (value === null) {
         return null;
       }
-      args.push(match[0]);
+      args.push(value);
     }
   }
   return args as ExtractArgs<TPatterns>;

@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { RelativeURL } from '../src/location.js';
-import { Router, integer, route, wildcard } from '../src/router.js';
+import { Router, integer, regexp, route, wildcard } from '../src/router.js';
 
 describe('Router', () => {
   const basicRouter = new Router([
     route([''], () => 'index'),
     route(['articles'], null, [
-      route([/^\d+$/], ([id]) => `showArticle(${id})`, [
+      route([regexp(/^\d+$/)], ([id]) => `showArticle(${id})`, [
         route(['edit'], ([id]) => `editArticle(${id})`),
       ]),
     ]),
@@ -68,7 +68,7 @@ describe('Router', () => {
           `showArticleComment(${articleId}, ${commentId})`,
       );
       const router = new Router([
-        route(['articles', /^\d+$/, 'comments', integer], handler),
+        route(['articles', regexp(/^\d+$/), 'comments', integer], handler),
       ]);
       const url = new RelativeURL('/articles/123/comments/456');
       const state = {};
@@ -78,17 +78,17 @@ describe('Router', () => {
       expect(handler).toHaveBeenCalledWith(['123', 456], url, state);
     });
 
-    it('should match with a custom pattern function', () => {
-      const pattern = vi.fn((id) => +id);
+    it('should match with a custom matcher', () => {
+      const matcher = vi.fn((id) => +id);
       const router = new Router([
-        route(['articles', pattern], ([id]) => `showArticle(${id})`),
+        route(['articles', matcher], ([id]) => `showArticle(${id})`),
       ]);
       const url = new RelativeURL('/articles/123');
       const state = {};
 
       expect(router.match(url, state)).toBe('showArticle(123)');
-      expect(pattern).toHaveBeenCalledOnce();
-      expect(pattern).toHaveBeenCalledWith('123', url, state);
+      expect(matcher).toHaveBeenCalledOnce();
+      expect(matcher).toHaveBeenCalledWith('123', url, state);
     });
   });
 });
