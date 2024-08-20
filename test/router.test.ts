@@ -650,219 +650,7 @@ describe('hashLocation', () => {
   );
 });
 
-describe('createFormSubmitHandler', () => {
-  it('should push a new location when the from is submitted', () => {
-    const form = createElement(
-      'form',
-      {
-        method: 'GET',
-        action: '/foo?bar=123#baz',
-      },
-      [createElement('input', { type: 'hidden', name: 'qux', value: '456' })],
-    );
-    const event = new SubmitEvent('submit', {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
-
-    form.addEventListener('submit', formSubmitHandler);
-    form.dispatchEvent(event);
-
-    expect(navigate).toHaveBeenCalledOnce();
-    expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: '/foo',
-        search: '?qux=456',
-        hash: '#baz',
-      }),
-      { replace: false },
-    );
-    expect(formSubmitHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it('should push a new location when the from is submitted by the button', () => {
-    const form = createElement(
-      'form',
-      {
-        method: 'POST',
-        action: '/',
-      },
-      [
-        createElement('button', {
-          type: 'submit',
-          formmethod: 'GET',
-          formaction: '/foo?bar=123#baz',
-          name: 'qux',
-          value: '456',
-        }),
-      ],
-    );
-    const event = new SubmitEvent('submit', {
-      bubbles: true,
-      cancelable: true,
-      submitter: form.querySelector('button'),
-    });
-
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
-
-    form.addEventListener('submit', formSubmitHandler);
-    form.dispatchEvent(event);
-
-    expect(navigate).toHaveBeenCalledOnce();
-    expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: '/foo',
-        search: '?qux=456',
-        hash: '#baz',
-      }),
-      { replace: false },
-    );
-    expect(formSubmitHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it('should replace a new location when the form is submitted', () => {
-    const form = createElement(
-      'form',
-      {
-        method: 'GET',
-        action: '/foo?bar=123#baz',
-        'data-link-replace': '',
-        'data-link-no-scroll-reset': '',
-      },
-      [
-        createElement('input', {
-          type: 'hidden',
-          name: 'qux',
-          value: '456',
-        }),
-      ],
-    );
-    const event = new SubmitEvent('submit', {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
-
-    form.addEventListener('submit', formSubmitHandler);
-    form.dispatchEvent(event);
-
-    expect(navigate).toHaveBeenCalledOnce();
-    expect(navigate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pathname: '/foo',
-        search: '?qux=456',
-        hash: '#baz',
-      }),
-      { replace: true },
-    );
-    expect(formSubmitHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it('should ignore the event if its default action is prevented', () => {
-    const form = createElement('form', {
-      method: 'GET',
-      action: '/foo?bar=123#baz',
-    });
-    const event = new SubmitEvent('submit', {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
-
-    event.preventDefault();
-    form.addEventListener('submit', formSubmitHandler);
-    form.dispatchEvent(event);
-
-    expect(navigate).not.toHaveBeenCalled();
-    expect(formSubmitHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it('should ignore the event if the form method is not "GET"', () => {
-    const form = createElement('form', {
-      method: 'POST',
-      action: '/foo?bar=123#baz',
-    });
-    const event = new SubmitEvent('submit', {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
-
-    form.addEventListener('submit', formSubmitHandler);
-    form.dispatchEvent(event);
-
-    expect(navigate).not.toHaveBeenCalled();
-    expect(formSubmitHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(false);
-  });
-
-  it('should ignore the event If the origin of the action is different from the current location', () => {
-    const form = createElement('form', {
-      method: 'GET',
-      action: 'https://example.com',
-    });
-    const event = new SubmitEvent('submit', {
-      bubbles: true,
-      cancelable: true,
-    });
-
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
-    const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
-
-    form.addEventListener('submit', formSubmitHandler);
-    form.dispatchEvent(event);
-
-    expect(navigate).not.toHaveBeenCalled();
-    expect(formSubmitHandler).toHaveBeenCalledOnce();
-    expect(event.defaultPrevented).toBe(false);
-  });
-});
-
-describe('createLinkClickHandler', () => {
+describe('createBrowserClickHandler', () => {
   it('should push a new URL', () => {
     const container = createElement('div');
     const element = createElement('a', {
@@ -1099,6 +887,218 @@ describe('createLinkClickHandler', () => {
       expect(cancelHandler).toHaveBeenCalledWith(event);
     },
   );
+});
+
+describe('createBrowserSubmitHandler', () => {
+  it('should push a new location when the from is submitted', () => {
+    const form = createElement(
+      'form',
+      {
+        method: 'GET',
+        action: '/foo?bar=123#baz',
+      },
+      [createElement('input', { type: 'hidden', name: 'qux', value: '456' })],
+    );
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    form.addEventListener('submit', formSubmitHandler);
+    form.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?qux=456',
+        hash: '#baz',
+      }),
+      { replace: false },
+    );
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should push a new location when the from is submitted by the button', () => {
+    const form = createElement(
+      'form',
+      {
+        method: 'POST',
+        action: '/',
+      },
+      [
+        createElement('button', {
+          type: 'submit',
+          formmethod: 'GET',
+          formaction: '/foo?bar=123#baz',
+          name: 'qux',
+          value: '456',
+        }),
+      ],
+    );
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+      submitter: form.querySelector('button'),
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    form.addEventListener('submit', formSubmitHandler);
+    form.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?qux=456',
+        hash: '#baz',
+      }),
+      { replace: false },
+    );
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should replace a new location when the form is submitted', () => {
+    const form = createElement(
+      'form',
+      {
+        method: 'GET',
+        action: '/foo?bar=123#baz',
+        'data-link-replace': '',
+        'data-link-no-scroll-reset': '',
+      },
+      [
+        createElement('input', {
+          type: 'hidden',
+          name: 'qux',
+          value: '456',
+        }),
+      ],
+    );
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    form.addEventListener('submit', formSubmitHandler);
+    form.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?qux=456',
+        hash: '#baz',
+      }),
+      { replace: true },
+    );
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should ignore the event if its default action is prevented', () => {
+    const form = createElement('form', {
+      method: 'GET',
+      action: '/foo?bar=123#baz',
+    });
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    event.preventDefault();
+    form.addEventListener('submit', formSubmitHandler);
+    form.dispatchEvent(event);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should ignore the event if the form method is not "GET"', () => {
+    const form = createElement('form', {
+      method: 'POST',
+      action: '/foo?bar=123#baz',
+    });
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    form.addEventListener('submit', formSubmitHandler);
+    form.dispatchEvent(event);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('should ignore the event If the origin of the action is different from the current location', () => {
+    const form = createElement('form', {
+      method: 'GET',
+      action: 'https://example.com',
+    });
+    const event = new SubmitEvent('submit', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const formSubmitHandler = vi.fn(
+      createFormSubmitHandler({ getCurrentURL, navigate }),
+    );
+
+    form.addEventListener('submit', formSubmitHandler);
+    form.dispatchEvent(event);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(formSubmitHandler).toHaveBeenCalledOnce();
+    expect(event.defaultPrevented).toBe(false);
+  });
 });
 
 describe('resetScrollPosition', () => {

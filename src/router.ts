@@ -250,8 +250,8 @@ export function browserLocation(
         };
       });
     };
-    const handleClick = createLinkClickHandler(locationActions);
-    const handleSubmit = createFormSubmitHandler(locationActions);
+    const handleClick = createBrowserClickHandler(locationActions);
+    const handleSubmit = createBrowserSubmitHandler(locationActions);
     addEventListener('popstate', handlePopState);
     addEventListener('click', handleClick);
     addEventListener('submit', handleSubmit);
@@ -375,7 +375,47 @@ export function hashLocation(
 /**
  * @internal
  */
-export function createFormSubmitHandler({
+export function createBrowserClickHandler({
+  navigate,
+}: LocationActions): (event: MouseEvent) => void {
+  return (event) => {
+    if (
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.button !== 0 ||
+      event.defaultPrevented
+    ) {
+      return;
+    }
+
+    // Find a link element excluding nodes in closed shadow trees by
+    // composedPath().
+    const element = (event.composedPath() as Element[]).find(isLinkElement);
+    if (
+      element === undefined ||
+      element.origin !== location.origin ||
+      element.getAttribute('href')!.startsWith('#')
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const url = RelativeURL.fromLocation(element);
+    const replace =
+      element.hasAttribute('data-link-replace') ||
+      element.href === location.href;
+
+    navigate(url, { replace });
+  };
+}
+
+/**
+ * @internal
+ */
+export function createBrowserSubmitHandler({
   navigate,
 }: LocationActions): (event: SubmitEvent) => void {
   return (event) => {
@@ -411,46 +451,6 @@ export function createFormSubmitHandler({
     const replace =
       form.hasAttribute('data-link-replace') ||
       url.toString() === location.href;
-
-    navigate(url, { replace });
-  };
-}
-
-/**
- * @internal
- */
-export function createLinkClickHandler({
-  navigate,
-}: LocationActions): (event: MouseEvent) => void {
-  return (event) => {
-    if (
-      event.altKey ||
-      event.ctrlKey ||
-      event.metaKey ||
-      event.shiftKey ||
-      event.button !== 0 ||
-      event.defaultPrevented
-    ) {
-      return;
-    }
-
-    // Find a link element excluding nodes in closed shadow trees by
-    // composedPath().
-    const element = (event.composedPath() as Element[]).find(isLinkElement);
-    if (
-      element === undefined ||
-      element.origin !== location.origin ||
-      element.getAttribute('href')!.startsWith('#')
-    ) {
-      return;
-    }
-
-    event.preventDefault();
-
-    const url = RelativeURL.fromLocation(element);
-    const replace =
-      element.hasAttribute('data-link-replace') ||
-      element.href === location.href;
 
     navigate(url, { replace });
   };
