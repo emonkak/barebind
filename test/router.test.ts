@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext } from '../src/renderContext.js';
 import {
-  NavigateReason,
+  LocationType,
   RelativeURL,
   Router,
   browserLocation,
@@ -207,7 +207,7 @@ describe('browserLocation', () => {
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.url.toString()).toEqual(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.reason).toBe(NavigateReason.Load);
+    expect(locationState.type).toBe(LocationType.Load);
   });
 
   it('should push the a location to the history', () => {
@@ -233,7 +233,7 @@ describe('browserLocation', () => {
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(null);
-    expect(locationState.reason).toBe(NavigateReason.Push);
+    expect(locationState.type).toBe(LocationType.Push);
   });
 
   it('should replace the new location to the session', () => {
@@ -260,7 +260,7 @@ describe('browserLocation', () => {
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.reason).toBe(NavigateReason.Replace);
+    expect(locationState.type).toBe(LocationType.Replace);
   });
 
   it('should update the state when the "popstate" event is fired', () => {
@@ -286,7 +286,7 @@ describe('browserLocation', () => {
 
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.reason).toBe(NavigateReason.Pop);
+    expect(locationState.type).toBe(LocationType.Pop);
 
     location.hash = '#foo';
 
@@ -295,7 +295,7 @@ describe('browserLocation', () => {
 
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.reason).toBe(NavigateReason.Pop);
+    expect(locationState.type).toBe(LocationType.Pop);
 
     cleanHooks(hooks);
 
@@ -454,7 +454,7 @@ describe('hashLocation', () => {
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.url.toString()).toBe(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.reason).toBe(NavigateReason.Load);
+    expect(locationState.type).toBe(LocationType.Load);
   });
 
   it('should push a new location to the fragment identifier', () => {
@@ -482,7 +482,7 @@ describe('hashLocation', () => {
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.reason).toBe(NavigateReason.Push);
+    expect(locationState.type).toBe(LocationType.Push);
   });
 
   it('should replace a new location to the fragment identifier', () => {
@@ -511,7 +511,7 @@ describe('hashLocation', () => {
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.reason).toBe(NavigateReason.Replace);
+    expect(locationState.type).toBe(LocationType.Replace);
   });
 
   it('should register the current location', () => {
@@ -560,7 +560,7 @@ describe('hashLocation', () => {
       [locationState] = context.use(hashLocation);
 
       expect(locationState.url.toString()).toBe('/articles/123');
-      expect(locationState.reason).toBe(NavigateReason.Push);
+      expect(locationState.type).toBe(LocationType.Push);
 
       cleanHooks(hooks);
 
@@ -610,7 +610,7 @@ describe('hashLocation', () => {
 
         expect(locationState.url.toString()).toBe('/articles/123');
         // expect(locationState.state).toEqual(state1);
-        expect(locationState.reason).toBe(NavigateReason.Replace);
+        expect(locationState.type).toBe(LocationType.Replace);
 
         navigation.navigate('#/articles/456', {
           state: state2,
@@ -622,7 +622,7 @@ describe('hashLocation', () => {
 
         expect(locationState.url.toString()).toBe('/articles/456');
         expect(locationState.state).toEqual(state2);
-        expect(locationState.reason).toBe(NavigateReason.Push);
+        expect(locationState.type).toBe(LocationType.Push);
 
         await navigation.back().committed;
 
@@ -631,7 +631,7 @@ describe('hashLocation', () => {
 
         expect(locationState.url.toString()).toBe('/articles/123');
         expect(locationState.state).toEqual(state1);
-        expect(locationState.reason).toBe(NavigateReason.Pop);
+        expect(locationState.type).toBe(LocationType.Pop);
 
         cleanHooks(hooks);
 
@@ -1109,9 +1109,9 @@ describe('resetScrollPosition', () => {
     history.scrollRestoration = originalScrollRestoration;
   });
 
-  it.each([[NavigateReason.Pop, NavigateReason.Push, NavigateReason.Replace]])(
+  it.each([[LocationType.Pop, LocationType.Push, LocationType.Replace]])(
     'should scroll to the top',
-    (reason) => {
+    (type) => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       history.scrollRestoration = 'manual';
@@ -1119,7 +1119,7 @@ describe('resetScrollPosition', () => {
       resetScrollPosition({
         url: new RelativeURL('/foo'),
         state: null,
-        reason,
+        type,
       });
 
       expect(scrollToSpy).toHaveBeenCalled();
@@ -1127,9 +1127,9 @@ describe('resetScrollPosition', () => {
     },
   );
 
-  it.each([[NavigateReason.Pop, NavigateReason.Push, NavigateReason.Replace]])(
+  it.each([[LocationType.Pop, LocationType.Push, LocationType.Replace]])(
     'should scroll to the element indicating hash',
-    (reason) => {
+    (type) => {
       const element = createElement('div', {
         id: 'bar',
       });
@@ -1142,7 +1142,7 @@ describe('resetScrollPosition', () => {
       resetScrollPosition({
         url: new RelativeURL('/foo', '', '#bar'),
         state: null,
-        reason,
+        type,
       });
       document.body.removeChild(element);
 
@@ -1151,9 +1151,9 @@ describe('resetScrollPosition', () => {
     },
   );
 
-  it.each([[NavigateReason.Pop, NavigateReason.Push, NavigateReason.Replace]])(
+  it.each([[LocationType.Pop, LocationType.Push, LocationType.Replace]])(
     'should scroll to the top if there is not the element indicating hash',
-    (reason) => {
+    (type) => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       history.scrollRestoration = 'manual';
@@ -1161,16 +1161,16 @@ describe('resetScrollPosition', () => {
       resetScrollPosition({
         url: new RelativeURL('/foo', '', '#bar'),
         state: null,
-        reason,
+        type,
       });
 
       expect(scrollToSpy).toHaveBeenCalled();
     },
   );
 
-  it.each([[NavigateReason.Load, NavigateReason.Pop]])(
-    'should do nothing if the navigate reason is `Load` or `Pop`',
-    (reason) => {
+  it.each([[LocationType.Load, LocationType.Pop]])(
+    'should do nothing if the navigate type is `Load` or `Pop`',
+    (type) => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       history.scrollRestoration = 'auto';
@@ -1178,7 +1178,7 @@ describe('resetScrollPosition', () => {
       resetScrollPosition({
         url: new RelativeURL('/foo'),
         state: null,
-        reason,
+        type,
       });
 
       expect(scrollToSpy).not.toHaveBeenCalled();

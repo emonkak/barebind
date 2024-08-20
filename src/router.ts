@@ -32,19 +32,19 @@ export type Handler<TArgs extends any[], TResult> = (
 export interface LocationState {
   readonly url: RelativeURL;
   readonly state: unknown;
-  readonly reason: NavigateReason;
+  readonly type: LocationType;
+}
+
+export enum LocationType {
+  Load,
+  Pop,
+  Push,
+  Replace,
 }
 
 export interface LocationActions {
   getCurrentURL(): RelativeURL;
   navigate(url: RelativeURL, options?: NavigateOptions): void;
-}
-
-export enum NavigateReason {
-  Load,
-  Pop,
-  Push,
-  Replace,
 }
 
 export interface NavigateOptions {
@@ -204,7 +204,7 @@ export function browserLocation(
     () => ({
       url: RelativeURL.fromLocation(location),
       state: history.state,
-      reason: NavigateReason.Load,
+      type: LocationType.Load,
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
@@ -214,18 +214,18 @@ export function browserLocation(
         url: RelativeURL,
         { replace = false, state = null }: NavigateOptions = {},
       ) => {
-        let reason: NavigateReason;
+        let type: LocationType;
         if (replace) {
           history.replaceState(state, '', url.toString());
-          reason = NavigateReason.Replace;
+          type = LocationType.Replace;
         } else {
           history.pushState(state, '', url.toString());
-          reason = NavigateReason.Push;
+          type = LocationType.Push;
         }
         setLocationState({
           url,
           state,
-          reason,
+          type,
         });
       },
     }),
@@ -246,7 +246,7 @@ export function browserLocation(
         return {
           url: RelativeURL.fromLocation(location),
           state: event.state,
-          reason: NavigateReason.Pop,
+          type: LocationType.Pop,
         };
       });
     };
@@ -290,7 +290,7 @@ export function hashLocation(
     () => ({
       url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
       state: history.state,
-      reason: NavigateReason.Load,
+      type: LocationType.Load,
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
@@ -301,18 +301,18 @@ export function hashLocation(
         url: RelativeURL,
         { replace = false, state = null }: NavigateOptions = {},
       ) => {
-        let reason: NavigateReason;
+        let type: LocationType;
         if (replace) {
           history.replaceState(state, '', '#' + url.toString());
-          reason = NavigateReason.Replace;
+          type = LocationType.Replace;
         } else {
           history.pushState(state, '', '#' + url.toString());
-          reason = NavigateReason.Push;
+          type = LocationType.Push;
         }
         setLocationState({
           url,
           state,
-          reason,
+          type,
         });
       },
     }),
@@ -328,17 +328,17 @@ export function hashLocation(
         const url = RelativeURL.fromString(
           decodeURIComponent(new URL(event.destination.url).hash.slice(1)),
         );
-        const reason =
-          event.navigationType === 'push'
-            ? NavigateReason.Push
-            : event.navigationType === 'traverse'
-              ? NavigateReason.Pop
-              : NavigateReason.Replace;
         const state = event.destination.getState();
+        const type =
+          event.navigationType === 'push'
+            ? LocationType.Push
+            : event.navigationType === 'traverse'
+              ? LocationType.Pop
+              : LocationType.Replace;
         setLocationState({
           url,
           state,
-          reason,
+          type,
         });
       };
       navigation.addEventListener('navigate', handleNavigate);
@@ -347,15 +347,15 @@ export function hashLocation(
       };
     } else {
       // BUGS: HashChangeEvent is fired both when a link has clicked or during
-      // history back/forward navigation. Therefore the navigation reason cannot
-      // be detected correctly.
+      // history back/forward navigation. Therefore the location type cannot be
+      // detected correctly.
       const handleHashChange = (event: HashChangeEvent) => {
         setLocationState({
           url: RelativeURL.fromString(
             decodeURIComponent(new URL(event.newURL).hash.slice(1)),
           ),
           state: history.state,
-          reason: NavigateReason.Push,
+          type: LocationType.Push,
         });
       };
       addEventListener('hashchange', handleHashChange);
@@ -457,11 +457,11 @@ export function createLinkClickHandler({
 }
 
 export function resetScrollPosition(locationState: LocationState): void {
-  const { url, reason } = locationState;
+  const { url, type } = locationState;
 
   if (
-    reason === NavigateReason.Load ||
-    (reason === NavigateReason.Pop && history.scrollRestoration === 'auto')
+    type === LocationType.Load ||
+    (type === LocationType.Pop && history.scrollRestoration === 'auto')
   ) {
     return;
   }
