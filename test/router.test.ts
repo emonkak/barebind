@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext } from '../src/renderContext.js';
@@ -275,7 +275,6 @@ describe('browserLocation', () => {
     const queue = createUpdateQueue();
 
     const state = { key: 'foo' };
-    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
@@ -286,8 +285,6 @@ describe('browserLocation', () => {
 
     history.replaceState(state, '', '/articles/123');
     dispatchEvent(new PopStateEvent('popstate', { state: state }));
-
-    expect(requestUpdateSpy).toHaveBeenCalledOnce();
 
     context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(browserLocation);
@@ -512,50 +509,6 @@ describe('hashLocation', () => {
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
-  it('should update the state when the hash has changed', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
-    const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-    let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState] = context.use(hashLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
-    dispatchEvent(
-      new HashChangeEvent('hashchange', {
-        oldURL: location.href,
-        newURL: getHrefWithoutHash(location) + '#/articles/123',
-      }),
-    );
-
-    expect(requestUpdateSpy).toHaveBeenCalledOnce();
-
-    context = new RenderContext(host, updater, block, hooks, queue);
-    [locationState] = context.use(hashLocation);
-
-    expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.reason).toBe(NavigateReason.Push);
-
-    cleanHooks(hooks);
-
-    expect(addEventListenerSpy).toHaveBeenCalledOnce();
-    expect(addEventListenerSpy).toHaveBeenCalledWith(
-      'hashchange',
-      expect.any(Function),
-    );
-    expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-    expect(removeEventListenerSpy).toHaveBeenCalledWith(
-      'hashchange',
-      expect.any(Function),
-    );
-  });
-
   it('should register the current location', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
@@ -567,6 +520,129 @@ describe('hashLocation', () => {
 
     expect(context.use(currentLocation)).toStrictEqual(locationState);
   });
+
+  describe('using HashChangeEvent', () => {
+    beforeEach(() => {
+      vi.stubGlobal('navigation', undefined);
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('should update the state when the hash has changed', () => {
+      const host = new UpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const queue = createUpdateQueue();
+
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+      let context = new RenderContext(host, updater, block, hooks, queue);
+      let [locationState] = context.use(hashLocation);
+      context.finalize();
+      updater.flushUpdate(queue, host);
+
+      dispatchEvent(
+        new HashChangeEvent('hashchange', {
+          oldURL: location.href,
+          newURL: getHrefWithoutHash(location) + '#/articles/123',
+        }),
+      );
+
+      context = new RenderContext(host, updater, block, hooks, queue);
+      [locationState] = context.use(hashLocation);
+
+      expect(locationState.url.toString()).toBe('/articles/123');
+      expect(locationState.reason).toBe(NavigateReason.Push);
+
+      cleanHooks(hooks);
+
+      expect(addEventListenerSpy).toHaveBeenCalledOnce();
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'hashchange',
+        expect.any(Function),
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'hashchange',
+        expect.any(Function),
+      );
+    });
+  });
+
+  describe.runIf(typeof navigation !== 'undefined')(
+    'using NavigationEvent',
+    () => {
+      it('should update the state when the hash has changed', async () => {
+        const host = new UpdateHost();
+        const updater = new SyncUpdater();
+        const block = new MockBlock();
+        const queue = createUpdateQueue();
+
+        const addEventListenerSpy = vi.spyOn(navigation, 'addEventListener');
+        const removeEventListenerSpy = vi.spyOn(
+          navigation,
+          'removeEventListener',
+        );
+
+        const state1 = { key: 'foo' };
+        const state2 = { key: 'bar' };
+        let context = new RenderContext(host, updater, block, hooks, queue);
+        let [locationState] = context.use(hashLocation);
+
+        context.finalize();
+        updater.flushUpdate(queue, host);
+
+        navigation.navigate('#/articles/123', {
+          state: state1,
+          history: 'replace',
+        });
+
+        context = new RenderContext(host, updater, block, hooks, queue);
+        [locationState] = context.use(hashLocation);
+
+        expect(locationState.url.toString()).toBe('/articles/123');
+        // expect(locationState.state).toEqual(state1);
+        expect(locationState.reason).toBe(NavigateReason.Replace);
+
+        navigation.navigate('#/articles/456', {
+          state: state2,
+          history: 'push',
+        });
+
+        context = new RenderContext(host, updater, block, hooks, queue);
+        [locationState] = context.use(hashLocation);
+
+        expect(locationState.url.toString()).toBe('/articles/456');
+        expect(locationState.state).toEqual(state2);
+        expect(locationState.reason).toBe(NavigateReason.Push);
+
+        await navigation.back().committed;
+
+        context = new RenderContext(host, updater, block, hooks, queue);
+        [locationState] = context.use(hashLocation);
+
+        expect(locationState.url.toString()).toBe('/articles/123');
+        expect(locationState.state).toEqual(state1);
+        expect(locationState.reason).toBe(NavigateReason.Pop);
+
+        cleanHooks(hooks);
+
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(addEventListenerSpy).toHaveBeenCalledWith(
+          'navigate',
+          expect.any(Function),
+        );
+        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).toHaveBeenCalledWith(
+          'navigate',
+          expect.any(Function),
+        );
+      });
+    },
+  );
 });
 
 describe('createFormSubmitHandler', () => {

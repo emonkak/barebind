@@ -1,4 +1,5 @@
 import type { RenderContext } from './renderContext.js';
+import type {} from './typings/navigation.js';
 
 export interface Route<
   TResult,
@@ -309,22 +310,49 @@ export function hashLocation(
   );
 
   context.useLayoutEffect(() => {
-    // BUGS: HashChangeEvent is fired both when a link has clicked or during
-    // history back/forward navigation. Therefore the navigation reason cannot
-    // be detected correctly.
-    const handleHashChange = (event: HashChangeEvent) => {
-      setLocationState({
-        url: RelativeURL.fromString(
-          decodeURIComponent(new URL(event.newURL).hash.slice(1)),
-        ),
-        state: history.state,
-        reason: NavigateReason.Push,
-      });
-    };
-    addEventListener('hashchange', handleHashChange);
-    return () => {
-      removeEventListener('hashchange', handleHashChange);
-    };
+    if (typeof navigation !== 'undefined') {
+      const handleNavigate = (event: NavigateEvent) => {
+        if (!event.hashChange) {
+          return;
+        }
+        const url = RelativeURL.fromString(
+          decodeURIComponent(new URL(event.destination.url).hash.slice(1)),
+        );
+        const reason =
+          event.navigationType === 'push'
+            ? NavigateReason.Push
+            : event.navigationType === 'traverse'
+              ? NavigateReason.Pop
+              : NavigateReason.Replace;
+        const state = event.destination.getState();
+        setLocationState({
+          url,
+          state,
+          reason,
+        });
+      };
+      navigation.addEventListener('navigate', handleNavigate);
+      return () => {
+        navigation.removeEventListener('navigate', handleNavigate);
+      };
+    } else {
+      // BUGS: HashChangeEvent is fired both when a link has clicked or during
+      // history back/forward navigation. Therefore the navigation reason cannot
+      // be detected correctly.
+      const handleHashChange = (event: HashChangeEvent) => {
+        setLocationState({
+          url: RelativeURL.fromString(
+            decodeURIComponent(new URL(event.newURL).hash.slice(1)),
+          ),
+          state: history.state,
+          reason: NavigateReason.Push,
+        });
+      };
+      addEventListener('hashchange', handleHashChange);
+      return () => {
+        removeEventListener('hashchange', handleHashChange);
+      };
+    }
   }, []);
 
   const value = [locationState, locationActions] as const;
