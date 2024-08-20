@@ -1,5 +1,4 @@
 import type { RenderContext } from './renderContext.js';
-import type {} from './typings/navigation.js';
 
 export interface Route<
   TResult,
@@ -288,15 +287,14 @@ export function hashLocation(
 ): readonly [LocationState, LocationActions] {
   const [locationState, setLocationState] = context.useState<LocationState>(
     () => ({
-      url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
+      url: RelativeURL.fromString(decodeHash(location.hash)),
       state: history.state,
       type: LocationType.Load,
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
     () => ({
-      getCurrentURL: () =>
-        RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
+      getCurrentURL: () => RelativeURL.fromString(decodeHash(location.hash)),
       navigate: (
         url: RelativeURL,
         { replace = false, state = null }: NavigateOptions = {},
@@ -320,49 +318,26 @@ export function hashLocation(
   );
 
   context.useLayoutEffect(() => {
-    if (typeof navigation !== 'undefined') {
-      const handleNavigate = (event: NavigateEvent) => {
-        if (!event.hashChange) {
-          return;
-        }
-        const url = RelativeURL.fromString(
-          decodeURIComponent(new URL(event.destination.url).hash.slice(1)),
-        );
-        const state = event.destination.getState();
-        const type =
-          event.navigationType === 'push'
-            ? LocationType.Push
-            : event.navigationType === 'traverse'
-              ? LocationType.Pop
-              : LocationType.Replace;
-        setLocationState({
-          url,
-          state,
-          type,
-        });
-      };
-      navigation.addEventListener('navigate', handleNavigate);
-      return () => {
-        navigation.removeEventListener('navigate', handleNavigate);
-      };
-    } else {
-      // BUGS: HashChangeEvent is fired both when a link has clicked or during
-      // history back/forward navigation. Therefore the location type cannot be
-      // detected correctly.
-      const handleHashChange = (event: HashChangeEvent) => {
-        setLocationState({
-          url: RelativeURL.fromString(
-            decodeURIComponent(new URL(event.newURL).hash.slice(1)),
-          ),
-          state: history.state,
-          type: LocationType.Push,
-        });
-      };
-      addEventListener('hashchange', handleHashChange);
-      return () => {
-        removeEventListener('hashchange', handleHashChange);
-      };
-    }
+    // BUGS: "hashchange" event is fired other than when navigating through
+    // history entries by back/forward action. For instance, when a link is
+    // clicked or a new URL is entered in the address bar. Therefore the
+    // location type cannot be detected completely correctly.
+    const handleHashChange = (event: HashChangeEvent) => {
+      setLocationState({
+        url: RelativeURL.fromString(decodeHash(new URL(event.newURL).hash)),
+        state: history.state,
+        type: LocationType.Pop,
+      });
+    };
+    // Prevent the default action when hash link is clicked. So, "hashchange"
+    // event is canceled and the location type is detected correctly.
+    const handleClick = createHashClickHandler(locationActions);
+    addEventListener('hashchange', handleHashChange);
+    addEventListener('click', handleClick);
+    return () => {
+      removeEventListener('hashchange', handleHashChange);
+      removeEventListener('click', handleClick);
+    };
   }, []);
 
   const value = [locationState, locationActions] as const;
@@ -380,19 +355,14 @@ export function createBrowserClickHandler({
 }: LocationActions): (event: MouseEvent) => void {
   return (event) => {
     if (
-      event.altKey ||
-      event.ctrlKey ||
-      event.metaKey ||
-      event.shiftKey ||
+      isPressedModifierKeys(event) ||
       event.button !== 0 ||
       event.defaultPrevented
     ) {
       return;
     }
 
-    // Find a link element excluding nodes in closed shadow trees by
-    // composedPath().
-    const element = (event.composedPath() as Element[]).find(isLinkElement);
+    const element = (event.composedPath() as Element[]).find(isInternalLink);
     if (
       element === undefined ||
       element.origin !== location.origin ||
@@ -456,6 +426,40 @@ export function createBrowserSubmitHandler({
   };
 }
 
+/**
+ * @internal
+ */
+export function createHashClickHandler({
+  navigate,
+}: LocationActions): (event: MouseEvent) => void {
+  return (event) => {
+    if (
+      isPressedModifierKeys(event) ||
+      event.button !== 0 ||
+      event.defaultPrevented
+    ) {
+      return;
+    }
+
+    const element = (event.composedPath() as Element[]).find(isInternalLink);
+    if (
+      element === undefined ||
+      !element.getAttribute('href')!.startsWith('#')
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const url = RelativeURL.fromString(decodeHash(element.hash));
+    const replace =
+      element.hasAttribute('data-link-replace') ||
+      element.hash === location.hash;
+
+    navigate(url, { replace });
+  };
+}
+
 export function resetScrollPosition(locationState: LocationState): void {
   const { url, type } = locationState;
 
@@ -467,7 +471,7 @@ export function resetScrollPosition(locationState: LocationState): void {
   }
 
   if (url.hash !== '') {
-    const id = decodeURIComponent(url.hash.slice(1));
+    const id = decodeHash(url.hash);
     const element = document.getElementById(id);
 
     if (element !== null) {
@@ -511,6 +515,10 @@ export function wildcard(component: string): string {
   return component;
 }
 
+function decodeHash(hash: string): string {
+  return decodeURIComponent(hash.slice(1));
+}
+
 function extractArgs<TPatterns extends Pattern[]>(
   patterns: TPatterns,
   components: string[],
@@ -545,7 +553,7 @@ function extractArgs<TPatterns extends Pattern[]>(
   return args as ExtractArgs<TPatterns>;
 }
 
-function isLinkElement(element: Element): element is HTMLAnchorElement {
+function isInternalLink(element: Element): element is HTMLAnchorElement {
   return (
     element.tagName === 'A' &&
     element.hasAttribute('href') &&
@@ -553,4 +561,8 @@ function isLinkElement(element: Element): element is HTMLAnchorElement {
     !element.hasAttribute('download') &&
     element.getAttribute('rel') !== 'external'
   );
+}
+
+function isPressedModifierKeys(event: MouseEvent): boolean {
+  return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
 }

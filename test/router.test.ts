@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext } from '../src/renderContext.js';
@@ -7,8 +7,9 @@ import {
   RelativeURL,
   Router,
   browserLocation,
-  createFormSubmitHandler,
-  createLinkClickHandler,
+  createBrowserClickHandler,
+  createBrowserSubmitHandler,
+  createHashClickHandler,
   currentLocation,
   hashLocation,
   integer,
@@ -263,7 +264,7 @@ describe('browserLocation', () => {
     expect(locationState.type).toBe(LocationType.Replace);
   });
 
-  it('should update the state when the "popstate" event is fired', () => {
+  it('should update the state when "popstate" event is fired', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -311,7 +312,7 @@ describe('browserLocation', () => {
     );
   });
 
-  it('should update the state when the "click" event is fired', () => {
+  it('should update the state when "click" event is fired', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -350,7 +351,7 @@ describe('browserLocation', () => {
     );
   });
 
-  it('should update the state when the "submit" event is fired', () => {
+  it('should update the state when "submit" event is fired', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -526,128 +527,85 @@ describe('hashLocation', () => {
     expect(context.use(currentLocation)).toStrictEqual(locationState);
   });
 
-  describe('using HashChangeEvent', () => {
-    beforeEach(() => {
-      vi.stubGlobal('navigation', undefined);
+  it('should update the state when "hashchange" event is fired', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const queue = createUpdateQueue();
+
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    let context = new RenderContext(host, updater, block, hooks, queue);
+    let [locationState] = context.use(hashLocation);
+    context.finalize();
+    updater.flushUpdate(queue, host);
+
+    const event = new HashChangeEvent('hashchange', {
+      oldURL: location.href,
+      newURL: getHrefWithoutHash(location) + '#/articles/123',
     });
+    dispatchEvent(event);
 
-    afterEach(() => {
-      vi.unstubAllGlobals();
-    });
+    context = new RenderContext(host, updater, block, hooks, queue);
+    [locationState] = context.use(hashLocation);
 
-    it('should update the state when the hash has changed', () => {
-      const host = new UpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const queue = createUpdateQueue();
+    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.type).toBe(LocationType.Pop);
 
-      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+    cleanHooks(hooks);
 
-      let context = new RenderContext(host, updater, block, hooks, queue);
-      let [locationState] = context.use(hashLocation);
-      context.finalize();
-      updater.flushUpdate(queue, host);
-
-      dispatchEvent(
-        new HashChangeEvent('hashchange', {
-          oldURL: location.href,
-          newURL: getHrefWithoutHash(location) + '#/articles/123',
-        }),
-      );
-
-      context = new RenderContext(host, updater, block, hooks, queue);
-      [locationState] = context.use(hashLocation);
-
-      expect(locationState.url.toString()).toBe('/articles/123');
-      expect(locationState.type).toBe(LocationType.Push);
-
-      cleanHooks(hooks);
-
-      expect(addEventListenerSpy).toHaveBeenCalledOnce();
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'hashchange',
-        expect.any(Function),
-      );
-      expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'hashchange',
-        expect.any(Function),
-      );
-    });
+    expect(addEventListenerSpy).toHaveBeenCalled();
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'hashchange',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalled();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'hashchange',
+      expect.any(Function),
+    );
   });
 
-  describe.runIf(typeof navigation !== 'undefined')(
-    'using NavigationEvent',
-    () => {
-      it('should update the state when the hash has changed', async () => {
-        const host = new UpdateHost();
-        const updater = new SyncUpdater();
-        const block = new MockBlock();
-        const queue = createUpdateQueue();
+  it('should update the state when "click" event is fired', () => {
+    const host = new UpdateHost();
+    const updater = new SyncUpdater();
+    const block = new MockBlock();
+    const queue = createUpdateQueue();
 
-        const addEventListenerSpy = vi.spyOn(navigation, 'addEventListener');
-        const removeEventListenerSpy = vi.spyOn(
-          navigation,
-          'removeEventListener',
-        );
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-        const state1 = { key: 'foo' };
-        const state2 = { key: 'bar' };
-        let context = new RenderContext(host, updater, block, hooks, queue);
-        let [locationState] = context.use(hashLocation);
+    let context = new RenderContext(host, updater, block, hooks, queue);
+    let [locationState] = context.use(hashLocation);
+    context.finalize();
+    updater.flushUpdate(queue, host);
 
-        context.finalize();
-        updater.flushUpdate(queue, host);
+    const element = createElement('a', { href: '#/articles/123' });
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    document.body.appendChild(element);
+    element.dispatchEvent(event);
+    document.body.removeChild(element);
 
-        navigation.navigate('#/articles/123', {
-          state: state1,
-          history: 'replace',
-        });
+    context = new RenderContext(host, updater, block, hooks, queue);
+    [locationState] = context.use(hashLocation);
 
-        context = new RenderContext(host, updater, block, hooks, queue);
-        [locationState] = context.use(hashLocation);
+    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.type).toBe(LocationType.Push);
 
-        expect(locationState.url.toString()).toBe('/articles/123');
-        // expect(locationState.state).toEqual(state1);
-        expect(locationState.type).toBe(LocationType.Replace);
+    cleanHooks(hooks);
 
-        navigation.navigate('#/articles/456', {
-          state: state2,
-          history: 'push',
-        });
-
-        context = new RenderContext(host, updater, block, hooks, queue);
-        [locationState] = context.use(hashLocation);
-
-        expect(locationState.url.toString()).toBe('/articles/456');
-        expect(locationState.state).toEqual(state2);
-        expect(locationState.type).toBe(LocationType.Push);
-
-        await navigation.back().committed;
-
-        context = new RenderContext(host, updater, block, hooks, queue);
-        [locationState] = context.use(hashLocation);
-
-        expect(locationState.url.toString()).toBe('/articles/123');
-        expect(locationState.state).toEqual(state1);
-        expect(locationState.type).toBe(LocationType.Pop);
-
-        cleanHooks(hooks);
-
-        expect(addEventListenerSpy).toHaveBeenCalledOnce();
-        expect(addEventListenerSpy).toHaveBeenCalledWith(
-          'navigate',
-          expect.any(Function),
-        );
-        expect(removeEventListenerSpy).toHaveBeenCalledOnce();
-        expect(removeEventListenerSpy).toHaveBeenCalledWith(
-          'navigate',
-          expect.any(Function),
-        );
-      });
-    },
-  );
+    expect(addEventListenerSpy).toHaveBeenCalled();
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function),
+    );
+    expect(removeEventListenerSpy).toHaveBeenCalled();
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      'click',
+      expect.any(Function),
+    );
+  });
 });
 
 describe('createBrowserClickHandler', () => {
@@ -666,7 +624,7 @@ describe('createBrowserClickHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
+      createBrowserClickHandler({ getCurrentURL, navigate }),
     );
 
     container.addEventListener('click', linkClickHandler);
@@ -704,7 +662,7 @@ describe('createBrowserClickHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
+      createBrowserClickHandler({ getCurrentURL, navigate }),
     );
 
     container.appendChild(element);
@@ -740,7 +698,7 @@ describe('createBrowserClickHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
+      createBrowserClickHandler({ getCurrentURL, navigate }),
     );
 
     container.appendChild(element);
@@ -776,7 +734,7 @@ describe('createBrowserClickHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
+      createBrowserClickHandler({ getCurrentURL, navigate }),
     );
 
     container.appendChild(element);
@@ -808,7 +766,7 @@ describe('createBrowserClickHandler', () => {
         .mockImplementation(() => RelativeURL.fromLocation(location));
       const navigate = vi.fn();
       const linkClickHandler = vi.fn(
-        createLinkClickHandler({ getCurrentURL, navigate }),
+        createBrowserClickHandler({ getCurrentURL, navigate }),
       );
 
       container.appendChild(element);
@@ -824,7 +782,7 @@ describe('createBrowserClickHandler', () => {
 
   it('should ignore the event if its default action is prevented', () => {
     const container = createElement('div');
-    const element = createElement('a', { href: '/foo' });
+    const element = createElement('a');
     const event = new MouseEvent('click', { cancelable: true, bubbles: true });
 
     const getCurrentURL = vi
@@ -832,7 +790,7 @@ describe('createBrowserClickHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
+      createBrowserClickHandler({ getCurrentURL, navigate }),
     );
 
     event.preventDefault();
@@ -847,6 +805,7 @@ describe('createBrowserClickHandler', () => {
   });
 
   it.each([
+    ['a', { href: '#/foo' }],
     ['a', { href: '/foo', download: '' }],
     ['a', { href: '/foo', rel: 'external' }],
     ['a', { href: '/foo', target: '_blank' }],
@@ -868,7 +827,7 @@ describe('createBrowserClickHandler', () => {
         .mockImplementation(() => RelativeURL.fromLocation(location));
       const navigate = vi.fn();
       const linkClickHandler = vi.fn(
-        createLinkClickHandler({ getCurrentURL, navigate }),
+        createBrowserClickHandler({ getCurrentURL, navigate }),
       );
       const cancelHandler = vi.fn((event: Event) => {
         event.preventDefault();
@@ -909,7 +868,7 @@ describe('createBrowserSubmitHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
+      createBrowserSubmitHandler({ getCurrentURL, navigate }),
     );
 
     form.addEventListener('submit', formSubmitHandler);
@@ -956,7 +915,7 @@ describe('createBrowserSubmitHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
+      createBrowserSubmitHandler({ getCurrentURL, navigate }),
     );
 
     form.addEventListener('submit', formSubmitHandler);
@@ -1002,7 +961,7 @@ describe('createBrowserSubmitHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
+      createBrowserSubmitHandler({ getCurrentURL, navigate }),
     );
 
     form.addEventListener('submit', formSubmitHandler);
@@ -1036,7 +995,7 @@ describe('createBrowserSubmitHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
+      createBrowserSubmitHandler({ getCurrentURL, navigate }),
     );
 
     event.preventDefault();
@@ -1063,7 +1022,7 @@ describe('createBrowserSubmitHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
+      createBrowserSubmitHandler({ getCurrentURL, navigate }),
     );
 
     form.addEventListener('submit', formSubmitHandler);
@@ -1089,7 +1048,7 @@ describe('createBrowserSubmitHandler', () => {
       .mockImplementation(() => RelativeURL.fromLocation(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
+      createBrowserSubmitHandler({ getCurrentURL, navigate }),
     );
 
     form.addEventListener('submit', formSubmitHandler);
@@ -1099,6 +1058,217 @@ describe('createBrowserSubmitHandler', () => {
     expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(false);
   });
+});
+
+describe('createHashClickHandler', () => {
+  it('should push a new URL', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: '#/foo?bar=123#baz',
+    });
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(
+      createHashClickHandler({ getCurrentURL, navigate }),
+    );
+
+    container.addEventListener('click', linkClickHandler);
+    container.appendChild(element);
+    element.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?bar=123',
+        hash: '#baz',
+      }),
+      { replace: false },
+    );
+    expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should replace the URL with a new one if the element has "data-link-replace" attribute', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: '#/foo?bar=123#baz',
+      'data-link-replace': '',
+      'data-link-no-scroll-reset': '',
+    });
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(
+      createHashClickHandler({ getCurrentURL, navigate }),
+    );
+
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandler);
+    element.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/foo',
+        search: '?bar=123',
+        hash: '#baz',
+      }),
+      { replace: true },
+    );
+    expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('should replace the URL with the same one if it has not changed', () => {
+    const container = createElement('div');
+    const element = createElement('a', {
+      href: '#/',
+    });
+    const event = new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+    });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(
+      createHashClickHandler({ getCurrentURL, navigate }),
+    );
+
+    location.hash = '#/';
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandler);
+    element.dispatchEvent(event);
+
+    expect(navigate).toHaveBeenCalledOnce();
+    expect(navigate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pathname: '/',
+        search: '',
+        hash: '',
+      }),
+      { replace: true },
+    );
+    expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it.each([
+    [{ altKey: true, bubbles: true }],
+    [{ ctrlKey: true, bubbles: true }],
+    [{ metaKey: true, bubbles: true }],
+    [{ shiftKey: true, bubbles: true }],
+    [{ button: 1, bubbles: true }],
+  ])(
+    'should ignore the event if any modifier keys or a button other than left button is pressed',
+    (eventInit) => {
+      const container = createElement('div');
+      const element = createElement('a');
+      const event = new MouseEvent('click', eventInit);
+
+      const getCurrentURL = vi
+        .fn()
+        .mockImplementation(() => RelativeURL.fromLocation(location));
+      const navigate = vi.fn();
+      const linkClickHandler = vi.fn(
+        createHashClickHandler({ getCurrentURL, navigate }),
+      );
+
+      container.appendChild(element);
+      container.addEventListener('click', linkClickHandler);
+      element.dispatchEvent(event);
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(linkClickHandler).toHaveBeenCalledOnce();
+      expect(linkClickHandler).toHaveBeenCalledWith(event);
+      expect(event.defaultPrevented).toBe(false);
+    },
+  );
+
+  it('should ignore the event if its default action is prevented', () => {
+    const container = createElement('div');
+    const element = createElement('a');
+    const event = new MouseEvent('click', { cancelable: true, bubbles: true });
+
+    const getCurrentURL = vi
+      .fn()
+      .mockImplementation(() => RelativeURL.fromLocation(location));
+    const navigate = vi.fn();
+    const linkClickHandler = vi.fn(
+      createHashClickHandler({ getCurrentURL, navigate }),
+    );
+
+    event.preventDefault();
+    container.appendChild(element);
+    container.addEventListener('click', linkClickHandler);
+    element.dispatchEvent(event);
+
+    expect(navigate).not.toHaveBeenCalled();
+    expect(linkClickHandler).toHaveBeenCalledOnce();
+    expect(linkClickHandler).toHaveBeenCalledWith(event);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it.each([
+    ['a', { href: '/foo', download: '' }],
+    ['a', { href: '/foo', rel: 'external' }],
+    ['a', { href: '/foo', target: '_blank' }],
+    ['a', { href: '/foo' }],
+    ['button', {}],
+  ] as const)(
+    'should ignore the event if the target is not valid as a link',
+    (tagName, attribues) => {
+      const cancelWrapper = createElement('div');
+      const container = createElement('div');
+      const element = createElement(tagName, attribues);
+      const event = new MouseEvent('click', {
+        cancelable: true,
+        bubbles: true,
+      });
+
+      const getCurrentURL = vi
+        .fn()
+        .mockImplementation(() => RelativeURL.fromLocation(location));
+      const navigate = vi.fn();
+      const linkClickHandler = vi.fn(
+        createHashClickHandler({ getCurrentURL, navigate }),
+      );
+      const cancelHandler = vi.fn((event: Event) => {
+        event.preventDefault();
+      });
+
+      cancelWrapper.appendChild(container);
+      cancelWrapper.addEventListener('click', cancelHandler);
+      container.appendChild(element);
+      container.addEventListener('click', linkClickHandler);
+      element.dispatchEvent(event);
+
+      expect(navigate).not.toHaveBeenCalled();
+      expect(linkClickHandler).toHaveBeenCalledOnce();
+      expect(linkClickHandler).toHaveBeenCalledWith(event);
+      expect(cancelHandler).toHaveBeenCalledOnce();
+      expect(cancelHandler).toHaveBeenCalledWith(event);
+    },
+  );
 });
 
 describe('resetScrollPosition', () => {
