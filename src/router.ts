@@ -234,10 +234,20 @@ export function browserLocation(
 
   context.useLayoutEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      setLocationState({
-        url: RelativeURL.fromLocation(location),
-        state: event.state,
-        reason: NavigateReason.Pop,
+      setLocationState((prevState) => {
+        if (
+          prevState.url.pathname === location.pathname &&
+          prevState.url.search === location.search
+        ) {
+          // Ignore an event when the hash has only changed.
+          return prevState;
+        }
+
+        return {
+          url: RelativeURL.fromLocation(location),
+          state: event.state,
+          reason: NavigateReason.Pop,
+        };
       });
     };
     const handleClick = createLinkClickHandler(locationActions);

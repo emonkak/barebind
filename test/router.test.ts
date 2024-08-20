@@ -204,7 +204,6 @@ describe('browserLocation', () => {
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    expect(location.pathname).toBe('/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.url.toString()).toEqual(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(history.state);
@@ -230,12 +229,10 @@ describe('browserLocation', () => {
     context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(browserLocation);
 
-    expect(location.pathname).toBe('/articles/456');
-    expect(history.state).toBe(null);
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
-    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.state).toStrictEqual(null);
     expect(locationState.reason).toBe(NavigateReason.Push);
   });
 
@@ -259,12 +256,10 @@ describe('browserLocation', () => {
     context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(browserLocation);
 
-    expect(location.pathname).toBe('/articles/123');
-    expect(history.state).toStrictEqual(state);
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.state).toStrictEqual(state);
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
@@ -289,7 +284,15 @@ describe('browserLocation', () => {
     context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(browserLocation);
 
-    expect(location.pathname).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.state).toStrictEqual(state);
+    expect(locationState.reason).toBe(NavigateReason.Pop);
+
+    location.hash = '#foo';
+
+    context = new RenderContext(host, updater, block, hooks, queue);
+    [locationState] = context.use(browserLocation);
+
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
     expect(locationState.reason).toBe(NavigateReason.Pop);
@@ -330,6 +333,7 @@ describe('browserLocation', () => {
     document.body.removeChild(element);
 
     expect(location.pathname).toBe('/articles/123');
+    expect(history.state).toBe(null);
     expect(locationActions.getCurrentURL().toString()).toBe('/articles/123');
 
     cleanHooks(hooks);
@@ -371,6 +375,7 @@ describe('browserLocation', () => {
     document.body.removeChild(element);
 
     expect(location.pathname).toBe('/articles/123');
+    expect(history.state).toBe(null);
     expect(locationActions.getCurrentURL().toString()).toBe('/articles/123');
 
     cleanHooks(hooks);
