@@ -9,7 +9,7 @@ export interface StoriesPageProps {
   page?: number;
 }
 
-const STORIES_PER_PAGE = 28;
+const STORIES_PER_PAGE = 30;
 
 export function StoriesPage(
   { type, page = 1 }: StoriesPageProps,
