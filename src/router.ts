@@ -309,16 +309,21 @@ export function hashLocation(
   );
 
   context.useLayoutEffect(() => {
-    const hashChangeHandler = () => {
+    // BUGS: HashChangeEvent is fired both when a link has clicked or during
+    // history back/forward navigation. Therefore the navigation reason cannot
+    // be detected correctly.
+    const handleHashChange = (event: HashChangeEvent) => {
       setLocationState({
-        url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
+        url: RelativeURL.fromString(
+          decodeURIComponent(new URL(event.newURL).hash.slice(1)),
+        ),
         state: history.state,
-        reason: NavigateReason.Pop,
+        reason: NavigateReason.Push,
       });
     };
-    addEventListener('hashchange', hashChangeHandler);
+    addEventListener('hashchange', handleHashChange);
     return () => {
-      removeEventListener('hashchange', hashChangeHandler);
+      removeEventListener('hashchange', handleHashChange);
     };
   }, []);
 

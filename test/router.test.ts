@@ -268,7 +268,7 @@ describe('browserLocation', () => {
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
-  it('should update the state when the "popstate" event is triggered', () => {
+  it('should update the state when the "popstate" event is fired', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -311,7 +311,7 @@ describe('browserLocation', () => {
     );
   });
 
-  it('should update the state when the "click" event is triggered', () => {
+  it('should update the state when the "click" event is fired', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -349,7 +349,7 @@ describe('browserLocation', () => {
     );
   });
 
-  it('should update the state when the "submit" event is triggered', () => {
+  it('should update the state when the "submit" event is fired', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
@@ -512,13 +512,12 @@ describe('hashLocation', () => {
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
-  it('should update the state when the "hashchange" event is tiggered', () => {
+  it('should update the state when the hash has changed', () => {
     const host = new UpdateHost();
     const updater = new SyncUpdater();
     const block = new MockBlock();
     const queue = createUpdateQueue();
 
-    const state = { key: 'foo' };
     const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
@@ -528,11 +527,10 @@ describe('hashLocation', () => {
     context.finalize();
     updater.flushUpdate(queue, host);
 
-    history.replaceState(state, '', '#/articles/123');
     dispatchEvent(
       new HashChangeEvent('hashchange', {
-        oldURL: '#',
-        newURL: '#/articles/123',
+        oldURL: location.href,
+        newURL: getHrefWithoutHash(location) + '#/articles/123',
       }),
     );
 
@@ -541,10 +539,8 @@ describe('hashLocation', () => {
     context = new RenderContext(host, updater, block, hooks, queue);
     [locationState] = context.use(hashLocation);
 
-    expect(location.hash).toBe('#/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.state).toStrictEqual(state);
-    expect(locationState.reason).toBe(NavigateReason.Pop);
+    expect(locationState.reason).toBe(NavigateReason.Push);
 
     cleanHooks(hooks);
 
@@ -1135,4 +1131,10 @@ function createElement<const T extends keyof HTMLElementTagNameMap>(
     element.appendChild(child);
   }
   return element;
+}
+
+function getHrefWithoutHash(location: Location): string {
+  return location.hash !== ''
+    ? location.href.slice(0, -location.hash.length)
+    : location.href;
 }
