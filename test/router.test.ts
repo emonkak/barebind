@@ -208,7 +208,6 @@ describe('browserLocation', () => {
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.url.toString()).toEqual(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.scrollReset).toBe(false);
     expect(locationState.reason).toBe(NavigateReason.Load);
   });
 
@@ -237,7 +236,6 @@ describe('browserLocation', () => {
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.scrollReset).toBe(true);
     expect(locationState.reason).toBe(NavigateReason.Push);
   });
 
@@ -267,7 +265,6 @@ describe('browserLocation', () => {
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.scrollReset).toBe(true);
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
@@ -298,7 +295,6 @@ describe('browserLocation', () => {
     expect(location.pathname).toBe('/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.scrollReset).toBe(false);
     expect(locationState.reason).toBe(NavigateReason.Pop);
 
     cleanHooks(hooks);
@@ -456,7 +452,6 @@ describe('hashLocation', () => {
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.url.toString()).toBe(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.scrollReset).toBe(false);
     expect(locationState.reason).toBe(NavigateReason.Load);
   });
 
@@ -485,7 +480,6 @@ describe('hashLocation', () => {
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.scrollReset).toBe(true);
     expect(locationState.reason).toBe(NavigateReason.Push);
   });
 
@@ -515,7 +509,6 @@ describe('hashLocation', () => {
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(history.state);
-    expect(locationState.scrollReset).toBe(true);
     expect(locationState.reason).toBe(NavigateReason.Replace);
   });
 
@@ -551,7 +544,6 @@ describe('hashLocation', () => {
     expect(location.hash).toBe('#/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.scrollReset).toBe(true);
     expect(locationState.reason).toBe(NavigateReason.Pop);
 
     cleanHooks(hooks);
@@ -614,7 +606,7 @@ describe('createFormSubmitHandler', () => {
         search: '?qux=456',
         hash: '#baz',
       }),
-      { replace: false, scrollReset: true },
+      { replace: false },
     );
     expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
@@ -661,7 +653,7 @@ describe('createFormSubmitHandler', () => {
         search: '?qux=456',
         hash: '#baz',
       }),
-      { replace: false, scrollReset: true },
+      { replace: false },
     );
     expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
@@ -707,7 +699,7 @@ describe('createFormSubmitHandler', () => {
         search: '?qux=456',
         hash: '#baz',
       }),
-      { replace: true, scrollReset: false },
+      { replace: true },
     );
     expect(formSubmitHandler).toHaveBeenCalledOnce();
     expect(event.defaultPrevented).toBe(true);
@@ -823,7 +815,7 @@ describe('createLinkClickHandler', () => {
         search: '?bar=123',
         hash: '#baz',
       }),
-      { replace: false, scrollReset: true },
+      { replace: false },
     );
     expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(linkClickHandler).toHaveBeenCalledWith(event);
@@ -861,7 +853,7 @@ describe('createLinkClickHandler', () => {
         search: '?bar=123',
         hash: '#baz',
       }),
-      { replace: true, scrollReset: false },
+      { replace: true },
     );
     expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(linkClickHandler).toHaveBeenCalledWith(event);
@@ -897,7 +889,7 @@ describe('createLinkClickHandler', () => {
         search: location.search,
         hash: location.hash,
       }),
-      { replace: true, scrollReset: true },
+      { replace: true },
     );
     expect(linkClickHandler).toHaveBeenCalledOnce();
     expect(linkClickHandler).toHaveBeenCalledWith(event);
@@ -1033,71 +1025,88 @@ describe('createLinkClickHandler', () => {
 });
 
 describe('resetScrollPosition', () => {
+  const originalScrollRestoration = history.scrollRestoration;
+
   afterEach(() => {
     vi.restoreAllMocks();
+    history.scrollRestoration = originalScrollRestoration;
   });
 
-  it('should scroll to the top', () => {
-    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+  it.each([[NavigateReason.Pop, NavigateReason.Push, NavigateReason.Replace]])(
+    'should scroll to the top',
+    (reason) => {
+      const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    resetScrollPosition({
-      url: new RelativeURL('/foo'),
-      state: null,
-      scrollReset: true,
-      reason: NavigateReason.Load,
-    });
+      history.scrollRestoration = 'manual';
 
-    expect(scrollToSpy).toHaveBeenCalled();
-    expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
-  });
+      resetScrollPosition({
+        url: new RelativeURL('/foo'),
+        state: null,
+        reason,
+      });
 
-  it('should scroll to the top if there is not the element indicating hash', () => {
-    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+      expect(scrollToSpy).toHaveBeenCalled();
+      expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
+    },
+  );
 
-    resetScrollPosition({
-      url: new RelativeURL('/foo', '', '#bar'),
-      state: null,
-      scrollReset: true,
-      reason: NavigateReason.Load,
-    });
+  it.each([[NavigateReason.Pop, NavigateReason.Push, NavigateReason.Replace]])(
+    'should scroll to the element indicating hash',
+    (reason) => {
+      const element = createElement('div', {
+        id: 'bar',
+      });
+      const scrollToSpy = vi.spyOn(window, 'scrollTo');
+      const scrollIntoViewSpy = vi.spyOn(element, 'scrollIntoView');
 
-    expect(scrollToSpy).toHaveBeenCalled();
-  });
+      history.scrollRestoration = 'manual';
 
-  it('should scroll to the element indicating hash', () => {
-    const element = createElement('div', {
-      id: 'bar',
-    });
-    const scrollToSpy = vi.spyOn(window, 'scrollTo');
-    const scrollIntoViewSpy = vi.spyOn(element, 'scrollIntoView');
+      document.body.appendChild(element);
+      resetScrollPosition({
+        url: new RelativeURL('/foo', '', '#bar'),
+        state: null,
+        reason,
+      });
+      document.body.removeChild(element);
 
-    document.body.appendChild(element);
+      expect(scrollToSpy).not.toHaveBeenCalled();
+      expect(scrollIntoViewSpy).toHaveBeenCalledOnce();
+    },
+  );
 
-    resetScrollPosition({
-      url: new RelativeURL('/foo', '', '#bar'),
-      state: null,
-      scrollReset: true,
-      reason: NavigateReason.Load,
-    });
+  it.each([[NavigateReason.Pop, NavigateReason.Push, NavigateReason.Replace]])(
+    'should scroll to the top if there is not the element indicating hash',
+    (reason) => {
+      const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    document.body.removeChild(element);
+      history.scrollRestoration = 'manual';
 
-    expect(scrollToSpy).not.toHaveBeenCalled();
-    expect(scrollIntoViewSpy).toHaveBeenCalledOnce();
-  });
+      resetScrollPosition({
+        url: new RelativeURL('/foo', '', '#bar'),
+        state: null,
+        reason,
+      });
 
-  it('should do nothing if scroll reset is disabled', () => {
-    const scrollToSpy = vi.spyOn(window, 'scrollTo');
+      expect(scrollToSpy).toHaveBeenCalled();
+    },
+  );
 
-    resetScrollPosition({
-      url: new RelativeURL('/foo'),
-      state: null,
-      scrollReset: false,
-      reason: NavigateReason.Load,
-    });
+  it.each([[NavigateReason.Load, NavigateReason.Pop]])(
+    'should do nothing if the navigate reason is `Load` or `Pop`',
+    (reason) => {
+      const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    expect(scrollToSpy).not.toHaveBeenCalled();
-  });
+      history.scrollRestoration = 'auto';
+
+      resetScrollPosition({
+        url: new RelativeURL('/foo'),
+        state: null,
+        reason,
+      });
+
+      expect(scrollToSpy).not.toHaveBeenCalled();
+    },
+  );
 });
 
 function cleanHooks(hooks: Hook[]): void {

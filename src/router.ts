@@ -31,7 +31,6 @@ export type Handler<TArgs extends any[], TResult> = (
 export interface LocationState {
   readonly url: RelativeURL;
   readonly state: unknown;
-  readonly scrollReset: boolean;
   readonly reason: NavigateReason;
 }
 
@@ -49,7 +48,6 @@ export enum NavigateReason {
 
 export interface NavigateOptions {
   replace?: boolean;
-  scrollReset?: boolean;
   state?: unknown;
 }
 
@@ -205,7 +203,6 @@ export function browserLocation(
     () => ({
       url: RelativeURL.fromLocation(location),
       state: history.state,
-      scrollReset: false,
       reason: NavigateReason.Load,
     }),
   );
@@ -214,11 +211,7 @@ export function browserLocation(
       getCurrentURL: () => RelativeURL.fromLocation(location),
       navigate: (
         url: RelativeURL,
-        {
-          replace = false,
-          scrollReset = true,
-          state = null,
-        }: NavigateOptions = {},
+        { replace = false, state = null }: NavigateOptions = {},
       ) => {
         let reason: NavigateReason;
         if (replace) {
@@ -231,7 +224,6 @@ export function browserLocation(
         setLocationState({
           url,
           state,
-          scrollReset,
           reason,
         });
       },
@@ -244,7 +236,6 @@ export function browserLocation(
       setLocationState({
         url: RelativeURL.fromLocation(location),
         state: event.state,
-        scrollReset: history.scrollRestoration === 'manual',
         reason: NavigateReason.Pop,
       });
     };
@@ -288,7 +279,6 @@ export function hashLocation(
     () => ({
       url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
       state: history.state,
-      scrollReset: false,
       reason: NavigateReason.Load,
     }),
   );
@@ -298,11 +288,7 @@ export function hashLocation(
         RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
       navigate: (
         url: RelativeURL,
-        {
-          replace = false,
-          scrollReset = true,
-          state = null,
-        }: NavigateOptions = {},
+        { replace = false, state = null }: NavigateOptions = {},
       ) => {
         let reason: NavigateReason;
         if (replace) {
@@ -315,7 +301,6 @@ export function hashLocation(
         setLocationState({
           url,
           state,
-          scrollReset,
           reason,
         });
       },
@@ -328,7 +313,6 @@ export function hashLocation(
       setLocationState({
         url: RelativeURL.fromString(decodeURIComponent(location.hash.slice(1))),
         state: history.state,
-        scrollReset: true,
         reason: NavigateReason.Pop,
       });
     };
@@ -384,9 +368,8 @@ export function createFormSubmitHandler({
     const replace =
       form.hasAttribute('data-link-replace') ||
       url.toString() === location.href;
-    const scrollReset = !form.hasAttribute('data-link-no-scroll-reset');
 
-    navigate(url, { replace, scrollReset });
+    navigate(url, { replace });
   };
 }
 
@@ -425,16 +408,18 @@ export function createLinkClickHandler({
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.href === location.href;
-    const scrollReset = !element.hasAttribute('data-link-no-scroll-reset');
 
-    navigate(url, { replace, scrollReset });
+    navigate(url, { replace });
   };
 }
 
 export function resetScrollPosition(locationState: LocationState): void {
-  const { url, scrollReset } = locationState;
+  const { url, reason } = locationState;
 
-  if (!scrollReset) {
+  if (
+    reason === NavigateReason.Load ||
+    (reason === NavigateReason.Pop && history.scrollRestoration === 'auto')
+  ) {
     return;
   }
 
