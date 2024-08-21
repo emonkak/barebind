@@ -36,8 +36,8 @@ export abstract class Signal<TValue>
 
   map<TResult>(
     selector: (value: TValue) => TResult,
-  ): Projection<TValue, TResult> {
-    return new Projection(this, selector);
+  ): Projected<TValue, TResult> {
+    return new Projected(this, selector);
   }
 
   toJSON(): TValue {
@@ -186,7 +186,7 @@ export class Atom<TValue> extends Signal<TValue> {
   }
 }
 
-export class Computation<
+export class Computed<
   TResult,
   const TDependencies extends Signal<any>[],
 > extends Signal<TResult> {
@@ -238,7 +238,7 @@ export class Computation<
   }
 }
 
-export class Projection<TValue, TResult> extends Signal<TResult> {
+export class Projected<TValue, TResult> extends Signal<TResult> {
   private readonly _signal: Signal<TValue>;
 
   private readonly _selector: (value: TValue) => TResult;
