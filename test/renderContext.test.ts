@@ -87,7 +87,21 @@ describe('RenderContext', () => {
       expect(hooks).toEqual([{ type: HookType.Finalizer }]);
     });
 
-    it('should throw an error if fewer hooks are used than last time.', () => {
+    it('should throw an error if a hook is added after finalization', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      expect(() => {
+        const context = new RenderContext(host, updater, block, hooks, queue);
+        context.finalize();
+        context.useEffect(() => {});
+      }).toThrow('Unexpected hook type.');
+    });
+
+    it('should throw an error if fewer hooks are used than last time', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -105,7 +119,7 @@ describe('RenderContext', () => {
       }).toThrow('Unexpected hook type.');
     });
 
-    it('should throw an error if more hooks are used than last time.', () => {
+    it('should throw an error if more hooks are used than last time', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
