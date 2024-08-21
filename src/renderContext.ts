@@ -124,10 +124,7 @@ export class RenderContext {
   }
 
   isFirstRender(): boolean {
-    return (
-      this._hooks.length === 0 ||
-      this._hooks[this._hooks.length - 1]!.type !== HookType.Finalizer
-    );
+    return this._hooks.at(-1)?.type !== HookType.Finalizer;
   }
 
   forceUpdate(priority?: TaskPriority): void {
