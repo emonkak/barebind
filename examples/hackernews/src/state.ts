@@ -1,5 +1,5 @@
 import { type RenderContext, usableTag } from '@emonkak/ebit';
-import { Atom } from '@emonkak/ebit/directives.js';
+import { State } from '@emonkak/ebit/directives.js';
 
 export interface Story {
   comments_count: number;
@@ -20,13 +20,13 @@ const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';
 
 export class StoryState {
-  readonly stories$ = new Atom<Story[]>([]);
+  readonly stories$ = new State<Story[]>([]);
 
-  readonly type$ = new Atom<StoryType | null>(null);
+  readonly type$ = new State<StoryType | null>(null);
 
-  readonly page$ = new Atom(0);
+  readonly page$ = new State(0);
 
-  readonly isLoading$ = new Atom(false);
+  readonly isLoading$ = new State(false);
 
   static [usableTag](context: RenderContext): StoryState {
     const state = context.getContextValue(this);
@@ -88,11 +88,11 @@ export interface Comment {
 }
 
 export class ItemState {
-  readonly item$ = new Atom<Item | null>(null);
+  readonly item$ = new State<Item | null>(null);
 
-  readonly isLoading$ = new Atom(false);
+  readonly isLoading$ = new State(false);
 
-  readonly error$ = new Atom<Error | null>(null);
+  readonly error$ = new State<Error | null>(null);
 
   static [usableTag](context: RenderContext): ItemState {
     const state = context.getContextValue(this);
@@ -137,11 +137,11 @@ export interface User {
 }
 
 export class UserState {
-  readonly user$ = new Atom<User | null>(null);
+  readonly user$ = new State<User | null>(null);
 
-  readonly isLoading$ = new Atom(false);
+  readonly isLoading$ = new State(false);
 
-  readonly error$ = new Atom<Error | null>(null);
+  readonly error$ = new State<Error | null>(null);
 
   static [usableTag](context: RenderContext): UserState {
     const state = context.getContextValue(this);

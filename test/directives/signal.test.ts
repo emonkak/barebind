@@ -10,7 +10,7 @@ import {
   nameTag,
 } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
-import { Atom, Computed, SignalBinding } from '../../src/directives/signal.js';
+import { Computed, SignalBinding, State } from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '.././mocks.js';
@@ -18,7 +18,7 @@ import { MockBlock, MockUpdateHost } from '.././mocks.js';
 describe('Signal', () => {
   describe('.toJSON()', () => {
     it('should return the value', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
 
       expect('foo').toBe(signal.toJSON());
     });
@@ -26,7 +26,7 @@ describe('Signal', () => {
 
   describe('.value', () => {
     it('should increment the version on update', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
 
       signal.value = 'bar';
       expect(signal.value).toBe('bar');
@@ -36,7 +36,7 @@ describe('Signal', () => {
 
   describe('.valueOf()', () => {
     it('should return the value of the signal', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
 
       expect('foo').toBe(signal.valueOf());
     });
@@ -44,7 +44,7 @@ describe('Signal', () => {
 
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new Atom('foo')[nameTag]).toBe('Signal("foo")');
+      expect(new State('foo')[nameTag]).toBe('Signal("foo")');
     });
   });
 
@@ -58,7 +58,7 @@ describe('Signal', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new Atom('foo');
+      const value = new State('foo');
       const binding = value[directiveTag](part, context);
 
       expect(binding.part).toBe(part);
@@ -80,7 +80,7 @@ describe('Signal', () => {
       const queue = createUpdateQueue();
       const context = new RenderContext(host, updater, block, hooks, queue);
 
-      const signal = new Atom('foo');
+      const signal = new State('foo');
       const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
 
       expect(context.use(signal)).toBe('foo');
@@ -112,7 +112,7 @@ describe('SignalBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new Atom('foo');
+      const value = new State('foo');
       const binding = new SignalBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -142,7 +142,7 @@ describe('SignalBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new Atom('foo');
+      const value = new State('foo');
       const binding = new SignalBinding(value, part, context);
 
       const unsubscribeSpy = vi.fn();
@@ -172,8 +172,8 @@ describe('SignalBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value1 = new Atom('foo');
-      const value2 = new Atom('bar');
+      const value1 = new State('foo');
+      const value2 = new State('bar');
       const binding = new SignalBinding(value1, part, context);
 
       const unsubscribe1Spy = vi.fn();
@@ -209,7 +209,7 @@ describe('SignalBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new Atom('foo');
+      const value = new State('foo');
       const binding = new SignalBinding(value, part, context);
 
       expect(() => {
@@ -230,7 +230,7 @@ describe('SignalBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new Atom('foo');
+      const value = new State('foo');
       const binding = new SignalBinding(value, part, context);
 
       const unsubscribeSpy = vi.fn();
@@ -263,7 +263,7 @@ describe('SignalBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const value = new Atom('foo');
+      const value = new State('foo');
       const binding = new SignalBinding(value, part, context);
 
       const unsubscribeSpy = vi.fn();
@@ -287,17 +287,17 @@ describe('SignalBinding', () => {
   });
 });
 
-describe('Atom', () => {
+describe('State', () => {
   describe('.value', () => {
     it('should get 0 of the initial version on initalize', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
 
       expect(signal.value).toBe('foo');
       expect(signal.version).toBe(0);
     });
 
     it('should increment the version on update', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
 
       signal.value = 'bar';
       expect(signal.value).toBe('bar');
@@ -307,7 +307,7 @@ describe('Atom', () => {
 
   describe('.notifyUpdate()', () => {
     it('should increment the version', () => {
-      const signal = new Atom(1);
+      const signal = new State(1);
 
       signal.notifyUpdate();
 
@@ -318,7 +318,7 @@ describe('Atom', () => {
 
   describe('.setUntrackedValue()', () => {
     it('should set the new value without invoking the callback', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
       const callback = vi.fn();
 
       signal.subscribe(callback);
@@ -331,7 +331,7 @@ describe('Atom', () => {
 
   describe('.subscribe()', () => {
     it('should invoke the callback on update', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
       const callback = vi.fn();
 
       signal.subscribe(callback);
@@ -345,7 +345,7 @@ describe('Atom', () => {
     });
 
     it('should not invoke the unsubscribed callback', () => {
-      const signal = new Atom('foo');
+      const signal = new State('foo');
       const callback = vi.fn();
 
       signal.subscribe(callback)();
@@ -363,9 +363,9 @@ describe('Atom', () => {
 describe('Computed', () => {
   describe('.value', () => {
     it('should produce a memoized value by dependent signals', () => {
-      const foo = new Atom(1);
-      const bar = new Atom(2);
-      const baz = new Atom(3);
+      const foo = new State(1);
+      const bar = new State(2);
+      const baz = new State(3);
 
       const signal = new Computed(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
@@ -378,9 +378,9 @@ describe('Computed', () => {
     });
 
     it('should increment the version when any dependent signal has been updated', () => {
-      const foo = new Atom(1);
-      const bar = new Atom(2);
-      const baz = new Atom(3);
+      const foo = new State(1);
+      const bar = new State(2);
+      const baz = new State(3);
 
       const signal = new Computed(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
@@ -409,9 +409,9 @@ describe('Computed', () => {
 
   describe('.subscribe()', () => {
     it('should invoke the callback on update', () => {
-      const foo = new Atom(1);
-      const bar = new Atom(2);
-      const baz = new Atom(3);
+      const foo = new State(1);
+      const bar = new State(2);
+      const baz = new State(3);
       const callback = vi.fn();
 
       const signal = new Computed(
@@ -433,9 +433,9 @@ describe('Computed', () => {
     });
 
     it('should not invoke the unsubscribed callback', () => {
-      const foo = new Atom(1);
-      const bar = new Atom(2);
-      const baz = new Atom(3);
+      const foo = new State(1);
+      const bar = new State(2);
+      const baz = new State(3);
       const callback = vi.fn();
 
       const signal = new Computed(
@@ -461,7 +461,7 @@ describe('Computed', () => {
 describe('Projected', () => {
   describe('.value', () => {
     it('should apply the function to each values', () => {
-      const signal = new Atom(1);
+      const signal = new State(1);
       const projectedSignal = signal.map((n) => n * 2);
 
       expect(projectedSignal.value).toBe(2);
@@ -481,7 +481,7 @@ describe('Projected', () => {
 
   describe('.subscribe()', () => {
     it('should invoke the callback on update', () => {
-      const signal = new Atom(1);
+      const signal = new State(1);
       const projectedSignal = signal.map((n) => n * 2);
       const callback = vi.fn();
 
@@ -499,7 +499,7 @@ describe('Projected', () => {
     });
 
     it('should not invoke the unsubscribed callback', () => {
-      const signal = new Atom(1);
+      const signal = new State(1);
       const projectedSignal = signal.map((n) => n * 2);
       const callback = vi.fn();
 

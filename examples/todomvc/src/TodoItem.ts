@@ -1,6 +1,6 @@
 import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
 import {
-  type Atom,
+  type State,
   classMap,
   component,
   ifElse,
@@ -10,7 +10,7 @@ import { TodoInput } from './TodoInput.js';
 import { type Todo, TodoState } from './state.js';
 
 export interface TodoItemProps {
-  todo$: Atom<Todo>;
+  todo$: State<Todo>;
 }
 
 export function TodoItem(

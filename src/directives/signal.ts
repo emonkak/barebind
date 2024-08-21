@@ -137,16 +137,16 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
   }
 }
 
-export class Atom<TValue> extends Signal<TValue> {
+export class State<TValue> extends Signal<TValue> {
   private _value: TValue;
 
   private _version = 0;
 
   private readonly _subscribers = new LinkedList<Subscriber>();
 
-  constructor(initialValue: TValue) {
+  constructor(value: TValue) {
     super();
-    this._value = initialValue;
+    this._value = value;
   }
 
   get value(): TValue {
