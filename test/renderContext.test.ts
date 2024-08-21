@@ -242,6 +242,24 @@ describe('RenderContext', () => {
     });
   });
 
+  describe('.setContextValue()', () => {
+    it('should set a value to the block scope', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      const context = new RenderContext(host, updater, block, hooks, queue);
+      const setScopedValueSpy = vi.spyOn(host, 'setScopedValue');
+
+      context.setContextValue('foo', 123);
+
+      expect(setScopedValueSpy).toHaveBeenCalledOnce();
+      expect(setScopedValueSpy).toHaveBeenCalledWith('foo', 123, block);
+    });
+  });
+
   describe('.svg()', () => {
     it('should return Fragment with an SVG-hormatted TaggedTemplate set as a template', () => {
       const host = new MockUpdateHost();
