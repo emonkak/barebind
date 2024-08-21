@@ -49,9 +49,15 @@ export class RelativeURL {
     return RelativeURL.fromString(value);
   }
 
-  static fromString(urlString: string): RelativeURL {
+  static fromString(
+    urlString: string,
+    base: string | RelativeURL = '',
+  ): RelativeURL {
     // SAFETY: Relative URLs can always be safely initialized.
-    return RelativeURL.fromURL(new URL(urlString, 'file:'));
+    const baseURL =
+      'file://' + (typeof base === 'string' ? base : base.pathname);
+    const url = new URL(urlString, baseURL);
+    return RelativeURL.fromURL(url);
   }
 
   static fromLocation(location: LocationLike) {
@@ -98,6 +104,10 @@ export class RelativeURL {
 
   toString(): string {
     return this._pathname + this.search + this._hash;
+  }
+
+  toURL(): URL {
+    return new URL(this.toString(), 'file:');
   }
 }
 
@@ -335,6 +345,7 @@ export function createBrowserSubmitHandler({
  * @internal
  */
 export function createHashClickHandler({
+  getCurrentURL,
   navigate,
 }: LocationActions): (event: MouseEvent) => void {
   return (event) => {
@@ -356,7 +367,8 @@ export function createHashClickHandler({
 
     event.preventDefault();
 
-    const url = RelativeURL.fromString(decodeHash(element.hash));
+    const base = getCurrentURL();
+    const url = RelativeURL.fromString(decodeHash(element.hash), base);
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.hash === location.hash;

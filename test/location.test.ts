@@ -40,6 +40,7 @@ describe('RelativeURL', () => {
         expect(url.hash).toBe('#baz');
         expect(url.toString()).toBe('/foo?bar=123#baz');
         expect(url.toJSON()).toBe('/foo?bar=123#baz');
+        expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
       },
     );
   });
@@ -53,7 +54,22 @@ describe('RelativeURL', () => {
       expect(url.hash).toBe('#baz');
       expect(url.toString()).toBe('/foo?bar=123#baz');
       expect(url.toJSON()).toBe('/foo?bar=123#baz');
+      expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
     });
+
+    it.each([['/foo'], [new RelativeURL('/foo')]])(
+      'should construct a new RelativeURL from the String with base URL',
+      (base) => {
+        const url = RelativeURL.fromString('?bar=123#baz', base);
+        expect(url.pathname).toBe('/foo');
+        expect(url.search).toBe('?bar=123');
+        expect(url.searchParams.toString()).toBe('bar=123');
+        expect(url.hash).toBe('#baz');
+        expect(url.toString()).toBe('/foo?bar=123#baz');
+        expect(url.toJSON()).toBe('/foo?bar=123#baz');
+        expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
+      },
+    );
   });
 
   describe('.fromURL()', () => {
@@ -65,6 +81,7 @@ describe('RelativeURL', () => {
       expect(url.hash).toBe('#baz');
       expect(url.toString()).toBe('/foo?bar=123#baz');
       expect(url.toJSON()).toBe('/foo?bar=123#baz');
+      expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
     });
   });
 
@@ -981,7 +998,7 @@ describe('createHashClickHandler', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => new RelativeURL('/'));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
       createHashClickHandler({ getCurrentURL, navigate }),
@@ -1008,7 +1025,7 @@ describe('createHashClickHandler', () => {
   it('should replace the URL with a new one if the element has "data-link-replace" attribute', () => {
     const container = createElement('div');
     const element = createElement('a', {
-      href: '#/foo?bar=123#baz',
+      href: '#?bar=123#baz',
       'data-link-replace': '',
       'data-link-no-scroll-reset': '',
     });
@@ -1019,7 +1036,7 @@ describe('createHashClickHandler', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => new RelativeURL('/foo'));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
       createHashClickHandler({ getCurrentURL, navigate }),
@@ -1055,7 +1072,7 @@ describe('createHashClickHandler', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => new RelativeURL('/'));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
       createHashClickHandler({ getCurrentURL, navigate }),
@@ -1095,7 +1112,7 @@ describe('createHashClickHandler', () => {
 
       const getCurrentURL = vi
         .fn()
-        .mockImplementation(() => RelativeURL.fromLocation(location));
+        .mockImplementation(() => new RelativeURL('/'));
       const navigate = vi.fn();
       const linkClickHandler = vi.fn(
         createHashClickHandler({ getCurrentURL, navigate }),
@@ -1119,7 +1136,7 @@ describe('createHashClickHandler', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => new RelativeURL('/'));
     const navigate = vi.fn();
     const linkClickHandler = vi.fn(
       createHashClickHandler({ getCurrentURL, navigate }),
@@ -1155,7 +1172,7 @@ describe('createHashClickHandler', () => {
 
       const getCurrentURL = vi
         .fn()
-        .mockImplementation(() => RelativeURL.fromLocation(location));
+        .mockImplementation(() => new RelativeURL('/'));
       const navigate = vi.fn();
       const linkClickHandler = vi.fn(
         createHashClickHandler({ getCurrentURL, navigate }),
