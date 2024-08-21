@@ -88,10 +88,11 @@ describe('RelativeURL', () => {
 describe('browserLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
-  const hooks: Hook[] = [];
+  let hooks: Hook[] = [];
 
   afterEach(() => {
     cleanHooks(hooks);
+    hooks = [];
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -334,10 +335,11 @@ describe('currentLocation', () => {
 describe('hashLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
-  const hooks: Hook[] = [];
+  let hooks: Hook[] = [];
 
   afterEach(() => {
     cleanHooks(hooks);
+    hooks = [];
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -1272,7 +1274,6 @@ function cleanHooks(hooks: Hook[]): void {
       hook.cleanup?.();
     }
   }
-  hooks.length = 0;
 }
 
 function createElement<const T extends keyof HTMLElementTagNameMap>(

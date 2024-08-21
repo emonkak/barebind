@@ -102,12 +102,15 @@ export class RenderContext {
    * @internal
    */
   finalize(): void {
-    const currentHook = this._hooks[this._hookIndex];
+    const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType<FinalizerHook>(HookType.Finalizer, currentHook);
     } else {
       this._hooks.push({ type: HookType.Finalizer });
+
+      // Refuse to use new hooks after finalization.
+      Object.freeze(this._hooks);
     }
   }
 
@@ -125,6 +128,10 @@ export class RenderContext {
 
   isFirstRender(): boolean {
     return this._hooks.at(-1)?.type !== HookType.Finalizer;
+  }
+
+  isRendering(): boolean {
+    return this._hooks[this._hookIndex - 1]?.type !== HookType.Finalizer;
   }
 
   forceUpdate(priority?: TaskPriority): void {
@@ -181,7 +188,7 @@ export class RenderContext {
   }
 
   useEffect(callback: EffectCallback, dependencies?: unknown[]): void {
-    const currentHook = this._hooks[this._hookIndex];
+    const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(HookType.PassiveEffect, currentHook);
@@ -202,8 +209,6 @@ export class RenderContext {
       this._hooks.push(hook);
       this._queue.passiveEffects.push(new InvokeEffectHook(hook));
     }
-
-    this._hookIndex++;
   }
 
   useEvent<THandler extends (...args: any[]) => any>(
@@ -225,7 +230,7 @@ export class RenderContext {
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType<IdentifierHook>(HookType.Identifier, currentHook);
@@ -237,13 +242,11 @@ export class RenderContext {
       this._hooks.push(currentHook);
     }
 
-    this._hookIndex++;
-
     return ':' + this._host.getHostName() + '-' + currentHook.id + ':';
   }
 
   useLayoutEffect(callback: EffectCallback, dependencies?: unknown[]): void {
-    const currentHook = this._hooks[this._hookIndex];
+    const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(HookType.LayoutEffect, currentHook);
@@ -264,12 +267,10 @@ export class RenderContext {
       this._hooks.push(hook);
       this._queue.layoutEffects.push(new InvokeEffectHook(hook));
     }
-
-    this._hookIndex++;
   }
 
   useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType<MemoHook<TResult>>(HookType.Memo, currentHook);
@@ -287,8 +288,6 @@ export class RenderContext {
       this._hooks.push(currentHook);
     }
 
-    this._hookIndex++;
-
     return currentHook.value;
   }
 
@@ -296,7 +295,7 @@ export class RenderContext {
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
   ): readonly [TState, (action: TAction, priority?: TaskPriority) => void] {
-    let currentHook = this._hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
       ensureHookType<ReducerHook<TState, TAction>>(
@@ -319,8 +318,6 @@ export class RenderContext {
       currentHook = hook;
       this._hooks.push(hook);
     }
-
-    this._hookIndex++;
 
     return [currentHook.state, currentHook.dispatch];
   }

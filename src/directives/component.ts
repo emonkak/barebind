@@ -171,7 +171,7 @@ export class ComponentBinding<TProps, TData, TContext>
         hook.cleanup?.();
       }
     }
-    this._hooks.length = 0;
+    this._hooks = [];
   }
 
   private _triggerRender(

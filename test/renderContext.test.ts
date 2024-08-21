@@ -98,7 +98,7 @@ describe('RenderContext', () => {
         const context = new RenderContext(host, updater, block, hooks, queue);
         context.finalize();
         context.useEffect(() => {});
-      }).toThrow('Unexpected hook type.');
+      }).toThrow('Cannot add property');
     });
 
     it('should throw an error if fewer hooks are used than last time', () => {
@@ -189,11 +189,35 @@ describe('RenderContext', () => {
 
       expect(context.isFirstRender()).toBe(true);
       context.finalize();
+      expect(context.isFirstRender()).toBe(false);
 
       context = new RenderContext(host, updater, block, hooks, queue);
 
       expect(context.isFirstRender()).toBe(false);
       context.finalize();
+      expect(context.isFirstRender()).toBe(false);
+    });
+  });
+
+  describe('.isRendering()', () => {
+    it('should check whether the render is in progress', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      let context = new RenderContext(host, updater, block, hooks, queue);
+
+      expect(context.isRendering()).toBe(true);
+      context.finalize();
+      expect(context.isRendering()).toBe(false);
+
+      context = new RenderContext(host, updater, block, hooks, queue);
+
+      expect(context.isRendering()).toBe(true);
+      context.finalize();
+      expect(context.isRendering()).toBe(false);
     });
   });
 
