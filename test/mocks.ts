@@ -23,11 +23,7 @@ import {
   type UsableObject,
   usableTag,
 } from '../src/renderContext.js';
-import type {
-  RequestCallbackOptions,
-  Scheduler,
-  YieldToMainOptions,
-} from '../src/scheduler.js';
+import type { RequestCallbackOptions, Scheduler } from '../src/scheduler.js';
 
 export class MockBlock<TContext> implements Block<TContext> {
   private _parent: Block<TContext> | null;
@@ -82,7 +78,7 @@ export class MockScheduler implements Scheduler {
     return false;
   }
 
-  yieldToMain(_options?: YieldToMainOptions): Promise<void> {
+  yieldToMain(): Promise<void> {
     return Promise.resolve();
   }
 }

@@ -51,9 +51,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
               this._scheduler.getCurrentTime() - startTime,
             )
           ) {
-            await this._scheduler.yieldToMain({
-              priority: block.priority,
-            });
+            await this._scheduler.yieldToMain();
             startTime = this._scheduler.getCurrentTime();
           }
 

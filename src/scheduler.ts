@@ -9,7 +9,7 @@ export interface Scheduler {
     options?: RequestCallbackOptions,
   ): void;
   shouldYieldToMain(elapsedTime: number): boolean;
-  yieldToMain(options?: YieldToMainOptions): Promise<void>;
+  yieldToMain(): Promise<void>;
 }
 
 export interface SchedulerOptions {
@@ -20,10 +20,6 @@ export interface SchedulerOptions {
 
 export interface RequestCallbackOptions {
   priority?: TaskPriority;
-}
-
-export interface YieldToMainOptions {
-  priority?: TaskPriority | 'inherit';
 }
 
 export function getDefaultScheduler({
@@ -83,7 +79,7 @@ export function getDefaultScheduler({
   }
 
   if (typeof globalThis.scheduler?.yield === 'function') {
-    yieldToMain = (options) => scheduler.yield(options);
+    yieldToMain = () => scheduler.yield();
   } else {
     yieldToMain = () => new Promise((resolve) => setTimeout(resolve));
   }
