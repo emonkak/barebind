@@ -6,8 +6,6 @@ import {
   nameOf,
 } from './baseTypes.js';
 
-export type NonEmpty<T> = [T, ...T[]];
-
 export const REPORT_MARKER = '[[USED IN HERE!]]';
 
 export function ensureDirective<
