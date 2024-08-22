@@ -119,8 +119,8 @@ export class RenderContext {
     return this._host.getScopedValue(key, this._block);
   }
 
-  html<TData extends ReadonlyArray<any>>(
-    tokens: ReadonlyArray<string>,
+  html<TData extends readonly any[]>(
+    tokens: TemplateStringsArray,
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
     const host = this._host;
@@ -156,8 +156,8 @@ export class RenderContext {
     this._host.setScopedValue(key, value, this._block);
   }
 
-  svg<TData extends ReadonlyArray<any>>(
-    tokens: ReadonlyArray<string>,
+  svg<TData extends readonly any[]>(
+    tokens: TemplateStringsArray,
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
     const host = this._host;

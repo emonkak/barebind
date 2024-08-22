@@ -63,12 +63,12 @@ export interface UpdateRuntime<TContext> {
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
   getHTMLTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
+    tokens: TemplateStringsArray,
     data: TData,
   ): Template<TData>;
   getHostName(): string;
   getSVGTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
+    tokens: TemplateStringsArray,
     data: TData,
   ): Template<TData>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;

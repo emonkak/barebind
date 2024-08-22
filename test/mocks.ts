@@ -168,7 +168,7 @@ export class MockUpdateHost implements UpdateRuntime<RenderContext> {
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
-    _tokens: ReadonlyArray<string>,
+    _tokens: TemplateStringsArray,
     _data: TData,
   ): Template<TData> {
     return new MockTemplate();
@@ -179,7 +179,7 @@ export class MockUpdateHost implements UpdateRuntime<RenderContext> {
   }
 
   getSVGTemplate<TData extends readonly any[]>(
-    _tokens: ReadonlyArray<string>,
+    _tokens: TemplateStringsArray,
     _data: TData,
   ): Template<TData> {
     return new MockTemplate();

@@ -33,7 +33,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
   > = new WeakMap();
 
   private readonly _cachedTemplates: WeakMap<
-    ReadonlyArray<string>,
+    TemplateStringsArray,
     TaggedTemplate<readonly any[]>
   > = new WeakMap();
 
@@ -82,7 +82,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
+    tokens: TemplateStringsArray,
     data: TData,
   ): TaggedTemplate<TData> {
     let template = this._cachedTemplates.get(tokens);
@@ -112,7 +112,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
   }
 
   getSVGTemplate<TData extends readonly any[]>(
-    tokens: ReadonlyArray<string>,
+    tokens: TemplateStringsArray,
     data: TData,
   ): TaggedTemplate<TData> {
     let template = this._cachedTemplates.get(tokens);

@@ -68,11 +68,11 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
   'u',
 );
 
-export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
+export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
   implements Template<TData>
 {
-  static parseHTML<TData extends ReadonlyArray<any>>(
-    tokens: ReadonlyArray<string>,
+  static parseHTML<TData extends readonly any[]>(
+    tokens: readonly string[],
     values: TData,
     marker: string,
   ): TaggedTemplate<TData> {
@@ -85,8 +85,8 @@ export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
     return new TaggedTemplate(template, holes);
   }
 
-  static parseSVG<TData extends ReadonlyArray<any>>(
-    tokens: ReadonlyArray<string>,
+  static parseSVG<TData extends readonly any[]>(
+    tokens: readonly string[],
     values: TData,
     marker: string,
   ): TaggedTemplate<TData> {
@@ -220,7 +220,7 @@ export class TaggedTemplate<TData extends ReadonlyArray<any> = readonly any[]>
   }
 }
 
-export class TaggedTemplateView<TData extends ReadonlyArray<any>>
+export class TaggedTemplateView<TData extends readonly any[]>
   implements TemplateView<TData>
 {
   private readonly _bindings: Binding<unknown>[];
@@ -340,7 +340,7 @@ function extractRealAttributeName(token: string): string | undefined {
 
 function parseAttribtues(
   element: Element,
-  tokens: ReadonlyArray<string>,
+  tokens: readonly string[],
   marker: string,
   holes: Hole[],
   index: number,
@@ -416,8 +416,8 @@ function parseAttribtues(
 
 function parseChildren(
   rootNode: Node,
-  tokens: ReadonlyArray<string>,
-  values: ReadonlyArray<unknown>,
+  tokens: readonly string[],
+  values: readonly unknown[],
   marker: string,
 ): Hole[] {
   const walker = document.createTreeWalker(
