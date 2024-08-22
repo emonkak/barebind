@@ -25,10 +25,14 @@ import {
 import {
   type ElementData,
   ElementTemplate,
-} from './template/elementTemplate.js';
-import { EmptyTemplate } from './template/emptyTemplate.js';
-import { LazyTemplate } from './template/lazyTemplate.js';
-import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
+} from './templates/elementTemplate.js';
+import { EmptyTemplate } from './templates/emptyTemplate.js';
+import { LazyTemplate } from './templates/lazyTemplate.js';
+import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
+import {
+  UnsafeHTMLTemplate,
+  UnsafeSVGTemplate,
+} from './templates/unsafeContentTemplate.js';
 
 export const usableTag = Symbol('Usable');
 
@@ -76,7 +80,6 @@ export class RenderContext {
     this._hooks = hooks;
     this._queue = queue;
   }
-
   childNode<T>(value: T): TemplateResult<T, RenderContext> {
     const template = ChildNodeTemplate.instance;
     return new TemplateResult(template, value);
@@ -171,6 +174,16 @@ export class RenderContext {
   text<T>(value: T): TemplateResult<T, RenderContext> {
     const template = TextTemplate.instance;
     return new TemplateResult(template, value);
+  }
+
+  unsafeHTML(content: string): LazyTemplateResult<null, RenderContext> {
+    const template = new UnsafeHTMLTemplate(content);
+    return new LazyTemplateResult(template, null);
+  }
+
+  unsafeSVG(content: string): LazyTemplateResult<null, RenderContext> {
+    const template = new UnsafeSVGTemplate(content);
+    return new LazyTemplateResult(template, null);
   }
 
   use<TResult>(usable: Usable<TResult, RenderContext>): TResult {

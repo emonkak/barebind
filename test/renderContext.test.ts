@@ -2,13 +2,17 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
-import { ElementTemplate } from '../src/template/elementTemplate.js';
-import { EmptyTemplate } from '../src/template/emptyTemplate.js';
-import { LazyTemplate } from '../src/template/lazyTemplate.js';
+import { ElementTemplate } from '../src/templates/elementTemplate.js';
+import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
+import { LazyTemplate } from '../src/templates/lazyTemplate.js';
 import {
   ChildNodeTemplate,
   TextTemplate,
-} from '../src/template/singleTemplate.js';
+} from '../src/templates/singleTemplate.js';
+import {
+  UnsafeHTMLTemplate,
+  UnsafeSVGTemplate,
+} from '../src/templates/unsafeContentTemplate.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -19,7 +23,7 @@ import {
 
 describe('RenderContext', () => {
   describe('.childNode()', () => {
-    it('should return Fragment with ChildNodeTemplate set as a template', () => {
+    it('should return a TemplateResult with ChildNodeTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -35,7 +39,7 @@ describe('RenderContext', () => {
   });
 
   describe('.element()', () => {
-    it('should return Fragment with ElementTemplate set as a template', () => {
+    it('should return a TemplateResult with ElementTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -54,7 +58,7 @@ describe('RenderContext', () => {
   });
 
   describe('.empty()', () => {
-    it('should return Fragment with EmptyTemplate set as a template', () => {
+    it('should return a TemplateResult with EmptyTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -135,6 +139,51 @@ describe('RenderContext', () => {
         const context = new RenderContext(host, updater, block, hooks, queue);
         context.useEffect(() => {});
       }).toThrow('Unexpected hook type.');
+    });
+  });
+
+  describe('.forceUpdate()', () => {
+    it('should request update with the given priority', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      let context = new RenderContext(host, updater, block, hooks, queue);
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+
+      context = new RenderContext(host, updater, block, hooks, queue);
+      context.forceUpdate('background');
+
+      expect(requestUpdateSpy).toHaveBeenCalledOnce();
+      expect(requestUpdateSpy).toHaveBeenCalledWith(
+        'background',
+        expect.objectContaining({ host, updater, block, queue }),
+      );
+    });
+
+    it('should request update with the host priority', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      const context = new RenderContext(host, updater, block, hooks, queue);
+      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
+      const getCurrentPrioritySpy = vi
+        .spyOn(host, 'getCurrentPriority')
+        .mockReturnValue('user-blocking');
+
+      context.forceUpdate();
+
+      expect(requestUpdateSpy).toHaveBeenCalledOnce();
+      expect(requestUpdateSpy).toHaveBeenCalledWith(
+        'user-blocking',
+        expect.objectContaining({ host, updater, block, queue }),
+      );
+      expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
     });
   });
 
@@ -227,51 +276,6 @@ describe('RenderContext', () => {
     });
   });
 
-  describe('.forceUpdate()', () => {
-    it('should request update with the given priority', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
-
-      let context = new RenderContext(host, updater, block, hooks, queue);
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-
-      context = new RenderContext(host, updater, block, hooks, queue);
-      context.forceUpdate('background');
-
-      expect(requestUpdateSpy).toHaveBeenCalledOnce();
-      expect(requestUpdateSpy).toHaveBeenCalledWith(
-        'background',
-        expect.objectContaining({ host, updater, block, queue }),
-      );
-    });
-
-    it('should request update with the host priority', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
-
-      const context = new RenderContext(host, updater, block, hooks, queue);
-      const requestUpdateSpy = vi.spyOn(block, 'requestUpdate');
-      const getCurrentPrioritySpy = vi
-        .spyOn(host, 'getCurrentPriority')
-        .mockReturnValue('user-blocking');
-
-      context.forceUpdate();
-
-      expect(requestUpdateSpy).toHaveBeenCalledOnce();
-      expect(requestUpdateSpy).toHaveBeenCalledWith(
-        'user-blocking',
-        expect.objectContaining({ host, updater, block, queue }),
-      );
-      expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
-    });
-  });
-
   describe('.setContextValue()', () => {
     it('should set a value to the block scope', () => {
       const host = new MockUpdateHost();
@@ -317,7 +321,7 @@ describe('RenderContext', () => {
   });
 
   describe('.text()', () => {
-    it('should return FragmenFragment TextTemplate set as a template', () => {
+    it('should return a TemplateResult with TextTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -327,8 +331,44 @@ describe('RenderContext', () => {
       const context = new RenderContext(host, updater, block, hooks, queue);
       const value = context.text('foo');
 
-      expect(value.template).toBeInstanceOf(TextTemplate);
+      expect(value.template).toBe(TextTemplate.instance);
       expect(value.data).toEqual('foo');
+    });
+  });
+
+  describe('.unsafeHTML()', () => {
+    it('should return a LazyTemplateResult with UnsafeHTMLTemplate', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      const context = new RenderContext(host, updater, block, hooks, queue);
+      const content = '<div>foo</div>';
+      const value = context.unsafeHTML(content);
+
+      expect(value.template).toBeInstanceOf(UnsafeHTMLTemplate);
+      expect((value.template as UnsafeHTMLTemplate).content).toBe(content);
+      expect(value.data).toEqual(null);
+    });
+  });
+
+  describe('.unsafeSVG()', () => {
+    it('should return a LazyTemplateResult with UnsafeSVGTemplate', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      const context = new RenderContext(host, updater, block, hooks, queue);
+      const content = '<text>foo</text>';
+      const value = context.unsafeSVG(content);
+
+      expect(value.template).toBeInstanceOf(UnsafeSVGTemplate);
+      expect((value.template as UnsafeSVGTemplate).content).toBe(content);
+      expect(value.data).toEqual(null);
     });
   });
 

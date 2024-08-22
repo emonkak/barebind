@@ -6,7 +6,7 @@ import {
   ChildNodeTemplate,
   SingleTemplateView,
   TextTemplate,
-} from '../../src/template/singleTemplate.js';
+} from '../../src/templates/singleTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '../mocks.js';
 

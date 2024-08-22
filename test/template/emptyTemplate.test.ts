@@ -4,7 +4,7 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import {
   EmptyTemplate,
   EmptyTemplateView,
-} from '../../src/template/emptyTemplate.js';
+} from '../../src/templates/emptyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockUpdateHost } from '../mocks.js';
 

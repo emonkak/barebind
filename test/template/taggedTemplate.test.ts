@@ -19,7 +19,7 @@ import {
   TaggedTemplateView,
   getMarker,
   isValidMarker,
-} from '../../src/template/taggedTemplate.js';
+} from '../../src/templates/taggedTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
