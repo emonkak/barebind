@@ -70,7 +70,7 @@ export class List<TItem, TKey, TValue>
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext,
+    _context: DirectiveContext<unknown>,
   ): ListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(

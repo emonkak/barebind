@@ -17,7 +17,10 @@ export class NoValue implements Directive<NoValue> {
     }
   }
 
-  [directiveTag](part: Part, _context: DirectiveContext): NoValueBinding {
+  [directiveTag](
+    part: Part,
+    _context: DirectiveContext<unknown>,
+  ): NoValueBinding {
     return new NoValueBinding(part);
   }
 }

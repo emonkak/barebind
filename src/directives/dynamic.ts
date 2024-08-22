@@ -31,7 +31,10 @@ export class Dynamic implements Directive<Dynamic> {
     return 'Dynamic(' + nameOf(this._value) + ')';
   }
 
-  [directiveTag](part: Part, context: DirectiveContext): DynamicBinding {
+  [directiveTag](
+    part: Part,
+    context: DirectiveContext<unknown>,
+  ): DynamicBinding {
     return new DynamicBinding(this, part, context);
   }
 }
@@ -41,7 +44,7 @@ export class DynamicBinding implements Binding<unknown> {
 
   private _binding: Binding<any>;
 
-  constructor(value: Dynamic, part: Part, context: DirectiveContext) {
+  constructor(value: Dynamic, part: Part, context: DirectiveContext<unknown>) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);
   }

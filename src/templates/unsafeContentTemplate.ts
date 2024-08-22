@@ -1,5 +1,6 @@
 import type {
   ChildNodePart,
+  DirectiveContext,
   Template,
   TemplateView,
   UpdateContext,
@@ -18,7 +19,7 @@ export class UnsafeHTMLTemplate implements Template<null> {
 
   render(
     _data: null,
-    _context: UpdateContext<unknown>,
+    _context: DirectiveContext<unknown>,
   ): UnsafeContentTemplateView {
     const template = document.createElement('template');
     template.innerHTML = this._content;
@@ -46,7 +47,7 @@ export class UnsafeSVGTemplate implements Template<null> {
 
   render(
     _data: null,
-    _context: UpdateContext<unknown>,
+    _context: DirectiveContext<unknown>,
   ): UnsafeContentTemplateView {
     const template = document.createElement('template');
     template.innerHTML = '<svg>' + this._content + '</svg>';

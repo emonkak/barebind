@@ -1,6 +1,7 @@
 import {
   type Binding,
   type ChildNodePart,
+  type DirectiveContext,
   PartType,
   type Template,
   type TemplateView,
@@ -18,7 +19,7 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: UpdateContext<unknown>): SingleTemplateView<T> {
+  render(data: T, context: DirectiveContext<unknown>): SingleTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
@@ -41,7 +42,7 @@ export class ValueTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: UpdateContext<unknown>): SingleTemplateView<T> {
+  render(data: T, context: DirectiveContext<unknown>): SingleTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),

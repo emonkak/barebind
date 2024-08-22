@@ -1,6 +1,7 @@
 import {
   type Binding,
   type ChildNodePart,
+  type DirectiveContext,
   type Part,
   PartType,
   type Template,
@@ -121,7 +122,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
 
   render(
     data: TData,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext<unknown>,
   ): TaggedTemplateView<TData> {
     const holes = this._holes;
 

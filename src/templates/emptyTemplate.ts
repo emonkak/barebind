@@ -1,5 +1,6 @@
 import type {
   ChildNodePart,
+  DirectiveContext,
   Template,
   TemplateView,
   UpdateContext,
@@ -14,7 +15,7 @@ export class EmptyTemplate implements Template<null> {
     }
   }
 
-  render(_data: null, _context: UpdateContext<unknown>): EmptyTemplateView {
+  render(_data: null, _context: DirectiveContext<unknown>): EmptyTemplateView {
     return new EmptyTemplateView();
   }
 

@@ -42,7 +42,7 @@ export class Keyed<TKey, TValue> implements Directive<Keyed<TKey, TValue>> {
 
   [directiveTag](
     part: Part,
-    context: DirectiveContext,
+    context: DirectiveContext<unknown>,
   ): KeyedBinding<TKey, TValue> {
     return new KeyedBinding(this, part, context);
   }
@@ -58,7 +58,7 @@ export class KeyedBinding<TKey, TValue>
   constructor(
     value: Keyed<TKey, TValue>,
     part: Part,
-    context: DirectiveContext,
+    context: DirectiveContext<unknown>,
   ) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);

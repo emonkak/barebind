@@ -53,7 +53,7 @@ export class Component<TProps, TData, TContext>
 
   [directiveTag](
     part: Part,
-    context: DirectiveContext,
+    context: DirectiveContext<unknown>,
   ): Root<Component<TProps, TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(

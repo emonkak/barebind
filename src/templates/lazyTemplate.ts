@@ -1,4 +1,4 @@
-import type { Template, TemplateView, UpdateContext } from '../baseTypes.js';
+import type { DirectiveContext, Template, TemplateView } from '../baseTypes.js';
 
 export class LazyTemplate<TKey, TData, TContext>
   implements Template<TData, TContext>
@@ -22,7 +22,7 @@ export class LazyTemplate<TKey, TData, TContext>
 
   render(
     data: TData,
-    context: UpdateContext<TContext>,
+    context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext> {
     const templateFactory = this._templateFactory;
     return templateFactory().render(data, context);

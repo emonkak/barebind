@@ -23,7 +23,7 @@ export interface Directive<TThis, TContext = unknown> {
   ): Binding<TThis, TContext>;
 }
 
-export interface DirectiveContext<TContext = unknown> {
+export interface DirectiveContext<TContext> {
   get block(): Block<TContext> | null;
 }
 
@@ -92,7 +92,7 @@ export interface Updater<TContext> {
 export interface Template<TData, TContext = unknown> {
   render(
     data: TData,
-    context: UpdateContext<TContext>,
+    context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext>;
   isSameTemplate(other: Template<TData, TContext>): boolean;
 }
@@ -234,7 +234,7 @@ export interface RefObject<T> {
   current: T;
 }
 
-export class UpdateContext<TContext> {
+export class UpdateContext<TContext = unknown> {
   private _host: UpdateRuntime<TContext>;
 
   private _updater: Updater<TContext>;

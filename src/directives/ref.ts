@@ -32,7 +32,7 @@ export class Ref implements Directive<Ref> {
     return this._ref;
   }
 
-  [directiveTag](part: Part, _contex: DirectiveContext): RefBinding {
+  [directiveTag](part: Part, _contex: DirectiveContext<unknown>): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +

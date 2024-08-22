@@ -1,6 +1,7 @@
 import {
   type Binding,
   type ChildNodePart,
+  type DirectiveContext,
   PartType,
   type Template,
   type TemplateView,
@@ -25,7 +26,7 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
 
   render(
     data: ElementData<TElementValue, TChildNodeValue>,
-    context: UpdateContext<unknown>,
+    context: DirectiveContext<unknown>,
   ): ElementTemplateView<TElementValue, TChildNodeValue> {
     const elementPart = {
       type: PartType.Element,

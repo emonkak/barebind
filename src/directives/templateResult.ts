@@ -39,7 +39,7 @@ export abstract class AbstractTemplateResult<TData, TContext>
 
   abstract [directiveTag](
     part: Part,
-    _context: DirectiveContext,
+    _context: DirectiveContext<unknown>,
   ): Binding<AbstractTemplateResult<TData, TContext>, TContext>;
 }
 
@@ -53,7 +53,7 @@ export class TemplateResult<TData, TContext> extends AbstractTemplateResult<
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext,
+    _context: DirectiveContext<unknown>,
   ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
