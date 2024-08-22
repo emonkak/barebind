@@ -108,11 +108,8 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
         if (content !== '') {
           const template = document.createElement('template');
           const reference = this._part.node;
-
           template.innerHTML = '<svg>' + content + '</svg>';
-
           this._childNodes = [...template.content.firstChild!.childNodes];
-
           reference.before(...this._childNodes);
         } else {
           this._childNodes = [];
@@ -125,7 +122,6 @@ export class UnsafeSVGBinding implements Binding<UnsafeSVG> {
         for (let i = 0, l = this._childNodes.length; i < l; i++) {
           this._childNodes[i]!.remove();
         }
-
         this._childNodes = [];
         this._memoizedContent = '';
       }

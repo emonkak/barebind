@@ -108,11 +108,8 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
         if (content !== '') {
           const template = document.createElement('template');
           const reference = this._part.node;
-
           template.innerHTML = content;
-
           this._childNodes = [...template.content.childNodes];
-
           reference.before(template.content);
         } else {
           this._childNodes = [];
@@ -125,7 +122,6 @@ export class UnsafeHTMLBinding implements Binding<UnsafeHTML> {
         for (let i = 0, l = this._childNodes.length; i < l; i++) {
           this._childNodes[i]!.remove();
         }
-
         this._childNodes = [];
         this._memoizedContent = '';
       }
