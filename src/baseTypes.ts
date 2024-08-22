@@ -263,7 +263,7 @@ export class UpdateContext<TContext> {
     return this._updater;
   }
 
-  get block(): Block<TContext> | null {
+  get block(): Block<TContext> {
     return this._block;
   }
 
