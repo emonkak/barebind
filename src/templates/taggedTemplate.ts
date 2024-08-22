@@ -334,7 +334,7 @@ function ensureValidMarker(marker: string): void {
   }
 }
 
-function extractRealAttributeName(token: string): string | undefined {
+function extractCaseSensitiveAttributeName(token: string): string | undefined {
   return ATTRIBUTE_NAME_REGEXP.exec(token)?.[1];
 }
 
@@ -359,33 +359,35 @@ function parseAttribtues(
         index,
       });
     } else if (value === marker) {
-      const realName = extractRealAttributeName(tokens[holes.length]!);
+      const caseSensitiveName = extractCaseSensitiveAttributeName(
+        tokens[holes.length]!,
+      );
 
       DEBUG: {
-        if (realName?.toLowerCase() !== name) {
+        if (caseSensitiveName?.toLowerCase() !== name) {
           throw new Error(
-            `The real attribute name must be "${name}", but got "${realName}". The attribute may be duplicated.`,
+            `The attribute name must be "${name}", but got "${caseSensitiveName}". The attribute may be duplicated.`,
           );
         }
       }
 
-      if (realName.length > 1 && realName[0] === '@') {
+      if (caseSensitiveName.length > 1 && caseSensitiveName[0] === '@') {
         holes.push({
           type: PartType.Event,
           index,
-          name: realName.slice(1),
+          name: caseSensitiveName.slice(1),
         });
-      } else if (realName.length > 1 && realName[0] === '.') {
+      } else if (caseSensitiveName.length > 1 && caseSensitiveName[0] === '.') {
         holes.push({
           type: PartType.Property,
           index,
-          name: realName.slice(1),
+          name: caseSensitiveName.slice(1),
         });
       } else {
         holes.push({
           type: PartType.Attribute,
           index,
-          name: realName,
+          name: caseSensitiveName,
         });
       }
     } else {

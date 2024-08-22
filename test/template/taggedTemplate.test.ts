@@ -298,7 +298,7 @@ describe('TaggedTemplate', () => {
         html`
           <div class="foo" class=${0} id=${1}></div>
         `;
-      }).toThrow(`The real attribute name must be "id", but got "class".`);
+      }).toThrow(`The attribute name must be "id", but got "class".`);
     });
   });
 
