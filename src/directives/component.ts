@@ -7,13 +7,13 @@ import {
   type DirectiveContext,
   type Effect,
   type Hook,
-  HookType,
   type Part,
   PartType,
   type Template,
   type TemplateView,
   type UpdateContext,
   directiveTag,
+  isEffectHook,
   nameOf,
   nameTag,
 } from '../baseTypes.js';
@@ -162,12 +162,10 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   private _cleanHooks(): void {
-    for (let i = 0, l = this._hooks.length; i < l; i++) {
+    // Clean hooks in reverse order.
+    for (let i = this._hooks.length - 1; i >= 0; i--) {
       const hook = this._hooks[i]!;
-      if (
-        hook.type === HookType.PassiveEffect ||
-        hook.type === HookType.LayoutEffect
-      ) {
+      if (isEffectHook(hook)) {
         hook.cleanup?.();
       }
     }

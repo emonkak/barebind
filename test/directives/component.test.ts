@@ -740,6 +740,9 @@ describe('ComponentBinding', () => {
 
       expect(cleanup1Fn).toHaveBeenCalledOnce();
       expect(cleanup2Fn).toHaveBeenCalledOnce();
+      expect(cleanup1Fn.mock.invocationCallOrder[0]!).toBeGreaterThan(
+        cleanup2Fn.mock.invocationCallOrder[0]!,
+      );
     });
 
     it('should cancel mounting', () => {

@@ -497,17 +497,24 @@ describe('RenderContext', () => {
       const effectFn = vi.fn().mockReturnValue(cleanupFn);
 
       context.useEffect(effectFn);
-
+      expect(hooks).toStrictEqual([
+        {
+          type: HookType.PassiveEffect,
+          callback: effectFn,
+          cleanup: undefined,
+          dependencies: undefined,
+        },
+      ]);
       expect(queue.passiveEffects).toHaveLength(1);
+
       updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledTimes(1);
       expect(cleanupFn).not.toHaveBeenCalled();
 
       context = new RenderContext(host, updater, block, hooks, queue);
-
       context.useEffect(effectFn);
-
       expect(queue.passiveEffects).toHaveLength(1);
+
       updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledTimes(2);
       expect(cleanupFn).toHaveBeenCalledOnce();
@@ -524,16 +531,23 @@ describe('RenderContext', () => {
       const effectFn = vi.fn();
 
       context.useEffect(effectFn, []);
-
+      expect(hooks).toStrictEqual([
+        {
+          type: HookType.PassiveEffect,
+          callback: effectFn,
+          cleanup: undefined,
+          dependencies: [],
+        },
+      ]);
       expect(queue.passiveEffects).toHaveLength(1);
+
       updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledOnce();
 
       context = new RenderContext(host, updater, block, hooks, queue);
-
       context.useEffect(effectFn, []);
-
       expect(queue.passiveEffects).toHaveLength(0);
+
       updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledOnce();
     });
@@ -561,6 +575,75 @@ describe('RenderContext', () => {
     });
   });
 
+  describe('.useInsertionEffect()', () => {
+    it('should perform a cleanup function when a new effect is enqueued', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      let context = new RenderContext(host, updater, block, hooks, queue);
+      const cleanupFn = vi.fn();
+      const effectFn = vi.fn().mockReturnValue(cleanupFn);
+
+      context.useInsertionEffect(effectFn);
+      expect(hooks).toStrictEqual([
+        {
+          type: HookType.InsertionEffect,
+          callback: effectFn,
+          cleanup: undefined,
+          dependencies: undefined,
+        },
+      ]);
+      expect(queue.mutationEffects).toHaveLength(1);
+
+      updater.flushUpdate(queue, host);
+      expect(effectFn).toHaveBeenCalledTimes(1);
+      expect(cleanupFn).not.toHaveBeenCalled();
+
+      context = new RenderContext(host, updater, block, hooks, queue);
+      context.useInsertionEffect(effectFn);
+      expect(queue.mutationEffects).toHaveLength(1);
+
+      updater.flushUpdate(queue, host);
+      expect(effectFn).toHaveBeenCalledTimes(2);
+      expect(cleanupFn).toHaveBeenCalledOnce();
+    });
+
+    it('should not perform an effect function if dependencies are not changed', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      let context = new RenderContext(host, updater, block, hooks, queue);
+      const effectFn = vi.fn();
+
+      context.useInsertionEffect(effectFn, []);
+      expect(hooks).toStrictEqual([
+        {
+          type: HookType.InsertionEffect,
+          callback: effectFn,
+          cleanup: undefined,
+          dependencies: [],
+        },
+      ]);
+      expect(queue.mutationEffects).toHaveLength(1);
+
+      updater.flushUpdate(queue, host);
+      expect(effectFn).toHaveBeenCalledOnce();
+
+      context = new RenderContext(host, updater, block, hooks, queue);
+      context.useInsertionEffect(effectFn, []);
+      expect(queue.mutationEffects).toHaveLength(0);
+
+      updater.flushUpdate(queue, host);
+      expect(effectFn).toHaveBeenCalledOnce();
+    });
+  });
+
   describe('.useLayoutEffect()', () => {
     it('should perform a cleanup function when a new effect is enqueued', () => {
       const host = new MockUpdateHost();
@@ -574,18 +657,25 @@ describe('RenderContext', () => {
       const effectFn = vi.fn().mockReturnValue(cleanupFn);
 
       context.useLayoutEffect(effectFn);
+      expect(hooks).toStrictEqual([
+        {
+          type: HookType.LayoutEffect,
+          callback: effectFn,
+          cleanup: undefined,
+          dependencies: undefined,
+        },
+      ]);
       expect(queue.layoutEffects).toHaveLength(1);
-      updater.flushUpdate(queue, host);
 
+      updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledTimes(1);
       expect(cleanupFn).not.toHaveBeenCalled();
 
       context = new RenderContext(host, updater, block, hooks, queue);
-
       context.useLayoutEffect(effectFn);
       expect(queue.layoutEffects).toHaveLength(1);
-      updater.flushUpdate(queue, host);
 
+      updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledTimes(2);
       expect(cleanupFn).toHaveBeenCalledOnce();
     });
@@ -601,17 +691,25 @@ describe('RenderContext', () => {
       const effectFn = vi.fn();
 
       context.useLayoutEffect(effectFn, []);
-      expect(queue.layoutEffects).toHaveLength(1);
-      updater.flushUpdate(queue, host);
 
+      expect(hooks).toStrictEqual([
+        {
+          type: HookType.LayoutEffect,
+          callback: effectFn,
+          cleanup: undefined,
+          dependencies: [],
+        },
+      ]);
+      expect(queue.layoutEffects).toHaveLength(1);
+
+      updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledOnce();
 
       context = new RenderContext(host, updater, block, hooks, queue);
-
       context.useLayoutEffect(effectFn, []);
       expect(queue.layoutEffects).toHaveLength(0);
-      updater.flushUpdate(queue, host);
 
+      updater.flushUpdate(queue, host);
       expect(effectFn).toHaveBeenCalledOnce();
     });
   });

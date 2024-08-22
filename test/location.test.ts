@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
+import {
+  type Hook,
+  createUpdateQueue,
+  isEffectHook,
+} from '../src/baseTypes.js';
 import {
   LocationType,
   RelativeURL,
@@ -1282,12 +1286,9 @@ describe('resetScrollPosition', () => {
 });
 
 function cleanHooks(hooks: Hook[]): void {
-  for (let i = 0, l = hooks.length; i < l; i++) {
+  for (let i = hooks.length - 1; i >= 0; i--) {
     const hook = hooks[i]!;
-    if (
-      hook.type === HookType.PassiveEffect ||
-      hook.type === HookType.LayoutEffect
-    ) {
+    if (isEffectHook(hook)) {
       hook.cleanup?.();
     }
   }

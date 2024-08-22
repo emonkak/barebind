@@ -2,11 +2,11 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   type Hook,
-  HookType,
   PartType,
   UpdateContext,
   createUpdateQueue,
   directiveTag,
+  isEffectHook,
   nameTag,
 } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
@@ -519,9 +519,9 @@ describe('Projected', () => {
 });
 
 function cleanHooks(hooks: Hook[]): void {
-  for (let i = 0, l = hooks.length; i < l; i++) {
+  for (let i = hooks.length - 1; i >= 0; i--) {
     const hook = hooks[i]!;
-    if (hook.type === HookType.PassiveEffect) {
+    if (isEffectHook(hook)) {
       hook.cleanup?.();
     }
   }

@@ -9,14 +9,18 @@ import {
   HookType,
   type IdentifierHook,
   type MemoHook,
+  PartType,
   type ReducerHook,
   type RefObject,
   type TaskPriority,
+  type TemplateDirective,
+  type TemplateView,
   UpdateContext,
   type UpdateQueue,
   type UpdateRuntime,
   type Updater,
 } from './baseTypes.js';
+import { resolveBinding } from './binding.js';
 import { dependenciesAreChanged } from './compare.js';
 import {
   LazyTemplateResult,
@@ -248,6 +252,30 @@ export class RenderContext {
     }
 
     return ':' + this._host.getHostName() + '-' + currentHook.id + ':';
+  }
+
+  useInsertionEffect(callback: EffectCallback, dependencies?: unknown[]): void {
+    const currentHook = this._hooks[this._hookIndex++];
+
+    if (currentHook !== undefined) {
+      ensureHookType<EffectHook>(HookType.InsertionEffect, currentHook);
+
+      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
+        this._queue.mutationEffects.push(new InvokeEffectHook(currentHook));
+      }
+
+      currentHook.callback = callback;
+      currentHook.dependencies = dependencies;
+    } else {
+      const hook: EffectHook = {
+        type: HookType.InsertionEffect,
+        callback,
+        dependencies,
+        cleanup: undefined,
+      };
+      this._hooks.push(hook);
+      this._queue.mutationEffects.push(new InvokeEffectHook(hook));
+    }
   }
 
   useLayoutEffect(callback: EffectCallback, dependencies?: unknown[]): void {

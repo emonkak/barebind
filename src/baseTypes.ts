@@ -188,6 +188,7 @@ export type Hook =
   | FinalizerHook;
 
 export enum HookType {
+  InsertionEffect,
   LayoutEffect,
   PassiveEffect,
   Identifier,
@@ -197,7 +198,10 @@ export enum HookType {
 }
 
 export interface EffectHook {
-  type: HookType.LayoutEffect | HookType.PassiveEffect;
+  type:
+    | HookType.InsertionEffect
+    | HookType.LayoutEffect
+    | HookType.PassiveEffect;
   callback: EffectCallback;
   cleanup: Cleanup | void;
   dependencies: unknown[] | undefined;
@@ -342,6 +346,14 @@ export function isDirective<TValue>(
   value: TValue,
 ): value is TValue & Directive<TValue> {
   return value !== null && typeof value === 'object' && directiveTag in value;
+}
+
+export function isEffectHook(hook: Hook): hook is EffectHook {
+  return (
+    hook.type === HookType.InsertionEffect ||
+    hook.type === HookType.LayoutEffect ||
+    hook.type === HookType.PassiveEffect
+  );
 }
 
 export function nameOf(value: unknown): string {
