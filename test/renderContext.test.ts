@@ -488,37 +488,6 @@ describe('RenderContext', () => {
     });
   });
 
-  describe('.useEvent()', () => {
-    it('should always return a stable function', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
-
-      let context = new RenderContext(host, updater, block, hooks, queue);
-      const handler1 = vi.fn();
-      const handler2 = vi.fn();
-
-      const eventHandler1 = context.useEvent(handler1);
-      updater.flushUpdate(queue, host);
-      eventHandler1();
-
-      expect(handler1).toHaveBeenCalledOnce();
-      expect(handler2).not.toHaveBeenCalled();
-
-      context = new RenderContext(host, updater, block, hooks, queue);
-
-      const eventHandler2 = context.useEvent(handler2);
-      updater.flushUpdate(queue, host);
-      eventHandler2();
-
-      expect(eventHandler2).toBe(eventHandler1);
-      expect(handler1).toHaveBeenCalledOnce();
-      expect(handler2).toHaveBeenCalledOnce();
-    });
-  });
-
   describe('.useId()', () => {
     it('should return a unique identifier', () => {
       const host = new MockUpdateHost();

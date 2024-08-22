@@ -211,24 +211,6 @@ export class RenderContext {
     }
   }
 
-  useEvent<THandler extends (...args: any[]) => any>(
-    handler: THandler,
-  ): (...args: Parameters<THandler>) => ReturnType<THandler> {
-    const handlerRef = this.useRef<THandler | null>(null);
-
-    this.useLayoutEffect(() => {
-      handlerRef.current = handler;
-    }, [handler]);
-
-    return this.useCallback(function (
-      this: ThisType<THandler>,
-      ...args: Parameters<THandler>
-    ) {
-      const currentHandler = handlerRef.current!;
-      return currentHandler.call(this, args);
-    }, []);
-  }
-
   useId(): string {
     let currentHook = this._hooks[this._hookIndex++];
 
