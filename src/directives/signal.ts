@@ -64,79 +64,6 @@ export abstract class Signal<TValue>
   }
 }
 
-export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
-  private _signal: Signal<TValue>;
-
-  private readonly _binding: Binding<TValue>;
-
-  private _subscription: Subscription | null = null;
-
-  constructor(signal: Signal<TValue>, part: Part, context: DirectiveContext) {
-    this._signal = signal;
-    this._binding = resolveBinding(signal.value, part, context);
-  }
-
-  get value(): Signal<TValue> {
-    return this._signal;
-  }
-
-  get part(): Part {
-    return this._binding.part;
-  }
-
-  get startNode(): ChildNode {
-    return this._binding.startNode;
-  }
-
-  get endNode(): ChildNode {
-    return this._binding.endNode;
-  }
-
-  get binding(): Binding<TValue> {
-    return this._binding;
-  }
-
-  connect(context: UpdateContext<unknown>): void {
-    this._binding.connect(context);
-    this._subscription ??= this._subscribeSignal(this._signal, context);
-  }
-
-  bind(newValue: Signal<TValue>, context: UpdateContext<unknown>): void {
-    DEBUG: {
-      ensureDirective(Signal, newValue, this._binding.part);
-    }
-    if (this._signal !== newValue) {
-      this._subscription?.();
-      this._subscription = null;
-      this._signal = newValue;
-    }
-    this._binding.bind(newValue.value, context);
-    this._subscription ??= this._subscribeSignal(newValue, context);
-  }
-
-  unbind(context: UpdateContext<unknown>): void {
-    this._binding.unbind(context);
-    this._subscription?.();
-    this._subscription = null;
-  }
-
-  disconnect(): void {
-    this._binding.disconnect();
-    this._subscription?.();
-    this._subscription = null;
-  }
-
-  private _subscribeSignal(
-    signal: Signal<TValue>,
-    context: UpdateContext<unknown>,
-  ): Subscription {
-    return signal.subscribe(() => {
-      this._binding.bind(signal.value, context);
-      context.scheduleUpdate();
-    });
-  }
-}
-
 export class State<TValue> extends Signal<TValue> {
   private _value: TValue;
 
@@ -260,5 +187,78 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 
   subscribe(subscriber: Subscriber): Subscription {
     return this._signal.subscribe(subscriber);
+  }
+}
+
+export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
+  private _signal: Signal<TValue>;
+
+  private readonly _binding: Binding<TValue>;
+
+  private _subscription: Subscription | null = null;
+
+  constructor(signal: Signal<TValue>, part: Part, context: DirectiveContext) {
+    this._signal = signal;
+    this._binding = resolveBinding(signal.value, part, context);
+  }
+
+  get value(): Signal<TValue> {
+    return this._signal;
+  }
+
+  get part(): Part {
+    return this._binding.part;
+  }
+
+  get startNode(): ChildNode {
+    return this._binding.startNode;
+  }
+
+  get endNode(): ChildNode {
+    return this._binding.endNode;
+  }
+
+  get binding(): Binding<TValue> {
+    return this._binding;
+  }
+
+  connect(context: UpdateContext<unknown>): void {
+    this._binding.connect(context);
+    this._subscription ??= this._subscribeSignal(this._signal, context);
+  }
+
+  bind(newValue: Signal<TValue>, context: UpdateContext<unknown>): void {
+    DEBUG: {
+      ensureDirective(Signal, newValue, this._binding.part);
+    }
+    if (this._signal !== newValue) {
+      this._subscription?.();
+      this._subscription = null;
+      this._signal = newValue;
+    }
+    this._binding.bind(newValue.value, context);
+    this._subscription ??= this._subscribeSignal(newValue, context);
+  }
+
+  unbind(context: UpdateContext<unknown>): void {
+    this._binding.unbind(context);
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  disconnect(): void {
+    this._binding.disconnect();
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  private _subscribeSignal(
+    signal: Signal<TValue>,
+    context: UpdateContext<unknown>,
+  ): Subscription {
+    return signal.subscribe(() => {
+      this._binding.bind(signal.value, context);
+      context.scheduleUpdate();
+    });
   }
 }
