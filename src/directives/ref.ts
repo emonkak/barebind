@@ -1,19 +1,21 @@
 import {
   type AttributePart,
   type Binding,
+  type Cleanup,
   CommitStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
   type Part,
   PartType,
-  type RefValue,
+  type RefCallback,
+  type RefObject,
   type UpdateContext,
   directiveTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
 
-type ElementRef = RefValue<Element | null>;
+export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
 
 export function ref(ref: ElementRef): Ref {
   return new Ref(ref);
@@ -47,6 +49,8 @@ export class RefBinding implements Binding<Ref>, Effect {
   private readonly _part: AttributePart;
 
   private _memoizedRef: ElementRef | null = null;
+
+  private _cleanup: Cleanup | void = undefined;
 
   private _status = CommitStatus.Committed;
 
@@ -95,28 +99,18 @@ export class RefBinding implements Binding<Ref>, Effect {
   }
 
   disconnect(): void {
-    const { ref } = this._value;
-    invokeRef(ref, null);
-    this._memoizedRef = null;
+    this._cleanRef();
     this._status = CommitStatus.Committed;
   }
 
   commit(): void {
     switch (this._status) {
       case CommitStatus.Mounting: {
-        const oldRef = this._memoizedRef ?? null;
-        const newRef = this._value.ref;
-        if (oldRef !== null) {
-          invokeRef(oldRef, null);
-        }
-        invokeRef(newRef, this._part.node);
-        this._memoizedRef = this._value.ref;
+        this._invokeRef();
         break;
       }
       case CommitStatus.Unmounting: {
-        const { ref } = this._value;
-        invokeRef(ref, null);
-        this._memoizedRef = null;
+        this._cleanRef();
         break;
       }
     }
@@ -129,12 +123,30 @@ export class RefBinding implements Binding<Ref>, Effect {
       context.enqueueLayoutEffect(this);
     }
   }
-}
 
-function invokeRef(ref: ElementRef, value: Element | null): void {
-  if (typeof ref === 'function') {
-    ref(value);
-  } else {
-    ref.current = value;
+  private _cleanRef(): Cleanup | void {
+    const ref = this._memoizedRef;
+    this._cleanup?.();
+    if (ref !== null && typeof ref === 'object') {
+      ref.current = null;
+    }
+    this._cleanup = undefined;
+    this._memoizedRef = null;
+  }
+
+  private _invokeRef(): Cleanup | void {
+    const newRef = this._value.ref;
+    const oldRef = this._memoizedRef;
+    this._cleanup?.();
+    if (oldRef !== null && typeof oldRef === 'object') {
+      oldRef.current = null;
+    }
+    if (typeof newRef === 'object') {
+      newRef.current = this._part.node;
+      this._cleanup = undefined;
+    } else {
+      this._cleanup = newRef(this._part.node);
+    }
+    this._memoizedRef = newRef;
   }
 }

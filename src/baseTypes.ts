@@ -228,9 +228,7 @@ export type Cleanup = () => void;
 
 export type EffectCallback = () => Cleanup | void;
 
-export type RefValue<T> = RefCallback<T> | RefObject<T>;
-
-export type RefCallback<T> = (value: T) => void;
+export type RefCallback<T> = (value: T) => Cleanup | void;
 
 export interface RefObject<T> {
   current: T;

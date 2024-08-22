@@ -122,7 +122,7 @@ describe('RefBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should invoke the new ref callback with the element and invoke a old one with null', () => {
+    it('should invoke a ref callback with the element and then invoke a cleanup function', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -132,7 +132,8 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refCallback1 = vi.fn();
+      const cleanup = vi.fn();
+      const refCallback1 = vi.fn().mockReturnValue(cleanup);
       const refCallback2 = vi.fn();
       const value1 = ref(refCallback1);
       const value2 = ref(refCallback2);
@@ -145,13 +146,14 @@ describe('RefBinding', () => {
       context.flushUpdate();
 
       expect(binding.value).toBe(value2);
-      expect(refCallback1).toHaveBeenCalledTimes(2);
-      expect(refCallback1).toHaveBeenCalledWith(null);
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(refCallback1).toHaveBeenCalledOnce();
+      expect(refCallback1).toHaveBeenCalledWith(part.node);
       expect(refCallback2).toHaveBeenCalledOnce();
       expect(refCallback2).toHaveBeenCalledWith(part.node);
     });
 
-    it('should assign the element to the new ref object and unassign the element from the old one', () => {
+    it('should assgin an element to the ref object', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -224,7 +226,7 @@ describe('RefBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should invoke the old ref callback with null', () => {
+    it('should invoke a cleanup function', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -234,7 +236,8 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refCallback = vi.fn();
+      const cleanup = vi.fn();
+      const refCallback = vi.fn().mockReturnValue(cleanup);
       const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
@@ -244,11 +247,12 @@ describe('RefBinding', () => {
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(refCallback).toHaveBeenCalledTimes(2);
-      expect(refCallback).toHaveBeenCalledWith(null);
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(refCallback).toHaveBeenCalledOnce();
+      expect(refCallback).toHaveBeenCalledWith(part.node);
     });
 
-    it('should unassign the element from the old ref object', () => {
+    it('should unassign an element from the ref object', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -290,7 +294,7 @@ describe('RefBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should invoke the ref callback with null', () => {
+    it('should invoke a cleanup function', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -300,7 +304,8 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refCallback = vi.fn();
+      const cleanup = vi.fn();
+      const refCallback = vi.fn().mockReturnValue(cleanup);
       const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
@@ -309,12 +314,12 @@ describe('RefBinding', () => {
 
       binding.disconnect();
 
-      expect(refCallback).toHaveBeenCalledTimes(2);
-      expect(refCallback).toHaveBeenNthCalledWith(1, part.node);
-      expect(refCallback).toHaveBeenNthCalledWith(2, null);
+      expect(cleanup).toHaveBeenCalledOnce();
+      expect(refCallback).toHaveBeenCalled();
+      expect(refCallback).toHaveBeenCalledWith(part.node);
     });
 
-    it('should invoke the ref object with null', () => {
+    it('should assign null to the ref object', () => {
       const part = {
         type: PartType.Attribute,
         name: 'ref',
@@ -348,7 +353,8 @@ describe('RefBinding', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const refCallback = vi.fn();
+      const cleanup = vi.fn();
+      const refCallback = vi.fn().mockReturnValue(cleanup);
       const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
@@ -356,8 +362,8 @@ describe('RefBinding', () => {
       binding.disconnect();
       context.flushUpdate();
 
-      expect(refCallback).toHaveBeenCalledOnce();
-      expect(refCallback).toHaveBeenCalledWith(null);
+      expect(cleanup).not.toHaveBeenCalled();
+      expect(refCallback).not.toHaveBeenCalled();
     });
   });
 });
