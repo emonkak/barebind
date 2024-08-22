@@ -25,7 +25,7 @@ describe('EmptyTemplate', () => {
 
       const view = EmptyTemplate.instance.render(null, context);
 
-      expect(context.isPending()).toBe(false);
+      expect(view).toBeInstanceOf(EmptyTemplateView);
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
     });

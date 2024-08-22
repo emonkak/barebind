@@ -4,6 +4,7 @@ import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
 import { ElementTemplate } from '../src/template/elementTemplate.js';
 import { EmptyTemplate } from '../src/template/emptyTemplate.js';
+import { LazyTemplate } from '../src/template/lazyTemplate.js';
 import {
   ChildNodeTemplate,
   TextTemplate,
@@ -157,7 +158,7 @@ describe('RenderContext', () => {
   });
 
   describe('.html()', () => {
-    it('should return Fragment with an HTML-formatted TaggedTemplate set as a template', () => {
+    it('should return TemplateDirective with an HTML-formatted TaggedTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -167,12 +168,17 @@ describe('RenderContext', () => {
       const context = new RenderContext(host, updater, block, hooks, queue);
       const getHTMLTemplateSpy = vi.spyOn(host, 'getHTMLTemplate');
 
-      const result = context.html`
-        <div class=${0}>Hello, ${1}!</div>
-      `;
+      const { template, data } =
+        context.html`<div class=${0}>Hello, ${1}!</div>`;
 
-      expect(result.template).toBeInstanceOf(MockTemplate);
-      expect(result.data).toStrictEqual([0, 1]);
+      expect(template).toBeInstanceOf(LazyTemplate);
+      expect(
+        (template as LazyTemplate<any, any, any>).templateFactory.call(null),
+      ).toBeInstanceOf(MockTemplate);
+      expect((template as LazyTemplate<any, any, any>).key).toStrictEqual(
+        strings`<div class=${0}>Hello, ${1}!</div>`,
+      );
+      expect(data).toStrictEqual([0, 1]);
       expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -285,7 +291,7 @@ describe('RenderContext', () => {
   });
 
   describe('.svg()', () => {
-    it('should return Fragment with an SVG-hormatted TaggedTemplate set as a template', () => {
+    it('should return TemplateDirective with an SVG-formatted TaggedTemplate', () => {
       const host = new MockUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
@@ -295,12 +301,17 @@ describe('RenderContext', () => {
       const context = new RenderContext(host, updater, block, hooks, queue);
       const getSVGTemplateSpy = vi.spyOn(host, 'getSVGTemplate');
 
-      const result = context.svg`
-        <text x=${0} y=${1}>Hello, ${2}!</text>
-      `;
+      const { template, data } =
+        context.svg`<text x=${0} y=${1}>Hello, ${2}!</text>`;
 
-      expect(result.template).toBeInstanceOf(MockTemplate);
-      expect(result.data).toStrictEqual([0, 1, 2]);
+      expect(template).toBeInstanceOf(LazyTemplate);
+      expect(
+        (template as LazyTemplate<any, any, any>).templateFactory.call(null),
+      ).toBeInstanceOf(MockTemplate);
+      expect((template as LazyTemplate<any, any, any>).key).toStrictEqual(
+        strings`<text x=${0} y=${1}>Hello, ${2}!</text>`,
+      );
+      expect(data).toStrictEqual([0, 1, 2]);
       expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -1009,3 +1020,10 @@ describe('RenderContext', () => {
     });
   });
 });
+
+function strings(
+  strings: TemplateStringsArray,
+  ..._values: unknown[]
+): TemplateStringsArray {
+  return strings;
+}

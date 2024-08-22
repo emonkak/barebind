@@ -66,6 +66,7 @@ describe('TextTemplate', () => {
 
       const view = TextTemplate.instance.render('foo', context);
 
+      expect(view).toBeInstanceOf(SingleTemplateView);
       expect(view.binding).toBeInstanceOf(NodeBinding);
       expect(view.binding.value).toBe('foo');
       expect(view.binding.part).toMatchObject({

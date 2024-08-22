@@ -27,6 +27,7 @@ import {
   ElementTemplate,
 } from './template/elementTemplate.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
+import { LazyTemplate } from './template/lazyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './template/singleTemplate.js';
 
 export const usableTag = Symbol('Usable');
@@ -122,7 +123,11 @@ export class RenderContext {
     tokens: ReadonlyArray<string>,
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
-    const template = this._host.getHTMLTemplate(tokens, data);
+    const host = this._host;
+    const template = new LazyTemplate(
+      () => host.getHTMLTemplate(tokens, data),
+      tokens,
+    );
     return new LazyTemplateResult(template, data);
   }
 
@@ -155,7 +160,11 @@ export class RenderContext {
     tokens: ReadonlyArray<string>,
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
-    const template = this._host.getSVGTemplate(tokens, data);
+    const host = this._host;
+    const template = new LazyTemplate(
+      () => host.getSVGTemplate(tokens, data),
+      tokens,
+    );
     return new LazyTemplateResult(template, data);
   }
 
