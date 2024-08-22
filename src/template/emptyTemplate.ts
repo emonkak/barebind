@@ -6,7 +6,7 @@ import type {
 } from '../baseTypes.js';
 
 export class EmptyTemplate implements Template<null> {
-  static readonly instance: EmptyTemplate = new EmptyTemplate();
+  static readonly instance = new EmptyTemplate();
 
   private constructor() {
     if (EmptyTemplate.instance !== undefined) {

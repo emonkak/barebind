@@ -9,7 +9,7 @@ import {
 import { ensureDirective } from '../error.js';
 
 export class NoValue implements Directive<NoValue> {
-  static readonly instance: NoValue = new NoValue();
+  static readonly instance = new NoValue();
 
   constructor() {
     if (NoValue.instance !== undefined) {

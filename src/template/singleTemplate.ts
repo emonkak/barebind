@@ -10,8 +10,7 @@ import {
 import { resolveBinding } from '../binding.js';
 
 export class ChildNodeTemplate<T> implements Template<T> {
-  static readonly instance: ChildNodeTemplate<any> =
-    new ChildNodeTemplate<any>();
+  static readonly instance = new ChildNodeTemplate<any>();
 
   private constructor() {
     if (ChildNodeTemplate.instance !== undefined) {
@@ -41,7 +40,7 @@ export class ChildNodeTemplate<T> implements Template<T> {
 }
 
 export class TextTemplate<T> implements Template<T> {
-  static readonly instance: TextTemplate<any> = new TextTemplate<any>();
+  static readonly instance = new TextTemplate<any>();
 
   private constructor() {
     if (TextTemplate.instance !== undefined) {
