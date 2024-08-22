@@ -1,5 +1,5 @@
 import { type RenderContext, usableTag } from '@emonkak/ebit';
-import { Computed, State, type Signal } from '@emonkak/ebit/directives.js';
+import { Computed, type Signal, State } from '@emonkak/ebit/directives.js';
 
 export interface Todo {
   id: string;
@@ -114,7 +114,7 @@ export class TodoState {
 }
 
 function getUUID(): ReturnType<typeof crypto.randomUUID> {
-  if (typeof crypto.randomUUID === 'function') {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
     return crypto.randomUUID();
   } else {
     const s = [...crypto.getRandomValues(new Uint8Array(16))]
