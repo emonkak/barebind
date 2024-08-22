@@ -9,36 +9,6 @@ import {
 } from '../baseTypes.js';
 import { resolveBinding } from '../binding.js';
 
-export class ChildNodeTemplate<T> implements Template<T> {
-  static readonly instance = new ChildNodeTemplate<any>();
-
-  private constructor() {
-    if (ChildNodeTemplate.instance !== undefined) {
-      throw new Error(
-        'ChildNodeTemplate constructor cannot be called directly.',
-      );
-    }
-  }
-
-  render(data: T, context: UpdateContext<unknown>): SingleTemplateView<T> {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-    const binding = resolveBinding(data, part, context);
-
-    DEBUG: {
-      part.node.nodeValue = nameOf(data);
-    }
-
-    return new SingleTemplateView(binding);
-  }
-
-  isSameTemplate(other: Template<T>): boolean {
-    return other === this;
-  }
-}
-
 export class TextTemplate<T> implements Template<T> {
   static readonly instance = new TextTemplate<any>();
 
@@ -54,6 +24,32 @@ export class TextTemplate<T> implements Template<T> {
       node: document.createTextNode(''),
     } as const;
     const binding = resolveBinding(data, part, context);
+    return new SingleTemplateView(binding);
+  }
+
+  isSameTemplate(other: Template<T>): boolean {
+    return other === this;
+  }
+}
+
+export class ValueTemplate<T> implements Template<T> {
+  static readonly instance = new ValueTemplate<any>();
+
+  private constructor() {
+    if (ValueTemplate.instance !== undefined) {
+      throw new Error('ValueTemplate constructor cannot be called directly.');
+    }
+  }
+
+  render(data: T, context: UpdateContext<unknown>): SingleTemplateView<T> {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+    const binding = resolveBinding(data, part, context);
+    DEBUG: {
+      part.node.nodeValue = nameOf(data);
+    }
     return new SingleTemplateView(binding);
   }
 

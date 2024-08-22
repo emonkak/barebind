@@ -31,7 +31,7 @@ export function UserPage(
     `;
   }
 
-  return context.childNode(
+  return context.only(
     when(!isLoading && user !== null, () =>
       component(UserView, { user: user! }),
     ),

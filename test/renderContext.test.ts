@@ -6,8 +6,8 @@ import { ElementTemplate } from '../src/templates/elementTemplate.js';
 import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
 import { LazyTemplate } from '../src/templates/lazyTemplate.js';
 import {
-  ChildNodeTemplate,
   TextTemplate,
+  ValueTemplate,
 } from '../src/templates/singleTemplate.js';
 import {
   UnsafeHTMLTemplate,
@@ -22,22 +22,6 @@ import {
 } from './mocks.js';
 
 describe('RenderContext', () => {
-  describe('.childNode()', () => {
-    it('should return a TemplateResult with ChildNodeTemplate', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
-
-      const context = new RenderContext(host, updater, block, hooks, queue);
-      const value = context.childNode('foo');
-
-      expect(value.template).toBeInstanceOf(ChildNodeTemplate);
-      expect(value.data).toBe('foo');
-    });
-  });
-
   describe('.element()', () => {
     it('should return a TemplateResult with ElementTemplate', () => {
       const host = new MockUpdateHost();
@@ -273,6 +257,22 @@ describe('RenderContext', () => {
       expect(context.isRendering()).toBe(true);
       context.finalize();
       expect(context.isRendering()).toBe(false);
+    });
+  });
+
+  describe('.only()', () => {
+    it('should return a TemplateResult with ValueTemplate', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+
+      const context = new RenderContext(host, updater, block, hooks, queue);
+      const value = context.only('foo');
+
+      expect(value.template).toBeInstanceOf(ValueTemplate);
+      expect(value.data).toBe('foo');
     });
   });
 

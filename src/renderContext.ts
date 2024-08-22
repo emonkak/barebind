@@ -28,7 +28,7 @@ import {
 } from './templates/elementTemplate.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
-import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
+import { TextTemplate, ValueTemplate } from './templates/singleTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
@@ -80,10 +80,6 @@ export class RenderContext {
     this._hooks = hooks;
     this._queue = queue;
   }
-  childNode<T>(value: T): TemplateResult<T, RenderContext> {
-    const template = ChildNodeTemplate.instance;
-    return new TemplateResult(template, value);
-  }
 
   element<TElementValue, TChildNodeValue>(
     type: string,
@@ -118,6 +114,19 @@ export class RenderContext {
     }
   }
 
+  forceUpdate(priority?: TaskPriority): void {
+    const context = new UpdateContext(
+      this._host,
+      this._updater,
+      this._block,
+      this._queue,
+    );
+    this._block.requestUpdate(
+      priority ?? this._host.getCurrentPriority(),
+      context,
+    );
+  }
+
   getContextValue(key: unknown): unknown {
     return this._host.getScopedValue(key, this._block);
   }
@@ -142,17 +151,9 @@ export class RenderContext {
     return this._hooks[this._hookIndex - 1]?.type !== HookType.Finalizer;
   }
 
-  forceUpdate(priority?: TaskPriority): void {
-    const context = new UpdateContext(
-      this._host,
-      this._updater,
-      this._block,
-      this._queue,
-    );
-    this._block.requestUpdate(
-      priority ?? this._host.getCurrentPriority(),
-      context,
-    );
+  only<T>(value: T): TemplateResult<T, RenderContext> {
+    const template = ValueTemplate.instance;
+    return new TemplateResult(template, value);
   }
 
   setContextValue(key: unknown, value: unknown): void {
