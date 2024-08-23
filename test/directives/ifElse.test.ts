@@ -6,7 +6,6 @@ import {
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding.js';
 import { NoValue } from '../../src/directives.js';
 import {
   IfElseBinding,
@@ -96,10 +95,12 @@ describe('IfElse', () => {
         new MockBlock(),
       );
 
+      const trueValue = new TextDirective('foo');
+      const falseValue = new TextDirective('bar');
       const value = ifElse(
         true,
-        () => 'foo',
-        () => 'bar',
+        () => trueValue,
+        () => falseValue,
       );
       const part = {
         type: PartType.Node,
@@ -115,8 +116,8 @@ describe('IfElse', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.currentBinding).toBeInstanceOf(NodeBinding);
-      expect(binding.currentBinding.value).toBe('foo');
+      expect(binding.currentBinding).toBeInstanceOf(TextBinding);
+      expect(binding.currentBinding.value).toBe(trueValue);
       expect(getPart).toHaveBeenCalledOnce();
       expect(getStartNode).toHaveBeenCalledOnce();
       expect(getEndNode).toHaveBeenCalledOnce();

@@ -4,7 +4,7 @@ import type {
   Part,
   TaskPriority,
   UpdateContext,
-} from './baseTypes.js';
+} from '../baseTypes.js';
 
 const FLAG_NONE = 0;
 const FLAG_DIRTY = 1 << 0;

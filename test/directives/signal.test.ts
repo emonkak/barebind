@@ -9,11 +9,15 @@ import {
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding.js';
 import { Computed, SignalBinding, State } from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '.././mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '.././mocks.js';
 
 describe('Signal', () => {
   describe('.toJSON()', () => {
@@ -56,7 +60,7 @@ describe('Signal', () => {
         new MockBlock(),
       );
 
-      const value = new State('foo');
+      const value = new State(new TextDirective('foo'));
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -67,8 +71,8 @@ describe('Signal', () => {
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.value).toBe(value);
-      expect(binding.binding).toBeInstanceOf(NodeBinding);
-      expect(binding.binding.value).toBe('foo');
+      expect(binding.binding).toBeInstanceOf(TextBinding);
+      expect(binding.binding.value).toBe(value.value);
       expect(context.isPending()).toBe(false);
     });
   });

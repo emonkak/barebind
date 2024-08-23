@@ -1,14 +1,19 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding.js';
+import { NodeBinding } from '../../src/bindings/node.js';
 import {
   SingleTemplateView,
   TextTemplate,
   ValueTemplate,
 } from '../../src/templates/singleTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import {
+  MockBlock,
+  MockUpdateHost,
+  TextBinding,
+  TextDirective,
+} from '../mocks.js';
 
 describe('ValueTemplate', () => {
   describe('.constructor()', () => {
@@ -27,16 +32,18 @@ describe('ValueTemplate', () => {
         new MockBlock(),
       );
 
-      const view = ValueTemplate.instance.render('foo', context);
+      const data = new TextDirective('foo');
+      const view = ValueTemplate.instance.render(data, context);
 
       context.flushUpdate();
 
-      expect(view.binding).toBeInstanceOf(NodeBinding);
+      expect(view.binding).toBeInstanceOf(TextBinding);
+      expect(view.binding.value).toBe(data);
       expect(view.binding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
       });
-      expect(view.binding.part.node.nodeValue).toBe('"foo"');
+      expect(view.binding.part.node.nodeValue).toBe('TextDirective');
       expect(view.startNode).toBe(view.binding.startNode);
       expect(view.endNode).toBe(view.binding.endNode);
     });
@@ -68,11 +75,12 @@ describe('TextTemplate', () => {
         new MockBlock(),
       );
 
-      const view = TextTemplate.instance.render('foo', context);
+      const data = 'foo';
+      const view = TextTemplate.instance.render(data, context);
 
       expect(view).toBeInstanceOf(SingleTemplateView);
       expect(view.binding).toBeInstanceOf(NodeBinding);
-      expect(view.binding.value).toBe('foo');
+      expect(view.binding.value).toBe(data);
       expect(view.binding.part).toMatchObject({
         type: PartType.Node,
         node: expect.any(Text),
@@ -126,13 +134,13 @@ describe('SingleTemplateView', () => {
         new MockBlock(),
       );
 
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.ChildNode,
+        node: document.createComment(''),
       } as const;
-      const binding = new NodeBinding(value1, part);
+      const binding = new TextBinding(value1, part);
       const view = new SingleTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -152,12 +160,12 @@ describe('SingleTemplateView', () => {
         new MockBlock(),
       );
 
-      const value = 'foo';
+      const value = new TextDirective('foo');
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.ChildNode,
+        node: document.createComment(''),
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new TextBinding(value, part);
       const view = new SingleTemplateView(binding);
 
       const unbindSpy = vi.spyOn(binding, 'unbind');
@@ -177,12 +185,12 @@ describe('SingleTemplateView', () => {
         new MockBlock(),
       );
 
-      const value = 'foo';
+      const value = new TextDirective('foo');
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.ChildNode,
+        node: document.createComment(''),
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new TextBinding(value, part);
       const view = new SingleTemplateView(binding);
 
       const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
@@ -203,26 +211,29 @@ describe('SingleTemplateView', () => {
       );
 
       const container = document.createElement('div');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode('foo'),
-      } as const;
       const containerPart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new NodeBinding('foo', part);
+      const value = new TextDirective('foo');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TextBinding(value, part);
       const view = new SingleTemplateView(binding);
 
       container.appendChild(containerPart.node);
+      view.mount(containerPart);
       view.connect(context);
       context.flushUpdate();
-      expect(container.innerHTML).toBe('<!---->');
 
-      view.mount(containerPart);
-      expect(container.innerHTML).toBe('foo<!---->');
+      expect(container.innerHTML).toBe('foo<!----><!---->');
 
+      view.unbind(context);
+      context.flushUpdate();
       view.unmount(containerPart);
+
       expect(container.innerHTML).toBe('<!---->');
     });
   });

@@ -14,15 +14,12 @@ import {
   nameOf,
   resolveBinding,
 } from './baseTypes.js';
-import {
-  AttributeBinding,
-  ElementBinding,
-  EventBinding,
-  NodeBinding,
-  PropertyBinding,
-  resolvePrimitiveBinding,
-} from './binding.js';
-import { BlockBinding } from './block.js';
+import { AttributeBinding } from './bindings/attribute.js';
+import { BlockBinding } from './bindings/block.js';
+import { ElementBinding } from './bindings/element.js';
+import { EventBinding } from './bindings/event.js';
+import { NodeBinding } from './bindings/node.js';
+import { PropertyBinding } from './bindings/property.js';
 import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 import type {} from './typings/deprecatedEvent.js';

@@ -7,13 +7,11 @@ import {
   UpdateContext,
   directiveTag,
 } from '../../src/baseTypes.js';
-import {
-  AttributeBinding,
-  ElementBinding,
-  EventBinding,
-  NodeBinding,
-  PropertyBinding,
-} from '../../src/binding.js';
+import { AttributeBinding } from '../../src/bindings/attribute.js';
+import { ElementBinding } from '../../src/bindings/element.js';
+import { EventBinding } from '../../src/bindings/event.js';
+import { NodeBinding } from '../../src/bindings/node.js';
+import { PropertyBinding } from '../../src/bindings/property.js';
 import {
   TaggedTemplate,
   TaggedTemplateView,

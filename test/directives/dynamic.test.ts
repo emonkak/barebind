@@ -6,7 +6,7 @@ import {
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding.js';
+import { NodeBinding } from '../../src/bindings/node.js';
 import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {

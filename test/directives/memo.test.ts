@@ -6,7 +6,6 @@ import {
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -42,7 +41,8 @@ describe('Memo', () => {
         new MockBlock(),
       );
 
-      const factory = vi.fn(() => 'foo');
+      const memoizedValue = new TextDirective('foo');
+      const factory = vi.fn(() => memoizedValue);
       const value = memo(factory, ['foo']);
       const part = {
         type: PartType.Node,
@@ -57,7 +57,8 @@ describe('Memo', () => {
       expect(factory).toHaveBeenCalledOnce();
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-      expect(binding.binding).toBeInstanceOf(NodeBinding);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
+      expect(binding.binding.value).toBe(memoizedValue);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(getPartSpy).toHaveBeenCalledOnce();

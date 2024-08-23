@@ -6,7 +6,6 @@ import {
   directiveTag,
   nameTag,
 } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding.js';
 import { Keyed, KeyedBinding, keyed } from '../../src/directives/keyed.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -42,7 +41,7 @@ describe('Keyed', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', 'bar');
+      const value = keyed('foo', new TextDirective('bar'));
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -57,8 +56,8 @@ describe('Keyed', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.binding).toBeInstanceOf(NodeBinding);
-      expect(binding.binding.value).toBe('bar');
+      expect(binding.binding).toBeInstanceOf(TextBinding);
+      expect(binding.binding.value).toBe(value.value);
       expect(getPartSpy).toHaveBeenCalledOnce();
       expect(getStartNodeSpy).toHaveBeenCalledOnce();
       expect(getEndNodeSpy).toHaveBeenCalledOnce();

@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, UpdateContext } from '../src/baseTypes.js';
-import { BlockBinding } from '../src/block.js';
-import { SyncUpdater } from '../src/updater/syncUpdater.js';
+import { PartType, UpdateContext } from '../../src/baseTypes.js';
+import { BlockBinding } from '../../src/bindings/block.js';
+import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockUpdateHost,
   TextBinding,
   TextDirective,
-} from './mocks.js';
+} from '../mocks.js';
 
 describe('BlockBinding', () => {
   describe('.ofRoot()', () => {

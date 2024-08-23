@@ -14,7 +14,7 @@ import {
   nameOf,
   nameTag,
 } from '../baseTypes.js';
-import { BlockBinding } from '../block.js';
+import { BlockBinding } from '../bindings/block.js';
 import { ensureDirective, reportPart } from '../error.js';
 
 export abstract class AbstractTemplateResult<TData, TContext>
