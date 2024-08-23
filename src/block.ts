@@ -12,7 +12,7 @@ const FLAG_DIRTY = 1 << 0;
 const FLAG_CONNECTED = 1 << 1;
 const FLAG_UPDATING = 1 << 2;
 
-export class Root<TValue, TContext>
+export class BlockBinding<TValue, TContext>
   implements Binding<TValue>, Block<TContext>
 {
   private readonly _binding: Binding<TValue, TContext>;

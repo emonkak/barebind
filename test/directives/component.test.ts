@@ -21,7 +21,7 @@ import {
 } from '../mocks.js';
 
 describe('component()', () => {
-  it('should construct a new Component directive wrapped in Root directive', () => {
+  it('should construct a new Component directive', () => {
     const type = () => new TemplateResult(new MockTemplate(), {});
     const props = {};
     const value = component(type, props);
@@ -42,7 +42,7 @@ describe('Component', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new BlockBinding wrapped in Root', () => {
+    it('should create a new BlockBinding wrapped in BlockBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

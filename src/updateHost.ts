@@ -12,8 +12,8 @@ import {
   nameOf,
 } from './baseTypes.js';
 import { resolveBinding } from './binding.js';
+import { BlockBinding } from './block.js';
 import { RenderContext } from './renderContext.js';
-import { Root } from './root.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 import type {} from './typings/deprecatedEvent.js';
 
@@ -126,7 +126,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
 
   mount<TValue>(
     value: TValue,
-    container: ChildNode,
+    container: Node,
     updater: Updater<RenderContext>,
   ): () => void {
     const part = {
@@ -141,7 +141,9 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
     const directiveContext = { block: null };
     const binding = resolveBinding(value, part, directiveContext);
     const block =
-      binding instanceof Root ? binding : new Root(binding, directiveContext);
+      binding instanceof BlockBinding
+        ? binding
+        : new BlockBinding(binding, directiveContext);
     const updateContext = new UpdateContext(this, updater, block);
 
     updateContext.enqueueMutationEffect(new MountNode(part.node, container));
@@ -215,9 +217,9 @@ function isContinuousEvent(event: Event): boolean {
 class MountNode implements Effect {
   private readonly _node: Node;
 
-  private readonly _container: ChildNode;
+  private readonly _container: Node;
 
-  constructor(node: Node, container: ChildNode) {
+  constructor(node: Node, container: Node) {
     this._node = node;
     this._container = container;
   }
@@ -230,9 +232,9 @@ class MountNode implements Effect {
 class UnmountNode implements Effect {
   private readonly _node: Node;
 
-  private readonly _container: ChildNode;
+  private readonly _container: Node;
 
-  constructor(node: Node, container: ChildNode) {
+  constructor(node: Node, container: Node) {
     this._node = node;
     this._container = container;
   }

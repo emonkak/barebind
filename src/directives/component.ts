@@ -18,8 +18,8 @@ import {
   nameOf,
   nameTag,
 } from '../baseTypes.js';
+import { BlockBinding } from '../block.js';
 import { ensureDirective, reportPart } from '../error.js';
-import { Root } from '../root.js';
 
 export function component<TProps, TData, TContext>(
   component: ComponentType<TProps, TData, TContext>,
@@ -55,16 +55,16 @@ export class Component<TProps, TData, TContext>
   [directiveTag](
     part: Part,
     context: DirectiveContext,
-  ): Root<Component<TProps, TData, TContext>, TContext> {
+  ): BlockBinding<Component<TProps, TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    // Component directive should be used with Root. Otherwise, updates will
-    // begin from the parent block instead of the component itself.
-    return new Root(new ComponentBinding(this, part), context);
+    // Component directive should be used with BlockBinding. Otherwise, updates
+    // will begin from the parent block instead of the component itself.
+    return new BlockBinding(new ComponentBinding(this, part), context);
   }
 }
 

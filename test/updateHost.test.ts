@@ -8,7 +8,7 @@ import {
   createUpdateQueue,
   directiveTag,
 } from '../src/baseTypes.js';
-import { Root } from '../src/root.js';
+import { BlockBinding } from '../src/block.js';
 import { UpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextBinding, TextDirective } from './mocks.js';
@@ -223,7 +223,7 @@ describe('UpdateHost', () => {
       const directiveSpy = vi
         .spyOn(value, directiveTag)
         .mockImplementation(function (this: typeof value, part, context) {
-          return new Root(new TextBinding(this, part), context);
+          return new BlockBinding(new TextBinding(this, part), context);
         });
       const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
 
