@@ -7,15 +7,9 @@ import {
   EventBinding,
   NodeBinding,
   PropertyBinding,
-  resolveBinding,
 } from '../src/binding.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import {
-  MockBlock,
-  MockUpdateHost,
-  TextBinding,
-  TextDirective,
-} from './mocks.js';
+import { MockBlock, MockUpdateHost, TextDirective } from './mocks.js';
 
 describe('AttributeBinding', () => {
   describe('.constructor()', () => {
@@ -240,7 +234,7 @@ describe('AttributeBinding', () => {
       const binding = new AttributeBinding(null, part);
 
       expect(() => {
-        binding.bind(new TextDirective(), context);
+        binding.bind(new TextDirective() as any, context);
       }).toThrow('A value must not be a directive,');
     });
   });
@@ -835,7 +829,7 @@ describe('NodeBinding', () => {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const binding = new NodeBinding(value1, part);
+      const binding = new NodeBinding<string | null>(value1, part);
 
       binding.connect(context);
       context.flushUpdate();
@@ -919,7 +913,7 @@ describe('NodeBinding', () => {
       const binding = new NodeBinding('foo', part);
 
       expect(() => {
-        binding.bind(new TextDirective(), context);
+        binding.bind(new TextDirective() as any, context);
       }).toThrow('A value must not be a directive,');
     });
   });
@@ -1110,7 +1104,7 @@ describe('PropertyBinding', () => {
       });
 
       expect(() => {
-        binding.bind(new TextDirective(), context);
+        binding.bind(new TextDirective() as any, context);
       }).toThrow('A value must not be a directive,');
     });
   });
@@ -1456,154 +1450,5 @@ describe('ElementBinding', () => {
       expect(disconnect1Spy).toHaveBeenCalledOnce();
       expect(disconnect2Spy).toHaveBeenCalledOnce();
     });
-  });
-});
-
-describe('resolveBinding()', () => {
-  it('should perform the value if it is a directive', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = new TextDirective();
-    const part = {
-      type: PartType.Node,
-      node: document.createTextNode(''),
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    expect(binding).toBeInstanceOf(TextBinding);
-    expect(binding.value).toBe(value);
-    expect(binding.part).toBe(part);
-  });
-
-  it('should resolve the value as a AttributeBinding if the part is a AttributePart', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = 'foo';
-    const part = {
-      type: PartType.Attribute,
-      node: document.createElement('div'),
-      name: 'class',
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    expect(binding).toBeInstanceOf(AttributeBinding);
-    expect(binding.value).toBe(value);
-    expect(binding.part).toBe(part);
-    expect(context.isPending()).toBe(false);
-  });
-
-  it('should resolve the value as a EventBinding if the part is a EventPart', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = vi.fn();
-    const part = {
-      type: PartType.Event,
-      node: document.createElement('div'),
-      name: 'hello',
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    expect(binding).toBeInstanceOf(EventBinding);
-    expect(binding.value).toBe(value);
-    expect(binding.part).toBe(part);
-    expect(context.isPending()).toBe(false);
-  });
-
-  it('should resolve the value as a PropertyBinding if the part is a PropertyPart', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = 'foo';
-    const part = {
-      type: PartType.Property,
-      node: document.createElement('div'),
-      name: 'className',
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    expect(binding).toBeInstanceOf(PropertyBinding);
-    expect(binding.value).toBe(value);
-    expect(binding.part).toBe(part);
-    expect(context.isPending()).toBe(false);
-  });
-
-  it('should resolve the value as a NodeBinding if the part is a NodePart', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = 'foo';
-    const part = {
-      type: PartType.Node,
-      node: document.createTextNode(''),
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    expect(binding).toBeInstanceOf(NodeBinding);
-    expect(binding.value).toBe(value);
-    expect(context.isPending()).toBe(false);
-  });
-
-  it('should resolve the value as a NodeBinding if the part is a ChildNodePart', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = 'foo';
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    expect(binding).toBeInstanceOf(NodeBinding);
-    expect(binding.value).toBe(value);
-    expect(binding.part).toBe(part);
-    expect(context.isPending()).toBe(false);
-  });
-
-  it('should resolve the value as a ElementBinding if the part is a ElementPart', () => {
-    const context = new UpdateContext(
-      new MockUpdateHost(),
-      new SyncUpdater(),
-      new MockBlock(),
-    );
-
-    const value = {
-      class: 'foo',
-      title: 'bar',
-    };
-    const part = {
-      type: PartType.Element,
-      node: document.createElement('div'),
-    } as const;
-    const binding = resolveBinding(value, part, context);
-
-    binding.connect(context);
-    context.flushUpdate();
-
-    expect(binding).toBeInstanceOf(ElementBinding);
-    expect(binding.value).toBe(value);
-    expect(binding.part).toBe(part);
-    expect(context.isPending()).toBe(false);
   });
 });

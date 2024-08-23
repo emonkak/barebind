@@ -8,8 +8,8 @@ import {
   type TemplateView,
   type UpdateContext,
   nameOf,
+  resolveBinding,
 } from '../baseTypes.js';
-import { resolveBinding } from '../binding.js';
 
 export type Hole =
   | AttributeHole

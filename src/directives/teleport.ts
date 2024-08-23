@@ -6,8 +6,8 @@ import {
   type Part,
   type UpdateContext,
   directiveTag,
+  resolveBinding,
 } from '../baseTypes.js';
-import { resolveBinding } from '../binding.js';
 import { ensureDirective } from '../error.js';
 
 export function teleport<T>(value: T, container: Element): Teleport<T> {

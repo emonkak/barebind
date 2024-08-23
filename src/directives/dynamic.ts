@@ -8,8 +8,8 @@ import {
   isDirective,
   nameOf,
   nameTag,
+  resolveBinding,
 } from '../baseTypes.js';
-import { resolveBinding, resolvePrimitiveBinding } from '../binding.js';
 import { ensureDirective } from '../error.js';
 
 export function dynamic(value: unknown): Dynamic {
@@ -87,7 +87,10 @@ export class DynamicBinding implements Binding<Dynamic> {
     } else {
       if (isDirective(oldDynamic)) {
         this._binding.unbind(context);
-        this._binding = resolvePrimitiveBinding(newDynamic, this._binding.part);
+        this._binding = context.host.resolveBinding(
+          newDynamic,
+          this._binding.part,
+        );
         this._binding.connect(context);
       } else {
         this._binding.bind(newDynamic, context);

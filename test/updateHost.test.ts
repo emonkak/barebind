@@ -7,6 +7,13 @@ import {
   PartType,
   createUpdateQueue,
 } from '../src/baseTypes.js';
+import {
+  AttributeBinding,
+  ElementBinding,
+  EventBinding,
+  NodeBinding,
+  PropertyBinding,
+} from '../src/binding.js';
 import { ClientUpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextDirective } from './mocks.js';
@@ -213,6 +220,97 @@ describe('ClientUpdateHost', () => {
       host.setScopedValue('foo', 456, parent);
 
       expect(host.getScopedValue('foo', block)).toBe(456);
+    });
+  });
+
+  describe('resolveBinding()', () => {
+    it('should resolve the value as an AttributeBinding if the part is a AttributePart', () => {
+      const host = new ClientUpdateHost();
+      const value = 'foo';
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      } as const;
+      const binding = host.resolveBinding(value, part);
+
+      expect(binding).toBeInstanceOf(AttributeBinding);
+      expect(binding.value).toBe(value);
+      expect(binding.part).toBe(part);
+    });
+
+    it('should resolve the value as an EventBinding if the part is a EventPart', () => {
+      const host = new ClientUpdateHost();
+      const value = vi.fn();
+      const part = {
+        type: PartType.Event,
+        node: document.createElement('div'),
+        name: 'hello',
+      } as const;
+      const binding = host.resolveBinding(value, part);
+
+      expect(binding).toBeInstanceOf(EventBinding);
+      expect(binding.value).toBe(value);
+      expect(binding.part).toBe(part);
+    });
+
+    it('should resolve the value as a PropertyBinding if the part is a PropertyPart', () => {
+      const host = new ClientUpdateHost();
+      const value = 'foo';
+      const part = {
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
+      } as const;
+      const binding = host.resolveBinding(value, part);
+
+      expect(binding).toBeInstanceOf(PropertyBinding);
+      expect(binding.value).toBe(value);
+      expect(binding.part).toBe(part);
+    });
+
+    it('should resolve the value as a NodeBinding if the part is a NodePart', () => {
+      const host = new ClientUpdateHost();
+      const value = 'foo';
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = host.resolveBinding(value, part);
+
+      expect(binding).toBeInstanceOf(NodeBinding);
+      expect(binding.value).toBe(value);
+    });
+
+    it('should resolve the value as a NodeBinding if the part is a ChildNodePart', () => {
+      const host = new ClientUpdateHost();
+      const value = 'foo';
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = host.resolveBinding(value, part);
+
+      expect(binding).toBeInstanceOf(NodeBinding);
+      expect(binding.value).toBe(value);
+      expect(binding.part).toBe(part);
+    });
+
+    it('should resolve the value as an ElementBinding if the part is a ElementPart', () => {
+      const host = new ClientUpdateHost();
+      const value = {
+        class: 'foo',
+        title: 'bar',
+      };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      } as const;
+      const binding = host.resolveBinding(value, part);
+
+      expect(binding).toBeInstanceOf(ElementBinding);
+      expect(binding.value).toBe(value);
+      expect(binding.part).toBe(part);
     });
   });
 

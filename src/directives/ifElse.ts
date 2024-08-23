@@ -7,8 +7,8 @@ import {
   directiveTag,
   nameOf,
   nameTag,
+  resolveBinding,
 } from '../baseTypes.js';
-import { resolveBinding } from '../binding.js';
 import { ensureDirective } from '../error.js';
 import { NoValue } from './noValue.js';
 

@@ -10,9 +10,9 @@ import {
   TextDirective,
 } from './mocks.js';
 
-describe('RootBinding', () => {
+describe('BlockBinding', () => {
   describe('.ofRoot()', () => {
-    it('should construct a RootBinding without parent', () => {
+    it('should construct a BlockBinding without parent', () => {
       const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
@@ -36,7 +36,7 @@ describe('RootBinding', () => {
   });
 
   describe('.constructor()', () => {
-    it('should construct a RootBinding', () => {
+    it('should construct a BlockBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

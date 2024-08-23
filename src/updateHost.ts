@@ -1,18 +1,27 @@
 import {
+  type Binding,
   type Block,
   type CommitPhase,
   type Effect,
   type Hook,
+  type Part,
   PartType,
-  type Root,
   type TaskPriority,
   UpdateContext,
   type UpdateHost,
   type UpdateQueue,
   type Updater,
   nameOf,
+  resolveBinding,
 } from './baseTypes.js';
-import { resolveBinding } from './binding.js';
+import {
+  AttributeBinding,
+  ElementBinding,
+  EventBinding,
+  NodeBinding,
+  PropertyBinding,
+  resolvePrimitiveBinding,
+} from './binding.js';
 import { BlockBinding } from './block.js';
 import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
@@ -21,6 +30,12 @@ import type {} from './typings/deprecatedEvent.js';
 export interface ClientUpdateHostOptions {
   name?: string;
   constants?: Map<unknown, unknown>;
+}
+
+export interface Root<T> {
+  mount(): void;
+  unmount(): void;
+  update(value: T): void;
 }
 
 export class ClientUpdateHost implements UpdateHost<RenderContext> {
@@ -71,7 +86,7 @@ export class ClientUpdateHost implements UpdateHost<RenderContext> {
       part.node.data = nameOf(value);
     }
 
-    const binding = resolveBinding(value, part, { block: null });
+    const binding = resolveBinding(value, part, { host: this, block: null });
     const block = BlockBinding.ofRoot(binding);
     const context = new UpdateContext(this, updater, block);
 
@@ -163,6 +178,26 @@ export class ClientUpdateHost implements UpdateHost<RenderContext> {
 
   nextIdentifier(): number {
     return ++this._idCounter;
+  }
+
+  resolveBinding<TValue, TContext>(
+    value: TValue,
+    part: Part,
+  ): Binding<TValue, TContext> {
+    switch (part.type) {
+      case PartType.Attribute:
+        return new AttributeBinding(value, part);
+      case PartType.ChildNode:
+        return new NodeBinding(value, part);
+      case PartType.Element:
+        return new ElementBinding(value, part) as Binding<any, TContext>;
+      case PartType.Event:
+        return new EventBinding(value, part) as Binding<any, TContext>;
+      case PartType.Node:
+        return new NodeBinding(value, part);
+      case PartType.Property:
+        return new PropertyBinding(value, part);
+    }
   }
 
   setScopedValue(

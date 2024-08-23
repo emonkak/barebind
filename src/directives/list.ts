@@ -9,8 +9,8 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
+  resolveBinding,
 } from '../baseTypes.js';
-import { resolveBinding } from '../binding.js';
 import { ensureDirective, reportPart } from '../error.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;

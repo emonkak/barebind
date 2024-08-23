@@ -2,7 +2,6 @@ import {
   type AttributePart,
   type Binding,
   CommitStatus,
-  type DirectiveContext,
   type Effect,
   type ElementPart,
   type EventPart,
@@ -10,21 +9,22 @@ import {
   PartType,
   type PropertyPart,
   type UpdateContext,
-  directiveTag,
-  isDirective,
+  resolveBinding,
 } from './baseTypes.js';
 import { ensureNonDirective, reportPart } from './error.js';
 
-export class AttributeBinding implements Binding<unknown>, Effect {
-  private _pendingValue: unknown;
+export type SpreadProps = { [key: string]: unknown };
 
-  private _memoizedValue: unknown = null;
+export class AttributeBinding<T> implements Binding<T>, Effect {
+  private _pendingValue: T;
+
+  private _memoizedValue: T | null = null;
 
   private readonly _part: AttributePart;
 
   private _status = CommitStatus.Committed;
 
-  constructor(value: unknown, part: AttributePart) {
+  constructor(value: T, part: AttributePart) {
     DEBUG: {
       ensureNonDirective(value, part);
     }
@@ -32,7 +32,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     this._part = part;
   }
 
-  get value(): unknown {
+  get value(): T {
     return this._pendingValue;
   }
 
@@ -53,7 +53,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext): void {
+  bind(newValue: T, context: UpdateContext): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -113,8 +113,6 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     }
   }
 }
-
-type SpreadProps = { [key: string]: unknown };
 
 export class ElementBinding implements Binding<SpreadProps> {
   private _value: SpreadProps;
@@ -361,16 +359,16 @@ export class EventBinding
   }
 }
 
-export class NodeBinding implements Binding<unknown>, Effect {
-  private _pendingValue: unknown;
+export class NodeBinding<T> implements Binding<T>, Effect {
+  private _pendingValue: T;
 
-  private _memoizedValue: unknown = null;
+  private _memoizedValue: T | null = null;
 
   private readonly _part: Part;
 
   private _status = CommitStatus.Committed;
 
-  constructor(value: unknown, part: Part) {
+  constructor(value: T, part: Part) {
     DEBUG: {
       ensureNonDirective(value, part);
     }
@@ -378,7 +376,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
     this._part = part;
   }
 
-  get value(): unknown {
+  get value(): T {
     return this._pendingValue;
   }
 
@@ -399,7 +397,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext): void {
+  bind(newValue: T, context: UpdateContext): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -449,16 +447,16 @@ export class NodeBinding implements Binding<unknown>, Effect {
   }
 }
 
-export class PropertyBinding implements Binding<unknown>, Effect {
-  private _pendingValue: unknown;
+export class PropertyBinding<T> implements Binding<T>, Effect {
+  private _pendingValue: T;
 
-  private _memoizedValue: unknown = null;
+  private _memoizedValue: T | null = null;
 
   private readonly _part: PropertyPart;
 
   private _status = CommitStatus.Committed;
 
-  constructor(value: unknown, part: PropertyPart) {
+  constructor(value: T, part: PropertyPart) {
     DEBUG: {
       ensureNonDirective(value, part);
     }
@@ -466,7 +464,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     this._part = part;
   }
 
-  get value(): unknown {
+  get value(): T {
     return this._pendingValue;
   }
 
@@ -487,7 +485,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext): void {
+  bind(newValue: T, context: UpdateContext): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -523,38 +521,6 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
-  }
-}
-
-export function resolveBinding<TValue, TContext>(
-  value: TValue,
-  part: Part,
-  context: DirectiveContext<TContext>,
-): Binding<TValue, TContext> {
-  if (isDirective(value)) {
-    return value[directiveTag](part, context);
-  } else {
-    return resolvePrimitiveBinding(value, part) as Binding<TValue, TContext>;
-  }
-}
-
-export function resolvePrimitiveBinding(
-  value: unknown,
-  part: Part,
-): Binding<unknown> {
-  switch (part.type) {
-    case PartType.Attribute:
-      return new AttributeBinding(value, part);
-    case PartType.ChildNode:
-      return new NodeBinding(value, part);
-    case PartType.Element:
-      return new ElementBinding(value, part);
-    case PartType.Event:
-      return new EventBinding(value, part);
-    case PartType.Node:
-      return new NodeBinding(value, part);
-    case PartType.Property:
-      return new PropertyBinding(value, part);
   }
 }
 

@@ -23,10 +23,6 @@ export interface Directive<TThis, TContext = unknown> {
   ): Binding<TThis, TContext>;
 }
 
-export interface DirectiveContext<TContext = unknown> {
-  get block(): Block<TContext> | null;
-}
-
 export interface Block<TContext> {
   get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
@@ -73,6 +69,10 @@ export interface UpdateHost<TContext> {
   ): Template<TData>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
   nextIdentifier(): number;
+  resolveBinding<TValue, TContext>(
+    value: TValue,
+    part: Part,
+  ): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
 }
 
@@ -109,12 +109,6 @@ export interface TemplateView<TData, TContext = unknown> {
   disconnect(context: UpdateContext<TContext>): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
-}
-
-export interface Root<T> {
-  mount(): void;
-  unmount(): void;
-  update(value: T): void;
 }
 
 export interface Effect {
@@ -241,73 +235,49 @@ export interface RefObject<T> {
   current: T;
 }
 
+export interface DirectiveContext<TContext = unknown> {
+  readonly host: UpdateHost<TContext>;
+  readonly block: Block<TContext> | null;
+}
+
 export class UpdateContext<TContext = unknown> {
-  private _host: UpdateHost<TContext>;
-
-  private _updater: Updater<TContext>;
-
-  private _block: Block<TContext>;
-
-  private _queue: UpdateQueue<TContext>;
-
   constructor(
-    host: UpdateHost<TContext>,
-    updater: Updater<TContext>,
-    block: Block<TContext>,
-    queue: UpdateQueue<TContext> = createUpdateQueue(),
-  ) {
-    this._host = host;
-    this._updater = updater;
-    this._block = block;
-    this._queue = queue;
-  }
-
-  get host(): UpdateHost<TContext> {
-    return this._host;
-  }
-
-  get updater(): Updater<TContext> {
-    return this._updater;
-  }
-
-  get block(): Block<TContext> {
-    return this._block;
-  }
-
-  /**
-   * @internal
-   */
-  get queue(): UpdateQueue<TContext> {
-    return this._queue;
-  }
+    public readonly host: UpdateHost<TContext>,
+    public readonly updater: Updater<TContext>,
+    public readonly block: Block<TContext>,
+    /**
+     * @internal
+     */
+    public readonly queue: UpdateQueue<TContext> = createUpdateQueue(),
+  ) {}
 
   enqueueBlock(block: Block<TContext>): void {
-    this._queue.blocks.push(block);
+    this.queue.blocks.push(block);
   }
 
   enqueueMutationEffect(effect: Effect): void {
-    this._queue.mutationEffects.push(effect);
+    this.queue.mutationEffects.push(effect);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
-    this._queue.layoutEffects.push(effect);
+    this.queue.layoutEffects.push(effect);
   }
 
   enqueuePassiveEffect(effect: Effect): void {
-    this._queue.passiveEffects.push(effect);
+    this.queue.passiveEffects.push(effect);
   }
 
   flushUpdate(): void {
-    this._updater.flushUpdate(this._queue, this._host);
+    this.updater.flushUpdate(this.queue, this.host);
   }
 
   isPending(): boolean {
     return (
-      this._updater.isScheduled() ||
-      this._queue.blocks.length > 0 ||
-      this._queue.mutationEffects.length > 0 ||
-      this._queue.layoutEffects.length > 0 ||
-      this._queue.passiveEffects.length > 0
+      this.updater.isScheduled() ||
+      this.queue.blocks.length > 0 ||
+      this.queue.mutationEffects.length > 0 ||
+      this.queue.layoutEffects.length > 0 ||
+      this.queue.passiveEffects.length > 0
     );
   }
 
@@ -316,21 +286,21 @@ export class UpdateContext<TContext = unknown> {
     props: TProps,
     hooks: Hook[],
   ): TemplateDirective<TData, TContext> {
-    const context = this._host.beginRender(
-      this._updater,
-      this._block,
-      this._queue,
+    const context = this.host.beginRender(
+      this.updater,
+      this.block,
+      this.queue,
       hooks,
     );
     const result = type(props, context);
 
-    this._host.finishRender(context);
+    this.host.finishRender(context);
 
     return result;
   }
 
   scheduleUpdate(): void {
-    this._updater.scheduleUpdate(this._queue, this._host);
+    this.updater.scheduleUpdate(this.queue, this.host);
   }
 }
 
@@ -369,4 +339,16 @@ export function nameOf(value: unknown): string {
     return 'undefined';
   }
   return JSON.stringify(value);
+}
+
+export function resolveBinding<TValue, TContext>(
+  value: TValue,
+  part: Part,
+  context: DirectiveContext<TContext>,
+): Binding<TValue, TContext> {
+  if (isDirective(value)) {
+    return value[directiveTag](part, context);
+  } else {
+    return context.host.resolveBinding(value, part);
+  }
 }

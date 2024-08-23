@@ -7,8 +7,8 @@ import {
   type TemplateView,
   type UpdateContext,
   nameOf,
+  resolveBinding,
 } from '../baseTypes.js';
-import { resolveBinding } from '../binding.js';
 
 export class TextTemplate<T> implements Template<T> {
   static readonly instance = new TextTemplate<any>();

@@ -9,6 +9,7 @@ import {
   type Effect,
   type Hook,
   type Part,
+  PartType,
   type TaskPriority,
   type Template,
   type TemplateView,
@@ -18,6 +19,13 @@ import {
   type Updater,
   directiveTag,
 } from '../src/baseTypes.js';
+import {
+  AttributeBinding,
+  ElementBinding,
+  EventBinding,
+  NodeBinding,
+  PropertyBinding,
+} from '../src/binding.js';
 import {
   RenderContext,
   type UsableObject,
@@ -190,6 +198,26 @@ export class MockUpdateHost implements UpdateHost<RenderContext> {
 
   nextIdentifier(): number {
     return ++this._idCounter;
+  }
+
+  resolveBinding<TValue, TContext>(
+    value: TValue,
+    part: Part,
+  ): Binding<TValue, TContext> {
+    switch (part.type) {
+      case PartType.Attribute:
+        return new AttributeBinding(value, part);
+      case PartType.ChildNode:
+        return new NodeBinding(value, part);
+      case PartType.Element:
+        return new ElementBinding(value, part) as Binding<any, TContext>;
+      case PartType.Event:
+        return new EventBinding(value, part) as Binding<any, TContext>;
+      case PartType.Node:
+        return new NodeBinding(value, part);
+      case PartType.Property:
+        return new PropertyBinding(value, part);
+    }
   }
 
   setScopedValue(
