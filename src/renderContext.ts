@@ -62,9 +62,9 @@ export class RenderContext {
 
   private readonly _block: Block<RenderContext>;
 
-  private readonly _hooks: Hook[];
-
   private readonly _queue: UpdateQueue<RenderContext>;
+
+  private readonly _hooks: Hook[];
 
   private _hookIndex = 0;
 
@@ -72,33 +72,24 @@ export class RenderContext {
     host: UpdateRuntime<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    hooks: Hook[] = [],
     queue: UpdateQueue<RenderContext> = createUpdateQueue(),
+    hooks: Hook[] = [],
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
-    this._hooks = hooks;
     this._queue = queue;
+    this._hooks = hooks;
   }
 
-  /**
-   * @internal
-   */
   get host(): UpdateRuntime<RenderContext> {
     return this._host;
   }
 
-  /**
-   * @internal
-   */
   get updater(): Updater<RenderContext> {
     return this._updater;
   }
 
-  /**
-   * @internal
-   */
   get block(): Block<RenderContext> {
     return this._block;
   }
@@ -115,6 +106,19 @@ export class RenderContext {
    */
   get queue(): UpdateQueue<RenderContext> {
     return this._queue;
+  }
+
+  /**
+   * @internal
+   */
+  clone(): RenderContext {
+    return new RenderContext(
+      this._host,
+      this._updater,
+      this._block,
+      this._queue,
+      this._hooks,
+    );
   }
 
   element<TElementValue, TChildNodeValue>(
@@ -148,6 +152,13 @@ export class RenderContext {
       // Refuse to use new hooks after finalization.
       Object.freeze(this._hooks);
     }
+  }
+
+  /**
+   * @internal
+   */
+  flushUpdate(): void {
+    this._updater.flushUpdate(this._queue, this._host);
   }
 
   forceUpdate(priority?: TaskPriority): void {

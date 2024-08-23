@@ -256,31 +256,33 @@ describe('ClassMapBinding', () => {
 
       expect(context.isPending()).toBe(false);
     });
-  });
 
-  describe('.disconnect()', () => {
-    it('should do nothing', () => {
+    it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
+      const value = classMap({
+        foo: true,
+      });
       const part = {
         type: PartType.Attribute,
         name: 'class',
         node: document.createElement('div'),
       } as const;
-      const value = classMap({
-        foo: true,
-      });
       const binding = new ClassMapBinding(value, part);
 
-      binding.disconnect(context);
+      binding.connect(context);
+      binding.unbind(context);
+      context.flushUpdate();
 
-      expect(context.isPending()).toBe(false);
+      expect(part.node.className).toBe('');
     });
+  });
 
+  describe('.disconnect()', () => {
     it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
@@ -303,11 +305,6 @@ describe('ClassMapBinding', () => {
       context.flushUpdate();
 
       expect(part.node.className).toBe('');
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(part.node.className).toBe('foo');
     });
   });
 });

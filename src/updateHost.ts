@@ -52,10 +52,10 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
   beginRender(
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    hooks: Hook[],
     queue: UpdateQueue<RenderContext>,
+    hooks: Hook[],
   ): RenderContext {
-    return new RenderContext(this, updater, block, hooks, queue);
+    return new RenderContext(this, updater, block, queue, hooks);
   }
 
   finishRender(context: RenderContext): void {

@@ -340,6 +340,7 @@ describe('RefBinding', () => {
       context.flushUpdate();
 
       binding.disconnect(context);
+      context.flushUpdate();
 
       expect(cleanup).toHaveBeenCalledOnce();
       expect(refCallback).toHaveBeenCalled();
@@ -368,6 +369,7 @@ describe('RefBinding', () => {
       expect(refObject.current).toBe(part.node);
 
       binding.disconnect(context);
+      context.flushUpdate();
 
       expect(refObject.current).toBe(null);
     });

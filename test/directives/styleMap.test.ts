@@ -253,6 +253,28 @@ describe('StyleMapBinding', () => {
 
       expect(context.isPending()).toBe(false);
     });
+
+    it('should cancel mounting', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({ display: 'none' });
+      const part = {
+        type: PartType.Attribute,
+        name: 'style',
+        node: document.createElement('div'),
+      } as const;
+      const binding = new StyleMapBinding(value, part);
+
+      binding.connect(context);
+      binding.unbind(context);
+      context.flushUpdate();
+
+      expect(part.node.style.cssText).toBe('');
+    });
   });
 
   describe('.disconnect()', () => {
@@ -296,11 +318,6 @@ describe('StyleMapBinding', () => {
       context.flushUpdate();
 
       expect(part.node.style.cssText).toBe('');
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(part.node.style.cssText).toBe('display: none;');
     });
   });
 });

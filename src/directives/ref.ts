@@ -95,12 +95,18 @@ export class RefBinding implements Binding<Ref>, Effect {
     if (this._memoizedRef !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
   }
 
-  disconnect(_context: UpdateContext): void {
-    this._cleanRef();
-    this._status = CommitStatus.Committed;
+  disconnect(context: UpdateContext): void {
+    if (this._memoizedRef !== null) {
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
+    }
   }
 
   commit(): void {

@@ -39,10 +39,10 @@ describe('UpdateHost', () => {
       const host = new UpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const hooks: Hook[] = [];
       const queue = createUpdateQueue();
+      const hooks: Hook[] = [];
 
-      const context = host.beginRender(updater, block, hooks, queue);
+      const context = host.beginRender(updater, block, queue, hooks);
 
       host.finishRender(context);
 

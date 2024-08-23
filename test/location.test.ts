@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  type EffectHook,
   type Hook,
+  HookType,
   createUpdateQueue,
-  isEffectHook,
 } from '../src/baseTypes.js';
 import {
   LocationType,
@@ -109,29 +110,32 @@ describe('RelativeURL', () => {
 describe('browserLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
+  let queue = createUpdateQueue();
   let hooks: Hook[] = [];
 
   afterEach(() => {
     cleanHooks(hooks);
+    queue = createUpdateQueue();
     hooks = [];
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
 
   it('should return the current location of the browser', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
     const state = { key: 'foo' };
 
     history.replaceState(state, '', '/articles/123');
 
-    const context = new RenderContext(host, updater, block, hooks, queue);
     const [locationState, { getCurrentURL }] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.url.toString()).toEqual(getCurrentURL().toString());
@@ -140,22 +144,24 @@ describe('browserLocation', () => {
   });
 
   it('should push the a location to the history', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
 
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, { navigate }] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     navigate(new RelativeURL('/articles/456'));
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(browserLocation);
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
@@ -166,23 +172,25 @@ describe('browserLocation', () => {
   });
 
   it('should replace the new location to the session', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
 
     const state = { key: 'foo' };
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, { navigate }] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     navigate(new RelativeURL('/articles/123'), { replace: true, state });
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(browserLocation);
 
     expect(pushStateSpy).not.toHaveBeenCalled();
@@ -193,24 +201,26 @@ describe('browserLocation', () => {
   });
 
   it('should update the state when "popstate" event is fired', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
 
     const state = { key: 'foo' };
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     history.replaceState(state, '', '/articles/123');
     dispatchEvent(new PopStateEvent('popstate', { state: state }));
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(browserLocation);
 
     expect(locationState.url.toString()).toBe('/articles/123');
@@ -219,7 +229,7 @@ describe('browserLocation', () => {
 
     location.hash = '#foo';
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(browserLocation);
 
     expect(locationState.url.toString()).toBe('/articles/123');
@@ -241,21 +251,22 @@ describe('browserLocation', () => {
   });
 
   it('should update the state when "click" event is fired', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
+    const element = createElement('a', { href: '/articles/123' });
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    const context = new RenderContext(host, updater, block, hooks, queue);
     const [, locationActions] = context.use(browserLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
-
-    const element = createElement('a', { href: '/articles/123' });
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    context.flushUpdate();
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
@@ -280,24 +291,25 @@ describe('browserLocation', () => {
   });
 
   it('should update the state when "submit" event is fired', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
-    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-    const context = new RenderContext(host, updater, block, hooks, queue);
-    const [, locationActions] = context.use(browserLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
     const element = createElement('form', {
       method: 'GET',
       action: '/articles/123',
     });
     const event = new MouseEvent('submit', { bubbles: true, cancelable: true });
+
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    const [, locationActions] = context.use(browserLocation);
+    context.finalize();
+    context.flushUpdate();
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
@@ -322,30 +334,30 @@ describe('browserLocation', () => {
   });
 
   it('should register the current location', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
 
-    const context = new RenderContext(host, updater, block, hooks, queue);
     const locationState = context.use(browserLocation);
 
     expect(context.use(currentLocation)).toStrictEqual(locationState);
 
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
   });
 });
 
 describe('currentLocation', () => {
   it('should throw an error if the current location is not registered', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const hooks: Hook[] = [];
-    const queue = createUpdateQueue();
-
-    const context = new RenderContext(host, updater, block, hooks, queue);
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+    );
 
     expect(() => context.use(currentLocation)).toThrow(
       'A context value for the current location does not exist,',
@@ -357,28 +369,31 @@ describe('hashLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
   let hooks: Hook[] = [];
+  let queue = createUpdateQueue();
 
   afterEach(() => {
     cleanHooks(hooks);
     hooks = [];
+    queue = createUpdateQueue();
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
 
   it('should return the current location by the fragment identifier', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
     const state = { key: 'foo' };
 
     history.replaceState(state, '', '#/articles/123');
 
-    const context = new RenderContext(host, updater, block, hooks, queue);
     const [locationState, { getCurrentURL }] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     expect(location.hash).toBe('#/articles/123');
     expect(locationState.url.toString()).toBe('/articles/123');
@@ -388,22 +403,24 @@ describe('hashLocation', () => {
   });
 
   it('should push a new location to the fragment identifier', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
 
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, { navigate }] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     navigate(new RelativeURL('/articles/456'));
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(hashLocation);
 
     expect(location.hash).toBe('#/articles/456');
@@ -416,23 +433,25 @@ describe('hashLocation', () => {
   });
 
   it('should replace a new location to the fragment identifier', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
     const state = { key: 'foo' };
+
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState, { navigate }] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
     navigate(new RelativeURL('/articles/123'), { replace: true, state });
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(hashLocation);
 
     expect(location.hash).toBe('#/articles/123');
@@ -445,38 +464,40 @@ describe('hashLocation', () => {
   });
 
   it('should register the current location', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
-    const context = new RenderContext(host, updater, block, hooks, queue);
+    const context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
     const locationState = context.use(hashLocation);
 
     expect(context.use(currentLocation)).toStrictEqual(locationState);
   });
 
   it('should update the state when "hashchange" event is fired', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
-
-    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
-    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
-
-    let context = new RenderContext(host, updater, block, hooks, queue);
-    let [locationState] = context.use(hashLocation);
-    context.finalize();
-    updater.flushUpdate(queue, host);
-
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
     const event = new HashChangeEvent('hashchange', {
       oldURL: location.href,
       newURL: getHrefWithoutHash(location) + '#/articles/123',
     });
+
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+
+    let [locationState] = context.use(hashLocation);
+    context.finalize();
+    context.flushUpdate();
     dispatchEvent(event);
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(hashLocation);
 
     expect(locationState.url.toString()).toBe('/articles/123');
@@ -497,26 +518,28 @@ describe('hashLocation', () => {
   });
 
   it('should update the state when "click" event is fired', () => {
-    const host = new UpdateHost();
-    const updater = new SyncUpdater();
-    const block = new MockBlock();
-    const queue = createUpdateQueue();
+    let context = new RenderContext(
+      new UpdateHost(),
+      new SyncUpdater(),
+      new MockBlock(),
+      queue,
+      hooks,
+    );
+    const element = createElement('a', { href: '#/articles/123' });
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    let context = new RenderContext(host, updater, block, hooks, queue);
     let [locationState] = context.use(hashLocation);
     context.finalize();
-    updater.flushUpdate(queue, host);
+    context.flushUpdate();
 
-    const element = createElement('a', { href: '#/articles/123' });
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
 
-    context = new RenderContext(host, updater, block, hooks, queue);
+    context = context.clone();
     [locationState] = context.use(hashLocation);
 
     expect(locationState.url.toString()).toBe('/articles/123');
@@ -1313,4 +1336,12 @@ function getHrefWithoutHash(location: Location): string {
   return location.hash !== ''
     ? location.href.slice(0, -location.hash.length)
     : location.href;
+}
+
+function isEffectHook(hook: Hook): hook is EffectHook {
+  return (
+    hook.type === HookType.InsertionEffect ||
+    hook.type === HookType.LayoutEffect ||
+    hook.type === HookType.PassiveEffect
+  );
 }

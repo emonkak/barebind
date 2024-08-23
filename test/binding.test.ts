@@ -292,28 +292,31 @@ describe('AttributeBinding', () => {
         expect(context.isPending()).toBe(false);
       },
     );
-  });
 
-  describe('.disconnect()', () => {
-    it('should do nothing', () => {
+    it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
+      const value = 'foo';
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: 'contenteditable',
+        name: 'class',
       } as const;
-      const binding = new AttributeBinding(true, part);
+      const binding = new AttributeBinding(value, part);
 
-      binding.disconnect(context);
+      binding.connect(context);
+      binding.unbind(context);
+      context.flushUpdate();
 
-      expect(context.isPending()).toBe(false);
+      expect(part.node.getAttribute('class')).toBe(null);
     });
+  });
 
+  describe('.disconnect()', () => {
     it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
@@ -334,11 +337,6 @@ describe('AttributeBinding', () => {
       context.flushUpdate();
 
       expect(part.node.getAttribute('class')).toBe(null);
-
-      binding.bind(value, context);
-      context.flushUpdate();
-
-      expect(part.node.getAttribute('class')).toBe(value);
     });
   });
 });
@@ -647,19 +645,18 @@ describe('EventBinding', () => {
       } as const;
       const binding = new EventBinding(value, part);
 
-      binding.connect(context);
-
-      context.flushUpdate();
-
       const enqueueMutationEffectSpy = vi.spyOn(
         context,
         'enqueueMutationEffect',
       );
 
+      binding.connect(context);
+      context.flushUpdate();
+
       binding.unbind(context);
       binding.unbind(context);
 
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledTimes(2);
       expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
     });
 
@@ -687,6 +684,30 @@ describe('EventBinding', () => {
       binding.unbind(context);
 
       expect(enqueueMutationEffectSpy).not.toHaveBeenCalled();
+    });
+
+    it('should cancel mounting', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = () => {};
+      const part = {
+        type: PartType.Event,
+        node: document.createElement('div'),
+        name: 'hello',
+      } as const;
+      const binding = new EventBinding(value, part);
+
+      const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
+
+      binding.connect(context);
+      binding.unbind(context);
+      context.flushUpdate();
+
+      expect(addEventListenerSpy).not.toHaveBeenCalled();
     });
   });
 
@@ -757,33 +778,6 @@ describe('EventBinding', () => {
       );
     });
 
-    it('should do nothing if no event listener is registered', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const part = {
-        type: PartType.Event,
-        node: document.createElement('div'),
-        name: 'hello',
-      } as const;
-      const binding = new EventBinding(null, part);
-
-      const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
-      const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.disconnect(context);
-
-      expect(context.isPending()).toBe(false);
-      expect(addEventListenerSpy).not.toHaveBeenCalled();
-      expect(removeEventListenerSpy).not.toHaveBeenCalled();
-    });
-
     it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
@@ -798,6 +792,7 @@ describe('EventBinding', () => {
         name: 'hello',
       } as const;
       const binding = new EventBinding(value, part);
+
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
 
       binding.connect(context);
@@ -805,12 +800,6 @@ describe('EventBinding', () => {
       context.flushUpdate();
 
       expect(addEventListenerSpy).not.toHaveBeenCalled();
-
-      binding.bind(value, context);
-      context.flushUpdate();
-
-      expect(addEventListenerSpy).toHaveBeenCalledOnce();
-      expect(addEventListenerSpy).toHaveBeenCalledWith('hello', binding);
     });
   });
 });
@@ -936,7 +925,7 @@ describe('NodeBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should set null to the value of the node', () => {
+    it('should set null to the node value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -963,44 +952,29 @@ describe('NodeBinding', () => {
       expect(part.node.nodeValue).toBe('');
     });
 
-    it('should do nothing if the value is null', () => {
+    it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
+      const value = 'foo';
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const binding = new NodeBinding(null, part);
+      const binding = new NodeBinding(value, part);
 
+      binding.connect(context);
       binding.unbind(context);
+      context.flushUpdate();
 
-      expect(context.isPending()).toBe(false);
+      expect(part.node.nodeValue).toBe('');
     });
   });
 
   describe('.disconnect()', () => {
-    it('should do nothing', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const binding = new NodeBinding('foo', part);
-
-      binding.disconnect(context);
-
-      expect(context.isPending()).toBe(false);
-    });
-
     it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
@@ -1020,11 +994,6 @@ describe('NodeBinding', () => {
       context.flushUpdate();
 
       expect(part.node.nodeValue).toBe('');
-
-      binding.bind(value, context);
-      context.flushUpdate();
-
-      expect(part.node.nodeValue).toBe(value);
     });
   });
 });
@@ -1147,7 +1116,7 @@ describe('PropertyBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should do nothing', () => {
+    it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -1162,6 +1131,7 @@ describe('PropertyBinding', () => {
       } as const;
       const binding = new PropertyBinding(value, part);
 
+      binding.connect(context);
       binding.unbind(context);
       context.flushUpdate();
 
@@ -1170,26 +1140,6 @@ describe('PropertyBinding', () => {
   });
 
   describe('.disconnect()', () => {
-    it('should do nothing', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = 'foo';
-      const part = {
-        type: PartType.Property,
-        node: document.createElement('div'),
-        name: 'className',
-      } as const;
-      const binding = new PropertyBinding(value, part);
-
-      binding.disconnect(context);
-
-      expect(context.isPending()).toBe(false);
-    });
-
     it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),

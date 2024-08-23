@@ -15,7 +15,7 @@ import {
   nameTag,
 } from '../baseTypes.js';
 import { ensureDirective, reportPart } from '../error.js';
-import { Root as RootBinding } from '../root.js';
+import { Root } from '../root.js';
 
 export abstract class AbstractTemplateResult<TData, TContext>
   implements TemplateDirective<TData, TContext>
@@ -76,14 +76,14 @@ export class LazyTemplateResult<TData, TContext> extends AbstractTemplateResult<
   [directiveTag](
     part: Part,
     context: DirectiveContext<TContext>,
-  ): RootBinding<AbstractTemplateResult<TData, TContext>, TContext> {
+  ): Root<AbstractTemplateResult<TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'LazyTemplateResult directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    return new RootBinding<AbstractTemplateResult<TData, TContext>, TContext>(
+    return new Root<AbstractTemplateResult<TData, TContext>, TContext>(
       new TemplateResultBinding(this, part),
       context,
     );

@@ -56,8 +56,8 @@ export interface UpdateRuntime<TContext> {
   beginRender(
     updater: Updater<TContext>,
     block: Block<TContext>,
-    hooks: Hook[],
     queue: UpdateQueue<TContext>,
+    hooks: Hook[],
   ): TContext;
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
@@ -271,6 +271,9 @@ export class UpdateContext<TContext = unknown> {
     return this._block;
   }
 
+  /**
+   * @internal
+   */
   get queue(): UpdateQueue<TContext> {
     return this._queue;
   }
@@ -313,8 +316,8 @@ export class UpdateContext<TContext = unknown> {
     const context = this._host.beginRender(
       this._updater,
       this._block,
-      hooks,
       this._queue,
+      hooks,
     );
     const result = type(props, context);
 
@@ -346,14 +349,6 @@ export function isDirective<TValue>(
   value: TValue,
 ): value is TValue & Directive<TValue> {
   return value !== null && typeof value === 'object' && directiveTag in value;
-}
-
-export function isEffectHook(hook: Hook): hook is EffectHook {
-  return (
-    hook.type === HookType.InsertionEffect ||
-    hook.type === HookType.LayoutEffect ||
-    hook.type === HookType.PassiveEffect
-  );
 }
 
 export function nameOf(value: unknown): string {

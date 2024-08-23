@@ -91,6 +91,8 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     if (Object.keys(this._memoizedClasses).length > 0) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
   }
 

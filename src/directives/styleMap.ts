@@ -104,6 +104,8 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     if (Object.keys(this._memoizedStyles).length > 0) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
   }
 

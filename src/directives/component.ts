@@ -6,14 +6,15 @@ import {
   type Directive,
   type DirectiveContext,
   type Effect,
+  type EffectHook,
   type Hook,
+  HookType,
   type Part,
   PartType,
   type Template,
   type TemplateView,
   type UpdateContext,
   directiveTag,
-  isEffectHook,
   nameOf,
   nameTag,
 } from '../baseTypes.js';
@@ -125,7 +126,7 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._value.type !== newValue.type) {
       // The component type has been changed, so we need to clean hooks before
       // rendering.
-      this._cleanHooks();
+      this._cleanHooks(context);
     }
 
     this._triggerRender(newValue, context);
@@ -134,14 +135,14 @@ export class ComponentBinding<TProps, TData, TContext>
 
   unbind(context: UpdateContext<TContext>): void {
     this._pendingView?.unbind(context);
-    this._cleanHooks();
+    this._cleanHooks(context);
     this._requestCommit(context);
     this._status = CommitStatus.Unmounting;
   }
 
   disconnect(context: UpdateContext<TContext>): void {
     this._pendingView?.disconnect(context);
-    this._cleanHooks();
+    this._cleanHooks(context);
     this._status = CommitStatus.Committed;
   }
 
@@ -161,12 +162,20 @@ export class ComponentBinding<TProps, TData, TContext>
     this._status = CommitStatus.Committed;
   }
 
-  private _cleanHooks(): void {
+  private _cleanHooks(context: UpdateContext<TContext>): void {
     // Clean hooks in reverse order.
     for (let i = this._hooks.length - 1; i >= 0; i--) {
       const hook = this._hooks[i]!;
-      if (isEffectHook(hook)) {
-        hook.cleanup?.();
+      switch (hook.type) {
+        case HookType.InsertionEffect:
+          context.enqueueMutationEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.LayoutEffect:
+          context.enqueueLayoutEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.PassiveEffect:
+          context.enqueuePassiveEffect(new CleanEffectHook(hook));
+          break;
       }
     }
     this._hooks = [];
@@ -247,5 +256,18 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
+  }
+}
+
+class CleanEffectHook implements Effect {
+  private _hook: EffectHook;
+
+  constructor(hook: EffectHook) {
+    this._hook = hook;
+  }
+
+  commit(): void {
+    this._hook.cleanup?.();
+    this._hook.cleanup = undefined;
   }
 }

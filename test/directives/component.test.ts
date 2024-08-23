@@ -736,12 +736,22 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
-      const cleanup1Fn = vi.fn();
-      const cleanup2Fn = vi.fn();
+      const cleanup1 = vi.fn();
+      const cleanup2 = vi.fn();
+      const cleanup3 = vi.fn();
+      const cleanup4 = vi.fn();
+      const effect1 = vi.fn(() => cleanup1);
+      const effect2 = vi.fn(() => cleanup2);
+      const effect3 = vi.fn(() => cleanup3);
+      const effect4 = vi.fn(() => cleanup4);
+      const effect5 = vi.fn();
       const value = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
-          context.useEffect(() => cleanup1Fn);
-          context.useLayoutEffect(() => cleanup2Fn);
+          context.useEffect(effect1);
+          context.useInsertionEffect(effect2);
+          context.useLayoutEffect(effect3);
+          context.useEffect(effect4);
+          context.useEffect(effect5);
           return new TemplateResult(new MockTemplate(), {});
         },
         {},
@@ -756,12 +766,35 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       binding.disconnect(context);
+      context.flushUpdate();
 
-      expect(context.isPending()).toBe(false);
-      expect(cleanup1Fn).toHaveBeenCalledOnce();
-      expect(cleanup2Fn).toHaveBeenCalledOnce();
-      expect(cleanup1Fn.mock.invocationCallOrder[0]!).toBeGreaterThan(
-        cleanup2Fn.mock.invocationCallOrder[0]!,
+      const effectInvocationCallOrders = [
+        effect2,
+        effect3,
+        effect1,
+        effect4,
+        effect5,
+      ].map((spy) => spy.mock.invocationCallOrder[0]);
+      const cleanupInvocationCallOrders = [
+        cleanup2,
+        cleanup3,
+        cleanup4,
+        cleanup1,
+      ].map((spy) => spy.mock.invocationCallOrder[0]);
+
+      expect(effect1).toHaveBeenCalledOnce();
+      expect(effect2).toHaveBeenCalledOnce();
+      expect(effect3).toHaveBeenCalledOnce();
+      expect(effect4).toHaveBeenCalledOnce();
+      expect(effect5).toHaveBeenCalledOnce();
+      expect(cleanup1).toHaveBeenCalledOnce();
+      expect(cleanup2).toHaveBeenCalledOnce();
+      expect(cleanup3).toHaveBeenCalledOnce();
+      expect(effectInvocationCallOrders).toStrictEqual(
+        effectInvocationCallOrders.toSorted(),
+      );
+      expect(cleanupInvocationCallOrders).toStrictEqual(
+        cleanupInvocationCallOrders.toSorted(),
       );
     });
 

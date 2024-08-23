@@ -68,6 +68,8 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     if (this._memoizedValue != null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
   }
 
@@ -264,6 +266,8 @@ export class EventBinding
     if (this._memoizedValue != null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
   }
 
@@ -410,6 +414,8 @@ export class NodeBinding implements Binding<unknown>, Effect {
     if (this._memoizedValue !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
   }
 
@@ -492,7 +498,9 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(_context: UpdateContext): void {}
+  unbind(_context: UpdateContext): void {
+    this._status = CommitStatus.Committed;
+  }
 
   disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;

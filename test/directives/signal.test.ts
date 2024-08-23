@@ -1,11 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  type EffectHook,
   type Hook,
+  HookType,
   PartType,
   UpdateContext,
   directiveTag,
-  isEffectHook,
   nameTag,
 } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding.js';
@@ -90,12 +91,10 @@ describe('Signal', () => {
       expect(requstUpdateSpy).not.toHaveBeenCalled();
 
       signal.value = 'bar';
-
       expect(requstUpdateSpy).toHaveBeenCalledOnce();
 
       cleanHooks(context.hooks);
       signal.value = 'baz';
-
       expect(requstUpdateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -538,4 +537,11 @@ function cleanHooks(hooks: Hook[]): void {
       hook.cleanup?.();
     }
   }
+}
+function isEffectHook(hook: Hook): hook is EffectHook {
+  return (
+    hook.type === HookType.InsertionEffect ||
+    hook.type === HookType.LayoutEffect ||
+    hook.type === HookType.PassiveEffect
+  );
 }
