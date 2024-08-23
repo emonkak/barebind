@@ -7,8 +7,8 @@ import {
   type Root,
   type TaskPriority,
   UpdateContext,
+  type UpdateHost,
   type UpdateQueue,
-  type UpdateRuntime,
   type Updater,
   nameOf,
 } from './baseTypes.js';
@@ -18,12 +18,12 @@ import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 import type {} from './typings/deprecatedEvent.js';
 
-export interface UpdateHostOptions {
+export interface ClientUpdateHostOptions {
   name?: string;
   constants?: Map<unknown, unknown>;
 }
 
-export class UpdateHost implements UpdateRuntime<RenderContext> {
+export class ClientUpdateHost implements UpdateHost<RenderContext> {
   private readonly _constants: Map<unknown, unknown>;
 
   private readonly _blockScopes: WeakMap<
@@ -43,7 +43,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
   constructor({
     name = getRandomString(8),
     constants = new Map(),
-  }: UpdateHostOptions = {}) {
+  }: ClientUpdateHostOptions = {}) {
     this._name = name;
     this._constants = constants;
   }

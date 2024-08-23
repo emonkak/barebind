@@ -18,7 +18,7 @@ import {
   resetScrollPosition,
 } from '../src/location.js';
 import { RenderContext } from '../src/renderContext.js';
-import { UpdateHost } from '../src/updateHost.js';
+import { ClientUpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock } from './mocks.js';
 
@@ -123,7 +123,7 @@ describe('browserLocation', () => {
 
   it('should return the current location of the browser', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -145,7 +145,7 @@ describe('browserLocation', () => {
 
   it('should push the a location to the history', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -173,7 +173,7 @@ describe('browserLocation', () => {
 
   it('should replace the new location to the session', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -202,7 +202,7 @@ describe('browserLocation', () => {
 
   it('should update the state when "popstate" event is fired', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -252,7 +252,7 @@ describe('browserLocation', () => {
 
   it('should update the state when "click" event is fired', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -292,7 +292,7 @@ describe('browserLocation', () => {
 
   it('should update the state when "submit" event is fired', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -335,7 +335,7 @@ describe('browserLocation', () => {
 
   it('should register the current location', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -354,7 +354,7 @@ describe('browserLocation', () => {
 describe('currentLocation', () => {
   it('should throw an error if the current location is not registered', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
     );
@@ -381,7 +381,7 @@ describe('hashLocation', () => {
 
   it('should return the current location by the fragment identifier', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -404,7 +404,7 @@ describe('hashLocation', () => {
 
   it('should push a new location to the fragment identifier', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -434,7 +434,7 @@ describe('hashLocation', () => {
 
   it('should replace a new location to the fragment identifier', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -465,7 +465,7 @@ describe('hashLocation', () => {
 
   it('should register the current location', () => {
     const context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -478,7 +478,7 @@ describe('hashLocation', () => {
 
   it('should update the state when "hashchange" event is fired', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,
@@ -519,7 +519,7 @@ describe('hashLocation', () => {
 
   it('should update the state when "click" event is fired', () => {
     let context = new RenderContext(
-      new UpdateHost(),
+      new ClientUpdateHost(),
       new SyncUpdater(),
       new MockBlock(),
       queue,

@@ -13,8 +13,8 @@ import {
   type Template,
   type TemplateView,
   type UpdateContext,
+  type UpdateHost,
   type UpdateQueue,
-  type UpdateRuntime,
   type Updater,
   directiveTag,
 } from '../src/baseTypes.js';
@@ -137,7 +137,7 @@ export class MockTemplateView<TData, TContext>
   disconnect(_context: UpdateContext): void {}
 }
 
-export class MockUpdateHost implements UpdateRuntime<RenderContext> {
+export class MockUpdateHost implements UpdateHost<RenderContext> {
   private _idCounter = 0;
 
   beginRender(

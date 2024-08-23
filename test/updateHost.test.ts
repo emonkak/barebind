@@ -7,7 +7,7 @@ import {
   PartType,
   createUpdateQueue,
 } from '../src/baseTypes.js';
-import { UpdateHost } from '../src/updateHost.js';
+import { ClientUpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextDirective } from './mocks.js';
 
@@ -31,10 +31,10 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'wheel',
 ];
 
-describe('UpdateHost', () => {
+describe('ClientUpdateHost', () => {
   describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const queue = createUpdateQueue();
@@ -51,7 +51,7 @@ describe('UpdateHost', () => {
   describe('.createRoot()', () => {
     it('should mount a value inside the container', async () => {
       const container = document.createElement('div');
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const updater = new SyncUpdater();
 
       const value1 = new TextDirective('foo');
@@ -82,7 +82,7 @@ describe('UpdateHost', () => {
 
   describe('.flushEffects()', () => {
     it('should perform given effects', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const effect1 = {
         commit: vi.fn(),
       };
@@ -100,7 +100,7 @@ describe('UpdateHost', () => {
 
   describe('.getCurrentPriority()', () => {
     it('should return "user-visible" if there is no current event', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
 
       vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
 
@@ -108,7 +108,7 @@ describe('UpdateHost', () => {
     });
 
     it('should return "user-blocking" if the current event is not continuous', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
 
       const eventMock = vi
         .spyOn(globalThis, 'event', 'get')
@@ -121,7 +121,7 @@ describe('UpdateHost', () => {
     it.each(CONTINUOUS_EVENT_TYPES)(
       'should return "user-visible" if the current event is continuous',
       (eventType) => {
-        const host = new UpdateHost();
+        const host = new ClientUpdateHost();
 
         const eventMock = vi
           .spyOn(globalThis, 'event', 'get')
@@ -136,17 +136,17 @@ describe('UpdateHost', () => {
   describe('.getHostName()', () => {
     it('should return the unpredictable host name', () => {
       expect(
-        new UpdateHost({
+        new ClientUpdateHost({
           name: '__test__',
         }).getHostName(),
       ).toBe('__test__');
-      expect(new UpdateHost().getHostName()).toMatch(/^[0-9a-z]+$/);
+      expect(new ClientUpdateHost().getHostName()).toMatch(/^[0-9a-z]+$/);
     });
   });
 
   describe('.getHTMLTemplate()', () => {
     it('should create a HTML template from tokens', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
@@ -155,7 +155,7 @@ describe('UpdateHost', () => {
     });
 
     it('should get a HTML template from cache if avaiable', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
@@ -165,7 +165,7 @@ describe('UpdateHost', () => {
 
   describe('.getSVGTemplate()', () => {
     it('should create a SVG template from tokens', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
       const template = host.getSVGTemplate(tokens, data);
 
@@ -177,7 +177,7 @@ describe('UpdateHost', () => {
     });
 
     it('should get a SVG template from cache if avaiable', () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getSVGTemplate(tokens, data);
 
@@ -187,7 +187,7 @@ describe('UpdateHost', () => {
 
   describe('.getScopedValue()', () => {
     it('should get a scoped value from constants', () => {
-      const host = new UpdateHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientUpdateHost({ constants: new Map([['foo', 123]]) });
       const block = new MockBlock();
 
       expect(host.getScopedValue('foo')).toBe(123);
@@ -195,7 +195,7 @@ describe('UpdateHost', () => {
     });
 
     it('should get a scoped value from the block scope', () => {
-      const host = new UpdateHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientUpdateHost({ constants: new Map([['foo', 123]]) });
       const block = new MockBlock();
 
       host.setScopedValue('foo', 456, block);
@@ -206,7 +206,7 @@ describe('UpdateHost', () => {
     });
 
     it('should get a scoped value from the parent block scope', () => {
-      const host = new UpdateHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientUpdateHost({ constants: new Map([['foo', 123]]) });
       const parent = new MockBlock();
       const block = new MockBlock(parent);
 
@@ -218,7 +218,7 @@ describe('UpdateHost', () => {
 
   describe('.nextIdentifier()', () => {
     it('should return a next identifier', async () => {
-      const host = new UpdateHost();
+      const host = new ClientUpdateHost();
 
       expect(host.nextIdentifier()).toBe(1);
       expect(host.nextIdentifier()).toBe(2);

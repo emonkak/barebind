@@ -13,8 +13,8 @@ import {
   type RefObject,
   type TaskPriority,
   UpdateContext,
+  type UpdateHost,
   type UpdateQueue,
-  type UpdateRuntime,
   type Updater,
   createUpdateQueue,
 } from './baseTypes.js';
@@ -56,7 +56,7 @@ export type NewState<TState> = [TState] extends [Function]
   : ((prevState: TState) => TState) | TState;
 
 export class RenderContext {
-  private readonly _host: UpdateRuntime<RenderContext>;
+  private readonly _host: UpdateHost<RenderContext>;
 
   private readonly _updater: Updater<RenderContext>;
 
@@ -69,7 +69,7 @@ export class RenderContext {
   private _hookIndex = 0;
 
   constructor(
-    host: UpdateRuntime<RenderContext>,
+    host: UpdateHost<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext> = createUpdateQueue(),
@@ -82,7 +82,7 @@ export class RenderContext {
     this._hooks = hooks;
   }
 
-  get host(): UpdateRuntime<RenderContext> {
+  get host(): UpdateHost<RenderContext> {
     return this._host;
   }
 
