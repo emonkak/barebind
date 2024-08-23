@@ -89,7 +89,7 @@ describe('IfElse', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new IfElseBinding from a non-directive value', () => {
+    it('should create a new IfElseBinding from a non-directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -122,7 +122,7 @@ describe('IfElse', () => {
       expect(getEndNode).toHaveBeenCalledOnce();
     });
 
-    it('should return a new IfElseBinding from a directive value', () => {
+    it('should create a new IfElseBinding from a directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

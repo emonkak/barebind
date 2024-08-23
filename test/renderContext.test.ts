@@ -40,7 +40,7 @@ describe('RenderContext', () => {
   });
 
   describe('.element()', () => {
-    it('should return a TemplateResult with ElementTemplate', () => {
+    it('should create a TemplateResult with ElementTemplate', () => {
       const context = new RenderContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -57,7 +57,7 @@ describe('RenderContext', () => {
   });
 
   describe('.empty()', () => {
-    it('should return a TemplateResult with EmptyTemplate', () => {
+    it('should create a TemplateResult with EmptyTemplate', () => {
       const context = new RenderContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -270,7 +270,7 @@ describe('RenderContext', () => {
   });
 
   describe('.only()', () => {
-    it('should return a TemplateResult with ValueTemplate', () => {
+    it('should create a TemplateResult with ValueTemplate', () => {
       const context = new RenderContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -328,7 +328,7 @@ describe('RenderContext', () => {
   });
 
   describe('.text()', () => {
-    it('should return a TemplateResult with TextTemplate', () => {
+    it('should create a TemplateResult with TextTemplate', () => {
       const context = new RenderContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -343,7 +343,7 @@ describe('RenderContext', () => {
   });
 
   describe('.unsafeHTML()', () => {
-    it('should return a LazyTemplateResult with UnsafeHTMLTemplate', () => {
+    it('should create a LazyTemplateResult with UnsafeHTMLTemplate', () => {
       const context = new RenderContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -360,7 +360,7 @@ describe('RenderContext', () => {
   });
 
   describe('.unsafeSVG()', () => {
-    it('should return a LazyTemplateResult with UnsafeSVGTemplate', () => {
+    it('should create a LazyTemplateResult with UnsafeSVGTemplate', () => {
       const context = new RenderContext(
         new MockUpdateHost(),
         new SyncUpdater(),

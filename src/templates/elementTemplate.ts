@@ -124,17 +124,11 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
   mount(part: ChildNodePart): void {
     const referenceNode = part.node;
     const element = this._elementBinding.part.node;
-
     referenceNode.before(element);
   }
 
-  unmount(part: ChildNodePart): void {
-    const { parentNode } = part.node;
-
-    if (parentNode !== null) {
-      const element = this._elementBinding.part.node;
-
-      parentNode.removeChild(element);
-    }
+  unmount(_part: ChildNodePart): void {
+    const { node } = this._elementBinding.part;
+    node.remove();
   }
 }

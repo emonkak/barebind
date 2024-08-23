@@ -147,9 +147,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
     const updateContext = new UpdateContext(this, updater, block);
 
     updateContext.enqueueMutationEffect(new MountNode(part.node, container));
-
     binding.connect(updateContext);
-
     updateContext.flushUpdate();
 
     return () => {

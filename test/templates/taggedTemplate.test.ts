@@ -329,7 +329,7 @@ describe('TaggedTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new TaggedTemplateView', () => {
+    it('should create a new TaggedTemplateView', () => {
       const { template, data } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
@@ -394,7 +394,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should return a TaggedTemplateView without bindings', () => {
+    it('should create a TaggedTemplateView without bindings', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -411,7 +411,7 @@ describe('TaggedTemplate', () => {
       expect(view.endNode).toBe(view.childNodes[0]);
     });
 
-    it('should return a TaggedTemplateView with a empty template', () => {
+    it('should create a TaggedTemplateView with a empty template', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -428,7 +428,7 @@ describe('TaggedTemplate', () => {
       expect(view.endNode).toBeNull();
     });
 
-    it('should return a TaggedTemplateView with a single value', () => {
+    it('should create a TaggedTemplateView with a single value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -747,43 +747,6 @@ describe('TaggedTemplateView', () => {
       view.unmount(part);
 
       expect(container.innerHTML).toBe('<!---->');
-    });
-  });
-
-  describe('.unmount()', () => {
-    it('should not remove child nodes if a different part is given', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const { template, data } = html`
-        <p>Hello, ${'World'}!</p>
-      `;
-      const view = template.render(data, context);
-
-      container.appendChild(part.node);
-      view.connect(context);
-      context.flushUpdate();
-
-      expect(container.innerHTML).toBe('<!---->');
-
-      view.mount(part);
-
-      expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
-
-      view.unmount({
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      });
-
-      expect(container.innerHTML).toBe('<p>Hello, World!</p><!---->');
     });
   });
 });

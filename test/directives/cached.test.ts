@@ -35,7 +35,7 @@ describe('Cached', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new CachedBinding from a non-directive value', () => {
+    it('should create a new CachedBinding from a non-directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -64,7 +64,7 @@ describe('Cached', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return a new CachedBinding from a directive value', () => {
+    it('should create a new CachedBinding from a directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

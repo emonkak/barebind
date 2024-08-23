@@ -281,13 +281,10 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     switch (this._status) {
       case CommitStatus.Mounting: {
         const { content } = this._value;
-
         this._textNode.data = content;
-
         if (this._textNode.parentNode === null) {
           this._part.node.before(this._textNode);
         }
-
         break;
       }
       case CommitStatus.Unmounting:

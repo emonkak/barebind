@@ -16,7 +16,7 @@ describe('classMap()', () => {
 
 describe('ClassMapDirective', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new ClassMapBinding', () => {
+    it('should create a new ClassMapBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

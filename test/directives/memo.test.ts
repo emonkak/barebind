@@ -35,7 +35,7 @@ describe('Memo', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new MemoBinding from the non-directive value', () => {
+    it('should create a new MemoBinding from the non-directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -65,7 +65,7 @@ describe('Memo', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return a new MemoBinding from the directive value', () => {
+    it('should create a new MemoBinding from the directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

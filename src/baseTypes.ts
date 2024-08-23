@@ -72,11 +72,6 @@ export interface UpdateRuntime<TContext> {
     data: TData,
   ): Template<TData>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
-  mount<TValue>(
-    value: TValue,
-    container: ChildNode,
-    updater: Updater<TContext>,
-  ): () => void;
   nextIdentifier(): number;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
 }

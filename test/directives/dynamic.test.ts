@@ -35,7 +35,7 @@ describe('Dynamic', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new DynamicBinding from the non-directive value', () => {
+    it('should create a new DynamicBinding from the non-directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -63,7 +63,7 @@ describe('Dynamic', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return an instance of DynamicBinding from a directive value', () => {
+    it('should create a new DynamicBinding from the directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

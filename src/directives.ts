@@ -10,4 +10,5 @@ export * from './directives/noValue.js';
 export * from './directives/ref.js';
 export * from './directives/signal.js';
 export * from './directives/styleMap.js';
+export * from './directives/teleport.js';
 export * from './directives/templateResult.js';

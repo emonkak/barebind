@@ -33,7 +33,7 @@ describe('keyedList()', () => {
 
 describe('List', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new ListBinding', () => {
+    it('should create a new ListBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

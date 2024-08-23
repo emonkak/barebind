@@ -90,7 +90,7 @@ describe('UnsafeSVGTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new UnsafeHTMLTemplateView', () => {
+    it('should create a new UnsafeHTMLTemplateView', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

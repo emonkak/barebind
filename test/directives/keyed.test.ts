@@ -35,7 +35,7 @@ describe('Keyed', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new KeyedBinding from a non-directive value', () => {
+    it('should create a new KeyedBinding from a non-directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -64,7 +64,7 @@ describe('Keyed', () => {
       expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
-    it('should return a new KeyedBinding from a directive value', () => {
+    it('should create a new KeyedBinding from a directive value', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

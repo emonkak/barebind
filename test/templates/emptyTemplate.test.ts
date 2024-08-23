@@ -18,7 +18,7 @@ describe('EmptyTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new EmptyTemplateView', () => {
+    it('should create a new EmptyTemplateView', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

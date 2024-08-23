@@ -99,7 +99,8 @@ export class SingleTemplateView<T> implements TemplateView<T> {
     referenceNode.before(this._binding.part.node);
   }
 
-  unmount(part: ChildNodePart): void {
-    part.node.parentNode?.removeChild(this._binding.part.node);
+  unmount(_part: ChildNodePart): void {
+    const { node } = this._binding.part;
+    node.remove();
   }
 }

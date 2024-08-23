@@ -307,13 +307,9 @@ export class TaggedTemplateView<TData extends readonly any[]>
     }
   }
 
-  unmount(part: ChildNodePart): void {
-    const { parentNode } = part.node;
-
-    if (parentNode !== null) {
-      for (let i = 0, l = this._childNodes.length; i < l; i++) {
-        parentNode.removeChild(this._childNodes[i]!);
-      }
+  unmount(_part: ChildNodePart): void {
+    for (let i = 0, l = this._childNodes.length; i < l; i++) {
+      this._childNodes[i]!.remove();
     }
   }
 }

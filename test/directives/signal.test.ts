@@ -49,7 +49,7 @@ describe('Signal', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new SignalBinding', () => {
+    it('should create a new SignalBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

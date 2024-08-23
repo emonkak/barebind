@@ -20,7 +20,7 @@ describe('ValueTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return a new SingleTemplateView', () => {
+    it('should create a new SingleTemplateView', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -224,34 +224,6 @@ describe('SingleTemplateView', () => {
 
       view.unmount(containerPart);
       expect(container.innerHTML).toBe('<!---->');
-    });
-  });
-
-  describe('.unmount()', () => {
-    it('should not remove the node if a different part is given', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode('foo'),
-      } as const;
-      const containerPart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new NodeBinding('foo', part);
-      const view = new SingleTemplateView(binding);
-
-      container.appendChild(containerPart.node);
-      expect(container.innerHTML).toBe('<!---->');
-
-      view.mount(containerPart);
-      expect(container.innerHTML).toBe('foo<!---->');
-
-      view.unmount({
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      });
-      expect(container.innerHTML).toBe('foo<!---->');
     });
   });
 });

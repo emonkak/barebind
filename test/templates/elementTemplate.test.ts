@@ -208,48 +208,4 @@ describe('ElementTemplateView', () => {
       expect(container.innerHTML).toBe('<!---->');
     });
   });
-
-  describe('.unmount()', () => {
-    it('should not remove the node if a different part is given', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const view = new ElementTemplate('div').render(
-        {
-          elementValue: { class: 'foo' },
-          childNodeValue: new TextDirective('bar'),
-        },
-        context,
-      );
-
-      container.appendChild(part.node);
-      view.connect(context);
-      context.flushUpdate();
-
-      expect(container.innerHTML).toBe('<!---->');
-
-      view.mount(part);
-
-      expect(container.innerHTML).toBe(
-        '<div class="foo">bar<!--TextDirective--></div><!---->',
-      );
-
-      view.unmount({
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      });
-
-      expect(container.innerHTML).toBe(
-        '<div class="foo">bar<!--TextDirective--></div><!---->',
-      );
-    });
-  });
 });

@@ -16,7 +16,7 @@ describe('ref()', () => {
 
 describe('Ref', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new RefBinding', () => {
+    it('should create a new RefBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

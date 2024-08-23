@@ -25,7 +25,7 @@ describe('NoValue', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new NoValueBinding', () => {
+    it('should create a new NoValueBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

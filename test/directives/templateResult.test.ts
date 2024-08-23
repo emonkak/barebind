@@ -28,7 +28,7 @@ describe('TemplateResult', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new TemplateBinding directive', () => {
+    it('should create a new TemplateBinding directive', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
@@ -78,7 +78,7 @@ describe('LazyTemplateResult', () => {
   });
 
   describe('[directiveTag]()', () => {
-    it('should return a new TemplateBinding directive', () => {
+    it('should create a new TemplateBinding directive', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

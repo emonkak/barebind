@@ -16,7 +16,7 @@ describe('styleMap()', () => {
 
 describe('StyleMap', () => {
   describe('[directiveTag]()', () => {
-    it('should return a new StyleMapBinding', () => {
+    it('should create a new StyleMapBinding', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
