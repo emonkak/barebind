@@ -15,11 +15,11 @@ const FLAG_UPDATING = 1 << 2;
 export class Root<TValue, TContext>
   implements Binding<TValue>, Block<TContext>
 {
-  protected readonly _binding: Binding<TValue, TContext>;
+  private readonly _binding: Binding<TValue, TContext>;
 
-  protected readonly _parent: Block<TContext> | null;
+  private readonly _parent: Block<TContext> | null;
 
-  protected _value: TValue;
+  private _value: TValue;
 
   private _priority: TaskPriority = 'user-blocking';
 
