@@ -26,14 +26,16 @@ describe('NoValue', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new NoValueBinding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const binding = noValue[directiveTag](part, context);
 
       expect(binding.value).toBe(noValue);
@@ -47,14 +49,16 @@ describe('NoValue', () => {
 describe('NoValueBinding', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const binding = new NoValueBinding(part);
 
       binding.connect(context);
@@ -65,14 +69,16 @@ describe('NoValueBinding', () => {
 
   describe('.bind()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const binding = new NoValueBinding(part);
 
       binding.bind(noValue, context);
@@ -81,14 +87,16 @@ describe('NoValueBinding', () => {
     });
 
     it('should throw an error if the new value is not NoValue', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const binding = new NoValueBinding(part);
 
       expect(() => binding.bind(null as any, context)).toThrow(
@@ -99,14 +107,16 @@ describe('NoValueBinding', () => {
 
   describe('.unbind()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const binding = new NoValueBinding(part);
 
       binding.unbind(context);
@@ -117,14 +127,21 @@ describe('NoValueBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-
       const binding = new NoValueBinding(part);
 
-      binding.disconnect();
+      binding.disconnect(context);
+
+      expect(context.isPending()).toBe(false);
     });
   });
 });

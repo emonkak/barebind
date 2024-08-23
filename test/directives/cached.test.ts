@@ -36,15 +36,17 @@ describe('Cached', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new CachedBinding from a non-directive value', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = cached('foo', 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = cached('foo', 'bar');
       const binding = value[directiveTag](part, context);
 
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
@@ -63,15 +65,17 @@ describe('Cached', () => {
     });
 
     it('should return a new CachedBinding from a directive value', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = cached('foo', new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = cached('foo', new TextDirective());
       const binding = value[directiveTag](part, context);
 
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
@@ -94,15 +98,17 @@ describe('Cached', () => {
 describe('CachedBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = cached('foo', new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = cached('foo', new TextDirective());
       const binding = new CachedBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -117,15 +123,17 @@ describe('CachedBinding', () => {
 
   describe('.bind()', () => {
     it('should bind the new value to the current binding if the key is the same', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new Cached('foo', new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new Cached('foo', new TextDirective());
       const binding = new CachedBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -141,16 +149,18 @@ describe('CachedBinding', () => {
     });
 
     it('should connect a new binding and unbind the old binidng if the key changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = new Cached('foo', new TextDirective());
+      const value2 = new Cached('bar', new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = new Cached('foo', new TextDirective());
-      const value2 = new Cached('bar', new TextDirective());
       const binding = new CachedBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -169,16 +179,18 @@ describe('CachedBinding', () => {
     });
 
     it('should memoize the old binding if the key changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = new Cached('foo', new TextDirective());
+      const value2 = new Cached('bar', new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = new Cached('foo', new TextDirective());
-      const value2 = new Cached('bar', new TextDirective());
       const binding = new CachedBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -200,15 +212,17 @@ describe('CachedBinding', () => {
     });
 
     it('should throw an error if the new value is not Cached directive', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = cached('foo', new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = cached('foo', new TextDirective());
       const binding = new CachedBinding(value, part, context);
 
       expect(() => {
@@ -221,15 +235,17 @@ describe('CachedBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = cached('foo', () => new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = cached('foo', () => new TextDirective());
       const binding = new CachedBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.binding, 'unbind');
@@ -243,22 +259,25 @@ describe('CachedBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = cached('foo', () => new TextDirective());
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = cached('foo', () => new TextDirective());
       const binding = new CachedBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 });

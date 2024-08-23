@@ -32,7 +32,7 @@ export class Ref implements Directive<Ref> {
     return this._ref;
   }
 
-  [directiveTag](part: Part, _contex: DirectiveContext<unknown>): RefBinding {
+  [directiveTag](part: Part, _contex: DirectiveContext): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +
@@ -75,12 +75,12 @@ export class RefBinding implements Binding<Ref>, Effect {
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: Ref, context: UpdateContext<unknown>): void {
+  bind(newValue: Ref, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Ref, newValue, this._part);
     }
@@ -91,14 +91,14 @@ export class RefBinding implements Binding<Ref>, Effect {
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (this._memoizedRef !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._cleanRef();
     this._status = CommitStatus.Committed;
   }
@@ -118,7 +118,7 @@ export class RefBinding implements Binding<Ref>, Effect {
     this._status = CommitStatus.Committed;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueLayoutEffect(this);
     }

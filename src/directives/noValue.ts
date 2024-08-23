@@ -17,10 +17,7 @@ export class NoValue implements Directive<NoValue> {
     }
   }
 
-  [directiveTag](
-    part: Part,
-    _context: DirectiveContext<unknown>,
-  ): NoValueBinding {
+  [directiveTag](part: Part, _context: DirectiveContext): NoValueBinding {
     return new NoValueBinding(part);
   }
 }
@@ -48,17 +45,17 @@ export class NoValueBinding implements Binding<NoValue> {
     return this._part.node;
   }
 
-  connect(_context: UpdateContext<unknown>): void {}
+  connect(_context: UpdateContext): void {}
 
-  bind(newValue: NoValue, _context: UpdateContext<unknown>): void {
+  bind(newValue: NoValue, _context: UpdateContext): void {
     DEBUG: {
       ensureDirective(NoValue, newValue, this._part);
     }
   }
 
-  unbind(_context: UpdateContext<unknown>): void {}
+  unbind(_context: UpdateContext): void {}
 
-  disconnect(): void {}
+  disconnect(_context: UpdateContext): void {}
 }
 
 export const noValue = NoValue.instance;

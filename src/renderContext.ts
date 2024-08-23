@@ -9,18 +9,15 @@ import {
   HookType,
   type IdentifierHook,
   type MemoHook,
-  PartType,
   type ReducerHook,
   type RefObject,
   type TaskPriority,
-  type TemplateDirective,
-  type TemplateView,
   UpdateContext,
   type UpdateQueue,
   type UpdateRuntime,
   type Updater,
+  createUpdateQueue,
 } from './baseTypes.js';
-import { resolveBinding } from './binding.js';
 import { dependenciesAreChanged } from './compare.js';
 import {
   LazyTemplateResult,
@@ -75,14 +72,49 @@ export class RenderContext {
     host: UpdateRuntime<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    hooks: Hook[],
-    queue: UpdateQueue<RenderContext>,
+    hooks: Hook[] = [],
+    queue: UpdateQueue<RenderContext> = createUpdateQueue(),
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
     this._hooks = hooks;
     this._queue = queue;
+  }
+
+  /**
+   * @internal
+   */
+  get host(): UpdateRuntime<RenderContext> {
+    return this._host;
+  }
+
+  /**
+   * @internal
+   */
+  get updater(): Updater<RenderContext> {
+    return this._updater;
+  }
+
+  /**
+   * @internal
+   */
+  get block(): Block<RenderContext> {
+    return this._block;
+  }
+
+  /**
+   * @internal
+   */
+  get hooks(): Hook[] {
+    return this._hooks;
+  }
+
+  /**
+   * @internal
+   */
+  get queue(): UpdateQueue<RenderContext> {
+    return this._queue;
   }
 
   element<TElementValue, TChildNodeValue>(

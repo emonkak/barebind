@@ -21,9 +21,11 @@ describe('ValueTemplate', () => {
 
   describe('.render()', () => {
     it('should return a new SingleTemplateView', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = ValueTemplate.instance.render('foo', context);
 
@@ -60,9 +62,11 @@ describe('TextTemplate', () => {
 
   describe('.render()', () => {
     it('should return SingleTemplateView', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = TextTemplate.instance.render('foo', context);
 
@@ -90,106 +94,102 @@ describe('TextTemplate', () => {
 describe('SingleTemplateView', () => {
   describe('.connect()', () => {
     it('should connect the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const binding = new NodeBinding('foo', part);
       const view = new SingleTemplateView(binding);
 
       view.connect(context);
       context.flushUpdate();
-
       expect(part.node.nodeValue).toBe('foo');
 
       view.bind('bar', context);
       context.flushUpdate();
-
       expect(part.node.nodeValue).toBe('bar');
 
       view.unbind(context);
       context.flushUpdate();
-
       expect(part.node.nodeValue).toBe('');
     });
   });
 
   describe('.mount()', () => {
     it('should mount the node before the part node', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode('foo'),
+      } as const;
       const containerPart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const viewPart = {
-        type: PartType.Node,
-        node: document.createTextNode('foo'),
-      } as const;
-      const binding = new NodeBinding('foo', viewPart);
+      const binding = new NodeBinding('foo', part);
       const view = new SingleTemplateView(binding);
 
       container.appendChild(containerPart.node);
       view.connect(context);
       context.flushUpdate();
-
       expect(container.innerHTML).toBe('<!---->');
 
       view.mount(containerPart);
-
       expect(container.innerHTML).toBe('foo<!---->');
 
       view.unmount(containerPart);
-
       expect(container.innerHTML).toBe('<!---->');
     });
   });
 
   describe('.unmount()', () => {
     it('should not remove the node if a different part is given', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const container = document.createElement('div');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode('foo'),
+      } as const;
       const containerPart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const viewPart = {
-        type: PartType.Node,
-        node: document.createTextNode('foo'),
-      } as const;
-      const binding = new NodeBinding('foo', viewPart);
+      const binding = new NodeBinding('foo', part);
       const view = new SingleTemplateView(binding);
 
       container.appendChild(containerPart.node);
-
       expect(container.innerHTML).toBe('<!---->');
 
       view.mount(containerPart);
-      context.flushUpdate();
-
       expect(container.innerHTML).toBe('foo<!---->');
 
       view.unmount({
         type: PartType.ChildNode,
         node: document.createComment(''),
       });
-
       expect(container.innerHTML).toBe('foo<!---->');
     });
   });
 
   describe('.disconnect()', () => {
     it('should disconnect the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -199,9 +199,10 @@ describe('SingleTemplateView', () => {
 
       const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
 
-      view.disconnect();
+      view.disconnect(context);
 
       expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 });

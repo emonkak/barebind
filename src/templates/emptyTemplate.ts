@@ -15,7 +15,7 @@ export class EmptyTemplate implements Template<null> {
     }
   }
 
-  render(_data: null, _context: DirectiveContext<unknown>): EmptyTemplateView {
+  render(_data: null, _context: DirectiveContext): EmptyTemplateView {
     return new EmptyTemplateView();
   }
 
@@ -33,15 +33,15 @@ export class EmptyTemplateView implements TemplateView<null> {
     return null;
   }
 
-  connect(_context: UpdateContext<unknown>): void {}
+  connect(_context: UpdateContext): void {}
 
-  bind(_data: null, _context: UpdateContext<unknown>): void {}
+  bind(_data: null, _context: UpdateContext): void {}
 
-  unbind(_context: UpdateContext<unknown>): void {}
+  unbind(_context: UpdateContext): void {}
 
   mount(_part: ChildNodePart): void {}
 
   unmount(_part: ChildNodePart): void {}
 
-  disconnect(): void {}
+  disconnect(_context: UpdateContext): void {}
 }

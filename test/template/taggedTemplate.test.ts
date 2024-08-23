@@ -395,9 +395,12 @@ describe('TaggedTemplate', () => {
     });
 
     it('should return a TaggedTemplateView without bindings', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const { template } = html`<div></div>`;
       const view = template.render([], context);
 
@@ -409,9 +412,12 @@ describe('TaggedTemplate', () => {
     });
 
     it('should return a TaggedTemplateView with a empty template', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const { template } = html``;
       const view = template.render([], context);
 
@@ -423,17 +429,19 @@ describe('TaggedTemplate', () => {
     });
 
     it('should return a TaggedTemplateView with a single value', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-      const { template, data } = html`${new TextDirective('foo')}`;
-      const view = template.render(data, context);
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
+      const { template, data } = html`${new TextDirective('foo')}`;
+      const view = template.render(data, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -451,9 +459,12 @@ describe('TaggedTemplate', () => {
     });
 
     it('should throw an error if the number of holes and values do not match', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const { template, data } = html`
         <div class=${'foo'} class=${'bar'}></div>
       `;
@@ -485,15 +496,18 @@ describe('TaggedTemplate', () => {
 describe('TaggedTemplateView', () => {
   describe('.connect()', () => {
     it('should connect bindings in the view', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const { template, data } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
         </div>
       `;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
       const view = template.render(data, context);
 
       view.connect(context);
@@ -511,12 +525,15 @@ describe('TaggedTemplateView', () => {
 
   describe('.bind()', () => {
     it('should bind values corresponding to bindings in the view', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const { template, data } = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
       const view = template.render(data, context);
 
       view.connect(context);
@@ -539,9 +556,11 @@ describe('TaggedTemplateView', () => {
 
   describe('.unbind()', () => {
     it('should unbind top-level bindings in the view and other bindings are disconnected', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
       const part = {
@@ -595,9 +614,11 @@ describe('TaggedTemplateView', () => {
     });
 
     it('should only unbind top-level bindings in the view', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
       const part = {
@@ -645,9 +666,12 @@ describe('TaggedTemplateView', () => {
     });
 
     it('should throw an error if the number of binding and values do not match', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const { template, data } = html`
         <p>Count: ${0}</p>
       `;
@@ -661,13 +685,16 @@ describe('TaggedTemplateView', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect bindings in the view', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const value = new TextDirective();
       const { template, data } = html`
         <div>${value}</div>
       `;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
       let disconnects = 0;
       vi.spyOn(value, directiveTag).mockImplementation(function (
         this: TextDirective,
@@ -683,7 +710,7 @@ describe('TaggedTemplateView', () => {
 
       expect(disconnects).toBe(0);
 
-      view.disconnect();
+      view.disconnect(context);
 
       expect(disconnects).toBe(1);
     });
@@ -691,9 +718,11 @@ describe('TaggedTemplateView', () => {
 
   describe('.mount()', () => {
     it('should mount child nodes before the part node', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
       const part = {
@@ -723,9 +752,11 @@ describe('TaggedTemplateView', () => {
 
   describe('.unmount()', () => {
     it('should not remove child nodes if a different part is given', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
       const part = {

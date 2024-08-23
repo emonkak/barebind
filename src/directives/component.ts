@@ -53,7 +53,7 @@ export class Component<TProps, TData, TContext>
 
   [directiveTag](
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ): Root<Component<TProps, TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -139,8 +139,8 @@ export class ComponentBinding<TProps, TData, TContext>
     this._status = CommitStatus.Unmounting;
   }
 
-  disconnect(): void {
-    this._pendingView?.disconnect();
+  disconnect(context: UpdateContext<TContext>): void {
+    this._pendingView?.disconnect(context);
     this._cleanHooks();
     this._status = CommitStatus.Committed;
   }

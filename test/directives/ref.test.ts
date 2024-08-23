@@ -17,16 +17,18 @@ describe('ref()', () => {
 describe('Ref', () => {
   describe('[directiveTag]()', () => {
     it('should return a new RefBinding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = ref(() => {});
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -36,15 +38,17 @@ describe('Ref', () => {
     });
 
     it('should throw an error if the part does not indicate "ref" attribute', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.Attribute,
         name: 'data-ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const value = ref(() => {});
 
       expect(() => value[directiveTag](part, context)).toThrow(
@@ -57,17 +61,19 @@ describe('Ref', () => {
 describe('RefBinding', () => {
   describe('.connect()', () => {
     it('should invoke the ref callback with the element', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const refCallback = vi.fn();
+      const value = ref(refCallback);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refCallback = vi.fn();
-      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
@@ -78,17 +84,19 @@ describe('RefBinding', () => {
     });
 
     it('should assign the element to the ref object', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const refObject = { current: null };
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refObject = { current: null };
-      const value = ref(refObject);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
@@ -98,17 +106,19 @@ describe('RefBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const refObject = { current: null };
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refObject = { current: null };
-      const value = ref(refObject);
       const binding = new RefBinding(value, part);
 
       const enqueueLayoutEffectSpy = vi.spyOn(context, 'enqueueLayoutEffect');
@@ -123,20 +133,22 @@ describe('RefBinding', () => {
 
   describe('.bind()', () => {
     it('should invoke a ref callback with the element and then invoke a cleanup function', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'ref',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const cleanup = vi.fn();
       const refCallback1 = vi.fn().mockReturnValue(cleanup);
       const refCallback2 = vi.fn();
       const value1 = ref(refCallback1);
       const value2 = ref(refCallback2);
+      const part = {
+        type: PartType.Attribute,
+        name: 'ref',
+        node: document.createElement('div'),
+      } as const;
       const binding = new RefBinding(value1, part);
 
       binding.connect(context);
@@ -154,19 +166,21 @@ describe('RefBinding', () => {
     });
 
     it('should assgin an element to the ref object', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'ref',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const refObject1 = { current: null };
       const refObject2 = { current: null };
       const value1 = ref(refObject1);
       const value2 = ref(refObject2);
+      const part = {
+        type: PartType.Attribute,
+        name: 'ref',
+        node: document.createElement('div'),
+      } as const;
       const binding = new RefBinding(value1, part);
 
       binding.connect(context);
@@ -181,18 +195,20 @@ describe('RefBinding', () => {
     });
 
     it('should skip an update if the new ref is the same as the old one', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const refObject = { current: null };
+      const value1 = ref(refObject);
+      const value2 = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refObject = { current: null };
-      const value1 = ref(refObject);
-      const value2 = ref(refObject);
       const binding = new RefBinding(value1, part);
 
       binding.connect(context);
@@ -205,16 +221,18 @@ describe('RefBinding', () => {
     });
 
     it('should throw an error if the new value is not Ref directive', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = ref(() => {});
       const binding = new RefBinding(value, part);
 
       expect(() => {
@@ -227,18 +245,20 @@ describe('RefBinding', () => {
 
   describe('.unbind()', () => {
     it('should invoke a cleanup function', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const cleanup = vi.fn();
+      const refCallback = vi.fn().mockReturnValue(cleanup);
+      const value = ref(refCallback);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const cleanup = vi.fn();
-      const refCallback = vi.fn().mockReturnValue(cleanup);
-      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
@@ -253,17 +273,19 @@ describe('RefBinding', () => {
     });
 
     it('should unassign an element from the ref object', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const refObject = { current: null };
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refObject = { current: null };
-      const value = ref(refObject);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
@@ -276,6 +298,12 @@ describe('RefBinding', () => {
     });
 
     it('should do nothing if there is no memoized ref', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const value = ref(() => {});
       const part = {
         type: PartType.Attribute,
@@ -283,9 +311,6 @@ describe('RefBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new RefBinding(value, part);
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
 
       binding.unbind(context);
 
@@ -295,24 +320,26 @@ describe('RefBinding', () => {
 
   describe('.disconnect()', () => {
     it('should invoke a cleanup function', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const cleanup = vi.fn();
+      const refCallback = vi.fn().mockReturnValue(cleanup);
+      const value = ref(refCallback);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const cleanup = vi.fn();
-      const refCallback = vi.fn().mockReturnValue(cleanup);
-      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
       context.flushUpdate();
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(cleanup).toHaveBeenCalledOnce();
       expect(refCallback).toHaveBeenCalled();
@@ -320,17 +347,19 @@ describe('RefBinding', () => {
     });
 
     it('should assign null to the ref object', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const refObject = { current: null };
+      const value = ref(refObject);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const refObject = { current: null };
-      const value = ref(refObject);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
@@ -338,28 +367,30 @@ describe('RefBinding', () => {
 
       expect(refObject.current).toBe(part.node);
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(refObject.current).toBe(null);
     });
 
     it('should cancel the pending effect', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const cleanup = vi.fn();
+      const refCallback = vi.fn().mockReturnValue(cleanup);
+      const value = ref(refCallback);
       const part = {
         type: PartType.Attribute,
         name: 'ref',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const cleanup = vi.fn();
-      const refCallback = vi.fn().mockReturnValue(cleanup);
-      const value = ref(refCallback);
       const binding = new RefBinding(value, part);
 
       binding.connect(context);
-      binding.disconnect();
+      binding.disconnect(context);
       context.flushUpdate();
 
       expect(cleanup).not.toHaveBeenCalled();

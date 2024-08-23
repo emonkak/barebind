@@ -134,7 +134,7 @@ export class MockTemplateView<TData, TContext>
 
   unmount(_part: ChildNodePart): void {}
 
-  disconnect(): void {}
+  disconnect(_context: UpdateContext): void {}
 }
 
 export class MockUpdateHost implements UpdateRuntime<RenderContext> {
@@ -243,7 +243,7 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     return this._part.node;
   }
 
-  bind(newValue: TextDirective, context: UpdateContext<unknown>): void {
+  bind(newValue: TextDirective, context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
@@ -251,21 +251,21 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     this._status = CommitStatus.Mounting;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._status = CommitStatus.Mounting;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._status = CommitStatus.Unmounting;
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;
   }
 
@@ -304,7 +304,7 @@ export class TextDirective implements Directive<TextDirective> {
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext<unknown>,
+    _context: DirectiveContext,
   ): Binding<TextDirective> {
     return new TextBinding(this, part);
   }

@@ -12,7 +12,7 @@ export interface Binding<TValue, TContext = unknown> {
   connect(context: UpdateContext<TContext>): void;
   bind(newValue: TValue, context: UpdateContext<TContext>): void;
   unbind(context: UpdateContext<TContext>): void;
-  disconnect(): void;
+  disconnect(context: UpdateContext<TContext>): void;
 }
 
 export interface Directive<TThis, TContext = unknown> {
@@ -23,7 +23,7 @@ export interface Directive<TThis, TContext = unknown> {
   ): Binding<TThis, TContext>;
 }
 
-export interface DirectiveContext<TContext> {
+export interface DirectiveContext<TContext = unknown> {
   get block(): Block<TContext> | null;
 }
 
@@ -111,7 +111,7 @@ export interface TemplateView<TData, TContext = unknown> {
   unbind(context: UpdateContext<TContext>): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
-  disconnect(): void;
+  disconnect(context: UpdateContext<TContext>): void;
 }
 
 export interface Effect {

@@ -30,10 +30,7 @@ export class ClassMap implements Directive<ClassMap> {
     return this._classes;
   }
 
-  [directiveTag](
-    part: Part,
-    _context: DirectiveContext<unknown>,
-  ): ClassMapBinding {
+  [directiveTag](part: Part, _context: DirectiveContext): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
         'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +
@@ -74,12 +71,12 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: ClassMap, context: UpdateContext<unknown>): void {
+  bind(newValue: ClassMap, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(ClassMap, newValue, this._part);
     }
@@ -90,14 +87,14 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     this._pendingValue = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (Object.keys(this._memoizedClasses).length > 0) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;
   }
 
@@ -132,7 +129,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     this._status = CommitStatus.Committed;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }

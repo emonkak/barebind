@@ -4,7 +4,6 @@ import {
   type Hook,
   PartType,
   UpdateContext,
-  createUpdateQueue,
   directiveTag,
   isEffectHook,
   nameTag,
@@ -50,15 +49,17 @@ describe('Signal', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new SignalBinding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new State('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new State('foo');
       const binding = value[directiveTag](part, context);
 
       expect(binding.part).toBe(part);
@@ -73,19 +74,18 @@ describe('Signal', () => {
 
   describe('[usableTag]()', () => {
     it('should subscribe the signal and return a signal value', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
-      const context = new RenderContext(host, updater, block, hooks, queue);
+      const context = new RenderContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const signal = new State('foo');
-      const requstUpdateSpy = vi.spyOn(block, 'requestUpdate');
+      const requstUpdateSpy = vi.spyOn(context.block, 'requestUpdate');
 
       expect(context.use(signal)).toBe('foo');
       context.finalize();
-      updater.flushUpdate(queue, host);
+      context.updater.flushUpdate(context.queue, context.host);
 
       expect(requstUpdateSpy).not.toHaveBeenCalled();
 
@@ -93,196 +93,10 @@ describe('Signal', () => {
 
       expect(requstUpdateSpy).toHaveBeenCalledOnce();
 
-      cleanHooks(hooks);
+      cleanHooks(context.hooks);
       signal.value = 'baz';
 
       expect(requstUpdateSpy).toHaveBeenCalledOnce();
-    });
-  });
-});
-
-describe('SignalBinding', () => {
-  describe('.connect()', () => {
-    it('should subscribe the signal', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new State('foo');
-      const binding = new SignalBinding(value, part, context);
-
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-
-      binding.connect(context);
-
-      expect(binding.binding.value).toBe('foo');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).not.toHaveBeenCalled();
-
-      value.value = 'bar';
-
-      expect(binding.binding.value).toBe('bar');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.bind()', () => {
-    it('should update the the value binding with current signal value', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new State('foo');
-      const binding = new SignalBinding(value, part, context);
-
-      const unsubscribeSpy = vi.fn();
-      const subscribe = vi
-        .spyOn(value, 'subscribe')
-        .mockReturnValue(unsubscribeSpy);
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-
-      binding.connect(context);
-      value.setUntrackedValue('bar');
-      binding.bind(value, context);
-
-      expect(binding.binding.value).toBe('bar');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(unsubscribeSpy).not.toHaveBeenCalled();
-      expect(subscribe).toHaveBeenCalledOnce();
-    });
-
-    it('should unsubscribe the previous subscription if signal changes', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = new State('foo');
-      const value2 = new State('bar');
-      const binding = new SignalBinding(value1, part, context);
-
-      const unsubscribe1Spy = vi.fn();
-      const unsubscribe2Spy = vi.fn();
-      const subscribe1Spy = vi
-        .spyOn(value1, 'subscribe')
-        .mockReturnValue(unsubscribe1Spy);
-      const subscribe2Spy = vi
-        .spyOn(value2, 'subscribe')
-        .mockReturnValue(unsubscribe1Spy);
-      const connectSpy = vi.spyOn(binding.binding, 'connect');
-      const bindSpy = vi.spyOn(binding.binding, 'bind');
-
-      binding.connect(context);
-      binding.bind(value2, context);
-
-      expect(binding.binding.value).toBe('bar');
-      expect(connectSpy).toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(unsubscribe1Spy).toHaveBeenCalledOnce();
-      expect(unsubscribe2Spy).not.toHaveBeenCalled();
-      expect(subscribe1Spy).toHaveBeenCalledOnce();
-      expect(subscribe2Spy).toHaveBeenCalledOnce();
-    });
-
-    it('should throw the error if the value is not a signal', () => {
-      const part = {
-        type: PartType.Attribute,
-        node: document.createElement('div'),
-        name: 'class',
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new State('foo');
-      const binding = new SignalBinding(value, part, context);
-
-      expect(() => {
-        binding.bind(null as any, context);
-      }).toThrow(
-        'A value must be a instance of Signal directive, but got "null".',
-      );
-    });
-  });
-
-  describe('.unbind()', () => {
-    it('should unbind the value binding and unsubscribe the signal', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new State('foo');
-      const binding = new SignalBinding(value, part, context);
-
-      const unsubscribeSpy = vi.fn();
-      const subscribeSpy = vi
-        .spyOn(value, 'subscribe')
-        .mockReturnValue(unsubscribeSpy);
-      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
-
-      binding.connect(context);
-
-      expect(unbindSpy).not.toHaveBeenCalled();
-      expect(unsubscribeSpy).not.toHaveBeenCalled();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-
-      binding.unbind(context);
-
-      expect(unbindSpy).toHaveBeenCalledOnce();
-      expect(unsubscribeSpy).toHaveBeenCalledOnce();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should disconnect the value binding and unsubscribe the signal', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new State('foo');
-      const binding = new SignalBinding(value, part, context);
-
-      const unsubscribeSpy = vi.fn();
-      const subscribeSpy = vi
-        .spyOn(value, 'subscribe')
-        .mockReturnValue(unsubscribeSpy);
-      const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
-
-      binding.connect(context);
-
-      expect(unsubscribeSpy).not.toHaveBeenCalled();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).not.toHaveBeenCalled();
-
-      binding.disconnect();
-
-      expect(unsubscribeSpy).toHaveBeenCalledOnce();
-      expect(subscribeSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledOnce();
     });
   });
 });
@@ -514,6 +328,205 @@ describe('Projected', () => {
 
       signal.value++;
       expect(callback).not.toHaveBeenCalled();
+    });
+  });
+});
+
+describe('SignalBinding', () => {
+  describe('.connect()', () => {
+    it('should subscribe the signal', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new State('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new SignalBinding(value, part, context);
+
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const bindSpy = vi.spyOn(binding.binding, 'bind');
+
+      binding.connect(context);
+
+      expect(binding.binding.value).toBe('foo');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).not.toHaveBeenCalled();
+
+      value.value = 'bar';
+
+      expect(binding.binding.value).toBe('bar');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.bind()', () => {
+    it('should update the the value binding with current signal value', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new State('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new SignalBinding(value, part, context);
+
+      const unsubscribeSpy = vi.fn();
+      const subscribe = vi
+        .spyOn(value, 'subscribe')
+        .mockReturnValue(unsubscribeSpy);
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const bindSpy = vi.spyOn(binding.binding, 'bind');
+
+      binding.connect(context);
+      value.setUntrackedValue('bar');
+      binding.bind(value, context);
+
+      expect(binding.binding.value).toBe('bar');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(unsubscribeSpy).not.toHaveBeenCalled();
+      expect(subscribe).toHaveBeenCalledOnce();
+    });
+
+    it('should unsubscribe the previous subscription if signal changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = new State('foo');
+      const value2 = new State('bar');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new SignalBinding(value1, part, context);
+
+      const unsubscribe1Spy = vi.fn();
+      const unsubscribe2Spy = vi.fn();
+      const subscribe1Spy = vi
+        .spyOn(value1, 'subscribe')
+        .mockReturnValue(unsubscribe1Spy);
+      const subscribe2Spy = vi
+        .spyOn(value2, 'subscribe')
+        .mockReturnValue(unsubscribe1Spy);
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
+      const bindSpy = vi.spyOn(binding.binding, 'bind');
+
+      binding.connect(context);
+      binding.bind(value2, context);
+
+      expect(binding.binding.value).toBe('bar');
+      expect(connectSpy).toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(unsubscribe1Spy).toHaveBeenCalledOnce();
+      expect(unsubscribe2Spy).not.toHaveBeenCalled();
+      expect(subscribe1Spy).toHaveBeenCalledOnce();
+      expect(subscribe2Spy).toHaveBeenCalledOnce();
+    });
+
+    it('should throw the error if the value is not a signal', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new State('foo');
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'class',
+      } as const;
+      const binding = new SignalBinding(value, part, context);
+
+      expect(() => {
+        binding.bind(null as any, context);
+      }).toThrow(
+        'A value must be a instance of Signal directive, but got "null".',
+      );
+    });
+  });
+
+  describe('.unbind()', () => {
+    it('should unbind the value binding and unsubscribe the signal', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new State('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new SignalBinding(value, part, context);
+
+      const unsubscribeSpy = vi.fn();
+      const subscribeSpy = vi
+        .spyOn(value, 'subscribe')
+        .mockReturnValue(unsubscribeSpy);
+      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
+
+      binding.connect(context);
+
+      expect(unbindSpy).not.toHaveBeenCalled();
+      expect(unsubscribeSpy).not.toHaveBeenCalled();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+
+      binding.unbind(context);
+
+      expect(unbindSpy).toHaveBeenCalledOnce();
+      expect(unsubscribeSpy).toHaveBeenCalledOnce();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.disconnect()', () => {
+    it('should disconnect the value binding and unsubscribe the signal', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new State('foo');
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new SignalBinding(value, part, context);
+
+      const unsubscribeSpy = vi.fn();
+      const subscribeSpy = vi
+        .spyOn(value, 'subscribe')
+        .mockReturnValue(unsubscribeSpy);
+      const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
+
+      binding.connect(context);
+
+      expect(unsubscribeSpy).not.toHaveBeenCalled();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).not.toHaveBeenCalled();
+
+      binding.disconnect(context);
+
+      expect(unsubscribeSpy).toHaveBeenCalledOnce();
+      expect(subscribeSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 });

@@ -31,20 +31,17 @@ export class Dynamic implements Directive<Dynamic> {
     return 'Dynamic(' + nameOf(this._value) + ')';
   }
 
-  [directiveTag](
-    part: Part,
-    context: DirectiveContext<unknown>,
-  ): DynamicBinding {
+  [directiveTag](part: Part, context: DirectiveContext): DynamicBinding {
     return new DynamicBinding(this, part, context);
   }
 }
 
-export class DynamicBinding implements Binding<unknown> {
+export class DynamicBinding implements Binding<Dynamic> {
   private _value: Dynamic;
 
   private _binding: Binding<any>;
 
-  constructor(value: Dynamic, part: Part, context: DirectiveContext<unknown>) {
+  constructor(value: Dynamic, part: Part, context: DirectiveContext) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);
   }
@@ -69,11 +66,11 @@ export class DynamicBinding implements Binding<unknown> {
     return this._binding;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
   }
 
-  bind(newValue: Dynamic, context: UpdateContext<unknown>): void {
+  bind(newValue: Dynamic, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Dynamic, newValue, this._binding.part);
     }
@@ -98,12 +95,12 @@ export class DynamicBinding implements Binding<unknown> {
     }
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
   }
 }
 

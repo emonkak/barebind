@@ -48,12 +48,12 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -64,14 +64,14 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (this._memoizedValue != null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;
   }
 
@@ -105,7 +105,7 @@ export class AttributeBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Committed;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
@@ -149,11 +149,11 @@ export class ElementBinding implements Binding<SpreadProps> {
     return this._bindings;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._updateProps(this._value, context);
   }
 
-  bind(newValue: SpreadProps, context: UpdateContext<unknown>): void {
+  bind(newValue: SpreadProps, context: UpdateContext): void {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
     }
@@ -161,22 +161,19 @@ export class ElementBinding implements Binding<SpreadProps> {
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     for (const binding of this._bindings.values()) {
       binding.unbind(context);
     }
   }
 
-  disconnect(): void {
+  disconnect(context: UpdateContext): void {
     for (const binding of this._bindings.values()) {
-      binding.disconnect();
+      binding.disconnect(context);
     }
   }
 
-  private _updateProps(
-    props: SpreadProps,
-    context: UpdateContext<unknown>,
-  ): void {
+  private _updateProps(props: SpreadProps, context: UpdateContext): void {
     for (const [name, binding] of this._bindings.entries()) {
       if (!Object.hasOwn(props, name) || props[name] === undefined) {
         binding.unbind(context);
@@ -244,14 +241,14 @@ export class EventBinding
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
   bind(
     newValue: EventListenerOrEventListenerObject | null | undefined,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): void {
     DEBUG: {
       ensureEventListener(newValue, this._part);
@@ -263,14 +260,14 @@ export class EventBinding
     }
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (this._memoizedValue != null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     const value = this._memoizedValue;
 
     if (value != null) {
@@ -353,7 +350,7 @@ export class EventBinding
     }
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
@@ -393,12 +390,12 @@ export class NodeBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -409,14 +406,14 @@ export class NodeBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (this._memoizedValue !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;
   }
 
@@ -439,7 +436,7 @@ export class NodeBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Committed;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
@@ -479,12 +476,12 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: unknown, context: UpdateContext<unknown>): void {
+  bind(newValue: unknown, context: UpdateContext): void {
     DEBUG: {
       ensureNonDirective(newValue, this._part);
     }
@@ -495,9 +492,9 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     }
   }
 
-  unbind(_context: UpdateContext<unknown>): void {}
+  unbind(_context: UpdateContext): void {}
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;
   }
 
@@ -514,7 +511,7 @@ export class PropertyBinding implements Binding<unknown>, Effect {
     this._status = CommitStatus.Committed;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }

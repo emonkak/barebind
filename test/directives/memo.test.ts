@@ -36,16 +36,18 @@ describe('Memo', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new MemoBinding from the non-directive value', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const factory = vi.fn(() => 'foo');
+      const value = memo(factory, ['foo']);
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const factory = vi.fn(() => 'foo');
-      const value = memo(factory, ['foo']);
       const binding = value[directiveTag](part, context);
 
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
@@ -64,16 +66,18 @@ describe('Memo', () => {
     });
 
     it('should return a new MemoBinding from the directive value', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const factory = vi.fn(() => new TextDirective());
+      const value = memo(factory, ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const factory = vi.fn(() => new TextDirective());
-      const value = memo(factory, ['foo']);
       const binding = value[directiveTag](part, context);
 
       const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
@@ -96,15 +100,17 @@ describe('Memo', () => {
 describe('MemoBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -118,16 +124,18 @@ describe('MemoBinding', () => {
 
   describe('.bind()', () => {
     it('should delete to the inner binding if dependencies are changed', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = memo(() => new TextDirective(), ['foo']);
+      const value2 = memo(() => new TextDirective(), ['bar']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = memo(() => new TextDirective(), ['foo']);
-      const value2 = memo(() => new TextDirective(), ['bar']);
       const binding = new MemoBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -143,16 +151,18 @@ describe('MemoBinding', () => {
     });
 
     it('should skip an update if dependencies are not changed', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = memo(() => new TextDirective(), ['foo']);
+      const value2 = memo(value1.factory, value1.dependencies);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = memo(() => new TextDirective(), ['foo']);
-      const value2 = memo(value1.factory, value1.dependencies);
       const binding = new MemoBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -168,15 +178,17 @@ describe('MemoBinding', () => {
     });
 
     it('should throw an error if the new value is not Memo directive', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
 
       expect(() => {
@@ -189,15 +201,17 @@ describe('MemoBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -217,16 +231,18 @@ describe('MemoBinding', () => {
     });
 
     it('should always bind a new value to the current binding after unbounding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const memoizedValue = new TextDirective();
+      const value = memo(() => memoizedValue, ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const innerValue = new TextDirective();
-      const value = memo(() => innerValue, ['foo']);
       const binding = new MemoBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -246,7 +262,7 @@ describe('MemoBinding', () => {
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(binding.value).toBe(value);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(innerValue, context);
+      expect(bindSpy).toHaveBeenCalledWith(memoizedValue, context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
@@ -254,15 +270,17 @@ describe('MemoBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = memo(() => new TextDirective(), ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = memo(() => new TextDirective(), ['foo']);
       const binding = new MemoBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.binding, 'connect');
@@ -271,25 +289,28 @@ describe('MemoBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(binding.value).toBe(value);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
 
     it('should always bind a new value to the current binding after disconnecting', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const memoizedValue = new TextDirective();
+      const value = memo(() => memoizedValue, ['foo']);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const innerValue = new TextDirective();
-      const value = memo(() => innerValue, ['foo']);
       const binding = new MemoBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.binding, 'bind');
@@ -299,7 +320,7 @@ describe('MemoBinding', () => {
       binding.connect(context);
       context.flushUpdate();
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       binding.bind(value, context);
       context.flushUpdate();
@@ -308,9 +329,9 @@ describe('MemoBinding', () => {
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(innerValue, context);
+      expect(bindSpy).toHaveBeenCalledWith(memoizedValue, context);
       expect(disconnectSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledWith();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 });

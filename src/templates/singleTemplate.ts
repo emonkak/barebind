@@ -19,7 +19,7 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: DirectiveContext<unknown>): SingleTemplateView<T> {
+  render(data: T, context: DirectiveContext): SingleTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
@@ -42,7 +42,7 @@ export class ValueTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: DirectiveContext<unknown>): SingleTemplateView<T> {
+  render(data: T, context: DirectiveContext): SingleTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -78,15 +78,15 @@ export class SingleTemplateView<T> implements TemplateView<T> {
     return this._binding;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
   }
 
-  bind(data: T, context: UpdateContext<unknown>): void {
+  bind(data: T, context: UpdateContext): void {
     this._binding.bind(data, context);
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
@@ -99,7 +99,7 @@ export class SingleTemplateView<T> implements TemplateView<T> {
     part.node.parentNode?.removeChild(this._binding.part.node);
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
   }
 }

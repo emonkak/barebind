@@ -17,10 +17,7 @@ export class UnsafeHTMLTemplate implements Template<null> {
     return this._content;
   }
 
-  render(
-    _data: null,
-    _context: DirectiveContext<unknown>,
-  ): UnsafeContentTemplateView {
+  render(_data: null, _context: DirectiveContext): UnsafeContentTemplateView {
     const template = document.createElement('template');
     template.innerHTML = this._content;
     return new UnsafeContentTemplateView([...template.content.childNodes]);
@@ -45,10 +42,7 @@ export class UnsafeSVGTemplate implements Template<null> {
     return this._content;
   }
 
-  render(
-    _data: null,
-    _context: DirectiveContext<unknown>,
-  ): UnsafeContentTemplateView {
+  render(_data: null, _context: DirectiveContext): UnsafeContentTemplateView {
     const template = document.createElement('template');
     template.innerHTML = '<svg>' + this._content + '</svg>';
     return new UnsafeContentTemplateView([
@@ -83,13 +77,13 @@ export class UnsafeContentTemplateView implements TemplateView<null> {
     return this._childNodes;
   }
 
-  connect(_context: UpdateContext<unknown>): void {}
+  connect(_context: UpdateContext): void {}
 
-  bind(_data: null, _context: UpdateContext<unknown>): void {}
+  bind(_data: null, _context: UpdateContext): void {}
 
-  unbind(_context: UpdateContext<unknown>): void {}
+  unbind(_context: UpdateContext): void {}
 
-  disconnect(): void {}
+  disconnect(_context: UpdateContext): void {}
 
   mount(part: ChildNodePart): void {
     part.node.before(...this._childNodes);

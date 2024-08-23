@@ -20,12 +20,15 @@ describe('UnsafeHTMLTemplate', () => {
 
   describe('.render()', () => {
     it('should render a new tempalte view', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
-      const content = '<em>foo</em>bar<strong>baz</strong>';
-      const template = new UnsafeHTMLTemplate(content);
+      const template = new UnsafeHTMLTemplate(
+        '<em>foo</em>bar<strong>baz</strong>',
+      );
       const view = template.render(null, context);
 
       expect(view.startNode).toBe(view.childNodes[0]);
@@ -38,12 +41,13 @@ describe('UnsafeHTMLTemplate', () => {
     });
 
     it('should render a new tempalte view with no child', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
-      const content = '';
-      const template = new UnsafeHTMLTemplate(content);
+      const template = new UnsafeHTMLTemplate('');
       const view = template.render(null, context);
 
       expect(view.startNode).toBe(null);
@@ -87,13 +91,15 @@ describe('UnsafeSVGTemplate', () => {
 
   describe('.render()', () => {
     it('should return a new UnsafeHTMLTemplateView', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
-      const content =
-        '<circle r="10" /><text>foo</text><rect witdh="10" height="10" />';
-      const template = new UnsafeSVGTemplate(content);
+      const template = new UnsafeSVGTemplate(
+        '<circle r="10" /><text>foo</text><rect witdh="10" height="10" />',
+      );
       const view = template.render(null, context);
 
       expect(view.startNode).toBe(view.childNodes[0]);
@@ -106,12 +112,13 @@ describe('UnsafeSVGTemplate', () => {
     });
 
     it('should render a new tempalte view with no child', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
-      const content = '';
-      const template = new UnsafeSVGTemplate(content);
+      const template = new UnsafeSVGTemplate('');
       const view = template.render(null, context);
 
       expect(view.startNode).toBe(null);
@@ -146,9 +153,11 @@ describe('UnsafeSVGTemplate', () => {
 describe('UnsafeContentTemplateView', () => {
   describe('.bind()', () => {
     it('should do no nothing', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new UnsafeContentTemplateView([]);
 
@@ -161,9 +170,11 @@ describe('UnsafeContentTemplateView', () => {
 
   describe('.unbind()', () => {
     it('should do no nothing', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new UnsafeContentTemplateView([]);
 
@@ -176,34 +187,43 @@ describe('UnsafeContentTemplateView', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const view = new UnsafeContentTemplateView([]);
 
-      view.disconnect();
+      view.disconnect(context);
+
+      expect(context.isPending()).toBe(false);
     });
   });
 
   describe('.mount()', () => {
     it('should mount child nodes', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const content = '<em>foo</em>bar<strong>baz</strong>';
-      const template = new UnsafeHTMLTemplate(content);
+      const template = new UnsafeHTMLTemplate(
+        '<em>foo</em>bar<strong>baz</strong>',
+      );
       const view = template.render(null, context);
 
       container.appendChild(part.node);
       view.mount(part);
-
-      expect(container.innerHTML).toStrictEqual(content + '<!---->');
+      expect(container.innerHTML).toStrictEqual(template.content + '<!---->');
 
       view.unmount(part);
-
       expect(container.innerHTML).toStrictEqual('<!---->');
     });
   });

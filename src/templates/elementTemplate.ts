@@ -26,7 +26,7 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
 
   render(
     data: ElementData<TElementValue, TChildNodeValue>,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ): ElementTemplateView<TElementValue, TChildNodeValue> {
     const elementPart = {
       type: PartType.Element,
@@ -98,20 +98,20 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
     return this._elementBinding.endNode;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._elementBinding.connect(context);
     this._childNodeBinding.connect(context);
   }
 
   bind(
     data: ElementData<TElementValue, TChildNodeValue>,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): void {
     this._elementBinding.bind(data.elementValue, context);
     this._childNodeBinding.bind(data.childNodeValue, context);
   }
 
-  unbind(context: UpdateContext<unknown>) {
+  unbind(context: UpdateContext) {
     this._elementBinding.unbind(context);
     this._childNodeBinding.unbind(context);
   }
@@ -133,8 +133,8 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
     }
   }
 
-  disconnect(): void {
-    this._elementBinding.disconnect();
-    this._childNodeBinding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._elementBinding.disconnect(context);
+    this._childNodeBinding.disconnect(context);
   }
 }

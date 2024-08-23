@@ -22,6 +22,23 @@ import {
 } from './mocks.js';
 
 describe('RenderContext', () => {
+  describe('.constructor()', () => {
+    it('should construct a new RenderContext', () => {
+      const host = new MockUpdateHost();
+      const updater = new SyncUpdater();
+      const block = new MockBlock();
+      const hooks: Hook[] = [];
+      const queue = createUpdateQueue();
+      const context = new RenderContext(host, updater, block, hooks, queue);
+
+      expect(context.host).toBe(host);
+      expect(context.updater).toBe(updater);
+      expect(context.block).toBe(block);
+      expect(context.hooks).toBe(hooks);
+      expect(context.queue).toBe(queue);
+    });
+  });
+
   describe('.element()', () => {
     it('should return a TemplateResult with ElementTemplate', () => {
       const host = new MockUpdateHost();

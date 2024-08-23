@@ -41,10 +41,7 @@ export class Memo<T> implements Directive<Memo<T>> {
     return 'Memo(' + nameOf(this._factory()) + ')';
   }
 
-  [directiveTag](
-    part: Part,
-    context: DirectiveContext<unknown>,
-  ): MemoBinding<T> {
+  [directiveTag](part: Part, context: DirectiveContext): MemoBinding<T> {
     return new MemoBinding(this, part, context);
   }
 }
@@ -56,7 +53,7 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   private readonly _binding: Binding<T>;
 
-  constructor(value: Memo<T>, part: Part, context: DirectiveContext<unknown>) {
+  constructor(value: Memo<T>, part: Part, context: DirectiveContext) {
     this._value = value;
     this._binding = resolveBinding(value.factory(), part, context);
   }
@@ -81,12 +78,12 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     return this._binding;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
     this._memoizedDependencies = this._value.dependencies;
   }
 
-  bind(newValue: Memo<T>, context: UpdateContext<unknown>): void {
+  bind(newValue: Memo<T>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Memo, newValue, this._binding.part);
     }
@@ -99,13 +96,13 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
     this._memoizedDependencies = newDependencies;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
     this._memoizedDependencies = undefined;
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
     this._memoizedDependencies = undefined;
   }
 }

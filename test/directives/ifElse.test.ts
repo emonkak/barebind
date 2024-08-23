@@ -90,19 +90,21 @@ describe('IfElse', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new IfElseBinding from a non-directive value', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
       const binding = value[directiveTag](part, context);
 
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
@@ -121,21 +123,23 @@ describe('IfElse', () => {
     });
 
     it('should return a new IfElseBinding from a directive value', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const value = ifElse(
+        false,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const value = ifElse(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = value[directiveTag](part, context);
 
       const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
@@ -147,7 +151,7 @@ describe('IfElse', () => {
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.currentBinding).toBeInstanceOf(TextBinding);
-      expect(binding.currentBinding.value).toBe(falseDirective);
+      expect(binding.currentBinding.value).toBe(falseValue);
       expect(getPart).toHaveBeenCalledOnce();
       expect(getStartNode).toHaveBeenCalledOnce();
       expect(getEndNode).toHaveBeenCalledOnce();
@@ -158,19 +162,21 @@ describe('IfElse', () => {
 describe('IfElseBinding', () => {
   describe('.connect()', () => {
     it('should connecty the current binding', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new IfElseBinding(value, part, context);
 
       const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
@@ -185,23 +191,25 @@ describe('IfElseBinding', () => {
 
   describe('.bind()', () => {
     it('should bind the true value to the current binding if the condition is the same', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const trueValueSpy = vi.spyOn(trueValue, directiveTag);
+      const falseValueSpy = vi.spyOn(falseValue, directiveTag);
+      const value = ifElse(
+        true,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
-      const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value = ifElse(
-        true,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = new IfElseBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
@@ -212,31 +220,33 @@ describe('IfElseBinding', () => {
       binding.bind(value, context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(trueDirective);
-      expect(trueDirectiveSpy).toHaveBeenCalledOnce();
-      expect(falseDirectiveSpy).not.toHaveBeenCalled();
+      expect(binding.currentBinding.value).toBe(trueValue);
+      expect(trueValueSpy).toHaveBeenCalledOnce();
+      expect(falseValueSpy).not.toHaveBeenCalled();
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(falseDirective, context);
+      expect(bindSpy).toHaveBeenCalledWith(falseValue, context);
     });
 
     it('should bind the false value to the current binding if the condition is the same', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const trueValueSpy = vi.spyOn(trueValue, directiveTag);
+      const falseValueSpy = vi.spyOn(falseValue, directiveTag);
+      const value = ifElse(
+        false,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
-      const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value = ifElse(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = new IfElseBinding(value, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
@@ -247,36 +257,38 @@ describe('IfElseBinding', () => {
       binding.bind(value, context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(falseDirective);
-      expect(trueDirectiveSpy).not.toHaveBeenCalled();
-      expect(falseDirectiveSpy).toHaveBeenCalledOnce();
+      expect(binding.currentBinding.value).toBe(falseValue);
+      expect(trueValueSpy).not.toHaveBeenCalled();
+      expect(falseValueSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(trueDirective, context);
+      expect(bindSpy).toHaveBeenCalledWith(trueValue, context);
     });
 
     it('should connect a true binding and unbind the false binidng if the condition changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const trueValueSpy = vi.spyOn(trueValue, directiveTag);
+      const falseValueSpy = vi.spyOn(falseValue, directiveTag);
+      const value1 = ifElse(
+        true,
+        () => trueValue,
+        () => falseValue,
+      );
+      const value2 = ifElse(
+        false,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
-      const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = ifElse(
-        true,
-        () => trueDirective,
-        () => falseDirective,
-      );
-      const value2 = ifElse(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
@@ -288,37 +300,39 @@ describe('IfElseBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(falseDirective);
-      expect(trueDirectiveSpy).toHaveBeenCalledOnce();
-      expect(falseDirectiveSpy).toHaveBeenCalledOnce();
+      expect(binding.currentBinding.value).toBe(falseValue);
+      expect(trueValueSpy).toHaveBeenCalledOnce();
+      expect(falseValueSpy).toHaveBeenCalledOnce();
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should connect a false binding and unbind the true binidng if the condition changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const trueValueSpy = vi.spyOn(trueValue, directiveTag);
+      const falseValueSpy = vi.spyOn(falseValue, directiveTag);
+      const value1 = ifElse(
+        false,
+        () => trueValue,
+        () => falseValue,
+      );
+      const value2 = ifElse(
+        true,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
-      const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = ifElse(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
-      const value2 = ifElse(
-        true,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
@@ -330,37 +344,39 @@ describe('IfElseBinding', () => {
       binding.bind(value2, context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(trueDirective);
-      expect(trueDirectiveSpy).toHaveBeenCalledOnce();
-      expect(falseDirectiveSpy).toHaveBeenCalledOnce();
+      expect(binding.currentBinding.value).toBe(trueValue);
+      expect(trueValueSpy).toHaveBeenCalledOnce();
+      expect(falseValueSpy).toHaveBeenCalledOnce();
       expect(bindSpy).not.toHaveBeenCalled();
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should memoize the true binding if key changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const trueValueSpy = vi.spyOn(trueValue, directiveTag);
+      const falseValueSpy = vi.spyOn(falseValue, directiveTag);
+      const value1 = ifElse(
+        true,
+        () => trueValue,
+        () => falseValue,
+      );
+      const value2 = ifElse(
+        false,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
-      const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = ifElse(
-        true,
-        () => trueDirective,
-        () => falseDirective,
-      );
-      const value2 = ifElse(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
@@ -375,37 +391,39 @@ describe('IfElseBinding', () => {
       binding.bind(value1, context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(trueDirective);
-      expect(trueDirectiveSpy).toHaveBeenCalledOnce();
-      expect(falseDirectiveSpy).toHaveBeenCalledOnce();
+      expect(binding.currentBinding.value).toBe(trueValue);
+      expect(trueValueSpy).toHaveBeenCalledOnce();
+      expect(falseValueSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should memoize the false binding if key changes', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const trueValue = new TextDirective();
+      const falseValue = new TextDirective();
+      const trueValueSpy = vi.spyOn(trueValue, directiveTag);
+      const falseValueSpy = vi.spyOn(falseValue, directiveTag);
+      const value1 = ifElse(
+        false,
+        () => trueValue,
+        () => falseValue,
+      );
+      const value2 = ifElse(
+        true,
+        () => trueValue,
+        () => falseValue,
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const trueDirective = new TextDirective();
-      const falseDirective = new TextDirective();
-      const trueDirectiveSpy = vi.spyOn(trueDirective, directiveTag);
-      const falseDirectiveSpy = vi.spyOn(falseDirective, directiveTag);
-      const value1 = ifElse(
-        false,
-        () => trueDirective,
-        () => falseDirective,
-      );
-      const value2 = ifElse(
-        true,
-        () => trueDirective,
-        () => falseDirective,
-      );
       const binding = new IfElseBinding(value1, part, context);
 
       const bindSpy = vi.spyOn(binding.currentBinding, 'bind');
@@ -420,28 +438,30 @@ describe('IfElseBinding', () => {
       binding.bind(value1, context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(falseDirective);
-      expect(trueDirectiveSpy).toHaveBeenCalledOnce();
-      expect(falseDirectiveSpy).toHaveBeenCalledOnce();
+      expect(binding.currentBinding.value).toBe(falseValue);
+      expect(trueValueSpy).toHaveBeenCalledOnce();
+      expect(falseValueSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
 
     it('should throw an error if the new value is not Condition directive', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new IfElseBinding(value, part, context);
 
       expect(() => {
@@ -454,19 +474,21 @@ describe('IfElseBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new IfElseBinding(value, part, context);
 
       const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
@@ -480,26 +502,29 @@ describe('IfElseBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = ifElse(
         true,
         () => 'foo',
         () => 'bar',
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new IfElseBinding(value, part, context);
 
       const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 });

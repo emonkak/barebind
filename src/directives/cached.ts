@@ -42,7 +42,7 @@ export class Cached<TKey, TValue> implements Directive<Cached<TKey, TValue>> {
 
   [directiveTag](
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ): CachedBinding<TKey, TValue> {
     return new CachedBinding(this, part, context);
   }
@@ -60,7 +60,7 @@ export class CachedBinding<TKey, TValue>
   constructor(
     value: Cached<TKey, TValue>,
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);
@@ -86,11 +86,11 @@ export class CachedBinding<TKey, TValue>
     return this._binding;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
   }
 
-  bind(newValue: Cached<TKey, TValue>, context: UpdateContext<unknown>): void {
+  bind(newValue: Cached<TKey, TValue>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Cached, newValue, this._binding.part);
     }
@@ -123,11 +123,11 @@ export class CachedBinding<TKey, TValue>
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
   }
 }

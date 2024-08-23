@@ -34,19 +34,21 @@ describe('keyedList()', () => {
 describe('List', () => {
   describe('[directiveTag]()', () => {
     it('should return a new ListBinding', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -57,19 +59,21 @@ describe('List', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
       );
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'List directive must be used in a child node,',
@@ -81,20 +85,22 @@ describe('List', () => {
 describe('ListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
       );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
@@ -127,19 +133,21 @@ describe('ListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value, part);
 
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -158,14 +166,11 @@ describe('ListBinding', () => {
 
       for (const items1 of allCombinations(source)) {
         for (const items2 of allCombinations(source)) {
-          const container = document.createElement('div');
-          const part = {
-            type: PartType.ChildNode,
-            node: document.createComment(''),
-          } as const;
-          const host = new MockUpdateHost();
-          const updater = new SyncUpdater();
-          const context = new UpdateContext(host, updater, new MockBlock());
+          const context = new UpdateContext(
+            new MockUpdateHost(),
+            new SyncUpdater(),
+            new MockBlock(),
+          );
 
           const value1 = keyedList(
             items1,
@@ -177,6 +182,11 @@ describe('ListBinding', () => {
             (item) => item,
             (item) => new TextDirective(item),
           );
+          const container = document.createElement('div');
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+          } as const;
           const binding = new ListBinding(value1, part);
 
           container.appendChild(part.node);
@@ -209,14 +219,11 @@ describe('ListBinding', () => {
             [permutation1, permutation2],
             [permutation2, permutation1],
           ]) {
-            const container = document.createElement('div');
-            const part = {
-              type: PartType.ChildNode,
-              node: document.createComment(''),
-            } as const;
-            const host = new MockUpdateHost();
-            const updater = new SyncUpdater();
-            const context = new UpdateContext(host, updater, new MockBlock());
+            const context = new UpdateContext(
+              new MockUpdateHost(),
+              new SyncUpdater(),
+              new MockBlock(),
+            );
 
             const value1 = keyedList(
               items1!,
@@ -228,6 +235,11 @@ describe('ListBinding', () => {
               (item) => item,
               (item) => new TextDirective(item),
             );
+            const container = document.createElement('div');
+            const part = {
+              type: PartType.ChildNode,
+              node: document.createComment(''),
+            } as const;
             const binding = new ListBinding(value1, part);
 
             container.appendChild(part.node);
@@ -256,14 +268,11 @@ describe('ListBinding', () => {
 
       for (const items1 of permutations(source)) {
         for (const items2 of permutations(source)) {
-          const container = document.createElement('div');
-          const part = {
-            type: PartType.ChildNode,
-            node: document.createComment(''),
-          } as const;
-          const host = new MockUpdateHost();
-          const updater = new SyncUpdater();
-          const context = new UpdateContext(host, updater, new MockBlock());
+          const context = new UpdateContext(
+            new MockUpdateHost(),
+            new SyncUpdater(),
+            new MockBlock(),
+          );
 
           const value1 = keyedList(
             items1,
@@ -275,6 +284,11 @@ describe('ListBinding', () => {
             (item) => item,
             (item) => new TextDirective(item),
           );
+          const container = document.createElement('div');
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+          } as const;
           const binding = new ListBinding(value1, part);
 
           container.appendChild(part.node);
@@ -298,14 +312,11 @@ describe('ListBinding', () => {
     });
 
     it('should update with longer list than last time', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = list(
         ['foo', 'bar', 'baz'],
@@ -315,6 +326,11 @@ describe('ListBinding', () => {
         ['qux', 'baz', 'bar', 'foo'],
         (item) => new TextDirective(item),
       );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
@@ -334,20 +350,22 @@ describe('ListBinding', () => {
     });
 
     it('should update with shoter list than last time', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = list(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
       const value2 = list(['bar', 'foo'], (item) => new TextDirective(item));
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value1, part);
 
       container.appendChild(part.node);
@@ -369,20 +387,22 @@ describe('ListBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
       );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
@@ -397,19 +417,21 @@ describe('ListBinding', () => {
     });
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => item,
       );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value, part);
 
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -424,20 +446,22 @@ describe('ListBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
       );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
@@ -448,11 +472,12 @@ describe('ListBinding', () => {
         vi.spyOn(binding, 'disconnect'),
       );
 
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(disconnectSpies).toHaveLength(3);
       for (const disconnectSpy of disconnectSpies) {
         expect(disconnectSpy).toHaveBeenCalledOnce();
+        expect(disconnectSpy).toHaveBeenCalledWith(context);
       }
       expect(container.innerHTML).toBe(
         'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
@@ -460,25 +485,27 @@ describe('ListBinding', () => {
     });
 
     it('should not commit pending bindings', () => {
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = keyedList(
         ['foo', 'bar', 'baz'],
         (item) => item,
         (item) => new TextDirective(item),
       );
+      const container = document.createElement('div');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new ListBinding(value, part);
 
       container.appendChild(part.node);
       binding.connect(context);
-      binding.disconnect();
+      binding.disconnect(context);
       context.flushUpdate();
 
       expect(container.innerHTML).toBe('<!---->');

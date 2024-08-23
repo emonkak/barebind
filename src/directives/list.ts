@@ -70,7 +70,7 @@ export class List<TItem, TKey, TValue>
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext<unknown>,
+    _context: DirectiveContext,
   ): ListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -122,17 +122,14 @@ export class ListBinding<TItem, TKey, TValue>
     return this._pendingBindings;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     const { items, keySelector, valueSelector } = this._value;
     this._updateItems(items, keySelector, valueSelector, context);
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(
-    newValue: List<TItem, TKey, TValue>,
-    context: UpdateContext<unknown>,
-  ): void {
+  bind(newValue: List<TItem, TKey, TValue>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(List, newValue, this._part);
     }
@@ -143,15 +140,15 @@ export class ListBinding<TItem, TKey, TValue>
     this._status = CommitStatus.Mounting;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._clearItems(context);
     this._requestCommit(context);
     this._status = CommitStatus.Unmounting;
   }
 
-  disconnect(): void {
+  disconnect(context: UpdateContext): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      this._pendingBindings[i]!.disconnect();
+      this._pendingBindings[i]!.disconnect(context);
     }
     this._status = CommitStatus.Committed;
   }
@@ -163,7 +160,7 @@ export class ListBinding<TItem, TKey, TValue>
     }
   }
 
-  private _clearItems(context: UpdateContext<unknown>): void {
+  private _clearItems(context: UpdateContext): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
       this._pendingBindings[i]!.unbind(context);
     }
@@ -175,7 +172,7 @@ export class ListBinding<TItem, TKey, TValue>
     key: TKey,
     value: TValue,
     referenceBinding: Binding<TValue> | null,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): ItemBinding<TValue> {
     const part = {
       type: PartType.ChildNode,
@@ -200,7 +197,7 @@ export class ListBinding<TItem, TKey, TValue>
     items: TItem[],
     keySelector: Selector<TItem, TKey>,
     valueSelector: Selector<TItem, TValue>,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): void {
     const oldBindings: (ItemBinding<TValue> | null)[] = this._pendingBindings;
     const newBindings = new Array<ItemBinding<TValue>>(items.length);
@@ -322,7 +319,7 @@ export class ListBinding<TItem, TKey, TValue>
     items: TItem[],
     keySelector: (item: TItem, index: number) => TKey,
     valueSelector: (item: TItem, index: number) => TValue,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): void {
     const newKeys = new Array<TKey>(items.length);
     const oldBindings = this._pendingBindings;
@@ -358,7 +355,7 @@ export class ListBinding<TItem, TKey, TValue>
     this._pendingBindings = newBindings;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
@@ -368,7 +365,7 @@ export class ListBinding<TItem, TKey, TValue>
     items: TItem[],
     keySelector: Selector<TItem, TKey>,
     valueSelector: Selector<TItem, TValue>,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): void {
     if (this._pendingBindings.length === 0 || keySelector === indexSelector) {
       this._replaceItems(items, keySelector, valueSelector, context);
@@ -413,14 +410,14 @@ class ItemBinding<TValue> implements Binding<TValue>, Effect {
     return this._binding.endNode;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._flags |= FLAG_INSERTING;
     this._flags &= ~(FLAG_MOVING | FLAG_REMOVING);
     this._binding.connect(context);
   }
 
-  bind(newValue: TValue, context: UpdateContext<unknown>): void {
+  bind(newValue: TValue, context: UpdateContext): void {
     if (!(this._flags & FLAG_INSERTED)) {
       this._requestCommit(context);
       this._flags |= FLAG_INSERTING;
@@ -429,22 +426,22 @@ class ItemBinding<TValue> implements Binding<TValue>, Effect {
     this._binding.bind(newValue, context);
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
     this._requestCommit(context);
     this._flags |= FLAG_REMOVING;
     this._flags &= ~(FLAG_INSERTING | FLAG_MOVING);
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
     this._flags &= ~(FLAG_INSERTING | FLAG_MOVING | FLAG_REMOVING);
   }
 
   move(
     newValue: TValue,
     referenceBinding: Binding<TValue> | null,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): void {
     this._binding.bind(newValue, context);
     this._requestCommit(context);
@@ -472,7 +469,7 @@ class ItemBinding<TValue> implements Binding<TValue>, Effect {
     this._flags &= ~(FLAG_INSERTING | FLAG_MOVING | FLAG_REMOVING);
   }
 
-  private _requestCommit(context: UpdateContext<unknown>) {
+  private _requestCommit(context: UpdateContext) {
     if (!(this._flags & (FLAG_INSERTING | FLAG_MOVING | FLAG_REMOVING))) {
       context.enqueueMutationEffect(this);
     }

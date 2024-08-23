@@ -17,16 +17,18 @@ describe('styleMap()', () => {
 describe('StyleMap', () => {
   describe('[directiveTag]()', () => {
     it('should return a new StyleMapBinding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({ display: 'none' });
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = styleMap({ display: 'none' });
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -36,16 +38,18 @@ describe('StyleMap', () => {
     });
 
     it('should throw an error if the part does not indicate "style" attribute', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({ display: 'none' });
       const part = {
         type: PartType.Attribute,
         name: 'data-style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = styleMap({ display: 'none' });
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'StyleMap directive must be used in a "style" attribute,',
@@ -57,14 +61,11 @@ describe('StyleMap', () => {
 describe('StyleMapBinding', () => {
   describe('.connect()', () => {
     it('should set styles to the element', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'style',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = styleMap({
         '--my-css-property': '1',
@@ -73,6 +74,11 @@ describe('StyleMapBinding', () => {
         webkitFilter: 'blur(8px)',
         filter: 'blur(8px)',
       });
+      const part = {
+        type: PartType.Attribute,
+        name: 'style',
+        node: document.createElement('div'),
+      } as const;
       const binding = new StyleMapBinding(value, part);
 
       binding.connect(context);
@@ -84,18 +90,20 @@ describe('StyleMapBinding', () => {
     });
 
     it('should do nothing if the update is already scheduled', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({
+        color: 'black',
+      });
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = styleMap({
-        color: 'black',
-      });
       const binding = new StyleMapBinding(value, part);
 
       const enqueueMutationEffectSpy = vi.spyOn(
@@ -113,14 +121,11 @@ describe('StyleMapBinding', () => {
 
   describe('.bind()', () => {
     it('should remove gone styles from the element', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'style',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = styleMap({
         padding: '8px',
@@ -129,6 +134,11 @@ describe('StyleMapBinding', () => {
       const value2 = styleMap({
         padding: '0',
       });
+      const part = {
+        type: PartType.Attribute,
+        name: 'style',
+        node: document.createElement('div'),
+      } as const;
       const binding = new StyleMapBinding(value1, part);
 
       binding.connect(context);
@@ -142,19 +152,21 @@ describe('StyleMapBinding', () => {
     });
 
     it('should skip an update if new styles are the same as old ones', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'style',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = styleMap({
         color: 'black',
       });
       const value2 = styleMap(value1.styles);
+      const part = {
+        type: PartType.Attribute,
+        name: 'style',
+        node: document.createElement('div'),
+      } as const;
       const binding = new StyleMapBinding(value1, part);
 
       binding.connect(context);
@@ -167,18 +179,20 @@ describe('StyleMapBinding', () => {
     });
 
     it('should throw an error if the new value is not StyleMap', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({
+        color: 'black',
+      });
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = styleMap({
-        color: 'black',
-      });
       const binding = new StyleMapBinding(value, part);
 
       expect(() => {
@@ -191,14 +205,11 @@ describe('StyleMapBinding', () => {
 
   describe('.unbind()', () => {
     it('should remove all styles from the element', () => {
-      const part = {
-        type: PartType.Attribute,
-        name: 'style',
-        node: document.createElement('div'),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = styleMap({
         '--my-css-property': '1',
@@ -207,6 +218,11 @@ describe('StyleMapBinding', () => {
         webkitFilter: 'blur(8px)',
         filter: 'blur(8px)',
       });
+      const part = {
+        type: PartType.Attribute,
+        name: 'style',
+        node: document.createElement('div'),
+      } as const;
       const binding = new StyleMapBinding(value, part);
 
       binding.connect(context);
@@ -219,16 +235,18 @@ describe('StyleMapBinding', () => {
     });
 
     it('should skip an update if the current styles are empty', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({});
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = styleMap({});
       const binding = new StyleMapBinding(value, part);
 
       binding.unbind(context);
@@ -239,33 +257,42 @@ describe('StyleMapBinding', () => {
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({ display: 'none' });
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-
-      const value = styleMap({ display: 'none' });
       const binding = new StyleMapBinding(value, part);
 
-      binding.disconnect();
+      binding.disconnect(context);
+
+      expect(context.isPending()).toBe(false);
     });
 
     it('should cancel mounting', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = styleMap({ display: 'none' });
       const part = {
         type: PartType.Attribute,
         name: 'style',
         node: document.createElement('div'),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = styleMap({ display: 'none' });
       const binding = new StyleMapBinding(value, part);
 
       binding.connect(context);
-      binding.disconnect();
+      binding.disconnect(context);
       context.flushUpdate();
 
       expect(part.node.style.cssText).toBe('');

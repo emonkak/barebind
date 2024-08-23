@@ -29,16 +29,17 @@ describe('TemplateResult', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new TemplateBinding directive', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const context = new UpdateContext(host, updater, block);
-
-      const value = new TemplateResult(new MockTemplate(), {});
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -48,15 +49,17 @@ describe('TemplateResult', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TemplateResult(new MockTemplate(), {});
 
       expect(() => value[directiveTag](part, context)).toThrow(
         'TemplateResult directive must be used in a child node,',
@@ -76,16 +79,17 @@ describe('LazyTemplateResult', () => {
 
   describe('[directiveTag]()', () => {
     it('should return a new TemplateBinding directive', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new LazyTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const context = new UpdateContext(host, updater, block);
-
-      const value = new LazyTemplateResult(new MockTemplate(), {});
       const binding = value[directiveTag](part, context);
 
       expect(binding.value).toBe(value);
@@ -96,14 +100,16 @@ describe('LazyTemplateResult', () => {
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const value = new LazyTemplateResult(new MockTemplate(), {});
 
       expect(() => value[directiveTag](part, context)).toThrow(
@@ -116,15 +122,17 @@ describe('LazyTemplateResult', () => {
 describe('TemplateResultBinding', () => {
   describe('.connect()', () => {
     it('should not render the template if it is already rendered', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value.data, [
         document.createComment(''),
       ]);
@@ -156,15 +164,17 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should remount the view if it is unmounted', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value.data, [
         document.createComment(''),
       ]);
@@ -208,13 +218,11 @@ describe('TemplateResultBinding', () => {
 
   describe('.bind()', () => {
     it('should bind data to the current view if it is a renderd from the same template', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const template = new MockTemplate();
       const value1 = new TemplateResult(template, {});
@@ -222,6 +230,10 @@ describe('TemplateResultBinding', () => {
       const view = new MockTemplateView(value1.data, [
         document.createComment(''),
       ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value1, part);
 
       const renderSpy = vi
@@ -250,13 +262,11 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should unbind data from the current view if it is a renderd from a different template', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
@@ -266,6 +276,10 @@ describe('TemplateResultBinding', () => {
       const view2 = new MockTemplateView(value2.data, [
         document.createComment(''),
       ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value1, part);
 
       const render1Spy = vi
@@ -312,19 +326,21 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should render the template when it is called without calling connect()', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value1.data, [
         document.createComment(''),
       ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value1, part);
 
       const renderSpy = vi
@@ -349,13 +365,11 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should only mount the last rendered view if there is multiple renderings durling a transation', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value1 = new TemplateResult(new MockTemplate(), {});
       const value2 = new TemplateResult(new MockTemplate(), {});
@@ -365,6 +379,10 @@ describe('TemplateResultBinding', () => {
       const view2 = new MockTemplateView(value2.data, [
         document.createComment(''),
       ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value1, part);
 
       const render1Spy = vi
@@ -407,18 +425,20 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should remount the view if it is unmounted', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = new TemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value.data, [
         document.createComment(''),
       ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
@@ -457,15 +477,17 @@ describe('TemplateResultBinding', () => {
     });
 
     it('should throw an error if the new value is not AbstractTemplateResult', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TemplateResult(new MockTemplate(), {});
       const binding = new TemplateResultBinding(value, part);
 
       expect(() => {
@@ -478,18 +500,20 @@ describe('TemplateResultBinding', () => {
 
   describe('.unbind()', () => {
     it('should unbind data from the current view', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const value = new LazyTemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value.data, [
         document.createComment(''),
       ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
@@ -520,16 +544,18 @@ describe('TemplateResultBinding', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the current view', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new LazyTemplateResult(new MockTemplate(), {});
+      const view = new MockTemplateView(value.data);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new LazyTemplateResult(new MockTemplate(), {});
-      const view = new MockTemplateView(value.data);
       const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi
@@ -540,42 +566,41 @@ describe('TemplateResultBinding', () => {
 
       binding.connect(context);
       context.flushUpdate();
-      binding.disconnect();
+      binding.disconnect(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(value.data, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
 
     it('should cancel mounting', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const block = new MockBlock();
-      const context = new UpdateContext(host, updater, block);
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const template = new MockTemplate();
       const data = {};
       const value = new LazyTemplateResult(template, data);
       const view = new MockTemplateView(value.data);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
       const binding = new TemplateResultBinding(value, part);
 
       const renderSpy = vi.spyOn(template, 'render').mockReturnValue(view);
       const connectSpy = vi.spyOn(view, 'connect');
+      const disconnectSpy = vi.spyOn(view, 'disconnect');
       const bindSpy = vi.spyOn(view, 'bind');
       const mountSpy = vi.spyOn(view, 'mount');
 
       binding.connect(context);
-      binding.disconnect();
+      binding.disconnect(context);
       context.flushUpdate();
-
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledOnce();
-      expect(mountSpy).not.toHaveBeenCalled();
 
       binding.bind(value, context);
       context.flushUpdate();
@@ -586,6 +611,8 @@ describe('TemplateResultBinding', () => {
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledWith(data, context);
+      expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
     });

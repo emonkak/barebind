@@ -131,13 +131,13 @@ export class Root<TValue, TContext>
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext<TContext>): void {
+    this._binding.disconnect(context);
 
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
-  private _forceUpdate(context: UpdateContext<unknown>): void {
+  private _forceUpdate(context: UpdateContext): void {
     const priority = this._parent?.priority ?? 'user-blocking';
 
     if (

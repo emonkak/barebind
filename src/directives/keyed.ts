@@ -42,7 +42,7 @@ export class Keyed<TKey, TValue> implements Directive<Keyed<TKey, TValue>> {
 
   [directiveTag](
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ): KeyedBinding<TKey, TValue> {
     return new KeyedBinding(this, part, context);
   }
@@ -58,7 +58,7 @@ export class KeyedBinding<TKey, TValue>
   constructor(
     value: Keyed<TKey, TValue>,
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ) {
     this._value = value;
     this._binding = resolveBinding(value.value, part, context);
@@ -84,11 +84,11 @@ export class KeyedBinding<TKey, TValue>
     return this._binding;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
   }
 
-  bind(newValue: Keyed<TKey, TValue>, context: UpdateContext<unknown>): void {
+  bind(newValue: Keyed<TKey, TValue>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Keyed, newValue, this._binding.part);
     }
@@ -111,11 +111,11 @@ export class KeyedBinding<TKey, TValue>
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
   }
 }

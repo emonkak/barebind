@@ -39,7 +39,7 @@ export abstract class AbstractTemplateResult<TData, TContext>
 
   abstract [directiveTag](
     part: Part,
-    _context: DirectiveContext<unknown>,
+    _context: DirectiveContext,
   ): Binding<AbstractTemplateResult<TData, TContext>, TContext>;
 }
 
@@ -53,7 +53,7 @@ export class TemplateResult<TData, TContext> extends AbstractTemplateResult<
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext<unknown>,
+    _context: DirectiveContext,
   ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -199,8 +199,8 @@ export class TemplateResultBinding<TData, TContext>
     this._status = CommitStatus.Unmounting;
   }
 
-  disconnect(): void {
-    this._pendingView?.disconnect();
+  disconnect(context: UpdateContext<TContext>): void {
+    this._pendingView?.disconnect(context);
 
     this._status = CommitStatus.Committed;
   }

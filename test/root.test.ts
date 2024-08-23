@@ -13,16 +13,17 @@ import {
 describe('Root', () => {
   describe('.constructor()', () => {
     it('should construct a Root', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const parent = new MockBlock();
-      const context = new UpdateContext(host, updater, parent);
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -30,7 +31,7 @@ describe('Root', () => {
       expect(block.part).toBe(part);
       expect(block.startNode).toBe(part.node);
       expect(block.endNode).toBe(part.node);
-      expect(block.parent).toBe(parent);
+      expect(block.parent).toBe(context.block);
       expect(block.priority).toBe('user-blocking');
       expect(block.isConnected).toBe(false);
       expect(block.isUpdating).toBe(false);
@@ -40,15 +41,17 @@ describe('Root', () => {
   });
   describe('.shouldUpdate()', () => {
     it('should return false after the block is initialized', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -56,15 +59,17 @@ describe('Root', () => {
     });
 
     it('should return true after the block is connected', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -74,15 +79,17 @@ describe('Root', () => {
     });
 
     it('should return true after an update is requested', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -95,15 +102,17 @@ describe('Root', () => {
     });
 
     it('should return false after the block is unbound', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -114,20 +123,21 @@ describe('Root', () => {
     });
 
     it('should return false if there is a parent block is updating', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const parent = new MockBlock();
-      const context = new UpdateContext(host, updater, parent);
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
-      vi.spyOn(parent, 'isUpdating', 'get').mockReturnValue(true);
+      vi.spyOn(context.block, 'isUpdating', 'get').mockReturnValue(true);
 
       block.connect(context);
 
@@ -137,15 +147,17 @@ describe('Root', () => {
 
   describe('.cancelUpdate()', () => {
     it('should cancel the update if it is scheduled', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -158,15 +170,17 @@ describe('Root', () => {
 
   describe('.requestUpdate()', () => {
     it('should schedule an update with the user-specified priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -174,7 +188,7 @@ describe('Root', () => {
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
-      const scheduleUpdateSpy = vi.spyOn(updater, 'scheduleUpdate');
+      const scheduleUpdateSpy = vi.spyOn(context.updater, 'scheduleUpdate');
 
       block.requestUpdate('background', context);
 
@@ -186,15 +200,17 @@ describe('Root', () => {
     });
 
     it('should reschedule an update a higer priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -215,15 +231,17 @@ describe('Root', () => {
     });
 
     it('should not schedule an update with a lower or equal priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -244,15 +262,17 @@ describe('Root', () => {
     });
 
     it('should not schedule an update if the block is not connected', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -273,15 +293,17 @@ describe('Root', () => {
     });
 
     it('should not schedule an update if the block is already updating', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -299,15 +321,17 @@ describe('Root', () => {
 
   describe('.connect()', () => {
     it('should enqueue the block for update with "user-blocking" priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, { block: null });
 
@@ -331,21 +355,22 @@ describe('Root', () => {
     });
 
     it('should enqueue the block for update with the parent block priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const parent = new MockBlock();
-      const context = new UpdateContext(host, updater, parent);
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
       const getPrioritySpy = vi
-        .spyOn(parent, 'priority', 'get')
+        .spyOn(context.block, 'priority', 'get')
         .mockReturnValue('background');
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
@@ -368,15 +393,17 @@ describe('Root', () => {
     });
 
     it('should re-enqueue the block with "user-blocking" priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -404,15 +431,17 @@ describe('Root', () => {
     });
 
     it('should not enqueue a block if it is already enqueueing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -431,15 +460,17 @@ describe('Root', () => {
     });
 
     it('should connect the binding on update', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -455,16 +486,18 @@ describe('Root', () => {
 
   describe('.bind()', () => {
     it('should enqueue the block for update', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = new TextDirective('foo');
-      const value2 = new TextDirective('bar');
       const binding = new TextBinding(value1, part);
       const block = new Root(binding, context);
 
@@ -492,17 +525,18 @@ describe('Root', () => {
     });
 
     it('should enqueue the block for update with the parent block priority', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const parent = new MockBlock();
-      const context = new UpdateContext(host, updater, parent);
-
-      const value1 = new TextDirective('foo');
-      const value2 = new TextDirective('bar');
       const binding = new TextBinding(value1, part);
       const block = new Root(binding, context);
 
@@ -510,7 +544,7 @@ describe('Root', () => {
       context.flushUpdate();
 
       const getPrioritySpy = vi
-        .spyOn(parent, 'priority', 'get')
+        .spyOn(context.block, 'priority', 'get')
         .mockReturnValue('background');
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
@@ -535,16 +569,18 @@ describe('Root', () => {
     });
 
     it('should bind the new value to the binding on update', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value1 = new TextDirective('foo');
-      const value2 = new TextDirective('bar');
       const binding = new TextBinding(value1, part);
       const block = new Root(binding, context);
 
@@ -561,8 +597,8 @@ describe('Root', () => {
       expect(bindSpy).toHaveBeenCalledWith(
         value2,
         expect.objectContaining({
-          host,
-          updater,
+          host: context.host,
+          updater: context.updater,
           block: block,
           queue: context.queue,
         }),
@@ -572,15 +608,17 @@ describe('Root', () => {
 
   describe('.unbind()', () => {
     it('should unbind the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -601,15 +639,17 @@ describe('Root', () => {
     });
 
     it('should cancel the update in progress', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -631,15 +671,17 @@ describe('Root', () => {
 
   describe('.disconnect()', () => {
     it('should unbind the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 
@@ -651,23 +693,27 @@ describe('Root', () => {
       expect(block.isConnected).toBe(true);
       expect(block.isUpdating).toBe(false);
 
-      block.disconnect();
+      block.disconnect(context);
 
+      expect(context.isPending()).toBe(false);
       expect(block.isConnected).toBe(false);
       expect(block.isUpdating).toBe(false);
       expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
 
     it('should cancel the update in progress', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
-      const value = new TextDirective('foo');
       const binding = new TextBinding(value, part);
       const block = new Root(binding, context);
 

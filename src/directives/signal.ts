@@ -48,10 +48,7 @@ export abstract class Signal<TValue>
     return this.value;
   }
 
-  [directiveTag](
-    part: Part,
-    context: DirectiveContext<unknown>,
-  ): SignalBinding<TValue> {
+  [directiveTag](part: Part, context: DirectiveContext): SignalBinding<TValue> {
     return new SignalBinding(this, part, context);
   }
 
@@ -200,11 +197,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   private _subscription: Subscription | null = null;
 
-  constructor(
-    signal: Signal<TValue>,
-    part: Part,
-    context: DirectiveContext<unknown>,
-  ) {
+  constructor(signal: Signal<TValue>, part: Part, context: DirectiveContext) {
     this._signal = signal;
     this._binding = resolveBinding(signal.value, part, context);
   }
@@ -229,12 +222,12 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     return this._binding;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
     this._subscription ??= this._subscribeSignal(this._signal, context);
   }
 
-  bind(newValue: Signal<TValue>, context: UpdateContext<unknown>): void {
+  bind(newValue: Signal<TValue>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Signal, newValue, this._binding.part);
     }
@@ -247,21 +240,21 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
     this._subscription ??= this._subscribeSignal(newValue, context);
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
     this._subscription?.();
     this._subscription = null;
   }
 
-  disconnect(): void {
-    this._binding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
     this._subscription?.();
     this._subscription = null;
   }
 
   private _subscribeSignal(
     signal: Signal<TValue>,
-    context: UpdateContext<unknown>,
+    context: UpdateContext,
   ): Subscription {
     return signal.subscribe(() => {
       this._binding.bind(signal.value, context);

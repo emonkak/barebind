@@ -43,10 +43,7 @@ export class StyleMap implements Directive<StyleMap> {
     return this._styles;
   }
 
-  [directiveTag](
-    part: Part,
-    _context: DirectiveContext<unknown>,
-  ): StyleMapBinding {
+  [directiveTag](part: Part, _context: DirectiveContext): StyleMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
         'StyleMap directive must be used in a "style" attribute, but it is used here:\n' +
@@ -87,12 +84,12 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     return this._part.node;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this._requestCommit(context);
     this._status = CommitStatus.Mounting;
   }
 
-  bind(newValue: StyleMap, context: UpdateContext<unknown>): void {
+  bind(newValue: StyleMap, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(StyleMap, newValue, this._part);
     }
@@ -103,14 +100,14 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     if (Object.keys(this._memoizedStyles).length > 0) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     }
   }
 
-  disconnect(): void {
+  disconnect(_context: UpdateContext): void {
     this._status = CommitStatus.Committed;
   }
 
@@ -153,7 +150,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     this._status = CommitStatus.Committed;
   }
 
-  private _requestCommit(context: UpdateContext<unknown>): void {
+  private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }

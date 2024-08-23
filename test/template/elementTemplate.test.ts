@@ -14,9 +14,11 @@ import {
 describe('ElementTemplate', () => {
   describe('.render()', () => {
     it('should return ElementTemplateView initialized with NodeBinding', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const elementValue = { class: 'foo' };
       const childNodeValue = new TextDirective('bar');
@@ -70,9 +72,11 @@ describe('ElementTemplate', () => {
 describe('ElementTemplateView', () => {
   describe('.connect()', () => {
     it('should connect the element and child bindings', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new ElementTemplate('div').render(
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
@@ -107,15 +111,17 @@ describe('ElementTemplateView', () => {
 
   describe('.mount()', () => {
     it('should mount the element before the part node', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const view = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
@@ -144,15 +150,17 @@ describe('ElementTemplateView', () => {
 
   describe('.unmount()', () => {
     it('should not remove the node if a different part is given', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
-
       const view = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
@@ -186,9 +194,11 @@ describe('ElementTemplateView', () => {
 
   describe('.disconnect()', () => {
     it('should disconnect the element and child bindings', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new ElementTemplate('div').render(
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
@@ -204,7 +214,7 @@ describe('ElementTemplateView', () => {
         'disconnect',
       );
 
-      view.disconnect();
+      view.disconnect(context);
 
       expect(elementBindingDisconnectSpy).toHaveBeenCalledOnce();
       expect(childNodeBindingDisconnectSpy).toHaveBeenCalledOnce();

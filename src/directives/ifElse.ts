@@ -76,7 +76,7 @@ export class IfElse<TTrue, TFalse> implements Directive<IfElse<TTrue, TFalse>> {
 
   [directiveTag](
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ): IfElseBinding<TTrue, TFalse> {
     return new IfElseBinding<TTrue, TFalse>(this, part, context);
   }
@@ -94,7 +94,7 @@ export class IfElseBinding<TTrue, TFalse>
   constructor(
     value: IfElse<TTrue, TFalse>,
     part: Part,
-    context: DirectiveContext<unknown>,
+    context: DirectiveContext,
   ) {
     this._value = value;
     if (value.conditional.condition) {
@@ -136,11 +136,11 @@ export class IfElseBinding<TTrue, TFalse>
       : this._falseBinding!;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     this.currentBinding.connect(context);
   }
 
-  bind(newValue: IfElse<TTrue, TFalse>, context: UpdateContext<unknown>): void {
+  bind(newValue: IfElse<TTrue, TFalse>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(IfElse, newValue, this.currentBinding.part);
     }
@@ -185,11 +185,11 @@ export class IfElseBinding<TTrue, TFalse>
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     this.currentBinding.unbind(context);
   }
 
-  disconnect(): void {
-    this.currentBinding.disconnect();
+  disconnect(context: UpdateContext): void {
+    this.currentBinding.disconnect(context);
   }
 }

@@ -19,9 +19,11 @@ describe('EmptyTemplate', () => {
 
   describe('.render()', () => {
     it('should return a new EmptyTemplateView', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = EmptyTemplate.instance.render(null, context);
 
@@ -43,9 +45,11 @@ describe('EmptyTemplate', () => {
 describe('EmptyTemplateView', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new EmptyTemplateView();
 
@@ -57,9 +61,11 @@ describe('EmptyTemplateView', () => {
 
   describe('.bind()', () => {
     it('should do nothing', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new EmptyTemplateView();
 
@@ -71,9 +77,11 @@ describe('EmptyTemplateView', () => {
 
   describe('.unbind()', () => {
     it('should do nothing', () => {
-      const host = new MockUpdateHost();
-      const updater = new SyncUpdater();
-      const context = new UpdateContext(host, updater, new MockBlock());
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
 
       const view = new EmptyTemplateView();
 
@@ -90,28 +98,32 @@ describe('EmptyTemplateView', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-
       const view = new EmptyTemplateView();
 
       container.appendChild(part.node);
-
       expect(container.innerHTML).toBe('<!---->');
 
       view.mount(part);
-
       expect(container.innerHTML).toBe('<!---->');
 
       view.unmount(part);
-
       expect(container.innerHTML).toBe('<!---->');
     });
   });
 
   describe('.disconnect()', () => {
     it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const view = new EmptyTemplateView();
 
-      view.disconnect();
+      view.disconnect(context);
+
+      expect(context.isPending()).toBe(false);
     });
   });
 });

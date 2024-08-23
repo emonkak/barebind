@@ -120,10 +120,7 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
     return this._holes;
   }
 
-  render(
-    data: TData,
-    context: DirectiveContext<unknown>,
-  ): TaggedTemplateView<TData> {
+  render(data: TData, context: DirectiveContext): TaggedTemplateView<TData> {
     const holes = this._holes;
 
     if (holes.length !== data.length) {
@@ -252,13 +249,13 @@ export class TaggedTemplateView<TData extends readonly any[]>
     return this._bindings;
   }
 
-  connect(context: UpdateContext<unknown>): void {
+  connect(context: UpdateContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       this._bindings[i]!.connect(context);
     }
   }
 
-  bind(data: TData, context: UpdateContext<unknown>): void {
+  bind(data: TData, context: UpdateContext): void {
     if (data.length !== this._bindings.length) {
       throw new Error(
         `The number of new data must be ${this._bindings.length}, but got ${data.length}.`,
@@ -278,7 +275,7 @@ export class TaggedTemplateView<TData extends readonly any[]>
     }
   }
 
-  unbind(context: UpdateContext<unknown>): void {
+  unbind(context: UpdateContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       const part = binding.part;
@@ -291,7 +288,7 @@ export class TaggedTemplateView<TData extends readonly any[]>
         binding.unbind(context);
       } else {
         // Otherwise, it does not need to be unbound.
-        binding.disconnect();
+        binding.disconnect(context);
       }
     }
   }
@@ -314,9 +311,9 @@ export class TaggedTemplateView<TData extends readonly any[]>
     }
   }
 
-  disconnect(): void {
+  disconnect(context: UpdateContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.disconnect();
+      this._bindings[i]!.disconnect(context);
     }
   }
 }
