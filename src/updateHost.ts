@@ -4,6 +4,7 @@ import {
   type Effect,
   type Hook,
   PartType,
+  type Root,
   type TaskPriority,
   UpdateContext,
   type UpdateQueue,
@@ -54,6 +55,42 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
     hooks: Hook[],
   ): RenderContext {
     return new RenderContext(this, updater, block, queue, hooks);
+  }
+
+  createRoot<TValue>(
+    value: TValue,
+    container: Node,
+    updater: Updater<RenderContext>,
+  ): Root<TValue> {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    } as const;
+
+    DEBUG: {
+      part.node.data = nameOf(value);
+    }
+
+    const binding = resolveBinding(value, part, { block: null });
+    const block = BlockBinding.ofRoot(binding);
+    const context = new UpdateContext(this, updater, block);
+
+    return {
+      mount(): void {
+        context.enqueueMutationEffect(new MountNode(part.node, container));
+        binding.connect(context);
+        context.flushUpdate();
+      },
+      unmount(): void {
+        binding.unbind(context);
+        context.enqueueMutationEffect(new UnmountNode(part.node, container));
+        context.flushUpdate();
+      },
+      update(newValue: TValue): void {
+        binding.bind(newValue, context);
+        context.flushUpdate();
+      },
+    };
   }
 
   finishRender(context: RenderContext): void {
@@ -124,43 +161,6 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
     return template;
   }
 
-  mount<TValue>(
-    value: TValue,
-    container: Node,
-    updater: Updater<RenderContext>,
-  ): () => void {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-
-    DEBUG: {
-      part.node.data = nameOf(value);
-    }
-
-    const directiveContext = { block: null };
-    const binding = resolveBinding(value, part, directiveContext);
-    const block =
-      binding instanceof BlockBinding
-        ? binding
-        : new BlockBinding(binding, directiveContext);
-    const updateContext = new UpdateContext(this, updater, block);
-
-    updateContext.enqueueMutationEffect(new MountNode(part.node, container));
-    binding.connect(updateContext);
-    updateContext.flushUpdate();
-
-    return () => {
-      binding.unbind(updateContext);
-
-      updateContext.enqueueMutationEffect(
-        new UnmountNode(part.node, container),
-      );
-
-      updateContext.flushUpdate();
-    };
-  }
-
   nextIdentifier(): number {
     return ++this._idCounter;
   }
@@ -178,6 +178,36 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
       namespace.set(key, value);
       this._blockScopes.set(block, namespace);
     }
+  }
+}
+
+class MountNode implements Effect {
+  private readonly _node: Node;
+
+  private readonly _container: Node;
+
+  constructor(node: Node, container: Node) {
+    this._node = node;
+    this._container = container;
+  }
+
+  commit(): void {
+    this._container.appendChild(this._node);
+  }
+}
+
+class UnmountNode implements Effect {
+  private readonly _node: Node;
+
+  private readonly _container: Node;
+
+  constructor(node: Node, container: Node) {
+    this._node = node;
+    this._container = container;
+  }
+
+  commit(): void {
+    this._container.removeChild(this._node);
   }
 }
 
@@ -209,35 +239,5 @@ function isContinuousEvent(event: Event): boolean {
       return true;
     default:
       return false;
-  }
-}
-
-class MountNode implements Effect {
-  private readonly _node: Node;
-
-  private readonly _container: Node;
-
-  constructor(node: Node, container: Node) {
-    this._node = node;
-    this._container = container;
-  }
-
-  commit(): void {
-    this._container.appendChild(this._node);
-  }
-}
-
-class UnmountNode implements Effect {
-  private readonly _node: Node;
-
-  private readonly _container: Node;
-
-  constructor(node: Node, container: Node) {
-    this._node = node;
-    this._container = container;
-  }
-
-  commit(): void {
-    this._container.removeChild(this._node);
   }
 }

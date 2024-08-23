@@ -114,6 +114,12 @@ export interface TemplateView<TData, TContext = unknown> {
   unmount(part: ChildNodePart): void;
 }
 
+export interface Root<T> {
+  mount(): void;
+  unmount(): void;
+  update(value: T): void;
+}
+
 export interface Effect {
   commit(phase: CommitPhase): void;
 }

@@ -1,7 +1,6 @@
 import type {
   Binding,
   Block,
-  DirectiveContext,
   Part,
   TaskPriority,
   UpdateContext,
@@ -25,13 +24,19 @@ export class BlockBinding<TValue, TContext>
 
   private _flags = FLAG_NONE;
 
+  static ofRoot<TValue, TContext>(binding: Binding<TValue, TContext>) {
+    return binding instanceof BlockBinding
+      ? binding
+      : new BlockBinding(binding, null);
+  }
+
   constructor(
     binding: Binding<TValue, TContext>,
-    context: DirectiveContext<TContext>,
+    parent: Block<TContext> | null,
   ) {
     this._binding = binding;
     this._value = binding.value;
-    this._parent = context.block;
+    this._parent = parent;
   }
 
   get value(): TValue {

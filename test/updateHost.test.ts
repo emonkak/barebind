@@ -6,12 +6,10 @@ import {
   HookType,
   PartType,
   createUpdateQueue,
-  directiveTag,
 } from '../src/baseTypes.js';
-import { BlockBinding } from '../src/block.js';
 import { UpdateHost } from '../src/updateHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
-import { MockBlock, TextBinding, TextDirective } from './mocks.js';
+import { MockBlock, TextDirective } from './mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -47,6 +45,38 @@ describe('UpdateHost', () => {
       host.finishRender(context);
 
       expect(hooks).toStrictEqual([{ type: HookType.Finalizer }]);
+    });
+  });
+
+  describe('.createRoot()', () => {
+    it('should mount a value inside the container', async () => {
+      const container = document.createElement('div');
+      const host = new UpdateHost();
+      const updater = new SyncUpdater();
+
+      const value1 = new TextDirective('foo');
+      const value2 = new TextDirective('bar');
+
+      const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
+
+      const root = host.createRoot(value1, container, updater);
+      root.mount();
+      await updater.waitForUpdate();
+
+      expect(container.innerHTML).toBe('foo<!--TextDirective-->');
+      expect(flushUpdateSpy).toHaveBeenCalled();
+
+      root.update(value2);
+      await updater.waitForUpdate();
+
+      expect(container.innerHTML).toBe('bar<!--TextDirective-->');
+      expect(flushUpdateSpy).toHaveBeenCalledTimes(2);
+
+      root.unmount();
+      await updater.waitForUpdate();
+
+      expect(container.innerHTML).toBe('');
+      expect(flushUpdateSpy).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -183,64 +213,6 @@ describe('UpdateHost', () => {
       host.setScopedValue('foo', 456, parent);
 
       expect(host.getScopedValue('foo', block)).toBe(456);
-    });
-  });
-
-  describe('.mount()', () => {
-    it('should mount a non root value inside the container', async () => {
-      const container = document.createElement('div');
-      const host = new UpdateHost();
-      const updater = new SyncUpdater();
-
-      const value = new TextDirective('foo');
-
-      const directiveSpy = vi.spyOn(value, directiveTag);
-      const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
-
-      const unmount = host.mount(value, container, updater);
-
-      expect(directiveSpy).toHaveBeenCalledOnce();
-      expect(flushUpdateSpy).toHaveBeenCalled();
-
-      await updater.waitForUpdate();
-
-      expect(container.innerHTML).toBe('foo<!--TextDirective-->');
-
-      unmount();
-
-      await updater.waitForUpdate();
-
-      expect(container.innerHTML).toBe('');
-    });
-
-    it('should mount a root value inside the container', async () => {
-      const container = document.createElement('div');
-      const host = new UpdateHost();
-      const updater = new SyncUpdater();
-
-      const value = new TextDirective('foo');
-
-      const directiveSpy = vi
-        .spyOn(value, directiveTag)
-        .mockImplementation(function (this: typeof value, part, context) {
-          return new BlockBinding(new TextBinding(this, part), context);
-        });
-      const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
-
-      const unmount = host.mount(value, container, updater);
-
-      expect(directiveSpy).toHaveBeenCalledOnce();
-      expect(flushUpdateSpy).toHaveBeenCalled();
-
-      await updater.waitForUpdate();
-
-      expect(container.innerHTML).toBe('foo<!--TextDirective-->');
-
-      unmount();
-
-      await updater.waitForUpdate();
-
-      expect(container.innerHTML).toBe('');
     });
   });
 

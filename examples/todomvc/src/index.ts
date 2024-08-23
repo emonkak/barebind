@@ -6,5 +6,10 @@ import { TodoState } from './state.js';
 
 const host = new UpdateHost();
 const updater = new ConcurrentUpdater();
+const root = host.createRoot(
+  component(App, { state: new TodoState() }),
+  document.body,
+  updater,
+);
 
-host.mount(component(App, { state: new TodoState() }), document.body, updater);
+root.mount();

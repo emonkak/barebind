@@ -6,8 +6,7 @@ import { ItemState, StoryState, UserState } from './state.js';
 
 const host = new UpdateHost();
 const updater = new ConcurrentUpdater();
-
-host.mount(
+const root = host.createRoot(
   component(App, {
     storyState: new StoryState(),
     itemState: new ItemState(),
@@ -16,3 +15,5 @@ host.mount(
   document.body,
   updater,
 );
+
+root.mount();

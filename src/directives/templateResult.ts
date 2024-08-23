@@ -85,7 +85,7 @@ export class LazyTemplateResult<TData, TContext> extends AbstractTemplateResult<
     }
     return new BlockBinding<AbstractTemplateResult<TData, TContext>, TContext>(
       new TemplateResultBinding(this, part),
-      context,
+      context.block,
     );
   }
 }

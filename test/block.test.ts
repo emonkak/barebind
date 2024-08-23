@@ -11,6 +11,30 @@ import {
 } from './mocks.js';
 
 describe('RootBinding', () => {
+  describe('.ofRoot()', () => {
+    it('should construct a RootBinding without parent', () => {
+      const value = new TextDirective('foo');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TextBinding(value, part);
+      const block = BlockBinding.ofRoot(binding);
+
+      expect(block).toBe(BlockBinding.ofRoot(block));
+      expect(block.value).toBe(value);
+      expect(block.part).toBe(part);
+      expect(block.startNode).toBe(part.node);
+      expect(block.endNode).toBe(part.node);
+      expect(block.parent).toBe(null);
+      expect(block.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
+      expect(block.binding).toBeInstanceOf(TextBinding);
+      expect(block.binding.value).toBe(value);
+    });
+  });
+
   describe('.constructor()', () => {
     it('should construct a RootBinding', () => {
       const context = new UpdateContext(
@@ -25,20 +49,21 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      expect(rootBinding.value).toBe(value);
-      expect(rootBinding.part).toBe(part);
-      expect(rootBinding.startNode).toBe(part.node);
-      expect(rootBinding.endNode).toBe(part.node);
-      expect(rootBinding.parent).toBe(context.block);
-      expect(rootBinding.priority).toBe('user-blocking');
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.binding).toBeInstanceOf(TextBinding);
-      expect(rootBinding.binding.value).toBe(value);
+      expect(block.value).toBe(value);
+      expect(block.part).toBe(part);
+      expect(block.startNode).toBe(part.node);
+      expect(block.endNode).toBe(part.node);
+      expect(block.parent).toBe(context.block);
+      expect(block.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
+      expect(block.binding).toBeInstanceOf(TextBinding);
+      expect(block.binding.value).toBe(value);
     });
   });
+
   describe('.shouldUpdate()', () => {
     it('should return false after the binding is initialized', () => {
       const context = new UpdateContext(
@@ -53,9 +78,9 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      expect(rootBinding.shouldUpdate()).toBe(false);
+      expect(block.shouldUpdate()).toBe(false);
     });
 
     it('should return true after the binding is connected', () => {
@@ -71,11 +96,11 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.shouldUpdate()).toBe(true);
+      expect(block.shouldUpdate()).toBe(true);
     });
 
     it('should return true after an update is requested', () => {
@@ -91,14 +116,14 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      rootBinding.requestUpdate('user-blocking', context);
+      block.requestUpdate('user-blocking', context);
 
-      expect(rootBinding.shouldUpdate()).toBe(true);
+      expect(block.shouldUpdate()).toBe(true);
     });
 
     it('should return false after the binding is unbound', () => {
@@ -114,12 +139,12 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
-      rootBinding.unbind(context);
+      block.connect(context);
+      block.unbind(context);
 
-      expect(rootBinding.shouldUpdate()).toBe(false);
+      expect(block.shouldUpdate()).toBe(false);
     });
 
     it('should return false if there is a parent binding is updating', () => {
@@ -135,13 +160,13 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       vi.spyOn(context.block, 'isUpdating', 'get').mockReturnValue(true);
 
-      rootBinding.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.shouldUpdate()).toBe(false);
+      expect(block.shouldUpdate()).toBe(false);
     });
   });
 
@@ -159,12 +184,12 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
-      rootBinding.cancelUpdate();
+      block.connect(context);
+      block.cancelUpdate();
 
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isUpdating).toBe(false);
     });
   });
 
@@ -182,20 +207,20 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context.updater, 'scheduleUpdate');
 
-      rootBinding.requestUpdate('background', context);
+      block.requestUpdate('background', context);
 
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('background');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -212,21 +237,21 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.requestUpdate('background', context);
-      rootBinding.requestUpdate('user-visible', context);
+      block.requestUpdate('background', context);
+      block.requestUpdate('user-visible', context);
 
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('user-visible');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-visible');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
     });
 
@@ -243,21 +268,21 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.requestUpdate('user-blocking', context);
-      rootBinding.requestUpdate('user-visible', context);
+      block.requestUpdate('user-blocking', context);
+      block.requestUpdate('user-visible', context);
 
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(1);
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -274,21 +299,21 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.requestUpdate('background', context);
-      rootBinding.requestUpdate('background', context);
+      block.requestUpdate('background', context);
+      block.requestUpdate('background', context);
 
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('background');
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -305,15 +330,15 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.requestUpdate('background', context);
+      block.requestUpdate('background', context);
 
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).not.toHaveBeenCalled();
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
@@ -333,25 +358,25 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, { block: null });
+      const block = new BlockBinding(binding, null);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
     });
 
     it('should enqueue the binding for update with the parent block priority', () => {
@@ -367,7 +392,7 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const getPrioritySpy = vi
         .spyOn(context.block, 'priority', 'get')
@@ -375,21 +400,21 @@ describe('RootBinding', () => {
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('background');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(getPrioritySpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.priority).toBe('background');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('background');
     });
 
     it('should re-enqueue the binding as a block with "user-blocking" priority', () => {
@@ -405,29 +430,29 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.requestUpdate('background', context);
-      rootBinding.connect(context);
+      block.requestUpdate('background', context);
+      block.connect(context);
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
 
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
     });
 
     it('should not enqueue the binding as a block if it is already enqueueing', () => {
@@ -443,19 +468,19 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.connect(context);
-      rootBinding.connect(context);
+      block.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
 
@@ -472,11 +497,11 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const connectSpy = vi.spyOn(binding, 'connect');
 
-      rootBinding.connect(context);
+      block.connect(context);
       expect(connectSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
@@ -499,29 +524,29 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value1, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.bind(value2, context);
+      block.bind(value2, context);
 
-      expect(rootBinding.value).toBe(value2);
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.value).toBe(value2);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('user-blocking');
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.priority).toBe('user-blocking');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
     });
 
     it('should enqueue the binding as a block for update with the parent block priority', () => {
@@ -538,9 +563,9 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value1, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const getPrioritySpy = vi
@@ -549,23 +574,23 @@ describe('RootBinding', () => {
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      rootBinding.bind(value2, context);
+      block.bind(value2, context);
 
-      expect(rootBinding.value).toBe(value2);
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(true);
-      expect(rootBinding.priority).toBe('background');
+      expect(block.value).toBe(value2);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(true);
+      expect(block.priority).toBe('background');
       expect(getPrioritySpy).toHaveBeenCalledOnce();
       expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(rootBinding);
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
-      expect(rootBinding.priority).toBe('background');
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('background');
     });
 
     it('should bind the new value to the binding on update', () => {
@@ -582,14 +607,14 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value1, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      rootBinding.bind(value2, context);
+      block.bind(value2, context);
       expect(bindSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
@@ -599,7 +624,7 @@ describe('RootBinding', () => {
         expect.objectContaining({
           host: context.host,
           updater: context.updater,
-          block: rootBinding,
+          block: block,
           queue: context.queue,
         }),
       );
@@ -620,20 +645,20 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
 
-      rootBinding.unbind(context);
+      block.unbind(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
@@ -651,19 +676,19 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      rootBinding.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(true);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
 
-      rootBinding.unbind(context);
+      block.unbind(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });
@@ -683,21 +708,21 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
 
-      rootBinding.connect(context);
+      block.connect(context);
       context.flushUpdate();
 
-      expect(rootBinding.isConnected).toBe(true);
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
 
-      rootBinding.disconnect(context);
+      block.disconnect(context);
 
       expect(context.isPending()).toBe(false);
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(disconnectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
@@ -715,19 +740,19 @@ describe('RootBinding', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const rootBinding = new BlockBinding(binding, context);
+      const block = new BlockBinding(binding, context.block);
 
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
-      rootBinding.connect(context);
+      block.connect(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(true);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(true);
 
-      rootBinding.unbind(context);
+      block.unbind(context);
 
-      expect(rootBinding.isConnected).toBe(false);
-      expect(rootBinding.isUpdating).toBe(false);
+      expect(block.isConnected).toBe(false);
+      expect(block.isUpdating).toBe(false);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
     });

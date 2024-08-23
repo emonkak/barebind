@@ -64,7 +64,7 @@ export class Component<TProps, TData, TContext>
     }
     // Component directive should be used with BlockBinding. Otherwise, updates
     // will begin from the parent block instead of the component itself.
-    return new BlockBinding(new ComponentBinding(this, part), context);
+    return new BlockBinding(new ComponentBinding(this, part), context.block);
   }
 }
 
