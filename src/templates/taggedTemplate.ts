@@ -293,6 +293,12 @@ export class TaggedTemplateView<TData extends readonly any[]>
     }
   }
 
+  disconnect(context: UpdateContext): void {
+    for (let i = 0, l = this._bindings.length; i < l; i++) {
+      this._bindings[i]!.disconnect(context);
+    }
+  }
+
   mount(part: ChildNodePart): void {
     const referenceNode = part.node;
 
@@ -308,12 +314,6 @@ export class TaggedTemplateView<TData extends readonly any[]>
       for (let i = 0, l = this._childNodes.length; i < l; i++) {
         parentNode.removeChild(this._childNodes[i]!);
       }
-    }
-  }
-
-  disconnect(context: UpdateContext): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.disconnect(context);
     }
   }
 }

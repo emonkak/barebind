@@ -100,24 +100,97 @@ describe('SingleTemplateView', () => {
         new MockBlock(),
       );
 
+      const value = 'foo';
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const binding = new NodeBinding('foo', part);
+      const binding = new NodeBinding(value, part);
       const view = new SingleTemplateView(binding);
+
+      const connectSpy = vi.spyOn(binding, 'connect');
 
       view.connect(context);
       context.flushUpdate();
-      expect(part.node.nodeValue).toBe('foo');
 
-      view.bind('bar', context);
-      context.flushUpdate();
-      expect(part.node.nodeValue).toBe('bar');
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
+    });
+  });
+
+  describe('.bind()', () => {
+    it('should bind a new value to the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new NodeBinding(value1, part);
+      const view = new SingleTemplateView(binding);
+
+      const bindSpy = vi.spyOn(binding, 'bind');
+
+      view.bind(value2, context);
+
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(value2, context);
+    });
+  });
+
+  describe('.unbind()', () => {
+    it('should unbind a value from the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = 'foo';
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new NodeBinding(value, part);
+      const view = new SingleTemplateView(binding);
+
+      const unbindSpy = vi.spyOn(binding, 'unbind');
 
       view.unbind(context);
-      context.flushUpdate();
-      expect(part.node.nodeValue).toBe('');
+
+      expect(unbindSpy).toHaveBeenCalledOnce();
+      expect(unbindSpy).toHaveBeenCalledWith(context);
+    });
+  });
+
+  describe('.disconnect()', () => {
+    it('should disconnect the binding', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = 'foo';
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new NodeBinding(value, part);
+      const view = new SingleTemplateView(binding);
+
+      const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
+
+      view.disconnect(context);
+
+      expect(disconnectSpy).toHaveBeenCalledOnce();
+      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -179,30 +252,6 @@ describe('SingleTemplateView', () => {
         node: document.createComment(''),
       });
       expect(container.innerHTML).toBe('foo<!---->');
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should disconnect the binding', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const binding = new NodeBinding('foo', part);
-      const view = new SingleTemplateView(binding);
-
-      const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
-
-      view.disconnect(context);
-
-      expect(disconnectSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 });

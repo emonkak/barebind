@@ -75,6 +75,22 @@ describe('EmptyTemplateView', () => {
     });
   });
 
+  describe('.disconnect()', () => {
+    it('should do nothing', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const view = new EmptyTemplateView();
+
+      view.disconnect(context);
+
+      expect(context.isPending()).toBe(false);
+    });
+  });
+
   describe('.unbind()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
@@ -108,22 +124,6 @@ describe('EmptyTemplateView', () => {
 
       view.unmount(part);
       expect(container.innerHTML).toBe('<!---->');
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should do nothing', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const view = new EmptyTemplateView();
-
-      view.disconnect(context);
-
-      expect(context.isPending()).toBe(false);
     });
   });
 });

@@ -116,6 +116,11 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
     this._childNodeBinding.unbind(context);
   }
 
+  disconnect(context: UpdateContext): void {
+    this._elementBinding.disconnect(context);
+    this._childNodeBinding.disconnect(context);
+  }
+
   mount(part: ChildNodePart): void {
     const referenceNode = part.node;
     const element = this._elementBinding.part.node;
@@ -131,10 +136,5 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
 
       parentNode.removeChild(element);
     }
-  }
-
-  disconnect(context: UpdateContext): void {
-    this._elementBinding.disconnect(context);
-    this._childNodeBinding.disconnect(context);
   }
 }

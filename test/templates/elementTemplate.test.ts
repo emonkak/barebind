@@ -78,34 +78,95 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
+      const data = { elementValue: { class: 'foo' }, childNodeValue: 'bar' };
+      const view = new ElementTemplate('div').render(data, context);
+
+      const elmentConnectSpy = vi.spyOn(view.elementBinding, 'connect');
+      const childNodeConnectSpy = vi.spyOn(view.elementBinding, 'connect');
+
+      view.connect(context);
+
+      expect(elmentConnectSpy).toHaveBeenCalledOnce();
+      expect(elmentConnectSpy).toHaveBeenCalledWith(context);
+      expect(childNodeConnectSpy).toHaveBeenCalledOnce();
+      expect(childNodeConnectSpy).toHaveBeenCalledWith(context);
+    });
+  });
+
+  describe('.bind()', () => {
+    it('should bind new values to the element and child bindings', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const data = { elementValue: { class: 'foo' }, childNodeValue: 'bar' };
+      const view = new ElementTemplate('div').render(data, context);
+
+      const elmentBindSpy = vi.spyOn(view.elementBinding, 'bind');
+      const childNodeBindSpy = vi.spyOn(view.childNodeBinding, 'bind');
+
+      view.bind(data, context);
+
+      expect(elmentBindSpy).toHaveBeenCalledOnce();
+      expect(elmentBindSpy).toHaveBeenCalledWith(data.elementValue, context);
+      expect(childNodeBindSpy).toHaveBeenCalledOnce();
+      expect(childNodeBindSpy).toHaveBeenCalledWith(
+        data.childNodeValue,
+        context,
+      );
+    });
+  });
+
+  describe('.unbind()', () => {
+    it('should unbind values from the element and child bindings', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const data = { elementValue: { class: 'foo' }, childNodeValue: 'bar' };
+      const view = new ElementTemplate('div').render(data, context);
+
+      const elmentUnbindSpy = vi.spyOn(view.elementBinding, 'unbind');
+      const childNodeUnbindSpy = vi.spyOn(view.childNodeBinding, 'unbind');
+
+      view.unbind(context);
+
+      expect(elmentUnbindSpy).toHaveBeenCalledOnce();
+      expect(elmentUnbindSpy).toHaveBeenCalledWith(context);
+      expect(childNodeUnbindSpy).toHaveBeenCalledOnce();
+      expect(childNodeUnbindSpy).toHaveBeenCalledWith(context);
+    });
+  });
+
+  describe('.disconnect()', () => {
+    it('should disconnect the element and child bindings', () => {
+      const context = new UpdateContext(
+        new MockUpdateHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
       const view = new ElementTemplate('div').render(
         { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
         context,
       );
 
-      view.connect(context);
-      context.flushUpdate();
-
-      expect((view.elementBinding.part.node as Element).outerHTML).toBe(
-        '<div class="foo"><!--bar--></div>',
+      const elementDisconnectSpy = vi.spyOn(view.elementBinding, 'disconnect');
+      const childNodeDisconnectSpy = vi.spyOn(
+        view.childNodeBinding,
+        'disconnect',
       );
 
-      view.bind(
-        { elementValue: { class: 'bar' }, childNodeValue: 'baz' },
-        context,
-      );
-      context.flushUpdate();
+      view.disconnect(context);
 
-      expect((view.elementBinding.part.node as Element).outerHTML).toBe(
-        '<div class="bar"><!--baz--></div>',
-      );
-
-      view.unbind(context);
-      context.flushUpdate();
-
-      expect((view.elementBinding.part.node as Element).outerHTML).toBe(
-        '<div><!----></div>',
-      );
+      expect(elementDisconnectSpy).toHaveBeenCalledOnce();
+      expect(elementDisconnectSpy).toHaveBeenCalledWith(context);
+      expect(childNodeDisconnectSpy).toHaveBeenCalledOnce();
+      expect(childNodeDisconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -189,35 +250,6 @@ describe('ElementTemplateView', () => {
       expect(container.innerHTML).toBe(
         '<div class="foo">bar<!--TextDirective--></div><!---->',
       );
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should disconnect the element and child bindings', () => {
-      const context = new UpdateContext(
-        new MockUpdateHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const view = new ElementTemplate('div').render(
-        { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
-        context,
-      );
-
-      const elementBindingDisconnectSpy = vi.spyOn(
-        view.elementBinding,
-        'disconnect',
-      );
-      const childNodeBindingDisconnectSpy = vi.spyOn(
-        view.childNodeBinding,
-        'disconnect',
-      );
-
-      view.disconnect(context);
-
-      expect(elementBindingDisconnectSpy).toHaveBeenCalledOnce();
-      expect(childNodeBindingDisconnectSpy).toHaveBeenCalledOnce();
     });
   });
 });

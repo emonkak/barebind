@@ -114,9 +114,9 @@ export interface TemplateView<TData, TContext = unknown> {
   connect(context: UpdateContext<TContext>): void;
   bind(data: TData, context: UpdateContext<TContext>): void;
   unbind(context: UpdateContext<TContext>): void;
+  disconnect(context: UpdateContext<TContext>): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
-  disconnect(context: UpdateContext<TContext>): void;
 }
 
 export interface Effect {

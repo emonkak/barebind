@@ -277,10 +277,11 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const value = context.only('foo');
+      const value = 'foo';
+      const { template, data } = context.only(value);
 
-      expect(value.template).toBeInstanceOf(ValueTemplate);
-      expect(value.data).toBe('foo');
+      expect(template).toBeInstanceOf(ValueTemplate);
+      expect(data).toBe(value);
     });
   });
 

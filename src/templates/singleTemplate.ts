@@ -90,6 +90,10 @@ export class SingleTemplateView<T> implements TemplateView<T> {
     this._binding.unbind(context);
   }
 
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
+  }
+
   mount(part: ChildNodePart): void {
     const referenceNode = part.node;
     referenceNode.before(this._binding.part.node);
@@ -97,9 +101,5 @@ export class SingleTemplateView<T> implements TemplateView<T> {
 
   unmount(part: ChildNodePart): void {
     part.node.parentNode?.removeChild(this._binding.part.node);
-  }
-
-  disconnect(context: UpdateContext): void {
-    this._binding.disconnect(context);
   }
 }

@@ -194,14 +194,12 @@ export class TemplateResultBinding<TData, TContext>
   unbind(context: UpdateContext<TContext>): void {
     // Detach data from the current view before its unmount.
     this._pendingView?.unbind(context);
-
     this._requestCommit(context);
     this._status = CommitStatus.Unmounting;
   }
 
   disconnect(context: UpdateContext<TContext>): void {
     this._pendingView?.disconnect(context);
-
     this._status = CommitStatus.Committed;
   }
 
