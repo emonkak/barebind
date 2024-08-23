@@ -44,23 +44,23 @@ export class Ref implements Directive<Ref> {
 }
 
 export class RefBinding implements Binding<Ref>, Effect {
-  private _value: Ref;
+  private _pendingValue: Ref;
+
+  private _memoizedValue: Ref | null = null;
 
   private readonly _part: AttributePart;
-
-  private _memoizedRef: ElementRef | null = null;
 
   private _cleanup: Cleanup | void = undefined;
 
   private _status = CommitStatus.Committed;
 
   constructor(directive: Ref, part: AttributePart) {
-    this._value = directive;
+    this._pendingValue = directive;
     this._part = part;
   }
 
   get value(): Ref {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): AttributePart {
@@ -84,15 +84,18 @@ export class RefBinding implements Binding<Ref>, Effect {
     DEBUG: {
       ensureDirective(Ref, newValue, this._part);
     }
-    if (newValue.ref !== this._memoizedRef) {
+    if (
+      this._memoizedValue === null ||
+      newValue.ref !== this._memoizedValue.ref
+    ) {
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
     }
-    this._value = newValue;
+    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext): void {
-    if (this._memoizedRef !== null) {
+    if (this._memoizedValue !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     } else {
@@ -101,7 +104,7 @@ export class RefBinding implements Binding<Ref>, Effect {
   }
 
   disconnect(context: UpdateContext): void {
-    if (this._memoizedRef !== null) {
+    if (this._memoizedValue !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     } else {
@@ -112,15 +115,34 @@ export class RefBinding implements Binding<Ref>, Effect {
   commit(): void {
     switch (this._status) {
       case CommitStatus.Mounting: {
-        this._invokeRef();
+        const oldRef = this._memoizedValue?.ref ?? null;
+        const newRef = this._pendingValue.ref;
+        const cleanup = this._cleanup;
+        cleanup?.();
+        if (oldRef !== null && typeof oldRef === 'object') {
+          oldRef.current = null;
+        }
+        if (typeof newRef === 'object') {
+          newRef.current = this._part.node;
+          this._cleanup = undefined;
+        } else {
+          this._cleanup = newRef(this._part.node);
+        }
+        this._memoizedValue = this._pendingValue;
         break;
       }
       case CommitStatus.Unmounting: {
-        this._cleanRef();
+        const value = this._memoizedValue;
+        const cleanup = this._cleanup;
+        cleanup?.();
+        if (value !== null && typeof value.ref === 'object') {
+          value.ref.current = null;
+        }
+        this._cleanup = undefined;
+        this._memoizedValue = null;
         break;
       }
     }
-
     this._status = CommitStatus.Committed;
   }
 
@@ -128,31 +150,5 @@ export class RefBinding implements Binding<Ref>, Effect {
     if (this._status === CommitStatus.Committed) {
       context.enqueueLayoutEffect(this);
     }
-  }
-
-  private _cleanRef(): Cleanup | void {
-    const ref = this._memoizedRef;
-    this._cleanup?.();
-    if (ref !== null && typeof ref === 'object') {
-      ref.current = null;
-    }
-    this._cleanup = undefined;
-    this._memoizedRef = null;
-  }
-
-  private _invokeRef(): Cleanup | void {
-    const newRef = this._value.ref;
-    const oldRef = this._memoizedRef;
-    this._cleanup?.();
-    if (oldRef !== null && typeof oldRef === 'object') {
-      oldRef.current = null;
-    }
-    if (typeof newRef === 'object') {
-      newRef.current = this._part.node;
-      this._cleanup = undefined;
-    } else {
-      this._cleanup = newRef(this._part.node);
-    }
-    this._memoizedRef = newRef;
   }
 }

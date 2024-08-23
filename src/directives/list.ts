@@ -1,7 +1,6 @@
 import {
   type Binding,
   type ChildNodePart,
-  CommitStatus,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -95,7 +94,7 @@ export class ListBinding<TItem, TKey, TValue>
 
   private _memoizedBindings: ItemBinding<TValue>[] = [];
 
-  private _status = CommitStatus.Committed;
+  private _dirty = false;
 
   constructor(value: List<TItem, TKey, TValue>, part: ChildNodePart) {
     this._value = value;
@@ -126,7 +125,6 @@ export class ListBinding<TItem, TKey, TValue>
     const { items, keySelector, valueSelector } = this._value;
     this._updateItems(items, keySelector, valueSelector, context);
     this._requestCommit(context);
-    this._status = CommitStatus.Mounting;
   }
 
   bind(newValue: List<TItem, TKey, TValue>, context: UpdateContext): void {
@@ -137,27 +135,26 @@ export class ListBinding<TItem, TKey, TValue>
     this._updateItems(items, keySelector, valueSelector, context);
     this._requestCommit(context);
     this._value = newValue;
-    this._status = CommitStatus.Mounting;
   }
 
   unbind(context: UpdateContext): void {
     this._clearItems(context);
     this._requestCommit(context);
-    this._status = CommitStatus.Unmounting;
   }
 
   disconnect(context: UpdateContext): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
       this._pendingBindings[i]!.disconnect(context);
     }
-    this._status = CommitStatus.Committed;
+    this._dirty = false;
   }
 
   commit(): void {
-    if (this._status !== CommitStatus.Committed) {
-      this._memoizedBindings = this._pendingBindings;
-      this._status = CommitStatus.Committed;
+    if (!this._dirty) {
+      return;
     }
+    this._memoizedBindings = this._pendingBindings;
+    this._dirty = false;
   }
 
   private _clearItems(context: UpdateContext): void {
@@ -356,8 +353,9 @@ export class ListBinding<TItem, TKey, TValue>
   }
 
   private _requestCommit(context: UpdateContext): void {
-    if (this._status === CommitStatus.Committed) {
+    if (!this._dirty) {
       context.enqueueMutationEffect(this);
+      this._dirty = true;
     }
   }
 

@@ -44,7 +44,7 @@ export class ClassMap implements Directive<ClassMap> {
 export class ClassMapBinding implements Effect, Binding<ClassMap> {
   private _pendingValue: ClassMap;
 
-  private _memoizedClasses: ClassDeclaration = {};
+  private _memoizedValue: ClassMap | null = null;
 
   private readonly _part: AttributePart;
 
@@ -80,7 +80,10 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     DEBUG: {
       ensureDirective(ClassMap, newValue, this._part);
     }
-    if (!shallowEqual(newValue.classes, this._memoizedClasses)) {
+    if (
+      this._memoizedValue === null ||
+      !shallowEqual(newValue.classes, this._memoizedValue.classes)
+    ) {
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
     }
@@ -88,7 +91,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
   }
 
   unbind(context: UpdateContext): void {
-    if (Object.keys(this._memoizedClasses).length > 0) {
+    if (this._memoizedValue !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     } else {
@@ -104,7 +107,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
     switch (this._status) {
       case CommitStatus.Mounting: {
         const { classList } = this._part.node;
-        const oldClasses = this._memoizedClasses;
+        const oldClasses = this._memoizedValue?.classes ?? {};
         const newClasses = this._pendingValue.classes;
 
         for (const className in newClasses) {
@@ -118,12 +121,12 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
           }
         }
 
-        this._memoizedClasses = newClasses;
+        this._memoizedValue = this._pendingValue;
         break;
       }
       case CommitStatus.Unmounting: {
         this._part.node.className = '';
-        this._memoizedClasses = {};
+        this._memoizedValue = this._pendingValue;
         break;
       }
     }

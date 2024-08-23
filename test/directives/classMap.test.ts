@@ -237,7 +237,7 @@ describe('ClassMapBinding', () => {
       expect(part.node.classList).toHaveLength(0);
     });
 
-    it('should skip an update if the current properties are empty', () => {
+    it('should skip an update if the current classes have not been comitted', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),

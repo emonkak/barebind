@@ -55,21 +55,21 @@ export class StyleMap implements Directive<StyleMap> {
 }
 
 export class StyleMapBinding implements Binding<StyleMap>, Effect {
-  private _value: StyleMap;
+  private _pendingValue: StyleMap;
+
+  private _memoizedValue: StyleMap | null = null;
 
   private readonly _part: AttributePart;
-
-  private _memoizedStyles: StyleDeclaration = {};
 
   private _status = CommitStatus.Committed;
 
   constructor(value: StyleMap, part: AttributePart) {
-    this._value = value;
+    this._pendingValue = value;
     this._part = part;
   }
 
   get value(): StyleMap {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): AttributePart {
@@ -93,15 +93,18 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     DEBUG: {
       ensureDirective(StyleMap, newValue, this._part);
     }
-    if (!shallowEqual(newValue.styles, this._memoizedStyles)) {
+    if (
+      this._memoizedValue === null ||
+      !shallowEqual(newValue.styles, this._memoizedValue.styles)
+    ) {
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
     }
-    this._value = newValue;
+    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext): void {
-    if (Object.keys(this._memoizedStyles).length > 0) {
+    if (this._memoizedValue !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
     } else {
@@ -120,8 +123,8 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
           | HTMLElement
           | MathMLElement
           | SVGElement;
-        const oldStyles = this._memoizedStyles;
-        const newStyles = this._value.styles;
+        const oldStyles = this._memoizedValue?.styles ?? {};
+        const newStyles = this._pendingValue.styles;
 
         for (const newProperty in newStyles) {
           const cssProperty = toCSSProperty(newProperty);
@@ -136,7 +139,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
           }
         }
 
-        this._memoizedStyles = newStyles;
+        this._memoizedValue = this._pendingValue;
         break;
       }
       case CommitStatus.Unmounting: {
@@ -145,7 +148,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
           | MathMLElement
           | SVGElement;
         style.cssText = '';
-        this._memoizedStyles = {};
+        this._memoizedValue = null;
       }
     }
 

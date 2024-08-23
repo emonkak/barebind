@@ -19,7 +19,10 @@ export function dependenciesAreChanged(
   return false;
 }
 
-export function shallowEqual(firstProps: {}, secondProps: {}): boolean {
+export function shallowEqual<T extends {}>(
+  firstProps: T,
+  secondProps: T,
+): boolean {
   if (firstProps === secondProps) {
     return true;
   }

@@ -234,7 +234,7 @@ describe('StyleMapBinding', () => {
       expect(part.node.style.cssText).toBe('');
     });
 
-    it('should skip an update if the current styles are empty', () => {
+    it('should skip an update if the current styles have not been comitted', () => {
       const context = new UpdateContext(
         new MockUpdateHost(),
         new SyncUpdater(),
