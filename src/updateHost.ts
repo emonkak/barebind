@@ -1,10 +1,8 @@
 import {
-  type Binding,
   type Block,
   type CommitPhase,
   type Effect,
   type Hook,
-  type Part,
   PartType,
   type TaskPriority,
   UpdateContext,
@@ -130,7 +128,7 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
     value: TValue,
     container: ChildNode,
     updater: Updater<RenderContext>,
-  ): Binding<TValue, RenderContext> {
+  ): () => void {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -146,13 +144,21 @@ export class UpdateHost implements UpdateRuntime<RenderContext> {
       binding instanceof Root ? binding : new Root(binding, directiveContext);
     const updateContext = new UpdateContext(this, updater, block);
 
-    updateContext.enqueueMutationEffect(new MountPart(part, container));
+    updateContext.enqueueMutationEffect(new MountNode(part.node, container));
 
     binding.connect(updateContext);
 
     updateContext.flushUpdate();
 
-    return binding;
+    return () => {
+      binding.unbind(updateContext);
+
+      updateContext.enqueueMutationEffect(
+        new UnmountNode(part.node, container),
+      );
+
+      updateContext.flushUpdate();
+    };
   }
 
   nextIdentifier(): number {
@@ -206,17 +212,32 @@ function isContinuousEvent(event: Event): boolean {
   }
 }
 
-class MountPart implements Effect {
-  private readonly _part: Part;
+class MountNode implements Effect {
+  private readonly _node: Node;
 
   private readonly _container: ChildNode;
 
-  constructor(part: Part, container: ChildNode) {
-    this._part = part;
+  constructor(node: Node, container: ChildNode) {
+    this._node = node;
     this._container = container;
   }
 
   commit(): void {
-    this._container.appendChild(this._part.node);
+    this._container.appendChild(this._node);
+  }
+}
+
+class UnmountNode implements Effect {
+  private readonly _node: Node;
+
+  private readonly _container: ChildNode;
+
+  constructor(node: Node, container: ChildNode) {
+    this._node = node;
+    this._container = container;
+  }
+
+  commit(): void {
+    this._container.removeChild(this._node);
   }
 }

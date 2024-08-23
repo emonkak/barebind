@@ -197,15 +197,20 @@ describe('UpdateHost', () => {
       const directiveSpy = vi.spyOn(value, directiveTag);
       const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
 
-      const binding = host.mount(value, container, updater);
+      const unmount = host.mount(value, container, updater);
 
-      expect(binding).toBeInstanceOf(TextBinding);
       expect(directiveSpy).toHaveBeenCalledOnce();
       expect(flushUpdateSpy).toHaveBeenCalled();
 
       await updater.waitForUpdate();
 
       expect(container.innerHTML).toBe('foo<!--TextDirective-->');
+
+      unmount();
+
+      await updater.waitForUpdate();
+
+      expect(container.innerHTML).toBe('');
     });
 
     it('should mount a root value inside the container', async () => {
@@ -222,16 +227,20 @@ describe('UpdateHost', () => {
         });
       const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
 
-      const binding = host.mount(value, container, updater);
+      const unmount = host.mount(value, container, updater);
 
-      expect(binding).toBeInstanceOf(Root);
-      expect(binding.value).toBe(value);
       expect(directiveSpy).toHaveBeenCalledOnce();
       expect(flushUpdateSpy).toHaveBeenCalled();
 
       await updater.waitForUpdate();
 
       expect(container.innerHTML).toBe('foo<!--TextDirective-->');
+
+      unmount();
+
+      await updater.waitForUpdate();
+
+      expect(container.innerHTML).toBe('');
     });
   });
 

@@ -188,6 +188,14 @@ export class MockUpdateHost implements UpdateRuntime<RenderContext> {
     return undefined;
   }
 
+  mount<TValue>(
+    _value: TValue,
+    _container: ChildNode,
+    _updater: Updater<RenderContext>,
+  ): () => void {
+    return () => {};
+  }
+
   nextIdentifier(): number {
     return ++this._idCounter;
   }
