@@ -281,7 +281,7 @@ export class UpdateContext<TContext = unknown> {
     );
   }
 
-  renderComponent<TProps, TData>(
+  render<TProps, TData>(
     type: ComponentType<TProps, TData, TContext>,
     props: TProps,
     hooks: Hook[],

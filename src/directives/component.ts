@@ -186,11 +186,7 @@ export class ComponentBinding<TProps, TData, TContext>
     context: UpdateContext<TContext>,
   ) {
     const { type, props } = component;
-    const { template, data } = context.renderComponent(
-      type,
-      props,
-      this._hooks,
-    );
+    const { template, data } = context.render(type, props, this._hooks);
 
     if (this._pendingView !== null) {
       // Safety: If a pending view exists, there will always be a memoized
