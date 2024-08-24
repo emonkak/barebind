@@ -85,7 +85,7 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   bind(newValue: Memo<T>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(Memo, newValue, this._binding.part);
+      ensureDirective([Memo], newValue, this._binding.part);
     }
     const oldDependencies = this._memoizedDependencies;
     const newDependencies = newValue.dependencies;

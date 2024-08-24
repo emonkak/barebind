@@ -6,8 +6,8 @@ import {
   nameTag,
 } from '../../src/baseTypes.js';
 import {
+  EagerTemplateResult,
   LazyTemplateResult,
-  TemplateResult,
   TemplateResultBinding,
 } from '../../src/directives/templateResult.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -18,12 +18,12 @@ import {
   MockTemplateView,
 } from '../mocks.js';
 
-describe('TemplateResult', () => {
+describe('EagerTemplateResult', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
 
-      expect(value[nameTag]).toBe('TemplateResult(MockTemplate)');
+      expect(value[nameTag]).toBe('EagerTemplateResult(MockTemplate)');
     });
   });
 
@@ -35,7 +35,7 @@ describe('TemplateResult', () => {
         new MockBlock(),
       );
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -55,7 +55,7 @@ describe('TemplateResult', () => {
         new MockBlock(),
       );
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -128,7 +128,7 @@ describe('TemplateResultBinding', () => {
         new MockBlock(),
       );
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -170,7 +170,7 @@ describe('TemplateResultBinding', () => {
         new MockBlock(),
       );
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -225,8 +225,8 @@ describe('TemplateResultBinding', () => {
       );
 
       const template = new MockTemplate();
-      const value1 = new TemplateResult(template, {});
-      const value2 = new TemplateResult(template, {});
+      const value1 = new EagerTemplateResult(template, {});
+      const value2 = new EagerTemplateResult(template, {});
       const view = new MockTemplateView(value1.data, [
         document.createComment(''),
       ]);
@@ -268,8 +268,8 @@ describe('TemplateResultBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = new TemplateResult(new MockTemplate(), {});
-      const value2 = new TemplateResult(new MockTemplate(), {});
+      const value1 = new EagerTemplateResult(new MockTemplate(), {});
+      const value2 = new EagerTemplateResult(new MockTemplate(), {});
       const view1 = new MockTemplateView(value1.data, [
         document.createComment(''),
       ]);
@@ -332,8 +332,8 @@ describe('TemplateResultBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = new TemplateResult(new MockTemplate(), {});
-      const value2 = new TemplateResult(new MockTemplate(), {});
+      const value1 = new EagerTemplateResult(new MockTemplate(), {});
+      const value2 = new EagerTemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value1.data, [
         document.createComment(''),
       ]);
@@ -371,8 +371,8 @@ describe('TemplateResultBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = new TemplateResult(new MockTemplate(), {});
-      const value2 = new TemplateResult(new MockTemplate(), {});
+      const value1 = new EagerTemplateResult(new MockTemplate(), {});
+      const value2 = new EagerTemplateResult(new MockTemplate(), {});
       const view1 = new MockTemplateView(value1.data, [
         document.createComment(''),
       ]);
@@ -431,7 +431,7 @@ describe('TemplateResultBinding', () => {
         new MockBlock(),
       );
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
       const view = new MockTemplateView(value.data, [
         document.createComment(''),
       ]);
@@ -476,14 +476,14 @@ describe('TemplateResultBinding', () => {
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should throw an error if the new value is not AbstractTemplateResult', () => {
+    it('should throw an error if the new value is not TemplateResult', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      const value = new TemplateResult(new MockTemplate(), {});
+      const value = new EagerTemplateResult(new MockTemplate(), {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -493,7 +493,7 @@ describe('TemplateResultBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of AbstractTemplateResult directive, but got "null".',
+        'A value must be a instance of EagerTemplateResult or LazyTemplateResult directive, but got "null".',
       );
     });
   });

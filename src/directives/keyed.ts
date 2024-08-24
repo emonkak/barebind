@@ -90,7 +90,7 @@ export class KeyedBinding<TKey, TValue>
 
   bind(newValue: Keyed<TKey, TValue>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(Keyed, newValue, this._binding.part);
+      ensureDirective([Keyed], newValue, this._binding.part);
     }
 
     const oldValue = this._value;

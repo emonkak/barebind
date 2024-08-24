@@ -20,8 +20,8 @@ import {
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
 import {
+  EagerTemplateResult,
   LazyTemplateResult,
-  TemplateResult,
 } from './directives/templateResult.js';
 import {
   type ElementData,
@@ -125,17 +125,17 @@ export class RenderContext {
     type: string,
     elementValue: TElementValue,
     childNodeValue: TChildNodeValue,
-  ): TemplateResult<
+  ): EagerTemplateResult<
     ElementData<TElementValue, TChildNodeValue>,
     RenderContext
   > {
     const template = new ElementTemplate<TElementValue, TChildNodeValue>(type);
-    return new TemplateResult(template, { elementValue, childNodeValue });
+    return new EagerTemplateResult(template, { elementValue, childNodeValue });
   }
 
-  empty(): TemplateResult<null, RenderContext> {
+  empty(): EagerTemplateResult<null, RenderContext> {
     const template = EmptyTemplate.instance;
-    return new TemplateResult(template, null);
+    return new EagerTemplateResult(template, null);
   }
 
   /**
@@ -197,9 +197,9 @@ export class RenderContext {
     return this._hooks[this._hookIndex - 1]?.type !== HookType.Finalizer;
   }
 
-  only<T>(value: T): TemplateResult<T, RenderContext> {
+  only<T>(value: T): EagerTemplateResult<T, RenderContext> {
     const template = ValueTemplate.instance;
-    return new TemplateResult(template, value);
+    return new EagerTemplateResult(template, value);
   }
 
   setContextValue(key: unknown, value: unknown): void {
@@ -217,9 +217,9 @@ export class RenderContext {
     return new LazyTemplateResult(template, data);
   }
 
-  text<T>(value: T): TemplateResult<T, RenderContext> {
+  text<T>(value: T): EagerTemplateResult<T, RenderContext> {
     const template = TextTemplate.instance;
-    return new TemplateResult(template, value);
+    return new EagerTemplateResult(template, value);
   }
 
   unsafeHTML(content: string): LazyTemplateResult<null, RenderContext> {

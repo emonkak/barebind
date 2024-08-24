@@ -72,7 +72,7 @@ export class DynamicBinding implements Binding<Dynamic> {
 
   bind(newValue: Dynamic, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(Dynamic, newValue, this._binding.part);
+      ensureDirective([Dynamic], newValue, this._binding.part);
     }
     const oldDynamic = this._binding.value;
     const newDynamic = newValue.value;

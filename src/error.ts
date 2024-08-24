@@ -6,25 +6,33 @@ import {
   nameOf,
 } from './baseTypes.js';
 
+type DirectiveClass<TValue> = abstract new (
+  ...args: any[]
+) => Directive<TValue>;
+
+type NonEmptyArray<T> = [T, ...T[]];
+
 export const REPORT_MARKER = '[[USED IN HERE!]]';
 
 export function ensureDirective<
-  TExpectedClass extends abstract new (
-    ...args: any[]
-  ) => Directive<TExpectedValue>,
+  TExpectedClasses extends NonEmptyArray<DirectiveClass<TExpectedValue>>,
   TExpectedValue,
 >(
-  expectedClass: TExpectedClass,
+  expectedClasses: TExpectedClasses,
   actualValue: unknown,
   part: Part,
 ): asserts actualValue is TExpectedValue {
-  if (!(actualValue instanceof expectedClass)) {
+  if (
+    !expectedClasses.some(
+      (expectedClass) => actualValue instanceof expectedClass,
+    )
+  ) {
     throw new Error(
       'A value must be a instance of ' +
-        expectedClass.name +
+        oneOf(expectedClasses.map((expectedClass) => expectedClass.name)) +
         ' directive, but got "' +
         nameOf(actualValue) +
-        '". Consider using cached(), condition() or dynamic() directive instead.\n' +
+        '". Consider using cached(), dynamic(), ifElse(), or keyed() directive instead.\n' +
         reportPart(part),
     );
   }
@@ -122,6 +130,12 @@ function formatPart(part: Part): string {
 
 function isSelfClosingTag(element: Element): boolean {
   return !element.outerHTML.endsWith(closeTag(element));
+}
+
+function oneOf(choices: string[]): string {
+  return choices.length > 2
+    ? choices.slice(0, -1).join(', ') + ', or ' + choices.at(-1)
+    : choices.join(' or ');
 }
 
 function openTag(element: Element): string {

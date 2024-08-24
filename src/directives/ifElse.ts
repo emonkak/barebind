@@ -142,7 +142,7 @@ export class IfElseBinding<TTrue, TFalse>
 
   bind(newValue: IfElse<TTrue, TFalse>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(IfElse, newValue, this.currentBinding.part);
+      ensureDirective([IfElse], newValue, this.currentBinding.part);
     }
 
     const oldConditional = this._value.conditional;

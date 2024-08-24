@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { PartType } from '../src/baseTypes.js';
+import {
+  type Binding,
+  type Directive,
+  PartType,
+  directiveTag,
+} from '../src/baseTypes.js';
 import {
   REPORT_MARKER,
   ensureDirective,
@@ -16,8 +21,13 @@ describe('ensureDirective', () => {
       node: document.createComment(''),
     } as const;
 
-    expect(() => ensureDirective(TextDirective, null, part)).toThrow(
+    expect(() => ensureDirective([TextDirective], null, part)).toThrow(
       'A value must be a instance of TextDirective directive, but got "null".',
+    );
+    expect(() =>
+      ensureDirective([DirectiveA, DirectiveB, DirectiveC], null, part),
+    ).toThrow(
+      'A value must be a instance of DirectiveA, DirectiveB, or DirectiveC directive, but got "null".',
     );
   });
 
@@ -27,7 +37,7 @@ describe('ensureDirective', () => {
       node: document.createComment(''),
     } as const;
 
-    ensureDirective(TextDirective, new TextDirective(), part);
+    ensureDirective([TextDirective], new TextDirective(), part);
   });
 });
 
@@ -182,3 +192,21 @@ describe('reportPart()', () => {
     );
   });
 });
+
+class DirectiveA implements Directive<DirectiveA> {
+  [directiveTag](): Binding<DirectiveA, unknown> {
+    throw new Error('Method is not implemented.');
+  }
+}
+
+class DirectiveB implements Directive<DirectiveB> {
+  [directiveTag](): Binding<DirectiveB> {
+    throw new Error('Method is not implemented.');
+  }
+}
+
+class DirectiveC implements Directive<DirectiveC> {
+  [directiveTag](): Binding<DirectiveC> {
+    throw new Error('Method is not implemented.');
+  }
+}

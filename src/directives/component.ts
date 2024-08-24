@@ -120,7 +120,7 @@ export class ComponentBinding<TProps, TData, TContext>
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
-      ensureDirective(Component, newValue, this._part);
+      ensureDirective([Component], newValue, this._part);
     }
 
     if (this._value.type !== newValue.type) {

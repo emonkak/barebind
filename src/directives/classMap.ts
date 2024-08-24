@@ -78,7 +78,7 @@ export class ClassMapBinding implements Effect, Binding<ClassMap> {
 
   bind(newValue: ClassMap, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(ClassMap, newValue, this._part);
+      ensureDirective([ClassMap], newValue, this._part);
     }
     if (
       this._memoizedValue === null ||

@@ -129,7 +129,7 @@ export class ListBinding<TItem, TKey, TValue>
 
   bind(newValue: List<TItem, TKey, TValue>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(List, newValue, this._part);
+      ensureDirective([List], newValue, this._part);
     }
     const { items, keySelector, valueSelector } = newValue;
     this._updateItems(items, keySelector, valueSelector, context);

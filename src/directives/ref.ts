@@ -82,7 +82,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   bind(newValue: Ref, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(Ref, newValue, this._part);
+      ensureDirective([Ref], newValue, this._part);
     }
     if (
       this._memoizedValue === null ||

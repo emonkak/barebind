@@ -79,7 +79,7 @@ export class TeleportBinding<T> implements Binding<Teleport<T>> {
 
   bind(newValue: Teleport<T>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(Teleport, newValue, this._binding.part);
+      ensureDirective([Teleport], newValue, this._binding.part);
     }
     if (newValue.container !== this._memoizedContainer) {
       this._requestCommit(context);

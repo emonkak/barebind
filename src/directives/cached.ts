@@ -92,7 +92,7 @@ export class CachedBinding<TKey, TValue>
 
   bind(newValue: Cached<TKey, TValue>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective(Cached, newValue, this._binding.part);
+      ensureDirective([Cached], newValue, this._binding.part);
     }
 
     const oldValue = this._value;
