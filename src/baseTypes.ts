@@ -48,7 +48,7 @@ export interface UpdateQueue<TContext> {
   passiveEffects: Effect[];
 }
 
-export interface UpdateHost<TContext> {
+export interface RenderHost<TContext> {
   beginRender(
     updater: Updater<TContext>,
     block: Block<TContext>,
@@ -78,10 +78,10 @@ export interface UpdateHost<TContext> {
 
 export interface Updater<TContext> {
   isScheduled(): boolean;
-  flushUpdate(queue: UpdateQueue<TContext>, host: UpdateHost<TContext>): void;
+  flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void;
   scheduleUpdate(
     queue: UpdateQueue<TContext>,
-    host: UpdateHost<TContext>,
+    host: RenderHost<TContext>,
   ): void;
   waitForUpdate(): Promise<void>;
 }
@@ -236,13 +236,13 @@ export interface RefObject<T> {
 }
 
 export interface DirectiveContext<TContext = unknown> {
-  readonly host: UpdateHost<TContext>;
+  readonly host: RenderHost<TContext>;
   readonly block: Block<TContext> | null;
 }
 
 export class UpdateContext<TContext = unknown> {
   constructor(
-    public readonly host: UpdateHost<TContext>,
+    public readonly host: RenderHost<TContext>,
     public readonly updater: Updater<TContext>,
     public readonly block: Block<TContext>,
     /**

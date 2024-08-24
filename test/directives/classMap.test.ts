@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { ClassMapBinding, classMap } from '../../src/directives/classMap.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('classMap()', () => {
   it('should construct a ClassMap directive', () => {
@@ -18,7 +18,7 @@ describe('ClassMapDirective', () => {
   describe('[directiveTag]()', () => {
     it('should create a new ClassMapBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -39,7 +39,7 @@ describe('ClassMapDirective', () => {
 
     it('should throw an error if the part does not indicate "class" attribute', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -62,7 +62,7 @@ describe('ClassMapBinding', () => {
   describe('.connect()', () => {
     it('should add properties whose values are true as classes to the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -89,7 +89,7 @@ describe('ClassMapBinding', () => {
 
     it('should do nothing if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -122,7 +122,7 @@ describe('ClassMapBinding', () => {
   describe('.bind()', () => {
     it('should remove classes whose values are false from the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -156,7 +156,7 @@ describe('ClassMapBinding', () => {
 
     it('should skip an update if the new classes are the same as old ones', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -185,7 +185,7 @@ describe('ClassMapBinding', () => {
 
     it('should throw an error if the new value is not ClassMap', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -211,7 +211,7 @@ describe('ClassMapBinding', () => {
   describe('.unbind()', () => {
     it('should remove all classes from the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -239,7 +239,7 @@ describe('ClassMapBinding', () => {
 
     it('should skip an update if the current classes have not been comitted', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -259,7 +259,7 @@ describe('ClassMapBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -285,7 +285,7 @@ describe('ClassMapBinding', () => {
   describe('.disconnect()', () => {
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

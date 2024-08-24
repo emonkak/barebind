@@ -5,9 +5,9 @@ import { LazyTemplate } from '../../src/templates/lazyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
+  MockRenderHost,
   MockTemplate,
   MockTemplateView,
-  MockUpdateHost,
 } from '../mocks.js';
 
 describe('LazyTemplate', () => {
@@ -23,7 +23,7 @@ describe('LazyTemplate', () => {
 
   describe('.render()', () => {
     it('should render a template created by the template factory', () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 

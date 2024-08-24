@@ -6,7 +6,7 @@ import {
   EmptyTemplateView,
 } from '../../src/templates/emptyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('.constructor()', () => {
@@ -20,7 +20,7 @@ describe('EmptyTemplate', () => {
   describe('.render()', () => {
     it('should create a new EmptyTemplateView', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -46,7 +46,7 @@ describe('EmptyTemplateView', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -62,7 +62,7 @@ describe('EmptyTemplateView', () => {
   describe('.bind()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -78,7 +78,7 @@ describe('EmptyTemplateView', () => {
   describe('.disconnect()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -94,7 +94,7 @@ describe('EmptyTemplateView', () => {
   describe('.unbind()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

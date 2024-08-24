@@ -10,11 +10,11 @@ import {
   type Hook,
   type Part,
   PartType,
+  type RenderHost,
   type TaskPriority,
   type Template,
   type TemplateView,
   type UpdateContext,
-  type UpdateHost,
   type UpdateQueue,
   type Updater,
   directiveTag,
@@ -143,7 +143,7 @@ export class MockTemplateView<TData, TContext>
   disconnect(_context: UpdateContext): void {}
 }
 
-export class MockUpdateHost implements UpdateHost<RenderContext> {
+export class MockRenderHost implements RenderHost<RenderContext> {
   private _idCounter = 0;
 
   beginRender(

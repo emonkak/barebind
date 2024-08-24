@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { ListBinding, keyedList, list } from '../../src/directives/list.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
+import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
 describe('list()', () => {
@@ -35,7 +35,7 @@ describe('List', () => {
   describe('[directiveTag]()', () => {
     it('should create a new ListBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -60,7 +60,7 @@ describe('List', () => {
 
     it('should throw an error if the part is not a ChildNodePart', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -86,7 +86,7 @@ describe('ListBinding', () => {
   describe('.connect()', () => {
     it('should connect new bindings from items', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -134,7 +134,7 @@ describe('ListBinding', () => {
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -167,7 +167,7 @@ describe('ListBinding', () => {
       for (const items1 of allCombinations(source)) {
         for (const items2 of allCombinations(source)) {
           const context = new UpdateContext(
-            new MockUpdateHost(),
+            new MockRenderHost(),
             new SyncUpdater(),
             new MockBlock(),
           );
@@ -220,7 +220,7 @@ describe('ListBinding', () => {
             [permutation2, permutation1],
           ]) {
             const context = new UpdateContext(
-              new MockUpdateHost(),
+              new MockRenderHost(),
               new SyncUpdater(),
               new MockBlock(),
             );
@@ -269,7 +269,7 @@ describe('ListBinding', () => {
       for (const items1 of permutations(source)) {
         for (const items2 of permutations(source)) {
           const context = new UpdateContext(
-            new MockUpdateHost(),
+            new MockRenderHost(),
             new SyncUpdater(),
             new MockBlock(),
           );
@@ -313,7 +313,7 @@ describe('ListBinding', () => {
 
     it('should update with longer list than last time', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -351,7 +351,7 @@ describe('ListBinding', () => {
 
     it('should update with shoter list than last time', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -388,7 +388,7 @@ describe('ListBinding', () => {
   describe('.unbind()', () => {
     it('should unbind current bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -418,7 +418,7 @@ describe('ListBinding', () => {
 
     it('should not enqueue self as a mutation effect if already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -447,7 +447,7 @@ describe('ListBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect current bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -486,7 +486,7 @@ describe('ListBinding', () => {
 
     it('should not commit pending bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

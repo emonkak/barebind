@@ -6,9 +6,9 @@ import {
   type Hook,
   type Part,
   PartType,
+  type RenderHost,
   type TaskPriority,
   UpdateContext,
-  type UpdateHost,
   type UpdateQueue,
   type Updater,
   nameOf,
@@ -24,7 +24,7 @@ import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 import type {} from './typings/deprecatedEvent.js';
 
-export interface ClientUpdateHostOptions {
+export interface ClientRenderHostOptions {
   name?: string;
   constants?: Map<unknown, unknown>;
 }
@@ -35,10 +35,10 @@ export interface Root<T> {
   update(value: T): void;
 }
 
-export class ClientUpdateHost implements UpdateHost<RenderContext> {
+export class ClientRenderHost implements RenderHost<RenderContext> {
   private readonly _constants: Map<unknown, unknown>;
 
-  private readonly _blockScopes: WeakMap<
+  private readonly _scopes: WeakMap<
     Block<RenderContext>,
     Map<unknown, unknown>
   > = new WeakMap();
@@ -55,7 +55,7 @@ export class ClientUpdateHost implements UpdateHost<RenderContext> {
   constructor({
     name = getRandomString(8),
     constants = new Map(),
-  }: ClientUpdateHostOptions = {}) {
+  }: ClientRenderHostOptions = {}) {
     this._name = name;
     this._constants = constants;
   }
@@ -149,7 +149,7 @@ export class ClientUpdateHost implements UpdateHost<RenderContext> {
   ): unknown {
     let currentScope = block;
     while (currentScope !== null) {
-      const value = this._blockScopes.get(currentScope)?.get(key);
+      const value = this._scopes.get(currentScope)?.get(key);
       if (value !== undefined) {
         return value;
       }
@@ -202,13 +202,13 @@ export class ClientUpdateHost implements UpdateHost<RenderContext> {
     value: unknown,
     block: Block<RenderContext>,
   ): void {
-    const variables = this._blockScopes.get(block);
+    const variables = this._scopes.get(block);
     if (variables !== undefined) {
       variables.set(key, value);
     } else {
       const namespace = new Map();
       namespace.set(key, value);
-      this._blockScopes.set(block, namespace);
+      this._scopes.set(block, namespace);
     }
   }
 }

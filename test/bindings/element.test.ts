@@ -4,7 +4,7 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { ElementBinding } from '../../src/bindings/element.js';
 import { EventBinding } from '../../src/bindings/event.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
+import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 
 describe('ElementBinding', () => {
   describe('.constructor()', () => {
@@ -35,7 +35,7 @@ describe('ElementBinding', () => {
   describe('.value', () => {
     it('should throw the error when a non-object value is passed', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -56,7 +56,7 @@ describe('ElementBinding', () => {
   describe('.connect()', () => {
     it('should bind element attributes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -79,7 +79,7 @@ describe('ElementBinding', () => {
 
     it('should bind element properities by properities starting with "."', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -102,7 +102,7 @@ describe('ElementBinding', () => {
 
     it('should bind event listeners by properities starting with "@"', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -138,7 +138,7 @@ describe('ElementBinding', () => {
   describe('.bind()', () => {
     it('should skip properities with the same value as old one', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -176,7 +176,7 @@ describe('ElementBinding', () => {
 
     it('should unbind bindings that no longer exists', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -202,7 +202,7 @@ describe('ElementBinding', () => {
 
     it('should reconnect bindings if the new properities are the same as old ones', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -233,7 +233,7 @@ describe('ElementBinding', () => {
   describe('.unbind()', () => {
     it('should unbind all bound properities', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -261,7 +261,7 @@ describe('ElementBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect all bound properities', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('styleMap()', () => {
   it('should construct a new StyleMap directive', () => {
@@ -18,7 +18,7 @@ describe('StyleMap', () => {
   describe('[directiveTag]()', () => {
     it('should create a new StyleMapBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -39,7 +39,7 @@ describe('StyleMap', () => {
 
     it('should throw an error if the part does not indicate "style" attribute', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -62,7 +62,7 @@ describe('StyleMapBinding', () => {
   describe('.connect()', () => {
     it('should set styles to the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -91,7 +91,7 @@ describe('StyleMapBinding', () => {
 
     it('should do nothing if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -122,7 +122,7 @@ describe('StyleMapBinding', () => {
   describe('.bind()', () => {
     it('should remove gone styles from the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -153,7 +153,7 @@ describe('StyleMapBinding', () => {
 
     it('should skip an update if new styles are the same as old ones', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -180,7 +180,7 @@ describe('StyleMapBinding', () => {
 
     it('should throw an error if the new value is not StyleMap', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -206,7 +206,7 @@ describe('StyleMapBinding', () => {
   describe('.unbind()', () => {
     it('should remove all styles from the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -236,7 +236,7 @@ describe('StyleMapBinding', () => {
 
     it('should skip an update if the current styles have not been comitted', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -256,7 +256,7 @@ describe('StyleMapBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -280,7 +280,7 @@ describe('StyleMapBinding', () => {
   describe('.disconnect()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -300,7 +300,7 @@ describe('StyleMapBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

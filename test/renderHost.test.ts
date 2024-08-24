@@ -12,7 +12,7 @@ import { ElementBinding } from '../src/bindings/element.js';
 import { EventBinding } from '../src/bindings/event.js';
 import { NodeBinding } from '../src/bindings/node.js';
 import { PropertyBinding } from '../src/bindings/property.js';
-import { ClientUpdateHost } from '../src/updateHost.js';
+import { ClientRenderHost } from '../src/renderHost.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextDirective } from './mocks.js';
 
@@ -36,10 +36,10 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'wheel',
 ];
 
-describe('ClientUpdateHost', () => {
+describe('ClientRenderHost', () => {
   describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const queue = createUpdateQueue();
@@ -56,7 +56,7 @@ describe('ClientUpdateHost', () => {
   describe('.createRoot()', () => {
     it('should mount a value inside the container', async () => {
       const container = document.createElement('div');
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const updater = new SyncUpdater();
 
       const value1 = new TextDirective('foo');
@@ -87,7 +87,7 @@ describe('ClientUpdateHost', () => {
 
   describe('.flushEffects()', () => {
     it('should perform given effects', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const effect1 = {
         commit: vi.fn(),
       };
@@ -105,7 +105,7 @@ describe('ClientUpdateHost', () => {
 
   describe('.getCurrentPriority()', () => {
     it('should return "user-visible" if there is no current event', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
 
       vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
 
@@ -113,7 +113,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should return "user-blocking" if the current event is not continuous', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
 
       const eventMock = vi
         .spyOn(globalThis, 'event', 'get')
@@ -126,7 +126,7 @@ describe('ClientUpdateHost', () => {
     it.each(CONTINUOUS_EVENT_TYPES)(
       'should return "user-visible" if the current event is continuous',
       (eventType) => {
-        const host = new ClientUpdateHost();
+        const host = new ClientRenderHost();
 
         const eventMock = vi
           .spyOn(globalThis, 'event', 'get')
@@ -141,17 +141,17 @@ describe('ClientUpdateHost', () => {
   describe('.getHostName()', () => {
     it('should return the unpredictable host name', () => {
       expect(
-        new ClientUpdateHost({
+        new ClientRenderHost({
           name: '__test__',
         }).getHostName(),
       ).toBe('__test__');
-      expect(new ClientUpdateHost().getHostName()).toMatch(/^[0-9a-z]+$/);
+      expect(new ClientRenderHost().getHostName()).toMatch(/^[0-9a-z]+$/);
     });
   });
 
   describe('.getHTMLTemplate()', () => {
     it('should create a HTML template from tokens', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
@@ -160,7 +160,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should get a HTML template from cache if avaiable', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(tokens, data);
 
@@ -170,7 +170,7 @@ describe('ClientUpdateHost', () => {
 
   describe('.getSVGTemplate()', () => {
     it('should create a SVG template from tokens', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
       const template = host.getSVGTemplate(tokens, data);
 
@@ -182,7 +182,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should get a SVG template from cache if avaiable', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getSVGTemplate(tokens, data);
 
@@ -192,7 +192,7 @@ describe('ClientUpdateHost', () => {
 
   describe('.getScopedValue()', () => {
     it('should get a scoped value from constants', () => {
-      const host = new ClientUpdateHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientRenderHost({ constants: new Map([['foo', 123]]) });
       const block = new MockBlock();
 
       expect(host.getScopedValue('foo')).toBe(123);
@@ -200,7 +200,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should get a scoped value from the block scope', () => {
-      const host = new ClientUpdateHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientRenderHost({ constants: new Map([['foo', 123]]) });
       const block = new MockBlock();
 
       host.setScopedValue('foo', 456, block);
@@ -211,7 +211,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should get a scoped value from the parent block scope', () => {
-      const host = new ClientUpdateHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientRenderHost({ constants: new Map([['foo', 123]]) });
       const parent = new MockBlock();
       const block = new MockBlock(parent);
 
@@ -223,7 +223,7 @@ describe('ClientUpdateHost', () => {
 
   describe('resolveBinding()', () => {
     it('should resolve the value as an AttributeBinding if the part is a AttributePart', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.Attribute,
@@ -238,7 +238,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should resolve the value as an EventBinding if the part is a EventPart', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const value = vi.fn();
       const part = {
         type: PartType.Event,
@@ -253,7 +253,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should resolve the value as a PropertyBinding if the part is a PropertyPart', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.Property,
@@ -268,7 +268,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should resolve the value as a NodeBinding if the part is a NodePart', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.Node,
@@ -281,7 +281,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should resolve the value as a NodeBinding if the part is a ChildNodePart', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -295,7 +295,7 @@ describe('ClientUpdateHost', () => {
     });
 
     it('should resolve the value as an ElementBinding if the part is a ElementPart', () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
       const value = {
         class: 'foo',
         title: 'bar',
@@ -314,7 +314,7 @@ describe('ClientUpdateHost', () => {
 
   describe('.nextIdentifier()', () => {
     it('should return a next identifier', async () => {
-      const host = new ClientUpdateHost();
+      const host = new ClientRenderHost();
 
       expect(host.nextIdentifier()).toBe(1);
       expect(host.nextIdentifier()).toBe(2);

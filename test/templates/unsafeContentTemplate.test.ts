@@ -7,7 +7,7 @@ import {
   UnsafeSVGTemplate,
 } from '../../src/templates/unsafeContentTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('UnsafeHTMLTemplate', () => {
   describe('.constructor()', () => {
@@ -21,7 +21,7 @@ describe('UnsafeHTMLTemplate', () => {
   describe('.render()', () => {
     it('should render a new tempalte view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -42,7 +42,7 @@ describe('UnsafeHTMLTemplate', () => {
 
     it('should render a new tempalte view with no child', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -92,7 +92,7 @@ describe('UnsafeSVGTemplate', () => {
   describe('.render()', () => {
     it('should create a new UnsafeHTMLTemplateView', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -113,7 +113,7 @@ describe('UnsafeSVGTemplate', () => {
 
     it('should render a new tempalte view with no child', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -154,7 +154,7 @@ describe('UnsafeContentTemplateView', () => {
   describe('.bind()', () => {
     it('should do no nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -171,7 +171,7 @@ describe('UnsafeContentTemplateView', () => {
   describe('.unbind()', () => {
     it('should do no nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -188,7 +188,7 @@ describe('UnsafeContentTemplateView', () => {
   describe('.disconnect()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -204,7 +204,7 @@ describe('UnsafeContentTemplateView', () => {
   describe('.mount()', () => {
     it('should mount child nodes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

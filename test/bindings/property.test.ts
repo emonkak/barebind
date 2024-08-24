@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { PropertyBinding } from '../../src/bindings/property.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
+import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 
 describe('PropertyBinding', () => {
   describe('.constructor()', () => {
@@ -25,7 +25,7 @@ describe('PropertyBinding', () => {
   describe('.bind()', () => {
     it('should update the property of the element', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -54,7 +54,7 @@ describe('PropertyBinding', () => {
 
     it('should not update the binding if the new and old values are the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -78,7 +78,7 @@ describe('PropertyBinding', () => {
 
     it('should do nothing if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -105,7 +105,7 @@ describe('PropertyBinding', () => {
 
     it('should throw the error if the value is a directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -125,7 +125,7 @@ describe('PropertyBinding', () => {
   describe('.unbind()', () => {
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -149,7 +149,7 @@ describe('PropertyBinding', () => {
   describe('.disconnect()', () => {
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

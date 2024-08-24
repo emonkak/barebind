@@ -10,7 +10,7 @@ import {
 } from '../src/baseTypes.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from './mocks.js';
@@ -45,7 +45,7 @@ describe('nameOf()', () => {
 
 describe('resolveBinding()', () => {
   it('should perform a directive', () => {
-    const host = new MockUpdateHost();
+    const host = new MockRenderHost();
     const block = new MockBlock();
 
     const value = new TextDirective();
@@ -62,7 +62,7 @@ describe('resolveBinding()', () => {
   });
 
   it('should resolve a non-directive value by the update host', () => {
-    const host = new MockUpdateHost();
+    const host = new MockRenderHost();
     const block = new MockBlock();
 
     const value = 'foo';

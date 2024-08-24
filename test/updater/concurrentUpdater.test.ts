@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
 import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
-import { MockBlock, MockScheduler, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
 
 const TASK_PRIORITIES: TaskPriority[] = [
   'user-blocking',
@@ -13,7 +13,7 @@ const TASK_PRIORITIES: TaskPriority[] = [
 describe('ConcurrentUpdater', () => {
   describe('.waitForUpdate()', () => {
     it('should return a promise that will be fulfilled when the update is complete', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
@@ -54,7 +54,7 @@ describe('ConcurrentUpdater', () => {
     it.each(TASK_PRIORITIES)(
       'should request update the block with its own priority',
       async (priority) => {
-        const host = new MockUpdateHost();
+        const host = new MockRenderHost();
         const scheduler = new MockScheduler();
         const updater = new ConcurrentUpdater({
           scheduler,
@@ -87,7 +87,7 @@ describe('ConcurrentUpdater', () => {
     );
 
     it('should commit effects enqueued during an update', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
@@ -125,7 +125,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should commit mutation and layout effects with "user-blocking" priority', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
@@ -152,7 +152,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should commit passive effects with "background" priority', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
@@ -176,7 +176,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should cancel the update of the block if shouldUpdate() returns false', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
@@ -202,7 +202,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should block an update while the update queue is running', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,
@@ -229,7 +229,7 @@ describe('ConcurrentUpdater', () => {
     });
 
     it('should yield to the main thread during an update if shouldYieldToMain() returns true', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
         scheduler,

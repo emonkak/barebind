@@ -10,7 +10,7 @@ import {
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -27,7 +27,7 @@ describe('ValueTemplate', () => {
   describe('.render()', () => {
     it('should create a new SingleTemplateView', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -70,7 +70,7 @@ describe('TextTemplate', () => {
   describe('.render()', () => {
     it('should return SingleTemplateView', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -103,7 +103,7 @@ describe('SingleTemplateView', () => {
   describe('.connect()', () => {
     it('should connect the binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -129,7 +129,7 @@ describe('SingleTemplateView', () => {
   describe('.bind()', () => {
     it('should bind a new value to the binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -155,7 +155,7 @@ describe('SingleTemplateView', () => {
   describe('.unbind()', () => {
     it('should unbind a value from the binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -180,7 +180,7 @@ describe('SingleTemplateView', () => {
   describe('.disconnect()', () => {
     it('should disconnect the binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -205,7 +205,7 @@ describe('SingleTemplateView', () => {
   describe('.mount()', () => {
     it('should mount the node before the part node', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

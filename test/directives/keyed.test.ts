@@ -10,7 +10,7 @@ import { Keyed, KeyedBinding, keyed } from '../../src/directives/keyed.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -36,7 +36,7 @@ describe('Keyed', () => {
   describe('[directiveTag]()', () => {
     it('should create a new KeyedBinding from a non-directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -65,7 +65,7 @@ describe('Keyed', () => {
 
     it('should create a new KeyedBinding from a directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -98,7 +98,7 @@ describe('KeyedBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -123,7 +123,7 @@ describe('KeyedBinding', () => {
   describe('.bind()', () => {
     it('should bind the new value to the current binding if the key is the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -149,7 +149,7 @@ describe('KeyedBinding', () => {
 
     it('should connect a new binding and unbind the old binidng if the key changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -179,7 +179,7 @@ describe('KeyedBinding', () => {
 
     it('should throw an error if the new value is not Keyed directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -202,7 +202,7 @@ describe('KeyedBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -226,7 +226,7 @@ describe('KeyedBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

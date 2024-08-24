@@ -21,7 +21,7 @@ import {
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -334,7 +334,7 @@ describe('TaggedTemplate', () => {
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
         </div>
       `;
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
       const view = template.render(data, context);
@@ -394,7 +394,7 @@ describe('TaggedTemplate', () => {
 
     it('should create a TaggedTemplateView without bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -411,7 +411,7 @@ describe('TaggedTemplate', () => {
 
     it('should create a TaggedTemplateView with a empty template', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -428,7 +428,7 @@ describe('TaggedTemplate', () => {
 
     it('should create a TaggedTemplateView with a single value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -458,7 +458,7 @@ describe('TaggedTemplate', () => {
 
     it('should throw an error if the number of holes and values do not match', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -495,7 +495,7 @@ describe('TaggedTemplateView', () => {
   describe('.connect()', () => {
     it('should connect bindings in the view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -524,7 +524,7 @@ describe('TaggedTemplateView', () => {
   describe('.bind()', () => {
     it('should bind values corresponding to bindings in the view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -555,7 +555,7 @@ describe('TaggedTemplateView', () => {
   describe('.unbind()', () => {
     it('should unbind top-level bindings in the view and other bindings are disconnected', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -613,7 +613,7 @@ describe('TaggedTemplateView', () => {
 
     it('should only unbind top-level bindings in the view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -665,7 +665,7 @@ describe('TaggedTemplateView', () => {
 
     it('should throw an error if the number of binding and values do not match', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -684,7 +684,7 @@ describe('TaggedTemplateView', () => {
   describe('.disconnect()', () => {
     it('should disconnect bindings in the view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -717,7 +717,7 @@ describe('TaggedTemplateView', () => {
   describe('.mount()', () => {
     it('should mount child nodes before the part node', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

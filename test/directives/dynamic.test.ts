@@ -11,7 +11,7 @@ import { DynamicBinding, dynamic } from '../../src/directives/dynamic.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -37,7 +37,7 @@ describe('Dynamic', () => {
   describe('[directiveTag]()', () => {
     it('should create a new DynamicBinding from the non-directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -65,7 +65,7 @@ describe('Dynamic', () => {
 
     it('should create a new DynamicBinding from the directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -97,7 +97,7 @@ describe('DynamicBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -121,7 +121,7 @@ describe('DynamicBinding', () => {
   describe('.bind()', () => {
     it('should bind a new value to the current binding if old and new values are non-directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -151,7 +151,7 @@ describe('DynamicBinding', () => {
 
     it('should bind a new value to the current binding if old and new values are the same directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -180,7 +180,7 @@ describe('DynamicBinding', () => {
 
     it('should unbind the old binding and connect a new binding if old and new values are directive and non-directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -210,7 +210,7 @@ describe('DynamicBinding', () => {
 
     it('should unbind the old binding and connect a new binding if old and new values are non-directive and directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -248,7 +248,7 @@ describe('DynamicBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -272,7 +272,7 @@ describe('DynamicBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

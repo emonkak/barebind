@@ -7,7 +7,7 @@ import {
   noValue,
 } from '../../src/directives/noValue.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('noValue', () => {
   it('should be the same as NoValue.instance', () => {
@@ -27,7 +27,7 @@ describe('NoValue', () => {
   describe('[directiveTag]()', () => {
     it('should create a new NoValueBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -50,7 +50,7 @@ describe('NoValueBinding', () => {
   describe('.connect()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -70,7 +70,7 @@ describe('NoValueBinding', () => {
   describe('.bind()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -88,7 +88,7 @@ describe('NoValueBinding', () => {
 
     it('should throw an error if the new value is not NoValue', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -108,7 +108,7 @@ describe('NoValueBinding', () => {
   describe('.unbind()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -128,7 +128,7 @@ describe('NoValueBinding', () => {
   describe('.disconnect()', () => {
     it('should do nothing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

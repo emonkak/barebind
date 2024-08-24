@@ -1,7 +1,7 @@
 import {
   CommitPhase,
+  type RenderHost,
   UpdateContext,
-  type UpdateHost,
   type UpdateQueue,
   type Updater,
 } from '../baseTypes.js';
@@ -9,7 +9,7 @@ import {
 export class SyncUpdater<TContext> implements Updater<TContext> {
   private readonly _pendingPipelines: UpdateQueue<TContext>[] = [];
 
-  flushUpdate(queue: UpdateQueue<TContext>, host: UpdateHost<TContext>): void {
+  flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;
 
     try {
@@ -51,7 +51,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
 
   scheduleUpdate(
     queue: UpdateQueue<TContext>,
-    host: UpdateHost<TContext>,
+    host: RenderHost<TContext>,
   ): void {
     if (this._pendingPipelines.length === 0) {
       queueMicrotask(() => {

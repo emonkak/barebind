@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { EventBinding } from '../../src/bindings/event.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('EventBinding', () => {
   describe('.constructor()', () => {
@@ -41,7 +41,7 @@ describe('EventBinding', () => {
   describe('.connect()', () => {
     it('should do nothing if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -70,7 +70,7 @@ describe('EventBinding', () => {
   describe('.bind()', () => {
     it('should connect the function to the element as an event listener', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -107,7 +107,7 @@ describe('EventBinding', () => {
 
     it('should connect the object to the element as an event listener', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -167,7 +167,7 @@ describe('EventBinding', () => {
 
     it('should not connect the event listener if the new and current listeners are the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -198,7 +198,7 @@ describe('EventBinding', () => {
       'should unbind the active event listener when null or undefined is passed',
       (value2) => {
         const context = new UpdateContext(
-          new MockUpdateHost(),
+          new MockRenderHost(),
           new SyncUpdater(),
           new MockBlock(),
         );
@@ -237,7 +237,7 @@ describe('EventBinding', () => {
 
     it('should throw the error if the value other than an event listner is assigned', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -260,7 +260,7 @@ describe('EventBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the active event listener', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -296,7 +296,7 @@ describe('EventBinding', () => {
 
     it('should do nothing if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -326,7 +326,7 @@ describe('EventBinding', () => {
 
     it('should do nothing if there is no active listner', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -352,7 +352,7 @@ describe('EventBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -378,7 +378,7 @@ describe('EventBinding', () => {
   describe('.disconnect()', () => {
     it('should unregister the active event listener function', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -409,7 +409,7 @@ describe('EventBinding', () => {
 
     it('should unregister the active event listener object', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -444,7 +444,7 @@ describe('EventBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

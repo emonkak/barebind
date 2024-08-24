@@ -6,7 +6,7 @@ import { ElementTemplate } from '../../src/templates/elementTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -15,7 +15,7 @@ describe('ElementTemplate', () => {
   describe('.render()', () => {
     it('should return ElementTemplateView initialized with NodeBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -73,7 +73,7 @@ describe('ElementTemplateView', () => {
   describe('.connect()', () => {
     it('should connect the element and child bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -96,7 +96,7 @@ describe('ElementTemplateView', () => {
   describe('.bind()', () => {
     it('should bind new values to the element and child bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -122,7 +122,7 @@ describe('ElementTemplateView', () => {
   describe('.unbind()', () => {
     it('should unbind values from the element and child bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -145,7 +145,7 @@ describe('ElementTemplateView', () => {
   describe('.disconnect()', () => {
     it('should disconnect the element and child bindings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -173,7 +173,7 @@ describe('ElementTemplateView', () => {
   describe('.mount()', () => {
     it('should mount the element before the part node', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

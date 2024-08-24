@@ -16,7 +16,7 @@ import {
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -90,7 +90,7 @@ describe('IfElse', () => {
   describe('[directiveTag]()', () => {
     it('should create a new IfElseBinding from a non-directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -125,7 +125,7 @@ describe('IfElse', () => {
 
     it('should create a new IfElseBinding from a directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -164,7 +164,7 @@ describe('IfElseBinding', () => {
   describe('.connect()', () => {
     it('should connecty the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -193,7 +193,7 @@ describe('IfElseBinding', () => {
   describe('.bind()', () => {
     it('should bind the true value to the current binding if the condition is the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -230,7 +230,7 @@ describe('IfElseBinding', () => {
 
     it('should bind the false value to the current binding if the condition is the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -267,7 +267,7 @@ describe('IfElseBinding', () => {
 
     it('should connect a true binding and unbind the false binidng if the condition changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -311,7 +311,7 @@ describe('IfElseBinding', () => {
 
     it('should connect a false binding and unbind the true binidng if the condition changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -355,7 +355,7 @@ describe('IfElseBinding', () => {
 
     it('should memoize the true binding if key changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -402,7 +402,7 @@ describe('IfElseBinding', () => {
 
     it('should memoize the false binding if key changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -449,7 +449,7 @@ describe('IfElseBinding', () => {
 
     it('should throw an error if the new value is not Condition directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -476,7 +476,7 @@ describe('IfElseBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -504,7 +504,7 @@ describe('IfElseBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

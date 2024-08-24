@@ -5,7 +5,7 @@ import { TeleportBinding, teleport } from '../../src/directives/teleport.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -25,7 +25,7 @@ describe('Teleport', () => {
   describe('[directiveTag]()', () => {
     it('should create a new NoValueBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -54,7 +54,7 @@ describe('TeloportBinding', () => {
   describe('.bind()', () => {
     it('should mount the binding in the container', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -91,7 +91,7 @@ describe('TeloportBinding', () => {
 
     it('should move the binding when the container is changed', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -131,7 +131,7 @@ describe('TeloportBinding', () => {
 
     it('should update the pending value if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -161,7 +161,7 @@ describe('TeloportBinding', () => {
 
     it('should throw an error if the new value is not Teleport directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -187,7 +187,7 @@ describe('TeloportBinding', () => {
   describe('.unbind()', () => {
     it('should mount the binding from the container', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -218,7 +218,7 @@ describe('TeloportBinding', () => {
 
     it('should cancel the pending update', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -249,7 +249,7 @@ describe('TeloportBinding', () => {
   describe('.disconnect()', () => {
     it('should mount the binding from the container', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -280,7 +280,7 @@ describe('TeloportBinding', () => {
 
     it('should cancel the pending update', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

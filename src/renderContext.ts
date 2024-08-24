@@ -11,9 +11,9 @@ import {
   type MemoHook,
   type ReducerHook,
   type RefObject,
+  type RenderHost,
   type TaskPriority,
   UpdateContext,
-  type UpdateHost,
   type UpdateQueue,
   type Updater,
   createUpdateQueue,
@@ -56,7 +56,7 @@ export type NewState<TState> = [TState] extends [Function]
   : ((prevState: TState) => TState) | TState;
 
 export class RenderContext {
-  private readonly _host: UpdateHost<RenderContext>;
+  private readonly _host: RenderHost<RenderContext>;
 
   private readonly _updater: Updater<RenderContext>;
 
@@ -69,7 +69,7 @@ export class RenderContext {
   private _hookIndex = 0;
 
   constructor(
-    host: UpdateHost<RenderContext>,
+    host: RenderHost<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext> = createUpdateQueue(),
@@ -82,7 +82,7 @@ export class RenderContext {
     this._hooks = hooks;
   }
 
-  get host(): UpdateHost<RenderContext> {
+  get host(): RenderHost<RenderContext> {
     return this._host;
   }
 

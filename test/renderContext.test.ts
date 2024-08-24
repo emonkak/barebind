@@ -16,15 +16,15 @@ import {
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,
+  MockRenderHost,
   MockTemplate,
-  MockUpdateHost,
   MockUsableObject,
 } from './mocks.js';
 
 describe('RenderContext', () => {
   describe('.constructor()', () => {
     it('should construct a new RenderContext', () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const hooks: Hook[] = [];
@@ -42,7 +42,7 @@ describe('RenderContext', () => {
   describe('.element()', () => {
     it('should create a TemplateResult with ElementTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -59,7 +59,7 @@ describe('RenderContext', () => {
   describe('.empty()', () => {
     it('should create a TemplateResult with EmptyTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -73,7 +73,7 @@ describe('RenderContext', () => {
   describe('.finalize()', () => {
     it('should enqueue a Finalizer hook', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -90,7 +90,7 @@ describe('RenderContext', () => {
 
     it('should throw an error if a hook is added after finalization', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -103,7 +103,7 @@ describe('RenderContext', () => {
 
     it('should throw an error if fewer hooks are used than last time', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -119,7 +119,7 @@ describe('RenderContext', () => {
 
     it('should throw an error if more hooks are used than last time', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -136,7 +136,7 @@ describe('RenderContext', () => {
   describe('.forceUpdate()', () => {
     it('should request update with the given priority', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -160,7 +160,7 @@ describe('RenderContext', () => {
 
     it('should request update with the host priority', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -189,7 +189,7 @@ describe('RenderContext', () => {
   describe('.getContextValue()', () => {
     it('should get a value from the block scope', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -207,7 +207,7 @@ describe('RenderContext', () => {
   describe('.html()', () => {
     it('should return TemplateDirective with an HTML-formatted TaggedTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -232,7 +232,7 @@ describe('RenderContext', () => {
   describe('.isFirstRender()', () => {
     it('should check whether the render is the first one', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -252,7 +252,7 @@ describe('RenderContext', () => {
   describe('.isRendering()', () => {
     it('should check whether the render is in progress', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -272,7 +272,7 @@ describe('RenderContext', () => {
   describe('.only()', () => {
     it('should create a TemplateResult with ValueTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -288,7 +288,7 @@ describe('RenderContext', () => {
   describe('.setContextValue()', () => {
     it('should set a value to the block scope', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -305,7 +305,7 @@ describe('RenderContext', () => {
   describe('.svg()', () => {
     it('should return TemplateDirective with an SVG-formatted TaggedTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -330,7 +330,7 @@ describe('RenderContext', () => {
   describe('.text()', () => {
     it('should create a TemplateResult with TextTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -345,7 +345,7 @@ describe('RenderContext', () => {
   describe('.unsafeHTML()', () => {
     it('should create a LazyTemplateResult with UnsafeHTMLTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -362,7 +362,7 @@ describe('RenderContext', () => {
   describe('.unsafeSVG()', () => {
     it('should create a LazyTemplateResult with UnsafeSVGTemplate', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -379,7 +379,7 @@ describe('RenderContext', () => {
   describe('.use()', () => {
     it('should handle the UsableCallback', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -393,7 +393,7 @@ describe('RenderContext', () => {
 
     it('should handle the UsableObject', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -410,7 +410,7 @@ describe('RenderContext', () => {
   describe('.useCallback()', () => {
     it('should return a memoized callback', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -434,7 +434,7 @@ describe('RenderContext', () => {
   describe('.useDeferredValue()', () => {
     it('should return a value deferred until next rendering', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -469,7 +469,7 @@ describe('RenderContext', () => {
 
     it('should return a initial value if it is presented', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -491,7 +491,7 @@ describe('RenderContext', () => {
   describe('.useEffect()', () => {
     it('should perform a cleanup function when a new effect is enqueued', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -525,7 +525,7 @@ describe('RenderContext', () => {
 
     it('should not perform an effect function if dependencies are not changed', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -558,7 +558,7 @@ describe('RenderContext', () => {
   describe('.useId()', () => {
     it('should return a unique identifier', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -576,7 +576,7 @@ describe('RenderContext', () => {
   describe('.useInsertionEffect()', () => {
     it('should perform a cleanup function when a new effect is enqueued', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -610,7 +610,7 @@ describe('RenderContext', () => {
 
     it('should not perform an effect function if dependencies are not changed', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -643,7 +643,7 @@ describe('RenderContext', () => {
   describe('.useLayoutEffect()', () => {
     it('should perform a cleanup function when a new effect is enqueued', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -677,7 +677,7 @@ describe('RenderContext', () => {
 
     it('should not perform an effect function if dependencies are not changed', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -711,7 +711,7 @@ describe('RenderContext', () => {
   describe('.useMemo()', () => {
     it('should return a memoized value until dependencies is changed', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -732,7 +732,7 @@ describe('RenderContext', () => {
   describe('.useReducer()', () => {
     it('should request update with "inherit" priority', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -791,7 +791,7 @@ describe('RenderContext', () => {
 
     it('should request update with user-specified priority', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -846,7 +846,7 @@ describe('RenderContext', () => {
 
     it('should skip request update if the state has not changed', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -871,7 +871,7 @@ describe('RenderContext', () => {
 
     it('should return the function result as an initial state', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -895,7 +895,7 @@ describe('RenderContext', () => {
 
     it('should always return the same dispatcher', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -919,7 +919,7 @@ describe('RenderContext', () => {
   describe('.useRef()', () => {
     it('should return the same object', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -937,7 +937,7 @@ describe('RenderContext', () => {
   describe('.useState()', () => {
     it('should request update with the host priority', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -987,7 +987,7 @@ describe('RenderContext', () => {
 
     it('should request update with user-specified priority', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -1033,7 +1033,7 @@ describe('RenderContext', () => {
 
     it('should skip requst update if the state has not changed', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -1055,7 +1055,7 @@ describe('RenderContext', () => {
 
     it('should return the result of the function as an initial state', () => {
       let context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -1080,7 +1080,7 @@ describe('RenderContext', () => {
   describe('.useSyncEnternalStore()', () => {
     it('should return the snapshot value', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -1100,7 +1100,7 @@ describe('RenderContext', () => {
 
     it('should request update with the host priority when changes are notified', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -1142,7 +1142,7 @@ describe('RenderContext', () => {
 
     it('should request update with a user-specified priority when changes are notified', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

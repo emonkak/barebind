@@ -5,7 +5,7 @@ import { BlockBinding } from '../../src/bindings/block.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -38,7 +38,7 @@ describe('BlockBinding', () => {
   describe('.constructor()', () => {
     it('should construct a BlockBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -67,7 +67,7 @@ describe('BlockBinding', () => {
   describe('.shouldUpdate()', () => {
     it('should return false after the binding is initialized', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -85,7 +85,7 @@ describe('BlockBinding', () => {
 
     it('should return true after the binding is connected', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -105,7 +105,7 @@ describe('BlockBinding', () => {
 
     it('should return true after an update is requested', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -128,7 +128,7 @@ describe('BlockBinding', () => {
 
     it('should return false after the binding is unbound', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -149,7 +149,7 @@ describe('BlockBinding', () => {
 
     it('should return false if there is a parent binding is updating', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -173,7 +173,7 @@ describe('BlockBinding', () => {
   describe('.cancelUpdate()', () => {
     it('should cancel the update if it is scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -196,7 +196,7 @@ describe('BlockBinding', () => {
   describe('.requestUpdate()', () => {
     it('should schedule an update with the user-specified priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -226,7 +226,7 @@ describe('BlockBinding', () => {
 
     it('should reschedule an update a higer priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -257,7 +257,7 @@ describe('BlockBinding', () => {
 
     it('should not schedule an update with a lower or equal priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -288,7 +288,7 @@ describe('BlockBinding', () => {
 
     it('should not schedule an update if the binding is not connected', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -319,7 +319,7 @@ describe('BlockBinding', () => {
 
     it('should not schedule an update if the binding is already updating', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -347,7 +347,7 @@ describe('BlockBinding', () => {
   describe('.connect()', () => {
     it('should enqueue the binding as a block for update with "user-blocking" priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -381,7 +381,7 @@ describe('BlockBinding', () => {
 
     it('should enqueue the binding for update with the parent block priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -419,7 +419,7 @@ describe('BlockBinding', () => {
 
     it('should re-enqueue the binding as a block with "user-blocking" priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -457,7 +457,7 @@ describe('BlockBinding', () => {
 
     it('should not enqueue the binding as a block if it is already enqueueing', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -486,7 +486,7 @@ describe('BlockBinding', () => {
 
     it('should connect the binding on update', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -512,7 +512,7 @@ describe('BlockBinding', () => {
   describe('.bind()', () => {
     it('should enqueue the binding as a block for update', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -551,7 +551,7 @@ describe('BlockBinding', () => {
 
     it('should enqueue the binding as a block for update with the parent block priority', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -595,7 +595,7 @@ describe('BlockBinding', () => {
 
     it('should bind the new value to the binding on update', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -634,7 +634,7 @@ describe('BlockBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -665,7 +665,7 @@ describe('BlockBinding', () => {
 
     it('should cancel the update in progress', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -697,7 +697,7 @@ describe('BlockBinding', () => {
   describe('.disconnect()', () => {
     it('should unbind the binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -729,7 +729,7 @@ describe('BlockBinding', () => {
 
     it('should cancel the update in progress', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

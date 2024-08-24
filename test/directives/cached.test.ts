@@ -10,7 +10,7 @@ import { Cached, CachedBinding, cached } from '../../src/directives/cached.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -36,7 +36,7 @@ describe('Cached', () => {
   describe('[directiveTag]()', () => {
     it('should create a new CachedBinding from a non-directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -65,7 +65,7 @@ describe('Cached', () => {
 
     it('should create a new CachedBinding from a directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -98,7 +98,7 @@ describe('CachedBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -123,7 +123,7 @@ describe('CachedBinding', () => {
   describe('.bind()', () => {
     it('should bind the new value to the current binding if the key is the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -149,7 +149,7 @@ describe('CachedBinding', () => {
 
     it('should connect a new binding and unbind the old binidng if the key changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -179,7 +179,7 @@ describe('CachedBinding', () => {
 
     it('should memoize the old binding if the key changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -212,7 +212,7 @@ describe('CachedBinding', () => {
 
     it('should throw an error if the new value is not Cached directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -235,7 +235,7 @@ describe('CachedBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -259,7 +259,7 @@ describe('CachedBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

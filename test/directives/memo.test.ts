@@ -10,7 +10,7 @@ import { MemoBinding, memo } from '../../src/directives/memo.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -36,7 +36,7 @@ describe('Memo', () => {
   describe('[directiveTag]()', () => {
     it('should create a new MemoBinding from the non-directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -68,7 +68,7 @@ describe('Memo', () => {
 
     it('should create a new MemoBinding from the directive value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -102,7 +102,7 @@ describe('MemoBinding', () => {
   describe('.connect()', () => {
     it('should connect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -126,7 +126,7 @@ describe('MemoBinding', () => {
   describe('.bind()', () => {
     it('should delete to the inner binding if dependencies are changed', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -153,7 +153,7 @@ describe('MemoBinding', () => {
 
     it('should skip an update if dependencies are not changed', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -180,7 +180,7 @@ describe('MemoBinding', () => {
 
     it('should throw an error if the new value is not Memo directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -203,7 +203,7 @@ describe('MemoBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -233,7 +233,7 @@ describe('MemoBinding', () => {
 
     it('should always bind a new value to the current binding after unbounding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -272,7 +272,7 @@ describe('MemoBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the current binding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -301,7 +301,7 @@ describe('MemoBinding', () => {
 
     it('should always bind a new value to the current binding after disconnecting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

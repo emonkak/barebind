@@ -2,12 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost } from '../mocks.js';
+import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('SyncUpdater', () => {
   describe('.waitForUpdate()', () => {
     it('should return a promise that will be fulfilled when the update is complete', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
       const queue = createUpdateQueue();
@@ -41,7 +41,7 @@ describe('SyncUpdater', () => {
 
   describe('.scheduleUpdate()', () => {
     it('should do nothing if already scheduled', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
       const queue = createUpdateQueue();
@@ -57,7 +57,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should update the block on a microtask', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
       const queue = createUpdateQueue();
@@ -92,7 +92,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should cancel the update of the block if shouldUpdate() returns false ', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
       const queue = createUpdateQueue();
@@ -118,7 +118,7 @@ describe('SyncUpdater', () => {
     });
 
     it('should commit effects on a microtask', async () => {
-      const host = new MockUpdateHost();
+      const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
       const queue = createUpdateQueue();

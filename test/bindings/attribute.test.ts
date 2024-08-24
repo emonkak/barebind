@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { AttributeBinding } from '../../src/bindings/attribute.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockUpdateHost, TextDirective } from '../mocks.js';
+import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 
 describe('AttributeBinding', () => {
   describe('.constructor()', () => {
@@ -26,7 +26,7 @@ describe('AttributeBinding', () => {
   describe('.bind()', () => {
     it('should update the attribute with the passed string', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -54,7 +54,7 @@ describe('AttributeBinding', () => {
 
     it('should update the attribute with the string representation of the object', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -91,7 +91,7 @@ describe('AttributeBinding', () => {
 
     it('should toggle the attribute according to the boolean value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -120,7 +120,7 @@ describe('AttributeBinding', () => {
       'should remove the attribute when null or undefined is passed',
       (value) => {
         const context = new UpdateContext(
-          new MockUpdateHost(),
+          new MockRenderHost(),
           new SyncUpdater(),
           new MockBlock(),
         );
@@ -143,7 +143,7 @@ describe('AttributeBinding', () => {
 
     it('should remove the attribute when undefined is passed', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -165,7 +165,7 @@ describe('AttributeBinding', () => {
 
     it('should not update the binding if the new and old values are the same', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -189,7 +189,7 @@ describe('AttributeBinding', () => {
 
     it('should do nothing if the update is already scheduled', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -215,7 +215,7 @@ describe('AttributeBinding', () => {
 
     it('should throw the error if the value is a directive', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -236,7 +236,7 @@ describe('AttributeBinding', () => {
   describe('.unbind()', () => {
     it('should remove the attribute', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -262,7 +262,7 @@ describe('AttributeBinding', () => {
       'should do nothing if the value is null or undefined',
       (value) => {
         const context = new UpdateContext(
-          new MockUpdateHost(),
+          new MockRenderHost(),
           new SyncUpdater(),
           new MockBlock(),
         );
@@ -283,7 +283,7 @@ describe('AttributeBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -307,7 +307,7 @@ describe('AttributeBinding', () => {
   describe('.disconnect()', () => {
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

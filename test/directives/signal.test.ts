@@ -14,7 +14,7 @@ import { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
-  MockUpdateHost,
+  MockRenderHost,
   TextBinding,
   TextDirective,
 } from '.././mocks.js';
@@ -55,7 +55,7 @@ describe('Signal', () => {
   describe('[directiveTag]()', () => {
     it('should create a new SignalBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -80,7 +80,7 @@ describe('Signal', () => {
   describe('[usableTag]()', () => {
     it('should subscribe the signal and return a signal value', () => {
       const context = new RenderContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -339,7 +339,7 @@ describe('SignalBinding', () => {
   describe('.connect()', () => {
     it('should subscribe the signal', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -371,7 +371,7 @@ describe('SignalBinding', () => {
   describe('.bind()', () => {
     it('should update the the value binding with current signal value', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -403,7 +403,7 @@ describe('SignalBinding', () => {
 
     it('should unsubscribe the previous subscription if signal changes', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -441,7 +441,7 @@ describe('SignalBinding', () => {
 
     it('should throw the error if the value is not a signal', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -465,7 +465,7 @@ describe('SignalBinding', () => {
   describe('.unbind()', () => {
     it('should unbind the value binding and unsubscribe the signal', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -500,7 +500,7 @@ describe('SignalBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the value binding and unsubscribe the signal', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );

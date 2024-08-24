@@ -15,9 +15,9 @@ import type { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
+  MockRenderHost,
   MockTemplate,
   MockTemplateView,
-  MockUpdateHost,
 } from '../mocks.js';
 
 describe('component()', () => {
@@ -44,7 +44,7 @@ describe('Component', () => {
   describe('[directiveTag]()', () => {
     it('should create a new BlockBinding wrapped in BlockBinding', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -68,7 +68,7 @@ describe('Component', () => {
 
     it('should throw an error if the part is not a ChildNodePart', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -93,7 +93,7 @@ describe('ComponentBinding', () => {
   describe('.connect()', () => {
     it('should not render the template if it is already rendered', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -127,7 +127,7 @@ describe('ComponentBinding', () => {
 
     it('should update the block if an update is requested', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -155,7 +155,7 @@ describe('ComponentBinding', () => {
 
     it('should remount the view if it is unmounted', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -206,7 +206,7 @@ describe('ComponentBinding', () => {
   describe('.bind()', () => {
     it('should bind data to the current view if it is a renderd from the same template', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -254,7 +254,7 @@ describe('ComponentBinding', () => {
 
     it('should unbind data from the current view if it is a renderd from a different template', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -348,7 +348,7 @@ describe('ComponentBinding', () => {
 
     it('should render the template when it is called without calling connect()', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -392,7 +392,7 @@ describe('ComponentBinding', () => {
 
     it('should only mount the last rendered view if there is multiple renderings durling a transation', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -461,7 +461,7 @@ describe('ComponentBinding', () => {
 
     it('should remount the view if it is unmounted', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -510,7 +510,7 @@ describe('ComponentBinding', () => {
 
     it('should reuse the view cached from previous renderings', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -582,7 +582,7 @@ describe('ComponentBinding', () => {
 
     it('should clean hooks if the component has been changed', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -625,7 +625,7 @@ describe('ComponentBinding', () => {
   describe('.unbind()', () => {
     it('should unmount the memoized view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -665,7 +665,7 @@ describe('ComponentBinding', () => {
 
     it('should clean hooks', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -700,7 +700,7 @@ describe('ComponentBinding', () => {
   describe('.disconnect()', () => {
     it('should disconnect the current view', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -731,7 +731,7 @@ describe('ComponentBinding', () => {
 
     it('should clean hooks', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
@@ -800,7 +800,7 @@ describe('ComponentBinding', () => {
 
     it('should cancel mounting', () => {
       const context = new UpdateContext(
-        new MockUpdateHost(),
+        new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
