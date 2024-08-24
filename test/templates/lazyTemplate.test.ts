@@ -13,9 +13,9 @@ import {
 describe('LazyTemplate', () => {
   describe('.constructor()', () => {
     it('should construct a new LazyTemplate', () => {
-      const templateFactory = () => new MockTemplate();
       const key = {};
-      const template = new LazyTemplate(templateFactory, key);
+      const templateFactory = () => new MockTemplate();
+      const template = new LazyTemplate(key, templateFactory);
       expect(template.templateFactory).toBe(templateFactory);
       expect(template.key).toBe(key);
     });
@@ -27,7 +27,7 @@ describe('LazyTemplate', () => {
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
 
-      const view = new LazyTemplate(() => new MockTemplate(), {}).render(
+      const view = new LazyTemplate({}, () => new MockTemplate()).render(
         null,
         context,
       );
@@ -44,17 +44,17 @@ describe('LazyTemplate', () => {
       const key1 = 'foo';
       const key2 = 'bar';
       expect(
-        new LazyTemplate(templateFactory, key1).isSameTemplate(
-          new LazyTemplate(templateFactory, key1),
+        new LazyTemplate(key1, templateFactory).isSameTemplate(
+          new LazyTemplate(key1, templateFactory),
         ),
       ).toBe(true);
       expect(
-        new LazyTemplate(templateFactory, key1).isSameTemplate(
-          new LazyTemplate(templateFactory, key2),
+        new LazyTemplate(key1, templateFactory).isSameTemplate(
+          new LazyTemplate(key2, templateFactory),
         ),
       ).toBe(false);
       expect(
-        new LazyTemplate(templateFactory, key1).isSameTemplate(
+        new LazyTemplate(key1, templateFactory).isSameTemplate(
           new MockTemplate(),
         ),
       ).toBe(false);

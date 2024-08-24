@@ -183,9 +183,8 @@ export class RenderContext {
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
     const host = this._host;
-    const template = new LazyTemplate(
-      () => host.getHTMLTemplate(tokens, data),
-      tokens,
+    const template = new LazyTemplate(tokens, () =>
+      host.getHTMLTemplate(tokens, data),
     );
     return new LazyTemplateResult(template, data);
   }
@@ -212,9 +211,8 @@ export class RenderContext {
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
     const host = this._host;
-    const template = new LazyTemplate(
-      () => host.getSVGTemplate(tokens, data),
-      tokens,
+    const template = new LazyTemplate(tokens, () =>
+      host.getSVGTemplate(tokens, data),
     );
     return new LazyTemplateResult(template, data);
   }

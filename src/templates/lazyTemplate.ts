@@ -3,21 +3,21 @@ import type { DirectiveContext, Template, TemplateView } from '../baseTypes.js';
 export class LazyTemplate<TKey, TData, TContext>
   implements Template<TData, TContext>
 {
-  readonly _templateFactory: () => Template<TData, TContext>;
-
   readonly _key: TKey;
 
-  constructor(templateFactory: () => Template<TData, TContext>, key: TKey) {
-    this._templateFactory = templateFactory;
-    this._key = key;
-  }
+  readonly _templateFactory: () => Template<TData, TContext>;
 
-  get templateFactory(): () => Template<TData, TContext> {
-    return this._templateFactory;
+  constructor(key: TKey, templateFactory: () => Template<TData, TContext>) {
+    this._key = key;
+    this._templateFactory = templateFactory;
   }
 
   get key(): TKey {
     return this._key;
+  }
+
+  get templateFactory(): () => Template<TData, TContext> {
+    return this._templateFactory;
   }
 
   render(
