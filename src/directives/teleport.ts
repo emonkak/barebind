@@ -101,13 +101,7 @@ export class TeleportBinding<T> implements Binding<Teleport<T>> {
 
   disconnect(context: UpdateContext): void {
     // The binding must be unbound even when disconnecting.
-    this._binding.unbind(context);
-    if (this._memoizedContainer !== null) {
-      this._requestCommit(context);
-      this._status = CommitStatus.Unmounting;
-    } else {
-      this._status = CommitStatus.Committed;
-    }
+    this.unbind(context);
   }
 
   commit(): void {
