@@ -18,7 +18,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _taskCount: State<number> = new State(0);
 
-  private readonly _processingPipelines: WeakSet<UpdateQueue<TContext>> =
+  private readonly _processingQueues: WeakSet<UpdateQueue<TContext>> =
     new WeakSet();
 
   constructor({
@@ -31,7 +31,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): Promise<void> {
-    this._processingPipelines.add(queue);
+    this._processingQueues.add(queue);
 
     try {
       const { blocks } = queue;
@@ -62,7 +62,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       }
     } finally {
       queue.blocks.length = 0;
-      this._processingPipelines.delete(queue);
+      this._processingQueues.delete(queue);
     }
 
     this._scheduleEffects(queue, host);
@@ -76,7 +76,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    if (this._processingPipelines.has(queue)) {
+    if (this._processingQueues.has(queue)) {
       // Block an update while rendering.
       return;
     }
