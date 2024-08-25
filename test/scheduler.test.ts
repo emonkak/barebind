@@ -56,6 +56,7 @@ describe('requestCallback()', () => {
     scheduler.requestCallback(callback, options);
 
     expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith();
     expect(postTaskSpy).toHaveBeenCalledOnce();
     expect(postTaskSpy).toHaveBeenCalledWith(callback, options);
   });
@@ -73,8 +74,9 @@ describe('requestCallback()', () => {
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith();
     expect(setOnmessageSpy).toHaveBeenCalledOnce();
-    expect(setOnmessageSpy).toHaveBeenCalledWith(callback);
+    expect(setOnmessageSpy).toHaveBeenCalledWith(expect.any(Function));
     expect(postMessageSpy).toHaveBeenCalledOnce();
     expect(postMessageSpy).toHaveBeenCalledWith(null);
   });
@@ -95,6 +97,7 @@ describe('requestCallback()', () => {
     scheduler.requestCallback(callback, { priority: 'user-visible' });
 
     expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).toHaveBeenCalledWith();
     expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
     expect(setTimeoutSpy).toHaveBeenCalledWith(callback);
   });
@@ -116,6 +119,7 @@ describe('requestCallback()', () => {
     scheduler.requestCallback(callback, { priority: 'background' });
 
     expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).toHaveBeenCalledWith();
     expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
     expect(setTimeoutSpy).toHaveBeenCalledWith(callback);
   });
@@ -134,8 +138,9 @@ describe('requestCallback()', () => {
     scheduler.requestCallback(callback, { priority: 'background' });
 
     expect(callback).toHaveBeenCalledOnce();
+    expect(callback).toHaveBeenCalledWith();
     expect(requestIdleCallbackSpy).toHaveBeenCalledOnce();
-    expect(requestIdleCallbackSpy).toHaveBeenCalledWith(callback);
+    expect(requestIdleCallbackSpy).toHaveBeenCalledWith(expect.any(Function));
   });
 });
 

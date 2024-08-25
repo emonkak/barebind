@@ -3,10 +3,7 @@
 
 export interface Scheduler {
   getCurrentTime(): number;
-  requestCallback(
-    callback: VoidFunction,
-    options?: RequestCallbackOptions,
-  ): void;
+  requestCallback(callback: () => void, options?: RequestCallbackOptions): void;
   shouldYieldToMain(elapsedTime: number): boolean;
   yieldToMain(): Promise<void>;
 }
@@ -44,12 +41,12 @@ export function getDefaultScheduler({
     requestCallback = (callback, { priority } = {}) => {
       if (priority === 'user-blocking') {
         const channel = new MessageChannel();
-        channel.port1.onmessage = callback;
+        channel.port1.onmessage = () => callback();
         channel.port2.postMessage(null);
         return;
       } else if (priority === 'background') {
         if (typeof requestIdleCallback === 'function') {
-          requestIdleCallback(callback);
+          requestIdleCallback(() => callback());
           return;
         }
       }
