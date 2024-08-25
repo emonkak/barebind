@@ -1,4 +1,4 @@
-import type {} from './typings/scheduler.js';
+/// <reference path="./typings/scheduler.d.ts" />
 
 export const directiveTag = Symbol('Directive');
 

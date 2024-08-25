@@ -1,6 +1,5 @@
-import type { TaskPriority } from './baseTypes.js';
-import type {} from './typings/navigator.js';
-import type {} from './typings/scheduler.js';
+/// <reference path="./typings/navigator.d.ts" />
+/// <reference path="./typings/scheduler.d.ts" />
 
 export interface Scheduler {
   getCurrentTime(): number;

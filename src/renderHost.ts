@@ -22,7 +22,6 @@ import { NodeBinding } from './bindings/node.js';
 import { PropertyBinding } from './bindings/property.js';
 import { RenderContext } from './renderContext.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
-import type {} from './typings/deprecatedEvent.js';
 
 export interface ClientRenderHostOptions {
   name?: string;
@@ -271,5 +270,16 @@ function isContinuousEvent(event: Event): boolean {
       return true;
     default:
       return false;
+  }
+}
+
+declare global {
+  interface Window {
+    /**
+     * This property is marked as deprecated. But we use this to determine the
+     * task priority. This definition suppresses "'event' is deprecated." warning
+     * reported by VSCode.
+     */
+    readonly event: Event | undefined;
   }
 }
