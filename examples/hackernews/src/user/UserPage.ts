@@ -13,9 +13,11 @@ export function UserPage(
   context: RenderContext,
 ): TemplateDirective {
   const state = context.use(UserState);
-  const user = context.use(state.user$);
-  const error = context.use(state.error$);
-  const isLoading = context.use(state.isLoading$);
+  const [user, error, isLoading] = context.use([
+    state.user$,
+    state.error$,
+    state.isLoading$,
+  ]);
 
   context.useEffect(() => {
     if (state.user$.value === null || state.user$.value.id !== id) {

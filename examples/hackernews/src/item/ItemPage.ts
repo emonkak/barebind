@@ -13,9 +13,11 @@ export function ItemPage(
   context: RenderContext,
 ): TemplateDirective {
   const state = context.use(ItemState);
-  const item = context.use(state.item$);
-  const error = context.use(state.error$);
-  const isLoading = context.use(state.isLoading$);
+  const [item, error, isLoading] = context.use([
+    state.item$,
+    state.error$,
+    state.isLoading$,
+  ]);
 
   context.useEffect(() => {
     if (state.item$.value === null || state.item$.value.id !== id) {

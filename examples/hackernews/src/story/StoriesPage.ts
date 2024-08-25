@@ -16,8 +16,7 @@ export function StoriesPage(
   context: RenderContext,
 ): TemplateDirective {
   const state = context.use(StoryState);
-  const stories = context.use(state.stories$);
-  const isLoading = context.use(state.isLoading$);
+  const [stories, isLoading] = context.use([state.stories$, state.isLoading$]);
 
   context.useEffect(() => {
     if (state.type$.value !== type || state.page$.value !== page) {

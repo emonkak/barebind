@@ -377,33 +377,54 @@ describe('RenderContext', () => {
   });
 
   describe('.use()', () => {
-    it('should handle the UsableCallback', () => {
+    it('should handle a UsableCallback', () => {
       const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      const callback = vi.fn(() => 'foo');
+      const usableCallback = vi.fn(() => 'foo');
 
-      expect(context.use(callback)).toBe('foo');
-      expect(callback).toHaveBeenCalledOnce();
-      expect(callback).toHaveBeenCalledWith(context);
+      expect(context.use(usableCallback)).toBe('foo');
+      expect(usableCallback).toHaveBeenCalledOnce();
+      expect(usableCallback).toHaveBeenCalledWith(context);
     });
 
-    it('should handle the UsableObject', () => {
+    it('should handle a UsableObject', () => {
       const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      const usable = new MockUsableObject('foo');
-      const usableSpy = vi.spyOn(usable, usableTag);
+      const usableObject = new MockUsableObject('foo');
+      const usableObjectSpy = vi.spyOn(usableObject, usableTag);
 
-      expect(context.use(usable)).toBe('foo');
-      expect(usableSpy).toHaveBeenCalledOnce();
-      expect(usableSpy).toHaveBeenCalledWith(context);
+      expect(context.use(usableObject)).toBe('foo');
+      expect(usableObjectSpy).toHaveBeenCalledOnce();
+      expect(usableObjectSpy).toHaveBeenCalledWith(context);
+    });
+
+    it('should handle a UsableArray', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const usableCallback = vi.fn(() => 'foo' as const);
+      const usableObject = new MockUsableObject('bar');
+      const usableObjectSpy = vi.spyOn(usableObject, usableTag);
+
+      expect(context.use([usableCallback, usableObject])).toStrictEqual([
+        'foo',
+        'bar',
+      ]);
+      expect(usableObjectSpy).toHaveBeenCalledOnce();
+      expect(usableObjectSpy).toHaveBeenCalledWith(context);
+      expect(usableCallback).toHaveBeenCalledOnce();
+      expect(usableCallback).toHaveBeenCalledWith(context);
     });
   });
 

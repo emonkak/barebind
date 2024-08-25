@@ -47,6 +47,17 @@ export interface UsableObject<TResult, TContext> {
 
 export type UsableCallback<TResult, TContext> = (context: TContext) => TResult;
 
+export type Use<TUsable, TContext> = TUsable extends Usable<
+  infer TResult,
+  TContext
+>
+  ? TResult
+  : TUsable extends []
+    ? []
+    : TUsable extends [Usable<infer THead, TContext>, ...infer TTail]
+      ? [THead, ...Use<TTail, TContext>]
+      : never;
+
 export type InitialState<TState> = [TState] extends [Function]
   ? () => TState
   : (() => TState) | TState;
@@ -232,8 +243,19 @@ export class RenderContext {
     return new LazyTemplateResult(template, null);
   }
 
-  use<TResult>(usable: Usable<TResult, RenderContext>): TResult {
-    return usableTag in usable ? usable[usableTag](this) : usable(this);
+  use<
+    const TUsable extends
+      | Usable<any, RenderContext>
+      | Usable<any, RenderContext>[],
+  >(usable: TUsable): Use<TUsable, RenderContext> {
+    if (Array.isArray(usable)) {
+      return usable.map((usable) => use(usable, this)) as Use<
+        TUsable,
+        RenderContext
+      >;
+    } else {
+      return use(usable, this);
+    }
   }
 
   useCallback<TCallback extends Function>(
@@ -452,4 +474,11 @@ function ensureHookType<TExpectedHook extends Hook>(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
   }
+}
+
+function use<TResult>(
+  usable: Usable<TResult, RenderContext>,
+  context: RenderContext,
+): TResult {
+  return usableTag in usable ? usable[usableTag](context) : usable(context);
 }

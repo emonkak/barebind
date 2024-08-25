@@ -22,9 +22,7 @@ export function App(
     router.match(locationState.url, locationState.state) ??
     component(NotFound, { url: locationState.url });
 
-  context.use(itemState);
-  context.use(storyState);
-  context.use(userState);
+  context.use([itemState, storyState, userState]);
 
   context.useLayoutEffect(() => {
     resetScrollPosition(locationState);

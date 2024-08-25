@@ -11,8 +11,7 @@ export function Main(
   context: RenderContext,
 ): TemplateDirective {
   const state = context.use(TodoState);
-  const { visibleTodos$ } = state;
-  const visibleTodos = context.use(visibleTodos$);
+  const visibleTodos = context.use(state.visibleTodos$);
 
   const handleToggleAll = () => {
     state.toggleAllTodos();

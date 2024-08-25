@@ -10,10 +10,11 @@ export function Footer(
   context: RenderContext,
 ): TemplateDirective {
   const state = context.use(TodoState);
-  const { todos$, activeTodos$, filter$ } = state;
-  const todos = context.use(todos$);
-  const activeTodos = context.use(activeTodos$);
-  const filter = context.use(filter$);
+  const [todos, activeTodos, filter] = context.use([
+    state.todos$,
+    state.activeTodos$,
+    state.filter$,
+  ]);
 
   if (todos.length === 0) {
     return context.empty();
@@ -21,7 +22,7 @@ export function Footer(
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
-    filter$.value = newFilter;
+    state.filter$.value = newFilter;
   };
 
   const handleRemoveCompletedTodos = (event: Event) => {
