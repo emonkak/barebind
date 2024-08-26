@@ -14,6 +14,14 @@ import { NoValue } from './noValue.js';
 
 export type Either<TLeft, TRight> = Left<TLeft> | Right<TRight>;
 
+export function left<TLeft>(left: TLeft): Left<TLeft> {
+  return new Left(left);
+}
+
+export function right<TRight>(right: TRight): Right<TRight> {
+  return new Right(right);
+}
+
 export function ifElse<TThen, TElse>(
   condition: boolean,
   thenBlock: () => TThen,

@@ -12,6 +12,8 @@ import {
   Left,
   Right,
   ifElse,
+  left,
+  right,
   unless,
   when,
 } from '../../src/directives/either.js';
@@ -23,13 +25,25 @@ import {
   TextDirective,
 } from '../mocks.js';
 
+describe('left()', () => {
+  it('should construct a Left directive', () => {
+    expect(left('foo')).toStrictEqual(new Left('foo'));
+  });
+});
+
+describe('right()', () => {
+  it('should construct a Right directive', () => {
+    expect(right('foo')).toStrictEqual(new Right('foo'));
+  });
+});
+
 describe('ifElse()', () => {
   it('should construct a Left or Right directive depending on the condition', () => {
     const thenBlock = () => 'foo';
     const elseBlock = () => 'bar';
 
-    expect(ifElse(true, thenBlock, elseBlock)).toEqual(new Left('foo'));
-    expect(ifElse(false, thenBlock, elseBlock)).toEqual(new Right('bar'));
+    expect(ifElse(true, thenBlock, elseBlock)).toStrictEqual(new Left('foo'));
+    expect(ifElse(false, thenBlock, elseBlock)).toStrictEqual(new Right('bar'));
   });
 });
 
