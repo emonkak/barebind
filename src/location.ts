@@ -49,20 +49,22 @@ export class RelativeURL {
     return RelativeURL.fromString(value);
   }
 
+  static fromLocation(location: LocationLike) {
+    const { pathname, search, hash } = location;
+    return new RelativeURL(pathname, search, hash);
+  }
+
   static fromString(
     urlString: string,
     base: string | RelativeURL = '',
   ): RelativeURL {
     // SAFETY: Relative URLs can always be safely initialized.
-    const baseURL =
-      'file://' + (typeof base === 'string' ? base : base.pathname);
+    const baseURL = new URL(
+      typeof base === 'string' ? base : base.pathname,
+      'file://',
+    );
     const url = new URL(urlString, baseURL);
     return RelativeURL.fromURL(url);
-  }
-
-  static fromLocation(location: LocationLike) {
-    const { pathname, search, hash } = location;
-    return new RelativeURL(pathname, search, hash);
   }
 
   static fromURL(url: URL): RelativeURL {
