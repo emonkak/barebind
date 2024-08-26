@@ -6,8 +6,8 @@ import { ElementTemplate } from '../src/templates/elementTemplate.js';
 import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
 import { LazyTemplate } from '../src/templates/lazyTemplate.js';
 import {
+  ChildValueTemplate,
   TextTemplate,
-  ValueTemplate,
 } from '../src/templates/singleTemplate.js';
 import {
   UnsafeHTMLTemplate,
@@ -36,6 +36,22 @@ describe('RenderContext', () => {
       expect(context.block).toBe(block);
       expect(context.queue).toBe(queue);
       expect(context.hooks).toBe(hooks);
+    });
+  });
+
+  describe('.childValue()', () => {
+    it('should create a TemplateResult with ChildValueTemplate', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = 'foo';
+      const { template, data } = context.childValue(value);
+
+      expect(template).toBeInstanceOf(ChildValueTemplate);
+      expect(data).toBe(value);
     });
   });
 
@@ -266,22 +282,6 @@ describe('RenderContext', () => {
       expect(context.isRendering()).toBe(true);
       context.finalize();
       expect(context.isRendering()).toBe(false);
-    });
-  });
-
-  describe('.only()', () => {
-    it('should create a TemplateResult with ValueTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = 'foo';
-      const { template, data } = context.only(value);
-
-      expect(template).toBeInstanceOf(ValueTemplate);
-      expect(data).toBe(value);
     });
   });
 

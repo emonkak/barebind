@@ -3,9 +3,9 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/bindings/node.js';
 import {
+  ChildValueTemplate,
   SingleTemplateView,
   TextTemplate,
-  ValueTemplate,
 } from '../../src/templates/singleTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -15,11 +15,11 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-describe('ValueTemplate', () => {
+describe('ChildValueTemplate', () => {
   describe('.constructor()', () => {
     it('should throw an error from being called directly', () => {
-      expect(() => new (ValueTemplate as any)()).toThrow(
-        'ValueTemplate constructor cannot be called directly.',
+      expect(() => new (ChildValueTemplate as any)()).toThrow(
+        'ChildValueTemplate constructor cannot be called directly.',
       );
     });
   });
@@ -33,7 +33,7 @@ describe('ValueTemplate', () => {
       );
 
       const data = new TextDirective('foo');
-      const view = ValueTemplate.instance.render(data, context);
+      const view = ChildValueTemplate.instance.render(data, context);
 
       context.flushUpdate();
 
@@ -52,7 +52,7 @@ describe('ValueTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true always since the instance is a singleton', () => {
       expect(
-        ValueTemplate.instance.isSameTemplate(ValueTemplate.instance),
+        ChildValueTemplate.instance.isSameTemplate(ChildValueTemplate.instance),
       ).toBe(true);
     });
   });

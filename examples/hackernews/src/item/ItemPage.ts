@@ -33,7 +33,7 @@ export function ItemPage(
     `;
   }
 
-  return context.only(
+  return context.childValue(
     when(!isLoading && item !== null, () =>
       component(ItemView, { item: item! }),
     ),

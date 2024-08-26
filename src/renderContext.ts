@@ -29,7 +29,10 @@ import {
 } from './templates/elementTemplate.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
-import { TextTemplate, ValueTemplate } from './templates/singleTemplate.js';
+import {
+  ChildValueTemplate,
+  TextTemplate,
+} from './templates/singleTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
@@ -119,6 +122,11 @@ export class RenderContext {
     return this._queue;
   }
 
+  childValue<T>(value: T): EagerTemplateResult<T, RenderContext> {
+    const template = ChildValueTemplate.instance;
+    return new EagerTemplateResult(template, value);
+  }
+
   /**
    * @internal
    */
@@ -206,11 +214,6 @@ export class RenderContext {
 
   isRendering(): boolean {
     return this._hooks[this._hookIndex - 1]?.type !== HookType.Finalizer;
-  }
-
-  only<T>(value: T): EagerTemplateResult<T, RenderContext> {
-    const template = ValueTemplate.instance;
-    return new EagerTemplateResult(template, value);
   }
 
   setContextValue(key: unknown, value: unknown): void {
