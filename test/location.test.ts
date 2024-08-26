@@ -45,7 +45,7 @@ describe('RelativeURL', () => {
         expect(url.hash).toBe('#baz');
         expect(url.toString()).toBe('/foo?bar=123#baz');
         expect(url.toJSON()).toBe('/foo?bar=123#baz');
-        expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
+        expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
       },
     );
   });
@@ -59,7 +59,7 @@ describe('RelativeURL', () => {
       expect(url.hash).toBe('#baz');
       expect(url.toString()).toBe('/foo?bar=123#baz');
       expect(url.toJSON()).toBe('/foo?bar=123#baz');
-      expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
+      expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
     });
 
     it.each([['/foo'], [new RelativeURL('/foo')]])(
@@ -72,7 +72,7 @@ describe('RelativeURL', () => {
         expect(url.hash).toBe('#baz');
         expect(url.toString()).toBe('/foo?bar=123#baz');
         expect(url.toJSON()).toBe('/foo?bar=123#baz');
-        expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
+        expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
       },
     );
   });
@@ -86,7 +86,7 @@ describe('RelativeURL', () => {
       expect(url.hash).toBe('#baz');
       expect(url.toString()).toBe('/foo?bar=123#baz');
       expect(url.toJSON()).toBe('/foo?bar=123#baz');
-      expect(url.toURL().toString()).toBe('file:///foo?bar=123#baz');
+      expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
     });
   });
 

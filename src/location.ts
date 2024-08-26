@@ -108,8 +108,8 @@ export class RelativeURL {
     return this._pathname + this.search + this._hash;
   }
 
-  toURL(): URL {
-    return new URL(this.toString(), 'file:');
+  toURL(base: URL | string): URL {
+    return new URL(this.toString(), base);
   }
 }
 
