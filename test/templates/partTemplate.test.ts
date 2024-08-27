@@ -4,9 +4,9 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/bindings/node.js';
 import {
   ChildValueTemplate,
-  SingleTemplateView,
+  PartTemplateView,
   TextTemplate,
-} from '../../src/templates/singleTemplate.js';
+} from '../../src/templates/partTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -25,7 +25,7 @@ describe('ChildValueTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should create a new SingleTemplateView', () => {
+    it('should create a new PartTemplateView', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -68,7 +68,7 @@ describe('TextTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should return SingleTemplateView', () => {
+    it('should return PartTemplateView', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -78,7 +78,7 @@ describe('TextTemplate', () => {
       const data = 'foo';
       const view = TextTemplate.instance.render(data, context);
 
-      expect(view).toBeInstanceOf(SingleTemplateView);
+      expect(view).toBeInstanceOf(PartTemplateView);
       expect(view.binding).toBeInstanceOf(NodeBinding);
       expect(view.binding.value).toBe(data);
       expect(view.binding.part).toMatchObject({
@@ -99,7 +99,7 @@ describe('TextTemplate', () => {
   });
 });
 
-describe('SingleTemplateView', () => {
+describe('PartTemplateView', () => {
   describe('.connect()', () => {
     it('should connect the binding', () => {
       const context = new UpdateContext(
@@ -114,7 +114,7 @@ describe('SingleTemplateView', () => {
         node: document.createTextNode(''),
       } as const;
       const binding = new NodeBinding(value, part);
-      const view = new SingleTemplateView(binding);
+      const view = new PartTemplateView(binding);
 
       const connectSpy = vi.spyOn(binding, 'connect');
 
@@ -141,7 +141,7 @@ describe('SingleTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value1, part);
-      const view = new SingleTemplateView(binding);
+      const view = new PartTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
@@ -166,7 +166,7 @@ describe('SingleTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const view = new SingleTemplateView(binding);
+      const view = new PartTemplateView(binding);
 
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
@@ -191,7 +191,7 @@ describe('SingleTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const view = new SingleTemplateView(binding);
+      const view = new PartTemplateView(binding);
 
       const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
 
@@ -221,7 +221,7 @@ describe('SingleTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const view = new SingleTemplateView(binding);
+      const view = new PartTemplateView(binding);
 
       container.appendChild(containerPart.node);
       view.mount(containerPart);

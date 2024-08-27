@@ -21,7 +21,7 @@ export class ChildValueTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: DirectiveContext): SingleTemplateView<T> {
+  render(data: T, context: DirectiveContext): PartTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -30,7 +30,7 @@ export class ChildValueTemplate<T> implements Template<T> {
     DEBUG: {
       part.node.nodeValue = nameOf(data);
     }
-    return new SingleTemplateView(binding);
+    return new PartTemplateView(binding);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -47,13 +47,13 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: DirectiveContext): SingleTemplateView<T> {
+  render(data: T, context: DirectiveContext): PartTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
     const binding = resolveBinding(data, part, context);
-    return new SingleTemplateView(binding);
+    return new PartTemplateView(binding);
   }
 
   isSameTemplate(other: Template<T>): boolean {
@@ -61,7 +61,7 @@ export class TextTemplate<T> implements Template<T> {
   }
 }
 
-export class SingleTemplateView<T> implements TemplateView<T> {
+export class PartTemplateView<T> implements TemplateView<T> {
   private readonly _binding: Binding<T>;
 
   constructor(binding: Binding<T>) {

@@ -29,10 +29,7 @@ import {
 } from './templates/elementTemplate.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
-import {
-  ChildValueTemplate,
-  TextTemplate,
-} from './templates/singleTemplate.js';
+import { ChildValueTemplate, TextTemplate } from './templates/partTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,

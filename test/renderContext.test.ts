@@ -8,7 +8,7 @@ import { LazyTemplate } from '../src/templates/lazyTemplate.js';
 import {
   ChildValueTemplate,
   TextTemplate,
-} from '../src/templates/singleTemplate.js';
+} from '../src/templates/partTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
