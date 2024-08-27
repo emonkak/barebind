@@ -54,8 +54,9 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
   private readonly _binding: Binding<T>;
 
   constructor(value: Memo<T>, part: Part, context: DirectiveContext) {
+    const { factory } = value;
     this._value = value;
-    this._binding = resolveBinding(value.factory(), part, context);
+    this._binding = resolveBinding(factory(), part, context);
   }
 
   get value(): Memo<T> {
