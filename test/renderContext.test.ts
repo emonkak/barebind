@@ -67,7 +67,7 @@ describe('RenderContext', () => {
       expect(value.template).toBeInstanceOf(ElementTemplate);
       expect(value.data).toEqual({
         elementValue: { class: 'foo', id: 'bar' },
-        childNodeValue: 'baz',
+        childValue: 'baz',
       });
     });
   });

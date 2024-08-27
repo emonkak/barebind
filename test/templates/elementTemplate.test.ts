@@ -21,11 +21,11 @@ describe('ElementTemplate', () => {
       );
 
       const elementValue = { class: 'foo' };
-      const childNodeValue = new TextDirective('bar');
+      const childValue = new TextDirective('bar');
       const view = new ElementTemplate('div').render(
         {
           elementValue,
-          childNodeValue,
+          childValue,
         },
         context,
       );
@@ -38,9 +38,9 @@ describe('ElementTemplate', () => {
         node: expect.any(Element),
       });
       expect(view.elementBinding.part.node.nodeName).toBe('DIV');
-      expect(view.childNodeBinding).toBeInstanceOf(TextBinding);
-      expect(view.childNodeBinding.value).toBe(childNodeValue);
-      expect(view.childNodeBinding.part).toMatchObject({
+      expect(view.childBinding).toBeInstanceOf(TextBinding);
+      expect(view.childBinding.value).toBe(childValue);
+      expect(view.childBinding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
       });
@@ -78,18 +78,18 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
-      const data = { elementValue: { class: 'foo' }, childNodeValue: 'bar' };
+      const data = { elementValue: { class: 'foo' }, childValue: 'bar' };
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentConnectSpy = vi.spyOn(view.elementBinding, 'connect');
-      const childNodeConnectSpy = vi.spyOn(view.elementBinding, 'connect');
+      const childConnectSpy = vi.spyOn(view.elementBinding, 'connect');
 
       view.connect(context);
 
       expect(elmentConnectSpy).toHaveBeenCalledOnce();
       expect(elmentConnectSpy).toHaveBeenCalledWith(context);
-      expect(childNodeConnectSpy).toHaveBeenCalledOnce();
-      expect(childNodeConnectSpy).toHaveBeenCalledWith(context);
+      expect(childConnectSpy).toHaveBeenCalledOnce();
+      expect(childConnectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -101,21 +101,18 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
-      const data = { elementValue: { class: 'foo' }, childNodeValue: 'bar' };
+      const data = { elementValue: { class: 'foo' }, childValue: 'bar' };
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentBindSpy = vi.spyOn(view.elementBinding, 'bind');
-      const childNodeBindSpy = vi.spyOn(view.childNodeBinding, 'bind');
+      const childBindSpy = vi.spyOn(view.childBinding, 'bind');
 
       view.bind(data, context);
 
       expect(elmentBindSpy).toHaveBeenCalledOnce();
       expect(elmentBindSpy).toHaveBeenCalledWith(data.elementValue, context);
-      expect(childNodeBindSpy).toHaveBeenCalledOnce();
-      expect(childNodeBindSpy).toHaveBeenCalledWith(
-        data.childNodeValue,
-        context,
-      );
+      expect(childBindSpy).toHaveBeenCalledOnce();
+      expect(childBindSpy).toHaveBeenCalledWith(data.childValue, context);
     });
   });
 
@@ -127,18 +124,18 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
-      const data = { elementValue: { class: 'foo' }, childNodeValue: 'bar' };
+      const data = { elementValue: { class: 'foo' }, childValue: 'bar' };
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentUnbindSpy = vi.spyOn(view.elementBinding, 'unbind');
-      const childNodeUnbindSpy = vi.spyOn(view.childNodeBinding, 'unbind');
+      const childUnbindSpy = vi.spyOn(view.childBinding, 'unbind');
 
       view.unbind(context);
 
       expect(elmentUnbindSpy).toHaveBeenCalledOnce();
       expect(elmentUnbindSpy).toHaveBeenCalledWith(context);
-      expect(childNodeUnbindSpy).toHaveBeenCalledOnce();
-      expect(childNodeUnbindSpy).toHaveBeenCalledWith(context);
+      expect(childUnbindSpy).toHaveBeenCalledOnce();
+      expect(childUnbindSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -151,22 +148,19 @@ describe('ElementTemplateView', () => {
       );
 
       const view = new ElementTemplate('div').render(
-        { elementValue: { class: 'foo' }, childNodeValue: 'bar' },
+        { elementValue: { class: 'foo' }, childValue: 'bar' },
         context,
       );
 
       const elementDisconnectSpy = vi.spyOn(view.elementBinding, 'disconnect');
-      const childNodeDisconnectSpy = vi.spyOn(
-        view.childNodeBinding,
-        'disconnect',
-      );
+      const childDisconnectSpy = vi.spyOn(view.childBinding, 'disconnect');
 
       view.disconnect(context);
 
       expect(elementDisconnectSpy).toHaveBeenCalledOnce();
       expect(elementDisconnectSpy).toHaveBeenCalledWith(context);
-      expect(childNodeDisconnectSpy).toHaveBeenCalledOnce();
-      expect(childNodeDisconnectSpy).toHaveBeenCalledWith(context);
+      expect(childDisconnectSpy).toHaveBeenCalledOnce();
+      expect(childDisconnectSpy).toHaveBeenCalledWith(context);
     });
   });
 
@@ -186,7 +180,7 @@ describe('ElementTemplateView', () => {
       const view = new ElementTemplate('div').render(
         {
           elementValue: { class: 'foo' },
-          childNodeValue: new TextDirective('bar'),
+          childValue: new TextDirective('bar'),
         },
         context,
       );

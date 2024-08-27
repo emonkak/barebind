@@ -10,13 +10,13 @@ import {
   resolveBinding,
 } from '../baseTypes.js';
 
-export interface ElementData<TElementValue, TChildNodeValue> {
+export interface ElementData<TElementValue, TChildValue> {
   elementValue: TElementValue;
-  childNodeValue: TChildNodeValue;
+  childValue: TChildValue;
 }
 
-export class ElementTemplate<TElementValue, TChildNodeValue>
-  implements Template<ElementData<TElementValue, TChildNodeValue>>
+export class ElementTemplate<TElementValue, TChildValue>
+  implements Template<ElementData<TElementValue, TChildValue>>
 {
   private readonly _type: string;
 
@@ -25,40 +25,36 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
   }
 
   render(
-    data: ElementData<TElementValue, TChildNodeValue>,
+    data: ElementData<TElementValue, TChildValue>,
     context: DirectiveContext,
-  ): ElementTemplateView<TElementValue, TChildNodeValue> {
+  ): ElementTemplateView<TElementValue, TChildValue> {
     const elementPart = {
       type: PartType.Element,
       node: document.createElement(this._type),
     } as const;
-    const childNodePart = {
+    const childPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
 
     DEBUG: {
-      childNodePart.node.data = nameOf(data.childNodeValue);
+      childPart.node.data = nameOf(data.childValue);
     }
 
-    elementPart.node.appendChild(childNodePart.node);
+    elementPart.node.appendChild(childPart.node);
 
     const elementBinding = resolveBinding(
       data.elementValue,
       elementPart,
       context,
     );
-    const childNodeBinding = resolveBinding(
-      data.childNodeValue,
-      childNodePart,
-      context,
-    );
+    const childBinding = resolveBinding(data.childValue, childPart, context);
 
-    return new ElementTemplateView(elementBinding, childNodeBinding);
+    return new ElementTemplateView(elementBinding, childBinding);
   }
 
   isSameTemplate(
-    other: Template<ElementData<TElementValue, TChildNodeValue>>,
+    other: Template<ElementData<TElementValue, TChildValue>>,
   ): boolean {
     return (
       other === this ||
@@ -67,27 +63,27 @@ export class ElementTemplate<TElementValue, TChildNodeValue>
   }
 }
 
-export class ElementTemplateView<TElementValue, TChildNodeValue>
-  implements TemplateView<ElementData<TElementValue, TChildNodeValue>>
+export class ElementTemplateView<TElementValue, TChildValue>
+  implements TemplateView<ElementData<TElementValue, TChildValue>>
 {
   private readonly _elementBinding: Binding<TElementValue>;
 
-  private readonly _childNodeBinding: Binding<TChildNodeValue>;
+  private readonly _childBinding: Binding<TChildValue>;
 
   constructor(
     elementBinding: Binding<TElementValue>,
-    childNodeBinding: Binding<TChildNodeValue>,
+    childBinding: Binding<TChildValue>,
   ) {
     this._elementBinding = elementBinding;
-    this._childNodeBinding = childNodeBinding;
+    this._childBinding = childBinding;
   }
 
   get elementBinding(): Binding<TElementValue> {
     return this._elementBinding;
   }
 
-  get childNodeBinding(): Binding<TChildNodeValue> {
-    return this._childNodeBinding;
+  get childBinding(): Binding<TChildValue> {
+    return this._childBinding;
   }
 
   get startNode(): ChildNode {
@@ -100,25 +96,25 @@ export class ElementTemplateView<TElementValue, TChildNodeValue>
 
   connect(context: UpdateContext): void {
     this._elementBinding.connect(context);
-    this._childNodeBinding.connect(context);
+    this._childBinding.connect(context);
   }
 
   bind(
-    data: ElementData<TElementValue, TChildNodeValue>,
+    data: ElementData<TElementValue, TChildValue>,
     context: UpdateContext,
   ): void {
     this._elementBinding.bind(data.elementValue, context);
-    this._childNodeBinding.bind(data.childNodeValue, context);
+    this._childBinding.bind(data.childValue, context);
   }
 
   unbind(context: UpdateContext) {
     this._elementBinding.unbind(context);
-    this._childNodeBinding.unbind(context);
+    this._childBinding.unbind(context);
   }
 
   disconnect(context: UpdateContext): void {
     this._elementBinding.disconnect(context);
-    this._childNodeBinding.disconnect(context);
+    this._childBinding.disconnect(context);
   }
 
   mount(part: ChildNodePart): void {

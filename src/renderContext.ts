@@ -140,16 +140,16 @@ export class RenderContext {
     );
   }
 
-  element<TElementValue, TChildNodeValue>(
+  element<TElementValue, TChildValue>(
     type: string,
     elementValue: TElementValue,
-    childNodeValue: TChildNodeValue,
+    childValue: TChildValue,
   ): EagerTemplateResult<
-    ElementData<TElementValue, TChildNodeValue>,
+    ElementData<TElementValue, TChildValue>,
     RenderContext
   > {
-    const template = new ElementTemplate<TElementValue, TChildNodeValue>(type);
-    return new EagerTemplateResult(template, { elementValue, childNodeValue });
+    const template = new ElementTemplate<TElementValue, TChildValue>(type);
+    return new EagerTemplateResult(template, { elementValue, childValue });
   }
 
   empty(): EagerTemplateResult<null, RenderContext> {
