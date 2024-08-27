@@ -55,7 +55,7 @@ export class BlockBinding<TValue, TContext>
     return this._binding.endNode;
   }
 
-  get parent(): Block<unknown> | null {
+  get parent(): Block<TContext> | null {
     return this._parent;
   }
 
