@@ -1,7 +1,6 @@
 export * from './directives/cached.js';
 export * from './directives/classMap.js';
 export * from './directives/component.js';
-export * from './directives/dynamic.js';
 export * from './directives/either.js';
 export * from './directives/keyed.js';
 export * from './directives/list.js';
