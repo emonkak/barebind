@@ -20,8 +20,19 @@ export class ElementTemplate<TElementValue, TChildValue>
 {
   private readonly _type: string;
 
-  constructor(type: string) {
+  private readonly _namespace: string;
+
+  constructor(type: string, namespace = '') {
     this._type = type;
+    this._namespace = namespace;
+  }
+
+  get type(): string {
+    return this._type;
+  }
+
+  get namespace(): string {
+    return this._namespace;
   }
 
   render(
@@ -30,7 +41,10 @@ export class ElementTemplate<TElementValue, TChildValue>
   ): ElementTemplateView<TElementValue, TChildValue> {
     const elementPart = {
       type: PartType.Element,
-      node: document.createElement(this._type),
+      node:
+        this._namespace !== ''
+          ? document.createElementNS(this._namespace, this._type)
+          : document.createElement(this._type),
     } as const;
     const childPart = {
       type: PartType.ChildNode,
@@ -58,7 +72,9 @@ export class ElementTemplate<TElementValue, TChildValue>
   ): boolean {
     return (
       other === this ||
-      (other instanceof ElementTemplate && other._type === this._type)
+      (other instanceof ElementTemplate &&
+        other._type === this._type &&
+        other._namespace === this._namespace)
     );
   }
 }

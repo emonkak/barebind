@@ -65,6 +65,32 @@ describe('RenderContext', () => {
       const value = context.element('div', { class: 'foo', id: 'bar' }, 'baz');
 
       expect(value.template).toBeInstanceOf(ElementTemplate);
+      expect((value.template as ElementTemplate<any, any>).type).toBe('div');
+      expect((value.template as ElementTemplate<any, any>).namespace).toBe('');
+      expect(value.data).toEqual({
+        elementValue: { class: 'foo', id: 'bar' },
+        childValue: 'baz',
+      });
+    });
+
+    it('should create a TemplateResult with ElementTemplate with a certain namespace', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+      const value = context.element(
+        'div',
+        { class: 'foo', id: 'bar' },
+        'baz',
+        'http://www.w3.org/1999/xhtml',
+      );
+
+      expect(value.template).toBeInstanceOf(ElementTemplate);
+      expect((value.template as ElementTemplate<any, any>).type).toBe('div');
+      expect((value.template as ElementTemplate<any, any>).namespace).toBe(
+        'http://www.w3.org/1999/xhtml',
+      );
       expect(value.data).toEqual({
         elementValue: { class: 'foo', id: 'bar' },
         childValue: 'baz',

@@ -12,8 +12,19 @@ import {
 } from '../mocks.js';
 
 describe('ElementTemplate', () => {
+  describe('.constructor', () => {
+    it('should construct a new ElementTemplate', () => {
+      const template = new ElementTemplate(
+        'div',
+        'http://www.w3.org/1999/xhtml',
+      );
+      expect(template.type).toBe('div');
+      expect(template.namespace).toBe('http://www.w3.org/1999/xhtml');
+    });
+  });
+
   describe('.render()', () => {
-    it('should return ElementTemplateView initialized with NodeBinding', () => {
+    it('should render ElementTemplateView', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -22,7 +33,10 @@ describe('ElementTemplate', () => {
 
       const elementValue = { class: 'foo' };
       const childValue = new TextDirective('bar');
-      const view = new ElementTemplate('div').render(
+      const view = new ElementTemplate(
+        'div',
+        'http://www.w3.org/1999/xhtml',
+      ).render(
         {
           elementValue,
           childValue,
@@ -38,6 +52,9 @@ describe('ElementTemplate', () => {
         node: expect.any(Element),
       });
       expect(view.elementBinding.part.node.nodeName).toBe('DIV');
+      expect((view.elementBinding.part.node as Element).namespaceURI).toBe(
+        'http://www.w3.org/1999/xhtml',
+      );
       expect(view.childBinding).toBeInstanceOf(TextBinding);
       expect(view.childBinding.value).toBe(childValue);
       expect(view.childBinding.part).toMatchObject({
@@ -55,15 +72,29 @@ describe('ElementTemplate', () => {
       expect(template.isSameTemplate(template)).toBe(true);
     });
 
-    it('should return true if a type is the same', () => {
+    it('should return true if type and namespace are the same', () => {
       expect(
         new ElementTemplate('div').isSameTemplate(new ElementTemplate('div')),
       ).toBe(true);
+      expect(
+        new ElementTemplate(
+          'div',
+          'http://www.w3.org/1999/xhtml',
+        ).isSameTemplate(
+          new ElementTemplate('div', 'http://www.w3.org/1999/xhtml'),
+        ),
+      ).toBe(true);
     });
 
-    it('should return false if a type is not the same', () => {
+    it('should return false if type and namespace are not the same', () => {
       expect(
         new ElementTemplate('div').isSameTemplate(new ElementTemplate('p')),
+      ).toBe(false);
+      expect(
+        new ElementTemplate(
+          'div',
+          'http://www.w3.org/1999/xhtml',
+        ).isSameTemplate(new ElementTemplate('div')),
       ).toBe(false);
     });
   });

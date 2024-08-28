@@ -141,11 +141,15 @@ export class RenderContext {
     type: string,
     elementValue: TElementValue,
     childValue: TChildValue,
+    namespace = '',
   ): EagerTemplateResult<
     ElementData<TElementValue, TChildValue>,
     RenderContext
   > {
-    const template = new ElementTemplate<TElementValue, TChildValue>(type);
+    const template = new ElementTemplate<TElementValue, TChildValue>(
+      type,
+      namespace,
+    );
     return new EagerTemplateResult(template, { elementValue, childValue });
   }
 
