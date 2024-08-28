@@ -69,10 +69,7 @@ export interface RenderHost<TContext> {
   ): Template<TData>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
   nextIdentifier(): number;
-  resolveBinding<TValue, TContext>(
-    value: TValue,
-    part: Part,
-  ): Binding<TValue, TContext>;
+  resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
 }
 

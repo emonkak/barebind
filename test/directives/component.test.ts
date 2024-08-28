@@ -129,7 +129,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should update the block if an update is requested', () => {
-      const context = new UpdateContext(
+      const context = new UpdateContext<RenderContext>(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
@@ -590,7 +590,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should clean hooks if the component has been changed', () => {
-      const context = new UpdateContext(
+      const context = new UpdateContext<RenderContext>(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
@@ -676,7 +676,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should clean hooks', () => {
-      const context = new UpdateContext(
+      const context = new UpdateContext<RenderContext>(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
@@ -745,7 +745,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should clean hooks', () => {
-      const context = new UpdateContext(
+      const context = new UpdateContext<RenderContext>(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),

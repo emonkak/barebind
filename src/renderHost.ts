@@ -176,19 +176,19 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return ++this._idCounter;
   }
 
-  resolveBinding<TValue, TContext>(
+  resolveBinding<TValue>(
     value: TValue,
     part: Part,
-  ): Binding<TValue, TContext> {
+  ): Binding<TValue, RenderContext> {
     switch (part.type) {
       case PartType.Attribute:
         return new AttributeBinding(value, part);
       case PartType.ChildNode:
         return new NodeBinding(value, part);
       case PartType.Element:
-        return new ElementBinding(value, part) as Binding<any, TContext>;
+        return new ElementBinding(value, part) as Binding<any, RenderContext>;
       case PartType.Event:
-        return new EventBinding(value, part) as Binding<any, TContext>;
+        return new EventBinding(value, part) as Binding<any, RenderContext>;
       case PartType.Node:
         return new NodeBinding(value, part);
       case PartType.Property:
