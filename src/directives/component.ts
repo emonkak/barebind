@@ -112,7 +112,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   connect(context: UpdateContext<TContext>): void {
-    this._triggerRender(this._value, context);
+    this._performRender(this._value, context);
   }
 
   bind(
@@ -129,7 +129,7 @@ export class ComponentBinding<TProps, TData, TContext>
       this._cleanHooks(context);
     }
 
-    this._triggerRender(newValue, context);
+    this._performRender(newValue, context);
     this._value = newValue;
   }
 
@@ -181,7 +181,7 @@ export class ComponentBinding<TProps, TData, TContext>
     this._hooks = [];
   }
 
-  private _triggerRender(
+  private _performRender(
     component: Component<TProps, TData, TContext>,
     context: UpdateContext<TContext>,
   ) {
