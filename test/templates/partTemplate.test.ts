@@ -32,13 +32,13 @@ describe('ChildValueTemplate', () => {
         new MockBlock(),
       );
 
-      const data = new TextDirective('foo');
+      const data = [new TextDirective('foo')] as const;
       const view = ChildValueTemplate.instance.render(data, context);
 
       context.flushUpdate();
 
       expect(view.binding).toBeInstanceOf(TextBinding);
-      expect(view.binding.value).toBe(data);
+      expect(view.binding.value).toBe(data[0]);
       expect(view.binding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
@@ -75,12 +75,12 @@ describe('TextTemplate', () => {
         new MockBlock(),
       );
 
-      const data = 'foo';
+      const data = ['foo'] as const;
       const view = TextTemplate.instance.render(data, context);
 
       expect(view).toBeInstanceOf(PartTemplateView);
       expect(view.binding).toBeInstanceOf(NodeBinding);
-      expect(view.binding.value).toBe(data);
+      expect(view.binding.value).toBe(data[0]);
       expect(view.binding.part).toMatchObject({
         type: PartType.Node,
         node: expect.any(Text),
@@ -134,21 +134,21 @@ describe('PartTemplateView', () => {
         new MockBlock(),
       );
 
-      const value1 = new TextDirective('foo');
-      const value2 = new TextDirective('bar');
+      const data1 = [new TextDirective('foo')] as const;
+      const data2 = [new TextDirective('bar')] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TextBinding(value1, part);
+      const binding = new TextBinding(data1[0], part);
       const view = new PartTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      view.bind(value2, context);
+      view.bind(data2, context);
 
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value2, context);
+      expect(bindSpy).toHaveBeenCalledWith(data2[0], context);
     });
   });
 

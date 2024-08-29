@@ -51,7 +51,7 @@ describe('RenderContext', () => {
       const { template, data } = context.childValue(value);
 
       expect(template).toBeInstanceOf(ChildValueTemplate);
-      expect(data).toBe(value);
+      expect(data).toStrictEqual([value]);
     });
   });
 
@@ -67,10 +67,7 @@ describe('RenderContext', () => {
       expect(value.template).toBeInstanceOf(ElementTemplate);
       expect((value.template as ElementTemplate<any, any>).type).toBe('div');
       expect((value.template as ElementTemplate<any, any>).namespace).toBe('');
-      expect(value.data).toEqual({
-        elementValue: { class: 'foo', id: 'bar' },
-        childValue: 'baz',
-      });
+      expect(value.data).toStrictEqual([{ class: 'foo', id: 'bar' }, 'baz']);
     });
 
     it('should create a TemplateResult with ElementTemplate with a certain namespace', () => {
@@ -91,10 +88,7 @@ describe('RenderContext', () => {
       expect((value.template as ElementTemplate<any, any>).namespace).toBe(
         'http://www.w3.org/1999/xhtml',
       );
-      expect(value.data).toEqual({
-        elementValue: { class: 'foo', id: 'bar' },
-        childValue: 'baz',
-      });
+      expect(value.data).toEqual([{ class: 'foo', id: 'bar' }, 'baz']);
     });
   });
 
@@ -108,7 +102,7 @@ describe('RenderContext', () => {
       const value = context.empty();
 
       expect(value.template).toBe(EmptyTemplate.instance);
-      expect(value.data).toEqual(null);
+      expect(value.data).toStrictEqual([]);
     });
   });
 
@@ -364,7 +358,7 @@ describe('RenderContext', () => {
       const value = context.text('foo');
 
       expect(value.template).toBe(TextTemplate.instance);
-      expect(value.data).toEqual('foo');
+      expect(value.data).toStrictEqual(['foo']);
     });
   });
 
@@ -381,7 +375,7 @@ describe('RenderContext', () => {
 
       expect(value.template).toBeInstanceOf(UnsafeHTMLTemplate);
       expect((value.template as UnsafeHTMLTemplate).content).toBe(content);
-      expect(value.data).toEqual(null);
+      expect(value.data).toStrictEqual([]);
     });
   });
 
@@ -398,7 +392,7 @@ describe('RenderContext', () => {
 
       expect(value.template).toBeInstanceOf(UnsafeSVGTemplate);
       expect((value.template as UnsafeSVGTemplate).content).toBe(content);
-      expect(value.data).toEqual(null);
+      expect(value.data).toStrictEqual([]);
     });
   });
 

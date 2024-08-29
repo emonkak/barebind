@@ -10,7 +10,7 @@ import {
   resolveBinding,
 } from '../baseTypes.js';
 
-export class ChildValueTemplate<T> implements Template<T> {
+export class ChildValueTemplate<T> implements Template<readonly [T]> {
   static readonly instance = new ChildValueTemplate<any>();
 
   private constructor() {
@@ -21,24 +21,25 @@ export class ChildValueTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: DirectiveContext): PartTemplateView<T> {
+  render(data: readonly [T], context: DirectiveContext): PartTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
-    const binding = resolveBinding(data, part, context);
+    const value = data[0];
+    const binding = resolveBinding(value, part, context);
     DEBUG: {
-      part.node.nodeValue = nameOf(data);
+      part.node.nodeValue = nameOf(value);
     }
     return new PartTemplateView(binding);
   }
 
-  isSameTemplate(other: Template<T>): boolean {
+  isSameTemplate(other: Template<[T]>): boolean {
     return other === this;
   }
 }
 
-export class TextTemplate<T> implements Template<T> {
+export class TextTemplate<T> implements Template<readonly [T]> {
   static readonly instance = new TextTemplate<any>();
 
   private constructor() {
@@ -47,21 +48,21 @@ export class TextTemplate<T> implements Template<T> {
     }
   }
 
-  render(data: T, context: DirectiveContext): PartTemplateView<T> {
+  render(data: readonly [T], context: DirectiveContext): PartTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
-    const binding = resolveBinding(data, part, context);
+    const binding = resolveBinding(data[0], part, context);
     return new PartTemplateView(binding);
   }
 
-  isSameTemplate(other: Template<T>): boolean {
+  isSameTemplate(other: Template<readonly [T]>): boolean {
     return other === this;
   }
 }
 
-export class PartTemplateView<T> implements TemplateView<T> {
+export class PartTemplateView<T> implements TemplateView<readonly [T]> {
   private readonly _binding: Binding<T>;
 
   constructor(binding: Binding<T>) {
@@ -84,8 +85,8 @@ export class PartTemplateView<T> implements TemplateView<T> {
     this._binding.connect(context);
   }
 
-  bind(data: T, context: UpdateContext): void {
-    this._binding.bind(data, context);
+  bind(data: readonly [T], context: UpdateContext): void {
+    this._binding.bind(data[0], context);
   }
 
   unbind(context: UpdateContext): void {

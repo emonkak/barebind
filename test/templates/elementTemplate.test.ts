@@ -36,13 +36,7 @@ describe('ElementTemplate', () => {
       const view = new ElementTemplate(
         'div',
         'http://www.w3.org/1999/xhtml',
-      ).render(
-        {
-          elementValue,
-          childValue,
-        },
-        context,
-      );
+      ).render([elementValue, childValue], context);
 
       expect(context.isPending()).toBe(false);
       expect(view.elementBinding).toBeInstanceOf(ElementBinding);
@@ -109,7 +103,7 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
-      const data = { elementValue: { class: 'foo' }, childValue: 'bar' };
+      const data = [{ class: 'foo' }, 'bar'] as const;
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentConnectSpy = vi.spyOn(view.elementBinding, 'connect');
@@ -132,7 +126,7 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
-      const data = { elementValue: { class: 'foo' }, childValue: 'bar' };
+      const data = [{ class: 'foo' }, 'bar'] as const;
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentBindSpy = vi.spyOn(view.elementBinding, 'bind');
@@ -141,9 +135,9 @@ describe('ElementTemplateView', () => {
       view.bind(data, context);
 
       expect(elmentBindSpy).toHaveBeenCalledOnce();
-      expect(elmentBindSpy).toHaveBeenCalledWith(data.elementValue, context);
+      expect(elmentBindSpy).toHaveBeenCalledWith(data[0], context);
       expect(childBindSpy).toHaveBeenCalledOnce();
-      expect(childBindSpy).toHaveBeenCalledWith(data.childValue, context);
+      expect(childBindSpy).toHaveBeenCalledWith(data[1], context);
     });
   });
 
@@ -155,7 +149,7 @@ describe('ElementTemplateView', () => {
         new MockBlock(),
       );
 
-      const data = { elementValue: { class: 'foo' }, childValue: 'bar' };
+      const data = [{ class: 'foo' }, 'bar'] as const;
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentUnbindSpy = vi.spyOn(view.elementBinding, 'unbind');
@@ -179,7 +173,7 @@ describe('ElementTemplateView', () => {
       );
 
       const view = new ElementTemplate('div').render(
-        { elementValue: { class: 'foo' }, childValue: 'bar' },
+        [{ class: 'foo' }, 'bar'],
         context,
       );
 
@@ -209,10 +203,7 @@ describe('ElementTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const view = new ElementTemplate('div').render(
-        {
-          elementValue: { class: 'foo' },
-          childValue: new TextDirective('bar'),
-        },
+        [{ class: 'foo' }, new TextDirective('bar')],
         context,
       );
 

@@ -6,7 +6,7 @@ import type {
   UpdateContext,
 } from '../baseTypes.js';
 
-export class UnsafeHTMLTemplate implements Template<null> {
+export class UnsafeHTMLTemplate implements Template<readonly []> {
   private _content: string;
 
   constructor(content: string) {
@@ -17,13 +17,16 @@ export class UnsafeHTMLTemplate implements Template<null> {
     return this._content;
   }
 
-  render(_data: null, _context: DirectiveContext): UnsafeContentTemplateView {
+  render(
+    _data: readonly [],
+    _context: DirectiveContext,
+  ): UnsafeContentTemplateView {
     const template = document.createElement('template');
     template.innerHTML = this._content;
     return new UnsafeContentTemplateView([...template.content.childNodes]);
   }
 
-  isSameTemplate(other: Template<null>): boolean {
+  isSameTemplate(other: Template<readonly []>): boolean {
     return (
       other === this ||
       (other instanceof UnsafeHTMLTemplate && this._content === other._content)
@@ -31,7 +34,7 @@ export class UnsafeHTMLTemplate implements Template<null> {
   }
 }
 
-export class UnsafeSVGTemplate implements Template<null> {
+export class UnsafeSVGTemplate implements Template<readonly []> {
   private _content: string;
 
   constructor(content: string) {
@@ -42,7 +45,10 @@ export class UnsafeSVGTemplate implements Template<null> {
     return this._content;
   }
 
-  render(_data: null, _context: DirectiveContext): UnsafeContentTemplateView {
+  render(
+    _data: readonly [],
+    _context: DirectiveContext,
+  ): UnsafeContentTemplateView {
     const template = document.createElement('template');
     template.innerHTML = '<svg>' + this._content + '</svg>';
     return new UnsafeContentTemplateView([
@@ -50,7 +56,7 @@ export class UnsafeSVGTemplate implements Template<null> {
     ]);
   }
 
-  isSameTemplate(other: Template<null>): boolean {
+  isSameTemplate(other: Template<readonly []>): boolean {
     return (
       other === this ||
       (other instanceof UnsafeSVGTemplate && this._content === other._content)
@@ -58,7 +64,7 @@ export class UnsafeSVGTemplate implements Template<null> {
   }
 }
 
-export class UnsafeContentTemplateView implements TemplateView<null> {
+export class UnsafeContentTemplateView implements TemplateView<readonly []> {
   private _childNodes: ChildNode[] = [];
 
   constructor(childNodes: ChildNode[]) {
@@ -79,7 +85,7 @@ export class UnsafeContentTemplateView implements TemplateView<null> {
 
   connect(_context: UpdateContext): void {}
 
-  bind(_data: null, _context: UpdateContext): void {}
+  bind(_data: readonly [], _context: UpdateContext): void {}
 
   unbind(_context: UpdateContext): void {}
 

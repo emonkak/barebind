@@ -29,7 +29,7 @@ describe('UnsafeHTMLTemplate', () => {
       const template = new UnsafeHTMLTemplate(
         '<em>foo</em>bar<strong>baz</strong>',
       );
-      const view = template.render(null, context);
+      const view = template.render([], context);
 
       expect(view.startNode).toBe(view.childNodes[0]);
       expect(view.endNode).toBe(view.childNodes.at(-1));
@@ -48,7 +48,7 @@ describe('UnsafeHTMLTemplate', () => {
       );
 
       const template = new UnsafeHTMLTemplate('');
-      const view = template.render(null, context);
+      const view = template.render([], context);
 
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
@@ -100,7 +100,7 @@ describe('UnsafeSVGTemplate', () => {
       const template = new UnsafeSVGTemplate(
         '<circle r="10" /><text>foo</text><rect witdh="10" height="10" />',
       );
-      const view = template.render(null, context);
+      const view = template.render([], context);
 
       expect(view.startNode).toBe(view.childNodes[0]);
       expect(view.endNode).toBe(view.childNodes.at(-1));
@@ -119,7 +119,7 @@ describe('UnsafeSVGTemplate', () => {
       );
 
       const template = new UnsafeSVGTemplate('');
-      const view = template.render(null, context);
+      const view = template.render([], context);
 
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
@@ -162,7 +162,7 @@ describe('UnsafeContentTemplateView', () => {
       const view = new UnsafeContentTemplateView([]);
 
       view.connect(context);
-      view.bind(null, context);
+      view.bind([], context);
 
       expect(context.isPending()).toBe(false);
     });
@@ -217,7 +217,7 @@ describe('UnsafeContentTemplateView', () => {
       const template = new UnsafeHTMLTemplate(
         '<em>foo</em>bar<strong>baz</strong>',
       );
-      const view = template.render(null, context);
+      const view = template.render([], context);
 
       container.appendChild(part.node);
       view.mount(part);

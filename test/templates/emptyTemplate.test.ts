@@ -25,7 +25,7 @@ describe('EmptyTemplate', () => {
         new MockBlock(),
       );
 
-      const view = EmptyTemplate.instance.render(null, context);
+      const view = EmptyTemplate.instance.render([], context);
 
       expect(view).toBeInstanceOf(EmptyTemplateView);
       expect(view.startNode).toBe(null);
@@ -69,7 +69,7 @@ describe('EmptyTemplateView', () => {
 
       const view = new EmptyTemplateView();
 
-      view.bind(null, context);
+      view.bind([], context);
 
       expect(context.isPending()).toBe(false);
     });

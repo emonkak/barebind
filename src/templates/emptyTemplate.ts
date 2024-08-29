@@ -6,7 +6,7 @@ import type {
   UpdateContext,
 } from '../baseTypes.js';
 
-export class EmptyTemplate implements Template<null> {
+export class EmptyTemplate implements Template<readonly []> {
   static readonly instance = new EmptyTemplate();
 
   private constructor() {
@@ -15,16 +15,16 @@ export class EmptyTemplate implements Template<null> {
     }
   }
 
-  render(_data: null, _context: DirectiveContext): EmptyTemplateView {
+  render(_data: readonly [], _context: DirectiveContext): EmptyTemplateView {
     return new EmptyTemplateView();
   }
 
-  isSameTemplate(other: Template<null>): boolean {
+  isSameTemplate(other: Template<readonly []>): boolean {
     return other === this;
   }
 }
 
-export class EmptyTemplateView implements TemplateView<null> {
+export class EmptyTemplateView implements TemplateView<readonly []> {
   get startNode(): null {
     return null;
   }
@@ -35,7 +35,7 @@ export class EmptyTemplateView implements TemplateView<null> {
 
   connect(_context: UpdateContext): void {}
 
-  bind(_data: null, _context: UpdateContext): void {}
+  bind(_data: readonly [], _context: UpdateContext): void {}
 
   unbind(_context: UpdateContext): void {}
 

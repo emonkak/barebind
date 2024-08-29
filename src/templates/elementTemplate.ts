@@ -10,13 +10,8 @@ import {
   resolveBinding,
 } from '../baseTypes.js';
 
-export interface ElementData<TElementValue, TChildValue> {
-  elementValue: TElementValue;
-  childValue: TChildValue;
-}
-
 export class ElementTemplate<TElementValue, TChildValue>
-  implements Template<ElementData<TElementValue, TChildValue>>
+  implements Template<readonly [TElementValue, TChildValue]>
 {
   private readonly _type: string;
 
@@ -36,9 +31,10 @@ export class ElementTemplate<TElementValue, TChildValue>
   }
 
   render(
-    data: ElementData<TElementValue, TChildValue>,
+    data: readonly [TElementValue, TChildValue],
     context: DirectiveContext,
   ): ElementTemplateView<TElementValue, TChildValue> {
+    const [elementValue, childValue] = data;
     const elementPart = {
       type: PartType.Element,
       node:
@@ -52,23 +48,19 @@ export class ElementTemplate<TElementValue, TChildValue>
     } as const;
 
     DEBUG: {
-      childPart.node.data = nameOf(data.childValue);
+      childPart.node.data = nameOf(childValue);
     }
 
     elementPart.node.appendChild(childPart.node);
 
-    const elementBinding = resolveBinding(
-      data.elementValue,
-      elementPart,
-      context,
-    );
-    const childBinding = resolveBinding(data.childValue, childPart, context);
+    const elementBinding = resolveBinding(elementValue, elementPart, context);
+    const childBinding = resolveBinding(childValue, childPart, context);
 
     return new ElementTemplateView(elementBinding, childBinding);
   }
 
   isSameTemplate(
-    other: Template<ElementData<TElementValue, TChildValue>>,
+    other: Template<readonly [TElementValue, TChildValue]>,
   ): boolean {
     return (
       other === this ||
@@ -80,7 +72,7 @@ export class ElementTemplate<TElementValue, TChildValue>
 }
 
 export class ElementTemplateView<TElementValue, TChildValue>
-  implements TemplateView<ElementData<TElementValue, TChildValue>>
+  implements TemplateView<readonly [TElementValue, TChildValue]>
 {
   private readonly _elementBinding: Binding<TElementValue>;
 
@@ -116,11 +108,12 @@ export class ElementTemplateView<TElementValue, TChildValue>
   }
 
   bind(
-    data: ElementData<TElementValue, TChildValue>,
+    data: readonly [TElementValue, TChildValue],
     context: UpdateContext,
   ): void {
-    this._elementBinding.bind(data.elementValue, context);
-    this._childBinding.bind(data.childValue, context);
+    const [elementValue, childValue] = data;
+    this._elementBinding.bind(elementValue, context);
+    this._childBinding.bind(childValue, context);
   }
 
   unbind(context: UpdateContext) {
