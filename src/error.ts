@@ -68,12 +68,12 @@ export function reportPart(part: Part): string {
     return (
       openTag(parentNode) +
       beforePart +
-      formatPart(part) +
+      markPart(part) +
       afterPart +
       closeTag(parentNode)
     );
   } else {
-    return formatPart(part);
+    return markPart(part);
   }
 }
 
@@ -102,7 +102,11 @@ function escapeHTML(s: string): string {
   return new Option(s).innerHTML;
 }
 
-function formatPart(part: Part): string {
+function isSelfClosingTag(element: Element): boolean {
+  return !element.outerHTML.endsWith(closeTag(element));
+}
+
+function markPart(part: Part): string {
   switch (part.type) {
     case PartType.Attribute:
       return addAttributes(
@@ -126,10 +130,6 @@ function formatPart(part: Part): string {
     case PartType.Node:
       return REPORT_MARKER;
   }
-}
-
-function isSelfClosingTag(element: Element): boolean {
-  return !element.outerHTML.endsWith(closeTag(element));
 }
 
 function oneOf(choices: string[]): string {
