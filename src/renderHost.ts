@@ -8,6 +8,7 @@ import {
   PartType,
   type RenderHost,
   type TaskPriority,
+  type Template,
   UpdateContext,
   type UpdateQueue,
   type Updater,
@@ -21,6 +22,7 @@ import { EventBinding } from './bindings/event.js';
 import { NodeBinding } from './bindings/node.js';
 import { PropertyBinding } from './bindings/property.js';
 import { RenderContext } from './renderContext.js';
+import { LazyTemplate } from './templates/lazyTemplate.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 
 export interface ClientRenderHostOptions {
@@ -44,7 +46,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
 
   private readonly _cachedTemplates: WeakMap<
     TemplateStringsArray,
-    TaggedTemplate<readonly any[]>
+    Template<readonly any[], RenderContext>
   > = new WeakMap();
 
   private _name: string;
@@ -130,12 +132,14 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   getHTMLTemplate<TData extends readonly any[]>(
     tokens: TemplateStringsArray,
     data: TData,
-  ): TaggedTemplate<TData> {
+  ): Template<TData, RenderContext> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
       const marker = getMarker(this._name);
-      template = TaggedTemplate.parseHTML(tokens, data, marker);
+      template = new LazyTemplate(() =>
+        TaggedTemplate.parseHTML(tokens, data, marker),
+      );
       this._cachedTemplates.set(tokens, template);
     }
 
@@ -160,12 +164,14 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   getSVGTemplate<TData extends readonly any[]>(
     tokens: TemplateStringsArray,
     data: TData,
-  ): TaggedTemplate<TData> {
+  ): Template<TData, RenderContext> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
       const marker = getMarker(this._name);
-      template = TaggedTemplate.parseSVG(tokens, data, marker);
+      template = new LazyTemplate(() =>
+        TaggedTemplate.parseSVG(tokens, data, marker),
+      );
       this._cachedTemplates.set(tokens, template);
     }
 

@@ -98,10 +98,6 @@ export class MockTemplate<TData, TContext>
   ): MockTemplateView<TData, TContext> {
     return new MockTemplateView(data);
   }
-
-  isSameTemplate(other: Template<TData, TContext>): boolean {
-    return other === this;
-  }
 }
 
 export class MockTemplateView<TData, TContext>

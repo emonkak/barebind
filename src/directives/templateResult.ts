@@ -21,6 +21,26 @@ export type TemplateResult<TData, TContext> =
   | EagerTemplateResult<TData, TContext>
   | LazyTemplateResult<TData, TContext>;
 
+export function eagerTemplateResult<
+  const TData extends readonly any[],
+  TContext,
+>(
+  template: Template<TData, TContext>,
+  ...data: TData
+): EagerTemplateResult<TData, TContext> {
+  return new EagerTemplateResult(template, data);
+}
+
+export function lazyTemplateResult<
+  const TData extends readonly any[],
+  TContext,
+>(
+  template: Template<TData, TContext>,
+  ...data: TData
+): LazyTemplateResult<TData, TContext> {
+  return new LazyTemplateResult(template, data);
+}
+
 export class EagerTemplateResult<TData, TContext>
   implements TemplateDirective<TData, TContext>
 {
@@ -164,7 +184,7 @@ export class TemplateResultBinding<TData, TContext>
     const { template, data } = newValue;
 
     if (this._pendingView !== null) {
-      if (this._value.template.isSameTemplate(template)) {
+      if (this._value.template === template) {
         // Here we use the same template as before. However the view may have
         // been unmounted. If so, we have to remount it.
         if (this._pendingView !== this._memoizedView) {

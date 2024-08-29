@@ -18,10 +18,6 @@ export class EmptyTemplate implements Template<readonly []> {
   render(_data: readonly [], _context: DirectiveContext): EmptyTemplateView {
     return new EmptyTemplateView();
   }
-
-  isSameTemplate(other: Template<readonly []>): boolean {
-    return other === this;
-  }
 }
 
 export class EmptyTemplateView implements TemplateView<readonly []> {

@@ -19,21 +19,7 @@ import {
   createUpdateQueue,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
-import {
-  EagerTemplateResult,
-  LazyTemplateResult,
-} from './directives/templateResult.js';
-import {
-  ElementTemplate,
-  type ElementTemplateOptions,
-} from './templates/elementTemplate.js';
-import { EmptyTemplate } from './templates/emptyTemplate.js';
-import { LazyTemplate } from './templates/lazyTemplate.js';
-import { ChildValueTemplate, TextTemplate } from './templates/partTemplate.js';
-import {
-  UnsafeHTMLTemplate,
-  UnsafeSVGTemplate,
-} from './templates/unsafeContentTemplate.js';
+import { LazyTemplateResult } from './directives/templateResult.js';
 
 export const usableTag = Symbol('Usable');
 
@@ -119,11 +105,6 @@ export class RenderContext {
     return this._queue;
   }
 
-  childValue<T>(value: T): EagerTemplateResult<readonly [T], RenderContext> {
-    const template = ChildValueTemplate.instance;
-    return new EagerTemplateResult(template, [value]);
-  }
-
   /**
    * @internal
    */
@@ -135,24 +116,6 @@ export class RenderContext {
       this._queue,
       this._hooks,
     );
-  }
-
-  element<TElementValue, TChildValue>(
-    type: string,
-    elementValue: TElementValue,
-    childValue: TChildValue,
-    options?: ElementTemplateOptions,
-  ): EagerTemplateResult<readonly [TElementValue, TChildValue], RenderContext> {
-    const template = new ElementTemplate<TElementValue, TChildValue>(
-      type,
-      options,
-    );
-    return new EagerTemplateResult(template, [elementValue, childValue]);
-  }
-
-  empty(): EagerTemplateResult<readonly [], RenderContext> {
-    const template = EmptyTemplate.instance;
-    return new EagerTemplateResult(template, []);
   }
 
   /**
@@ -199,10 +162,7 @@ export class RenderContext {
     tokens: TemplateStringsArray,
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
-    const host = this._host;
-    const template = new LazyTemplate(tokens, () =>
-      host.getHTMLTemplate(tokens, data),
-    );
+    const template = this._host.getHTMLTemplate(tokens, data);
     return new LazyTemplateResult(template, data);
   }
 
@@ -222,26 +182,8 @@ export class RenderContext {
     tokens: TemplateStringsArray,
     ...data: TData
   ): LazyTemplateResult<TData, RenderContext> {
-    const host = this._host;
-    const template = new LazyTemplate(tokens, () =>
-      host.getSVGTemplate(tokens, data),
-    );
+    const template = this._host.getSVGTemplate(tokens, data);
     return new LazyTemplateResult(template, data);
-  }
-
-  text<T>(value: T): EagerTemplateResult<readonly [T], RenderContext> {
-    const template = TextTemplate.instance;
-    return new EagerTemplateResult(template, [value]);
-  }
-
-  unsafeHTML(content: string): LazyTemplateResult<readonly [], RenderContext> {
-    const template = new UnsafeHTMLTemplate(content);
-    return new LazyTemplateResult(template, []);
-  }
-
-  unsafeSVG(content: string): LazyTemplateResult<readonly [], RenderContext> {
-    const template = new UnsafeSVGTemplate(content);
-    return new LazyTemplateResult(template, []);
   }
 
   use<

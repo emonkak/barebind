@@ -1,5 +1,9 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { classMap } from '@emonkak/ebit/directives.js';
+import {
+  EmptyTemplate,
+  type RenderContext,
+  type TemplateDirective,
+} from '@emonkak/ebit';
+import { classMap, eagerTemplateResult } from '@emonkak/ebit/directives.js';
 
 import { TodoFilter, TodoState } from './state.js';
 
@@ -17,7 +21,7 @@ export function Footer(
   ]);
 
   if (todos.length === 0) {
-    return context.empty();
+    return eagerTemplateResult(EmptyTemplate.instance);
   }
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {

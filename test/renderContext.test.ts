@@ -2,17 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
-import { ElementTemplate } from '../src/templates/elementTemplate.js';
-import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
-import { LazyTemplate } from '../src/templates/lazyTemplate.js';
-import {
-  ChildValueTemplate,
-  TextTemplate,
-} from '../src/templates/partTemplate.js';
-import {
-  UnsafeHTMLTemplate,
-  UnsafeSVGTemplate,
-} from '../src/templates/unsafeContentTemplate.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -36,74 +25,6 @@ describe('RenderContext', () => {
       expect(context.block).toBe(block);
       expect(context.queue).toBe(queue);
       expect(context.hooks).toBe(hooks);
-    });
-  });
-
-  describe('.childValue()', () => {
-    it('should create a TemplateResult with ChildValueTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = 'foo';
-      const { template, data } = context.childValue(value);
-
-      expect(template).toBeInstanceOf(ChildValueTemplate);
-      expect(data).toStrictEqual([value]);
-    });
-  });
-
-  describe('.element()', () => {
-    it('should create a TemplateResult with ElementTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-      const value = context.element('div', { class: 'foo', id: 'bar' }, 'baz');
-
-      expect(value.template).toBeInstanceOf(ElementTemplate);
-      expect((value.template as ElementTemplate<any, any>).type).toBe('div');
-      expect(
-        (value.template as ElementTemplate<any, any>).options,
-      ).toStrictEqual({});
-      expect(value.data).toStrictEqual([{ class: 'foo', id: 'bar' }, 'baz']);
-    });
-
-    it('should create a TemplateResult with ElementTemplate with a certain namespace', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-      const value = context.element('div', { class: 'foo', id: 'bar' }, 'baz', {
-        namespace: 'http://www.w3.org/1999/xhtml',
-      });
-
-      expect(value.template).toBeInstanceOf(ElementTemplate);
-      expect((value.template as ElementTemplate<any, any>).type).toBe('div');
-      expect(
-        (value.template as ElementTemplate<any, any>).options,
-      ).toStrictEqual({
-        namespace: 'http://www.w3.org/1999/xhtml',
-      });
-      expect(value.data).toEqual([{ class: 'foo', id: 'bar' }, 'baz']);
-    });
-  });
-
-  describe('.empty()', () => {
-    it('should create a TemplateResult with EmptyTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-      const value = context.empty();
-
-      expect(value.template).toBe(EmptyTemplate.instance);
-      expect(value.data).toStrictEqual([]);
     });
   });
 
@@ -254,13 +175,7 @@ describe('RenderContext', () => {
       const { template, data } =
         context.html`<div class=${0}>Hello, ${1}!</div>`;
 
-      expect(template).toBeInstanceOf(LazyTemplate);
-      expect(
-        (template as LazyTemplate<any, any, any>).templateFactory.call(null),
-      ).toBeInstanceOf(MockTemplate);
-      expect((template as LazyTemplate<any, any, any>).key).toStrictEqual(
-        strings`<div class=${0}>Hello, ${1}!</div>`,
-      );
+      expect(template).toBeInstanceOf(MockTemplate);
       expect(data).toStrictEqual([0, 1]);
       expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
@@ -336,64 +251,9 @@ describe('RenderContext', () => {
       const { template, data } =
         context.svg`<text x=${0} y=${1}>Hello, ${2}!</text>`;
 
-      expect(template).toBeInstanceOf(LazyTemplate);
-      expect(
-        (template as LazyTemplate<any, any, any>).templateFactory.call(null),
-      ).toBeInstanceOf(MockTemplate);
-      expect((template as LazyTemplate<any, any, any>).key).toStrictEqual(
-        strings`<text x=${0} y=${1}>Hello, ${2}!</text>`,
-      );
+      expect(template).toBeInstanceOf(MockTemplate);
       expect(data).toStrictEqual([0, 1, 2]);
       expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.text()', () => {
-    it('should create a TemplateResult with TextTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = context.text('foo');
-
-      expect(value.template).toBe(TextTemplate.instance);
-      expect(value.data).toStrictEqual(['foo']);
-    });
-  });
-
-  describe('.unsafeHTML()', () => {
-    it('should create a LazyTemplateResult with UnsafeHTMLTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const content = '<div>foo</div>';
-      const value = context.unsafeHTML(content);
-
-      expect(value.template).toBeInstanceOf(UnsafeHTMLTemplate);
-      expect((value.template as UnsafeHTMLTemplate).content).toBe(content);
-      expect(value.data).toStrictEqual([]);
-    });
-  });
-
-  describe('.unsafeSVG()', () => {
-    it('should create a LazyTemplateResult with UnsafeSVGTemplate', () => {
-      const context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const content = '<text>foo</text>';
-      const value = context.unsafeSVG(content);
-
-      expect(value.template).toBeInstanceOf(UnsafeSVGTemplate);
-      expect((value.template as UnsafeSVGTemplate).content).toBe(content);
-      expect(value.data).toStrictEqual([]);
     });
   });
 
@@ -1228,10 +1088,3 @@ describe('RenderContext', () => {
     });
   });
 });
-
-function strings(
-  strings: TemplateStringsArray,
-  ..._values: unknown[]
-): TemplateStringsArray {
-  return strings;
-}

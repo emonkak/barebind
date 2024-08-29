@@ -9,7 +9,6 @@ import {
   nameOf,
   resolveBinding,
 } from '../baseTypes.js';
-import { shallowEqual } from '../compare.js';
 
 export type ElementTemplateOptions = ElementCreationOptions & {
   namespace?: string;
@@ -60,17 +59,6 @@ export class ElementTemplate<TElementValue, TChildValue>
 
     return new ElementTemplateView(elementBinding, childBinding);
   }
-
-  isSameTemplate(
-    other: Template<readonly [TElementValue, TChildValue]>,
-  ): boolean {
-    return (
-      other === this ||
-      (other instanceof ElementTemplate &&
-        other._type === this._type &&
-        shallowEqual(other._options, this._options))
-    );
-  }
 }
 
 export class ElementTemplateView<TElementValue, TChildValue>
@@ -114,6 +102,9 @@ export class ElementTemplateView<TElementValue, TChildValue>
     context: UpdateContext,
   ): void {
     const [elementValue, childValue] = data;
+    DEBUG: {
+      (this._childBinding.part as ChildNodePart).node.data = nameOf(childValue);
+    }
     this._elementBinding.bind(elementValue, context);
     this._childBinding.bind(childValue, context);
   }

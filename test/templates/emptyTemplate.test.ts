@@ -32,14 +32,6 @@ describe('EmptyTemplate', () => {
       expect(view.endNode).toBe(null);
     });
   });
-
-  describe('.isSameTemplate', () => {
-    it('should return true always since the instance is a singleton', () => {
-      expect(
-        EmptyTemplate.instance.isSameTemplate(EmptyTemplate.instance),
-      ).toBe(true);
-    });
-  });
 });
 
 describe('EmptyTemplateView', () => {

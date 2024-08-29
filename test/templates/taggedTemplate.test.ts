@@ -3,7 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type Part,
   PartType,
-  type Template,
   UpdateContext,
   directiveTag,
 } from '../../src/baseTypes.js';
@@ -470,23 +469,6 @@ describe('TaggedTemplate', () => {
       expect(() => {
         template.render(data, context);
       }).toThrow('There may be multiple holes indicating the same attribute.');
-    });
-  });
-
-  describe('.isSameTemplate()', () => {
-    it('should return whether the template is the same as the other template', () => {
-      const { template: template1 } = html`
-        <div></div>
-      `;
-      const { template: template2 } = html`
-        <div></div>
-      `;
-
-      expect(template1.isSameTemplate(template1)).toBe(true);
-      expect(template1.isSameTemplate(template2)).toBe(false);
-      expect(template1.isSameTemplate({} as Template<unknown, unknown>)).toBe(
-        false,
-      );
     });
   });
 });

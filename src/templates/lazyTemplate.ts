@@ -1,19 +1,14 @@
 import type { DirectiveContext, Template, TemplateView } from '../baseTypes.js';
 
-export class LazyTemplate<TKey, TData, TContext>
+export class LazyTemplate<TData, TContext>
   implements Template<TData, TContext>
 {
-  readonly _key: TKey;
+  private readonly _templateFactory: () => Template<TData, TContext>;
 
-  readonly _templateFactory: () => Template<TData, TContext>;
+  private _memoizedTemplate: Template<TData, TContext> | null = null;
 
-  constructor(key: TKey, templateFactory: () => Template<TData, TContext>) {
-    this._key = key;
+  constructor(templateFactory: () => Template<TData, TContext>) {
     this._templateFactory = templateFactory;
-  }
-
-  get key(): TKey {
-    return this._key;
   }
 
   get templateFactory(): () => Template<TData, TContext> {
@@ -24,11 +19,10 @@ export class LazyTemplate<TKey, TData, TContext>
     data: TData,
     context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext> {
-    const templateFactory = this._templateFactory;
-    return templateFactory().render(data, context);
-  }
-
-  isSameTemplate(other: Template<TData>): boolean {
-    return other instanceof LazyTemplate && this._key === other._key;
+    if (this._memoizedTemplate === null) {
+      const templateFactory = this._templateFactory;
+      this._memoizedTemplate = templateFactory();
+    }
+    return this._memoizedTemplate.render(data, context);
   }
 }

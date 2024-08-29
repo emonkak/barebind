@@ -55,28 +55,6 @@ describe('UnsafeHTMLTemplate', () => {
       expect(view.childNodes.map(toHTML)).toStrictEqual([]);
     });
   });
-
-  describe('.isSameTemplate', () => {
-    it('should return true if the content is the same', () => {
-      const content1 = '<span>foo</span>';
-      const content2 = '<span>bar</span>';
-      expect(
-        new UnsafeHTMLTemplate(content1).isSameTemplate(
-          new UnsafeHTMLTemplate(content1),
-        ),
-      ).toBe(true);
-      expect(
-        new UnsafeHTMLTemplate(content1).isSameTemplate(
-          new UnsafeHTMLTemplate(content2),
-        ),
-      ).toBe(false);
-      expect(
-        new UnsafeHTMLTemplate(content1).isSameTemplate(
-          new UnsafeSVGTemplate(content1),
-        ),
-      ).toBe(false);
-    });
-  });
 });
 
 describe('UnsafeSVGTemplate', () => {
@@ -124,28 +102,6 @@ describe('UnsafeSVGTemplate', () => {
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
       expect(view.childNodes.map(toHTML)).toStrictEqual([]);
-    });
-  });
-
-  describe('.isSameTemplate', () => {
-    it('should return true if the content is the same', () => {
-      const content1 = '<text>foo</text>';
-      const content2 = '<text>bar</text>';
-      expect(
-        new UnsafeSVGTemplate(content1).isSameTemplate(
-          new UnsafeSVGTemplate(content1),
-        ),
-      ).toBe(true);
-      expect(
-        new UnsafeSVGTemplate(content1).isSameTemplate(
-          new UnsafeSVGTemplate(content2),
-        ),
-      ).toBe(false);
-      expect(
-        new UnsafeSVGTemplate(content1).isSameTemplate(
-          new UnsafeHTMLTemplate(content1),
-        ),
-      ).toBe(false);
     });
   });
 });

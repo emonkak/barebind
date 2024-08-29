@@ -69,7 +69,7 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
   'u',
 );
 
-export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
+export class TaggedTemplate<TData extends readonly any[]>
   implements Template<TData>
 {
   static parseHTML<TData extends readonly any[]>(
@@ -212,10 +212,6 @@ export class TaggedTemplate<TData extends readonly any[] = readonly any[]>
 
     return new TaggedTemplateView(bindings, childNodes);
   }
-
-  isSameTemplate(other: Template<TData>): boolean {
-    return other === this;
-  }
 }
 
 export class TaggedTemplateView<TData extends readonly any[]>
@@ -314,8 +310,8 @@ export class TaggedTemplateView<TData extends readonly any[]>
   }
 }
 
-export function getMarker(secretString: string): string {
-  return '??' + secretString + '??';
+export function getMarker(randomString: string): string {
+  return '??' + randomString + '??';
 }
 
 export function isValidMarker(marker: string): boolean {
@@ -402,7 +398,6 @@ function parseAttribtues(
           );
         }
       }
-
       continue;
     }
 

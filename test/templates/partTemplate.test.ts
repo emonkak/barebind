@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/bindings/node.js';
 import {
-  ChildValueTemplate,
+  ChildTemplate,
   PartTemplateView,
   TextTemplate,
 } from '../../src/templates/partTemplate.js';
@@ -15,15 +15,7 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-describe('ChildValueTemplate', () => {
-  describe('.constructor()', () => {
-    it('should throw an error from being called directly', () => {
-      expect(() => new (ChildValueTemplate as any)()).toThrow(
-        'ChildValueTemplate constructor cannot be called directly.',
-      );
-    });
-  });
-
+describe('ChildTemplate', () => {
   describe('.render()', () => {
     it('should create a new PartTemplateView', () => {
       const context = new UpdateContext(
@@ -33,7 +25,7 @@ describe('ChildValueTemplate', () => {
       );
 
       const data = [new TextDirective('foo')] as const;
-      const view = ChildValueTemplate.instance.render(data, context);
+      const view = new ChildTemplate().render(data, context);
 
       context.flushUpdate();
 
@@ -46,14 +38,6 @@ describe('ChildValueTemplate', () => {
       expect(view.binding.part.node.nodeValue).toBe('TextDirective');
       expect(view.startNode).toBe(view.binding.startNode);
       expect(view.endNode).toBe(view.binding.endNode);
-    });
-  });
-
-  describe('.isSameTemplate()', () => {
-    it('should return true always since the instance is a singleton', () => {
-      expect(
-        ChildValueTemplate.instance.isSameTemplate(ChildValueTemplate.instance),
-      ).toBe(true);
     });
   });
 });
@@ -89,14 +73,6 @@ describe('TextTemplate', () => {
       expect(view.endNode).toBe(view.binding.endNode);
     });
   });
-
-  describe('.isSameTemplate', () => {
-    it('should return true always since the instance is a singleton', () => {
-      expect(TextTemplate.instance.isSameTemplate(TextTemplate.instance)).toBe(
-        true,
-      );
-    });
-  });
 });
 
 describe('PartTemplateView', () => {
@@ -127,7 +103,31 @@ describe('PartTemplateView', () => {
   });
 
   describe('.bind()', () => {
-    it('should bind a new value to the binding', () => {
+    it('should bind a new string to NodeBinding', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const data1 = ['foo'] as [string];
+      const data2 = ['bar'] as [string];
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new NodeBinding(data1[0], part);
+      const view = new PartTemplateView(binding);
+
+      const bindSpy = vi.spyOn(binding, 'bind');
+
+      view.bind(data2, context);
+
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(data2[0], context);
+    });
+
+    it('should bind a new TextDirective to TextBinding', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),

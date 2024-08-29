@@ -1,5 +1,13 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
-import { component, when } from '@emonkak/ebit/directives.js';
+import {
+  ChildTemplate,
+  type RenderContext,
+  type TemplateDirective,
+} from '@emonkak/ebit';
+import {
+  component,
+  eagerTemplateResult,
+  when,
+} from '@emonkak/ebit/directives.js';
 
 import { ItemState } from '../state.js';
 import { ItemView } from './ItemView.js';
@@ -18,6 +26,7 @@ export function ItemPage(
     state.error$,
     state.isLoading$,
   ]);
+  const childTemplate = context.useMemo(() => new ChildTemplate(), []);
 
   context.useEffect(() => {
     if (state.item$.value === null || state.item$.value.id !== id) {
@@ -33,7 +42,8 @@ export function ItemPage(
     `;
   }
 
-  return context.childValue(
+  return eagerTemplateResult(
+    childTemplate,
     when(!isLoading && item !== null, () =>
       component(ItemView, { item: item! }),
     ),

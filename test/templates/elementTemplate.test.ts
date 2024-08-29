@@ -57,39 +57,6 @@ describe('ElementTemplate', () => {
       expect(view.endNode).toBe(view.elementBinding.endNode);
     });
   });
-
-  describe('.isSameTemplate()', () => {
-    it('should return true if an instance is the same', () => {
-      const template = new ElementTemplate('div');
-      expect(template.isSameTemplate(template)).toBe(true);
-    });
-
-    it('should return true if type and namespace are the same', () => {
-      expect(
-        new ElementTemplate('div').isSameTemplate(new ElementTemplate('div')),
-      ).toBe(true);
-      expect(
-        new ElementTemplate('div', {
-          namespace: 'http://www.w3.org/1999/xhtml',
-        }).isSameTemplate(
-          new ElementTemplate('div', {
-            namespace: 'http://www.w3.org/1999/xhtml',
-          }),
-        ),
-      ).toBe(true);
-    });
-
-    it('should return false if type and namespace are not the same', () => {
-      expect(
-        new ElementTemplate('div').isSameTemplate(new ElementTemplate('p')),
-      ).toBe(false);
-      expect(
-        new ElementTemplate('div', {
-          namespace: 'http://www.w3.org/1999/xhtml',
-        }).isSameTemplate(new ElementTemplate('div')),
-      ).toBe(false);
-    });
-  });
 });
 
 describe('ElementTemplateView', () => {

@@ -13,6 +13,8 @@ import { EventBinding } from '../src/bindings/event.js';
 import { NodeBinding } from '../src/bindings/node.js';
 import { PropertyBinding } from '../src/bindings/property.js';
 import { ClientRenderHost } from '../src/renderHost.js';
+import { LazyTemplate } from '../src/templates/lazyTemplate.js';
+import { TaggedTemplate } from '../src/templates/taggedTemplate.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import { MockBlock, TextDirective } from './mocks.js';
 
@@ -153,10 +155,23 @@ describe('ClientRenderHost', () => {
     it('should create a HTML template from tokens', () => {
       const host = new ClientRenderHost();
       const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = host.getHTMLTemplate(tokens, data);
+      const lazyTemplate = host.getHTMLTemplate(tokens, data) as LazyTemplate<
+        unknown[],
+        unknown
+      >;
 
+      expect(lazyTemplate).toBeInstanceOf(LazyTemplate);
+
+      const template = lazyTemplate.templateFactory() as TaggedTemplate<
+        unknown[]
+      >;
+
+      expect(template).toBeInstanceOf(TaggedTemplate);
       expect(template.holes).toStrictEqual([{ type: PartType.Node, index: 2 }]);
       expect(template.element.innerHTML).toBe('<div>Hello, !</div>');
+      expect(template.element.content.firstElementChild?.namespaceURI).toBe(
+        'http://www.w3.org/1999/xhtml',
+      );
     });
 
     it('should get a HTML template from cache if avaiable', () => {
@@ -172,8 +187,18 @@ describe('ClientRenderHost', () => {
     it('should create a SVG template from tokens', () => {
       const host = new ClientRenderHost();
       const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
-      const template = host.getSVGTemplate(tokens, data);
+      const lazyTemplate = host.getSVGTemplate(tokens, data) as LazyTemplate<
+        unknown[],
+        unknown
+      >;
 
+      expect(lazyTemplate).toBeInstanceOf(LazyTemplate);
+
+      const template = lazyTemplate.templateFactory() as TaggedTemplate<
+        unknown[]
+      >;
+
+      expect(template).toBeInstanceOf(TaggedTemplate);
       expect(template.holes).toStrictEqual([{ type: PartType.Node, index: 2 }]);
       expect(template.element.innerHTML).toBe('<text>Hello, !</text>');
       expect(template.element.content.firstElementChild?.namespaceURI).toBe(

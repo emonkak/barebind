@@ -10,17 +10,7 @@ import {
   resolveBinding,
 } from '../baseTypes.js';
 
-export class ChildValueTemplate<T> implements Template<readonly [T]> {
-  static readonly instance = new ChildValueTemplate<any>();
-
-  private constructor() {
-    if (ChildValueTemplate.instance !== undefined) {
-      throw new Error(
-        'ChildValueTemplate constructor cannot be called directly.',
-      );
-    }
-  }
-
+export class ChildTemplate<T> implements Template<readonly [T]> {
   render(data: readonly [T], context: DirectiveContext): PartTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
@@ -32,10 +22,6 @@ export class ChildValueTemplate<T> implements Template<readonly [T]> {
       part.node.nodeValue = nameOf(value);
     }
     return new PartTemplateView(binding);
-  }
-
-  isSameTemplate(other: Template<[T]>): boolean {
-    return other === this;
   }
 }
 
@@ -55,10 +41,6 @@ export class TextTemplate<T> implements Template<readonly [T]> {
     } as const;
     const binding = resolveBinding(data[0], part, context);
     return new PartTemplateView(binding);
-  }
-
-  isSameTemplate(other: Template<readonly [T]>): boolean {
-    return other === this;
   }
 }
 
@@ -86,7 +68,13 @@ export class PartTemplateView<T> implements TemplateView<readonly [T]> {
   }
 
   bind(data: readonly [T], context: UpdateContext): void {
-    this._binding.bind(data[0], context);
+    const binding = this._binding;
+    DEBUG: {
+      if (binding.part.type === PartType.ChildNode) {
+        binding.part.node.data = nameOf(data[0]);
+      }
+    }
+    binding.bind(data[0], context);
   }
 
   unbind(context: UpdateContext): void {
