@@ -144,7 +144,7 @@ describe('ClientRenderHost', () => {
     it('should return the unpredictable host name', () => {
       expect(
         new ClientRenderHost({
-          name: '__test__',
+          hostName: '__test__',
         }).getHostName(),
       ).toBe('__test__');
       expect(new ClientRenderHost().getHostName()).toMatch(/^[0-9a-z]+$/);

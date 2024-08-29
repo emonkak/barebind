@@ -26,7 +26,7 @@ import { LazyTemplate } from './templates/lazyTemplate.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 
 export interface ClientRenderHostOptions {
-  name?: string;
+  hostName?: string;
   constants?: Map<unknown, unknown>;
 }
 
@@ -49,15 +49,15 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     Template<readonly any[], RenderContext>
   > = new WeakMap();
 
-  private _name: string;
+  private _hostName: string;
 
   private _idCounter = 0;
 
   constructor({
-    name = getRandomString(8),
+    hostName = getRandomString(8),
     constants = new Map(),
   }: ClientRenderHostOptions = {}) {
-    this._name = name;
+    this._hostName = hostName;
     this._constants = constants;
   }
 
@@ -126,7 +126,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 
   getHostName(): string {
-    return this._name;
+    return this._hostName;
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
@@ -136,7 +136,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
-      const marker = getMarker(this._name);
+      const marker = getMarker(this._hostName);
       template = new LazyTemplate(() =>
         TaggedTemplate.parseHTML(tokens, data, marker),
       );
@@ -168,7 +168,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     let template = this._cachedTemplates.get(tokens);
 
     if (template === undefined) {
-      const marker = getMarker(this._name);
+      const marker = getMarker(this._hostName);
       template = new LazyTemplate(() =>
         TaggedTemplate.parseSVG(tokens, data, marker),
       );
