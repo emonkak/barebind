@@ -23,7 +23,10 @@ import {
   EagerTemplateResult,
   LazyTemplateResult,
 } from './directives/templateResult.js';
-import { ElementTemplate } from './templates/elementTemplate.js';
+import {
+  ElementTemplate,
+  type ElementTemplateOptions,
+} from './templates/elementTemplate.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
 import { ChildValueTemplate, TextTemplate } from './templates/partTemplate.js';
@@ -138,11 +141,11 @@ export class RenderContext {
     type: string,
     elementValue: TElementValue,
     childValue: TChildValue,
-    namespace = '',
+    options?: ElementTemplateOptions,
   ): EagerTemplateResult<readonly [TElementValue, TChildValue], RenderContext> {
     const template = new ElementTemplate<TElementValue, TChildValue>(
       type,
-      namespace,
+      options,
     );
     return new EagerTemplateResult(template, [elementValue, childValue]);
   }

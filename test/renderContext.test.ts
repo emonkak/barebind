@@ -66,7 +66,9 @@ describe('RenderContext', () => {
 
       expect(value.template).toBeInstanceOf(ElementTemplate);
       expect((value.template as ElementTemplate<any, any>).type).toBe('div');
-      expect((value.template as ElementTemplate<any, any>).namespace).toBe('');
+      expect(
+        (value.template as ElementTemplate<any, any>).options,
+      ).toStrictEqual({});
       expect(value.data).toStrictEqual([{ class: 'foo', id: 'bar' }, 'baz']);
     });
 
@@ -76,18 +78,17 @@ describe('RenderContext', () => {
         new SyncUpdater(),
         new MockBlock(),
       );
-      const value = context.element(
-        'div',
-        { class: 'foo', id: 'bar' },
-        'baz',
-        'http://www.w3.org/1999/xhtml',
-      );
+      const value = context.element('div', { class: 'foo', id: 'bar' }, 'baz', {
+        namespace: 'http://www.w3.org/1999/xhtml',
+      });
 
       expect(value.template).toBeInstanceOf(ElementTemplate);
       expect((value.template as ElementTemplate<any, any>).type).toBe('div');
-      expect((value.template as ElementTemplate<any, any>).namespace).toBe(
-        'http://www.w3.org/1999/xhtml',
-      );
+      expect(
+        (value.template as ElementTemplate<any, any>).options,
+      ).toStrictEqual({
+        namespace: 'http://www.w3.org/1999/xhtml',
+      });
       expect(value.data).toEqual([{ class: 'foo', id: 'bar' }, 'baz']);
     });
   });

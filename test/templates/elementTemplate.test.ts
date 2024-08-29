@@ -14,12 +14,11 @@ import {
 describe('ElementTemplate', () => {
   describe('.constructor', () => {
     it('should construct a new ElementTemplate', () => {
-      const template = new ElementTemplate(
-        'div',
-        'http://www.w3.org/1999/xhtml',
-      );
-      expect(template.type).toBe('div');
-      expect(template.namespace).toBe('http://www.w3.org/1999/xhtml');
+      const type = 'div';
+      const options = { namespace: 'http://www.w3.org/1999/xhtml' };
+      const template = new ElementTemplate(type, options);
+      expect(template.type).toBe(type);
+      expect(template.options).toBe(options);
     });
   });
 
@@ -33,10 +32,9 @@ describe('ElementTemplate', () => {
 
       const elementValue = { class: 'foo' };
       const childValue = new TextDirective('bar');
-      const view = new ElementTemplate(
-        'div',
-        'http://www.w3.org/1999/xhtml',
-      ).render([elementValue, childValue], context);
+      const view = new ElementTemplate('div', {
+        namespace: 'http://www.w3.org/1999/xhtml',
+      }).render([elementValue, childValue], context);
 
       expect(context.isPending()).toBe(false);
       expect(view.elementBinding).toBeInstanceOf(ElementBinding);
@@ -71,11 +69,12 @@ describe('ElementTemplate', () => {
         new ElementTemplate('div').isSameTemplate(new ElementTemplate('div')),
       ).toBe(true);
       expect(
-        new ElementTemplate(
-          'div',
-          'http://www.w3.org/1999/xhtml',
-        ).isSameTemplate(
-          new ElementTemplate('div', 'http://www.w3.org/1999/xhtml'),
+        new ElementTemplate('div', {
+          namespace: 'http://www.w3.org/1999/xhtml',
+        }).isSameTemplate(
+          new ElementTemplate('div', {
+            namespace: 'http://www.w3.org/1999/xhtml',
+          }),
         ),
       ).toBe(true);
     });
@@ -85,10 +84,9 @@ describe('ElementTemplate', () => {
         new ElementTemplate('div').isSameTemplate(new ElementTemplate('p')),
       ).toBe(false);
       expect(
-        new ElementTemplate(
-          'div',
-          'http://www.w3.org/1999/xhtml',
-        ).isSameTemplate(new ElementTemplate('div')),
+        new ElementTemplate('div', {
+          namespace: 'http://www.w3.org/1999/xhtml',
+        }).isSameTemplate(new ElementTemplate('div')),
       ).toBe(false);
     });
   });
@@ -107,7 +105,7 @@ describe('ElementTemplateView', () => {
       const view = new ElementTemplate('div').render(data, context);
 
       const elmentConnectSpy = vi.spyOn(view.elementBinding, 'connect');
-      const childConnectSpy = vi.spyOn(view.elementBinding, 'connect');
+      const childConnectSpy = vi.spyOn(view.childBinding, 'connect');
 
       view.connect(context);
 

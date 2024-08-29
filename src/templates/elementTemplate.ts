@@ -9,25 +9,30 @@ import {
   nameOf,
   resolveBinding,
 } from '../baseTypes.js';
+import { shallowEqual } from '../compare.js';
+
+export type ElementTemplateOptions = ElementCreationOptions & {
+  namespace?: string;
+};
 
 export class ElementTemplate<TElementValue, TChildValue>
   implements Template<readonly [TElementValue, TChildValue]>
 {
   private readonly _type: string;
 
-  private readonly _namespace: string;
+  private readonly _options: ElementTemplateOptions;
 
-  constructor(type: string, namespace = '') {
+  constructor(type: string, options: ElementTemplateOptions = {}) {
     this._type = type;
-    this._namespace = namespace;
+    this._options = options;
   }
 
   get type(): string {
     return this._type;
   }
 
-  get namespace(): string {
-    return this._namespace;
+  get options(): ElementTemplateOptions {
+    return this._options;
   }
 
   render(
@@ -37,10 +42,7 @@ export class ElementTemplate<TElementValue, TChildValue>
     const [elementValue, childValue] = data;
     const elementPart = {
       type: PartType.Element,
-      node:
-        this._namespace !== ''
-          ? document.createElementNS(this._namespace, this._type)
-          : document.createElement(this._type),
+      node: createElement(this._type, this._options),
     } as const;
     const childPart = {
       type: PartType.ChildNode,
@@ -66,7 +68,7 @@ export class ElementTemplate<TElementValue, TChildValue>
       other === this ||
       (other instanceof ElementTemplate &&
         other._type === this._type &&
-        other._namespace === this._namespace)
+        shallowEqual(other._options, this._options))
     );
   }
 }
@@ -136,4 +138,10 @@ export class ElementTemplateView<TElementValue, TChildValue>
     const { node } = this._elementBinding.part;
     node.remove();
   }
+}
+
+function createElement(type: string, options: ElementTemplateOptions): Element {
+  return options.namespace !== undefined
+    ? document.createElementNS(options.namespace, type, options)
+    : document.createElement(type, options);
 }
