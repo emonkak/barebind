@@ -27,8 +27,8 @@ export function shallowEqual<T extends {}>(
     return true;
   }
 
-  const firstKeys = Object.keys(firstProps) as (keyof typeof firstProps)[];
-  const secondKeys = Object.keys(secondProps) as (keyof typeof secondProps)[];
+  const firstKeys = Object.keys(firstProps) as (keyof T)[];
+  const secondKeys = Object.keys(secondProps) as (keyof T)[];
 
   if (firstKeys.length !== secondKeys.length) {
     return false;
