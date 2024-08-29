@@ -150,13 +150,13 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     key: unknown,
     block: Block<RenderContext> | null = null,
   ): unknown {
-    let currentScope = block;
-    while (currentScope !== null) {
-      const value = this._scopes.get(currentScope)?.get(key);
+    let currentBlock = block;
+    while (currentBlock !== null) {
+      const value = this._scopes.get(currentBlock)?.get(key);
       if (value !== undefined) {
         return value;
       }
-      currentScope = currentScope.parent;
+      currentBlock = currentBlock.parent;
     }
     return this._constants.get(key);
   }
@@ -207,13 +207,13 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     value: unknown,
     block: Block<RenderContext>,
   ): void {
-    const variables = this._scopes.get(block);
-    if (variables !== undefined) {
-      variables.set(key, value);
+    let scope = this._scopes.get(block);
+    if (scope !== undefined) {
+      scope.set(key, value);
     } else {
-      const namespace = new Map();
-      namespace.set(key, value);
-      this._scopes.set(block, namespace);
+      scope = new Map();
+      scope.set(key, value);
+      this._scopes.set(block, scope);
     }
   }
 }
