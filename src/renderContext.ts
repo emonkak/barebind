@@ -208,13 +208,17 @@ export class RenderContext {
     return this.useMemo(() => callback, dependencies);
   }
 
-  useDeferredValue<TValue>(value: TValue, initialValue?: TValue): TValue {
-    const [deferredValue, setDeferredValue] = this.useState<TValue>(
-      (() => initialValue ?? value) as InitialState<TValue>,
+  useDeferredValue<TValue>(
+    value: TValue,
+    initialValue?: InitialState<TValue>,
+  ): TValue {
+    const [deferredValue, setDeferredValue] = this.useReducer<TValue, TValue>(
+      (_state, action) => action,
+      initialValue ?? (() => value),
     );
 
     this.useEffect(() => {
-      setDeferredValue((() => value) as NewState<TValue>, 'background');
+      setDeferredValue(value, 'background');
     }, [value]);
 
     return deferredValue;
