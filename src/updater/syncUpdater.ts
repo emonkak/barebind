@@ -7,7 +7,7 @@ import {
 } from '../baseTypes.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
-  private readonly _pendingPipelines: UpdateQueue<TContext>[] = [];
+  private readonly _pendingQueues: UpdateQueue<TContext>[] = [];
 
   flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;
@@ -46,26 +46,26 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   }
 
   isScheduled(): boolean {
-    return this._pendingPipelines.length > 0;
+    return this._pendingQueues.length > 0;
   }
 
   scheduleUpdate(
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    if (this._pendingPipelines.length === 0) {
+    if (this._pendingQueues.length === 0) {
       queueMicrotask(() => {
-        for (let i = 0, l = this._pendingPipelines.length; i < l; i++) {
-          this.flushUpdate(this._pendingPipelines[i]!, host);
+        for (let i = 0, l = this._pendingQueues.length; i < l; i++) {
+          this.flushUpdate(this._pendingQueues[i]!, host);
         }
-        this._pendingPipelines.length = 0;
+        this._pendingQueues.length = 0;
       });
     }
-    this._pendingPipelines.push(queue);
+    this._pendingQueues.push(queue);
   }
 
   waitForUpdate(): Promise<void> {
-    return this._pendingPipelines.length > 0
+    return this._pendingQueues.length > 0
       ? new Promise(queueMicrotask)
       : Promise.resolve();
   }
