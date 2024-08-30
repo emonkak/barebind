@@ -224,7 +224,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   connect(context: UpdateContext): void {
     this._binding.connect(context);
-    this._subscription ??= this._subscribeSignal(this._signal, context);
+    this._subscription ??= this._startSubscription(this._signal, context);
   }
 
   bind(newValue: Signal<TValue>, context: UpdateContext): void {
@@ -232,27 +232,29 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
       ensureDirective([Signal], newValue, this._binding.part);
     }
     if (this._signal !== newValue) {
-      this._subscription?.();
-      this._subscription = null;
+      this._endSubscription();
       this._signal = newValue;
     }
     this._binding.bind(newValue.value, context);
-    this._subscription ??= this._subscribeSignal(newValue, context);
+    this._subscription ??= this._startSubscription(newValue, context);
   }
 
   unbind(context: UpdateContext): void {
     this._binding.unbind(context);
-    this._subscription?.();
-    this._subscription = null;
+    this._endSubscription();
   }
 
   disconnect(context: UpdateContext): void {
     this._binding.disconnect(context);
+    this._endSubscription();
+  }
+
+  private _endSubscription(): void {
     this._subscription?.();
     this._subscription = null;
   }
 
-  private _subscribeSignal(
+  private _startSubscription(
     signal: Signal<TValue>,
     context: UpdateContext,
   ): Subscription {
