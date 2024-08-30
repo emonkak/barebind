@@ -5,7 +5,6 @@ import {
   type Effect,
   type UpdateContext,
 } from '../baseTypes.js';
-
 import { ensureNonDirective } from '../error.js';
 
 export class AttributeBinding<T> implements Binding<T>, Effect {
