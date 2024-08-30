@@ -1,5 +1,5 @@
-/// <reference path="./typings/navigator.d.ts" />
-/// <reference path="./typings/scheduler.d.ts" />
+/// <reference path="../typings/navigator.d.ts" />
+/// <reference path="../typings/scheduler.d.ts" />
 
 export interface Scheduler {
   getCurrentTime(): number;

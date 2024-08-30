@@ -1,4 +1,4 @@
-/// <reference path="./typings/scheduler.d.ts" />
+/// <reference path="../typings/scheduler.d.ts" />
 
 export const directiveTag = Symbol('Directive');
 
