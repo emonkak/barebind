@@ -191,19 +191,19 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 }
 
 export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
-  private _signal: Signal<TValue>;
+  private _value: Signal<TValue>;
 
   private readonly _binding: Binding<TValue>;
 
   private _subscription: Subscription | null = null;
 
   constructor(signal: Signal<TValue>, part: Part, context: DirectiveContext) {
-    this._signal = signal;
+    this._value = signal;
     this._binding = resolveBinding(signal.value, part, context);
   }
 
   get value(): Signal<TValue> {
-    return this._signal;
+    return this._value;
   }
 
   get part(): Part {
@@ -224,16 +224,16 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   connect(context: UpdateContext): void {
     this._binding.connect(context);
-    this._subscription ??= this._startSubscription(this._signal, context);
+    this._subscription ??= this._startSubscription(this._value, context);
   }
 
   bind(newValue: Signal<TValue>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective([Signal], newValue, this._binding.part);
     }
-    if (this._signal !== newValue) {
+    if (this._value !== newValue) {
       this._endSubscription();
-      this._signal = newValue;
+      this._value = newValue;
     }
     this._binding.bind(newValue.value, context);
     this._subscription ??= this._startSubscription(newValue, context);
