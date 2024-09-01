@@ -829,6 +829,7 @@ describe('RenderContext', () => {
       const ref = context.useRef('foo');
 
       expect(ref).toStrictEqual({ current: 'foo' });
+      expect(Object.isSealed(ref)).toBe(true);
 
       context = context.clone();
 
