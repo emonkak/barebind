@@ -564,6 +564,41 @@ describe('TemplateBinding', () => {
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
     });
+
+    it('should not unbind data if there is not a current view', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new LazyTemplate(new MockTemplate(), []);
+      const view = new MockTemplateView(value.data, [
+        document.createComment(''),
+      ]);
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TemplateBinding(value, part);
+
+      const renderSpy = vi
+        .spyOn(value.template, 'render')
+        .mockReturnValue(view);
+      const connectSpy = vi.spyOn(view, 'connect');
+      const unbindSpy = vi.spyOn(view, 'unbind');
+      const unmountSpy = vi.spyOn(view, 'unmount');
+
+      binding.unbind(context);
+      context.flushUpdate();
+
+      expect(renderSpy).not.toHaveBeenCalled();
+      expect(connectSpy).not.toHaveBeenCalled();
+      expect(unbindSpy).not.toHaveBeenCalled();
+      expect(unmountSpy).not.toHaveBeenCalled();
+      expect(binding.startNode).toBe(part.node);
+      expect(binding.endNode).toBe(part.node);
+    });
   });
 
   describe('.disconnect()', () => {

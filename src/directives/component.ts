@@ -136,8 +136,12 @@ export class ComponentBinding<TProps, TData, TContext>
   unbind(context: UpdateContext<TContext>): void {
     this._pendingView?.unbind(context);
     this._cleanHooks(context);
-    this._requestCommit(context);
-    this._status = CommitStatus.Unmounting;
+    if (this._memoizedView !== null) {
+      this._requestCommit(context);
+      this._status = CommitStatus.Unmounting;
+    } else {
+      this._status = CommitStatus.Committed;
+    }
   }
 
   disconnect(context: UpdateContext<TContext>): void {
