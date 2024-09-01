@@ -62,9 +62,9 @@ export class EventBinding
     }
     if (newValue !== this._memoizedValue) {
       this._requestCommit(context);
-      this._pendingValue = newValue;
       this._status = CommitStatus.Mounting;
     }
+    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext): void {
