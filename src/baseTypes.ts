@@ -39,7 +39,7 @@ export type TaskPriority = globalThis.TaskPriority;
 export type ComponentType<TProps, TData, TContext> = (
   props: TProps,
   context: TContext,
-) => TemplateDirective<TData, TContext>;
+) => TemplateResult<TData, TContext>;
 
 export interface UpdateQueue<TContext> {
   blocks: Block<TContext>[];
@@ -90,8 +90,8 @@ export interface Template<TData, TContext = unknown> {
   ): TemplateView<TData, TContext>;
 }
 
-export interface TemplateDirective<TData = unknown, TContext = unknown>
-  extends Directive<TemplateDirective<TData, TContext>, TContext> {
+export interface TemplateResult<TData = unknown, TContext = unknown>
+  extends Directive<TemplateResult<TData, TContext>, TContext> {
   get template(): Template<TData, TContext>;
   get data(): TData;
 }
@@ -281,7 +281,7 @@ export class UpdateContext<TContext = unknown> {
     type: ComponentType<TProps, TData, TContext>,
     props: TProps,
     hooks: Hook[],
-  ): TemplateDirective<TData, TContext> {
+  ): TemplateResult<TData, TContext> {
     const context = this.host.beginRender(
       this.updater,
       this.block,

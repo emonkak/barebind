@@ -1,9 +1,9 @@
 import {
   EmptyTemplate,
   type RenderContext,
-  type TemplateDirective,
+  type TemplateResult,
 } from '@emonkak/ebit';
-import { classMap, eagerTemplateResult } from '@emonkak/ebit/directives.js';
+import { classMap, eagerTemplate } from '@emonkak/ebit/directives.js';
 
 import { TodoFilter, TodoState } from './state.js';
 
@@ -12,7 +12,7 @@ export interface FooterProps {}
 export function Footer(
   _props: FooterProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const state = context.use(TodoState);
   const [todos, activeTodos, filter] = context.use([
     state.todos$,
@@ -21,7 +21,7 @@ export function Footer(
   ]);
 
   if (todos.length === 0) {
-    return eagerTemplateResult(EmptyTemplate.instance);
+    return eagerTemplate(EmptyTemplate.instance);
   }
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {

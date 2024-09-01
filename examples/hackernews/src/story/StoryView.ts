@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { ifElse, when } from '@emonkak/ebit/directives.js';
 
 import type { Story } from '../state.js';
@@ -10,7 +10,7 @@ export interface StoryProps {
 export function StoryView(
   { story }: StoryProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   return context.html`
     <li class="story-item">
       <div class="score">${story.points}</div>

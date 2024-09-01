@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import {
   classMap,
   component,
@@ -15,7 +15,7 @@ interface CommentProps {
 export function CommentView(
   { comment }: CommentProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const [isOpened, setIsOpened] = context.useState<boolean>(true);
 
   const handleToggleOpen = context.useCallback(() => {

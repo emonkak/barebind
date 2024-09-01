@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import {
   type State,
   classMap,
@@ -16,7 +16,7 @@ export interface TodoItemProps {
 export function TodoItem(
   { todo$ }: TodoItemProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const [isEditing, setIsEditing] = context.useState(false);
   const state = context.use(TodoState);
   const todo = context.use(todo$);

@@ -163,7 +163,7 @@ describe('RenderContext', () => {
   });
 
   describe('.html()', () => {
-    it('should return TemplateDirective with an HTML-formatted TaggedTemplate', () => {
+    it('should return TemplateResult with an HTML-formatted TaggedTemplate', () => {
       const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -239,7 +239,7 @@ describe('RenderContext', () => {
   });
 
   describe('.svg()', () => {
-    it('should return TemplateDirective with an SVG-formatted TaggedTemplate', () => {
+    it('should return TemplateResult with an SVG-formatted TaggedTemplate', () => {
       const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),

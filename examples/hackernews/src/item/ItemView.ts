@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, keyedList, when } from '@emonkak/ebit/directives.js';
 
 import type { Item } from '../state.js';
@@ -11,7 +11,7 @@ export interface ItemProps {
 export function ItemView(
   { item }: ItemProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   return context.html`
     <div class="item-view">
       <div class="item-view-header">

@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, keyedList, memo, when } from '@emonkak/ebit/directives.js';
 
 import { TodoItem } from './TodoItem.js';
@@ -9,7 +9,7 @@ export interface MainProps {}
 export function Main(
   _props: MainProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const state = context.use(TodoState);
   const visibleTodos = context.use(state.visibleTodos$);
 

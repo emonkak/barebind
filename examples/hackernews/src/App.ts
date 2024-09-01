@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, memo } from '@emonkak/ebit/directives.js';
 import { hashLocation, resetScrollPosition } from '@emonkak/ebit/location.js';
 
@@ -16,7 +16,7 @@ interface AppProps {
 export function App(
   { userState, itemState, storyState }: AppProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const [locationState] = context.use(hashLocation);
   const page =
     router.match(locationState.url, locationState.state) ??

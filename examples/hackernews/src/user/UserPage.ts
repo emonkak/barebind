@@ -1,13 +1,9 @@
 import {
   ChildTemplate,
   type RenderContext,
-  type TemplateDirective,
+  type TemplateResult,
 } from '@emonkak/ebit';
-import {
-  component,
-  eagerTemplateResult,
-  when,
-} from '@emonkak/ebit/directives.js';
+import { component, eagerTemplate, when } from '@emonkak/ebit/directives.js';
 
 import { UserState } from '../state.js';
 import { UserView } from './UserView.js';
@@ -19,7 +15,7 @@ export interface UserPageProps {
 export function UserPage(
   { id }: UserPageProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const state = context.use(UserState);
   const [user, error, isLoading] = context.use([
     state.user$,
@@ -42,7 +38,7 @@ export function UserPage(
     `;
   }
 
-  return eagerTemplateResult(
+  return eagerTemplate(
     childTemplate,
     when(!isLoading && user !== null, () =>
       component(UserView, { user: user! }),

@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { when } from '@emonkak/ebit/directives.js';
 
 import type { User } from '../state.js';
@@ -10,7 +10,7 @@ export interface UserProps {
 export function UserView(
   { user }: UserProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   return context.html`
     <div class="user-view">
       <h1>User : ${user.id}</h1>

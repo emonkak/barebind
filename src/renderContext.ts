@@ -19,7 +19,7 @@ import {
   createUpdateQueue,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
-import { LazyTemplateResult } from './directives/templateResult.js';
+import { LazyTemplate } from './directives/template.js';
 
 export const usableTag = Symbol('Usable');
 
@@ -161,9 +161,9 @@ export class RenderContext {
   html<TData extends readonly any[]>(
     tokens: TemplateStringsArray,
     ...data: TData
-  ): LazyTemplateResult<TData, RenderContext> {
+  ): LazyTemplate<TData, RenderContext> {
     const template = this._host.getHTMLTemplate(tokens, data);
-    return new LazyTemplateResult(template, data);
+    return new LazyTemplate(template, data);
   }
 
   isFirstRender(): boolean {
@@ -181,9 +181,9 @@ export class RenderContext {
   svg<TData extends readonly any[]>(
     tokens: TemplateStringsArray,
     ...data: TData
-  ): LazyTemplateResult<TData, RenderContext> {
+  ): LazyTemplate<TData, RenderContext> {
     const template = this._host.getSVGTemplate(tokens, data);
-    return new LazyTemplateResult(template, data);
+    return new LazyTemplate(template, data);
   }
 
   use<

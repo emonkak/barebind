@@ -1,13 +1,9 @@
 import {
   ChildTemplate,
   type RenderContext,
-  type TemplateDirective,
+  type TemplateResult,
 } from '@emonkak/ebit';
-import {
-  component,
-  eagerTemplateResult,
-  when,
-} from '@emonkak/ebit/directives.js';
+import { component, eagerTemplate, when } from '@emonkak/ebit/directives.js';
 
 import { ItemState } from '../state.js';
 import { ItemView } from './ItemView.js';
@@ -19,7 +15,7 @@ export interface ItemPageProps {
 export function ItemPage(
   { id }: ItemPageProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const state = context.use(ItemState);
   const [item, error, isLoading] = context.use([
     state.item$,
@@ -42,7 +38,7 @@ export function ItemPage(
     `;
   }
 
-  return eagerTemplateResult(
+  return eagerTemplate(
     childTemplate,
     when(!isLoading && item !== null, () =>
       component(ItemView, { item: item! }),

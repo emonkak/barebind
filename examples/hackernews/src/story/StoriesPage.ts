@@ -1,4 +1,4 @@
-import type { RenderContext, TemplateDirective } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, ifElse, keyedList } from '@emonkak/ebit/directives.js';
 
 import { StoryState, type StoryType } from '../state.js';
@@ -14,7 +14,7 @@ const STORIES_PER_PAGE = 30;
 export function StoriesPage(
   { type, page = 1 }: StoriesPageProps,
   context: RenderContext,
-): TemplateDirective {
+): TemplateResult {
   const state = context.use(StoryState);
   const [stories, isLoading] = context.use([state.stories$, state.isLoading$]);
 
