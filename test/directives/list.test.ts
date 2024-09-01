@@ -55,7 +55,7 @@ describe('List', () => {
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.bindings).toEqual([]);
+      expect(binding.bindings).toStrictEqual([]);
     });
 
     it('should throw an error if the part is not a ChildNodePart', () => {
@@ -109,22 +109,20 @@ describe('ListBinding', () => {
 
       expect(binding.value).toBe(value);
       expect(binding.startNode.nodeValue).toBe('foo');
-      expect(binding.bindings.map((binding) => binding.value.content)).toEqual([
-        'foo',
-        'bar',
-        'baz',
-      ]);
+      expect(
+        binding.bindings.map((binding) => binding.value.content),
+      ).toStrictEqual(['foo', 'bar', 'baz']);
       expect(
         binding.bindings.map((binding) => binding.part.node.nodeValue),
-      ).toEqual([
+      ).toStrictEqual([
         'TextDirective@"foo"',
         'TextDirective@"bar"',
         'TextDirective@"baz"',
       ]);
       expect(
         binding.bindings.map((binding) => binding.startNode.nodeValue),
-      ).toEqual(['foo', 'bar', 'baz']);
-      expect(binding.bindings.map((binding) => binding.endNode)).toEqual(
+      ).toStrictEqual(['foo', 'bar', 'baz']);
+      expect(binding.bindings.map((binding) => binding.endNode)).toStrictEqual(
         binding.bindings.map((binding) => binding.part.node),
       );
       expect(container.innerHTML).toBe(
@@ -199,7 +197,7 @@ describe('ListBinding', () => {
           expect(binding.value).toBe(value2);
           expect(
             binding.bindings.map((binding) => binding.value.content),
-          ).toEqual(value2.items);
+          ).toStrictEqual(value2.items);
           expect(container.innerHTML).toBe(
             items2
               .map((item) => item + '<!--TextDirective@"' + item + '"-->')
@@ -252,7 +250,7 @@ describe('ListBinding', () => {
             expect(binding.value).toBe(value2);
             expect(
               binding.bindings.map((binding) => binding.value.content),
-            ).toEqual(value2.items);
+            ).toStrictEqual(value2.items);
             expect(container.innerHTML).toBe(
               items2!
                 .map((item) => item + '<!--TextDirective@"' + item + '"-->')
@@ -301,7 +299,7 @@ describe('ListBinding', () => {
           expect(binding.value).toBe(value2);
           expect(
             binding.bindings.map((binding) => binding.value.content),
-          ).toEqual(value2.items);
+          ).toStrictEqual(value2.items);
           expect(container.innerHTML).toBe(
             items2
               .map((item) => item + '<!--TextDirective@"' + item + '"-->')
@@ -341,9 +339,9 @@ describe('ListBinding', () => {
       context.flushUpdate();
 
       expect(binding.value).toBe(value2);
-      expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
-        value2.items,
-      );
+      expect(
+        binding.bindings.map((binding) => binding.value.content),
+      ).toStrictEqual(value2.items);
       expect(container.innerHTML).toBe(
         'qux<!--TextDirective@0-->baz<!--TextDirective@1-->bar<!--TextDirective@2-->foo<!--TextDirective@3--><!---->',
       );
@@ -376,9 +374,9 @@ describe('ListBinding', () => {
       context.flushUpdate();
 
       expect(binding.value).toBe(value2);
-      expect(binding.bindings.map((binding) => binding.value.content)).toEqual(
-        value2.items,
-      );
+      expect(
+        binding.bindings.map((binding) => binding.value.content),
+      ).toStrictEqual(value2.items);
       expect(container.innerHTML).toBe(
         'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
       );

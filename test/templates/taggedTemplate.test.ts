@@ -33,7 +33,7 @@ describe('TaggedTemplate', () => {
       const { template } = html`
         <div class="container" id=${0} .innerHTML=${1} @click=${2}></div>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
         { type: PartType.Event, name: 'click', index: 0 },
@@ -45,7 +45,7 @@ describe('TaggedTemplate', () => {
       const { template } = html`
         <div class="container" id="${0}" .innerHTML="${1}" @click="${2}"></div>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
         { type: PartType.Event, name: 'click', index: 0 },
@@ -57,7 +57,7 @@ describe('TaggedTemplate', () => {
       const { template } = html`
         <div class="container" id='${0}' .innerHTML='${1}' @click='${2}'></div>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
         { type: PartType.Event, name: 'click', index: 0 },
@@ -69,7 +69,7 @@ describe('TaggedTemplate', () => {
       const { template } = html`
         <div class="container" id= "${0}" .innerHTML ="${1}" @click = "${2}"></div>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
         { type: PartType.Event, name: 'click', index: 0 },
@@ -84,7 +84,7 @@ describe('TaggedTemplate', () => {
         <${2}/>
         <${3} />
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.ChildNode, index: 0 },
         { type: PartType.ChildNode, index: 2 },
         { type: PartType.ChildNode, index: 4 },
@@ -106,7 +106,7 @@ describe('TaggedTemplate', () => {
         <div ${1} id="foo"></div>
         <div id="foo" ${2} class="bar"></div>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Element, index: 0 },
         { type: PartType.Element, index: 2 },
         { type: PartType.Element, index: 4 },
@@ -127,7 +127,7 @@ describe('TaggedTemplate', () => {
           <li>${2}</li>
         </ul>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Node, index: 3 },
         { type: PartType.Node, index: 6 },
       ]);
@@ -146,7 +146,7 @@ describe('TaggedTemplate', () => {
         <div>[${0}, ${1}]</div>
         <div>${0}, ${1}</div>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Node, index: 2 },
         { type: PartType.Node, index: 4 },
         { type: PartType.Node, index: 8 },
@@ -167,7 +167,7 @@ describe('TaggedTemplate', () => {
         <!-- ${2} -->
         <!-- ${3} /-->
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.ChildNode, index: 0 },
         { type: PartType.ChildNode, index: 2 },
         { type: PartType.ChildNode, index: 4 },
@@ -188,7 +188,7 @@ describe('TaggedTemplate', () => {
         < ${0}>
         < ${0}/>
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Node, index: 1 },
         { type: PartType.Node, index: 3 },
       ]);
@@ -304,7 +304,7 @@ describe('TaggedTemplate', () => {
       const { template } = svg`
         <circle fill="black" cx=${0} cy=${1} r=${2} />
       `;
-      expect(template.holes).toEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'cx', index: 0 },
         { type: PartType.Attribute, name: 'cy', index: 0 },
         { type: PartType.Attribute, name: 'r', index: 0 },
@@ -341,7 +341,7 @@ describe('TaggedTemplate', () => {
       expect(context.isPending()).toBe(false);
       expect(view).toBeInstanceOf(TaggedTemplateView);
       expect(view.bindings).toHaveLength(data.length);
-      expect(view.bindings.map((binding) => binding.value)).toEqual(data);
+      expect(view.bindings.map((binding) => binding.value)).toStrictEqual(data);
       expect(view.bindings[0]).toBeInstanceOf(AttributeBinding);
       expect(view.bindings[0]?.part).toMatchObject({
         type: PartType.Attribute,
@@ -369,7 +369,7 @@ describe('TaggedTemplate', () => {
       expect(view.bindings[5]?.part).toMatchObject({
         type: PartType.Node,
       });
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         `
         <div>
           <!--"bar"-->
@@ -382,7 +382,7 @@ describe('TaggedTemplate', () => {
       view.connect(context);
       context.flushUpdate();
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         `
         <div class="foo">
           <!--bar-->
@@ -403,7 +403,7 @@ describe('TaggedTemplate', () => {
 
       expect(view).toBeInstanceOf(TaggedTemplateView);
       expect(view.bindings).toHaveLength(0);
-      expect(view.childNodes.map(toHTML)).toEqual(['<div></div>']);
+      expect(view.childNodes.map(toHTML)).toStrictEqual(['<div></div>']);
       expect(view.startNode).toBe(view.childNodes[0]);
       expect(view.endNode).toBe(view.childNodes[0]);
     });
@@ -493,7 +493,7 @@ describe('TaggedTemplateView', () => {
       view.connect(context);
       context.flushUpdate();
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         `
         <div class="foo">
           <!--bar-->
@@ -519,7 +519,7 @@ describe('TaggedTemplateView', () => {
       view.connect(context);
       context.flushUpdate();
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         '<div class="foo">bar</div>',
         '<!--baz-->',
       ]);
@@ -527,7 +527,7 @@ describe('TaggedTemplateView', () => {
       view.bind(['bar', 'baz', 'qux'], context);
       context.flushUpdate();
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         '<div class="bar">baz</div>',
         '<!--qux-->',
       ]);
@@ -558,7 +558,7 @@ describe('TaggedTemplateView', () => {
 
       view.mount(part);
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         'foo',
         '<div class="bar">baz</div>',
         '<!--qux-->',
@@ -577,7 +577,7 @@ describe('TaggedTemplateView', () => {
       view.unbind(context);
       context.flushUpdate();
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         '',
         '<div class="bar">baz</div>',
         '<!---->',
@@ -585,12 +585,12 @@ describe('TaggedTemplateView', () => {
       expect(container.innerHTML).toBe(
         '<div class="bar">baz</div><!----><!---->',
       );
-      expect(unbindSpies.map((spy) => spy.mock.calls.length)).toEqual([
+      expect(unbindSpies.map((spy) => spy.mock.calls.length)).toStrictEqual([
         1, 0, 0, 1,
       ]);
-      expect(disconnectSpies.map((spy) => spy.mock.calls.length)).toEqual([
-        0, 1, 1, 0,
-      ]);
+      expect(disconnectSpies.map((spy) => spy.mock.calls.length)).toStrictEqual(
+        [0, 1, 1, 0],
+      );
     });
 
     it('should only unbind top-level bindings in the view', () => {
@@ -616,7 +616,7 @@ describe('TaggedTemplateView', () => {
 
       view.mount(part);
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         'foo',
         '<div></div>',
         '<!--baz-->',
@@ -633,16 +633,18 @@ describe('TaggedTemplateView', () => {
       view.unbind(context);
       context.flushUpdate();
 
-      expect(view.childNodes.map(toHTML)).toEqual([
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
         '',
         '<div></div>',
         '<!---->',
       ]);
       expect(container.innerHTML).toBe('<div></div><!----><!---->');
-      expect(unbindSpies.map((spy) => spy.mock.calls.length)).toEqual([1, 1]);
-      expect(disconnectSpies.map((spy) => spy.mock.calls.length)).toEqual([
-        0, 0,
+      expect(unbindSpies.map((spy) => spy.mock.calls.length)).toStrictEqual([
+        1, 1,
       ]);
+      expect(disconnectSpies.map((spy) => spy.mock.calls.length)).toStrictEqual(
+        [0, 0],
+      );
     });
 
     it('should throw an error if the number of binding and values do not match', () => {

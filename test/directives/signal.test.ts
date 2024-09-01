@@ -189,7 +189,7 @@ describe('Computed', () => {
         [foo, bar, baz],
       );
 
-      expect(signal.value).toEqual({ foo: 1, bar: 2, baz: 3 });
+      expect(signal.value).toStrictEqual({ foo: 1, bar: 2, baz: 3 });
       expect(signal.value).toBe(signal.value);
       expect(signal.version).toBe(0);
     });
@@ -205,20 +205,20 @@ describe('Computed', () => {
       );
 
       foo.value = 10;
-      expect(signal.value).toEqual({ foo: 10, bar: 2, baz: 3 });
+      expect(signal.value).toStrictEqual({ foo: 10, bar: 2, baz: 3 });
       expect(signal.version).toBe(1);
 
       let oldValue = signal.value;
 
       bar.value = 20;
-      expect(signal.value).toEqual({ foo: 10, bar: 20, baz: 3 });
+      expect(signal.value).toStrictEqual({ foo: 10, bar: 20, baz: 3 });
       expect(signal.value).not.toBe(oldValue);
       expect(signal.version).toBe(2);
 
       oldValue = signal.value;
 
       baz.value = 30;
-      expect(signal.value).toEqual({ foo: 10, bar: 20, baz: 30 });
+      expect(signal.value).toStrictEqual({ foo: 10, bar: 20, baz: 30 });
       expect(signal.value).not.toBe(oldValue);
       expect(signal.version).toBe(3);
     });

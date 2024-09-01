@@ -65,7 +65,7 @@ describe('permutations()', () => {
       );
 
       for (const result of results) {
-        expect(result.sort()).toEqual(source);
+        expect(result.sort()).toStrictEqual(source);
       }
     },
   );

@@ -38,12 +38,12 @@ describe('RenderContext', () => {
 
       context.finalize();
 
-      expect(context.hooks).toEqual([{ type: HookType.Finalizer }]);
+      expect(context.hooks).toStrictEqual([{ type: HookType.Finalizer }]);
 
       context = context.clone();
       context.finalize();
 
-      expect(context.hooks).toEqual([{ type: HookType.Finalizer }]);
+      expect(context.hooks).toStrictEqual([{ type: HookType.Finalizer }]);
     });
 
     it('should throw an error if a hook is added after finalization', () => {
@@ -649,7 +649,7 @@ describe('RenderContext', () => {
       );
       addMessage('foo');
 
-      expect(message).toEqual([]);
+      expect(message).toStrictEqual([]);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -669,7 +669,7 @@ describe('RenderContext', () => {
       );
       addMessage('bar');
 
-      expect(message).toEqual(['foo']);
+      expect(message).toStrictEqual(['foo']);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -688,7 +688,7 @@ describe('RenderContext', () => {
         [],
       );
 
-      expect(message).toEqual(['foo', 'bar']);
+      expect(message).toStrictEqual(['foo', 'bar']);
     });
 
     it('should request update with user-specified priority', () => {
@@ -706,7 +706,7 @@ describe('RenderContext', () => {
       );
       addMessage('foo', 'user-blocking');
 
-      expect(message).toEqual([]);
+      expect(message).toStrictEqual([]);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -725,7 +725,7 @@ describe('RenderContext', () => {
       );
       addMessage('bar', 'background');
 
-      expect(message).toEqual(['foo']);
+      expect(message).toStrictEqual(['foo']);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
@@ -743,7 +743,7 @@ describe('RenderContext', () => {
         [],
       );
 
-      expect(message).toEqual(['foo', 'bar']);
+      expect(message).toStrictEqual(['foo', 'bar']);
     });
 
     it('should skip request update if the state has not changed', () => {
@@ -760,14 +760,14 @@ describe('RenderContext', () => {
       );
       addCount(0);
 
-      expect(count).toEqual(0);
+      expect(count).toBe(0);
       expect(requestUpdateSpy).not.toHaveBeenCalled();
 
       context = context.clone();
       [count] = context.useReducer<number, number>((count, n) => count + n, 0);
       addCount(0);
 
-      expect(count).toEqual(0);
+      expect(count).toBe(0);
       expect(requestUpdateSpy).not.toHaveBeenCalled();
     });
 
@@ -784,7 +784,7 @@ describe('RenderContext', () => {
       );
       addMessage('baz');
 
-      expect(message).toEqual(['foo', 'bar']);
+      expect(message).toStrictEqual(['foo', 'bar']);
 
       context = context.clone();
       [message, addMessage] = context.useReducer<string[], string>(
@@ -792,7 +792,7 @@ describe('RenderContext', () => {
         () => ['foo', 'bar'],
       );
 
-      expect(message).toEqual(['foo', 'bar', 'baz']);
+      expect(message).toStrictEqual(['foo', 'bar', 'baz']);
     });
 
     it('should always return the same dispatcher', () => {
@@ -828,7 +828,7 @@ describe('RenderContext', () => {
 
       const ref = context.useRef('foo');
 
-      expect(ref).toEqual({ current: 'foo' });
+      expect(ref).toStrictEqual({ current: 'foo' });
 
       context = context.clone();
 
@@ -851,7 +851,7 @@ describe('RenderContext', () => {
       let [count, setCount] = context.useState(0);
       setCount(1);
 
-      expect(count).toEqual(0);
+      expect(count).toBe(0);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -868,7 +868,7 @@ describe('RenderContext', () => {
       [count, setCount] = context.useState(0);
       setCount((n) => n + 2);
 
-      expect(count).toEqual(1);
+      expect(count).toBe(1);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -884,7 +884,7 @@ describe('RenderContext', () => {
       context = context.clone();
       [count, setCount] = context.useState(0);
 
-      expect(count).toEqual(3);
+      expect(count).toBe(3);
     });
 
     it('should request update with user-specified priority', () => {
@@ -899,7 +899,7 @@ describe('RenderContext', () => {
       let [count, setCount] = context.useState(0);
       setCount(1, 'user-blocking');
 
-      expect(count).toEqual(0);
+      expect(count).toBe(0);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -915,7 +915,7 @@ describe('RenderContext', () => {
       [count, setCount] = context.useState(0);
       setCount((n) => n + 2, 'background');
 
-      expect(count).toEqual(1);
+      expect(count).toBe(1);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
@@ -930,7 +930,7 @@ describe('RenderContext', () => {
       context = context.clone();
       [count, setCount] = context.useState(0);
 
-      expect(count).toEqual(3);
+      expect(count).toBe(3);
     });
 
     it('should skip requst update if the state has not changed', () => {
@@ -944,14 +944,14 @@ describe('RenderContext', () => {
       let [count, setCount] = context.useState(0);
       setCount(0);
 
-      expect(count).toEqual(0);
+      expect(count).toBe(0);
       expect(requestUpdateSpy).not.toHaveBeenCalled();
 
       context = context.clone();
       [count, setCount] = context.useState(0);
       setCount(0);
 
-      expect(count).toEqual(0);
+      expect(count).toBe(0);
       expect(requestUpdateSpy).not.toHaveBeenCalled();
     });
 
@@ -966,7 +966,7 @@ describe('RenderContext', () => {
         (messages, message) => [...messages, message],
         () => ['foo', 'bar'],
       );
-      expect(message).toEqual(['foo', 'bar']);
+      expect(message).toStrictEqual(['foo', 'bar']);
 
       addMessage('baz');
 
@@ -975,7 +975,7 @@ describe('RenderContext', () => {
         (messages, message) => [...messages, message],
         () => ['foo', 'bar'],
       );
-      expect(message).toEqual(['foo', 'bar', 'baz']);
+      expect(message).toStrictEqual(['foo', 'bar', 'baz']);
     });
   });
 

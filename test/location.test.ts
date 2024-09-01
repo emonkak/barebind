@@ -138,8 +138,10 @@ describe('browserLocation', () => {
     context.flushUpdate();
 
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.url.toString()).toEqual(getCurrentURL().toString());
-    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.url.toString()).toStrictEqual(
+      getCurrentURL().toString(),
+    );
+    expect(locationState.state).toBe(history.state);
     expect(locationState.type).toBe(LocationType.Load);
   });
 
@@ -167,7 +169,7 @@ describe('browserLocation', () => {
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
-    expect(locationState.state).toStrictEqual(null);
+    expect(locationState.state).toBe(null);
     expect(locationState.type).toBe(LocationType.Push);
   });
 
@@ -196,7 +198,7 @@ describe('browserLocation', () => {
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.state).toStrictEqual(state);
+    expect(locationState.state).toBe(state);
     expect(locationState.type).toBe(LocationType.Replace);
   });
 
@@ -224,7 +226,7 @@ describe('browserLocation', () => {
     [locationState] = context.use(browserLocation);
 
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.state).toStrictEqual(state);
+    expect(locationState.state).toBe(state);
     expect(locationState.type).toBe(LocationType.Pop);
 
     location.hash = '#foo';
@@ -233,7 +235,7 @@ describe('browserLocation', () => {
     [locationState] = context.use(browserLocation);
 
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.state).toStrictEqual(state);
+    expect(locationState.state).toBe(state);
     expect(locationState.type).toBe(LocationType.Pop);
 
     cleanHooks(hooks);
@@ -344,7 +346,7 @@ describe('browserLocation', () => {
 
     const locationState = context.use(browserLocation);
 
-    expect(context.use(currentLocation)).toStrictEqual(locationState);
+    expect(context.use(currentLocation)).toBe(locationState);
 
     context.finalize();
     context.flushUpdate();
@@ -428,7 +430,7 @@ describe('hashLocation', () => {
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
     expect(locationState.url.toString()).toBe('/articles/456');
-    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.state).toBe(history.state);
     expect(locationState.type).toBe(LocationType.Push);
   });
 
@@ -459,7 +461,7 @@ describe('hashLocation', () => {
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
     expect(locationState.url.toString()).toBe('/articles/123');
-    expect(locationState.state).toStrictEqual(history.state);
+    expect(locationState.state).toBe(state);
     expect(locationState.type).toBe(LocationType.Replace);
   });
 
@@ -473,7 +475,7 @@ describe('hashLocation', () => {
     );
     const locationState = context.use(hashLocation);
 
-    expect(context.use(currentLocation)).toStrictEqual(locationState);
+    expect(context.use(currentLocation)).toBe(locationState);
   });
 
   it('should update the state when "hashchange" event is fired', () => {
