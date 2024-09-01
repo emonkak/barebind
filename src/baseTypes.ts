@@ -2,7 +2,7 @@
 
 export const directiveTag = Symbol('Directive');
 
-export const nameTag = Symbol('Name');
+export const nameTag = Symbol('name');
 
 export interface Binding<TValue, TContext = unknown> {
   get value(): TValue;
