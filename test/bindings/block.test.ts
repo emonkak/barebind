@@ -510,7 +510,7 @@ describe('BlockBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should enqueue the binding as a block for update', () => {
+    it('should update the binding as a block', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -529,6 +529,7 @@ describe('BlockBinding', () => {
       block.connect(context);
       context.flushUpdate();
 
+      const bindSpy = vi.spyOn(binding, 'bind');
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
@@ -538,59 +539,106 @@ describe('BlockBinding', () => {
       expect(block.isConnected).toBe(true);
       expect(block.isUpdating).toBe(true);
       expect(block.priority).toBe('user-blocking');
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
       expect(block.isConnected).toBe(true);
       expect(block.isUpdating).toBe(false);
       expect(block.priority).toBe('user-blocking');
+      expect(bindSpy).toHaveBeenCalledOnce();
+      expect(bindSpy).toHaveBeenCalledWith(
+        value2,
+        expect.objectContaining({
+          host: context.host,
+          updater: context.updater,
+          block,
+        }),
+      );
+      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
+      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
     });
 
-    it('should enqueue the binding as a block for update with the parent block priority', () => {
+    it('should update the binding as a block with the parent block priority', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      const value1 = new TextDirective('foo');
-      const value2 = new TextDirective('bar');
+      const value = new TextDirective('foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TextBinding(value1, part);
+      const binding = new TextBinding(value, part);
       const block = new BlockBinding(binding, context.block);
 
       block.connect(context);
       context.flushUpdate();
 
+      block.unbind(context);
+      context.flushUpdate();
+
+      const connectSpy = vi.spyOn(binding, 'connect');
       const getPrioritySpy = vi
         .spyOn(context.block, 'priority', 'get')
         .mockReturnValue('background');
       const enqueueBlockSpy = vi.spyOn(context, 'enqueueBlock');
       const scheduleUpdateSpy = vi.spyOn(context, 'scheduleUpdate');
 
-      block.bind(value2, context);
+      block.bind(value, context);
 
-      expect(block.value).toBe(value2);
-      expect(block.isConnected).toBe(true);
+      expect(block.value).toBe(value);
+      expect(block.isConnected).toBe(false);
       expect(block.isUpdating).toBe(true);
       expect(block.priority).toBe('background');
-      expect(getPrioritySpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
-      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
-      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       context.flushUpdate();
 
       expect(block.isConnected).toBe(true);
       expect(block.isUpdating).toBe(false);
       expect(block.priority).toBe('background');
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          host: context.host,
+          updater: context.updater,
+          block,
+        }),
+      );
+      expect(getPrioritySpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledOnce();
+      expect(enqueueBlockSpy).toHaveBeenCalledWith(block);
+      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
+      expect(scheduleUpdateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should not update the binding as a block if the new value is the same as the old value', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = new TextDirective('foo');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      } as const;
+      const binding = new TextBinding(value, part);
+      const block = new BlockBinding(binding, context.block);
+
+      block.connect(context);
+      context.flushUpdate();
+
+      block.bind(value, context);
+
+      expect(block.value).toBe(value);
+      expect(block.isConnected).toBe(true);
+      expect(block.isUpdating).toBe(false);
+      expect(block.priority).toBe('user-blocking');
+      expect(context.isPending()).toBe(false);
     });
 
     it('should bind the new value to the binding on update', () => {
@@ -624,8 +672,7 @@ describe('BlockBinding', () => {
         expect.objectContaining({
           host: context.host,
           updater: context.updater,
-          block: block,
-          queue: context.queue,
+          block,
         }),
       );
     });

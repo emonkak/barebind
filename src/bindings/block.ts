@@ -18,7 +18,7 @@ export class BlockBinding<TValue, TContext>
 
   private readonly _parent: Block<TContext> | null;
 
-  private _value: TValue;
+  private _pendingValue: TValue;
 
   private _priority: TaskPriority = 'user-blocking';
 
@@ -37,12 +37,12 @@ export class BlockBinding<TValue, TContext>
     parent: Block<TContext> | null,
   ) {
     this._binding = binding;
-    this._value = binding.value;
+    this._pendingValue = binding.value;
     this._parent = parent;
   }
 
   get value(): TValue {
-    return this._value;
+    return this._pendingValue;
   }
 
   get part(): Part {
@@ -113,7 +113,7 @@ export class BlockBinding<TValue, TContext>
 
   update(context: UpdateContext<TContext>): void {
     if (this._flags & FLAG_DIRTY) {
-      this._binding.bind(this._value, context);
+      this._binding.bind(this._pendingValue, context);
     } else {
       this._binding.connect(context);
     }
@@ -127,24 +127,27 @@ export class BlockBinding<TValue, TContext>
   }
 
   bind(newValue: TValue, context: UpdateContext<TContext>): void {
-    this._forceUpdate(context);
-    this._value = newValue;
-    this._flags |= FLAG_DIRTY;
+    if (!Object.is(newValue, this._binding.value)) {
+      this._forceUpdate(context);
+      this._flags |= FLAG_DIRTY;
+    } else if (!(this._flags & FLAG_CONNECTED)) {
+      this._forceUpdate(context);
+    }
+    this._pendingValue = newValue;
   }
 
   unbind(context: UpdateContext<TContext>): void {
     this._binding.unbind(context);
-
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   disconnect(context: UpdateContext<TContext>): void {
     this._binding.disconnect(context);
-
     this._flags &= ~(FLAG_CONNECTED | FLAG_UPDATING);
   }
 
   private _forceUpdate(context: UpdateContext): void {
+    // Root binding priority is always highest priority.
     const priority = this._parent?.priority ?? 'user-blocking';
 
     if (
