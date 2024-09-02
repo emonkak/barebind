@@ -87,16 +87,16 @@ describe('Left', () => {
       } as const;
       const binding = value[directiveTag](part, context);
 
-      const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
-      const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
-      const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
+      const getPart = vi.spyOn(binding.binding, 'part', 'get');
+      const getStartNode = vi.spyOn(binding.binding, 'startNode', 'get');
+      const getEndNode = vi.spyOn(binding.binding, 'endNode', 'get');
 
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.currentBinding).toBeInstanceOf(TextBinding);
-      expect(binding.currentBinding.value).toBe(value.value);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
+      expect(binding.binding.value).toBe(value.value);
       expect(getPart).toHaveBeenCalledOnce();
       expect(getStartNode).toHaveBeenCalledOnce();
       expect(getEndNode).toHaveBeenCalledOnce();
@@ -126,16 +126,16 @@ describe('Right', () => {
       } as const;
       const binding = value[directiveTag](part, context);
 
-      const getPart = vi.spyOn(binding.currentBinding, 'part', 'get');
-      const getStartNode = vi.spyOn(binding.currentBinding, 'startNode', 'get');
-      const getEndNode = vi.spyOn(binding.currentBinding, 'endNode', 'get');
+      const getPart = vi.spyOn(binding.binding, 'part', 'get');
+      const getStartNode = vi.spyOn(binding.binding, 'startNode', 'get');
+      const getEndNode = vi.spyOn(binding.binding, 'endNode', 'get');
 
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.currentBinding).toBeInstanceOf(TextBinding);
-      expect(binding.currentBinding.value).toBe(value.value);
+      expect(binding.binding).toBeInstanceOf(TextBinding);
+      expect(binding.binding.value).toBe(value.value);
       expect(getPart).toHaveBeenCalledOnce();
       expect(getStartNode).toHaveBeenCalledOnce();
       expect(getEndNode).toHaveBeenCalledOnce();
@@ -160,12 +160,12 @@ describe('EitherBinding', () => {
       } as const;
       const binding = new EitherBinding(value, part, context);
 
-      const connectSpy = vi.spyOn(binding.currentBinding, 'connect');
+      const connectSpy = vi.spyOn(binding.binding, 'connect');
 
       binding.connect(context);
       context.flushUpdate();
 
-      expect(binding.currentBinding.value).toBe(value.value);
+      expect(binding.binding.value).toBe(value.value);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
     });
@@ -213,7 +213,7 @@ describe('EitherBinding', () => {
         binding.bind(value2, context);
         context.flushUpdate();
 
-        expect(binding.currentBinding).toBe(binding1);
+        expect(binding.binding).toBe(binding1);
         expect(directive1Spy).toHaveBeenCalledOnce();
         expect(directive1Spy).toHaveBeenCalledWith(part, context);
         expect(directive2Spy).not.toHaveBeenCalled();
@@ -269,7 +269,7 @@ describe('EitherBinding', () => {
         binding.bind(value1, context);
         context.flushUpdate();
 
-        expect(binding.currentBinding).toBe(binding1);
+        expect(binding.binding).toBe(binding1);
         expect(directive1Spy).toHaveBeenCalledOnce();
         expect(directive1Spy).toHaveBeenCalledWith(part, context);
         expect(directive2Spy).toHaveBeenCalledOnce();
@@ -329,7 +329,7 @@ describe('EitherBinding', () => {
       } as const;
       const binding = new EitherBinding(value, part, context);
 
-      const unbindSpy = vi.spyOn(binding.currentBinding, 'unbind');
+      const unbindSpy = vi.spyOn(binding.binding, 'unbind');
 
       binding.unbind(context);
 
@@ -355,7 +355,7 @@ describe('EitherBinding', () => {
       } as const;
       const binding = new EitherBinding(value, part, context);
 
-      const disconnectSpy = vi.spyOn(binding.currentBinding, 'disconnect');
+      const disconnectSpy = vi.spyOn(binding.binding, 'disconnect');
 
       binding.disconnect(context);
 

@@ -565,7 +565,7 @@ describe('TemplateBinding', () => {
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should not unbind data if there is not a current view', () => {
+    it('should not unmount the memoized view if it do not exist', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),

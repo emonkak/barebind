@@ -663,7 +663,7 @@ describe('ComponentBinding', () => {
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should not unmount if there is not a memoized view', () => {
+    it('should not unmount the memoized view if it do not exist', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),

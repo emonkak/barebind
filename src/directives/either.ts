@@ -119,30 +119,30 @@ export class EitherBinding<TLeft, TRight>
   }
 
   get part(): Part {
-    return this.currentBinding.part;
+    return this.binding.part;
   }
 
   get startNode(): ChildNode {
-    return this.currentBinding.startNode;
+    return this.binding.startNode;
   }
 
   get endNode(): ChildNode {
-    return this.currentBinding.endNode;
+    return this.binding.endNode;
   }
 
-  get currentBinding(): Binding<TLeft> | Binding<TRight> {
+  get binding(): Binding<TLeft> | Binding<TRight> {
     return this._value instanceof Left
       ? this._leftBinding!
       : this._rightBinding!;
   }
 
   connect(context: UpdateContext): void {
-    this.currentBinding.connect(context);
+    this.binding.connect(context);
   }
 
   bind(newValue: Either<TLeft, TRight>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective([Left, Right], newValue, this.currentBinding.part);
+      ensureDirective([Left, Right], newValue, this.binding.part);
     }
 
     const oldValue = this._value;
@@ -185,10 +185,10 @@ export class EitherBinding<TLeft, TRight>
   }
 
   unbind(context: UpdateContext): void {
-    this.currentBinding.unbind(context);
+    this.binding.unbind(context);
   }
 
   disconnect(context: UpdateContext): void {
-    this.currentBinding.disconnect(context);
+    this.binding.disconnect(context);
   }
 }
