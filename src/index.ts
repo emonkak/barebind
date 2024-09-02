@@ -1,4 +1,5 @@
 export * from './baseTypes.js';
+export * from './error.js';
 export * from './renderContext.js';
 export * from './renderHost.js';
 export * from './scheduler.js';
