@@ -24,7 +24,9 @@ export class BlockBinding<TValue, TContext>
 
   private _flags = FLAG_NONE;
 
-  static ofRoot<TValue, TContext>(binding: Binding<TValue, TContext>) {
+  static ofRoot<TValue, TContext>(
+    binding: Binding<TValue, TContext>,
+  ): BlockBinding<TValue, TContext> {
     return binding instanceof BlockBinding
       ? binding
       : new BlockBinding(binding, null);
