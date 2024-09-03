@@ -1,34 +1,42 @@
 export function dependenciesAreChanged(
-  oldDependencies: unknown[] | undefined,
-  newDependencies: unknown[] | undefined,
+  oldDependencies: ArrayLike<unknown> | undefined,
+  newDependencies: ArrayLike<unknown> | undefined,
 ): boolean {
-  if (
+  return (
     oldDependencies === undefined ||
     newDependencies === undefined ||
-    oldDependencies.length !== newDependencies.length
-  ) {
+    !sequentialEqual(oldDependencies, newDependencies)
+  );
+}
+
+export function sequentialEqual<T>(
+  first: ArrayLike<T>,
+  second: ArrayLike<T>,
+): boolean {
+  if (first === second) {
     return true;
   }
 
-  for (let i = 0, l = oldDependencies.length; i < l; i++) {
-    if (!Object.is(oldDependencies[i], newDependencies[i])) {
-      return true;
+  if (first.length !== second.length) {
+    return false;
+  }
+
+  for (let i = 0, l = first.length; i < l; i++) {
+    if (!Object.is(first[i], second[i])) {
+      return false;
     }
   }
 
-  return false;
+  return true;
 }
 
-export function shallowEqual<T extends {}>(
-  firstProps: T,
-  secondProps: T,
-): boolean {
-  if (firstProps === secondProps) {
+export function shallowEqual<T extends {}>(first: T, second: T): boolean {
+  if (first === second) {
     return true;
   }
 
-  const firstKeys = Object.keys(firstProps) as (keyof T)[];
-  const secondKeys = Object.keys(secondProps) as (keyof T)[];
+  const firstKeys = Object.keys(first) as (keyof T)[];
+  const secondKeys = Object.keys(second) as (keyof T)[];
 
   if (firstKeys.length !== secondKeys.length) {
     return false;
@@ -36,10 +44,7 @@ export function shallowEqual<T extends {}>(
 
   for (let i = 0, l = firstKeys.length; i < l; i++) {
     const key = firstKeys[i]!;
-    if (
-      !Object.hasOwn(secondProps, key) ||
-      !Object.is(firstProps[key], secondProps[key])
-    ) {
+    if (!Object.hasOwn(second, key) || !Object.is(first[key], second[key])) {
       return false;
     }
   }
