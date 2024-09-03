@@ -391,14 +391,14 @@ describe('hashLocation', () => {
     );
     const state = { key: 'foo' };
 
-    history.replaceState(state, '', '#/articles/123');
+    history.replaceState(state, '', '#/articles/foo%2Fbar');
 
     const [locationState, { getCurrentURL }] = context.use(hashLocation);
     context.finalize();
     context.flushUpdate();
 
-    expect(location.hash).toBe('#/articles/123');
-    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(location.hash).toBe('#/articles/foo%2Fbar');
+    expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.url.toString()).toBe(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(state);
     expect(locationState.type).toBe(LocationType.Load);
@@ -420,16 +420,16 @@ describe('hashLocation', () => {
     context.finalize();
     context.flushUpdate();
 
-    navigate(new RelativeURL('/articles/456'));
+    navigate(new RelativeURL('/articles/foo%2Fbar'));
 
     context = context.clone();
     [locationState] = context.use(hashLocation);
 
-    expect(location.hash).toBe('#/articles/456');
+    expect(location.hash).toBe('#/articles/foo%2Fbar');
     expect(history.state).toBe(null);
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
-    expect(locationState.url.toString()).toBe('/articles/456');
+    expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.state).toBe(history.state);
     expect(locationState.type).toBe(LocationType.Push);
   });
@@ -451,16 +451,16 @@ describe('hashLocation', () => {
     context.finalize();
     context.flushUpdate();
 
-    navigate(new RelativeURL('/articles/123'), { replace: true, state });
+    navigate(new RelativeURL('/articles/foo%2Fbar'), { replace: true, state });
 
     context = context.clone();
     [locationState] = context.use(hashLocation);
 
-    expect(location.hash).toBe('#/articles/123');
+    expect(location.hash).toBe('#/articles/foo%2Fbar');
     expect(history.state).toStrictEqual(state);
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
-    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.state).toBe(state);
     expect(locationState.type).toBe(LocationType.Replace);
   });
@@ -488,7 +488,7 @@ describe('hashLocation', () => {
     );
     const event = new HashChangeEvent('hashchange', {
       oldURL: location.href,
-      newURL: getHrefWithoutHash(location) + '#/articles/123',
+      newURL: getHrefWithoutHash(location) + '#/articles/foo%2Fbar',
     });
 
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
@@ -502,7 +502,7 @@ describe('hashLocation', () => {
     context = context.clone();
     [locationState] = context.use(hashLocation);
 
-    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.type).toBe(LocationType.Pop);
 
     cleanHooks(hooks);
@@ -527,7 +527,7 @@ describe('hashLocation', () => {
       queue,
       hooks,
     );
-    const element = createElement('a', { href: '#/articles/123' });
+    const element = createElement('a', { href: '#/articles/foo%2Fbar' });
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
@@ -544,7 +544,7 @@ describe('hashLocation', () => {
     context = context.clone();
     [locationState] = context.use(hashLocation);
 
-    expect(locationState.url.toString()).toBe('/articles/123');
+    expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.type).toBe(LocationType.Push);
 
     cleanHooks(hooks);

@@ -204,14 +204,14 @@ export function hashLocation(
 ): readonly [LocationState, LocationActions] {
   const [locationState, setLocationState] = context.useState<LocationState>(
     () => ({
-      url: RelativeURL.fromString(decodeHash(location.hash)),
+      url: RelativeURL.fromString(trimHash(location.hash)),
       state: history.state,
       type: LocationType.Load,
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
     () => ({
-      getCurrentURL: () => RelativeURL.fromString(decodeHash(location.hash)),
+      getCurrentURL: () => RelativeURL.fromString(trimHash(location.hash)),
       navigate: (
         url: RelativeURL,
         { replace = false, state = null }: NavigateOptions = {},
@@ -241,7 +241,7 @@ export function hashLocation(
     // location type cannot be detected completely correctly.
     const handleHashChange = (event: HashChangeEvent) => {
       setLocationState({
-        url: RelativeURL.fromString(decodeHash(new URL(event.newURL).hash)),
+        url: RelativeURL.fromString(trimHash(new URL(event.newURL).hash)),
         state: history.state,
         type: LocationType.Pop,
       });
@@ -370,7 +370,7 @@ export function createHashClickHandler({
     event.preventDefault();
 
     const base = getCurrentURL();
-    const url = RelativeURL.fromString(decodeHash(element.hash), base);
+    const url = RelativeURL.fromString(trimHash(element.hash), base);
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.hash === location.hash;
@@ -390,7 +390,7 @@ export function resetScrollPosition(locationState: LocationState): void {
   }
 
   if (url.hash !== '') {
-    const id = decodeHash(url.hash);
+    const id = trimHash(url.hash);
     const element = document.getElementById(id);
 
     if (element !== null) {
@@ -400,10 +400,6 @@ export function resetScrollPosition(locationState: LocationState): void {
   }
 
   scrollTo(0, 0);
-}
-
-function decodeHash(hash: string): string {
-  return decodeURIComponent(hash.slice(1));
 }
 
 function isInternalLink(element: Element): element is HTMLAnchorElement {
@@ -418,4 +414,8 @@ function isInternalLink(element: Element): element is HTMLAnchorElement {
 
 function isPressedModifierKeys(event: MouseEvent): boolean {
   return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+}
+
+function trimHash(hash: string): string {
+  return hash.startsWith('#') ? hash.slice(1) : hash;
 }
