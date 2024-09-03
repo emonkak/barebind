@@ -130,17 +130,17 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
-    tokens: TemplateStringsArray,
-    data: TData,
+    strings: TemplateStringsArray,
+    values: TData,
   ): Template<TData, RenderContext> {
-    let template = this._cachedTemplates.get(tokens);
+    let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
       const marker = getMarker(this._hostName);
       template = new LazyTemplate(() =>
-        TaggedTemplate.parseHTML(tokens, data, marker),
+        TaggedTemplate.parseHTML(strings, values, marker),
       );
-      this._cachedTemplates.set(tokens, template);
+      this._cachedTemplates.set(strings, template);
     }
 
     return template;
@@ -162,17 +162,17 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 
   getSVGTemplate<TData extends readonly any[]>(
-    tokens: TemplateStringsArray,
-    data: TData,
+    strings: TemplateStringsArray,
+    values: TData,
   ): Template<TData, RenderContext> {
-    let template = this._cachedTemplates.get(tokens);
+    let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
       const marker = getMarker(this._hostName);
       template = new LazyTemplate(() =>
-        TaggedTemplate.parseSVG(tokens, data, marker),
+        TaggedTemplate.parseSVG(strings, values, marker),
       );
-      this._cachedTemplates.set(tokens, template);
+      this._cachedTemplates.set(strings, template);
     }
 
     return template;

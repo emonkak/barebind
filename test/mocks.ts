@@ -166,8 +166,8 @@ export class MockRenderHost implements RenderHost<RenderContext> {
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
-    _tokens: TemplateStringsArray,
-    _data: TData,
+    _strings: TemplateStringsArray,
+    _values: TData,
   ): Template<TData> {
     return new MockTemplate();
   }
@@ -176,18 +176,18 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return '__test__';
   }
 
-  getSVGTemplate<TData extends readonly any[]>(
-    _tokens: TemplateStringsArray,
-    _data: TData,
-  ): Template<TData> {
-    return new MockTemplate();
-  }
-
   getScopedValue(
     _key: unknown,
     _block: Block<RenderContext> | null = null,
   ): unknown {
     return undefined;
+  }
+
+  getSVGTemplate<TData extends readonly any[]>(
+    _strings: TemplateStringsArray,
+    _data: TData,
+  ): Template<TData> {
+    return new MockTemplate();
   }
 
   nextIdentifier(): number {

@@ -73,7 +73,7 @@ export class TaggedTemplate<TData extends readonly any[]>
   implements Template<TData>
 {
   static parseHTML<TData extends readonly any[]>(
-    tokens: readonly string[],
+    strings: readonly string[],
     values: TData,
     marker: string,
   ): TaggedTemplate<TData> {
@@ -81,13 +81,13 @@ export class TaggedTemplate<TData extends readonly any[]>
       ensureValidMarker(marker);
     }
     const template = document.createElement('template');
-    template.innerHTML = tokens.join(marker).trim();
-    const holes = parseChildren(template.content, tokens, values, marker);
+    template.innerHTML = strings.join(marker).trim();
+    const holes = parseChildren(strings, values, marker, template.content);
     return new TaggedTemplate(template, holes);
   }
 
   static parseSVG<TData extends readonly any[]>(
-    tokens: readonly string[],
+    strings: readonly string[],
     values: TData,
     marker: string,
   ): TaggedTemplate<TData> {
@@ -95,11 +95,11 @@ export class TaggedTemplate<TData extends readonly any[]>
       ensureValidMarker(marker);
     }
     const template = document.createElement('template');
-    template.innerHTML = '<svg>' + tokens.join(marker).trim() + '</svg>';
+    template.innerHTML = '<svg>' + strings.join(marker).trim() + '</svg>';
     template.content.replaceChildren(
       ...template.content.firstChild!.childNodes,
     );
-    const holes = parseChildren(template.content, tokens, values, marker);
+    const holes = parseChildren(strings, values, marker, template.content);
     return new TaggedTemplate(template, holes);
   }
 
@@ -123,10 +123,8 @@ export class TaggedTemplate<TData extends readonly any[]>
   render(data: TData, context: DirectiveContext): TaggedTemplateView<TData> {
     const holes = this._holes;
 
-    if (holes.length !== data.length) {
-      throw new Error(
-        'The number of holes and the number of values do not match. There may be multiple holes indicating the same attribute.',
-      );
+    DEBUG: {
+      assertNumberOfValues(holes.length, data.length);
     }
 
     const bindings = new Array(holes.length);
@@ -252,10 +250,8 @@ export class TaggedTemplateView<TData extends readonly any[]>
   }
 
   bind(data: TData, context: UpdateContext): void {
-    if (data.length !== this._bindings.length) {
-      throw new Error(
-        `The number of new data must be ${this._bindings.length}, but got ${data.length}.`,
-      );
+    DEBUG: {
+      assertNumberOfValues(this._bindings.length, data.length);
     }
 
     for (let i = 0, l = this._bindings.length; i < l; i++) {
@@ -330,7 +326,7 @@ function extractCaseSensitiveAttributeName(token: string): string | undefined {
 
 function parseAttribtues(
   element: Element,
-  tokens: readonly string[],
+  strings: readonly string[],
   marker: string,
   holes: Hole[],
   index: number,
@@ -350,7 +346,7 @@ function parseAttribtues(
       });
     } else if (value === marker) {
       const caseSensitiveName = extractCaseSensitiveAttributeName(
-        tokens[holes.length]!,
+        strings[holes.length]!,
       );
 
       DEBUG: {
@@ -406,10 +402,10 @@ function parseAttribtues(
 }
 
 function parseChildren(
-  rootNode: Node,
-  tokens: readonly string[],
+  strings: readonly string[],
   values: readonly unknown[],
   marker: string,
+  rootNode: Node,
 ): Hole[] {
   const walker = document.createTreeWalker(
     rootNode,
@@ -432,7 +428,7 @@ function parseChildren(
             );
           }
         }
-        parseAttribtues(currentNode as Element, tokens, marker, holes, index);
+        parseAttribtues(currentNode as Element, strings, marker, holes, index);
         break;
       }
       case Node.COMMENT_NODE: {
@@ -502,7 +498,33 @@ function parseChildren(
     index++;
   }
 
+  DEBUG: {
+    assertNumberOfHoles(values.length, holes.length);
+  }
+
   return holes;
+}
+
+function assertNumberOfValues(
+  expectedLength: number,
+  actualLength: number,
+): void {
+  if (expectedLength !== actualLength) {
+    throw new Error(
+      `The number of values must be ${expectedLength}, but got ${actualLength}. There may be multiple holes indicating the same attribute.`,
+    );
+  }
+}
+
+function assertNumberOfHoles(
+  expectedLength: number,
+  actualLength: number,
+): void {
+  if (expectedLength !== actualLength) {
+    throw new Error(
+      `The number of holes must be ${expectedLength}, but got ${actualLength}. There may be multiple holes indicating the same attribute.`,
+    );
+  }
 }
 
 function trimTrailingSlash(s: string): string {

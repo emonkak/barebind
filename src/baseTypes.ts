@@ -59,12 +59,12 @@ export interface RenderHost<TContext> {
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
   getHTMLTemplate<TData extends readonly any[]>(
-    tokens: TemplateStringsArray,
+    strings: TemplateStringsArray,
     data: TData,
   ): Template<TData, TContext>;
   getHostName(): string;
   getSVGTemplate<TData extends readonly any[]>(
-    tokens: TemplateStringsArray,
+    strings: TemplateStringsArray,
     data: TData,
   ): Template<TData, TContext>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;

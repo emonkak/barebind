@@ -152,10 +152,10 @@ describe('ClientRenderHost', () => {
   });
 
   describe('.getHTMLTemplate()', () => {
-    it('should create a HTML template from tokens', () => {
+    it('should create a HTML template from strings', () => {
       const host = new ClientRenderHost();
-      const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const lazyTemplate = host.getHTMLTemplate(tokens, data) as LazyTemplate<
+      const [strings, data] = tmpl`<div>Hello, ${'World'}!</div>`;
+      const lazyTemplate = host.getHTMLTemplate(strings, data) as LazyTemplate<
         unknown[],
         unknown
       >;
@@ -176,18 +176,18 @@ describe('ClientRenderHost', () => {
 
     it('should get a HTML template from cache if avaiable', () => {
       const host = new ClientRenderHost();
-      const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = host.getHTMLTemplate(tokens, data);
+      const [strings, data] = tmpl`<div>Hello, ${'World'}!</div>`;
+      const template = host.getHTMLTemplate(strings, data);
 
-      expect(template).toBe(host.getHTMLTemplate(tokens, data));
+      expect(template).toBe(host.getHTMLTemplate(strings, data));
     });
   });
 
   describe('.getSVGTemplate()', () => {
-    it('should create a SVG template from tokens', () => {
+    it('should create a SVG template from strings', () => {
       const host = new ClientRenderHost();
-      const [tokens, data] = tmpl`<text>Hello, ${'World'}!</text>`;
-      const lazyTemplate = host.getSVGTemplate(tokens, data) as LazyTemplate<
+      const [strings, data] = tmpl`<text>Hello, ${'World'}!</text>`;
+      const lazyTemplate = host.getSVGTemplate(strings, data) as LazyTemplate<
         unknown[],
         unknown
       >;
@@ -208,10 +208,10 @@ describe('ClientRenderHost', () => {
 
     it('should get a SVG template from cache if avaiable', () => {
       const host = new ClientRenderHost();
-      const [tokens, data] = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = host.getSVGTemplate(tokens, data);
+      const [strings, data] = tmpl`<div>Hello, ${'World'}!</div>`;
+      const template = host.getSVGTemplate(strings, data);
 
-      expect(template).toBe(host.getSVGTemplate(tokens, data));
+      expect(template).toBe(host.getSVGTemplate(strings, data));
     });
   });
 
@@ -349,8 +349,8 @@ describe('ClientRenderHost', () => {
 });
 
 function tmpl(
-  tokens: TemplateStringsArray,
+  strings: TemplateStringsArray,
   ...data: unknown[]
 ): [TemplateStringsArray, unknown[]] {
-  return [tokens, data];
+  return [strings, data];
 }

@@ -297,6 +297,19 @@ describe('TaggedTemplate', () => {
         `;
       }).toThrow(`The attribute name must be "id", but got "class".`);
     });
+
+    it('should throw an error if the number of holes and values do not match', () => {
+      expect(() => {
+        html`
+          <div class="foo" class=${'bar'}></div>
+        `;
+      }).toThrow('The number of holes must be 1, but got 0.');
+      expect(() => {
+        html`
+          <div class=${'foo'} class=${'bar'}></div>
+        `;
+      }).toThrow('The number of holes must be 2, but got 1.');
+    });
   });
 
   describe('.parseSVG()', () => {
@@ -462,12 +475,12 @@ describe('TaggedTemplate', () => {
         new MockBlock(),
       );
 
-      const { template, data } = html`
-        <div class=${'foo'} class=${'bar'}></div>
+      const { template } = html`
+        <div>${'foo'}</div>
       `;
 
       expect(() => {
-        template.render(data, context);
+        template.render([] as any, context);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
   });
@@ -531,6 +544,23 @@ describe('TaggedTemplateView', () => {
         '<div class="bar">baz</div>',
         '<!--qux-->',
       ]);
+    });
+
+    it('should throw an error if the number of binding and values do not match', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const { template, data } = html`
+        <p>Count: ${0}</p>
+      `;
+      const view = template.render(data, context);
+
+      expect(() => {
+        view.bind([] as any, context);
+      }).toThrow('The number of values must be 1, but got 0.');
     });
   });
 
@@ -646,23 +676,6 @@ describe('TaggedTemplateView', () => {
         [0, 0],
       );
     });
-
-    it('should throw an error if the number of binding and values do not match', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const { template, data } = html`
-        <p>Count: ${0}</p>
-      `;
-      const view = template.render(data, context);
-
-      expect(() => {
-        view.bind([] as any, context);
-      }).toThrow('The number of new data must be 1, but got 0.');
-    });
   });
 
   describe('.disconnect()', () => {
@@ -749,17 +762,17 @@ describe('getMarker()', () => {
 });
 
 function html<TData extends readonly any[]>(
-  tokens: TemplateStringsArray,
+  strings: TemplateStringsArray,
   ...data: TData
 ): { template: TaggedTemplate<TData>; data: TData } {
-  return { template: TaggedTemplate.parseHTML(tokens, data, MARKER), data };
+  return { template: TaggedTemplate.parseHTML(strings, data, MARKER), data };
 }
 
 function svg<const TData extends readonly any[]>(
-  tokens: TemplateStringsArray,
+  strings: TemplateStringsArray,
   ...data: TData
 ): { template: TaggedTemplate<TData>; data: TData } {
-  return { template: TaggedTemplate.parseSVG(tokens, data, MARKER), data };
+  return { template: TaggedTemplate.parseSVG(strings, data, MARKER), data };
 }
 
 function toHTML(node: Node): string {

@@ -159,11 +159,11 @@ export class RenderContext {
   }
 
   html<TData extends readonly any[]>(
-    tokens: TemplateStringsArray,
-    ...data: TData
+    strings: TemplateStringsArray,
+    ...values: TData
   ): LazyTemplate<TData, RenderContext> {
-    const template = this._host.getHTMLTemplate(tokens, data);
-    return new LazyTemplate(template, data);
+    const template = this._host.getHTMLTemplate(strings, values);
+    return new LazyTemplate(template, values);
   }
 
   isFirstRender(): boolean {
@@ -179,11 +179,11 @@ export class RenderContext {
   }
 
   svg<TData extends readonly any[]>(
-    tokens: TemplateStringsArray,
-    ...data: TData
+    strings: TemplateStringsArray,
+    ...values: TData
   ): LazyTemplate<TData, RenderContext> {
-    const template = this._host.getSVGTemplate(tokens, data);
-    return new LazyTemplate(template, data);
+    const template = this._host.getSVGTemplate(strings, values);
+    return new LazyTemplate(template, values);
   }
 
   use<
