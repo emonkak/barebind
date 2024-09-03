@@ -1,5 +1,7 @@
 import type { RelativeURL } from './location.js';
 
+export const noMatch = Symbol('noMatch');
+
 export interface Route<
   TResult,
   TState = unknown,
@@ -22,7 +24,10 @@ export interface Route<
 
 export type Pattern = string | Matcher<unknown>;
 
-export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
+export type Matcher<T> = (
+  component: string,
+  url: RelativeURL,
+) => T | typeof noMatch;
 
 export type Handler<TArgs extends any[], TResult, TState = unknown> = (
   args: TArgs,
@@ -90,13 +95,13 @@ export class Router<TResult, TState = unknown> {
   }
 }
 
-export function integer(component: string): number | null {
+export function integer(component: string): number | typeof noMatch {
   const n = Number.parseInt(component, 10);
-  return n.toString() === component ? n : null;
+  return n.toString() === component ? n : noMatch;
 }
 
 export function regexp(pattern: RegExp): Matcher<string> {
-  return (component: string) => component.match(pattern)?.[0] ?? null;
+  return (component: string) => component.match(pattern)?.[0] ?? noMatch;
 }
 
 export function route<
@@ -143,7 +148,7 @@ function extractArgs<TPatterns extends Pattern[]>(
       }
     } else {
       const value = pattern(component, url);
-      if (value === null) {
+      if (value === noMatch) {
         return null;
       }
       args.push(value);
