@@ -34,6 +34,9 @@ describe('Router', () => {
       expect(basicRouter.match(new RelativeURL('/tags/javascript'))).toBe(
         'showTag(javascript)',
       );
+      expect(basicRouter.match(new RelativeURL('/tags/GNU%2FLinux'))).toBe(
+        'showTag(GNU/Linux)',
+      );
       expect(basicRouter.match(new RelativeURL('/categories'))).toBe(
         'indexCategories',
       );

@@ -118,7 +118,7 @@ export function route<
 }
 
 export function wildcard(component: string): string {
-  return component;
+  return decodeURIComponent(component);
 }
 
 function extractArgs<TPatterns extends Pattern[]>(
