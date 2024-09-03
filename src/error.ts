@@ -32,7 +32,7 @@ export function ensureDirective<
         oneOf(expectedClasses.map((expectedClass) => expectedClass.name)) +
         ' directive, but got "' +
         nameOf(actualValue) +
-        '". Consider using cached(), ifElse(), or keyed() directive instead.\n' +
+        '". Consider using Either.left(), Either.right(), cached(), or keyed() directive instead.\n' +
         reportPart(part),
     );
   }

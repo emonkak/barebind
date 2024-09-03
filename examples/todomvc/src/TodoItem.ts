@@ -1,9 +1,9 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import {
+  Either,
   type State,
   classMap,
   component,
-  ifElse,
 } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
@@ -53,7 +53,7 @@ export function TodoItem(
       <div class="view">
         <${
           isEditing
-            ? ifElse.then(
+            ? Either.left(
                 component(TodoInput, {
                   label: 'Edit Todo Input',
                   onSubmit: handleUpdate,
@@ -61,7 +61,7 @@ export function TodoItem(
                   defaultValue: todo.title,
                 }),
               )
-            : ifElse.else(context.html`
+            : Either.right(context.html`
               <input
                 type="checkbox"
                 class="toggle"

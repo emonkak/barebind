@@ -8,13 +8,11 @@ import {
 } from '../../src/baseTypes.js';
 import { NoValue } from '../../src/directives.js';
 import {
+  Either,
   EitherBinding,
   Left,
   Right,
-  ifElse,
-  left,
   optional,
-  right,
 } from '../../src/directives/either.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -24,22 +22,15 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-describe('left()', () => {
+describe('Either.left()', () => {
   it('should construct a Left directive', () => {
-    expect(left('foo')).toStrictEqual(new Left('foo'));
+    expect(Either.left('foo')).toStrictEqual(new Left('foo'));
   });
 });
 
-describe('right()', () => {
+describe('Either.right()', () => {
   it('should construct a Right directive', () => {
-    expect(right('foo')).toStrictEqual(new Right('foo'));
-  });
-});
-
-describe('ifElse()', () => {
-  it('should construct a Left or Right directive depending on the condition', () => {
-    expect(ifElse.then('foo')).toStrictEqual(new Right('foo'));
-    expect(ifElse.else('bar')).toStrictEqual(new Left('bar'));
+    expect(Either.right('foo')).toStrictEqual(new Right('foo'));
   });
 });
 
