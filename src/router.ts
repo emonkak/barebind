@@ -2,16 +2,19 @@ import type { RelativeURL } from './location.js';
 
 export interface Route<
   TResult,
+  TState = unknown,
   TPatterns extends Pattern[] = Pattern[],
   TInheritArgs extends unknown[] = [],
 > {
   patterns: TPatterns;
   handler: Handler<
     [...TInheritArgs, ...ExtractArgs<TPatterns>],
-    TResult
+    TResult,
+    TState
   > | null;
   childRoutes: Route<
     TResult,
+    TState,
     Pattern[],
     [...TInheritArgs, ...ExtractArgs<TPatterns>]
   >[];
@@ -19,16 +22,12 @@ export interface Route<
 
 export type Pattern = string | Matcher<unknown>;
 
-export type Matcher<T> = (
-  component: string,
-  url: RelativeURL,
-  state: unknown,
-) => T | null;
+export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
 
-export type Handler<TArgs extends any[], TResult> = (
+export type Handler<TArgs extends any[], TResult, TState = unknown> = (
   args: TArgs,
   url: RelativeURL,
-  state: unknown,
+  state: TState,
 ) => TResult;
 
 type ExtractArgs<TPatterns> = TPatterns extends []
@@ -43,14 +42,14 @@ type Match<TPattern> = TPattern extends string
     ? [T]
     : [];
 
-export class Router<TResult> {
-  private readonly _routes: Route<TResult>[] = [];
+export class Router<TResult, TState = unknown> {
+  private readonly _routes: Route<TResult, TState>[] = [];
 
-  constructor(routes: Route<TResult>[]) {
+  constructor(routes: Route<TResult, TState>[]) {
     this._routes = routes;
   }
 
-  match(url: RelativeURL, state: unknown = null): TResult | null {
+  match(url: RelativeURL, state: TState): TResult | null {
     const path = url.pathname;
     const pathWithoutInitialSlash = path[0] === '/' ? path.slice(1) : path;
     const components = pathWithoutInitialSlash.split('/');
@@ -66,7 +65,6 @@ export class Router<TResult> {
         patterns,
         components.slice(componentIndex, componentIndex + patterns.length),
         url,
-        state,
       );
 
       if (args !== null) {
@@ -103,13 +101,19 @@ export function regexp(pattern: RegExp): Matcher<string> {
 
 export function route<
   TResult,
+  TState = unknown,
   const TPatterns extends Pattern[] = Pattern[],
   const TInheritArgs extends unknown[] = [],
 >(
   patterns: TPatterns,
-  handler: Route<TResult, TPatterns, TInheritArgs>['handler'],
-  childRoutes: Route<TResult, TPatterns, TInheritArgs>['childRoutes'] = [],
-): Route<TResult, TPatterns, TInheritArgs> {
+  handler: Route<TResult, TState, TPatterns, TInheritArgs>['handler'],
+  childRoutes: Route<
+    TResult,
+    TState,
+    TPatterns,
+    TInheritArgs
+  >['childRoutes'] = [],
+): Route<TResult, TState, TPatterns, TInheritArgs> {
   return {
     patterns,
     handler,
@@ -125,7 +129,6 @@ function extractArgs<TPatterns extends Pattern[]>(
   patterns: TPatterns,
   components: string[],
   url: RelativeURL,
-  state: unknown,
 ): ExtractArgs<TPatterns> | null {
   if (patterns.length !== components.length) {
     return null;
@@ -139,7 +142,7 @@ function extractArgs<TPatterns extends Pattern[]>(
         return null;
       }
     } else {
-      const value = pattern(component, url, state);
+      const value = pattern(component, url);
       if (value === null) {
         return null;
       }
