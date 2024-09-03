@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
-import { component, keyedList, when } from '@emonkak/ebit/directives.js';
+import { component, keyedList, optional } from '@emonkak/ebit/directives.js';
 
 import type { Item } from '../state.js';
 import { CommentView } from './CommentView.js';
@@ -18,7 +18,7 @@ export function ItemView(
         <a href=${item.url} target="_blank">
           <h1>${item.title}</h1>
         </a>
-        <${when(!!item.domain, () => context.html`<span class="host">(${item.domain})</span>`)}>
+        <${optional(item.domain ? () => context.html`<span class="host">(${item.domain})</span>` : null)}>
         <div class="meta">
           ${item.points} points | by
           ${' '}<a href=${`#/users/${item.user}`}>${item.user}</a>

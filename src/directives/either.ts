@@ -14,6 +14,11 @@ import { NoValue } from './noValue.js';
 
 export type Either<TLeft, TRight> = Left<TLeft> | Right<TRight>;
 
+export const ifElse = {
+  then: right,
+  else: left,
+};
+
 export function left<TLeft>(left: TLeft): Left<TLeft> {
   return new Left(left);
 }
@@ -22,26 +27,10 @@ export function right<TRight>(right: TRight): Right<TRight> {
   return new Right(right);
 }
 
-export function ifElse<TThen, TElse>(
-  condition: boolean,
-  thenBlock: () => TThen,
-  elseBlock: () => TElse,
-): Either<TThen, TElse> {
-  return condition ? new Left(thenBlock()) : new Right(elseBlock());
-}
-
-export function when<TThen>(
-  condition: boolean,
-  thenBlock: () => TThen,
-): Either<TThen, NoValue> {
-  return condition ? new Left(thenBlock()) : new Right(NoValue.instance);
-}
-
-export function unless<TElse>(
-  condition: boolean,
-  elseBlock: () => TElse,
-): Either<NoValue, TElse> {
-  return condition ? new Left(NoValue.instance) : new Right(elseBlock());
+export function optional<TValue>(
+  value: TValue | null | undefined,
+): Either<NoValue, TValue> {
+  return value != null ? new Right(value) : new Left(NoValue.instance);
 }
 
 export class Left<TLeft> implements Directive<Either<TLeft, unknown>> {

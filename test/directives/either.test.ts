@@ -13,9 +13,8 @@ import {
   Right,
   ifElse,
   left,
+  optional,
   right,
-  unless,
-  when,
 } from '../../src/directives/either.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -39,29 +38,15 @@ describe('right()', () => {
 
 describe('ifElse()', () => {
   it('should construct a Left or Right directive depending on the condition', () => {
-    const thenBlock = () => 'foo';
-    const elseBlock = () => 'bar';
-
-    expect(ifElse(true, thenBlock, elseBlock)).toStrictEqual(new Left('foo'));
-    expect(ifElse(false, thenBlock, elseBlock)).toStrictEqual(new Right('bar'));
+    expect(ifElse.then('foo')).toStrictEqual(new Right('foo'));
+    expect(ifElse.else('bar')).toStrictEqual(new Left('bar'));
   });
 });
 
-describe('when()', () => {
-  it('should construct a Left or Right directive depending on the condition', () => {
-    const thenBlock = () => 'foo';
-
-    expect(when(true, thenBlock)).toStrictEqual(new Left('foo'));
-    expect(when(false, thenBlock)).toStrictEqual(new Right(NoValue.instance));
-  });
-});
-
-describe('unless()', () => {
-  it('should construct a Left or Right directive depending on the condition', () => {
-    const elseBlock = () => 'foo';
-
-    expect(unless(true, elseBlock)).toStrictEqual(new Left(NoValue.instance));
-    expect(unless(false, elseBlock)).toStrictEqual(new Right('foo'));
+describe('optional()', () => {
+  it('should construct a Right directive if the value is not null or undefined', () => {
+    expect(optional('foo')).toStrictEqual(new Right('foo'));
+    expect(optional(null)).toStrictEqual(new Left(NoValue.instance));
   });
 });
 

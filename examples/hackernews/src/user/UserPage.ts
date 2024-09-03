@@ -3,7 +3,11 @@ import {
   type RenderContext,
   type TemplateResult,
 } from '@emonkak/ebit';
-import { component, eagerTemplate, when } from '@emonkak/ebit/directives.js';
+import {
+  component,
+  eagerTemplate,
+  optional,
+} from '@emonkak/ebit/directives.js';
 
 import { UserState } from '../state.js';
 import { UserView } from './UserView.js';
@@ -40,8 +44,8 @@ export function UserPage(
 
   return eagerTemplate(
     childTemplate,
-    when(!isLoading && user !== null, () =>
-      component(UserView, { user: user! }),
+    optional(
+      !isLoading && user !== null ? component(UserView, { user: user! }) : null,
     ),
   );
 }

@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
-import { component, ifElse, keyedList } from '@emonkak/ebit/directives.js';
+import { component, keyedList } from '@emonkak/ebit/directives.js';
 
 import { StoryState, type StoryType } from '../state.js';
 import { StoryView } from './StoryView.js';
@@ -27,41 +27,41 @@ export function StoriesPage(
   return context.html`
     <div class="story-view">
       <div class="story-list-nav">
-        <${ifElse(
-          !isLoading && page > 1,
-          () => context.html`
-            <a
-              class="page-link"
-              href=${`#/${storyTypeToPathName(type)}/${page - 1}`}
-              aria-label="Previous Page"
-            >
-              &lt; prev
-            </a>
-          `,
-          () => context.html`
-            <span class="page-link disabled" aria-hidden="true">
-              &lt; prev
-            </span>
-          `,
-        )}>
+        <${
+          !isLoading && page > 1
+            ? context.html`
+                <a
+                  class="page-link"
+                  href=${`#/${storyTypeToPathName(type)}/${page - 1}`}
+                  aria-label="Previous Page"
+                >
+                  &lt; prev
+                </a>
+              `
+            : context.html`
+                <span class="page-link disabled" aria-hidden="true">
+                  &lt; prev
+                </span>
+              `
+        }>
         <span>page ${page}</span>
-        <${ifElse(
-          !isLoading && stories.length >= STORIES_PER_PAGE,
-          () => context.html`
-            <a
-              class="page-link"
-              href=${`#/${storyTypeToPathName(type)}/${page + 1}`}
-              aria-label="Next Page"
-            >
-              more &gt;
-            </a>
-          `,
-          () => context.html`
-            <span class="page-link disabled" aria-hidden="true">
-              more &gt;
-            </span>
-          `,
-        )}>
+        <${
+          !isLoading && stories.length >= STORIES_PER_PAGE
+            ? context.html`
+                <a
+                  class="page-link"
+                  href=${`#/${storyTypeToPathName(type)}/${page + 1}`}
+                  aria-label="Next Page"
+                >
+                  more &gt;
+                </a>
+              `
+            : context.html`
+                <span class="page-link disabled" aria-hidden="true">
+                  more &gt;
+                </span>
+              `
+        }>
       </div>
       <main class="story-list">
         <ul>

@@ -3,7 +3,11 @@ import {
   type RenderContext,
   type TemplateResult,
 } from '@emonkak/ebit';
-import { component, eagerTemplate, when } from '@emonkak/ebit/directives.js';
+import {
+  component,
+  eagerTemplate,
+  optional,
+} from '@emonkak/ebit/directives.js';
 
 import { ItemState } from '../state.js';
 import { ItemView } from './ItemView.js';
@@ -40,8 +44,8 @@ export function ItemPage(
 
   return eagerTemplate(
     childTemplate,
-    when(!isLoading && item !== null, () =>
-      component(ItemView, { item: item! }),
+    optional(
+      !isLoading && item !== null ? component(ItemView, { item }) : null,
     ),
   );
 }

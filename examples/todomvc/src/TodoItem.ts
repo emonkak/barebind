@@ -51,37 +51,38 @@ export function TodoItem(
       class=${classMap({ completed: todo.completed })}
       data-testid="todo-item">
       <div class="view">
-        <${ifElse(
-          isEditing,
-          () =>
-            component(TodoInput, {
-              label: 'Edit Todo Input',
-              onSubmit: handleUpdate,
-              onBlur: handleEndEditing,
-              defaultValue: todo.title,
-            }),
-          () => context.html`
-            <input
-              type="checkbox"
-              class="toggle"
-              data-testid="todo-item-toggle"
-              .checked=${todo.completed}
-              @change=${handleToggleItem}
-            >
-            <label
-              data-testid="todo-item-label"
-              @dblclick=${handleStartEditing}
-            >
-              ${todo.title}
-            </label>
-            <button
-              type="button"
-              class="destroy"
-              data-testid="todo-item-button"
-              @click=${handleRemoveItem}
-            >
-          `,
-        )}>
+        <${
+          isEditing
+            ? ifElse.then(
+                component(TodoInput, {
+                  label: 'Edit Todo Input',
+                  onSubmit: handleUpdate,
+                  onBlur: handleEndEditing,
+                  defaultValue: todo.title,
+                }),
+              )
+            : ifElse.else(context.html`
+              <input
+                type="checkbox"
+                class="toggle"
+                data-testid="todo-item-toggle"
+                .checked=${todo.completed}
+                @change=${handleToggleItem}
+              >
+              <label
+                data-testid="todo-item-label"
+                @dblclick=${handleStartEditing}
+              >
+                ${todo.title}
+              </label>
+              <button
+                type="button"
+                class="destroy"
+                data-testid="todo-item-button"
+                @click=${handleRemoveItem}
+              >
+            `)
+        }>
       </div>
     </li>
   `;

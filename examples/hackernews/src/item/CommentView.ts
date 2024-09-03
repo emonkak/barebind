@@ -3,7 +3,7 @@ import {
   classMap,
   component,
   keyedList,
-  when,
+  optional,
 } from '@emonkak/ebit/directives.js';
 
 import type { Comment } from '../state.js';
@@ -29,27 +29,29 @@ export function CommentView(
         ${' '}${comment.time_ago} ago
       </div>
       <div class="text" .innerHTML=${comment.content}></div>
-      <${when(
-        comment.comments.length > 0,
-        () => context.html`
-          <div class=${classMap({ toggle: true, open: isOpened })}>
-            <a @click=${handleToggleOpen}>
-              ${isOpened ? '[-]' : '[+] ' + pluralize(comment.comments.length) + ' collapsed'}
-            </a>
-          </div>
-          <${when(
-            isOpened,
-            () => context.html`
-              <ul class="comment-children">
-                <${keyedList(
-                  comment.comments,
-                  (comment) => comment.id,
-                  (comment) => component(CommentView, { comment }),
-                )}>
-              </ul>
-            `,
-          )}>
-      `,
+      <${optional(
+        comment.comments.length > 0
+          ? context.html`
+        <div class=${classMap({ toggle: true, open: isOpened })}>
+          <a @click=${handleToggleOpen}>
+            ${isOpened ? '[-]' : '[+] ' + pluralize(comment.comments.length) + ' collapsed'}
+          </a>
+        </div>
+        <${optional(
+          isOpened
+            ? context.html`
+                <ul class="comment-children">
+                  <${keyedList(
+                    comment.comments,
+                    (comment) => comment.id,
+                    (comment) => component(CommentView, { comment }),
+                  )}>
+                </ul>
+              `
+            : null,
+        )}>
+        `
+          : null,
       )}>
     </li>
   `;

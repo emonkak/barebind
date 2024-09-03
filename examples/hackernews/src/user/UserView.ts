@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
-import { when } from '@emonkak/ebit/directives.js';
+import { optional } from '@emonkak/ebit/directives.js';
 
 import type { User } from '../state.js';
 
@@ -21,9 +21,10 @@ export function UserView(
         <li>
           <span class="label">Karma:</span> ${user.karma}
         </li>
-        <${when(
-          !!user.about,
-          () => context.html`<li .innerHTML=${user.about} class="about"></li>`,
+        <${optional(
+          user.about
+            ? context.html`<li .innerHTML=${user.about} class="about"></li>`
+            : null,
         )}>
       </ul>
       <p class="links">
