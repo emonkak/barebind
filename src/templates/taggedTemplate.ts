@@ -293,10 +293,7 @@ export class TaggedTemplateView<TData extends readonly any[]>
 
   mount(part: ChildNodePart): void {
     const referenceNode = part.node;
-
-    for (let i = 0, l = this._childNodes.length; i < l; i++) {
-      referenceNode.before(this._childNodes[i]!);
-    }
+    referenceNode.before(...this._childNodes);
   }
 
   unmount(_part: ChildNodePart): void {
