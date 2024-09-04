@@ -152,11 +152,11 @@ describe('ClientRenderHost', () => {
   });
 
   describe('.getHTMLTemplate()', () => {
-    it('should create a HTML template from strings', () => {
+    it('should create a TaggedTemplate representing HTML fragment', () => {
       const host = new ClientRenderHost();
       const [strings, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const lazyTemplate = host.getHTMLTemplate(strings, data) as LazyTemplate<
-        unknown[],
+        unknown,
         unknown
       >;
 
@@ -174,7 +174,7 @@ describe('ClientRenderHost', () => {
       );
     });
 
-    it('should get a HTML template from cache if avaiable', () => {
+    it('should get a template from the cache if avaiable', () => {
       const host = new ClientRenderHost();
       const [strings, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getHTMLTemplate(strings, data);
@@ -184,7 +184,7 @@ describe('ClientRenderHost', () => {
   });
 
   describe('.getSVGTemplate()', () => {
-    it('should create a SVG template from strings', () => {
+    it('should create a template representing SVG fragment', () => {
       const host = new ClientRenderHost();
       const [strings, data] = tmpl`<text>Hello, ${'World'}!</text>`;
       const lazyTemplate = host.getSVGTemplate(strings, data) as LazyTemplate<
@@ -206,7 +206,7 @@ describe('ClientRenderHost', () => {
       );
     });
 
-    it('should get a SVG template from cache if avaiable', () => {
+    it('should get a template from the cache if avaiable', () => {
       const host = new ClientRenderHost();
       const [strings, data] = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getSVGTemplate(strings, data);
@@ -246,7 +246,27 @@ describe('ClientRenderHost', () => {
     });
   });
 
-  describe('resolveBinding()', () => {
+  describe('.getUnsafeHTMLTemplate()', () => {
+    it('should create a template representing raw HTML string', () => {
+      const host = new ClientRenderHost();
+      const content = '<div>foo</div>';
+      const template = host.getUnsafeHTMLTemplate(content);
+
+      expect(template.content).toBe(content);
+    });
+  });
+
+  describe('.getUnsafeSVGTemplate()', () => {
+    it('should create a template representing raw SVG string', () => {
+      const host = new ClientRenderHost();
+      const content = '<text>foo</text>';
+      const template = host.getUnsafeSVGTemplate(content);
+
+      expect(template.content).toBe(content);
+    });
+  });
+
+  describe('.resolveBinding()', () => {
     it('should resolve the value as an AttributeBinding if the part is a AttributePart', () => {
       const host = new ClientRenderHost();
       const value = 'foo';

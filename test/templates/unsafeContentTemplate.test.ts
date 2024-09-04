@@ -19,7 +19,7 @@ describe('UnsafeHTMLTemplate', () => {
   });
 
   describe('.render()', () => {
-    it('should render a new tempalte view', () => {
+    it('should render a new template view', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -40,7 +40,7 @@ describe('UnsafeHTMLTemplate', () => {
       ]);
     });
 
-    it('should render a new tempalte view with no child', () => {
+    it('should render a new template view with no child', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -98,7 +98,7 @@ describe('UnsafeSVGTemplate', () => {
       ]);
     });
 
-    it('should render a new tempalte view with no child', () => {
+    it('should render a new template view with no child', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),

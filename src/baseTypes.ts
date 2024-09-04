@@ -68,6 +68,8 @@ export interface RenderHost<TContext> {
     values: TData,
   ): Template<TData, TContext>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
+  getUnsafeHTMLTemplate(content: string): Template<[], TContext>;
+  getUnsafeSVGTemplate(content: string): Template<[], TContext>;
   nextIdentifier(): number;
   resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;

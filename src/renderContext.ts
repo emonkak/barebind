@@ -19,7 +19,11 @@ import {
   createUpdateQueue,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
-import { LazyTemplateResult } from './directives/templateResult.js';
+import {
+  EagerTemplateResult,
+  LazyTemplateResult,
+} from './directives/templateResult.js';
+import { EmptyTemplate } from './templates/emptyTemplate.js';
 
 export const usableTag = Symbol('Usable');
 
@@ -184,6 +188,16 @@ export class RenderContext {
   ): LazyTemplateResult<TData, RenderContext> {
     const template = this._host.getSVGTemplate(strings, values);
     return new LazyTemplateResult(template, values);
+  }
+
+  unsafeHTML(content: string): LazyTemplateResult<readonly [], RenderContext> {
+    const template = this._host.getUnsafeHTMLTemplate(content);
+    return new LazyTemplateResult(template, []);
+  }
+
+  unsafeSVG(content: string): LazyTemplateResult<readonly [], RenderContext> {
+    const template = this._host.getUnsafeSVGTemplate(content);
+    return new LazyTemplateResult(template, []);
   }
 
   use<

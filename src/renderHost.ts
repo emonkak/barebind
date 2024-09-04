@@ -24,6 +24,10 @@ import { PropertyBinding } from './bindings/property.js';
 import { RenderContext } from './renderContext.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
+import {
+  UnsafeHTMLTemplate,
+  UnsafeSVGTemplate,
+} from './templates/unsafeContentTemplate.js';
 
 export interface ClientRenderHostOptions {
   hostName?: string;
@@ -146,21 +150,6 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return template;
   }
 
-  getScopedValue(
-    key: unknown,
-    block: Block<RenderContext> | null = null,
-  ): unknown {
-    let currentBlock = block;
-    while (currentBlock !== null) {
-      const value = this._scopes.get(currentBlock)?.get(key);
-      if (value !== undefined) {
-        return value;
-      }
-      currentBlock = currentBlock.parent;
-    }
-    return this._constants.get(key);
-  }
-
   getSVGTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     values: TData,
@@ -176,6 +165,29 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     }
 
     return template;
+  }
+
+  getScopedValue(
+    key: unknown,
+    block: Block<RenderContext> | null = null,
+  ): unknown {
+    let currentBlock = block;
+    while (currentBlock !== null) {
+      const value = this._scopes.get(currentBlock)?.get(key);
+      if (value !== undefined) {
+        return value;
+      }
+      currentBlock = currentBlock.parent;
+    }
+    return this._constants.get(key);
+  }
+
+  getUnsafeHTMLTemplate(content: string): UnsafeHTMLTemplate {
+    return new UnsafeHTMLTemplate(content);
+  }
+
+  getUnsafeSVGTemplate(content: string): UnsafeSVGTemplate {
+    return new UnsafeSVGTemplate(content);
   }
 
   nextIdentifier(): number {

@@ -163,7 +163,7 @@ describe('RenderContext', () => {
   });
 
   describe('.html()', () => {
-    it('should return TemplateResult with an HTML-formatted TaggedTemplate', () => {
+    it('should return a TemplateResult representing HTML fragment', () => {
       const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -239,7 +239,7 @@ describe('RenderContext', () => {
   });
 
   describe('.svg()', () => {
-    it('should return TemplateResult with an SVG-formatted TaggedTemplate', () => {
+    it('should return a TemplateResult representing SVG fragment', () => {
       const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -306,6 +306,52 @@ describe('RenderContext', () => {
       expect(usableObjectSpy).toHaveBeenCalledWith(context);
       expect(usableCallback).toHaveBeenCalledOnce();
       expect(usableCallback).toHaveBeenCalledWith(context);
+    });
+  });
+
+  describe('.unsafeHTML()', () => {
+    it('should return a TemplateResult representing raw HTML string', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const getUnsafeHTMLTemplateSpy = vi.spyOn(
+        context.host,
+        'getUnsafeHTMLTemplate',
+      );
+
+      const { template, data } = context.unsafeHTML(
+        '<text>Hello, World!</text>',
+      );
+
+      expect(template).toBeInstanceOf(MockTemplate);
+      expect(data).toStrictEqual([]);
+      expect(getUnsafeHTMLTemplateSpy).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('.unsafeSVG()', () => {
+    it('should return a TemplateResult representing raw SVG string', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const getUnsafeSVGTemplateSpy = vi.spyOn(
+        context.host,
+        'getUnsafeSVGTemplate',
+      );
+
+      const { template, data } = context.unsafeSVG(
+        '<text>Hello, World!</text>',
+      );
+
+      expect(template).toBeInstanceOf(MockTemplate);
+      expect(data).toStrictEqual([]);
+      expect(getUnsafeSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });
 

@@ -172,12 +172,19 @@ export class MockRenderHost implements RenderHost<RenderContext> {
   getHTMLTemplate<TData extends readonly any[]>(
     _strings: TemplateStringsArray,
     _values: TData,
-  ): Template<TData> {
+  ): MockTemplate<TData, RenderContext> {
     return new MockTemplate();
   }
 
   getHostName(): string {
     return '__test__';
+  }
+
+  getSVGTemplate<TData extends readonly any[]>(
+    _strings: TemplateStringsArray,
+    _data: TData,
+  ): MockTemplate<TData, RenderContext> {
+    return new MockTemplate();
   }
 
   getScopedValue(
@@ -187,10 +194,11 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return undefined;
   }
 
-  getSVGTemplate<TData extends readonly any[]>(
-    _strings: TemplateStringsArray,
-    _data: TData,
-  ): Template<TData> {
+  getUnsafeHTMLTemplate(_content: string): MockTemplate<[], RenderContext> {
+    return new MockTemplate();
+  }
+
+  getUnsafeSVGTemplate(_content: string): MockTemplate<[], RenderContext> {
     return new MockTemplate();
   }
 
