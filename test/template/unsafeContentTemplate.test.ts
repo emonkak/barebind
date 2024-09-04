@@ -5,7 +5,7 @@ import {
   UnsafeContentTemplateView,
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
-} from '../../src/templates/unsafeContentTemplate.js';
+} from '../../src/template/unsafeContentTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 

@@ -15,21 +15,21 @@ import {
   nameOf,
   resolveBinding,
 } from './baseTypes.js';
-import { AttributeBinding } from './bindings/attribute.js';
-import { BlockBinding } from './bindings/block.js';
-import { ElementBinding } from './bindings/element.js';
-import { EventBinding } from './bindings/event.js';
-import { NodeBinding } from './bindings/node.js';
-import { PropertyBinding } from './bindings/property.js';
+import { AttributeBinding } from './binding/attribute.js';
+import { BlockBinding } from './binding/block.js';
+import { ElementBinding } from './binding/element.js';
+import { EventBinding } from './binding/event.js';
+import { NodeBinding } from './binding/node.js';
+import { PropertyBinding } from './binding/property.js';
 import { RenderContext } from './renderContext.js';
-import { EmptyTemplate } from './templates/emptyTemplate.js';
-import { LazyTemplate } from './templates/lazyTemplate.js';
-import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
+import { EmptyTemplate } from './template/emptyTemplate.js';
+import { LazyTemplate } from './template/lazyTemplate.js';
+import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
-} from './templates/unsafeContentTemplate.js';
-import { ChildTemplate, TextTemplate } from './templates/valueTemplate.js';
+} from './template/unsafeContentTemplate.js';
+import { ChildTemplate, TextTemplate } from './template/valueTemplate.js';
 
 export interface ClientRenderHostOptions {
   hostName?: string;
