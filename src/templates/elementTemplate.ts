@@ -131,8 +131,11 @@ export class ElementTemplateView<TElementValue, TChildValue>
   }
 }
 
-function createElement(type: string, options: ElementTemplateOptions): Element {
-  return options.namespace !== undefined
-    ? document.createElementNS(options.namespace, type, options)
-    : document.createElement(type, options);
+function createElement(
+  type: string,
+  { namespace, ...restOptions }: ElementTemplateOptions,
+): Element {
+  return namespace !== undefined
+    ? document.createElementNS(namespace, type, restOptions)
+    : document.createElement(type, restOptions);
 }
