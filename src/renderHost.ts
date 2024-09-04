@@ -303,7 +303,10 @@ function getOptimizedTemplate<TData extends readonly any[], TContext>(
       return new TextTemplate() as Template<any, TContext>;
     }
 
-    if (beforeString === '<' && (afterString === '>' || afterString === '/>')) {
+    if (
+      (beforeString === '<' || beforeString === '<!--') &&
+      (afterString === '>' || afterString === '/>' || afterString === '-->')
+    ) {
       return new ChildTemplate() as Template<any, TContext>;
     }
   }

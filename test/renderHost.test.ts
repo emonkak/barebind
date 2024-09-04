@@ -198,7 +198,13 @@ describe('ClientRenderHost', () => {
       expect(result.data).toBe(data);
     });
 
-    it.each([[tmpl`<${'foo'}>`], [tmpl`<${'foo'}/>`], [tmpl` <${'foo'} /> `]])(
+    it.each([
+      [tmpl`<${'foo'}>`],
+      [tmpl`<${'foo'}/>`],
+      [tmpl` <${'foo'} /> `],
+      [tmpl` <!--${'foo'}--> `],
+      [tmpl` <!-- ${'foo'} --> `],
+    ])(
       'should create a ChildTemplate if there is a only child value',
       ([strings, data]) => {
         const host = new ClientRenderHost();
@@ -271,7 +277,13 @@ describe('ClientRenderHost', () => {
       expect(result.data).toBe(data);
     });
 
-    it.each([[tmpl`<${'foo'}>`], [tmpl`<${'foo'}/>`], [tmpl` <${'foo'} /> `]])(
+    it.each([
+      [tmpl`<${'foo'}>`],
+      [tmpl`<${'foo'}/>`],
+      [tmpl` <${'foo'} /> `],
+      [tmpl` <!--${'foo'}--> `],
+      [tmpl` <!-- ${'foo'} --> `],
+    ])(
       'should create a ChildTemplate if there is a only child value',
       ([strings, data]) => {
         const host = new ClientRenderHost();
