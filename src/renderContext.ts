@@ -13,13 +13,13 @@ import {
   type RefObject,
   type RenderHost,
   type TaskPriority,
+  type TemplateResult,
   UpdateContext,
   type UpdateQueue,
   type Updater,
   createUpdateQueue,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
-import { LazyTemplateResult } from './directives/templateResult.js';
 
 export const usableTag = Symbol('Usable');
 
@@ -161,9 +161,8 @@ export class RenderContext {
   html<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TData
-  ): LazyTemplateResult<TData, RenderContext> {
-    const template = this._host.getHTMLTemplate(strings, values);
-    return new LazyTemplateResult(template, values);
+  ): TemplateResult<TData, RenderContext> {
+    return this._host.getHTMLTemplateResult(strings, values);
   }
 
   isFirstRender(): boolean {
@@ -181,19 +180,16 @@ export class RenderContext {
   svg<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TData
-  ): LazyTemplateResult<TData, RenderContext> {
-    const template = this._host.getSVGTemplate(strings, values);
-    return new LazyTemplateResult(template, values);
+  ): TemplateResult<TData, RenderContext> {
+    return this._host.getSVGTemplateResult(strings, values);
   }
 
-  unsafeHTML(content: string): LazyTemplateResult<readonly [], RenderContext> {
-    const template = this._host.getUnsafeHTMLTemplate(content);
-    return new LazyTemplateResult(template, []);
+  unsafeHTML(content: string): TemplateResult<readonly [], RenderContext> {
+    return this._host.getUnsafeHTMLTemplateResult(content);
   }
 
-  unsafeSVG(content: string): LazyTemplateResult<readonly [], RenderContext> {
-    const template = this._host.getUnsafeSVGTemplate(content);
-    return new LazyTemplateResult(template, []);
+  unsafeSVG(content: string): TemplateResult<readonly [], RenderContext> {
+    return this._host.getUnsafeSVGTemplateResult(content);
   }
 
   use<

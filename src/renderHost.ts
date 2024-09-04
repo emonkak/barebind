@@ -9,6 +9,7 @@ import {
   type RenderHost,
   type TaskPriority,
   type Template,
+  type TemplateResult,
   UpdateContext,
   type UpdateQueue,
   type Updater,
@@ -21,6 +22,10 @@ import { ElementBinding } from './binding/element.js';
 import { EventBinding } from './binding/event.js';
 import { NodeBinding } from './binding/node.js';
 import { PropertyBinding } from './binding/property.js';
+import {
+  EagerTemplateResult,
+  LazyTemplateResult,
+} from './directives/templateResult.js';
 import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { LazyTemplate } from './template/lazyTemplate.js';
@@ -135,11 +140,12 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return this._hostName;
   }
 
-  getHTMLTemplate<TData extends readonly any[]>(
+  getHTMLTemplateResult<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     values: TData,
-  ): Template<TData, RenderContext> {
-    let template = this._cachedTemplates.get(strings);
+  ): TemplateResult<TData, RenderContext> {
+    let template: Template<TData, RenderContext> | undefined =
+      this._cachedTemplates.get(strings);
 
     if (template === undefined) {
       template =
@@ -148,14 +154,17 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
       this._cachedTemplates.set(strings, template);
     }
 
-    return template;
+    return template instanceof LazyTemplate
+      ? new LazyTemplateResult(template, values)
+      : new EagerTemplateResult(template, values);
   }
 
-  getSVGTemplate<TData extends readonly any[]>(
+  getSVGTemplateResult<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     values: TData,
-  ): Template<TData, RenderContext> {
-    let template = this._cachedTemplates.get(strings);
+  ): TemplateResult<TData, RenderContext> {
+    let template: Template<TData, RenderContext> | undefined =
+      this._cachedTemplates.get(strings);
 
     if (template === undefined) {
       template =
@@ -164,7 +173,9 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
       this._cachedTemplates.set(strings, template);
     }
 
-    return template;
+    return template instanceof LazyTemplate
+      ? new LazyTemplateResult(template, values)
+      : new EagerTemplateResult(template, values);
   }
 
   getScopedValue(
@@ -182,12 +193,16 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return this._constants.get(key);
   }
 
-  getUnsafeHTMLTemplate(content: string): UnsafeHTMLTemplate {
-    return new UnsafeHTMLTemplate(content);
+  getUnsafeHTMLTemplateResult(
+    content: string,
+  ): TemplateResult<readonly [], RenderContext> {
+    return new LazyTemplateResult(new UnsafeHTMLTemplate(content), []);
   }
 
-  getUnsafeSVGTemplate(content: string): UnsafeSVGTemplate {
-    return new UnsafeSVGTemplate(content);
+  getUnsafeSVGTemplateResult(
+    content: string,
+  ): TemplateResult<readonly [], RenderContext> {
+    return new LazyTemplateResult(new UnsafeSVGTemplate(content), []);
   }
 
   nextIdentifier(): number {
@@ -262,7 +277,7 @@ class UnmountNode implements Effect {
 
 function getHTMLTemplate<TData extends readonly any[], TContext>(
   strings: readonly string[],
-  values: readonly unknown[],
+  values: TData,
   marker: string,
 ): Template<TData, TContext> {
   return new LazyTemplate(() =>
@@ -298,7 +313,7 @@ function getOptimizedTemplate<TData extends readonly any[], TContext>(
 
 function getSVGTemplate<TData extends readonly any[], TContext>(
   strings: readonly string[],
-  values: readonly unknown[],
+  values: TData,
   marker: string,
 ): Template<TData, TContext> {
   return new LazyTemplate(() =>

@@ -58,18 +58,22 @@ export interface RenderHost<TContext> {
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
-  getHTMLTemplate<TData extends readonly any[]>(
+  getHTMLTemplateResult<TData extends readonly any[]>(
     strings: TemplateStringsArray,
-    values: TData,
-  ): Template<TData, TContext>;
+    data: TData,
+  ): TemplateResult<TData, TContext>;
   getHostName(): string;
-  getSVGTemplate<TData extends readonly any[]>(
+  getSVGTemplateResult<TData extends readonly any[]>(
     strings: TemplateStringsArray,
-    values: TData,
-  ): Template<TData, TContext>;
+    data: TData,
+  ): TemplateResult<TData, TContext>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
-  getUnsafeHTMLTemplate(content: string): Template<[], TContext>;
-  getUnsafeSVGTemplate(content: string): Template<[], TContext>;
+  getUnsafeHTMLTemplateResult(
+    content: string,
+  ): TemplateResult<readonly [], TContext>;
+  getUnsafeSVGTemplateResult(
+    content: string,
+  ): TemplateResult<readonly [], TContext>;
   nextIdentifier(): number;
   resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;

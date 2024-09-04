@@ -13,6 +13,7 @@ import {
   type RenderHost,
   type TaskPriority,
   type Template,
+  type TemplateResult,
   type TemplateView,
   type UpdateContext,
   type UpdateQueue,
@@ -169,22 +170,22 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return 'user-blocking';
   }
 
-  getHTMLTemplate<TData extends readonly any[]>(
+  getHTMLTemplateResult<TData extends readonly any[]>(
     _strings: TemplateStringsArray,
-    _values: TData,
-  ): MockTemplate<TData, RenderContext> {
-    return new MockTemplate();
+    values: TData,
+  ): TemplateResult<TData, RenderContext> {
+    return { template: new MockTemplate(), data: values };
   }
 
   getHostName(): string {
     return '__test__';
   }
 
-  getSVGTemplate<TData extends readonly any[]>(
+  getSVGTemplateResult<TData extends readonly any[]>(
     _strings: TemplateStringsArray,
-    _data: TData,
-  ): MockTemplate<TData, RenderContext> {
-    return new MockTemplate();
+    values: TData,
+  ): TemplateResult<TData, RenderContext> {
+    return { template: new MockTemplate(), data: values };
   }
 
   getScopedValue(
@@ -194,12 +195,16 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return undefined;
   }
 
-  getUnsafeHTMLTemplate(_content: string): MockTemplate<[], RenderContext> {
-    return new MockTemplate();
+  getUnsafeHTMLTemplateResult(
+    _content: string,
+  ): TemplateResult<[], RenderContext> {
+    return { template: new MockTemplate(), data: [] };
   }
 
-  getUnsafeSVGTemplate(_content: string): MockTemplate<[], RenderContext> {
-    return new MockTemplate();
+  getUnsafeSVGTemplateResult(
+    _content: string,
+  ): TemplateResult<[], RenderContext> {
+    return { template: new MockTemplate(), data: [] };
   }
 
   nextIdentifier(): number {

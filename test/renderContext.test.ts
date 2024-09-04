@@ -170,16 +170,20 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const template = new MockTemplate<any, RenderContext>();
-      const getHTMLTemplateSpy = vi
-        .spyOn(context.host, 'getHTMLTemplate')
-        .mockReturnValue(template);
+      const templateResult = {
+        template: new MockTemplate<any, RenderContext>(),
+        data: [],
+      };
+      const getHTMLTemplateResultSpy = vi
+        .spyOn(context.host, 'getHTMLTemplateResult')
+        .mockReturnValue(templateResult);
 
-      const result = context.html`<div class=${0}>Hello, ${1}!</div>`;
-
-      expect(result.template).toBe(template);
-      expect(result.data).toStrictEqual([0, 1]);
-      expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
+      expect(context.html`<div>Hello, ${'World'}!</div>`).toBe(templateResult);
+      expect(getHTMLTemplateResultSpy).toHaveBeenCalledOnce();
+      expect(getHTMLTemplateResultSpy).toHaveBeenCalledWith(
+        ['<div>Hello, ', '!</div>'],
+        ['World'],
+      );
     });
   });
 
@@ -248,16 +252,20 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const template = new MockTemplate<any, RenderContext>();
-      const getSVGTemplateSpy = vi
-        .spyOn(context.host, 'getSVGTemplate')
-        .mockReturnValue(template);
+      const templateResult = {
+        template: new MockTemplate<any, RenderContext>(),
+        data: [],
+      };
+      const getSVGTemplateResultSpy = vi
+        .spyOn(context.host, 'getSVGTemplateResult')
+        .mockReturnValue(templateResult);
 
-      const result = context.svg`<text x=${0} y=${1}>Hello, ${2}!</text>`;
-
-      expect(result.template).toBe(template);
-      expect(result.data).toStrictEqual([0, 1, 2]);
-      expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
+      expect(context.svg`<text>Hello, ${'World'}!</text>`).toBe(templateResult);
+      expect(getSVGTemplateResultSpy).toHaveBeenCalledOnce();
+      expect(getSVGTemplateResultSpy).toHaveBeenCalledWith(
+        ['<text>Hello, ', '!</text>'],
+        ['World'],
+      );
     });
   });
 
@@ -321,18 +329,18 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const getUnsafeHTMLTemplateSpy = vi.spyOn(
-        context.host,
-        'getUnsafeHTMLTemplate',
-      );
+      const templateResult = {
+        template: new MockTemplate<readonly [], RenderContext>(),
+        data: [],
+      } as const;
+      const content = '<div>Hello, World!</div>';
+      const getUnsafeHTMLTemplateResultSpy = vi
+        .spyOn(context.host, 'getUnsafeHTMLTemplateResult')
+        .mockReturnValue(templateResult);
 
-      const { template, data } = context.unsafeHTML(
-        '<text>Hello, World!</text>',
-      );
-
-      expect(template).toBeInstanceOf(MockTemplate);
-      expect(data).toStrictEqual([]);
-      expect(getUnsafeHTMLTemplateSpy).toHaveBeenCalledOnce();
+      expect(context.unsafeHTML(content)).toBe(templateResult);
+      expect(getUnsafeHTMLTemplateResultSpy).toHaveBeenCalledOnce();
+      expect(getUnsafeHTMLTemplateResultSpy).toHaveBeenCalledWith(content);
     });
   });
 
@@ -344,18 +352,18 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const getUnsafeSVGTemplateSpy = vi.spyOn(
-        context.host,
-        'getUnsafeSVGTemplate',
-      );
+      const templateResult = {
+        template: new MockTemplate<readonly [], RenderContext>(),
+        data: [],
+      } as const;
+      const content = '<text>Hello, World!</text>';
+      const getUnsafeSVGTemplateResultSpy = vi
+        .spyOn(context.host, 'getUnsafeSVGTemplateResult')
+        .mockReturnValue(templateResult);
 
-      const { template, data } = context.unsafeSVG(
-        '<text>Hello, World!</text>',
-      );
-
-      expect(template).toBeInstanceOf(MockTemplate);
-      expect(data).toStrictEqual([]);
-      expect(getUnsafeSVGTemplateSpy).toHaveBeenCalledOnce();
+      expect(context.unsafeSVG(content)).toBe(templateResult);
+      expect(getUnsafeSVGTemplateResultSpy).toHaveBeenCalledOnce();
+      expect(getUnsafeSVGTemplateResultSpy).toHaveBeenCalledWith(content);
     });
   });
 
