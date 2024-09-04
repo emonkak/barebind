@@ -11,6 +11,7 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,
+  MockTemplate,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -38,6 +39,14 @@ describe('ChildTemplate', () => {
       expect(view.binding.part.node.nodeValue).toBe('TextDirective');
       expect(view.startNode).toBe(view.binding.startNode);
       expect(view.endNode).toBe(view.binding.endNode);
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the instance is the same as this one', () => {
+      const template = new ChildTemplate();
+      expect(template.isSameTemplate(template)).toBe(true);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });
@@ -71,6 +80,14 @@ describe('TextTemplate', () => {
       });
       expect(view.startNode).toBe(view.binding.startNode);
       expect(view.endNode).toBe(view.binding.endNode);
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the instance is the same as this one', () => {
+      const template = TextTemplate.instance;
+      expect(template.isSameTemplate(template)).toBe(true);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });

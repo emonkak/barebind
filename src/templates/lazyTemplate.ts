@@ -25,4 +25,8 @@ export class LazyTemplate<TData, TContext>
     }
     return this._memoizedTemplate.render(data, context);
   }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return other === this;
+  }
 }

@@ -180,7 +180,7 @@ export class TemplateResultBinding<TData, TContext>
     const { template, data } = newValue;
 
     if (this._pendingView !== null) {
-      if (this._value.template === template) {
+      if (this._value.template.isSameTemplate(template)) {
         // Here we use the same template as before. However the view may have
         // been unmounted. If so, we have to remount it.
         if (this._pendingView !== this._memoizedView) {

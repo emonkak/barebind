@@ -7,6 +7,7 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,
+  MockTemplate,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -55,6 +56,14 @@ describe('ElementTemplate', () => {
       });
       expect(view.startNode).toBe(view.elementBinding.startNode);
       expect(view.endNode).toBe(view.elementBinding.endNode);
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the instance is the same as this one', () => {
+      const template = new ElementTemplate('div');
+      expect(template.isSameTemplate(template)).toBe(true);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });

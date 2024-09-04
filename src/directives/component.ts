@@ -195,7 +195,7 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._pendingView !== null) {
       // Safety: If a pending view exists, there will always be a memoized
       // template.
-      if (this._memoizedTemplate! === template) {
+      if (this._memoizedTemplate!.isSameTemplate(template)) {
         // Here we use the same template as before. However the view may have
         // been unmounted. If so, we have to remount it.
         if (this._memoizedView !== this._pendingView) {

@@ -7,7 +7,7 @@ import {
   UnsafeSVGTemplate,
 } from '../../src/templates/unsafeContentTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockRenderHost } from '../mocks.js';
+import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 
 describe('UnsafeHTMLTemplate', () => {
   describe('.constructor()', () => {
@@ -53,6 +53,15 @@ describe('UnsafeHTMLTemplate', () => {
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
       expect(view.childNodes.map(toHTML)).toStrictEqual([]);
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the content is the same as this one', () => {
+      const template = new UnsafeHTMLTemplate('foo');
+      expect(template.isSameTemplate(new UnsafeHTMLTemplate('foo'))).toBe(true);
+      expect(template.isSameTemplate(new UnsafeSVGTemplate('foo'))).toBe(false);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });
@@ -102,6 +111,17 @@ describe('UnsafeSVGTemplate', () => {
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
       expect(view.childNodes.map(toHTML)).toStrictEqual([]);
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the content is the same as this one', () => {
+      const template = new UnsafeSVGTemplate('foo');
+      expect(template.isSameTemplate(new UnsafeSVGTemplate('foo'))).toBe(true);
+      expect(template.isSameTemplate(new UnsafeHTMLTemplate('foo'))).toBe(
+        false,
+      );
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });

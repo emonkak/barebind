@@ -210,6 +210,10 @@ export class TaggedTemplate<TData extends readonly any[]>
 
     return new TaggedTemplateView(bindings, childNodes);
   }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return other === this;
+  }
 }
 
 export class TaggedTemplateView<TData extends readonly any[]>

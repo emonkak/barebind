@@ -25,6 +25,13 @@ export class UnsafeHTMLTemplate implements Template<readonly []> {
     template.innerHTML = this._content;
     return new UnsafeContentTemplateView([...template.content.childNodes]);
   }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return (
+      other === this ||
+      (other instanceof UnsafeHTMLTemplate && other._content === this._content)
+    );
+  }
 }
 
 export class UnsafeSVGTemplate implements Template<readonly []> {
@@ -47,6 +54,13 @@ export class UnsafeSVGTemplate implements Template<readonly []> {
     return new UnsafeContentTemplateView([
       ...template.content.firstChild!.childNodes,
     ]);
+  }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return (
+      other === this ||
+      (other instanceof UnsafeSVGTemplate && other._content === this._content)
+    );
   }
 }
 

@@ -23,6 +23,10 @@ export class ChildTemplate<T> implements Template<readonly [T]> {
     }
     return new PartTemplateView(binding);
   }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return other === this;
+  }
 }
 
 export class TextTemplate<T> implements Template<readonly [T]> {
@@ -41,6 +45,10 @@ export class TextTemplate<T> implements Template<readonly [T]> {
     } as const;
     const binding = resolveBinding(data[0], part, context);
     return new PartTemplateView(binding);
+  }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return other === this;
   }
 }
 

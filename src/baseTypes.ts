@@ -60,12 +60,12 @@ export interface RenderHost<TContext> {
   getCurrentPriority(): TaskPriority;
   getHTMLTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
-    data: TData,
+    values: TData,
   ): Template<TData, TContext>;
   getHostName(): string;
   getSVGTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
-    data: TData,
+    values: TData,
   ): Template<TData, TContext>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
   nextIdentifier(): number;
@@ -88,6 +88,7 @@ export interface Template<TData, TContext = unknown> {
     data: TData,
     context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext>;
+  isSameTemplate(other: Template<unknown, TContext>): boolean;
 }
 
 export interface TemplateResult<TData = unknown, TContext = unknown> {

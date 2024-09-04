@@ -6,7 +6,7 @@ import {
   EmptyTemplateView,
 } from '../../src/templates/emptyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
-import { MockBlock, MockRenderHost } from '../mocks.js';
+import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('.constructor()', () => {
@@ -30,6 +30,14 @@ describe('EmptyTemplate', () => {
       expect(view).toBeInstanceOf(EmptyTemplateView);
       expect(view.startNode).toBe(null);
       expect(view.endNode).toBe(null);
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the instance is the same as this one', () => {
+      const template = EmptyTemplate.instance;
+      expect(template.isSameTemplate(template)).toBe(true);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });

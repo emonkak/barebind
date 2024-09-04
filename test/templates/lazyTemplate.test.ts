@@ -38,4 +38,12 @@ describe('LazyTemplate', () => {
       expect(renderSpy).toHaveBeenCalledWith(data, context);
     });
   });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the instance is the same as this one', () => {
+      const template = new LazyTemplate(() => new MockTemplate());
+      expect(template.isSameTemplate(template)).toBe(true);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
 });

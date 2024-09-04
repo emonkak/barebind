@@ -21,6 +21,7 @@ import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,
+  MockTemplate,
   TextBinding,
   TextDirective,
 } from '../mocks.js';
@@ -482,6 +483,14 @@ describe('TaggedTemplate', () => {
       expect(() => {
         template.render([] as any, context);
       }).toThrow('There may be multiple holes indicating the same attribute.');
+    });
+  });
+
+  describe('.isSameTemplate()', () => {
+    it('should return true if the instance and the same as this one', () => {
+      const { template } = html`<div>${'foo'}</div>`;
+      expect(template.isSameTemplate(template)).toBe(true);
+      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });

@@ -59,6 +59,10 @@ export class ElementTemplate<TElementValue, TChildValue>
 
     return new ElementTemplateView(elementBinding, childBinding);
   }
+
+  isSameTemplate(other: Template<unknown>): boolean {
+    return other === this;
+  }
 }
 
 export class ElementTemplateView<TElementValue, TChildValue>
