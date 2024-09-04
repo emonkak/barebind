@@ -5,7 +5,7 @@ import {
 } from '@emonkak/ebit';
 import {
   component,
-  eagerTemplate,
+  eagerTemplateResult,
   optional,
 } from '@emonkak/ebit/directives.js';
 
@@ -42,7 +42,7 @@ export function ItemPage(
     `;
   }
 
-  return eagerTemplate(
+  return eagerTemplateResult(
     childTemplate,
     optional(
       !isLoading && item !== null ? component(ItemView, { item }) : null,

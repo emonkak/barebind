@@ -10,7 +10,7 @@ import {
   ComponentBinding,
   component,
 } from '../../src/directives/component.js';
-import { EagerTemplate } from '../../src/directives/template.js';
+import { EagerTemplateResult } from '../../src/directives/templateResult.js';
 import type { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -22,7 +22,7 @@ import {
 
 describe('component()', () => {
   it('should construct a new Component directive', () => {
-    const type = () => new EagerTemplate(new MockTemplate(), {});
+    const type = () => new EagerTemplateResult(new MockTemplate(), {});
     const props = {};
     const value = component(type, props);
 
@@ -35,7 +35,7 @@ describe('Component', () => {
   describe('[nameTag]', () => {
     it('should return a string represented itself', () => {
       const value = new Component(function foo() {
-        return new EagerTemplate(new MockTemplate(), {});
+        return new EagerTemplateResult(new MockTemplate(), {});
       }, {});
       expect(value[nameTag]).toBe('Component(foo)');
     });
@@ -50,7 +50,7 @@ describe('Component', () => {
       );
 
       const value = new Component(
-        () => new EagerTemplate(new MockTemplate(), {}),
+        () => new EagerTemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -74,7 +74,7 @@ describe('Component', () => {
       );
 
       const value = new Component(
-        () => new EagerTemplate(new MockTemplate(), {}),
+        () => new EagerTemplateResult(new MockTemplate(), {}),
         {},
       );
       const part = {
@@ -101,7 +101,10 @@ describe('ComponentBinding', () => {
       const data = {};
       const template = new MockTemplate();
       const view = new MockTemplateView(data, [document.createComment('')]);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -135,7 +138,7 @@ describe('ComponentBinding', () => {
       const value = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
           context.forceUpdate('user-blocking');
-          return new EagerTemplate(new MockTemplate(), {});
+          return new EagerTemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -163,7 +166,10 @@ describe('ComponentBinding', () => {
       const data = {};
       const template = new MockTemplate();
       const view = new MockTemplateView(data, [document.createComment('')]);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -216,11 +222,11 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const view = new MockTemplateView(data1, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplate(template, data1),
+        () => new EagerTemplateResult(template, data1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplate(template, data2),
+        () => new EagerTemplateResult(template, data2),
         {},
       );
       const part = {
@@ -269,15 +275,15 @@ describe('ComponentBinding', () => {
       const view2 = new MockTemplateView(data2, [document.createComment('')]);
       const view3 = new MockTemplateView(data3, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplate(template1, data1),
+        () => new EagerTemplateResult(template1, data1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplate(template2, data2),
+        () => new EagerTemplateResult(template2, data2),
         {},
       );
       const value3 = new Component(
-        () => new EagerTemplate(template3, data3),
+        () => new EagerTemplateResult(template3, data3),
         {},
       );
       const part = {
@@ -358,11 +364,11 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const view = new MockTemplateView(data1, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplate(template, data1),
+        () => new EagerTemplateResult(template, data1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplate(template, data2),
+        () => new EagerTemplateResult(template, data2),
         {},
       );
       const part = {
@@ -404,11 +410,11 @@ describe('ComponentBinding', () => {
       const view1 = new MockTemplateView(data1, [document.createComment('')]);
       const view2 = new MockTemplateView(data2, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplate(template1, data1),
+        () => new EagerTemplateResult(template1, data1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplate(template2, data2),
+        () => new EagerTemplateResult(template2, data2),
         {},
       );
       const part = {
@@ -469,7 +475,10 @@ describe('ComponentBinding', () => {
       const data = {};
       const template = new MockTemplate();
       const view = new MockTemplateView(data, [document.createComment('')]);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -522,11 +531,11 @@ describe('ComponentBinding', () => {
       const view1 = new MockTemplateView(data1, [document.createComment('')]);
       const view2 = new MockTemplateView(data2, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplate(template1, data1),
+        () => new EagerTemplateResult(template1, data1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplate(template2, data2),
+        () => new EagerTemplateResult(template2, data2),
         {},
       );
       const part = {
@@ -593,7 +602,7 @@ describe('ComponentBinding', () => {
         (_props, context) => {
           context.useEffect(() => cleanup1Fn);
           context.useLayoutEffect(() => cleanup2Fn);
-          return new EagerTemplate(new MockTemplate(), {});
+          return new EagerTemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -601,7 +610,7 @@ describe('ComponentBinding', () => {
         (_props, context) => {
           context.useEffect(() => cleanup1Fn);
           context.useLayoutEffect(() => cleanup2Fn);
-          return new EagerTemplate(new MockTemplate(), {});
+          return new EagerTemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -633,7 +642,10 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const view = new MockTemplateView(data);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -673,7 +685,10 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const view = new MockTemplateView(data);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -709,7 +724,7 @@ describe('ComponentBinding', () => {
         (_props, context) => {
           context.useEffect(() => cleanup1Fn);
           context.useLayoutEffect(() => cleanup2Fn);
-          return new EagerTemplate(new MockTemplate(), {});
+          return new EagerTemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -741,7 +756,10 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const view = new MockTemplateView(data);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -785,7 +803,7 @@ describe('ComponentBinding', () => {
           context.useLayoutEffect(effect3);
           context.useEffect(effect4);
           context.useEffect(effect5);
-          return new EagerTemplate(new MockTemplate(), {});
+          return new EagerTemplateResult(new MockTemplate(), {});
         },
         {},
       );
@@ -841,7 +859,10 @@ describe('ComponentBinding', () => {
       const template = new MockTemplate();
       const data = {};
       const view = new MockTemplateView(data);
-      const value = new Component(() => new EagerTemplate(template, data), {});
+      const value = new Component(
+        () => new EagerTemplateResult(template, data),
+        {},
+      );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

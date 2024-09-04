@@ -17,21 +17,27 @@ import {
 import { BlockBinding } from '../bindings/block.js';
 import { ensureDirective, reportPart } from '../error.js';
 
-export function eagerTemplate<const TData extends readonly any[], TContext>(
+export function eagerTemplateResult<
+  const TData extends readonly any[],
+  TContext,
+>(
   template: Template<TData, TContext>,
   ...data: TData
-): EagerTemplate<TData, TContext> {
-  return new EagerTemplate(template, data);
+): EagerTemplateResult<TData, TContext> {
+  return new EagerTemplateResult(template, data);
 }
 
-export function lazyTemplate<const TData extends readonly any[], TContext>(
+export function lazyTemplateResult<
+  const TData extends readonly any[],
+  TContext,
+>(
   template: Template<TData, TContext>,
   ...data: TData
-): LazyTemplate<TData, TContext> {
-  return new LazyTemplate(template, data);
+): LazyTemplateResult<TData, TContext> {
+  return new LazyTemplateResult(template, data);
 }
 
-export class EagerTemplate<TData, TContext>
+export class EagerTemplateResult<TData, TContext>
   implements TemplateResult<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;
@@ -52,24 +58,24 @@ export class EagerTemplate<TData, TContext>
   }
 
   get [nameTag](): string {
-    return 'EagerTemplate(' + nameOf(this._template) + ')';
+    return 'EagerTemplateResult(' + nameOf(this._template) + ')';
   }
 
   [directiveTag](
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<TData, TContext> {
+  ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'EagerTemplate directive must be used in a child node, but it is used here:\n' +
+        'EagerTemplateResult directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    return new TemplateBinding(this, part);
+    return new TemplateResultBinding(this, part);
   }
 }
 
-export class LazyTemplate<TData, TContext>
+export class LazyTemplateResult<TData, TContext>
   implements TemplateResult<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;
@@ -90,7 +96,7 @@ export class LazyTemplate<TData, TContext>
   }
 
   get [nameTag](): string {
-    return 'LazyTemplate(' + nameOf(this._template) + ')';
+    return 'LazyTemplateResult(' + nameOf(this._template) + ')';
   }
 
   [directiveTag](
@@ -99,16 +105,16 @@ export class LazyTemplate<TData, TContext>
   ): BlockBinding<TemplateResult<TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'LazyTemplate directive must be used in a child node, but it is used here:\n' +
+        'LazyTemplateResult directive must be used in a child node, but it is used here:\n' +
           reportPart(part),
       );
     }
-    const binding = new TemplateBinding(this, part);
+    const binding = new TemplateResultBinding(this, part);
     return new BlockBinding(binding, context.block);
   }
 }
 
-export class TemplateBinding<TData, TContext>
+export class TemplateResultBinding<TData, TContext>
   implements Binding<TemplateResult<TData, TContext>, TContext>, Effect
 {
   private _value: TemplateResult<TData, TContext>;
@@ -164,7 +170,11 @@ export class TemplateBinding<TData, TContext>
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
-      ensureDirective([EagerTemplate, LazyTemplate], newValue, this._part);
+      ensureDirective(
+        [EagerTemplateResult, LazyTemplateResult],
+        newValue,
+        this._part,
+      );
     }
 
     const { template, data } = newValue;
