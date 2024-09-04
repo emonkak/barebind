@@ -17,13 +17,10 @@ export class UnsafeHTMLTemplate implements Template<readonly []> {
     return this._content;
   }
 
-  render(
-    _data: readonly [],
-    _context: DirectiveContext,
-  ): UnsafeContentTemplateView {
+  render(_data: readonly [], _context: DirectiveContext): UnsafeTemplateView {
     const template = document.createElement('template');
     template.innerHTML = this._content;
-    return new UnsafeContentTemplateView([...template.content.childNodes]);
+    return new UnsafeTemplateView([...template.content.childNodes]);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
@@ -45,15 +42,10 @@ export class UnsafeSVGTemplate implements Template<readonly []> {
     return this._content;
   }
 
-  render(
-    _data: readonly [],
-    _context: DirectiveContext,
-  ): UnsafeContentTemplateView {
+  render(_data: readonly [], _context: DirectiveContext): UnsafeTemplateView {
     const template = document.createElement('template');
     template.innerHTML = '<svg>' + this._content + '</svg>';
-    return new UnsafeContentTemplateView([
-      ...template.content.firstChild!.childNodes,
-    ]);
+    return new UnsafeTemplateView([...template.content.firstChild!.childNodes]);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
@@ -64,7 +56,7 @@ export class UnsafeSVGTemplate implements Template<readonly []> {
   }
 }
 
-export class UnsafeContentTemplateView implements TemplateView<readonly []> {
+export class UnsafeTemplateView implements TemplateView<readonly []> {
   private _childNodes: ChildNode[] = [];
 
   constructor(childNodes: ChildNode[]) {

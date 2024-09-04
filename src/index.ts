@@ -13,7 +13,7 @@ export * from './template/elementTemplate.js';
 export * from './template/emptyTemplate.js';
 export * from './template/lazyTemplate.js';
 export * from './template/taggedTemplate.js';
-export * from './template/unsafeContentTemplate.js';
+export * from './template/unsafeTemplate.js';
 export * from './template/valueTemplate.js';
 export * from './updater/concurrentUpdater.js';
 export * from './updater/syncUpdater.js';

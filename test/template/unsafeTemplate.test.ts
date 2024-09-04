@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import {
-  UnsafeContentTemplateView,
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
-} from '../../src/template/unsafeContentTemplate.js';
+  UnsafeTemplateView,
+} from '../../src/template/unsafeTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 
@@ -135,7 +135,7 @@ describe('UnsafeContentTemplateView', () => {
         new MockBlock(),
       );
 
-      const view = new UnsafeContentTemplateView([]);
+      const view = new UnsafeTemplateView([]);
 
       view.connect(context);
       view.bind([], context);
@@ -152,7 +152,7 @@ describe('UnsafeContentTemplateView', () => {
         new MockBlock(),
       );
 
-      const view = new UnsafeContentTemplateView([]);
+      const view = new UnsafeTemplateView([]);
 
       view.connect(context);
       view.unbind(context);
@@ -169,7 +169,7 @@ describe('UnsafeContentTemplateView', () => {
         new MockBlock(),
       );
 
-      const view = new UnsafeContentTemplateView([]);
+      const view = new UnsafeTemplateView([]);
 
       view.disconnect(context);
 

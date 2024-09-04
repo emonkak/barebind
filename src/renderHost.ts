@@ -33,7 +33,7 @@ import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
-} from './template/unsafeContentTemplate.js';
+} from './template/unsafeTemplate.js';
 import { ChildTemplate, TextTemplate } from './template/valueTemplate.js';
 
 export interface ClientRenderHostOptions {

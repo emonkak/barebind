@@ -24,7 +24,7 @@ import { TaggedTemplate } from '../src/template/taggedTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
-} from '../src/template/unsafeContentTemplate.js';
+} from '../src/template/unsafeTemplate.js';
 import { TextTemplate } from '../src/template/valueTemplate.js';
 import { ChildTemplate } from '../src/template/valueTemplate.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
