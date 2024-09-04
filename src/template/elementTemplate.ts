@@ -4,11 +4,13 @@ import {
   type DirectiveContext,
   PartType,
   type Template,
+  type TemplateResult,
   type TemplateView,
   type UpdateContext,
   nameOf,
   resolveBinding,
 } from '../baseTypes.js';
+import { EagerTemplateResult } from '../directives/templateResult.js';
 
 export type ElementTemplateOptions = ElementCreationOptions & {
   namespace?: string;
@@ -62,6 +64,12 @@ export class ElementTemplate<TElement, TChild>
 
   isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
+  }
+
+  wrapInResult(
+    data: readonly [TElement, TChild],
+  ): TemplateResult<readonly [TElement, TChild]> {
+    return new EagerTemplateResult(this, data);
   }
 }
 

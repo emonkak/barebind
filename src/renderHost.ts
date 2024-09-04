@@ -9,7 +9,6 @@ import {
   type RenderHost,
   type TaskPriority,
   type Template,
-  type TemplateResult,
   UpdateContext,
   type UpdateQueue,
   type Updater,
@@ -22,10 +21,6 @@ import { ElementBinding } from './binding/element.js';
 import { EventBinding } from './binding/event.js';
 import { NodeBinding } from './binding/node.js';
 import { PropertyBinding } from './binding/property.js';
-import {
-  EagerTemplateResult,
-  LazyTemplateResult,
-} from './directives/templateResult.js';
 import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { LazyTemplate } from './template/lazyTemplate.js';
@@ -57,7 +52,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
 
   private readonly _cachedTemplates: WeakMap<
     TemplateStringsArray,
-    Template<readonly any[], RenderContext>
+    Template<any, RenderContext>
   > = new WeakMap();
 
   private _hostName: string;
@@ -140,12 +135,11 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return this._hostName;
   }
 
-  getHTMLTemplateResult<TData extends readonly any[]>(
+  getHTMLTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     values: TData,
-  ): TemplateResult<TData, RenderContext> {
-    let template: Template<TData, RenderContext> | undefined =
-      this._cachedTemplates.get(strings);
+  ): Template<TData, RenderContext> {
+    let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
       template =
@@ -154,17 +148,14 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
       this._cachedTemplates.set(strings, template);
     }
 
-    return template instanceof LazyTemplate
-      ? new LazyTemplateResult(template, values)
-      : new EagerTemplateResult(template, values);
+    return template;
   }
 
-  getSVGTemplateResult<TData extends readonly any[]>(
+  getSVGTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     values: TData,
-  ): TemplateResult<TData, RenderContext> {
-    let template: Template<TData, RenderContext> | undefined =
-      this._cachedTemplates.get(strings);
+  ): Template<TData, RenderContext> {
+    let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
       template =
@@ -173,9 +164,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
       this._cachedTemplates.set(strings, template);
     }
 
-    return template instanceof LazyTemplate
-      ? new LazyTemplateResult(template, values)
-      : new EagerTemplateResult(template, values);
+    return template;
   }
 
   getScopedValue(
@@ -193,16 +182,12 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return this._constants.get(key);
   }
 
-  getUnsafeHTMLTemplateResult(
-    content: string,
-  ): TemplateResult<readonly [], RenderContext> {
-    return new LazyTemplateResult(new UnsafeHTMLTemplate(content), []);
+  getUnsafeHTMLTemplate(content: string): Template<readonly [], RenderContext> {
+    return new UnsafeHTMLTemplate(content);
   }
 
-  getUnsafeSVGTemplateResult(
-    content: string,
-  ): TemplateResult<readonly [], RenderContext> {
-    return new LazyTemplateResult(new UnsafeSVGTemplate(content), []);
+  getUnsafeSVGTemplate(content: string): Template<readonly [], RenderContext> {
+    return new UnsafeSVGTemplate(content);
   }
 
   nextIdentifier(): number {

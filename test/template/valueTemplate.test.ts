@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/binding/node.js';
+import { EagerTemplateResult } from '../../src/directives/templateResult.js';
 import {
   ChildTemplate,
   TextTemplate,
@@ -45,8 +46,21 @@ describe('ChildTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the instance is the same as this one', () => {
       const template = new ChildTemplate();
+
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in EagerTemplateResult', () => {
+      const template = new ChildTemplate();
+      const data = [new TextDirective('foo')] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(EagerTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });
@@ -81,6 +95,18 @@ describe('TextTemplate', () => {
       const template = new TextTemplate();
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in EagerTemplateResult', () => {
+      const template = new TextTemplate();
+      const data = ['foo'] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(EagerTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });

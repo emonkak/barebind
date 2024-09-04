@@ -162,7 +162,7 @@ export class RenderContext {
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<TData, RenderContext> {
-    return this._host.getHTMLTemplateResult(strings, values);
+    return this._host.getHTMLTemplate(strings, values).wrapInResult(values);
   }
 
   isFirstRender(): boolean {
@@ -181,15 +181,15 @@ export class RenderContext {
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<TData, RenderContext> {
-    return this._host.getSVGTemplateResult(strings, values);
+    return this._host.getSVGTemplate(strings, values).wrapInResult(values);
   }
 
   unsafeHTML(content: string): TemplateResult<readonly [], RenderContext> {
-    return this._host.getUnsafeHTMLTemplateResult(content);
+    return this._host.getUnsafeHTMLTemplate(content).wrapInResult([]);
   }
 
   unsafeSVG(content: string): TemplateResult<readonly [], RenderContext> {
-    return this._host.getUnsafeSVGTemplateResult(content);
+    return this._host.getUnsafeSVGTemplate(content).wrapInResult([]);
   }
 
   use<

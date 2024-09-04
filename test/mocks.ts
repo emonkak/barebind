@@ -103,6 +103,13 @@ export class MockTemplate<TData, TContext>
   isSameTemplate(other: Template<unknown, TContext>): boolean {
     return other === this;
   }
+
+  wrapInResult(data: TData): TemplateResult<TData> {
+    return {
+      template: this,
+      data,
+    };
+  }
 }
 
 export class MockTemplateView<TData, TContext>
@@ -170,22 +177,22 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return 'user-blocking';
   }
 
-  getHTMLTemplateResult<TData extends readonly any[]>(
+  getHTMLTemplate<TData extends readonly any[]>(
     _strings: TemplateStringsArray,
-    values: TData,
-  ): TemplateResult<TData, RenderContext> {
-    return { template: new MockTemplate(), data: values };
+    _values: TData,
+  ): Template<TData, RenderContext> {
+    return new MockTemplate();
   }
 
   getHostName(): string {
     return '__test__';
   }
 
-  getSVGTemplateResult<TData extends readonly any[]>(
+  getSVGTemplate<TData extends readonly any[]>(
     _strings: TemplateStringsArray,
-    values: TData,
-  ): TemplateResult<TData, RenderContext> {
-    return { template: new MockTemplate(), data: values };
+    _values: TData,
+  ): Template<TData, RenderContext> {
+    return new MockTemplate();
   }
 
   getScopedValue(
@@ -195,16 +202,12 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return undefined;
   }
 
-  getUnsafeHTMLTemplateResult(
-    _content: string,
-  ): TemplateResult<[], RenderContext> {
-    return { template: new MockTemplate(), data: [] };
+  getUnsafeHTMLTemplate(_content: string): Template<[], RenderContext> {
+    return new MockTemplate();
   }
 
-  getUnsafeSVGTemplateResult(
-    _content: string,
-  ): TemplateResult<[], RenderContext> {
-    return { template: new MockTemplate(), data: [] };
+  getUnsafeSVGTemplate(_content: string): Template<[], RenderContext> {
+    return new MockTemplate();
   }
 
   nextIdentifier(): number {

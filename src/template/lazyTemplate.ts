@@ -1,4 +1,10 @@
-import type { DirectiveContext, Template, TemplateView } from '../baseTypes.js';
+import type {
+  DirectiveContext,
+  Template,
+  TemplateResult,
+  TemplateView,
+} from '../baseTypes.js';
+import { LazyTemplateResult } from '../directives/templateResult.js';
 
 export class LazyTemplate<TData, TContext>
   implements Template<TData, TContext>
@@ -28,5 +34,9 @@ export class LazyTemplate<TData, TContext>
 
   isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
+  }
+
+  wrapInResult(data: TData): TemplateResult<TData, TContext> {
+    return new LazyTemplateResult(this, data);
   }
 }

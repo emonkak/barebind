@@ -2,9 +2,11 @@ import type {
   ChildNodePart,
   DirectiveContext,
   Template,
+  TemplateResult,
   TemplateView,
   UpdateContext,
 } from '../baseTypes.js';
+import { EagerTemplateResult } from '../directives/templateResult.js';
 
 export class EmptyTemplate implements Template<readonly []> {
   static readonly instance = new EmptyTemplate();
@@ -21,6 +23,10 @@ export class EmptyTemplate implements Template<readonly []> {
 
   isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
+  }
+
+  wrapInResult(data: readonly []): TemplateResult<readonly []> {
+    return new EagerTemplateResult(this, data);
   }
 }
 

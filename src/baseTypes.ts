@@ -58,22 +58,18 @@ export interface RenderHost<TContext> {
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
-  getHTMLTemplateResult<TData extends readonly any[]>(
+  getHTMLTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     data: TData,
-  ): TemplateResult<TData, TContext>;
+  ): Template<TData, TContext>;
   getHostName(): string;
-  getSVGTemplateResult<TData extends readonly any[]>(
+  getSVGTemplate<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     data: TData,
-  ): TemplateResult<TData, TContext>;
+  ): Template<TData, TContext>;
   getScopedValue(key: unknown, block?: Block<TContext> | null): unknown;
-  getUnsafeHTMLTemplateResult(
-    content: string,
-  ): TemplateResult<readonly [], TContext>;
-  getUnsafeSVGTemplateResult(
-    content: string,
-  ): TemplateResult<readonly [], TContext>;
+  getUnsafeHTMLTemplate(content: string): Template<readonly [], TContext>;
+  getUnsafeSVGTemplate(content: string): Template<readonly [], TContext>;
   nextIdentifier(): number;
   resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
@@ -95,6 +91,7 @@ export interface Template<TData, TContext = unknown> {
     context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext>;
   isSameTemplate(other: Template<unknown, TContext>): boolean;
+  wrapInResult(data: TData): TemplateResult<TData, TContext>;
 }
 
 export interface TemplateResult<TData = unknown, TContext = unknown> {

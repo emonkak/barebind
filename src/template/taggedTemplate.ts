@@ -5,11 +5,13 @@ import {
   type Part,
   PartType,
   type Template,
+  type TemplateResult,
   type TemplateView,
   type UpdateContext,
   nameOf,
   resolveBinding,
 } from '../baseTypes.js';
+import { LazyTemplateResult } from '../directives/templateResult.js';
 
 export type Hole =
   | AttributeHole
@@ -213,6 +215,10 @@ export class TaggedTemplate<TData extends readonly any[]>
 
   isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
+  }
+
+  wrapInResult(data: TData): TemplateResult<TData> {
+    return new LazyTemplateResult(this, data);
   }
 }
 

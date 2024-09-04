@@ -2,9 +2,11 @@ import type {
   ChildNodePart,
   DirectiveContext,
   Template,
+  TemplateResult,
   TemplateView,
   UpdateContext,
 } from '../baseTypes.js';
+import { LazyTemplateResult } from '../directives/templateResult.js';
 
 export class UnsafeHTMLTemplate implements Template<readonly []> {
   private _content: string;
@@ -28,6 +30,10 @@ export class UnsafeHTMLTemplate implements Template<readonly []> {
       other === this ||
       (other instanceof UnsafeHTMLTemplate && other._content === this._content)
     );
+  }
+
+  wrapInResult(data: readonly []): TemplateResult<readonly []> {
+    return new LazyTemplateResult(this, data);
   }
 }
 
@@ -53,6 +59,10 @@ export class UnsafeSVGTemplate implements Template<readonly []> {
       other === this ||
       (other instanceof UnsafeSVGTemplate && other._content === this._content)
     );
+  }
+
+  wrapInResult(data: readonly []): TemplateResult<readonly []> {
+    return new LazyTemplateResult(this, data);
   }
 }
 

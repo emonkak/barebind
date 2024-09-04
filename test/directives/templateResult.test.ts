@@ -22,7 +22,7 @@ import {
 
 describe('eagerTemplateResult()', () => {
   it('should construct a new EagerTemplateResult with template and data', () => {
-    const template = new MockTemplate();
+    const template = new MockTemplate<unknown[], unknown>();
     const data = ['foo'];
     const value = eagerTemplateResult(template, ...data);
 
@@ -33,7 +33,7 @@ describe('eagerTemplateResult()', () => {
 
 describe('lazyTemplateResult()', () => {
   it('should construct a new LazyTemplate with template and data', () => {
-    const template = new MockTemplate();
+    const template = new MockTemplate<unknown[], unknown>();
     const data = ['foo'];
     const value = lazyTemplateResult(template, ...data);
 

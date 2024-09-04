@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
+import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
@@ -59,9 +60,22 @@ describe('UnsafeHTMLTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the content is the same as this one', () => {
       const template = new UnsafeHTMLTemplate('foo');
+
       expect(template.isSameTemplate(new UnsafeHTMLTemplate('foo'))).toBe(true);
       expect(template.isSameTemplate(new UnsafeSVGTemplate('foo'))).toBe(false);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in LazyTemplateResult', () => {
+      const template = new UnsafeHTMLTemplate('foo');
+      const data = [] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(LazyTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });
@@ -117,11 +131,24 @@ describe('UnsafeSVGTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the content is the same as this one', () => {
       const template = new UnsafeSVGTemplate('foo');
+
       expect(template.isSameTemplate(new UnsafeSVGTemplate('foo'))).toBe(true);
       expect(template.isSameTemplate(new UnsafeHTMLTemplate('foo'))).toBe(
         false,
       );
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in LazyTemplateResult', () => {
+      const template = new UnsafeSVGTemplate('foo');
+      const data = [] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(LazyTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });

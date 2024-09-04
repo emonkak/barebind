@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { UpdateContext } from '../../src/baseTypes.js';
+import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import { LazyTemplate } from '../../src/template/lazyTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -42,8 +43,21 @@ describe('LazyTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the instance is the same as this one', () => {
       const template = new LazyTemplate(() => new MockTemplate());
+
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in LazyTemplateResult', () => {
+      const template = new LazyTemplate(() => new MockTemplate());
+      const data = ['foo'] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(LazyTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });

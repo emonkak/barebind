@@ -11,6 +11,7 @@ import { ElementBinding } from '../../src/binding/element.js';
 import { EventBinding } from '../../src/binding/event.js';
 import { NodeBinding } from '../../src/binding/node.js';
 import { PropertyBinding } from '../../src/binding/property.js';
+import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
   TaggedTemplate,
   TaggedTemplateView,
@@ -489,8 +490,20 @@ describe('TaggedTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the instance and the same as this one', () => {
       const { template } = html`<div>${'foo'}</div>`;
+
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in LazyTemplateResult', () => {
+      const { template, data } = html`<div>${'foo'}</div>`;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(LazyTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });

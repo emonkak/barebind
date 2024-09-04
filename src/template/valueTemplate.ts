@@ -4,11 +4,13 @@ import {
   type DirectiveContext,
   PartType,
   type Template,
+  type TemplateResult,
   type TemplateView,
   type UpdateContext,
   nameOf,
   resolveBinding,
 } from '../baseTypes.js';
+import { EagerTemplateResult } from '../directives/templateResult.js';
 
 export class ChildTemplate<T> implements Template<readonly [T]> {
   render(data: readonly [T], context: DirectiveContext): ValueTemplateView<T> {
@@ -27,6 +29,10 @@ export class ChildTemplate<T> implements Template<readonly [T]> {
   isSameTemplate(other: Template<unknown>): boolean {
     return this === other;
   }
+
+  wrapInResult(data: readonly [T]): TemplateResult<readonly [T]> {
+    return new EagerTemplateResult(this, data);
+  }
 }
 
 export class TextTemplate<T> implements Template<readonly [T]> {
@@ -41,6 +47,10 @@ export class TextTemplate<T> implements Template<readonly [T]> {
 
   isSameTemplate(other: Template<unknown>): boolean {
     return this === other;
+  }
+
+  wrapInResult(data: readonly [T]): TemplateResult<readonly [T]> {
+    return new EagerTemplateResult(this, data);
   }
 }
 

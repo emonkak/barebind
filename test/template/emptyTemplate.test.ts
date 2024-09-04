@@ -36,8 +36,20 @@ describe('EmptyTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the instance is the same as this one', () => {
       const template = EmptyTemplate.instance;
+
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in EagerTemplateResult', () => {
+      const template = EmptyTemplate.instance;
+      const data = [] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });

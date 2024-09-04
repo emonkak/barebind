@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { ElementBinding } from '../../src/binding/element.js';
+import { EagerTemplateResult } from '../../src/directives/templateResult.js';
 import { ElementTemplate } from '../../src/template/elementTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
@@ -62,8 +63,21 @@ describe('ElementTemplate', () => {
   describe('.isSameTemplate()', () => {
     it('should return true if the instance is the same as this one', () => {
       const template = new ElementTemplate('div');
+
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
+    });
+  });
+
+  describe('.wrapInResult()', () => {
+    it('should wrap this template in EagerTemplateResult', () => {
+      const template = new ElementTemplate('div');
+      const data = [{}, 'foo'] as const;
+      const result = template.wrapInResult(data);
+
+      expect(result).toBeInstanceOf(EagerTemplateResult);
+      expect(result.template).toBe(template);
+      expect(result.data).toBe(data);
     });
   });
 });
