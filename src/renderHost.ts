@@ -22,12 +22,14 @@ import { EventBinding } from './bindings/event.js';
 import { NodeBinding } from './bindings/node.js';
 import { PropertyBinding } from './bindings/property.js';
 import { RenderContext } from './renderContext.js';
+import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
 import { TaggedTemplate, getMarker } from './templates/taggedTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
 } from './templates/unsafeContentTemplate.js';
+import { ChildTemplate, TextTemplate } from './templates/valueTemplate.js';
 
 export interface ClientRenderHostOptions {
   hostName?: string;
@@ -140,10 +142,9 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
-      const marker = getMarker(this._hostName);
-      template = new LazyTemplate(() =>
-        TaggedTemplate.parseHTML(strings, values, marker),
-      );
+      template =
+        getOptimizedTemplate(strings, values) ??
+        getHTMLTemplate(strings, values, getMarker(this._hostName));
       this._cachedTemplates.set(strings, template);
     }
 
@@ -157,10 +158,9 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
-      const marker = getMarker(this._hostName);
-      template = new LazyTemplate(() =>
-        TaggedTemplate.parseSVG(strings, values, marker),
-      );
+      template =
+        getOptimizedTemplate(strings, values) ??
+        getSVGTemplate(strings, values, getMarker(this._hostName));
       this._cachedTemplates.set(strings, template);
     }
 
@@ -258,6 +258,52 @@ class UnmountNode implements Effect {
   commit(): void {
     this._container.removeChild(this._node);
   }
+}
+
+function getHTMLTemplate<TData extends readonly any[], TContext>(
+  strings: readonly string[],
+  values: readonly unknown[],
+  marker: string,
+): Template<TData, TContext> {
+  return new LazyTemplate(() =>
+    TaggedTemplate.parseHTML(strings, values, marker),
+  );
+}
+
+function getOptimizedTemplate<TData extends readonly any[], TContext>(
+  strings: readonly string[],
+  values: TData,
+): Template<TData, TContext> | null {
+  if (values.length === 0 && strings[0] === '') {
+    // Assumption: strings.length === 1
+    return EmptyTemplate.instance as Template<any, TContext>;
+  }
+
+  if (values.length === 1) {
+    // Assumption: strings.length === 2
+    const beforeString = strings[0]!.trim();
+    const afterString = strings[1]!.trim();
+
+    if (beforeString === '' && afterString === '') {
+      return new TextTemplate() as Template<any, TContext>;
+    }
+
+    if (beforeString === '<' && (afterString === '>' || afterString === '/>')) {
+      return new ChildTemplate() as Template<any, TContext>;
+    }
+  }
+
+  return null;
+}
+
+function getSVGTemplate<TData extends readonly any[], TContext>(
+  strings: readonly string[],
+  values: readonly unknown[],
+  marker: string,
+): Template<TData, TContext> {
+  return new LazyTemplate(() =>
+    TaggedTemplate.parseSVG(strings, values, marker),
+  );
 }
 
 function getRandomString(length: number): string {

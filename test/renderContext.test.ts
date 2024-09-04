@@ -170,13 +170,15 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const getHTMLTemplateSpy = vi.spyOn(context.host, 'getHTMLTemplate');
+      const template = new MockTemplate<any, RenderContext>();
+      const getHTMLTemplateSpy = vi
+        .spyOn(context.host, 'getHTMLTemplate')
+        .mockReturnValue(template);
 
-      const { template, data } =
-        context.html`<div class=${0}>Hello, ${1}!</div>`;
+      const result = context.html`<div class=${0}>Hello, ${1}!</div>`;
 
-      expect(template).toBeInstanceOf(MockTemplate);
-      expect(data).toStrictEqual([0, 1]);
+      expect(result.template).toBe(template);
+      expect(result.data).toStrictEqual([0, 1]);
       expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
     });
   });
@@ -246,13 +248,15 @@ describe('RenderContext', () => {
         new MockBlock(),
       );
 
-      const getSVGTemplateSpy = vi.spyOn(context.host, 'getSVGTemplate');
+      const template = new MockTemplate<any, RenderContext>();
+      const getSVGTemplateSpy = vi
+        .spyOn(context.host, 'getSVGTemplate')
+        .mockReturnValue(template);
 
-      const { template, data } =
-        context.svg`<text x=${0} y=${1}>Hello, ${2}!</text>`;
+      const result = context.svg`<text x=${0} y=${1}>Hello, ${2}!</text>`;
 
-      expect(template).toBeInstanceOf(MockTemplate);
-      expect(data).toStrictEqual([0, 1, 2]);
+      expect(result.template).toBe(template);
+      expect(result.data).toStrictEqual([0, 1, 2]);
       expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
     });
   });

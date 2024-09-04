@@ -19,11 +19,7 @@ import {
   createUpdateQueue,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
-import {
-  EagerTemplateResult,
-  LazyTemplateResult,
-} from './directives/templateResult.js';
-import { EmptyTemplate } from './templates/emptyTemplate.js';
+import { LazyTemplateResult } from './directives/templateResult.js';
 
 export const usableTag = Symbol('Usable');
 
