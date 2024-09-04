@@ -14,8 +14,8 @@ export type ElementTemplateOptions = ElementCreationOptions & {
   namespace?: string;
 };
 
-export class ElementTemplate<TElementValue, TChildValue>
-  implements Template<readonly [TElementValue, TChildValue]>
+export class ElementTemplate<TElement, TChild>
+  implements Template<readonly [TElement, TChild]>
 {
   private readonly _type: string;
 
@@ -35,9 +35,9 @@ export class ElementTemplate<TElementValue, TChildValue>
   }
 
   render(
-    data: readonly [TElementValue, TChildValue],
+    data: readonly [TElement, TChild],
     context: DirectiveContext,
-  ): ElementTemplateView<TElementValue, TChildValue> {
+  ): ElementTemplateView<TElement, TChild> {
     const [elementValue, childValue] = data;
     const elementPart = {
       type: PartType.Element,
@@ -65,26 +65,26 @@ export class ElementTemplate<TElementValue, TChildValue>
   }
 }
 
-export class ElementTemplateView<TElementValue, TChildValue>
-  implements TemplateView<readonly [TElementValue, TChildValue]>
+export class ElementTemplateView<TElement, TChild>
+  implements TemplateView<readonly [TElement, TChild]>
 {
-  private readonly _elementBinding: Binding<TElementValue>;
+  private readonly _elementBinding: Binding<TElement>;
 
-  private readonly _childBinding: Binding<TChildValue>;
+  private readonly _childBinding: Binding<TChild>;
 
   constructor(
-    elementBinding: Binding<TElementValue>,
-    childBinding: Binding<TChildValue>,
+    elementBinding: Binding<TElement>,
+    childBinding: Binding<TChild>,
   ) {
     this._elementBinding = elementBinding;
     this._childBinding = childBinding;
   }
 
-  get elementBinding(): Binding<TElementValue> {
+  get elementBinding(): Binding<TElement> {
     return this._elementBinding;
   }
 
-  get childBinding(): Binding<TChildValue> {
+  get childBinding(): Binding<TChild> {
     return this._childBinding;
   }
 
@@ -101,10 +101,7 @@ export class ElementTemplateView<TElementValue, TChildValue>
     this._childBinding.connect(context);
   }
 
-  bind(
-    data: readonly [TElementValue, TChildValue],
-    context: UpdateContext,
-  ): void {
+  bind(data: readonly [TElement, TChild], context: UpdateContext): void {
     const [elementValue, childValue] = data;
     DEBUG: {
       (this._childBinding.part as ChildNodePart).node.data = nameOf(childValue);
@@ -130,8 +127,8 @@ export class ElementTemplateView<TElementValue, TChildValue>
   }
 
   unmount(_part: ChildNodePart): void {
-    const { node } = this._elementBinding.part;
-    node.remove();
+    const element = this._elementBinding.part.node;
+    element.remove();
   }
 }
 
