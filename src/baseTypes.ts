@@ -90,8 +90,7 @@ export interface Template<TData, TContext = unknown> {
   ): TemplateView<TData, TContext>;
 }
 
-export interface TemplateResult<TData = unknown, TContext = unknown>
-  extends Directive<TemplateResult<TData, TContext>, TContext> {
+export interface TemplateResult<TData = unknown, TContext = unknown> {
   get template(): Template<TData, TContext>;
   get data(): TData;
 }
