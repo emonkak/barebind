@@ -11,7 +11,7 @@ import {
 } from '../baseTypes.js';
 
 export class ChildTemplate<T> implements Template<readonly [T]> {
-  render(data: readonly [T], context: DirectiveContext): PartTemplateView<T> {
+  render(data: readonly [T], context: DirectiveContext): ValueTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -21,38 +21,30 @@ export class ChildTemplate<T> implements Template<readonly [T]> {
     DEBUG: {
       part.node.data = nameOf(value);
     }
-    return new PartTemplateView(binding);
+    return new ValueTemplateView(binding);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
-    return other === this;
+    return this === other;
   }
 }
 
 export class TextTemplate<T> implements Template<readonly [T]> {
-  static readonly instance = new TextTemplate<any>();
-
-  private constructor() {
-    if (TextTemplate.instance !== undefined) {
-      throw new Error('TextTemplate constructor cannot be called directly.');
-    }
-  }
-
-  render(data: readonly [T], context: DirectiveContext): PartTemplateView<T> {
+  render(data: readonly [T], context: DirectiveContext): ValueTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
     const binding = resolveBinding(data[0], part, context);
-    return new PartTemplateView(binding);
+    return new ValueTemplateView(binding);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
-    return other === this;
+    return this === other;
   }
 }
 
-export class PartTemplateView<T> implements TemplateView<readonly [T]> {
+export class ValueTemplateView<T> implements TemplateView<readonly [T]> {
   private readonly _binding: Binding<T>;
 
   constructor(binding: Binding<T>) {

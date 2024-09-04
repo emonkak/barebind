@@ -4,9 +4,9 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { NodeBinding } from '../../src/bindings/node.js';
 import {
   ChildTemplate,
-  PartTemplateView,
   TextTemplate,
-} from '../../src/templates/partTemplate.js';
+  ValueTemplateView,
+} from '../../src/templates/valueTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import {
   MockBlock,
@@ -18,7 +18,7 @@ import {
 
 describe('ChildTemplate', () => {
   describe('.render()', () => {
-    it('should create a new PartTemplateView', () => {
+    it('should create a new ValueTemplateView', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -52,26 +52,19 @@ describe('ChildTemplate', () => {
 });
 
 describe('TextTemplate', () => {
-  describe('.constructor()', () => {
-    it('should throw an error from being called directly', () => {
-      expect(() => new (TextTemplate as any)()).toThrow(
-        'TextTemplate constructor cannot be called directly.',
-      );
-    });
-  });
-
   describe('.render()', () => {
-    it('should return PartTemplateView', () => {
+    it('should return ValueTemplateView', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
+      const template = new TextTemplate();
       const data = ['foo'] as const;
-      const view = TextTemplate.instance.render(data, context);
+      const view = template.render(data, context);
 
-      expect(view).toBeInstanceOf(PartTemplateView);
+      expect(view).toBeInstanceOf(ValueTemplateView);
       expect(view.binding).toBeInstanceOf(NodeBinding);
       expect(view.binding.value).toBe(data[0]);
       expect(view.binding.part).toMatchObject({
@@ -85,14 +78,14 @@ describe('TextTemplate', () => {
 
   describe('.isSameTemplate()', () => {
     it('should return true if the instance is the same as this one', () => {
-      const template = TextTemplate.instance;
+      const template = new TextTemplate();
       expect(template.isSameTemplate(template)).toBe(true);
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
     });
   });
 });
 
-describe('PartTemplateView', () => {
+describe('ValueTemplateView', () => {
   describe('.connect()', () => {
     it('should connect the binding', () => {
       const context = new UpdateContext(
@@ -107,7 +100,7 @@ describe('PartTemplateView', () => {
         node: document.createTextNode(''),
       } as const;
       const binding = new NodeBinding(value, part);
-      const view = new PartTemplateView(binding);
+      const view = new ValueTemplateView(binding);
 
       const connectSpy = vi.spyOn(binding, 'connect');
 
@@ -134,7 +127,7 @@ describe('PartTemplateView', () => {
         node: document.createTextNode(''),
       } as const;
       const binding = new NodeBinding(data1[0], part);
-      const view = new PartTemplateView(binding);
+      const view = new ValueTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
@@ -158,7 +151,7 @@ describe('PartTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(data1[0], part);
-      const view = new PartTemplateView(binding);
+      const view = new ValueTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
@@ -183,7 +176,7 @@ describe('PartTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const view = new PartTemplateView(binding);
+      const view = new ValueTemplateView(binding);
 
       const unbindSpy = vi.spyOn(binding, 'unbind');
 
@@ -208,7 +201,7 @@ describe('PartTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const view = new PartTemplateView(binding);
+      const view = new ValueTemplateView(binding);
 
       const disconnectSpy = vi.spyOn(view.binding, 'disconnect');
 
@@ -238,7 +231,7 @@ describe('PartTemplateView', () => {
         node: document.createComment(''),
       } as const;
       const binding = new TextBinding(value, part);
-      const view = new PartTemplateView(binding);
+      const view = new ValueTemplateView(binding);
 
       container.appendChild(containerPart.node);
       view.mount(containerPart);
