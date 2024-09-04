@@ -19,7 +19,7 @@ export class ChildTemplate<T> implements Template<readonly [T]> {
     const value = data[0];
     const binding = resolveBinding(value, part, context);
     DEBUG: {
-      part.node.nodeValue = nameOf(value);
+      part.node.data = nameOf(value);
     }
     return new PartTemplateView(binding);
   }
