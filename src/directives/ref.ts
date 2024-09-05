@@ -143,7 +143,7 @@ export class RefBinding implements Binding<Ref>, Effect {
 
   private _requestCommit(context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
-      context.enqueueLayoutEffect(this);
+      context.enqueueMutationEffect(this);
     }
   }
 }

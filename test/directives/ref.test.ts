@@ -121,13 +121,16 @@ describe('RefBinding', () => {
       } as const;
       const binding = new RefBinding(value, part);
 
-      const enqueueLayoutEffectSpy = vi.spyOn(context, 'enqueueLayoutEffect');
+      const enqueueMutationEffectSpy = vi.spyOn(
+        context,
+        'enqueueMutationEffect',
+      );
 
       binding.connect(context);
       binding.connect(context);
 
-      expect(enqueueLayoutEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueLayoutEffectSpy).toHaveBeenCalledWith(binding);
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
     });
   });
 
