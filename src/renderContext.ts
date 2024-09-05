@@ -4,6 +4,7 @@ import {
   type Effect,
   type EffectCallback,
   type EffectHook,
+  type FilterLiterals,
   type FinalizerHook,
   type Hook,
   HookType,
@@ -94,15 +95,15 @@ export class RenderContext {
   /**
    * @internal
    */
-  get hooks(): Hook[] {
-    return this._hooks;
+  get queue(): UpdateQueue<RenderContext> {
+    return this._queue;
   }
 
   /**
    * @internal
    */
-  get queue(): UpdateQueue<RenderContext> {
-    return this._queue;
+  get hooks(): Hook[] {
+    return this._hooks;
   }
 
   /**
@@ -116,6 +117,28 @@ export class RenderContext {
       this._queue,
       this._hooks,
     );
+  }
+
+  dynamicHTML<TData extends readonly any[]>(
+    strings: TemplateStringsArray,
+    ...values: TData
+  ): TemplateResult<FilterLiterals<TData>, RenderContext> {
+    const { strings: staticStrings, values: staticValues } =
+      this._host.processLiterals(strings, values);
+    return this._host
+      .getHTMLTemplate(staticStrings, staticValues)
+      .wrapInResult(staticValues);
+  }
+
+  dynamicSVG<TData extends readonly any[]>(
+    strings: TemplateStringsArray,
+    ...values: TData
+  ): TemplateResult<FilterLiterals<TData>, RenderContext> {
+    const { strings: staticStrings, values: staticValues } =
+      this._host.processLiterals(strings, values);
+    return this._host
+      .getSVGTemplate(staticStrings, staticValues)
+      .wrapInResult(staticValues);
   }
 
   /**

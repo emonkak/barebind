@@ -71,6 +71,13 @@ export interface RenderHost<TContext> {
   getUnsafeHTMLTemplate(content: string): Template<readonly [], TContext>;
   getUnsafeSVGTemplate(content: string): Template<readonly [], TContext>;
   nextIdentifier(): number;
+  processLiterals<TValues extends readonly any[]>(
+    strings: TemplateStringsArray,
+    values: TValues,
+  ): {
+    strings: readonly string[];
+    values: FilterLiterals<TValues>;
+  };
   resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
 }
@@ -239,6 +246,35 @@ export interface DirectiveContext<TContext = unknown> {
   readonly block: Block<TContext> | null;
 }
 
+export type FilterLiterals<TValues extends readonly any[]> = TValues extends [
+  infer THead,
+  ...infer TTail,
+]
+  ? THead extends Literal
+    ? FilterLiterals<TTail>
+    : [THead, ...FilterLiterals<TTail>]
+  : [];
+
+export class Literal {
+  readonly #string: string;
+
+  constructor(string: string) {
+    this.#string = string;
+  }
+
+  get [Symbol.toStringTag](): string {
+    return this.#string;
+  }
+
+  valueOf(): string {
+    return this.#string;
+  }
+
+  toString(): string {
+    return this.#string;
+  }
+}
+
 export class UpdateContext<TContext = unknown> {
   constructor(
     public readonly host: RenderHost<TContext>,
@@ -321,6 +357,10 @@ export function isDirective<TValue>(
   value: TValue,
 ): value is TValue & Directive<TValue> {
   return value !== null && typeof value === 'object' && directiveTag in value;
+}
+
+export function literal(string: string): Literal {
+  return new Literal(string);
 }
 
 export function nameOf(value: unknown): string {

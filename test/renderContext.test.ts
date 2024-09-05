@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
+import {
+  type Hook,
+  HookType,
+  createUpdateQueue,
+  literal,
+} from '../src/baseTypes.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
 import {
@@ -25,6 +30,72 @@ describe('RenderContext', () => {
       expect(context.block).toBe(block);
       expect(context.queue).toBe(queue);
       expect(context.hooks).toBe(hooks);
+    });
+  });
+
+  describe('.dynamicHTML()', () => {
+    it('should return a TemplateResult with literals representing HTML fragment', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const template = new MockTemplate<any, RenderContext>();
+      const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
+      const getHTMLTemplateSpy = vi
+        .spyOn(context.host, 'getHTMLTemplate')
+        .mockReturnValue(template);
+
+      expect(
+        context.dynamicHTML`<${literal('div')}>Hello, ${'World'}!</${literal('div')}>`,
+      ).toStrictEqual({
+        template,
+        data: ['World'],
+      });
+      expect(processLiteralsSpy).toHaveBeenCalledOnce();
+      expect(processLiteralsSpy).toHaveBeenCalledWith(
+        ['<', '>Hello, ', '!</', '>'],
+        [literal('div'), 'World', literal('div')],
+      );
+      expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
+      expect(getHTMLTemplateSpy).toHaveBeenCalledWith(
+        ['<div>Hello, ', '!</div>'],
+        ['World'],
+      );
+    });
+  });
+
+  describe('.dynamicSVG()', () => {
+    it('should return a TemplateResult with literals representing SVG fragment', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const template = new MockTemplate<any, RenderContext>();
+      const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
+      const getSVGTemplateSpy = vi
+        .spyOn(context.host, 'getSVGTemplate')
+        .mockReturnValue(template);
+
+      expect(
+        context.dynamicSVG`<${literal('text')}>Hello, ${'World'}!</${literal('text')}>`,
+      ).toStrictEqual({
+        template,
+        data: ['World'],
+      });
+      expect(processLiteralsSpy).toHaveBeenCalledOnce();
+      expect(processLiteralsSpy).toHaveBeenCalledWith(
+        ['<', '>Hello, ', '!</', '>'],
+        [literal('text'), 'World', literal('text')],
+      );
+      expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
+      expect(getSVGTemplateSpy).toHaveBeenCalledWith(
+        ['<text>Hello, ', '!</text>'],
+        ['World'],
+      );
     });
   });
 

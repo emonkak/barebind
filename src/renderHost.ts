@@ -3,6 +3,7 @@ import {
   type Block,
   type CommitPhase,
   type Effect,
+  type FilterLiterals,
   type Hook,
   type Part,
   PartType,
@@ -21,6 +22,7 @@ import { ElementBinding } from './binding/element.js';
 import { EventBinding } from './binding/event.js';
 import { NodeBinding } from './binding/node.js';
 import { PropertyBinding } from './binding/property.js';
+import { LiteralProcessor } from './literalProcessor.js';
 import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { LazyTemplate } from './template/lazyTemplate.js';
@@ -32,8 +34,9 @@ import {
 import { ChildTemplate, TextTemplate } from './template/valueTemplate.js';
 
 export interface ClientRenderHostOptions {
-  hostName?: string;
   constants?: Map<unknown, unknown>;
+  hostName?: string;
+  literalProcessor?: LiteralProcessor;
 }
 
 export interface Root<T> {
@@ -55,16 +58,20 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     Template<any, RenderContext>
   > = new WeakMap();
 
+  private readonly _literalProcessor;
+
   private _hostName: string;
 
   private _idCounter = 0;
 
   constructor({
-    hostName = getRandomString(8),
     constants = new Map(),
+    hostName = getRandomString(8),
+    literalProcessor = new LiteralProcessor(),
   }: ClientRenderHostOptions = {}) {
-    this._hostName = hostName;
     this._constants = constants;
+    this._hostName = hostName;
+    this._literalProcessor = literalProcessor;
   }
 
   beginRender(
@@ -192,6 +199,16 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
 
   nextIdentifier(): number {
     return ++this._idCounter;
+  }
+
+  processLiterals<TValues extends readonly any[]>(
+    strings: TemplateStringsArray,
+    values: TValues,
+  ): {
+    strings: readonly string[];
+    values: FilterLiterals<TValues>;
+  } {
+    return this._literalProcessor.process(strings, values);
   }
 
   resolveBinding<TValue>(

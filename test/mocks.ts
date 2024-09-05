@@ -7,6 +7,7 @@ import {
   type Directive,
   type DirectiveContext,
   type Effect,
+  type FilterLiterals,
   type Hook,
   type Part,
   PartType,
@@ -25,6 +26,7 @@ import { ElementBinding } from '../src/binding/element.js';
 import { EventBinding } from '../src/binding/event.js';
 import { NodeBinding } from '../src/binding/node.js';
 import { PropertyBinding } from '../src/binding/property.js';
+import { LiteralProcessor } from '../src/literalProcessor.js';
 import {
   RenderContext,
   type UsableObject,
@@ -154,6 +156,8 @@ export class MockTemplateView<TData, TContext>
 export class MockRenderHost implements RenderHost<RenderContext> {
   private _idCounter = 0;
 
+  private _literalProcessor = new LiteralProcessor();
+
   beginRender(
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
@@ -212,6 +216,16 @@ export class MockRenderHost implements RenderHost<RenderContext> {
 
   nextIdentifier(): number {
     return ++this._idCounter;
+  }
+
+  processLiterals<TValues extends readonly any[]>(
+    strings: TemplateStringsArray,
+    values: TValues,
+  ): {
+    strings: readonly string[];
+    values: FilterLiterals<TValues>;
+  } {
+    return this._literalProcessor.process(strings, values);
   }
 
   resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue> {
