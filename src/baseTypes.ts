@@ -58,18 +58,17 @@ export interface RenderHost<TContext> {
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
-  getHTMLTemplate<TData extends readonly any[]>(
+  getTemplate<TData extends readonly any[]>(
     strings: readonly string[],
     data: TData,
+    mode: TemplateMode,
   ): Template<TData, TContext>;
   getHostName(): string;
-  getSVGTemplate<TData extends readonly any[]>(
-    strings: readonly string[],
-    data: TData,
-  ): Template<TData, TContext>;
   getScopedValue(key: unknown, block: Block<TContext>): unknown;
-  getUnsafeHTMLTemplate(content: string): Template<readonly [], TContext>;
-  getUnsafeSVGTemplate(content: string): Template<readonly [], TContext>;
+  getUnsafeTemplate(
+    content: string,
+    mode: TemplateMode,
+  ): Template<readonly [], TContext>;
   nextIdentifier(): number;
   processLiterals<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
@@ -116,6 +115,8 @@ export interface TemplateView<TData, TContext = unknown> {
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
 }
+
+export type TemplateMode = 'html' | 'math' | 'svg';
 
 export interface Effect {
   commit(phase: CommitPhase): void;

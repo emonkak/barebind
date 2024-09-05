@@ -43,8 +43,8 @@ describe('RenderContext', () => {
 
       const template = new MockTemplate<any, RenderContext>();
       const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
-      const getHTMLTemplateSpy = vi
-        .spyOn(context.host, 'getHTMLTemplate')
+      const getTemplateSpy = vi
+        .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(
@@ -58,10 +58,45 @@ describe('RenderContext', () => {
         ['<', '>Hello, ', '!</', '>'],
         [literal('div'), 'World', literal('div')],
       );
-      expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
-      expect(getHTMLTemplateSpy).toHaveBeenCalledWith(
+      expect(getTemplateSpy).toHaveBeenCalledOnce();
+      expect(getTemplateSpy).toHaveBeenCalledWith(
         ['<div>Hello, ', '!</div>'],
         ['World'],
+        'html',
+      );
+    });
+  });
+
+  describe('.dynamicMath()', () => {
+    it('should return a TemplateResult with literals representing HTML fragment', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const template = new MockTemplate<any, RenderContext>();
+      const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
+      const getTemplateSpy = vi
+        .spyOn(context.host, 'getTemplate')
+        .mockReturnValue(template);
+
+      expect(
+        context.dynamicMath`<${literal('mi')}>${'x'}</${literal('mi')}>`,
+      ).toStrictEqual({
+        template,
+        data: ['x'],
+      });
+      expect(processLiteralsSpy).toHaveBeenCalledOnce();
+      expect(processLiteralsSpy).toHaveBeenCalledWith(
+        ['<', '>', '</', '>'],
+        [literal('mi'), 'x', literal('mi')],
+      );
+      expect(getTemplateSpy).toHaveBeenCalledOnce();
+      expect(getTemplateSpy).toHaveBeenCalledWith(
+        ['<mi>', '</mi>'],
+        ['x'],
+        'math',
       );
     });
   });
@@ -76,8 +111,8 @@ describe('RenderContext', () => {
 
       const template = new MockTemplate<any, RenderContext>();
       const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
-      const getSVGTemplateSpy = vi
-        .spyOn(context.host, 'getSVGTemplate')
+      const getTemplateSpy = vi
+        .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(
@@ -91,10 +126,11 @@ describe('RenderContext', () => {
         ['<', '>Hello, ', '!</', '>'],
         [literal('text'), 'World', literal('text')],
       );
-      expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
-      expect(getSVGTemplateSpy).toHaveBeenCalledWith(
+      expect(getTemplateSpy).toHaveBeenCalledOnce();
+      expect(getTemplateSpy).toHaveBeenCalledWith(
         ['<text>Hello, ', '!</text>'],
         ['World'],
+        'svg',
       );
     });
   });
@@ -242,18 +278,19 @@ describe('RenderContext', () => {
       );
 
       const template = new MockTemplate<any, RenderContext>();
-      const getHTMLTemplateSpy = vi
-        .spyOn(context.host, 'getHTMLTemplate')
+      const getTemplateSpy = vi
+        .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(context.html`<div>Hello, ${'World'}!</div>`).toStrictEqual({
         template,
         data: ['World'],
       });
-      expect(getHTMLTemplateSpy).toHaveBeenCalledOnce();
-      expect(getHTMLTemplateSpy).toHaveBeenCalledWith(
+      expect(getTemplateSpy).toHaveBeenCalledOnce();
+      expect(getTemplateSpy).toHaveBeenCalledWith(
         ['<div>Hello, ', '!</div>'],
         ['World'],
+        'html',
       );
     });
   });
@@ -298,6 +335,32 @@ describe('RenderContext', () => {
     });
   });
 
+  describe('.math()', () => {
+    it('should return a TemplateResult representing HTML fragment', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const template = new MockTemplate<any, RenderContext>();
+      const getTemplateSpy = vi
+        .spyOn(context.host, 'getTemplate')
+        .mockReturnValue(template);
+
+      expect(context.math`<mi>${'x'}</mi>`).toStrictEqual({
+        template,
+        data: ['x'],
+      });
+      expect(getTemplateSpy).toHaveBeenCalledOnce();
+      expect(getTemplateSpy).toHaveBeenCalledWith(
+        ['<mi>', '</mi>'],
+        ['x'],
+        'math',
+      );
+    });
+  });
+
   describe('.setContextValue()', () => {
     it('should set a value to the block scope', () => {
       const context = new RenderContext(
@@ -324,18 +387,19 @@ describe('RenderContext', () => {
       );
 
       const template = new MockTemplate<any, RenderContext>();
-      const getSVGTemplateSpy = vi
-        .spyOn(context.host, 'getSVGTemplate')
+      const getTemplateSpy = vi
+        .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(context.svg`<text>Hello, ${'World'}!</text>`).toStrictEqual({
         template,
         data: ['World'],
       });
-      expect(getSVGTemplateSpy).toHaveBeenCalledOnce();
-      expect(getSVGTemplateSpy).toHaveBeenCalledWith(
+      expect(getTemplateSpy).toHaveBeenCalledOnce();
+      expect(getTemplateSpy).toHaveBeenCalledWith(
         ['<text>Hello, ', '!</text>'],
         ['World'],
+        'svg',
       );
     });
   });
@@ -402,13 +466,33 @@ describe('RenderContext', () => {
 
       const template = new MockTemplate<readonly [], RenderContext>();
       const content = '<div>Hello, World!</div>';
-      const getUnsafeHTMLTemplateSpy = vi
-        .spyOn(context.host, 'getUnsafeHTMLTemplate')
+      const getUnsafeTemplateSpy = vi
+        .spyOn(context.host, 'getUnsafeTemplate')
         .mockReturnValue(template);
 
       expect(context.unsafeHTML(content)).toStrictEqual({ template, data: [] });
-      expect(getUnsafeHTMLTemplateSpy).toHaveBeenCalledOnce();
-      expect(getUnsafeHTMLTemplateSpy).toHaveBeenCalledWith(content);
+      expect(getUnsafeTemplateSpy).toHaveBeenCalledOnce();
+      expect(getUnsafeTemplateSpy).toHaveBeenCalledWith(content, 'html');
+    });
+  });
+
+  describe('.unsafeMath()', () => {
+    it('should return a TemplateResult representing raw SVG string', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const template = new MockTemplate<readonly [], RenderContext>();
+      const content = '<mi>x</mi><mo>x</mo><mn>2</mn>';
+      const getUnsafeTemplateSpy = vi
+        .spyOn(context.host, 'getUnsafeTemplate')
+        .mockReturnValue(template);
+
+      expect(context.unsafeMath(content)).toStrictEqual({ template, data: [] });
+      expect(getUnsafeTemplateSpy).toHaveBeenCalledOnce();
+      expect(getUnsafeTemplateSpy).toHaveBeenCalledWith(content, 'math');
     });
   });
 
@@ -422,13 +506,13 @@ describe('RenderContext', () => {
 
       const template = new MockTemplate<readonly [], RenderContext>();
       const content = '<text>Hello, World!</text>';
-      const getUnsafeSVGTemplateSpy = vi
-        .spyOn(context.host, 'getUnsafeSVGTemplate')
+      const getUnsafeTemplateSpy = vi
+        .spyOn(context.host, 'getUnsafeTemplate')
         .mockReturnValue(template);
 
       expect(context.unsafeSVG(content)).toStrictEqual({ template, data: [] });
-      expect(getUnsafeSVGTemplateSpy).toHaveBeenCalledOnce();
-      expect(getUnsafeSVGTemplateSpy).toHaveBeenCalledWith(content);
+      expect(getUnsafeTemplateSpy).toHaveBeenCalledOnce();
+      expect(getUnsafeTemplateSpy).toHaveBeenCalledWith(content, 'svg');
     });
   });
 

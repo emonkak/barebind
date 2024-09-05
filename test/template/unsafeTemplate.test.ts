@@ -3,32 +3,34 @@ import { describe, expect, it } from 'vitest';
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
-  UnsafeHTMLTemplate,
-  UnsafeSVGTemplate,
+  UnsafeTemplate,
   UnsafeTemplateView,
 } from '../../src/template/unsafeTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
 import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 
-describe('UnsafeHTMLTemplate', () => {
+describe('UnsafeTemplate', () => {
   describe('.constructor()', () => {
     it('should constuct a new UnsafeHTMLTemplate', () => {
       const content = '<em>foo</em>bar<strong>baz</strong>';
-      const template = new UnsafeHTMLTemplate(content);
+      const mode = 'html';
+      const template = new UnsafeTemplate(content, mode);
       expect(template.content).toBe(content);
+      expect(template.mode).toBe(mode);
     });
   });
 
   describe('.render()', () => {
-    it('should render a new template view', () => {
+    it('should render a new template view as a HTML fragment', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      const template = new UnsafeHTMLTemplate(
+      const template = new UnsafeTemplate(
         '<em>foo</em>bar<strong>baz</strong>',
+        'html',
       );
       const view = template.render([], context);
 
@@ -41,70 +43,57 @@ describe('UnsafeHTMLTemplate', () => {
       ]);
     });
 
-    it('should render a new template view with no child', () => {
+    it('should render a new template view as a MathML fragment', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      const template = new UnsafeHTMLTemplate('');
-      const view = template.render([], context);
-
-      expect(view.startNode).toBe(null);
-      expect(view.endNode).toBe(null);
-      expect(view.childNodes.map(toHTML)).toStrictEqual([]);
-    });
-  });
-
-  describe('.isSameTemplate()', () => {
-    it('should return true if the content is the same as this one', () => {
-      const template = new UnsafeHTMLTemplate('foo');
-
-      expect(template.isSameTemplate(new UnsafeHTMLTemplate('foo'))).toBe(true);
-      expect(template.isSameTemplate(new UnsafeSVGTemplate('foo'))).toBe(false);
-      expect(template.isSameTemplate(new MockTemplate())).toBe(false);
-    });
-  });
-
-  describe('.wrapInResult()', () => {
-    it('should wrap this template in LazyTemplateResult', () => {
-      const template = new UnsafeHTMLTemplate('foo');
-      const data = [] as const;
-      const result = template.wrapInResult(data);
-
-      expect(result).toBeInstanceOf(LazyTemplateResult);
-      expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
-    });
-  });
-});
-
-describe('UnsafeSVGTemplate', () => {
-  describe('.constructor()', () => {
-    it('should constuct a new UnsafeHTMLTemplate', () => {
-      const content =
-        '<circle r="10" /><text>foo</text><rect witdh="10" height="10" />';
-      const template = new UnsafeSVGTemplate(content);
-      expect(template.content).toBe(content);
-    });
-  });
-
-  describe('.render()', () => {
-    it('should create a new UnsafeHTMLTemplateView', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const template = new UnsafeSVGTemplate(
-        '<circle r="10" /><text>foo</text><rect witdh="10" height="10" />',
+      const template = new UnsafeTemplate(
+        '<mi>x</mi><mo>x</mo><mn>2</mn>',
+        'math',
       );
       const view = template.render([], context);
 
       expect(view.startNode).toBe(view.childNodes[0]);
       expect(view.endNode).toBe(view.childNodes.at(-1));
+      expect(
+        view.childNodes.map((node) => (node as Element).namespaceURI),
+      ).toStrictEqual([
+        'http://www.w3.org/1998/Math/MathML',
+        'http://www.w3.org/1998/Math/MathML',
+        'http://www.w3.org/1998/Math/MathML',
+      ]);
+      expect(view.childNodes.map(toHTML)).toStrictEqual([
+        '<mi>x</mi>',
+        '<mo>x</mo>',
+        '<mn>2</mn>',
+      ]);
+    });
+
+    it('should render a new template view as a SVG fragment', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const template = new UnsafeTemplate(
+        '<circle r="10" /><text>foo</text><rect witdh="10" height="10" />',
+        'svg',
+      );
+      const view = template.render([], context);
+
+      expect(view.startNode).toBe(view.childNodes[0]);
+      expect(view.endNode).toBe(view.childNodes.at(-1));
+      expect(
+        view.childNodes.map((node) => (node as Element).namespaceURI),
+      ).toStrictEqual([
+        'http://www.w3.org/2000/svg',
+        'http://www.w3.org/2000/svg',
+        'http://www.w3.org/2000/svg',
+      ]);
       expect(view.childNodes.map(toHTML)).toStrictEqual([
         '<circle r="10"></circle>',
         '<text>foo</text>',
@@ -119,7 +108,7 @@ describe('UnsafeSVGTemplate', () => {
         new MockBlock(),
       );
 
-      const template = new UnsafeSVGTemplate('');
+      const template = new UnsafeTemplate('', 'html');
       const view = template.render([], context);
 
       expect(view.startNode).toBe(null);
@@ -130,10 +119,15 @@ describe('UnsafeSVGTemplate', () => {
 
   describe('.isSameTemplate()', () => {
     it('should return true if the content is the same as this one', () => {
-      const template = new UnsafeSVGTemplate('foo');
+      const template = new UnsafeTemplate('foo', 'html');
 
-      expect(template.isSameTemplate(new UnsafeSVGTemplate('foo'))).toBe(true);
-      expect(template.isSameTemplate(new UnsafeHTMLTemplate('foo'))).toBe(
+      expect(template.isSameTemplate(new UnsafeTemplate('foo', 'html'))).toBe(
+        true,
+      );
+      expect(template.isSameTemplate(new UnsafeTemplate('foo', 'math'))).toBe(
+        false,
+      );
+      expect(template.isSameTemplate(new UnsafeTemplate('foo', 'svg'))).toBe(
         false,
       );
       expect(template.isSameTemplate(new MockTemplate())).toBe(false);
@@ -142,7 +136,7 @@ describe('UnsafeSVGTemplate', () => {
 
   describe('.wrapInResult()', () => {
     it('should wrap this template in LazyTemplateResult', () => {
-      const template = new UnsafeSVGTemplate('foo');
+      const template = new UnsafeTemplate('foo', 'html');
       const data = [] as const;
       const result = template.wrapInResult(data);
 
@@ -153,7 +147,7 @@ describe('UnsafeSVGTemplate', () => {
   });
 });
 
-describe('UnsafeContentTemplateView', () => {
+describe('UnsafeTemplateView', () => {
   describe('.bind()', () => {
     it('should do no nothing', () => {
       const context = new UpdateContext(
@@ -217,8 +211,9 @@ describe('UnsafeContentTemplateView', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const template = new UnsafeHTMLTemplate(
+      const template = new UnsafeTemplate(
         '<em>foo</em>bar<strong>baz</strong>',
+        'html',
       );
       const view = template.render([], context);
 

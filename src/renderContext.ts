@@ -126,7 +126,18 @@ export class RenderContext {
     const { strings: staticStrings, values: staticValues } =
       this._host.processLiterals(strings, values);
     return this._host
-      .getHTMLTemplate(staticStrings, staticValues)
+      .getTemplate(staticStrings, staticValues, 'html')
+      .wrapInResult(staticValues);
+  }
+
+  dynamicMath<TData extends readonly any[]>(
+    strings: TemplateStringsArray,
+    ...values: TData
+  ): TemplateResult<FilterLiterals<TData>, RenderContext> {
+    const { strings: staticStrings, values: staticValues } =
+      this._host.processLiterals(strings, values);
+    return this._host
+      .getTemplate(staticStrings, staticValues, 'math')
       .wrapInResult(staticValues);
   }
 
@@ -137,7 +148,7 @@ export class RenderContext {
     const { strings: staticStrings, values: staticValues } =
       this._host.processLiterals(strings, values);
     return this._host
-      .getSVGTemplate(staticStrings, staticValues)
+      .getTemplate(staticStrings, staticValues, 'svg')
       .wrapInResult(staticValues);
   }
 
@@ -185,7 +196,7 @@ export class RenderContext {
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<TData, RenderContext> {
-    return this._host.getHTMLTemplate(strings, values).wrapInResult(values);
+    return this._host.getTemplate(strings, values, 'html').wrapInResult(values);
   }
 
   isFirstRender(): boolean {
@@ -196,6 +207,13 @@ export class RenderContext {
     return this._hooks[this._hookIndex - 1]?.type !== HookType.Finalizer;
   }
 
+  math<TData extends readonly any[]>(
+    strings: TemplateStringsArray,
+    ...values: TData
+  ): TemplateResult<TData, RenderContext> {
+    return this._host.getTemplate(strings, values, 'math').wrapInResult(values);
+  }
+
   setContextValue(key: unknown, value: unknown): void {
     this._host.setScopedValue(key, value, this._block);
   }
@@ -204,15 +222,19 @@ export class RenderContext {
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<TData, RenderContext> {
-    return this._host.getSVGTemplate(strings, values).wrapInResult(values);
+    return this._host.getTemplate(strings, values, 'svg').wrapInResult(values);
   }
 
   unsafeHTML(content: string): TemplateResult<readonly [], RenderContext> {
-    return this._host.getUnsafeHTMLTemplate(content).wrapInResult([]);
+    return this._host.getUnsafeTemplate(content, 'html').wrapInResult([]);
+  }
+
+  unsafeMath(content: string): TemplateResult<readonly [], RenderContext> {
+    return this._host.getUnsafeTemplate(content, 'math').wrapInResult([]);
   }
 
   unsafeSVG(content: string): TemplateResult<readonly [], RenderContext> {
-    return this._host.getUnsafeSVGTemplate(content).wrapInResult([]);
+    return this._host.getUnsafeTemplate(content, 'svg').wrapInResult([]);
   }
 
   use<

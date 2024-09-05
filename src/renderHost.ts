@@ -10,6 +10,7 @@ import {
   type RenderHost,
   type TaskPriority,
   type Template,
+  type TemplateMode,
   UpdateContext,
   type UpdateQueue,
   type Updater,
@@ -27,10 +28,7 @@ import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { LazyTemplate } from './template/lazyTemplate.js';
 import { TaggedTemplate, createMarker } from './template/taggedTemplate.js';
-import {
-  UnsafeHTMLTemplate,
-  UnsafeSVGTemplate,
-} from './template/unsafeTemplate.js';
+import { UnsafeTemplate } from './template/unsafeTemplate.js';
 import { ChildTemplate, TextTemplate } from './template/valueTemplate.js';
 
 export interface ClientRenderHostOptions {
@@ -137,32 +135,15 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return this._hostName;
   }
 
-  getHTMLTemplate<TData extends readonly any[]>(
+  getTemplate<TData extends readonly any[]>(
     strings: readonly string[],
     values: TData,
+    mode: TemplateMode,
   ): Template<TData, RenderContext> {
     let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template =
-        getOptimizedTemplate(strings, values) ??
-        getHTMLTemplate(strings, values, createMarker(this._hostName));
-      this._cachedTemplates.set(strings, template);
-    }
-
-    return template;
-  }
-
-  getSVGTemplate<TData extends readonly any[]>(
-    strings: readonly string[],
-    values: TData,
-  ): Template<TData, RenderContext> {
-    let template = this._cachedTemplates.get(strings);
-
-    if (template === undefined) {
-      template =
-        getOptimizedTemplate(strings, values) ??
-        getSVGTemplate(strings, values, createMarker(this._hostName));
+      template = getTemplate(strings, values, mode, this._hostName);
       this._cachedTemplates.set(strings, template);
     }
 
@@ -181,12 +162,11 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return undefined;
   }
 
-  getUnsafeHTMLTemplate(content: string): Template<readonly [], RenderContext> {
-    return new UnsafeHTMLTemplate(content);
-  }
-
-  getUnsafeSVGTemplate(content: string): Template<readonly [], RenderContext> {
-    return new UnsafeSVGTemplate(content);
+  getUnsafeTemplate(
+    content: string,
+    mode: TemplateMode,
+  ): Template<readonly [], RenderContext> {
+    return new UnsafeTemplate(content, mode);
   }
 
   nextIdentifier(): number {
@@ -269,20 +249,12 @@ class UnmountNode implements Effect {
   }
 }
 
-function getHTMLTemplate<TData extends readonly any[], TContext>(
+function getTemplate<TData extends readonly any[], TContext>(
   strings: readonly string[],
   values: TData,
-  marker: string,
+  mode: TemplateMode,
+  hostName: string,
 ): Template<TData, TContext> {
-  return new LazyTemplate(() =>
-    TaggedTemplate.parseHTML(strings, values, marker),
-  );
-}
-
-function getOptimizedTemplate<TData extends readonly any[], TContext>(
-  strings: readonly string[],
-  values: TData,
-): Template<TData, TContext> | null {
   if (values.length === 0 && strings[0]!.trim() === '') {
     // Assumption: strings.length === 1
     return EmptyTemplate.instance as Template<any, TContext>;
@@ -305,17 +277,10 @@ function getOptimizedTemplate<TData extends readonly any[], TContext>(
     }
   }
 
-  return null;
-}
-
-function getSVGTemplate<TData extends readonly any[], TContext>(
-  strings: readonly string[],
-  values: TData,
-  marker: string,
-): Template<TData, TContext> {
-  return new LazyTemplate(() =>
-    TaggedTemplate.parseSVG(strings, values, marker),
-  );
+  return new LazyTemplate(() => {
+    const marker = createMarker(hostName);
+    return TaggedTemplate.parse(strings, values, marker, mode);
+  });
 }
 
 function getRandomString(length: number): string {

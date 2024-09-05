@@ -19,10 +19,7 @@ import { ClientRenderHost } from '../src/renderHost.js';
 import { EmptyTemplate } from '../src/template/emptyTemplate.js';
 import { LazyTemplate } from '../src/template/lazyTemplate.js';
 import { TaggedTemplate } from '../src/template/taggedTemplate.js';
-import {
-  UnsafeHTMLTemplate,
-  UnsafeSVGTemplate,
-} from '../src/template/unsafeTemplate.js';
+import { UnsafeTemplate } from '../src/template/unsafeTemplate.js';
 import { TextTemplate } from '../src/template/valueTemplate.js';
 import { ChildTemplate } from '../src/template/valueTemplate.js';
 import { SyncUpdater } from '../src/updater/syncUpdater.js';
@@ -166,14 +163,15 @@ describe('ClientRenderHost', () => {
     });
   });
 
-  describe('.getHTMLTemplate()', () => {
+  describe('.getTemplate()', () => {
     it('should create a TaggedTemplate representing HTML fragment', () => {
       const host = new ClientRenderHost();
       const { strings, values } = tmpl`<div>${'Hello'}, ${'World'}!</div>`;
-      const template = host.getHTMLTemplate(strings, values) as LazyTemplate<
-        any,
-        RenderContext
-      >;
+      const template = host.getTemplate(
+        strings,
+        values,
+        'html',
+      ) as LazyTemplate<any, RenderContext>;
 
       expect(template).toBeInstanceOf(LazyTemplate);
 
@@ -192,57 +190,38 @@ describe('ClientRenderHost', () => {
       ).toBe('http://www.w3.org/1999/xhtml');
     });
 
-    it.each([[tmpl``], [tmpl` `]])(
-      'should create a EmptyTemplate if there is no contents',
-      ({ strings, values }) => {
-        const host = new ClientRenderHost();
-        const template = host.getHTMLTemplate(strings, values);
-
-        expect(template).toBeInstanceOf(EmptyTemplate);
-      },
-    );
-
-    it.each([
-      [tmpl`<${'foo'}>`],
-      [tmpl`<${'foo'}/>`],
-      [tmpl` <${'foo'} /> `],
-      [tmpl` <!--${'foo'}--> `],
-      [tmpl` <!-- ${'foo'} --> `],
-    ])(
-      'should create a ChildTemplate if there is a only child value',
-      ({ strings, values }) => {
-        const host = new ClientRenderHost();
-        const template = host.getHTMLTemplate(strings, values);
-
-        expect(template).toBeInstanceOf(ChildTemplate);
-      },
-    );
-
-    it.each([[tmpl`${'foo'}`], [tmpl` ${'foo'} `]])(
-      'should create a TextTemplate if there is a only text value',
-      ({ strings, values }) => {
-        const host = new ClientRenderHost();
-        const template = host.getHTMLTemplate(strings, values);
-
-        expect(template).toBeInstanceOf(TextTemplate);
-      },
-    );
-
-    it('should get a template from the cache if avaiable', () => {
+    it('should create a TaggedTemplate representing MathML fragment', () => {
       const host = new ClientRenderHost();
-      const { strings, values } = tmpl`<div>Hello, ${'World'}!</div>`;
-      const template = host.getHTMLTemplate(strings, values);
+      const { strings, values } = tmpl`<msup><mi>${0}</mi><mn>${1}</mn></msup>`;
+      const template = host.getTemplate(
+        strings,
+        values,
+        'math',
+      ) as LazyTemplate<any, RenderContext>;
 
       expect(template).toBeInstanceOf(LazyTemplate);
-      expect(template).toBe(host.getHTMLTemplate(strings, values));
-    });
-  });
 
-  describe('.getSVGTemplate()', () => {
-    it('should create a template representing SVG fragment', () => {
+      const innerTemplate = template.templateFactory() as TaggedTemplate<
+        unknown[]
+      >;
+
+      expect(innerTemplate).toBeInstanceOf(TaggedTemplate);
+      expect(innerTemplate.holes).toStrictEqual([
+        { type: PartType.Node, index: 2 },
+        { type: PartType.Node, index: 4 },
+      ]);
+      expect(innerTemplate.element.innerHTML).toBe(
+        '<msup><mi></mi><mn></mn></msup>',
+      );
+      expect(
+        innerTemplate.element.content.firstElementChild?.namespaceURI,
+      ).toBe('http://www.w3.org/1998/Math/MathML');
+    });
+
+    it('should create a TaggedTemplate representing SVG fragment', () => {
       const host = new ClientRenderHost();
       const { strings, values } = tmpl`<text>${'Hello'}, ${'World'}!</text>`;
-      const template = host.getSVGTemplate(strings, values) as LazyTemplate<
+      const template = host.getTemplate(strings, values, 'svg') as LazyTemplate<
         any,
         RenderContext
       >;
@@ -268,7 +247,7 @@ describe('ClientRenderHost', () => {
       'should create a EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const host = new ClientRenderHost();
-        const template = host.getSVGTemplate(strings, values);
+        const template = host.getTemplate(strings, values, 'html');
 
         expect(template).toBeInstanceOf(EmptyTemplate);
       },
@@ -284,7 +263,7 @@ describe('ClientRenderHost', () => {
       'should create a ChildTemplate if there is a only child value',
       ({ strings, values }) => {
         const host = new ClientRenderHost();
-        const template = host.getSVGTemplate(strings, values);
+        const template = host.getTemplate(strings, values, 'html');
 
         expect(template).toBeInstanceOf(ChildTemplate);
       },
@@ -294,7 +273,7 @@ describe('ClientRenderHost', () => {
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
         const host = new ClientRenderHost();
-        const template = host.getSVGTemplate(strings, values);
+        const template = host.getTemplate(strings, values, 'html');
 
         expect(template).toBeInstanceOf(TextTemplate);
       },
@@ -302,11 +281,11 @@ describe('ClientRenderHost', () => {
 
     it('should get a template from the cache if avaiable', () => {
       const host = new ClientRenderHost();
-      const { strings, values } = tmpl`<text>Hello, ${'World'}!</text>`;
-      const template = host.getSVGTemplate(strings, values);
+      const { strings, values } = tmpl`<div>Hello, ${'World'}!</div>`;
+      const template = host.getTemplate(strings, values, 'html');
 
       expect(template).toBeInstanceOf(LazyTemplate);
-      expect(template).toBe(host.getSVGTemplate(strings, values));
+      expect(template).toBe(host.getTemplate(strings, values, 'html'));
     });
   });
 
@@ -333,27 +312,17 @@ describe('ClientRenderHost', () => {
     });
   });
 
-  describe('.getUnsafeHTMLTemplate()', () => {
-    it('should create a template representing raw HTML string', () => {
+  describe('.getUnsafeTemplate()', () => {
+    it('should create a template by raw document string', () => {
       const host = new ClientRenderHost();
       const content = '<div>foo</div>';
-      const template = host.getUnsafeHTMLTemplate(content);
+      const template = host.getUnsafeTemplate(content, 'html');
 
-      expect(template).toStrictEqual(new UnsafeHTMLTemplate(content));
+      expect(template).toStrictEqual(new UnsafeTemplate(content, 'html'));
     });
   });
 
-  describe('.getUnsafeSVGTemplate()', () => {
-    it('should create a template representing raw SVG string', () => {
-      const host = new ClientRenderHost();
-      const content = '<text>foo</text>';
-      const template = host.getUnsafeSVGTemplate(content);
-
-      expect(template).toStrictEqual(new UnsafeSVGTemplate(content));
-    });
-  });
-
-  describe('processLiterals()', () => {
+  describe('.processLiterals()', () => {
     it('should process literals by LiteralProcessor', () => {
       const literalProcessor = new LiteralProcessor();
       const host = new ClientRenderHost({

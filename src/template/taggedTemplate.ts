@@ -5,6 +5,7 @@ import {
   type Part,
   PartType,
   type Template,
+  type TemplateMode,
   type TemplateResult,
   type TemplateView,
   type UpdateContext,
@@ -74,33 +75,25 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
 export class TaggedTemplate<TData extends readonly any[]>
   implements Template<TData>
 {
-  static parseHTML<TData extends readonly any[]>(
+  static parse<TData extends readonly any[]>(
     strings: readonly string[],
     values: TData,
     marker: string,
+    mode: TemplateMode,
   ): TaggedTemplate<TData> {
     DEBUG: {
       ensureValidMarker(marker);
     }
     const template = document.createElement('template');
-    template.innerHTML = strings.join(marker).trim();
-    const holes = parseChildren(strings, values, marker, template.content);
-    return new TaggedTemplate(template, holes);
-  }
-
-  static parseSVG<TData extends readonly any[]>(
-    strings: readonly string[],
-    values: TData,
-    marker: string,
-  ): TaggedTemplate<TData> {
-    DEBUG: {
-      ensureValidMarker(marker);
+    if (mode === 'math' || mode === 'svg') {
+      template.innerHTML =
+        '<' + mode + '>' + strings.join(marker).trim() + '</' + mode + '>';
+      template.content.replaceChildren(
+        ...template.content.firstChild!.childNodes,
+      );
+    } else {
+      template.innerHTML = strings.join(marker).trim();
     }
-    const template = document.createElement('template');
-    template.innerHTML = '<svg>' + strings.join(marker).trim() + '</svg>';
-    template.content.replaceChildren(
-      ...template.content.firstChild!.childNodes,
-    );
     const holes = parseChildren(strings, values, marker, template.content);
     return new TaggedTemplate(template, holes);
   }

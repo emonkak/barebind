@@ -30,7 +30,7 @@ import {
 const MARKER = createMarker('__test__');
 
 describe('TaggedTemplate', () => {
-  describe('.parseHTML()', () => {
+  describe('.parse()', () => {
     it('should parse holes inside attributes', () => {
       const { template } = html`
         <div class="container" id=${0} .innerHTML=${1} @click=${2}></div>
@@ -143,7 +143,7 @@ describe('TaggedTemplate', () => {
       );
     });
 
-    it('should parse multiple holes inside a child', () => {
+    it('should parse holes inside children', () => {
       const { template } = html`
         <div>[${0}, ${1}]</div>
         <div>${0}, ${1}</div>
@@ -202,12 +202,41 @@ describe('TaggedTemplate', () => {
       );
     });
 
+    it('should parse holes inside attributes as SVG fragment', () => {
+      const { template } = svg`
+        <circle fill="black" cx=${0} cy=${1} r=${2} />
+      `;
+      expect(template.holes).toStrictEqual([
+        { type: PartType.Attribute, name: 'cx', index: 0 },
+        { type: PartType.Attribute, name: 'cy', index: 0 },
+        { type: PartType.Attribute, name: 'r', index: 0 },
+      ]);
+      expect(template.element.innerHTML).toBe('<circle fill="black"></circle>');
+      expect(template.element.content.firstElementChild?.namespaceURI).toBe(
+        'http://www.w3.org/2000/svg',
+      );
+    });
+
+    it('should parse holes inside children as MathML fragment', () => {
+      const { template } = math`<msup><mi>${0}</mi><mn>${1}</mn></msup>`;
+      expect(template.holes).toStrictEqual([
+        { type: PartType.Node, index: 2 },
+        { type: PartType.Node, index: 4 },
+      ]);
+      expect(template.element.innerHTML).toBe(
+        '<msup><mi></mi><mn></mn></msup>',
+      );
+      expect(template.element.content.firstElementChild?.namespaceURI).toBe(
+        'http://www.w3.org/1998/Math/MathML',
+      );
+    });
+
     it('should throw an error if passed a marker in an invalid format', () => {
       expect(() => {
-        TaggedTemplate.parseHTML([], [], 'INVALID_MARKER');
+        TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html');
       }).toThrow('The marker is in an invalid format:');
       expect(() => {
-        TaggedTemplate.parseHTML([], [], MARKER.toUpperCase());
+        TaggedTemplate.parse([], [], MARKER.toUpperCase(), 'html');
       }).toThrow('The marker is in an invalid format:');
     });
 
@@ -311,32 +340,6 @@ describe('TaggedTemplate', () => {
           <div class=${'foo'} class=${'bar'}></div>
         `;
       }).toThrow('The number of holes must be 2, but got 1.');
-    });
-  });
-
-  describe('.parseSVG()', () => {
-    it('should parse holes inside attributes', () => {
-      const { template } = svg`
-        <circle fill="black" cx=${0} cy=${1} r=${2} />
-      `;
-      expect(template.holes).toStrictEqual([
-        { type: PartType.Attribute, name: 'cx', index: 0 },
-        { type: PartType.Attribute, name: 'cy', index: 0 },
-        { type: PartType.Attribute, name: 'r', index: 0 },
-      ]);
-      expect(template.element.innerHTML).toBe('<circle fill="black"></circle>');
-      expect(template.element.content.firstElementChild?.namespaceURI).toBe(
-        'http://www.w3.org/2000/svg',
-      );
-    });
-
-    it('should throw an error when it is passed a marker in an invalid format', () => {
-      expect(() => {
-        TaggedTemplate.parseSVG([], [], 'INVALID_MARKER');
-      }).toThrow('The marker is in an invalid format:');
-      expect(() => {
-        TaggedTemplate.parseSVG([], [], MARKER.toUpperCase());
-      }).toThrow('The marker is in an invalid format:');
     });
   });
 
@@ -787,14 +790,30 @@ function html<TData extends readonly any[]>(
   strings: TemplateStringsArray,
   ...data: TData
 ): { template: TaggedTemplate<TData>; data: TData } {
-  return { template: TaggedTemplate.parseHTML(strings, data, MARKER), data };
+  return {
+    template: TaggedTemplate.parse(strings, data, MARKER, 'html'),
+    data,
+  };
+}
+
+function math<const TData extends readonly any[]>(
+  strings: TemplateStringsArray,
+  ...data: TData
+): { template: TaggedTemplate<TData>; data: TData } {
+  return {
+    template: TaggedTemplate.parse(strings, data, MARKER, 'math'),
+    data,
+  };
 }
 
 function svg<const TData extends readonly any[]>(
   strings: TemplateStringsArray,
   ...data: TData
 ): { template: TaggedTemplate<TData>; data: TData } {
-  return { template: TaggedTemplate.parseSVG(strings, data, MARKER), data };
+  return {
+    template: TaggedTemplate.parse(strings, data, MARKER, 'svg'),
+    data,
+  };
 }
 
 function toHTML(node: Node): string {
