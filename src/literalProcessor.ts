@@ -6,8 +6,8 @@ export class LiteralProcessor {
     TemplateStringsArray,
     {
       strings: readonly string[];
-      literals: readonly string[];
-      literalPositions: readonly number[];
+      staticValues: readonly string[];
+      staticPositions: readonly number[];
     }
   > = new WeakMap();
 
@@ -18,17 +18,17 @@ export class LiteralProcessor {
     strings: readonly string[];
     values: FilterLiterals<TValues>;
   } {
-    const literals: string[] = [];
-    const literalPositions: number[] = [];
-    const staticValues: unknown[] = [];
+    const staticValues: string[] = [];
+    const staticPositions: number[] = [];
+    const dynamicValues: unknown[] = [];
 
     for (let i = 0, l = values.length; i < l; i++) {
       const value = values[i];
       if (value instanceof Literal) {
-        literals.push(value.toString());
-        literalPositions.push(i);
+        staticValues.push(value.toString());
+        staticPositions.push(i);
       } else {
-        staticValues.push(value);
+        dynamicValues.push(value);
       }
     }
 
@@ -36,27 +36,27 @@ export class LiteralProcessor {
 
     if (
       templateCache !== undefined &&
-      sequentialEqual(templateCache.literals, literals) &&
-      sequentialEqual(templateCache.literalPositions, literalPositions)
+      sequentialEqual(templateCache.staticValues, staticValues) &&
+      sequentialEqual(templateCache.staticPositions, staticPositions)
     ) {
       return {
         strings: templateCache.strings,
-        values: staticValues as FilterLiterals<TValues>,
+        values: dynamicValues as FilterLiterals<TValues>,
       };
     }
 
     const staticStrings =
-      literals.length > 0 ? applyLiterals(strings, values) : strings;
+      staticValues.length > 0 ? applyLiterals(strings, values) : strings;
 
     this._templateCaches.set(strings, {
       strings: staticStrings,
-      literals,
-      literalPositions,
+      staticValues: staticValues,
+      staticPositions: staticPositions,
     });
 
     return {
       strings: staticStrings,
-      values: staticValues as FilterLiterals<TValues>,
+      values: dynamicValues as FilterLiterals<TValues>,
     };
   }
 }

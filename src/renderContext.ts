@@ -123,33 +123,33 @@ export class RenderContext {
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<FilterLiterals<TData>, RenderContext> {
-    const { strings: staticStrings, values: staticValues } =
+    const { strings: staticStrings, values: dynamicValues } =
       this._host.processLiterals(strings, values);
     return this._host
-      .getTemplate(staticStrings, staticValues, 'html')
-      .wrapInResult(staticValues);
+      .getTemplate(staticStrings, dynamicValues, 'html')
+      .wrapInResult(dynamicValues);
   }
 
   dynamicMath<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<FilterLiterals<TData>, RenderContext> {
-    const { strings: staticStrings, values: staticValues } =
+    const { strings: staticStrings, values: dynamicValues } =
       this._host.processLiterals(strings, values);
     return this._host
-      .getTemplate(staticStrings, staticValues, 'math')
-      .wrapInResult(staticValues);
+      .getTemplate(staticStrings, dynamicValues, 'math')
+      .wrapInResult(dynamicValues);
   }
 
   dynamicSVG<TData extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TData
   ): TemplateResult<FilterLiterals<TData>, RenderContext> {
-    const { strings: staticStrings, values: staticValues } =
+    const { strings: staticStrings, values: dynamicValues } =
       this._host.processLiterals(strings, values);
     return this._host
-      .getTemplate(staticStrings, staticValues, 'svg')
-      .wrapInResult(staticValues);
+      .getTemplate(staticStrings, dynamicValues, 'svg')
+      .wrapInResult(dynamicValues);
   }
 
   /**
