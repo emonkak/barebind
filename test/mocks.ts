@@ -178,7 +178,7 @@ export class MockRenderHost implements RenderHost<RenderContext> {
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
-    _strings: TemplateStringsArray,
+    _strings: readonly string[],
     _values: TData,
   ): Template<TData, RenderContext> {
     return new MockTemplate();
@@ -189,7 +189,7 @@ export class MockRenderHost implements RenderHost<RenderContext> {
   }
 
   getSVGTemplate<TData extends readonly any[]>(
-    _strings: TemplateStringsArray,
+    _strings: readonly string[],
     _values: TData,
   ): Template<TData, RenderContext> {
     return new MockTemplate();

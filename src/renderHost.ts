@@ -51,7 +51,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   > = new WeakMap();
 
   private readonly _cachedTemplates: WeakMap<
-    TemplateStringsArray,
+    readonly string[],
     Template<any, RenderContext>
   > = new WeakMap();
 
@@ -136,7 +136,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 
   getHTMLTemplate<TData extends readonly any[]>(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     values: TData,
   ): Template<TData, RenderContext> {
     let template = this._cachedTemplates.get(strings);
@@ -152,7 +152,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 
   getSVGTemplate<TData extends readonly any[]>(
-    strings: TemplateStringsArray,
+    strings: readonly string[],
     values: TData,
   ): Template<TData, RenderContext> {
     let template = this._cachedTemplates.get(strings);
