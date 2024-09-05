@@ -9,7 +9,6 @@ export * from './error.js';
 export * from './renderContext.js';
 export * from './renderHost.js';
 export * from './scheduler.js';
-export * from './template/elementTemplate.js';
 export * from './template/emptyTemplate.js';
 export * from './template/lazyTemplate.js';
 export * from './template/taggedTemplate.js';
