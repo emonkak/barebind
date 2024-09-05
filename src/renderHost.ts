@@ -26,7 +26,7 @@ import { LiteralProcessor } from './literalProcessor.js';
 import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './template/emptyTemplate.js';
 import { LazyTemplate } from './template/lazyTemplate.js';
-import { TaggedTemplate, getMarker } from './template/taggedTemplate.js';
+import { TaggedTemplate, createMarker } from './template/taggedTemplate.js';
 import {
   UnsafeHTMLTemplate,
   UnsafeSVGTemplate,
@@ -146,7 +146,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     if (template === undefined) {
       template =
         getOptimizedTemplate(strings, values) ??
-        getHTMLTemplate(strings, values, getMarker(this._hostName));
+        getHTMLTemplate(strings, values, createMarker(this._hostName));
       this._cachedTemplates.set(strings, template);
     }
 
@@ -162,7 +162,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     if (template === undefined) {
       template =
         getOptimizedTemplate(strings, values) ??
-        getSVGTemplate(strings, values, getMarker(this._hostName));
+        getSVGTemplate(strings, values, createMarker(this._hostName));
       this._cachedTemplates.set(strings, template);
     }
 

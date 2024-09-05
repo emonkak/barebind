@@ -313,7 +313,7 @@ export class TaggedTemplateView<TData extends readonly any[]>
   }
 }
 
-export function getMarker(randomString: string): string {
+export function createMarker(randomString: string): string {
   return '??' + randomString + '??';
 }
 

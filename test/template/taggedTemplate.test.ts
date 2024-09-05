@@ -15,7 +15,7 @@ import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
   TaggedTemplate,
   TaggedTemplateView,
-  getMarker,
+  createMarker,
   isValidMarker,
 } from '../../src/template/taggedTemplate.js';
 import { SyncUpdater } from '../../src/updater/syncUpdater.js';
@@ -27,7 +27,7 @@ import {
   TextDirective,
 } from '../mocks.js';
 
-const MARKER = getMarker('__test__');
+const MARKER = createMarker('__test__');
 
 describe('TaggedTemplate', () => {
   describe('.parseHTML()', () => {
@@ -768,15 +768,15 @@ describe('TaggedTemplateView', () => {
   });
 });
 
-describe('getMarker()', () => {
+describe('createMarker()', () => {
   it('returns a valid marker string', () => {
-    expect(isValidMarker(getMarker('__test__'))).toBe(true);
+    expect(isValidMarker(createMarker('__test__'))).toBe(true);
 
     // force randomUUID() polyfill.
     const originalRandomUUID = crypto.randomUUID;
     try {
       (crypto as any).randomUUID = null;
-      expect(isValidMarker(getMarker('__test__'))).toBe(true);
+      expect(isValidMarker(createMarker('__test__'))).toBe(true);
     } finally {
       crypto.randomUUID = originalRandomUUID;
     }
