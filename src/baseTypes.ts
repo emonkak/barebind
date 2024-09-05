@@ -267,11 +267,11 @@ export class Literal {
     return this.#string;
   }
 
-  valueOf(): string {
+  toString(): string {
     return this.#string;
   }
 
-  toString(): string {
+  valueOf(): string {
     return this.#string;
   }
 }
