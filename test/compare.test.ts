@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { dependenciesAreChanged, shallowEqual } from '../src/compare.js';
+import {
+  dependenciesAreChanged,
+  sequentialEqual,
+  shallowEqual,
+} from '../src/compare.js';
 
 describe('dependenciesAreChanged()', () => {
   it('should return true if a old or new dependency is undefinied', () => {
@@ -43,6 +47,44 @@ describe('dependenciesAreChanged()', () => {
 
   it('should return false if there are no dependencies', () => {
     expect(dependenciesAreChanged([], [])).toBe(false);
+  });
+});
+
+describe('sequentialEqual()', () => {
+  it('should return false if the lengths of the first and second are different', () => {
+    expect(sequentialEqual([], ['foo'])).toBe(false);
+    expect(sequentialEqual(['foo'], [])).toBe(false);
+    expect(sequentialEqual(['foo'], ['foo', 'bar'])).toBe(false);
+    expect(sequentialEqual(['foo', 'bar'], ['foo'])).toBe(false);
+  });
+
+  it('should return false if there is a value that is not same from the other one', () => {
+    expect(sequentialEqual(['foo'], ['FOO'])).toBe(false);
+    expect(sequentialEqual(['FOO'], ['foo'])).toBe(false);
+    expect(sequentialEqual(['foO', 'bar'], ['FOO', 'bar'])).toBe(false);
+    expect(sequentialEqual(['FOO', 'bar'], ['foo', 'bar'])).toBe(false);
+    expect(sequentialEqual(['foo', 'bar'], ['foo', 'BAR'])).toBe(false);
+    expect(sequentialEqual(['foo', 'BAR'], ['foo', 'bar'])).toBe(false);
+    expect(sequentialEqual(['foo', 'bar'], ['FOO', 'BAR'])).toBe(false);
+    expect(sequentialEqual(['FOO', 'BAR'], ['foo', 'bar'])).toBe(false);
+    expect(sequentialEqual<unknown>(['0'], [0])).toBe(false);
+    expect(sequentialEqual<unknown>([0], ['0'])).toBe(false);
+    expect(sequentialEqual<unknown>([1], ['1'])).toBe(false);
+    expect(sequentialEqual<unknown>(['1'], [1])).toBe(false);
+  });
+
+  it('should return true if all values are same', () => {
+    expect(sequentialEqual(['foo'], ['foo'])).toBe(true);
+    expect(sequentialEqual(['foo', 'bar'], ['foo', 'bar'])).toBe(true);
+    expect(sequentialEqual([0], [0])).toBe(true);
+    expect(sequentialEqual(['0'], ['0'])).toBe(true);
+    expect(sequentialEqual([1], [1])).toBe(true);
+    expect(sequentialEqual(['1'], ['1'])).toBe(true);
+    expect(sequentialEqual([Number.NaN], [Number.NaN])).toBe(true);
+  });
+
+  it('should return true if there are no values', () => {
+    expect(sequentialEqual([], [])).toBe(true);
   });
 });
 
