@@ -192,13 +192,15 @@ describe('ClientRenderHost', () => {
       ).toBe('http://www.w3.org/1999/xhtml');
     });
 
-    it('should create a EmptyTemplate if there is no contents', () => {
-      const host = new ClientRenderHost();
-      const { strings, values } = tmpl``;
-      const template = host.getHTMLTemplate(strings, values);
+    it.each([[tmpl``], [tmpl` `]])(
+      'should create a EmptyTemplate if there is no contents',
+      ({ strings, values }) => {
+        const host = new ClientRenderHost();
+        const template = host.getHTMLTemplate(strings, values);
 
-      expect(template).toBeInstanceOf(EmptyTemplate);
-    });
+        expect(template).toBeInstanceOf(EmptyTemplate);
+      },
+    );
 
     it.each([
       [tmpl`<${'foo'}>`],
@@ -262,13 +264,15 @@ describe('ClientRenderHost', () => {
       ).toBe('http://www.w3.org/2000/svg');
     });
 
-    it('should create a EmptyTemplate if there is no contents', () => {
-      const host = new ClientRenderHost();
-      const { strings, values } = tmpl``;
-      const template = host.getSVGTemplate(strings, values);
+    it.each([[tmpl``], [tmpl` `]])(
+      'should create a EmptyTemplate if there is no contents',
+      ({ strings, values }) => {
+        const host = new ClientRenderHost();
+        const template = host.getSVGTemplate(strings, values);
 
-      expect(template).toBeInstanceOf(EmptyTemplate);
-    });
+        expect(template).toBeInstanceOf(EmptyTemplate);
+      },
+    );
 
     it.each([
       [tmpl`<${'foo'}>`],

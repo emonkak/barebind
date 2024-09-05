@@ -283,7 +283,7 @@ function getOptimizedTemplate<TData extends readonly any[], TContext>(
   strings: readonly string[],
   values: TData,
 ): Template<TData, TContext> | null {
-  if (values.length === 0 && strings[0] === '') {
+  if (values.length === 0 && strings[0]!.trim() === '') {
     // Assumption: strings.length === 1
     return EmptyTemplate.instance as Template<any, TContext>;
   }
