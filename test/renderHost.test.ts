@@ -307,16 +307,8 @@ describe('ClientRenderHost', () => {
   });
 
   describe('.getScopedValue()', () => {
-    it('should get a scoped value from constants', () => {
-      const host = new ClientRenderHost({ constants: new Map([['foo', 123]]) });
-      const block = new MockBlock();
-
-      expect(host.getScopedValue('foo')).toBe(123);
-      expect(host.getScopedValue('foo', block)).toBe(123);
-    });
-
     it('should get a scoped value from the block scope', () => {
-      const host = new ClientRenderHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientRenderHost({});
       const block = new MockBlock();
 
       host.setScopedValue('foo', 456, block);
@@ -327,7 +319,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should get a scoped value from the parent block scope', () => {
-      const host = new ClientRenderHost({ constants: new Map([['foo', 123]]) });
+      const host = new ClientRenderHost({});
       const parent = new MockBlock();
       const block = new MockBlock(parent);
 

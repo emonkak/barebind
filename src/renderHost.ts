@@ -34,7 +34,6 @@ import {
 import { ChildTemplate, TextTemplate } from './template/valueTemplate.js';
 
 export interface ClientRenderHostOptions {
-  constants?: Map<unknown, unknown>;
   hostName?: string;
   literalProcessor?: LiteralProcessor;
 }
@@ -46,9 +45,7 @@ export interface Root<T> {
 }
 
 export class ClientRenderHost implements RenderHost<RenderContext> {
-  private readonly _constants: Map<unknown, unknown>;
-
-  private readonly _scopes: WeakMap<
+  private readonly _namespaces: WeakMap<
     Block<RenderContext>,
     Map<unknown, unknown>
   > = new WeakMap();
@@ -65,11 +62,9 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   private _idCounter = 0;
 
   constructor({
-    constants = new Map(),
     hostName = getRandomString(8),
     literalProcessor = new LiteralProcessor(),
   }: ClientRenderHostOptions = {}) {
-    this._constants = constants;
     this._hostName = hostName;
     this._literalProcessor = literalProcessor;
   }
@@ -174,19 +169,16 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return template;
   }
 
-  getScopedValue(
-    key: unknown,
-    block: Block<RenderContext> | null = null,
-  ): unknown {
-    let currentBlock = block;
-    while (currentBlock !== null) {
-      const value = this._scopes.get(currentBlock)?.get(key);
+  getScopedValue(key: unknown, block: Block<RenderContext>): unknown {
+    let currentBlock: Block<RenderContext> | null = block;
+    do {
+      const value = this._namespaces.get(currentBlock)?.get(key);
       if (value !== undefined) {
         return value;
       }
       currentBlock = currentBlock.parent;
-    }
-    return this._constants.get(key);
+    } while (currentBlock !== null);
+    return undefined;
   }
 
   getUnsafeHTMLTemplate(content: string): Template<readonly [], RenderContext> {
@@ -236,13 +228,13 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     value: unknown,
     block: Block<RenderContext>,
   ): void {
-    let scope = this._scopes.get(block);
+    let scope = this._namespaces.get(block);
     if (scope !== undefined) {
       scope.set(key, value);
     } else {
       scope = new Map();
       scope.set(key, value);
-      this._scopes.set(block, scope);
+      this._namespaces.set(block, scope);
     }
   }
 }

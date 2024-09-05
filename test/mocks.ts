@@ -199,10 +199,7 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return new MockTemplate();
   }
 
-  getScopedValue(
-    _key: unknown,
-    _block: Block<RenderContext> | null = null,
-  ): unknown {
+  getScopedValue(_key: unknown, _block: Block<RenderContext>): unknown {
     return undefined;
   }
 
