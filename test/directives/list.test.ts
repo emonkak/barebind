@@ -506,14 +506,10 @@ describe('ListBinding', () => {
       binding.disconnect(context);
       context.flushUpdate();
 
-      expect(container.innerHTML).toBe('<!---->');
-
-      binding.bind(value, context);
-      context.flushUpdate();
-
       expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
+        '<!--TextDirective@"foo"--><!--TextDirective@"bar"--><!--TextDirective@"baz"--><!---->',
       );
+      expect(binding.startNode).toBe(part.node);
     });
   });
 });

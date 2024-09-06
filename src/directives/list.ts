@@ -15,12 +15,6 @@ import { ensureDirective, reportPart } from '../error.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 
-const FLAG_NONE = 0;
-const FLAG_INSERTED = 1 << 0;
-const FLAG_INSERTING = 1 << 1;
-const FLAG_MOVING = 1 << 2;
-const FLAG_REMOVING = 1 << 3;
-
 export function list<TItem, TValue>(
   items: TItem[],
   valueSelector: Selector<TItem, TValue>,
@@ -90,9 +84,9 @@ export class ListBinding<TItem, TKey, TValue>
 
   private _memoizedKeys: TKey[] = [];
 
-  private _pendingBindings: ItemBinding<TValue>[] = [];
+  private _pendingBindings: Binding<TValue>[] = [];
 
-  private _memoizedBindings: ItemBinding<TValue>[] = [];
+  private _memoizedBindings: Binding<TValue>[] = [];
 
   private _dirty = false;
 
@@ -117,7 +111,7 @@ export class ListBinding<TItem, TKey, TValue>
     return this._part.node;
   }
 
-  get bindings(): ItemBinding<TValue>[] {
+  get bindings(): Binding<TValue>[] {
     return this._pendingBindings;
   }
 
@@ -159,35 +153,10 @@ export class ListBinding<TItem, TKey, TValue>
 
   private _clearItems(context: UpdateContext): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      this._pendingBindings[i]!.unbind(context);
+      removeItem(this._pendingBindings[i]!, context);
     }
 
     this._pendingBindings.length = 0;
-  }
-
-  private _insertItem(
-    key: TKey,
-    value: TValue,
-    referenceBinding: Binding<TValue> | null,
-    context: UpdateContext,
-  ): ItemBinding<TValue> {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-    const binding = new ItemBinding(
-      resolveBinding(value, part, context),
-      referenceBinding,
-      this._part,
-    );
-
-    DEBUG: {
-      part.node.data = nameOf(value) + '@' + nameOf(key);
-    }
-
-    binding.connect(context);
-
-    return binding;
   }
 
   private _reconcileItems(
@@ -196,8 +165,8 @@ export class ListBinding<TItem, TKey, TValue>
     valueSelector: Selector<TItem, TValue>,
     context: UpdateContext,
   ): void {
-    const oldBindings: (ItemBinding<TValue> | null)[] = this._pendingBindings;
-    const newBindings = new Array<ItemBinding<TValue>>(items.length);
+    const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
+    const newBindings = new Array<Binding<TValue>>(items.length);
     const oldKeys = this._memoizedKeys;
     const newKeys = items.map(keySelector);
     const newValues = items.map(valueSelector);
@@ -233,9 +202,11 @@ export class ListBinding<TItem, TKey, TValue>
       } else if (oldKeys[oldHead] === newKeys[newTail]) {
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newTail] = oldBindings[oldHead]!);
-        binding.move(
-          newValues[newTail]!,
+        binding.bind(newValues[newTail]!, context);
+        reorderItem(
+          binding,
           newBindings[newTail + 1] ?? null,
+          this._part,
           context,
         );
         oldHead++;
@@ -243,7 +214,8 @@ export class ListBinding<TItem, TKey, TValue>
       } else if (oldKeys[oldTail] === newKeys[newHead]) {
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newHead] = oldBindings[oldTail]!);
-        binding.move(newValues[newHead]!, oldBindings[oldHead]!, context);
+        binding.bind(newValues[newHead]!, context);
+        reorderItem(binding, oldBindings[oldHead]!, this._part, context);
         oldTail--;
         newHead++;
       } else {
@@ -255,11 +227,11 @@ export class ListBinding<TItem, TKey, TValue>
         }
         if (!newKeyToIndexMap.has(oldKeys[oldHead]!)) {
           // Old head is no longer in new list; remove
-          oldBindings[oldHead]!.unbind(context);
+          removeItem(oldBindings[oldHead]!, context);
           oldHead++;
         } else if (!newKeyToIndexMap.has(oldKeys[oldTail]!)) {
           // Old tail is no longer in new list; remove
-          oldBindings[oldTail]!.unbind(context);
+          removeItem(oldBindings[oldTail]!, context);
           oldTail--;
         } else {
           // Any mismatches at this point are due to additions or moves; see if
@@ -268,16 +240,18 @@ export class ListBinding<TItem, TKey, TValue>
           if (oldIndex !== undefined && oldBindings[oldIndex] !== null) {
             // Reuse the old binding.
             const binding = (newBindings[newHead] = oldBindings[oldIndex]!);
-            binding.move(newValues[newHead]!, oldBindings[oldHead]!, context);
+            binding.bind(newValues[newHead]!, context);
+            reorderItem(binding, oldBindings[oldHead]!, this._part, context);
             // This marks the old binding as having been used, so that it will
             // be skipped in the first two checks above.
             oldBindings[oldIndex] = null;
           } else {
             // No old binding for this value; create a new one and insert it.
-            newBindings[newHead] = this._insertItem(
+            newBindings[newHead] = insertItem(
               newKeys[newHead]!,
               newValues[newHead]!,
               oldBindings[oldHead]!,
+              this._part,
               context,
             );
           }
@@ -290,10 +264,11 @@ export class ListBinding<TItem, TKey, TValue>
     while (newHead <= newTail) {
       // For all remaining additions, we insert before last new tail, since old
       // pointers are no longer valid.
-      newBindings[newHead] = this._insertItem(
+      newBindings[newHead] = insertItem(
         newKeys[newHead]!,
         newValues[newHead]!,
         newBindings[newTail + 1] ?? null,
+        this._part,
         context,
       );
       newHead++;
@@ -303,7 +278,7 @@ export class ListBinding<TItem, TKey, TValue>
     while (oldHead <= oldTail) {
       const oldBinding = oldBindings[oldHead]!;
       if (oldBinding !== null) {
-        oldBinding.unbind(context);
+        removeItem(oldBinding, context);
       }
       oldHead++;
     }
@@ -320,7 +295,7 @@ export class ListBinding<TItem, TKey, TValue>
   ): void {
     const newKeys = new Array<TKey>(items.length);
     const oldBindings = this._pendingBindings;
-    const newBindings = new Array<ItemBinding<TValue>>(items.length);
+    const newBindings = new Array<Binding<TValue>>(items.length);
 
     for (
       let i = 0, l = Math.min(oldBindings.length, items.length);
@@ -341,11 +316,11 @@ export class ListBinding<TItem, TKey, TValue>
       const key = keySelector(item, i);
       const value = valueSelector(item, i);
       newKeys[i] = key;
-      newBindings[i] = this._insertItem(key, value, null, context);
+      newBindings[i] = insertItem(key, value, null, this._part, context);
     }
 
     for (let i = items.length, l = oldBindings.length; i < l; i++) {
-      oldBindings[i]!.unbind(context);
+      removeItem(oldBindings[i]!, context);
     }
 
     this._memoizedKeys = newKeys;
@@ -373,104 +348,76 @@ export class ListBinding<TItem, TKey, TValue>
   }
 }
 
-class ItemBinding<TValue> implements Binding<TValue>, Effect {
+class MountItem<TValue> implements Effect {
   private readonly _binding: Binding<TValue>;
 
-  private _referenceBinding: Binding<TValue> | null;
+  private readonly _referenceBinding: Binding<TValue> | null;
 
-  private readonly _containerPart: ChildNodePart;
-
-  private _flags = FLAG_NONE;
+  private readonly _listPart: ChildNodePart;
 
   constructor(
     binding: Binding<TValue>,
     referenceBinding: Binding<TValue> | null,
-    containerPart: ChildNodePart,
+    listPart: ChildNodePart,
   ) {
     this._binding = binding;
     this._referenceBinding = referenceBinding;
-    this._containerPart = containerPart;
-  }
-
-  get value(): TValue {
-    return this._binding.value;
-  }
-
-  get part(): Part {
-    return this._binding.part;
-  }
-
-  get startNode(): ChildNode {
-    return this._binding.startNode;
-  }
-
-  get endNode(): ChildNode {
-    return this._binding.endNode;
-  }
-
-  connect(context: UpdateContext): void {
-    this._requestCommit(context);
-    this._flags |= FLAG_INSERTING;
-    this._flags &= ~(FLAG_MOVING | FLAG_REMOVING);
-    this._binding.connect(context);
-  }
-
-  bind(newValue: TValue, context: UpdateContext): void {
-    if (!(this._flags & FLAG_INSERTED)) {
-      this._requestCommit(context);
-      this._flags |= FLAG_INSERTING;
-      this._flags &= ~(FLAG_MOVING | FLAG_REMOVING);
-    }
-    this._binding.bind(newValue, context);
-  }
-
-  unbind(context: UpdateContext): void {
-    this._binding.unbind(context);
-    this._requestCommit(context);
-    this._flags |= FLAG_REMOVING;
-    this._flags &= ~(FLAG_INSERTING | FLAG_MOVING);
-  }
-
-  disconnect(context: UpdateContext): void {
-    this._binding.disconnect(context);
-    this._flags &= ~(FLAG_INSERTING | FLAG_MOVING | FLAG_REMOVING);
-  }
-
-  move(
-    newValue: TValue,
-    referenceBinding: Binding<TValue> | null,
-    context: UpdateContext,
-  ): void {
-    this._binding.bind(newValue, context);
-    this._requestCommit(context);
-    this._referenceBinding = referenceBinding;
-    this._flags |= FLAG_MOVING;
-    this._flags &= ~(FLAG_INSERTING | FLAG_REMOVING);
+    this._listPart = listPart;
   }
 
   commit(): void {
-    if (this._flags & FLAG_INSERTING) {
-      const referenceNode =
-        this._referenceBinding?.startNode ?? this._containerPart.node;
-      referenceNode.before(this._binding.part.node);
-      this._flags |= FLAG_INSERTED;
-    } else if (this._flags & FLAG_MOVING) {
-      const { startNode, endNode } = this._binding;
-      const referenceNode =
-        this._referenceBinding?.startNode ?? this._containerPart.node;
-      moveNodes(startNode, endNode, referenceNode);
-      this._flags |= FLAG_INSERTED;
-    } else {
-      this._binding.part.node.remove();
-      this._flags &= ~FLAG_INSERTED;
-    }
-    this._flags &= ~(FLAG_INSERTING | FLAG_MOVING | FLAG_REMOVING);
+    const referenceNode =
+      this._referenceBinding?.startNode ?? this._listPart.node;
+    referenceNode.before(this._binding.part.node);
+  }
+}
+
+class ReorderItem<TValue> implements Effect {
+  private readonly _binding: Binding<TValue>;
+
+  private readonly _referenceBinding: Binding<TValue> | null;
+
+  private readonly _listPart: ChildNodePart;
+
+  constructor(
+    binding: Binding<TValue>,
+    referenceBinding: Binding<TValue> | null,
+    listPart: ChildNodePart,
+  ) {
+    this._binding = binding;
+    this._referenceBinding = referenceBinding;
+    this._listPart = listPart;
   }
 
-  private _requestCommit(context: UpdateContext) {
-    if (!(this._flags & (FLAG_INSERTING | FLAG_MOVING | FLAG_REMOVING))) {
-      context.enqueueMutationEffect(this);
-    }
+  commit(): void {
+    const { startNode, endNode } = this._binding;
+    const referenceNode =
+      this._referenceBinding?.startNode ?? this._listPart.node;
+    // Elements must be collected before inserting to avoid infinite loop.
+    const targetNodes = [];
+    let currentNode: Node | null = startNode;
+
+    do {
+      targetNodes.push(currentNode);
+      if (currentNode === endNode) {
+        break;
+      }
+      currentNode = currentNode.nextSibling;
+    } while (currentNode !== null);
+
+    referenceNode.before(...targetNodes);
+  }
+}
+
+class UnmountItem<TValue> implements Effect {
+  private _binding: Binding<TValue>;
+
+  constructor(binding: Binding<TValue>) {
+    this._binding = binding;
+  }
+
+  commit(): void {
+    this._binding.part.node.remove();
   }
 }
 
@@ -490,22 +437,50 @@ function indexSelector(_item: unknown, index: number): number {
   return index;
 }
 
-function moveNodes(
-  startNode: Node,
-  endNode: Node,
-  referenceNode: ChildNode,
+function insertItem<TKey, TValue>(
+  key: TKey,
+  value: TValue,
+  referenceBinding: Binding<TValue> | null,
+  listPart: ChildNodePart,
+  context: UpdateContext,
+): Binding<TValue> {
+  const part = {
+    type: PartType.ChildNode,
+    node: document.createComment(''),
+  } as const;
+  const binding = resolveBinding(value, part, context);
+
+  DEBUG: {
+    part.node.data = nameOf(value) + '@' + nameOf(key);
+  }
+
+  // Mounting and reorder must guarantee the order of execution as separate
+  // effects. Because reference bindings may be unmounted.
+  context.enqueueMutationEffect(
+    new MountItem(binding, referenceBinding, listPart),
+  );
+
+  binding.connect(context);
+
+  return binding;
+}
+
+function removeItem<TValue>(
+  binding: Binding<TValue>,
+  context: UpdateContext,
 ): void {
-  // Elements must be collected before inserting to avoid infinite loop.
-  const targetNodes: Node[] = [];
-  let currentNode: Node | null = startNode;
+  binding.unbind(context);
 
-  do {
-    targetNodes.push(currentNode);
-    if (currentNode === endNode) {
-      break;
-    }
-    currentNode = currentNode.nextSibling;
-  } while (currentNode !== null);
+  context.enqueueMutationEffect(new UnmountItem(binding));
+}
 
-  referenceNode.before(...targetNodes);
+function reorderItem<TValue>(
+  binding: Binding<TValue>,
+  referenceBinding: Binding<TValue> | null,
+  listPart: ChildNodePart,
+  context: UpdateContext,
+): void {
+  context.enqueueMutationEffect(
+    new ReorderItem(binding, referenceBinding, listPart),
+  );
 }
