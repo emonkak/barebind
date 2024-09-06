@@ -155,6 +155,8 @@ export class TemplateResultBinding<TData, TContext>
       if (this._pendingView !== this._memoizedView) {
         this._requestCommit(context);
         this._status = CommitStatus.Mounting;
+      } else {
+        this._status = CommitStatus.Committed;
       }
       this._pendingView.bind(data, context);
     } else {
@@ -186,6 +188,8 @@ export class TemplateResultBinding<TData, TContext>
         if (this._pendingView !== this._memoizedView) {
           this._requestCommit(context);
           this._status = CommitStatus.Mounting;
+        } else {
+          this._status = CommitStatus.Committed;
         }
 
         this._pendingView.bind(data, context);

@@ -52,6 +52,8 @@ export class NodeBinding<T> implements Binding<T>, Effect {
     if (!Object.is(this._memoizedValue, newValue)) {
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
     this._pendingValue = newValue;
   }

@@ -99,6 +99,8 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
     ) {
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
     this._pendingValue = newValue;
   }

@@ -22,6 +22,33 @@ describe('NodeBinding', () => {
     });
   });
 
+  describe('.connect()', () => {
+    it('should do nothing if the update is already scheduled', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const part = {
+        type: PartType.Node,
+        node: document.createTextNode(''),
+      } as const;
+      const binding = new NodeBinding('foo', part);
+
+      const enqueueMutationEffectSpy = vi.spyOn(
+        context,
+        'enqueueMutationEffect',
+      );
+
+      binding.connect(context);
+      binding.connect(context);
+
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
+    });
+  });
+
   describe('.bind()', () => {
     it('should update the node value', () => {
       const context = new UpdateContext(
@@ -79,31 +106,6 @@ describe('NodeBinding', () => {
 
       expect(binding.value).toBe(value);
       expect(context.isPending()).toBe(false);
-    });
-
-    it('should do nothing if the update is already scheduled', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const binding = new NodeBinding('foo', part);
-
-      const enqueueMutationEffectSpy = vi.spyOn(
-        context,
-        'enqueueMutationEffect',
-      );
-
-      binding.connect(context);
-      binding.connect(context);
-
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
     });
 
     it('should throw the error if the value is a directive', () => {

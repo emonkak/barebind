@@ -84,6 +84,8 @@ export class TeleportBinding<T> implements Binding<Teleport<T>> {
     if (newValue.container !== this._memoizedContainer) {
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
+    } else {
+      this._status = CommitStatus.Committed;
     }
     this._binding.bind(newValue.value, context);
     this._value = newValue;

@@ -32,27 +32,6 @@ describe('ElementBinding', () => {
     });
   });
 
-  describe('.value', () => {
-    it('should throw the error when a non-object value is passed', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = {};
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      } as const;
-      const binding = new ElementBinding(value, part);
-
-      expect(() => {
-        binding.bind(null as any, context);
-      }).toThrow('A value of ElementBinding must be an object,');
-    });
-  });
-
   describe('.connect()', () => {
     it('should bind element attributes', () => {
       const context = new UpdateContext(
@@ -227,6 +206,25 @@ describe('ElementBinding', () => {
       context.flushUpdate();
 
       expect(part.node.outerHTML).toBe('<div class="foo" title="bar"></div>');
+    });
+
+    it('should throw the error when a non-object value is passed', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = {};
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      } as const;
+      const binding = new ElementBinding(value, part);
+
+      expect(() => {
+        binding.bind(null as any, context);
+      }).toThrow('A value of ElementBinding must be an object,');
     });
   });
 

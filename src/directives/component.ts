@@ -182,6 +182,8 @@ export class ComponentBinding<TProps, TData, TContext>
         if (this._memoizedView !== this._pendingView) {
           this._requestCommit(context);
           this._status = CommitStatus.Mounting;
+        } else {
+          this._status = CommitStatus.Committed;
         }
 
         this._pendingView.bind(data, context);

@@ -23,6 +23,81 @@ describe('AttributeBinding', () => {
     });
   });
 
+  describe('.connect()', () => {
+    it.each([[null], [undefined]])(
+      'should remove the attribute when null or undefined is passed',
+      (value) => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const part = {
+          type: PartType.Attribute,
+          node: document.createElement('div'),
+          name: 'contenteditable',
+        } as const;
+        const binding = new AttributeBinding(value, part);
+
+        part.node.toggleAttribute('contenteditable', true);
+        binding.connect(context);
+        context.flushUpdate();
+
+        expect(binding.value).toBe(value);
+        expect(part.node.hasAttribute('contenteditable')).toBe(false);
+      },
+    );
+
+    it('should remove the attribute when undefined is passed', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'contenteditable',
+      } as const;
+      const binding = new AttributeBinding(undefined, part);
+
+      part.node.toggleAttribute('contenteditable', true);
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(binding.value).toBe(undefined);
+      expect(part.node.hasAttribute('contenteditable')).toBe(false);
+    });
+
+    it('should do nothing if the update is already scheduled', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const part = {
+        type: PartType.Attribute,
+        node: document.createElement('div'),
+        name: 'contenteditable',
+      } as const;
+      const binding = new AttributeBinding(undefined, part);
+
+      const enqueueMutationEffectSpy = vi.spyOn(
+        context,
+        'enqueueMutationEffect',
+      );
+
+      binding.connect(context);
+      binding.connect(context);
+
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
+    });
+  });
+
   describe('.bind()', () => {
     it('should update the attribute with the passed string', () => {
       const context = new UpdateContext(
@@ -116,53 +191,6 @@ describe('AttributeBinding', () => {
       expect(part.node.hasAttribute('contenteditable')).toBe(false);
     });
 
-    it.each([[null], [undefined]])(
-      'should remove the attribute when null or undefined is passed',
-      (value) => {
-        const context = new UpdateContext(
-          new MockRenderHost(),
-          new SyncUpdater(),
-          new MockBlock(),
-        );
-
-        const part = {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: 'contenteditable',
-        } as const;
-        const binding = new AttributeBinding(value, part);
-
-        part.node.toggleAttribute('contenteditable', true);
-        binding.connect(context);
-        context.flushUpdate();
-
-        expect(binding.value).toBe(value);
-        expect(part.node.hasAttribute('contenteditable')).toBe(false);
-      },
-    );
-
-    it('should remove the attribute when undefined is passed', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const part = {
-        type: PartType.Attribute,
-        node: document.createElement('div'),
-        name: 'contenteditable',
-      } as const;
-      const binding = new AttributeBinding(undefined, part);
-
-      part.node.toggleAttribute('contenteditable', true);
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(binding.value).toBe(undefined);
-      expect(part.node.hasAttribute('contenteditable')).toBe(false);
-    });
-
     it('should not update the binding if the new and old values are the same', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
@@ -185,32 +213,6 @@ describe('AttributeBinding', () => {
 
       expect(binding.value).toBe(value);
       expect(context.isPending()).toBe(false);
-    });
-
-    it('should do nothing if the update is already scheduled', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const part = {
-        type: PartType.Attribute,
-        node: document.createElement('div'),
-        name: 'contenteditable',
-      } as const;
-      const binding = new AttributeBinding(undefined, part);
-
-      const enqueueMutationEffectSpy = vi.spyOn(
-        context,
-        'enqueueMutationEffect',
-      );
-
-      binding.connect(context);
-      binding.connect(context);
-
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-      expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
     });
 
     it('should throw the error if the value is a directive', () => {
