@@ -29,6 +29,8 @@ export interface NavigateOptions {
   state?: unknown;
 }
 
+type URLSearchParamsInput = ConstructorParameters<typeof URLSearchParams>[0];
+
 export class RelativeURL {
   private readonly _pathname: string;
 
@@ -49,7 +51,7 @@ export class RelativeURL {
     return RelativeURL.fromString(value);
   }
 
-  static fromLocation(location: LocationLike) {
+  static fromLocation(location: LocationLike): RelativeURL {
     const { pathname, search, hash } = location;
     return new RelativeURL(pathname, search, hash);
   }
@@ -74,7 +76,7 @@ export class RelativeURL {
 
   constructor(
     pathname: string,
-    search: ConstructorParameters<typeof URLSearchParams>[0] = '',
+    search: URLSearchParamsInput = '',
     hash = '',
   ) {
     this._pathname = pathname;
