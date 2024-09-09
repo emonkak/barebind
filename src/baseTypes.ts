@@ -247,7 +247,7 @@ export interface DirectiveContext<TContext = unknown> {
   readonly block: Block<TContext> | null;
 }
 
-export type FilterLiterals<TValues extends readonly any[]> = TValues extends [
+export type FilterLiterals<TValues extends readonly any[]> = TValues extends readonly [
   infer THead,
   ...infer TTail,
 ]
