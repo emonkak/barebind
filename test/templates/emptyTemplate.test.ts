@@ -4,8 +4,8 @@ import { PartType, UpdateContext } from '../../src/baseTypes.js';
 import {
   EmptyTemplate,
   EmptyTemplateView,
-} from '../../src/template/emptyTemplate.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+} from '../../src/templates/emptyTemplate.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 
 describe('EmptyTemplate', () => {

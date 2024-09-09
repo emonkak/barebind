@@ -1,24 +1,24 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding/node.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { PropertyBinding } from '../../src/bindings/property.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 
-describe('NodeBinding', () => {
+describe('PropertyBinding', () => {
   describe('.constructor()', () => {
-    it('should construct a new NodeBinding', () => {
-      const value = 'foo';
+    it('should construct a new PropertyBinding', () => {
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new PropertyBinding('foo', part);
 
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.value).toBe(value);
+      expect(binding.value).toBe('foo');
     });
   });
 
@@ -30,11 +30,13 @@ describe('NodeBinding', () => {
         new MockBlock(),
       );
 
+      const value = 'foo';
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
       } as const;
-      const binding = new NodeBinding('foo', part);
+      const binding = new PropertyBinding(value, part);
 
       const enqueueMutationEffectSpy = vi.spyOn(
         context,
@@ -50,7 +52,7 @@ describe('NodeBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should update the node value', () => {
+    it('should update the property of the element', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -60,29 +62,23 @@ describe('NodeBinding', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
       } as const;
-      const binding = new NodeBinding<string | null>(value1, part);
+      const binding = new PropertyBinding(value1, part);
 
       binding.connect(context);
       context.flushUpdate();
 
       expect(binding.value).toBe(value1);
-      expect(part.node.nodeValue).toBe(value1);
+      expect(part.node.className).toBe(value1);
 
       binding.bind(value2, context);
       context.flushUpdate();
 
       expect(binding.value).toBe(value2);
-      expect(part.node.nodeValue).toBe(value2);
-
-      binding.bind(null, context);
-      context.flushUpdate();
-      context.flushUpdate();
-
-      expect(binding.value).toBe(null);
-      expect(part.node.nodeValue).toBe('');
+      expect(part.node.className).toBe(value2);
     });
 
     it('should not update the binding if the new and old values are the same', () => {
@@ -92,12 +88,13 @@ describe('NodeBinding', () => {
         new MockBlock(),
       );
 
-      const value = 'foo';
+      const value = 'bar';
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new PropertyBinding(value, part);
 
       binding.connect(context);
       context.flushUpdate();
@@ -115,11 +112,11 @@ describe('NodeBinding', () => {
         new MockBlock(),
       );
 
-      const part = {
-        type: PartType.Node,
+      const binding = new PropertyBinding('foo', {
+        type: PartType.Property,
         node: document.createElement('div'),
-      } as const;
-      const binding = new NodeBinding('foo', part);
+        name: 'className',
+      });
 
       expect(() => {
         binding.bind(new TextDirective() as any, context);
@@ -128,33 +125,6 @@ describe('NodeBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should set null to the node value', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = 'foo';
-      const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
-      } as const;
-      const binding = new NodeBinding(value, part);
-
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(binding.value).toBe(value);
-      expect(part.node.nodeValue).toBe(value);
-
-      binding.unbind(context);
-      context.flushUpdate();
-
-      expect(binding.value).toBe(value);
-      expect(part.node.nodeValue).toBe('');
-    });
-
     it('should cancel mounting', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
@@ -164,16 +134,17 @@ describe('NodeBinding', () => {
 
       const value = 'foo';
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new PropertyBinding(value, part);
 
       binding.connect(context);
       binding.unbind(context);
       context.flushUpdate();
 
-      expect(part.node.nodeValue).toBe('');
+      expect(part.node.className).toBe('');
     });
   });
 
@@ -187,16 +158,22 @@ describe('NodeBinding', () => {
 
       const value = 'foo';
       const part = {
-        type: PartType.Node,
-        node: document.createTextNode(''),
+        type: PartType.Property,
+        node: document.createElement('div'),
+        name: 'className',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new PropertyBinding(value, part);
 
       binding.connect(context);
       binding.disconnect(context);
       context.flushUpdate();
 
-      expect(part.node.nodeValue).toBe('');
+      expect(part.node.className).toBe('');
+
+      binding.connect(context);
+      context.flushUpdate();
+
+      expect(part.node.className).toBe(value);
     });
   });
 });

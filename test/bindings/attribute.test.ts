@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
-import { AttributeBinding } from '../../src/binding/attribute.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { AttributeBinding } from '../../src/bindings/attribute.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 
 describe('AttributeBinding', () => {

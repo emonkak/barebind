@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { UpdateContext } from '../../src/baseTypes.js';
 import { LazyTemplateResult } from '../../src/directives/templateResult.js';
-import { LazyTemplate } from '../../src/template/lazyTemplate.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { LazyTemplate } from '../../src/templates/lazyTemplate.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

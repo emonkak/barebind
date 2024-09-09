@@ -1,14 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/binding/node.js';
+import { NodeBinding } from '../../src/bindings/node.js';
 import { EagerTemplateResult } from '../../src/directives/templateResult.js';
 import {
   ChildTemplate,
   TextTemplate,
   ValueTemplateView,
-} from '../../src/template/valueTemplate.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+} from '../../src/templates/valueTemplate.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

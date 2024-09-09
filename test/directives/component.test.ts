@@ -12,7 +12,7 @@ import {
 } from '../../src/directives/component.js';
 import { EagerTemplateResult } from '../../src/directives/templateResult.js';
 import type { RenderContext } from '../../src/renderContext.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

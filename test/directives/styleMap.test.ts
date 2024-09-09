@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { StyleMapBinding, styleMap } from '../../src/directives/styleMap.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('styleMap()', () => {

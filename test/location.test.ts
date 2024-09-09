@@ -19,7 +19,7 @@ import {
 } from '../src/location.js';
 import { RenderContext } from '../src/renderContext.js';
 import { ClientRenderHost } from '../src/renderHost.js';
-import { SyncUpdater } from '../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../src/updaters/syncUpdater.js';
 import { MockBlock } from './mocks.js';
 
 describe('RelativeURL', () => {

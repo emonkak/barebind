@@ -11,7 +11,7 @@ import {
 } from '../../src/baseTypes.js';
 import { Computed, SignalBinding, State } from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

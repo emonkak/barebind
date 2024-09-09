@@ -6,19 +6,19 @@ import {
   UpdateContext,
   directiveTag,
 } from '../../src/baseTypes.js';
-import { AttributeBinding } from '../../src/binding/attribute.js';
-import { ElementBinding } from '../../src/binding/element.js';
-import { EventBinding } from '../../src/binding/event.js';
-import { NodeBinding } from '../../src/binding/node.js';
-import { PropertyBinding } from '../../src/binding/property.js';
+import { AttributeBinding } from '../../src/bindings/attribute.js';
+import { ElementBinding } from '../../src/bindings/element.js';
+import { EventBinding } from '../../src/bindings/event.js';
+import { NodeBinding } from '../../src/bindings/node.js';
+import { PropertyBinding } from '../../src/bindings/property.js';
 import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
   TaggedTemplate,
   TaggedTemplateView,
   createMarker,
   isValidMarker,
-} from '../../src/template/taggedTemplate.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+} from '../../src/templates/taggedTemplate.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

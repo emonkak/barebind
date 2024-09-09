@@ -8,21 +8,21 @@ import {
   createUpdateQueue,
   literal,
 } from '../src/baseTypes.js';
-import { AttributeBinding } from '../src/binding/attribute.js';
-import { ElementBinding } from '../src/binding/element.js';
-import { EventBinding } from '../src/binding/event.js';
-import { NodeBinding } from '../src/binding/node.js';
-import { PropertyBinding } from '../src/binding/property.js';
+import { AttributeBinding } from '../src/bindings/attribute.js';
+import { ElementBinding } from '../src/bindings/element.js';
+import { EventBinding } from '../src/bindings/event.js';
+import { NodeBinding } from '../src/bindings/node.js';
+import { PropertyBinding } from '../src/bindings/property.js';
 import { LiteralProcessor } from '../src/literalProcessor.js';
 import type { RenderContext } from '../src/renderContext.js';
 import { ClientRenderHost } from '../src/renderHost.js';
-import { EmptyTemplate } from '../src/template/emptyTemplate.js';
-import { LazyTemplate } from '../src/template/lazyTemplate.js';
-import { TaggedTemplate } from '../src/template/taggedTemplate.js';
-import { UnsafeTemplate } from '../src/template/unsafeTemplate.js';
-import { TextTemplate } from '../src/template/valueTemplate.js';
-import { ChildTemplate } from '../src/template/valueTemplate.js';
-import { SyncUpdater } from '../src/updater/syncUpdater.js';
+import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
+import { LazyTemplate } from '../src/templates/lazyTemplate.js';
+import { TaggedTemplate } from '../src/templates/taggedTemplate.js';
+import { UnsafeTemplate } from '../src/templates/unsafeTemplate.js';
+import { TextTemplate } from '../src/templates/valueTemplate.js';
+import { ChildTemplate } from '../src/templates/valueTemplate.js';
+import { SyncUpdater } from '../src/updaters/syncUpdater.js';
 import { MockBlock, TextDirective } from './mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [

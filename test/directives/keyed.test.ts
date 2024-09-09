@@ -7,7 +7,7 @@ import {
   nameTag,
 } from '../../src/baseTypes.js';
 import { Keyed, KeyedBinding, keyed } from '../../src/directives/keyed.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

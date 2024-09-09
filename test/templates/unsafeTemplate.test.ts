@@ -5,8 +5,8 @@ import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
   UnsafeTemplate,
   UnsafeTemplateView,
-} from '../../src/template/unsafeTemplate.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+} from '../../src/templates/unsafeTemplate.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost, MockTemplate } from '../mocks.js';
 
 describe('UnsafeTemplate', () => {

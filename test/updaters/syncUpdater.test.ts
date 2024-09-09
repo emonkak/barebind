@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('SyncUpdater', () => {

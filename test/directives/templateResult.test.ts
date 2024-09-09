@@ -12,7 +12,7 @@ import {
   eagerTemplateResult,
   lazyTemplateResult,
 } from '../../src/directives/templateResult.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
-import { ConcurrentUpdater } from '../../src/updater/concurrentUpdater.js';
+import { ConcurrentUpdater } from '../../src/updaters/concurrentUpdater.js';
 import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
 
 const TASK_PRIORITIES: TaskPriority[] = [

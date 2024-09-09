@@ -7,7 +7,7 @@ import {
   literal,
 } from '../src/baseTypes.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
-import { SyncUpdater } from '../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,

@@ -6,7 +6,7 @@ import {
   NoValueBinding,
   noValue,
 } from '../../src/directives/noValue.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
 
 describe('noValue', () => {

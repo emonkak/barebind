@@ -14,7 +14,7 @@ import {
   Right,
   optional,
 } from '../../src/directives/either.js';
-import { SyncUpdater } from '../../src/updater/syncUpdater.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
   MockRenderHost,
