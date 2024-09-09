@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
-import { ElementBinding } from '../../src/bindings/element.js';
-import { EventBinding } from '../../src/bindings/event.js';
+import { ElementBinding } from '../../src/bindings/elementBinding.js';
+import { EventBinding } from '../../src/bindings/eventBinding.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 

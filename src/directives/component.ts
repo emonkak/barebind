@@ -18,7 +18,7 @@ import {
   nameOf,
   nameTag,
 } from '../baseTypes.js';
-import { BlockBinding } from '../bindings/block.js';
+import { BlockBinding } from '../bindings/blockBinding.js';
 import { ensureDirective, reportPart } from '../error.js';
 
 export function component<TProps, TData, TContext>(

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext } from '../../src/baseTypes.js';
-import { NodeBinding } from '../../src/bindings/node.js';
+import { NodeBinding } from '../../src/bindings/nodeBinding.js';
 import { EagerTemplateResult } from '../../src/directives/templateResult.js';
 import {
   ChildTemplate,

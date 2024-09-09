@@ -6,11 +6,11 @@ import {
   UpdateContext,
   directiveTag,
 } from '../../src/baseTypes.js';
-import { AttributeBinding } from '../../src/bindings/attribute.js';
-import { ElementBinding } from '../../src/bindings/element.js';
-import { EventBinding } from '../../src/bindings/event.js';
-import { NodeBinding } from '../../src/bindings/node.js';
-import { PropertyBinding } from '../../src/bindings/property.js';
+import { AttributeBinding } from '../../src/bindings/attributeBinding.js';
+import { ElementBinding } from '../../src/bindings/elementBinding.js';
+import { EventBinding } from '../../src/bindings/eventBinding.js';
+import { NodeBinding } from '../../src/bindings/nodeBinding.js';
+import { PropertyBinding } from '../../src/bindings/propertyBinding.js';
 import { LazyTemplateResult } from '../../src/directives/templateResult.js';
 import {
   TaggedTemplate,

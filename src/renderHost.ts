@@ -17,12 +17,12 @@ import {
   nameOf,
   resolveBinding,
 } from './baseTypes.js';
-import { AttributeBinding } from './bindings/attribute.js';
-import { BlockBinding } from './bindings/block.js';
-import { ElementBinding } from './bindings/element.js';
-import { EventBinding } from './bindings/event.js';
-import { NodeBinding } from './bindings/node.js';
-import { PropertyBinding } from './bindings/property.js';
+import { AttributeBinding } from './bindings/attributeBinding.js';
+import { BlockBinding } from './bindings/blockBinding.js';
+import { ElementBinding } from './bindings/elementBinding.js';
+import { EventBinding } from './bindings/eventBinding.js';
+import { NodeBinding } from './bindings/nodeBinding.js';
+import { PropertyBinding } from './bindings/propertyBinding.js';
 import { LiteralProcessor } from './literalProcessor.js';
 import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
