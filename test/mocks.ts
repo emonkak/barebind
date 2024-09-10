@@ -243,7 +243,7 @@ export class MockRenderHost implements RenderHost<RenderContext> {
   ): void {}
 }
 
-export class MockUsableObject<T> implements UsableObject<T, unknown> {
+export class MockUsableObject<T> implements UsableObject<T> {
   private _returnValue: T;
 
   constructor(returnValue: T) {

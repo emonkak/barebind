@@ -22,7 +22,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 export abstract class Signal<TValue>
-  implements Directive<Signal<TValue>>, UsableObject<TValue, RenderContext>
+  implements Directive<Signal<TValue>>, UsableObject<TValue>
 {
   abstract get value(): TValue;
 

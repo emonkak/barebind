@@ -24,25 +24,20 @@ import { dependenciesAreChanged } from './compare.js';
 
 export const usableTag = Symbol('Usable');
 
-export type Usable<TResult, TContext> =
-  | UsableObject<TResult, TContext>
-  | UsableCallback<TResult, TContext>;
+export type Usable<TResult> = UsableObject<TResult> | UsableCallback<TResult>;
 
-export interface UsableObject<TResult, TContext> {
-  [usableTag](context: TContext): TResult;
+export interface UsableObject<TResult> {
+  [usableTag](context: RenderContext): TResult;
 }
 
-export type UsableCallback<TResult, TContext> = (context: TContext) => TResult;
+export type UsableCallback<TResult> = (context: RenderContext) => TResult;
 
-export type Use<TUsable, TContext> = TUsable extends Usable<
-  infer TResult,
-  TContext
->
+export type Use<TUsable> = TUsable extends Usable<infer TResult>
   ? TResult
   : TUsable extends []
     ? []
-    : TUsable extends [Usable<infer THead, TContext>, ...infer TTail]
-      ? [THead, ...Use<TTail, TContext>]
+    : TUsable extends [Usable<infer THead>, ...infer TTail]
+      ? [THead, ...Use<TTail>]
       : never;
 
 export type InitialState<TState> = [TState] extends [Function]
@@ -237,16 +232,11 @@ export class RenderContext {
     return this._host.getUnsafeTemplate(content, 'svg').wrapInResult([]);
   }
 
-  use<
-    const TUsable extends
-      | Usable<any, RenderContext>
-      | Usable<any, RenderContext>[],
-  >(usable: TUsable): Use<TUsable, RenderContext> {
+  use<const TUsable extends Usable<any> | Usable<any>[]>(
+    usable: TUsable,
+  ): Use<TUsable> {
     if (Array.isArray(usable)) {
-      return usable.map((usable) => use(usable, this)) as Use<
-        TUsable,
-        RenderContext
-      >;
+      return usable.map((usable) => use(usable, this)) as Use<TUsable>;
     } else {
       return use(usable, this);
     }
@@ -472,7 +462,7 @@ function ensureHookType<TExpectedHook extends Hook>(
 }
 
 function use<TResult>(
-  usable: Usable<TResult, RenderContext>,
+  usable: Usable<TResult>,
   context: RenderContext,
 ): TResult {
   return usableTag in usable ? usable[usableTag](context) : usable(context);
