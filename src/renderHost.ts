@@ -92,7 +92,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
 
     const binding = resolveBinding(value, part, { host: this, block: null });
     const block = BlockBinding.ofRoot(binding);
-    const context = new UpdateContext(this, updater, block);
+    const context = new UpdateContext<RenderContext>(this, updater, block);
 
     return {
       mount(): void {
