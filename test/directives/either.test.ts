@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { NoValue } from '../../src/directives.js';
 import {
   Either,
@@ -42,9 +37,9 @@ describe('optional()', () => {
 });
 
 describe('Left', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new Left('foo')[nameTag]).toBe('Left("foo")');
+      expect(new Left('foo')[Symbol.toStringTag]).toBe('Left("foo")');
     });
   });
 
@@ -81,9 +76,9 @@ describe('Left', () => {
 });
 
 describe('Right', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new Right('foo')[nameTag]).toBe('Right("foo")');
+      expect(new Right('foo')[Symbol.toStringTag]).toBe('Right("foo")');
     });
   });
 

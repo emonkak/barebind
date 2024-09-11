@@ -16,7 +16,6 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
-  nameTag,
 } from '../baseTypes.js';
 import { BlockBinding } from '../bindings/blockBinding.js';
 import { ensureDirective, reportPart } from '../error.js';
@@ -48,8 +47,8 @@ export class Component<TProps, TData, TContext>
     return this._props;
   }
 
-  get [nameTag](): string {
-    return 'Component(' + nameOf(this._type) + ')';
+  get [Symbol.toStringTag](): string {
+    return `Component(${nameOf(this._type)})`;
   }
 
   [directiveTag](

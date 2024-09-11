@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { MemoBinding, memo } from '../../src/directives/memo.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
@@ -27,9 +22,9 @@ describe('memo()', () => {
 });
 
 describe('Memo', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(memo(() => 'foo', [])[nameTag]).toBe('Memo("foo")');
+      expect(memo(() => 'foo', [])[Symbol.toStringTag]).toBe('Memo("foo")');
     });
   });
 

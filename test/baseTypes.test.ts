@@ -6,7 +6,6 @@ import {
   isDirective,
   literal,
   nameOf,
-  nameTag,
   resolveBinding,
 } from '../src/baseTypes.js';
 import {
@@ -63,7 +62,7 @@ describe('nameOf()', () => {
     expect(nameOf(new Date())).toBe('Date');
     expect(nameOf(() => {})).toBe('Function');
     expect(nameOf(function foo() {})).toBe('foo');
-    expect(nameOf({ [nameTag]: 'foo' })).toBe('foo');
+    expect(nameOf({ [Symbol.toStringTag]: 'foo' })).toBe('foo');
   });
 });
 

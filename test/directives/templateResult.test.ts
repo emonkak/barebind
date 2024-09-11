@@ -1,10 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import {
   EagerTemplateResult,
   LazyTemplateResult,
@@ -43,11 +38,13 @@ describe('lazyTemplateResult()', () => {
 });
 
 describe('EagerTemplateResult', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
       const value = new EagerTemplateResult(new MockTemplate(), []);
 
-      expect(value[nameTag]).toBe('EagerTemplateResult(MockTemplate)');
+      expect(value[Symbol.toStringTag]).toBe(
+        'EagerTemplateResult(MockTemplate)',
+      );
     });
   });
 
@@ -93,11 +90,13 @@ describe('EagerTemplateResult', () => {
 });
 
 describe('LazyTemplateResult', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
       const value = new LazyTemplateResult(new MockTemplate(), []);
 
-      expect(value[nameTag]).toBe('LazyTemplateResult(MockTemplate)');
+      expect(value[Symbol.toStringTag]).toBe(
+        'LazyTemplateResult(MockTemplate)',
+      );
     });
   });
 

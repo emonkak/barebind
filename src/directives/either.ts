@@ -6,7 +6,6 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
-  nameTag,
   resolveBinding,
 } from '../baseTypes.js';
 import { ensureDirective } from '../error.js';
@@ -41,8 +40,8 @@ export class Left<TLeft> implements Directive<Either<TLeft, unknown>> {
     return this._value;
   }
 
-  get [nameTag](): string {
-    return 'Left(' + nameOf(this._value) + ')';
+  get [Symbol.toStringTag](): string {
+    return `Left(${nameOf(this._value)})`;
   }
 
   [directiveTag](
@@ -64,8 +63,8 @@ export class Right<TRight> implements Directive<Either<unknown, TRight>> {
     return this._value;
   }
 
-  get [nameTag](): string {
-    return 'Right(' + nameOf(this._value) + ')';
+  get [Symbol.toStringTag](): string {
+    return `Right(${nameOf(this._value)})`;
   }
 
   [directiveTag](

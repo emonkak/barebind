@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { Keyed, KeyedBinding, keyed } from '../../src/directives/keyed.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
@@ -27,9 +22,11 @@ describe('keyed()', () => {
 });
 
 describe('Keyed', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(keyed('foo', 'bar')[nameTag]).toBe('Keyed("foo", "bar")');
+      expect(keyed('foo', 'bar')[Symbol.toStringTag]).toBe(
+        'Keyed("foo", "bar")',
+      );
     });
   });
 

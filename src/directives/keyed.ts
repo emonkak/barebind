@@ -6,7 +6,6 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
-  nameTag,
   resolveBinding,
 } from '../baseTypes.js';
 import { ensureDirective } from '../error.js';
@@ -36,8 +35,8 @@ export class Keyed<TKey, TValue> implements Directive<Keyed<TKey, TValue>> {
     return this._value;
   }
 
-  get [nameTag](): string {
-    return 'Keyed(' + nameOf(this._key) + ', ' + nameOf(this._value) + ')';
+  get [Symbol.toStringTag](): string {
+    return `Keyed(${nameOf(this._key)}, ${nameOf(this._value)})`;
   }
 
   [directiveTag](

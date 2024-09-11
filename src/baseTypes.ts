@@ -2,8 +2,6 @@
 
 export const directiveTag = Symbol('Directive');
 
-export const nameTag = Symbol('name');
-
 export interface Binding<TValue, TContext = unknown> {
   get value(): TValue;
   get part(): Part;
@@ -247,14 +245,12 @@ export interface DirectiveContext<TContext = unknown> {
   readonly block: Block<TContext> | null;
 }
 
-export type FilterLiterals<TValues extends readonly any[]> = TValues extends readonly [
-  infer THead,
-  ...infer TTail,
-]
-  ? THead extends Literal
-    ? FilterLiterals<TTail>
-    : [THead, ...FilterLiterals<TTail>]
-  : [];
+export type FilterLiterals<TValues extends readonly any[]> =
+  TValues extends readonly [infer THead, ...infer TTail]
+    ? THead extends Literal
+      ? FilterLiterals<TTail>
+      : [THead, ...FilterLiterals<TTail>]
+    : [];
 
 export class Literal {
   readonly #string: string;
@@ -368,8 +364,8 @@ export function nameOf(value: unknown): string {
   if (typeof value === 'object') {
     return value === null
       ? 'null'
-      : nameTag in value
-        ? (value[nameTag] as string)
+      : Symbol.toStringTag in value
+        ? (value[Symbol.toStringTag] as string)
         : value.constructor.name;
   }
   if (typeof value === 'function') {

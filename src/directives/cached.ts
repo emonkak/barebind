@@ -6,7 +6,6 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
-  nameTag,
   resolveBinding,
 } from '../baseTypes.js';
 import { ensureDirective } from '../error.js';
@@ -36,8 +35,8 @@ export class Cached<TKey, TValue> implements Directive<Cached<TKey, TValue>> {
     return this._value;
   }
 
-  get [nameTag](): string {
-    return 'Cached(' + nameOf(this._key) + ', ' + nameOf(this._value) + ')';
+  get [Symbol.toStringTag](): string {
+    return `Cached(${nameOf(this._key)}, ${nameOf(this._value)})`;
   }
 
   [directiveTag](

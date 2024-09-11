@@ -7,7 +7,6 @@ import {
   PartType,
   UpdateContext,
   directiveTag,
-  nameTag,
 } from '../../src/baseTypes.js';
 import { Computed, SignalBinding, State } from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
@@ -46,9 +45,9 @@ describe('Signal', () => {
     });
   });
 
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new State('foo')[nameTag]).toBe('Signal("foo")');
+      expect(new State('foo')[Symbol.toStringTag]).toBe('Signal("foo")');
     });
   });
 

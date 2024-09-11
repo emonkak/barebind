@@ -6,7 +6,6 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
-  nameTag,
   resolveBinding,
 } from '../baseTypes.js';
 import { ensureDirective } from '../error.js';
@@ -28,8 +27,8 @@ export abstract class Signal<TValue>
 
   abstract get version(): number;
 
-  get [nameTag](): string {
-    return 'Signal(' + nameOf(this.value) + ')';
+  get [Symbol.toStringTag](): string {
+    return `Signal(${nameOf(this.value)})`;
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;

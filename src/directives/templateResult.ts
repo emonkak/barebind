@@ -12,7 +12,6 @@ import {
   type UpdateContext,
   directiveTag,
   nameOf,
-  nameTag,
 } from '../baseTypes.js';
 import { BlockBinding } from '../bindings/blockBinding.js';
 import { ensureDirective, reportPart } from '../error.js';
@@ -57,8 +56,8 @@ export class EagerTemplateResult<TData, TContext>
     return this._data;
   }
 
-  get [nameTag](): string {
-    return 'EagerTemplateResult(' + nameOf(this._template) + ')';
+  get [Symbol.toStringTag](): string {
+    return `EagerTemplateResult(${nameOf(this._template)})`;
   }
 
   [directiveTag](
@@ -95,8 +94,8 @@ export class LazyTemplateResult<TData, TContext>
     return this._data;
   }
 
-  get [nameTag](): string {
-    return 'LazyTemplateResult(' + nameOf(this._template) + ')';
+  get [Symbol.toStringTag](): string {
+    return `LazyTemplateResult(${nameOf(this._template)})`;
   }
 
   [directiveTag](

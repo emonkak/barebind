@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { Cached, CachedBinding, cached } from '../../src/directives/cached.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
@@ -27,9 +22,11 @@ describe('cached()', () => {
 });
 
 describe('Cached', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(cached('foo', 'bar')[nameTag]).toBe('Cached("foo", "bar")');
+      expect(cached('foo', 'bar')[Symbol.toStringTag]).toBe(
+        'Cached("foo", "bar")',
+      );
     });
   });
 

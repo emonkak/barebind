@@ -1,10 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  PartType,
-  UpdateContext,
-  directiveTag,
-  nameTag,
-} from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import {
   Component,
   ComponentBinding,
@@ -32,12 +27,12 @@ describe('component()', () => {
 });
 
 describe('Component', () => {
-  describe('[nameTag]', () => {
+  describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
       const value = new Component(function foo() {
         return new EagerTemplateResult(new MockTemplate(), {});
       }, {});
-      expect(value[nameTag]).toBe('Component(foo)');
+      expect(value[Symbol.toStringTag]).toBe('Component(foo)');
     });
   });
 
