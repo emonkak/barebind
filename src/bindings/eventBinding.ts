@@ -82,7 +82,7 @@ export class EventBinding
     const value = this._memoizedValue;
 
     if (value != null) {
-      this._detachLisetener(value);
+      this._detachListener(value);
       this._memoizedValue = null;
     }
 
@@ -105,11 +105,11 @@ export class EventBinding
           newValue === undefined
         ) {
           if (oldValue != null) {
-            this._detachLisetener(oldValue);
+            this._detachListener(oldValue);
           }
 
           if (newValue != null) {
-            this._attachLisetener(newValue);
+            this._attachListener(newValue);
           }
         }
 
@@ -121,7 +121,7 @@ export class EventBinding
 
         /* istanbul ignore else @preserve */
         if (value != null) {
-          this._detachLisetener(value);
+          this._detachListener(value);
         }
 
         this._memoizedValue = null;
@@ -141,7 +141,7 @@ export class EventBinding
     }
   }
 
-  private _attachLisetener(listener: EventListenerOrEventListenerObject): void {
+  private _attachListener(listener: EventListenerOrEventListenerObject): void {
     const { node, name } = this._part;
 
     if (typeof listener === 'function') {
@@ -151,7 +151,7 @@ export class EventBinding
     }
   }
 
-  private _detachLisetener(listener: EventListenerOrEventListenerObject): void {
+  private _detachListener(listener: EventListenerOrEventListenerObject): void {
     const { node, name } = this._part;
 
     if (typeof listener === 'function') {
