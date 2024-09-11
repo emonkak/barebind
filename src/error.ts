@@ -159,6 +159,9 @@ function openTag(element: Element): string {
 }
 
 function toHTML(node: Node): string {
+  if (node instanceof Element) {
+    return node.outerHTML;
+  }
   const wrapper = document.createElement('div');
   wrapper.appendChild(node.cloneNode(true));
   return wrapper.innerHTML;
