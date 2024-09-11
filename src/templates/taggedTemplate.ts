@@ -93,7 +93,10 @@ export class TaggedTemplate<TData extends readonly any[]>
     } else {
       template.innerHTML = strings.join(marker).trim();
     }
-    const holes = parseChildren(strings, values, marker, template.content);
+    const holes =
+      values.length > 0
+        ? parseChildren(strings, values, marker, template.content)
+        : [];
     return new TaggedTemplate(template, holes);
   }
 
