@@ -62,11 +62,13 @@ export class EagerTemplateResult<TData, TContext = unknown>
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext,
+    context: DirectiveContext,
   ): TemplateResultBinding<TData, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'EagerTemplateResult directive must be used in a child node, but it is used here:\n' +
+        'EagerTemplateResult directive must be used in a child node, but it is used here in ' +
+          nameOf(context.block?.binding.value ?? 'ROOT') +
+          ':\n' +
           reportPart(part, this),
       );
     }
@@ -104,7 +106,9 @@ export class LazyTemplateResult<TData, TContext = unknown>
   ): BlockBinding<TemplateResult<TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'LazyTemplateResult directive must be used in a child node, but it is used here:\n' +
+        'LazyTemplateResult directive must be used in a child node, but it is used here in ' +
+          nameOf(context.block?.binding.value ?? 'ROOT') +
+          ':\n' +
           reportPart(part, this),
       );
     }

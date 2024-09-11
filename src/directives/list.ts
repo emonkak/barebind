@@ -63,11 +63,13 @@ export class List<TItem, TKey, TValue>
 
   [directiveTag](
     part: Part,
-    _context: DirectiveContext,
+    context: DirectiveContext,
   ): ListBinding<TItem, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'List directive must be used in a child node, but it is used here:\n' +
+        'List directive must be used in a child node, but it is used here in ' +
+          nameOf(context.block?.binding.value ?? 'ROOT') +
+          ':\n' +
           reportPart(part, this),
       );
     }

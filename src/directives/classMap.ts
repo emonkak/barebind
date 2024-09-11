@@ -9,6 +9,7 @@ import {
   PartType,
   type UpdateContext,
   directiveTag,
+  nameOf,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
 import { ensureDirective, reportPart } from '../error.js';
@@ -30,10 +31,12 @@ export class ClassMap implements Directive<ClassMap> {
     return this._classes;
   }
 
-  [directiveTag](part: Part, _context: DirectiveContext): ClassMapBinding {
+  [directiveTag](part: Part, context: DirectiveContext): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
-        'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +
+        'ClassMap directive must be used in a "class" attribute, but it is used here in ' +
+          nameOf(context.block?.binding.value ?? 'ROOT') +
+          ':\n' +
           reportPart(part, this),
       );
     }

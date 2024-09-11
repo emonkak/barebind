@@ -21,10 +21,11 @@ export interface Directive<TThis, TContext = unknown> {
   ): Binding<TThis, TContext>;
 }
 
-export interface Block<TContext> {
+export interface Block<TContext = unknown> {
+  get binding(): Binding<unknown, TContext>;
+  get isUpdating(): boolean;
   get parent(): Block<TContext> | null;
   get priority(): TaskPriority;
-  get isUpdating(): boolean;
   shouldUpdate(): boolean;
   cancelUpdate(): void;
   requestUpdate(priority: TaskPriority, context: UpdateContext<TContext>): void;

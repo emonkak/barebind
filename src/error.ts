@@ -30,7 +30,7 @@ export function ensureDirective<
         oneOf(expectedClasses.map((expectedClass) => expectedClass.name)) +
         ' directive, but got "' +
         nameOf(actualValue) +
-        '". Consider using Either.left(), Either.right(), cached(), or keyed() directive instead.\n' +
+        '". Consider using Either, Cached, or Keyed directive instead.\n' +
         reportPart(part, actualValue),
     );
   }
@@ -41,7 +41,7 @@ export function ensureNonDirective(value: unknown, part: Part): void {
     throw new Error(
       'A value must not be a directive, but got "' +
         nameOf(value) +
-        '". Consider using cached(), condition() or dynamic() directive instead.\n' +
+        '". Consider using Either, Cached, or Keyed directive instead.\n' +
         reportPart(part, value),
     );
   }

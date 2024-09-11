@@ -9,6 +9,7 @@ import {
   PartType,
   type UpdateContext,
   directiveTag,
+  nameOf,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
 import { ensureDirective, reportPart } from '../error.js';
@@ -43,10 +44,12 @@ export class StyleMap implements Directive<StyleMap> {
     return this._styles;
   }
 
-  [directiveTag](part: Part, _context: DirectiveContext): StyleMapBinding {
+  [directiveTag](part: Part, context: DirectiveContext): StyleMapBinding {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
-        'StyleMap directive must be used in a "style" attribute, but it is used here:\n' +
+        'StyleMap directive must be used in a "style" attribute, but it is used here in ' +
+          nameOf(context.block?.binding.value ?? 'ROOT') +
+          ':\n' +
           reportPart(part, this),
       );
     }

@@ -35,15 +35,58 @@ import {
 } from '../src/renderContext.js';
 import type { RequestCallbackOptions, Scheduler } from '../src/scheduler.js';
 
+export class MockBinding<T> implements Binding<T> {
+  private _value: T;
+
+  private readonly _part: Part;
+
+  constructor(value: T, part: Part) {
+    this._value = value;
+    this._part = part;
+  }
+
+  get value(): T {
+    return this._value;
+  }
+
+  get part(): Part {
+    return this._part;
+  }
+
+  get startNode(): ChildNode {
+    return this._part.node;
+  }
+
+  get endNode(): ChildNode {
+    return this._part.node;
+  }
+
+  bind(newValue: T, _context: UpdateContext): void {
+    this._value = newValue;
+  }
+
+  connect(_context: UpdateContext): void {}
+
+  unbind(_context: UpdateContext): void {}
+
+  disconnect(_context: UpdateContext): void {}
+}
+
 export class MockBlock<TContext> implements Block<TContext> {
-  private _parent: Block<TContext> | null;
+  private readonly _binding: Binding<unknown, TContext>;
+
+  private readonly _parent: Block<TContext> | null;
 
   constructor(parent: Block<TContext> | null = null) {
+    this._binding = new MockBinding(null, {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+    });
     this._parent = parent;
   }
 
-  get isConnected(): boolean {
-    return false;
+  get binding(): Binding<unknown, TContext> {
+    return this._binding;
   }
 
   get isUpdating(): boolean {

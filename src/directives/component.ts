@@ -57,7 +57,9 @@ export class Component<TProps, TData, TContext>
   ): BlockBinding<Component<TProps, TData, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'Component directive must be used in a child node, but it is used here:\n' +
+        'Component directive must be used in a child node, but it is used here in ' +
+          nameOf(context.block?.binding.value ?? 'ROOT') +
+          ':\n' +
           reportPart(part, this),
       );
     }
