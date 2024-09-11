@@ -7,7 +7,6 @@ import {
   directiveTag,
 } from '../src/baseTypes.js';
 import {
-  REPORT_MARKER,
   ensureDirective,
   ensureNonDirective,
   reportPart,
@@ -24,10 +23,8 @@ describe('ensureDirective', () => {
     expect(() => ensureDirective([TextDirective], null, part)).toThrow(
       'A value must be a instance of TextDirective directive, but got "null".',
     );
-    expect(() =>
-      ensureDirective([DirectiveA, DirectiveB, DirectiveC], null, part),
-    ).toThrow(
-      'A value must be a instance of DirectiveA, DirectiveB, or DirectiveC directive, but got "null".',
+    expect(() => ensureDirective([Foo, Bar, Baz], null, part)).toThrow(
+      'A value must be a instance of Foo, Bar, or Baz directive, but got "null".',
     );
   });
 
@@ -76,8 +73,11 @@ describe('reportPart()', () => {
       name: 'class',
       node: document.createElement('input'),
     } as const;
+    const value = 'my value';
 
-    expect(reportPart(part)).toBe(`<input class=${REPORT_MARKER}>`);
+    expect(reportPart(part, value)).toBe(
+      `<input class=[["my value" IS USED IN HERE!]]>`,
+    );
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
@@ -85,8 +85,8 @@ describe('reportPart()', () => {
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
 
-    expect(reportPart(part)).toBe(
-      `<div>foo<input class=${REPORT_MARKER}><!--bar--><span></span></div>`,
+    expect(reportPart(part, value)).toBe(
+      `<div>foo<input class=[["my value" IS USED IN HERE!]]><!--bar--><span></span></div>`,
     );
   });
 
@@ -96,8 +96,11 @@ describe('reportPart()', () => {
       name: 'click',
       node: document.createComment(''),
     } as const;
+    const value = 'my value';
 
-    expect(reportPart(part)).toBe(`${REPORT_MARKER}<!---->`);
+    expect(reportPart(part, value)).toBe(
+      `[["my value" IS USED IN HERE!]]<!---->`,
+    );
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
@@ -105,8 +108,8 @@ describe('reportPart()', () => {
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
 
-    expect(reportPart(part)).toBe(
-      `<div>foo${REPORT_MARKER}<!----><!--bar--><span></span></div>`,
+    expect(reportPart(part, value)).toBe(
+      `<div>foo[["my value" IS USED IN HERE!]]<!----><!--bar--><span></span></div>`,
     );
   });
 
@@ -115,8 +118,11 @@ describe('reportPart()', () => {
       type: PartType.Element,
       node: document.createElement('div'),
     } as const;
+    const value = 'my value';
 
-    expect(reportPart(part)).toBe(`<div ${REPORT_MARKER}></div>`);
+    expect(reportPart(part, value)).toBe(
+      `<div [["my value" IS USED IN HERE!]]></div>`,
+    );
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
@@ -124,8 +130,8 @@ describe('reportPart()', () => {
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
 
-    expect(reportPart(part)).toBe(
-      `<div>foo<div ${REPORT_MARKER}></div><!--bar--><span></span></div>`,
+    expect(reportPart(part, value)).toBe(
+      `<div>foo<div [["my value" IS USED IN HERE!]]></div><!--bar--><span></span></div>`,
     );
   });
 
@@ -135,8 +141,11 @@ describe('reportPart()', () => {
       name: 'click',
       node: document.createElement('button'),
     } as const;
+    const value = 'my value';
 
-    expect(reportPart(part)).toBe(`<button @click=${REPORT_MARKER}></button>`);
+    expect(reportPart(part, value)).toBe(
+      `<button @click=[["my value" IS USED IN HERE!]]></button>`,
+    );
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
@@ -144,8 +153,8 @@ describe('reportPart()', () => {
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
 
-    expect(reportPart(part)).toBe(
-      `<div>foo<button @click=${REPORT_MARKER}></button><!--bar--><span></span></div>`,
+    expect(reportPart(part, value)).toBe(
+      `<div>foo<button @click=[["my value" IS USED IN HERE!]]></button><!--bar--><span></span></div>`,
     );
   });
 
@@ -155,8 +164,9 @@ describe('reportPart()', () => {
       name: 'click',
       node: document.createTextNode('foo'),
     } as const;
+    const value = 'my value';
 
-    expect(reportPart(part)).toBe(`${REPORT_MARKER}`);
+    expect(reportPart(part, value)).toBe(`[["my value" IS USED IN HERE!]]`);
 
     const container = document.createElement('div');
     container.appendChild(document.createTextNode('foo'));
@@ -164,8 +174,8 @@ describe('reportPart()', () => {
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
 
-    expect(reportPart(part)).toBe(
-      `<div>foo${REPORT_MARKER}<!--bar--><span></span></div>`,
+    expect(reportPart(part, value)).toBe(
+      `<div>foo[["my value" IS USED IN HERE!]]<!--bar--><span></span></div>`,
     );
   });
 
@@ -176,9 +186,10 @@ describe('reportPart()', () => {
       node: document.createElement('input'),
     } as const;
     part.node.setAttribute('type', 'text');
+    const value = 'my value';
 
-    expect(reportPart(part)).toBe(
-      `<input type="text" .value=${REPORT_MARKER}>`,
+    expect(reportPart(part, value)).toBe(
+      `<input type="text" .value=[["my value" IS USED IN HERE!]]>`,
     );
 
     const container = document.createElement('div');
@@ -187,26 +198,26 @@ describe('reportPart()', () => {
     container.appendChild(document.createComment('bar'));
     container.appendChild(document.createElement('span'));
 
-    expect(reportPart(part)).toBe(
-      `<div>foo<input type="text" .value=${REPORT_MARKER}><!--bar--><span></span></div>`,
+    expect(reportPart(part, value)).toBe(
+      `<div>foo<input type="text" .value=[["my value" IS USED IN HERE!]]><!--bar--><span></span></div>`,
     );
   });
 });
 
-class DirectiveA implements Directive<DirectiveA> {
-  [directiveTag](): Binding<DirectiveA, unknown> {
+class Foo implements Directive<Foo> {
+  [directiveTag](): Binding<Foo, unknown> {
     throw new Error('Method is not implemented.');
   }
 }
 
-class DirectiveB implements Directive<DirectiveB> {
-  [directiveTag](): Binding<DirectiveB> {
+class Bar implements Directive<Bar> {
+  [directiveTag](): Binding<Bar> {
     throw new Error('Method is not implemented.');
   }
 }
 
-class DirectiveC implements Directive<DirectiveC> {
-  [directiveTag](): Binding<DirectiveC> {
+class Baz implements Directive<Baz> {
+  [directiveTag](): Binding<Baz> {
     throw new Error('Method is not implemented.');
   }
 }

@@ -106,7 +106,7 @@ function ensureSpreadProps(
       'A value of ElementBinding must be an object, but got "' +
         value +
         '".' +
-        reportPart(part),
+        reportPart(part, value),
     );
   }
 }

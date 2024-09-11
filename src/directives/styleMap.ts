@@ -47,7 +47,7 @@ export class StyleMap implements Directive<StyleMap> {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
         'StyleMap directive must be used in a "style" attribute, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     return new StyleMapBinding(this, part);

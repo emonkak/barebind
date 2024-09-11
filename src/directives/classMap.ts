@@ -34,7 +34,7 @@ export class ClassMap implements Directive<ClassMap> {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
         'ClassMap directive must be used in a "class" attribute, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     return new ClassMapBinding(this, part);

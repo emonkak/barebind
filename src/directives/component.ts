@@ -58,7 +58,7 @@ export class Component<TProps, TData, TContext>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     // Component directive should be used with BlockBinding. Otherwise, updates

@@ -68,7 +68,7 @@ export class List<TItem, TKey, TValue>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'List directive must be used in a child node, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     return new ListBinding(this, part);

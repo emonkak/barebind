@@ -175,7 +175,7 @@ function ensureEventListener(
   if (!(value == null || isEventListener(value))) {
     throw new Error(
       'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.\n' +
-        reportPart(part),
+        reportPart(part, value),
     );
   }
 }

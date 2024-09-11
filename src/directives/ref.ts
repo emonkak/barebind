@@ -36,7 +36,7 @@ export class Ref implements Directive<Ref> {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     return new RefBinding(this, part);

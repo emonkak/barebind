@@ -12,8 +12,6 @@ type DirectiveClass<TValue> = abstract new (
 
 type NonEmptyArray<T> = [T, ...T[]];
 
-export const REPORT_MARKER = '[[USED IN HERE!]]';
-
 export function ensureDirective<
   TExpectedClasses extends NonEmptyArray<DirectiveClass<TExpectedValue>>,
   TExpectedValue,
@@ -33,7 +31,7 @@ export function ensureDirective<
         ' directive, but got "' +
         nameOf(actualValue) +
         '". Consider using Either.left(), Either.right(), cached(), or keyed() directive instead.\n' +
-        reportPart(part),
+        reportPart(part, actualValue),
     );
   }
 }
@@ -44,12 +42,12 @@ export function ensureNonDirective(value: unknown, part: Part): void {
       'A value must not be a directive, but got "' +
         nameOf(value) +
         '". Consider using cached(), condition() or dynamic() directive instead.\n' +
-        reportPart(part),
+        reportPart(part, value),
     );
   }
 }
 
-export function reportPart(part: Part): string {
+export function reportPart(part: Part, value: unknown): string {
   const { parentNode } = part.node;
   if (parentNode instanceof Element) {
     const childNodes = parentNode.childNodes;
@@ -68,12 +66,12 @@ export function reportPart(part: Part): string {
     return (
       openTag(parentNode) +
       beforePart +
-      markPart(part) +
+      markPart(part, value) +
       afterPart +
       closeTag(parentNode)
     );
   } else {
-    return markPart(part);
+    return markPart(part, value);
   }
 }
 
@@ -106,30 +104,34 @@ function isSelfClosingTag(element: Element): boolean {
   return !element.outerHTML.endsWith(closeTag(element));
 }
 
-function markPart(part: Part): string {
+function markPart(part: Part, value: unknown): string {
   switch (part.type) {
     case PartType.Attribute:
       return addAttributes(
         part.node,
-        unquotedAttribute(part.name, REPORT_MARKER),
+        unquotedAttribute(part.name, markValue(value)),
       );
     case PartType.ChildNode:
-      return REPORT_MARKER + toHTML(part.node);
+      return markValue(value) + toHTML(part.node);
     case PartType.Element:
-      return addAttributes(part.node, REPORT_MARKER);
+      return addAttributes(part.node, markValue(value));
     case PartType.Property:
       return addAttributes(
         part.node,
-        unquotedAttribute('.' + part.name, REPORT_MARKER),
+        unquotedAttribute('.' + part.name, markValue(value)),
       );
     case PartType.Event:
       return addAttributes(
         part.node,
-        unquotedAttribute('@' + part.name, REPORT_MARKER),
+        unquotedAttribute('@' + part.name, markValue(value)),
       );
     case PartType.Node:
-      return REPORT_MARKER;
+      return markValue(value);
   }
+}
+
+function markValue(value: unknown): string {
+  return `[[${nameOf(value)} IS USED IN HERE!]]`;
 }
 
 function oneOf(choices: string[]): string {

@@ -67,7 +67,7 @@ export class EagerTemplateResult<TData, TContext>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'EagerTemplateResult directive must be used in a child node, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     return new TemplateResultBinding(this, part);
@@ -105,7 +105,7 @@ export class LazyTemplateResult<TData, TContext>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'LazyTemplateResult directive must be used in a child node, but it is used here:\n' +
-          reportPart(part),
+          reportPart(part, this),
       );
     }
     const binding = new TemplateResultBinding(this, part);
