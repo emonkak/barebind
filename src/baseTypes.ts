@@ -94,7 +94,7 @@ export interface Template<TData, TContext = unknown> {
     data: TData,
     context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext>;
-  isSameTemplate(other: Template<unknown, TContext>): boolean;
+  isSameTemplate(other: Template<unknown, unknown>): boolean;
   wrapInResult(data: TData): TemplateResult<TData, TContext>;
 }
 

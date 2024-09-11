@@ -2,7 +2,6 @@ import type {
   ChildNodePart,
   DirectiveContext,
   Template,
-  TemplateResult,
   TemplateView,
   UpdateContext,
 } from '../baseTypes.js';
@@ -25,7 +24,7 @@ export class EmptyTemplate implements Template<readonly []> {
     return other === this;
   }
 
-  wrapInResult(data: readonly []): TemplateResult<readonly []> {
+  wrapInResult(data: readonly []): EagerTemplateResult<readonly []> {
     return new EagerTemplateResult(this, data);
   }
 }

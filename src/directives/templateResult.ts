@@ -36,7 +36,7 @@ export function lazyTemplateResult<
   return new LazyTemplateResult(template, data);
 }
 
-export class EagerTemplateResult<TData, TContext>
+export class EagerTemplateResult<TData, TContext = unknown>
   implements TemplateResult<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;
@@ -74,7 +74,7 @@ export class EagerTemplateResult<TData, TContext>
   }
 }
 
-export class LazyTemplateResult<TData, TContext>
+export class LazyTemplateResult<TData, TContext = unknown>
   implements TemplateResult<TData, TContext>
 {
   private readonly _template: Template<TData, TContext>;

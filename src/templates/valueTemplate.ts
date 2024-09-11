@@ -4,7 +4,6 @@ import {
   type DirectiveContext,
   PartType,
   type Template,
-  type TemplateResult,
   type TemplateView,
   type UpdateContext,
   nameOf,
@@ -30,7 +29,7 @@ export class ChildTemplate<T> implements Template<readonly [T]> {
     return this === other;
   }
 
-  wrapInResult(data: readonly [T]): TemplateResult<readonly [T]> {
+  wrapInResult(data: readonly [T]): EagerTemplateResult<readonly [T]> {
     return new EagerTemplateResult(this, data);
   }
 }
@@ -49,7 +48,7 @@ export class TextTemplate<T> implements Template<readonly [T]> {
     return this === other;
   }
 
-  wrapInResult(data: readonly [T]): TemplateResult<readonly [T]> {
+  wrapInResult(data: readonly [T]): EagerTemplateResult<readonly [T]> {
     return new EagerTemplateResult(this, data);
   }
 }

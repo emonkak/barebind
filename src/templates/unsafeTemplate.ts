@@ -3,7 +3,6 @@ import type {
   DirectiveContext,
   Template,
   TemplateMode,
-  TemplateResult,
   TemplateView,
   UpdateContext,
 } from '../baseTypes.js';
@@ -51,7 +50,7 @@ export class UnsafeTemplate implements Template<readonly []> {
     );
   }
 
-  wrapInResult(data: readonly []): TemplateResult<readonly []> {
+  wrapInResult(data: readonly []): LazyTemplateResult<readonly []> {
     return new LazyTemplateResult(this, data);
   }
 }

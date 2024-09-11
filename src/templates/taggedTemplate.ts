@@ -6,7 +6,6 @@ import {
   PartType,
   type Template,
   type TemplateMode,
-  type TemplateResult,
   type TemplateView,
   type UpdateContext,
   nameOf,
@@ -210,7 +209,7 @@ export class TaggedTemplate<TData extends readonly any[]>
     return other === this;
   }
 
-  wrapInResult(data: TData): TemplateResult<TData> {
+  wrapInResult(data: TData): LazyTemplateResult<TData> {
     return new LazyTemplateResult(this, data);
   }
 }

@@ -103,11 +103,11 @@ export class MockTemplate<TData, TContext>
     return new MockTemplateView(data);
   }
 
-  isSameTemplate(other: Template<unknown, TContext>): boolean {
+  isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
   }
 
-  wrapInResult(data: TData): TemplateResult<TData> {
+  wrapInResult(data: TData): TemplateResult<TData, TContext> {
     return {
       template: this,
       data,
