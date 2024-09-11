@@ -1322,7 +1322,7 @@ function cleanHooks(hooks: Hook[]): void {
 function createElement<const T extends keyof HTMLElementTagNameMap>(
   tagName: T,
   attribues: { [key: string]: string } = {},
-  children: Element[] = [],
+  children: Node[] = [],
 ): HTMLElementTagNameMap[T] {
   const element = document.createElement(tagName);
   for (const key in attribues) {

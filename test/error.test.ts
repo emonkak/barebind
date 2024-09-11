@@ -71,22 +71,26 @@ describe('reportPart()', () => {
     const part = {
       type: PartType.Attribute,
       name: 'class',
-      node: document.createElement('input'),
+      node: createElement('input', { type: 'text' }),
     } as const;
     const value = 'my value';
 
     expect(reportPart(part, value)).toBe(
-      `<input class=[["my value" IS USED IN HERE!]]>`,
+      `<input type="text" class=[["my value" IS USED IN HERE!]]>`,
     );
 
-    const container = document.createElement('div');
-    container.appendChild(document.createTextNode('foo'));
-    container.appendChild(part.node);
-    container.appendChild(document.createComment('bar'));
-    container.appendChild(document.createElement('span'));
+    createElement('div', {}, [
+      createElement('span', {}, [document.createTextNode('foo')]),
+      createElement('div', {}, [
+        document.createTextNode('foo'),
+        part.node,
+        document.createComment('bar'),
+      ]),
+      createElement('span', {}, [document.createTextNode('bar')]),
+    ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div>foo<input class=[["my value" IS USED IN HERE!]]><!--bar--><span></span></div>`,
+      `<span>foo</span><div>foo<input type="text" class=[["my value" IS USED IN HERE!]]><!--bar--></div><span>bar</span>`,
     );
   });
 
@@ -102,14 +106,18 @@ describe('reportPart()', () => {
       `[["my value" IS USED IN HERE!]]<!---->`,
     );
 
-    const container = document.createElement('div');
-    container.appendChild(document.createTextNode('foo'));
-    container.appendChild(part.node);
-    container.appendChild(document.createComment('bar'));
-    container.appendChild(document.createElement('span'));
+    createElement('div', {}, [
+      createElement('span', {}, [document.createTextNode('foo')]),
+      createElement('div', {}, [
+        document.createTextNode('foo'),
+        part.node,
+        document.createComment('bar'),
+      ]),
+      createElement('span', {}, [document.createTextNode('bar')]),
+    ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div>foo[["my value" IS USED IN HERE!]]<!----><!--bar--><span></span></div>`,
+      `<span>foo</span><div>foo[["my value" IS USED IN HERE!]]<!----><!--bar--></div><span>bar</span>`,
     );
   });
 
@@ -124,14 +132,18 @@ describe('reportPart()', () => {
       `<div [["my value" IS USED IN HERE!]]></div>`,
     );
 
-    const container = document.createElement('div');
-    container.appendChild(document.createTextNode('foo'));
-    container.appendChild(part.node);
-    container.appendChild(document.createComment('bar'));
-    container.appendChild(document.createElement('span'));
+    createElement('div', {}, [
+      createElement('span', {}, [document.createTextNode('foo')]),
+      createElement('div', {}, [
+        document.createTextNode('foo'),
+        part.node,
+        document.createComment('bar'),
+      ]),
+      createElement('span', {}, [document.createTextNode('bar')]),
+    ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div>foo<div [["my value" IS USED IN HERE!]]></div><!--bar--><span></span></div>`,
+      `<span>foo</span><div>foo<div [["my value" IS USED IN HERE!]]></div><!--bar--></div><span>bar</span>`,
     );
   });
 
@@ -139,22 +151,26 @@ describe('reportPart()', () => {
     const part = {
       type: PartType.Event,
       name: 'click',
-      node: document.createElement('button'),
+      node: createElement('button', { type: 'button' }),
     } as const;
     const value = 'my value';
 
     expect(reportPart(part, value)).toBe(
-      `<button @click=[["my value" IS USED IN HERE!]]></button>`,
+      `<button type="button" @click=[["my value" IS USED IN HERE!]]></button>`,
     );
 
-    const container = document.createElement('div');
-    container.appendChild(document.createTextNode('foo'));
-    container.appendChild(part.node);
-    container.appendChild(document.createComment('bar'));
-    container.appendChild(document.createElement('span'));
+    createElement('div', {}, [
+      createElement('span', {}, [document.createTextNode('foo')]),
+      createElement('div', {}, [
+        document.createTextNode('foo'),
+        part.node,
+        document.createComment('bar'),
+      ]),
+      createElement('span', {}, [document.createTextNode('bar')]),
+    ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div>foo<button @click=[["my value" IS USED IN HERE!]]></button><!--bar--><span></span></div>`,
+      `<span>foo</span><div>foo<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!--bar--></div><span>bar</span>`,
     );
   });
 
@@ -168,14 +184,18 @@ describe('reportPart()', () => {
 
     expect(reportPart(part, value)).toBe(`[["my value" IS USED IN HERE!]]`);
 
-    const container = document.createElement('div');
-    container.appendChild(document.createTextNode('foo'));
-    container.appendChild(part.node);
-    container.appendChild(document.createComment('bar'));
-    container.appendChild(document.createElement('span'));
+    createElement('div', {}, [
+      createElement('span', {}, [document.createTextNode('foo')]),
+      createElement('div', {}, [
+        document.createTextNode('foo'),
+        part.node,
+        document.createComment('bar'),
+      ]),
+      createElement('span', {}, [document.createTextNode('bar')]),
+    ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div>foo[["my value" IS USED IN HERE!]]<!--bar--><span></span></div>`,
+      `<span>foo</span><div>foo[["my value" IS USED IN HERE!]]<!--bar--></div><span>bar</span>`,
     );
   });
 
@@ -183,23 +203,26 @@ describe('reportPart()', () => {
     const part = {
       type: PartType.Property,
       name: 'value',
-      node: document.createElement('input'),
+      node: createElement('input', { type: 'text' }),
     } as const;
-    part.node.setAttribute('type', 'text');
     const value = 'my value';
 
     expect(reportPart(part, value)).toBe(
       `<input type="text" .value=[["my value" IS USED IN HERE!]]>`,
     );
 
-    const container = document.createElement('div');
-    container.appendChild(document.createTextNode('foo'));
-    container.appendChild(part.node);
-    container.appendChild(document.createComment('bar'));
-    container.appendChild(document.createElement('span'));
+    createElement('div', {}, [
+      createElement('span', {}, [document.createTextNode('foo')]),
+      createElement('div', {}, [
+        document.createTextNode('foo'),
+        part.node,
+        document.createComment('bar'),
+      ]),
+      createElement('span', {}, [document.createTextNode('bar')]),
+    ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div>foo<input type="text" .value=[["my value" IS USED IN HERE!]]><!--bar--><span></span></div>`,
+      `<span>foo</span><div>foo<input type="text" .value=[["my value" IS USED IN HERE!]]><!--bar--></div><span>bar</span>`,
     );
   });
 });
@@ -220,4 +243,19 @@ class Baz implements Directive<Baz> {
   [directiveTag](): Binding<Baz> {
     throw new Error('Method is not implemented.');
   }
+}
+
+function createElement<const T extends keyof HTMLElementTagNameMap>(
+  tagName: T,
+  attribues: { [key: string]: string } = {},
+  children: Node[] = [],
+): HTMLElementTagNameMap[T] {
+  const element = document.createElement(tagName);
+  for (const key in attribues) {
+    element.setAttribute(key, attribues[key]!);
+  }
+  for (const child of children) {
+    element.appendChild(child);
+  }
+  return element;
 }

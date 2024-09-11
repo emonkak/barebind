@@ -50,26 +50,38 @@ export function ensureNonDirective(value: unknown, part: Part): void {
 export function reportPart(part: Part, value: unknown): string {
   const { parentNode } = part.node;
   if (parentNode instanceof Element) {
-    const childNodes = parentNode.childNodes;
     let beforePart = '';
     let afterPart = '';
-    for (let i = 0, l = childNodes.length; i < l; i++) {
-      const childNode = childNodes[i]!;
-      if (childNode === part.node) {
-        for (i = i + 1; i < l; i++) {
-          afterPart += toHTML(childNodes[i]!);
+    for (
+      let currentNode = parentNode.previousSibling;
+      currentNode !== null;
+      currentNode = currentNode.previousSibling
+    ) {
+      beforePart += toHTML(currentNode);
+    }
+    beforePart += openTag(parentNode);
+    for (
+      let currentNode = parentNode.firstChild;
+      currentNode !== null;
+      currentNode = currentNode.nextSibling
+    ) {
+      if (currentNode === part.node) {
+        while ((currentNode = currentNode.nextSibling)) {
+          afterPart += toHTML(currentNode);
         }
         break;
       }
-      beforePart += toHTML(childNode);
+      beforePart += toHTML(currentNode);
     }
-    return (
-      openTag(parentNode) +
-      beforePart +
-      markPart(part, value) +
-      afterPart +
-      closeTag(parentNode)
-    );
+    afterPart += closeTag(parentNode);
+    for (
+      let currentNode = parentNode.nextSibling;
+      currentNode !== null;
+      currentNode = currentNode.nextSibling
+    ) {
+      afterPart += toHTML(currentNode);
+    }
+    return beforePart + markPart(part, value) + afterPart;
   } else {
     return markPart(part, value);
   }
