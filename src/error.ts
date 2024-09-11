@@ -48,59 +48,45 @@ export function ensureNonDirective(value: unknown, part: Part): void {
 }
 
 export function reportPart(part: Part, value: unknown): string {
-  const { parentNode } = part.node;
-  if (parentNode instanceof Element) {
-    let beforePart = '';
-    let afterPart = '';
+  let currentNode: Node | null = part.node;
+  let before = '';
+  let after = '';
+  while (true) {
     for (
-      let currentNode = parentNode.previousSibling;
-      currentNode !== null;
-      currentNode = currentNode.previousSibling
+      let previousNode: Node | null = currentNode.previousSibling;
+      previousNode !== null;
+      previousNode = previousNode.previousSibling
     ) {
-      beforePart += toHTML(currentNode);
+      before = toHTML(previousNode) + before;
     }
-    beforePart += openTag(parentNode);
     for (
-      let currentNode = parentNode.firstChild;
-      currentNode !== null;
-      currentNode = currentNode.nextSibling
+      let nextNode: Node | null = currentNode.nextSibling;
+      nextNode !== null;
+      nextNode = nextNode.nextSibling
     ) {
-      if (currentNode === part.node) {
-        while ((currentNode = currentNode.nextSibling)) {
-          afterPart += toHTML(currentNode);
-        }
-        break;
-      }
-      beforePart += toHTML(currentNode);
+      after += toHTML(nextNode);
     }
-    afterPart += closeTag(parentNode);
-    for (
-      let currentNode = parentNode.nextSibling;
-      currentNode !== null;
-      currentNode = currentNode.nextSibling
-    ) {
-      afterPart += toHTML(currentNode);
+    currentNode = currentNode.parentNode;
+    if (!(currentNode instanceof Element)) {
+      break;
     }
-    return beforePart + markPart(part, value) + afterPart;
-  } else {
-    return markPart(part, value);
+    before = openTag(currentNode) + before;
+    after += closeTag(currentNode);
   }
+  return before + markPart(part, value) + after;
 }
 
-function addAttributes(element: Element, insideTag: string): string {
+function appendInsideTag(element: Element, contentToAppend: string): string {
   const isSelfClosing = isSelfClosingTag(element);
   const offset = isSelfClosing ? 1 : element.tagName.length + 4;
   const unclosedOpenTag = element.outerHTML.slice(
     0,
     -(element.innerHTML.length + offset),
   );
-
-  let output = unclosedOpenTag + ' ' + insideTag + '>';
-
+  let output = unclosedOpenTag + ' ' + contentToAppend + '>';
   if (!isSelfClosing) {
     output += element.innerHTML + closeTag(element);
   }
-
   return output;
 }
 
@@ -119,21 +105,21 @@ function isSelfClosingTag(element: Element): boolean {
 function markPart(part: Part, value: unknown): string {
   switch (part.type) {
     case PartType.Attribute:
-      return addAttributes(
+      return appendInsideTag(
         part.node,
         unquotedAttribute(part.name, markValue(value)),
       );
     case PartType.ChildNode:
       return markValue(value) + toHTML(part.node);
     case PartType.Element:
-      return addAttributes(part.node, markValue(value));
+      return appendInsideTag(part.node, markValue(value));
     case PartType.Property:
-      return addAttributes(
+      return appendInsideTag(
         part.node,
         unquotedAttribute('.' + part.name, markValue(value)),
       );
     case PartType.Event:
-      return addAttributes(
+      return appendInsideTag(
         part.node,
         unquotedAttribute('@' + part.name, markValue(value)),
       );
@@ -161,10 +147,11 @@ function openTag(element: Element): string {
 function toHTML(node: Node): string {
   if (node instanceof Element) {
     return node.outerHTML;
+  } else {
+    const wrapper = document.createElement('div');
+    wrapper.appendChild(node.cloneNode(true));
+    return wrapper.innerHTML;
   }
-  const wrapper = document.createElement('div');
-  wrapper.appendChild(node.cloneNode(true));
-  return wrapper.innerHTML;
 }
 
 function unquotedAttribute(name: string, value: string): string {

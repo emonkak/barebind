@@ -81,7 +81,7 @@ describe('reportPart()', () => {
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
-      createElement('div', {}, [
+      createElement('p', {}, [
         document.createTextNode('foo'),
         part.node,
         document.createComment('bar'),
@@ -90,7 +90,7 @@ describe('reportPart()', () => {
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<span>foo</span><div>foo<input type="text" class=[["my value" IS USED IN HERE!]]><!--bar--></div><span>bar</span>`,
+      `<div><span>foo</span><p>foo<input type="text" class=[["my value" IS USED IN HERE!]]><!--bar--></p><span>bar</span></div>`,
     );
   });
 
@@ -108,7 +108,7 @@ describe('reportPart()', () => {
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
-      createElement('div', {}, [
+      createElement('p', {}, [
         document.createTextNode('foo'),
         part.node,
         document.createComment('bar'),
@@ -117,7 +117,7 @@ describe('reportPart()', () => {
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<span>foo</span><div>foo[["my value" IS USED IN HERE!]]<!----><!--bar--></div><span>bar</span>`,
+      `<div><span>foo</span><p>foo[["my value" IS USED IN HERE!]]<!----><!--bar--></p><span>bar</span></div>`,
     );
   });
 
@@ -134,7 +134,7 @@ describe('reportPart()', () => {
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
-      createElement('div', {}, [
+      createElement('p', {}, [
         document.createTextNode('foo'),
         part.node,
         document.createComment('bar'),
@@ -143,7 +143,7 @@ describe('reportPart()', () => {
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<span>foo</span><div>foo<div [["my value" IS USED IN HERE!]]></div><!--bar--></div><span>bar</span>`,
+      `<div><span>foo</span><p>foo<div [["my value" IS USED IN HERE!]]></div><!--bar--></p><span>bar</span></div>`,
     );
   });
 
@@ -161,7 +161,7 @@ describe('reportPart()', () => {
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
-      createElement('div', {}, [
+      createElement('p', {}, [
         document.createTextNode('foo'),
         part.node,
         document.createComment('bar'),
@@ -170,7 +170,7 @@ describe('reportPart()', () => {
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<span>foo</span><div>foo<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!--bar--></div><span>bar</span>`,
+      `<div><span>foo</span><p>foo<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!--bar--></p><span>bar</span></div>`,
     );
   });
 
@@ -186,7 +186,7 @@ describe('reportPart()', () => {
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
-      createElement('div', {}, [
+      createElement('p', {}, [
         document.createTextNode('foo'),
         part.node,
         document.createComment('bar'),
@@ -195,7 +195,7 @@ describe('reportPart()', () => {
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<span>foo</span><div>foo[["my value" IS USED IN HERE!]]<!--bar--></div><span>bar</span>`,
+      `<div><span>foo</span><p>foo[["my value" IS USED IN HERE!]]<!--bar--></p><span>bar</span></div>`,
     );
   });
 
@@ -213,7 +213,7 @@ describe('reportPart()', () => {
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
-      createElement('div', {}, [
+      createElement('p', {}, [
         document.createTextNode('foo'),
         part.node,
         document.createComment('bar'),
@@ -222,7 +222,7 @@ describe('reportPart()', () => {
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<span>foo</span><div>foo<input type="text" .value=[["my value" IS USED IN HERE!]]><!--bar--></div><span>bar</span>`,
+      `<div><span>foo</span><p>foo<input type="text" .value=[["my value" IS USED IN HERE!]]><!--bar--></p><span>bar</span></div>`,
     );
   });
 });
