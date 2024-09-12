@@ -354,7 +354,7 @@ function parseAttribtues(
       DEBUG: {
         if (caseSensitiveName?.toLowerCase() !== name) {
           throw new Error(
-            `The attribute name must be "${name}", but got "${caseSensitiveName}". The attribute may be duplicated.`,
+            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute.`,
           );
         }
       }
