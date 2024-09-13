@@ -23,7 +23,7 @@ describe('teleport()', () => {
 
 describe('Teleport', () => {
   describe('[directiveTag]()', () => {
-    it('should create a new NoValueBinding', () => {
+    it('should create a new TeleportBinding', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -42,10 +42,12 @@ describe('Teleport', () => {
 
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
-      expect(binding.startNode).toBe(part.node);
-      expect(binding.endNode).toBe(part.node);
+      expect(binding.startNode).toBe(binding.binding.startNode);
+      expect(binding.endNode).toBe(binding.binding.endNode);
       expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.binding.value).toBe(value.value);
+      expect(binding.binding.part.node).not.toBe(part.node);
+      expect(binding.binding.part.type).toBe(PartType.ChildNode);
     });
   });
 });

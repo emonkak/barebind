@@ -4,6 +4,7 @@ import {
   type Directive,
   type DirectiveContext,
   type Part,
+  PartType,
   type UpdateContext,
   directiveTag,
   resolveBinding,
@@ -40,6 +41,8 @@ export class Teleport<T> implements Directive<Teleport<T>> {
 export class TeleportBinding<T> implements Binding<Teleport<T>> {
   private _value: Teleport<T>;
 
+  private readonly _part: Part;
+
   private readonly _binding: Binding<T>;
 
   private _memoizedContainer: Element | null = null;
@@ -48,7 +51,15 @@ export class TeleportBinding<T> implements Binding<Teleport<T>> {
 
   constructor(value: Teleport<T>, part: Part, context: DirectiveContext) {
     this._value = value;
-    this._binding = resolveBinding(value.value, part, context);
+    this._part = part;
+    this._binding = resolveBinding(
+      value.value,
+      {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+      },
+      context,
+    );
   }
 
   get value(): Teleport<T> {
@@ -56,7 +67,7 @@ export class TeleportBinding<T> implements Binding<Teleport<T>> {
   }
 
   get part(): Part {
-    return this._binding.part;
+    return this._part;
   }
 
   get startNode(): ChildNode {
