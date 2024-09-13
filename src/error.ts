@@ -51,13 +51,15 @@ export function reportPart(part: Part, value: unknown): string {
   let currentNode: Node | null = part.node;
   let before = '';
   let after = '';
-  while (true) {
+  let complexity = 0;
+  do {
     for (
       let previousNode: Node | null = currentNode.previousSibling;
       previousNode !== null;
       previousNode = previousNode.previousSibling
     ) {
       before = toHTML(previousNode) + before;
+      complexity += getComplexity(previousNode);
     }
     for (
       let nextNode: Node | null = currentNode.nextSibling;
@@ -65,6 +67,7 @@ export function reportPart(part: Part, value: unknown): string {
       nextNode = nextNode.nextSibling
     ) {
       after += toHTML(nextNode);
+      complexity += getComplexity(nextNode);
     }
     currentNode = currentNode.parentNode;
     if (!(currentNode instanceof Element)) {
@@ -72,7 +75,8 @@ export function reportPart(part: Part, value: unknown): string {
     }
     before = openTag(currentNode) + before;
     after += closeTag(currentNode);
-  }
+    complexity += getComplexity(currentNode);
+  } while (complexity < 10);
   return before + markPart(part, value) + after;
 }
 
@@ -96,6 +100,34 @@ function closeTag(element: Element): string {
 
 function escapeHTML(s: string): string {
   return new Option(s).innerHTML;
+}
+
+function getComplexity(node: Node): number {
+  // Complexity is calculated as follows:
+  //   - increment by 1 when any element is found.
+  //   - increment by 2 when an element has "class".
+  //   - increment by 10 when an element has "id".
+  //   - increment by 1 when an element has any attribute other than "class" or "id".
+  //   - increment by 1 when a non-empty comment or text node is found.
+  let complexity = 0;
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      if ((node as Element).hasAttribute('id')) {
+        complexity += 9;
+      }
+      complexity +=
+        (node as Element).classList.length +
+        (node as Element).attributes.length +
+        1;
+      break;
+    case Node.TEXT_NODE:
+    case Node.COMMENT_NODE:
+      if ((node as CharacterData).data.trim() !== '') {
+        complexity += 1;
+      }
+      break;
+  }
+  return complexity;
 }
 
 function isSelfClosingTag(element: Element): boolean {
@@ -145,13 +177,9 @@ function openTag(element: Element): string {
 }
 
 function toHTML(node: Node): string {
-  if (node instanceof Element) {
-    return node.outerHTML;
-  } else {
-    const wrapper = document.createElement('div');
-    wrapper.appendChild(node.cloneNode(true));
-    return wrapper.innerHTML;
-  }
+  return node instanceof Element
+    ? (node as Element).outerHTML
+    : new XMLSerializer().serializeToString(node);
 }
 
 function unquotedAttribute(name: string, value: string): string {

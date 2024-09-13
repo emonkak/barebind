@@ -82,15 +82,57 @@ describe('reportPart()', () => {
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
       createElement('p', {}, [
-        document.createTextNode('foo'),
+        document.createTextNode('bar'),
         part.node,
-        document.createComment('bar'),
+        document.createComment(''),
       ]),
-      createElement('span', {}, [document.createTextNode('bar')]),
+      createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div><span>foo</span><p>foo<input type="text" class=[["my value" IS USED IN HERE!]]><!--bar--></p><span>bar</span></div>`,
+      `<div><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
+    );
+  });
+
+  it('should report where an AttributePart is inserted in the document', () => {
+    const part = {
+      type: PartType.Attribute,
+      name: 'class',
+      node: createElement('input', { type: 'text' }),
+    } as const;
+    const value = 'my value';
+
+    const myDocument = document.implementation.createHTMLDocument();
+    myDocument.body.replaceChildren(
+      createElement('div', {}, [
+        createElement('span', {}, [document.createTextNode('foo')]),
+        createElement('p', {}, [
+          document.createTextNode('bar'),
+          part.node,
+          document.createComment(''),
+        ]),
+        createElement('span', {}, [document.createTextNode('qux')]),
+      ]),
+    );
+
+    expect(reportPart(part, value)).toBe(
+      `<!DOCTYPE html><html><head></head><body><div><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div></body></html>`,
+    );
+
+    myDocument.body.replaceChildren(
+      createElement('div', { id: 'foo' }, [
+        createElement('span', {}, [document.createTextNode('foo')]),
+        createElement('p', {}, [
+          document.createTextNode('bar'),
+          part.node,
+          document.createComment(''),
+        ]),
+        createElement('span', {}, [document.createTextNode('qux')]),
+      ]),
+    );
+
+    expect(reportPart(part, value)).toBe(
+      `<div id="foo"><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
     );
   });
 
@@ -109,15 +151,15 @@ describe('reportPart()', () => {
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
       createElement('p', {}, [
-        document.createTextNode('foo'),
+        document.createTextNode('bar'),
         part.node,
-        document.createComment('bar'),
+        document.createComment(''),
       ]),
-      createElement('span', {}, [document.createTextNode('bar')]),
+      createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div><span>foo</span><p>foo[["my value" IS USED IN HERE!]]<!----><!--bar--></p><span>bar</span></div>`,
+      `<div><span>foo</span><p>bar[["my value" IS USED IN HERE!]]<!----><!----></p><span>qux</span></div>`,
     );
   });
 
@@ -135,15 +177,15 @@ describe('reportPart()', () => {
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
       createElement('p', {}, [
-        document.createTextNode('foo'),
+        document.createTextNode('bar'),
         part.node,
-        document.createComment('bar'),
+        document.createComment(''),
       ]),
-      createElement('span', {}, [document.createTextNode('bar')]),
+      createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div><span>foo</span><p>foo<div [["my value" IS USED IN HERE!]]></div><!--bar--></p><span>bar</span></div>`,
+      `<div><span>foo</span><p>bar<div [["my value" IS USED IN HERE!]]></div><!----></p><span>qux</span></div>`,
     );
   });
 
@@ -162,15 +204,15 @@ describe('reportPart()', () => {
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
       createElement('p', {}, [
-        document.createTextNode('foo'),
+        document.createTextNode('bar'),
         part.node,
-        document.createComment('bar'),
+        document.createComment(''),
       ]),
-      createElement('span', {}, [document.createTextNode('bar')]),
+      createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div><span>foo</span><p>foo<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!--bar--></p><span>bar</span></div>`,
+      `<div><span>foo</span><p>bar<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!----></p><span>qux</span></div>`,
     );
   });
 
@@ -187,15 +229,15 @@ describe('reportPart()', () => {
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
       createElement('p', {}, [
-        document.createTextNode('foo'),
+        document.createTextNode('bar'),
         part.node,
-        document.createComment('bar'),
+        document.createComment(''),
       ]),
-      createElement('span', {}, [document.createTextNode('bar')]),
+      createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div><span>foo</span><p>foo[["my value" IS USED IN HERE!]]<!--bar--></p><span>bar</span></div>`,
+      `<div><span>foo</span><p>bar[["my value" IS USED IN HERE!]]<!----></p><span>qux</span></div>`,
     );
   });
 
@@ -214,15 +256,15 @@ describe('reportPart()', () => {
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
       createElement('p', {}, [
-        document.createTextNode('foo'),
+        document.createTextNode('bar'),
         part.node,
-        document.createComment('bar'),
+        document.createComment(''),
       ]),
-      createElement('span', {}, [document.createTextNode('bar')]),
+      createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
     expect(reportPart(part, value)).toBe(
-      `<div><span>foo</span><p>foo<input type="text" .value=[["my value" IS USED IN HERE!]]><!--bar--></p><span>bar</span></div>`,
+      `<div><span>foo</span><p>bar<input type="text" .value=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
     );
   });
 });
