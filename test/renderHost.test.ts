@@ -54,7 +54,7 @@ describe('ClientRenderHost', () => {
       const queue = createUpdateQueue();
       const hooks: Hook[] = [];
 
-      const context = host.beginRender(updater, block, queue, hooks);
+      const context = host.beginRender(hooks, updater, block, queue);
 
       host.finishRender(context);
 

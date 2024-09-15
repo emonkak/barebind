@@ -49,10 +49,10 @@ export interface UpdateQueue<TContext> {
 
 export interface RenderHost<TContext> {
   beginRender(
+    hooks: Hook[],
     updater: Updater<TContext>,
     block: Block<TContext>,
     queue: UpdateQueue<TContext>,
-    hooks: Hook[],
   ): TContext;
   finishRender(context: TContext): void;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
@@ -320,10 +320,10 @@ export class UpdateContext<TContext = unknown> {
     hooks: Hook[],
   ): TemplateResult<TData, TContext> {
     const context = this.host.beginRender(
+      hooks,
       this.updater,
       this.block,
       this.queue,
-      hooks,
     );
     const result = type(props, context);
 

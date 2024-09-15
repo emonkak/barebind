@@ -68,10 +68,10 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 
   beginRender(
+    hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext>,
-    hooks: Hook[],
   ): RenderContext {
     return new RenderContext(this, updater, block, queue, hooks);
   }

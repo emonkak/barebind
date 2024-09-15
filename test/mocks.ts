@@ -203,10 +203,10 @@ export class MockRenderHost implements RenderHost<RenderContext> {
   private _literalProcessor = new LiteralProcessor();
 
   beginRender(
+    hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext>,
-    hooks: Hook[],
   ): RenderContext {
     return new RenderContext(this, updater, block, queue, hooks);
   }
