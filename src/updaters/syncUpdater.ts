@@ -5,9 +5,10 @@ import {
   type UpdateQueue,
   type Updater,
 } from '../baseTypes.js';
+import { State } from '../directives/signal.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
-  private readonly _pendingQueues: UpdateQueue<TContext>[] = [];
+  private readonly _pendingTasks: State<number> = new State(0);
 
   flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;
@@ -46,27 +47,36 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   }
 
   isScheduled(): boolean {
-    return this._pendingQueues.length > 0;
+    return this._pendingTasks.value > 0;
   }
 
   scheduleUpdate(
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    if (this._pendingQueues.length === 0) {
-      queueMicrotask(() => {
-        for (let i = 0, l = this._pendingQueues.length; i < l; i++) {
-          this.flushUpdate(this._pendingQueues[i]!, host);
-        }
-        this._pendingQueues.length = 0;
-      });
-    }
-    this._pendingQueues.push(queue);
+    queueMicrotask(() => {
+      try {
+        this.flushUpdate(queue, host);
+      } finally {
+        this._pendingTasks.value--;
+      }
+    });
+    this._pendingTasks.value++;
   }
 
   waitForUpdate(): Promise<void> {
-    return this._pendingQueues.length > 0
-      ? new Promise(queueMicrotask)
-      : Promise.resolve();
+    const pendingTasks = this._pendingTasks;
+    if (pendingTasks.value > 0) {
+      return new Promise((resolve) => {
+        const subscription = pendingTasks.subscribe(() => {
+          if (pendingTasks.value === 0) {
+            subscription();
+            resolve();
+          }
+        });
+      });
+    } else {
+      return Promise.resolve();
+    }
   }
 }

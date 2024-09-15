@@ -10,14 +10,18 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue = createUpdateQueue();
+      const queue1 = createUpdateQueue();
+      const queue2 = createUpdateQueue();
 
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate(queue, host);
+      updater.scheduleUpdate(queue1, host);
+      updater.scheduleUpdate(queue2, host);
+
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
+
       expect(updater.isScheduled()).toBe(false);
     });
 
@@ -40,22 +44,6 @@ describe('SyncUpdater', () => {
   });
 
   describe('.scheduleUpdate()', () => {
-    it('should do nothing if already scheduled', async () => {
-      const host = new MockRenderHost();
-      const updater = new SyncUpdater();
-
-      const queue = createUpdateQueue();
-
-      const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
-
-      updater.scheduleUpdate(queue, host);
-      updater.scheduleUpdate(queue, host);
-
-      expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
-
-      await updater.waitForUpdate();
-    });
-
     it('should update the block on a microtask', async () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();

@@ -16,7 +16,7 @@ export interface ConcurrentUpdaterOptions {
 export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   private readonly _scheduler: Scheduler;
 
-  private readonly _taskCount: State<number> = new State(0);
+  private readonly _pendingTasks: State<number> = new State(0);
 
   private readonly _processingQueues: WeakSet<UpdateQueue<TContext>> =
     new WeakSet();
@@ -69,7 +69,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   isScheduled(): boolean {
-    return this._taskCount.value > 0;
+    return this._pendingTasks.value > 0;
   }
 
   scheduleUpdate(
@@ -85,11 +85,11 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   waitForUpdate(): Promise<void> {
-    const taskCount = this._taskCount;
-    if (taskCount.value > 0) {
+    const pendingTasks = this._pendingTasks;
+    if (pendingTasks.value > 0) {
       return new Promise((resolve) => {
-        const subscription = taskCount.subscribe(() => {
-          if (taskCount.value === 0) {
+        const subscription = pendingTasks.subscribe(() => {
+          if (pendingTasks.value === 0) {
             subscription();
             resolve();
           }
@@ -114,14 +114,14 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
             const queue = createUpdateQueue([block]);
             await this.flushUpdate(queue, host);
           } finally {
-            this._taskCount.value--;
+            this._pendingTasks.value--;
           }
         },
         {
           priority: block.priority,
         },
       );
-      this._taskCount.value++;
+      this._pendingTasks.value++;
     }
 
     queue.blocks = [];
@@ -139,7 +139,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
           try {
             host.flushEffects(mutationEffects, CommitPhase.Mutation);
           } finally {
-            this._taskCount.value--;
+            this._pendingTasks.value--;
           }
         },
         { priority: 'user-blocking' },
@@ -147,7 +147,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
       queue.mutationEffects = [];
 
-      this._taskCount.value++;
+      this._pendingTasks.value++;
     }
 
     if (layoutEffects.length > 0) {
@@ -156,7 +156,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
           try {
             host.flushEffects(layoutEffects, CommitPhase.Layout);
           } finally {
-            this._taskCount.value--;
+            this._pendingTasks.value--;
           }
         },
         { priority: 'user-blocking' },
@@ -164,7 +164,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
       queue.layoutEffects = [];
 
-      this._taskCount.value++;
+      this._pendingTasks.value++;
     }
 
     if (passiveEffects.length > 0) {
@@ -173,7 +173,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
           try {
             host.flushEffects(passiveEffects, CommitPhase.Passive);
           } finally {
-            this._taskCount.value--;
+            this._pendingTasks.value--;
           }
         },
         { priority: 'background' },
@@ -181,7 +181,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
       queue.passiveEffects = [];
 
-      this._taskCount.value++;
+      this._pendingTasks.value++;
     }
   }
 }
