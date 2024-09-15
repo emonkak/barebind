@@ -4,7 +4,7 @@ import { RelativeURL } from './url.js';
 export interface LocationState {
   readonly url: RelativeURL;
   readonly state: unknown;
-  readonly navigationType: NavigationType | null;
+  readonly navigationType: NavigationType | 'initial';
 }
 
 // Re-export NavigationType from Navigation API.
@@ -28,7 +28,7 @@ export function browserLocation(
     () => ({
       url: RelativeURL.fromLocation(location),
       state: history.state,
-      navigationType: null,
+      navigationType: 'initial',
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
@@ -113,7 +113,7 @@ export function hashLocation(
     () => ({
       url: RelativeURL.fromString(trimHash(location.hash)),
       state: history.state,
-      navigationType: null,
+      navigationType: 'initial',
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
@@ -290,7 +290,7 @@ export function resetScrollPosition(locationState: LocationState): void {
   const { url, navigationType } = locationState;
 
   if (
-    navigationType === null ||
+    navigationType === 'initial' ||
     ((navigationType === 'reload' || navigationType === 'traverse') &&
       history.scrollRestoration === 'auto')
   ) {

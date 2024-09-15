@@ -56,7 +56,7 @@ describe('browserLocation', () => {
       getCurrentURL().toString(),
     );
     expect(locationState.state).toBe(history.state);
-    expect(locationState.navigationType).toBe(null);
+    expect(locationState.navigationType).toBe('initial');
   });
 
   it('should push the a location to the history', () => {
@@ -315,7 +315,7 @@ describe('hashLocation', () => {
     expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.url.toString()).toBe(getCurrentURL().toString());
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.navigationType).toBe(null);
+    expect(locationState.navigationType).toBe('initial');
   });
 
   it('should push a new location to the fragment identifier', () => {
@@ -1223,13 +1223,13 @@ describe('resetScrollPosition', () => {
     },
   );
 
-  it('should do nothing if the navigation type is null', () => {
+  it('should do nothing if the navigation type is "initial"', () => {
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
     resetScrollPosition({
       url: new RelativeURL('/foo'),
       state: null,
-      navigationType: null,
+      navigationType: 'initial',
     });
 
     expect(scrollToSpy).not.toHaveBeenCalled();
