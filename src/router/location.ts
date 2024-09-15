@@ -4,15 +4,12 @@ import { RelativeURL } from './url.js';
 export interface LocationState {
   readonly url: RelativeURL;
   readonly state: unknown;
-  readonly type: LocationType;
+  readonly navigationType: NavigationType | null;
 }
 
-export enum LocationType {
-  Load,
-  Pop,
-  Push,
-  Replace,
-}
+// Re-export NavigationType from Navigation API.
+// https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/navigationType
+export type NavigationType = 'push' | 'reload' | 'replace' | 'traverse';
 
 export interface LocationActions {
   getCurrentURL(): RelativeURL;
@@ -31,7 +28,7 @@ export function browserLocation(
     () => ({
       url: RelativeURL.fromLocation(location),
       state: history.state,
-      type: LocationType.Load,
+      navigationType: null,
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
@@ -41,18 +38,18 @@ export function browserLocation(
         url: RelativeURL,
         { replace = false, state = null }: NavigateOptions = {},
       ) => {
-        let type: LocationType;
+        let navigationType: NavigationType;
         if (replace) {
           history.replaceState(state, '', url.toString());
-          type = LocationType.Replace;
+          navigationType = 'replace';
         } else {
           history.pushState(state, '', url.toString());
-          type = LocationType.Push;
+          navigationType = 'push';
         }
         setLocationState({
           url,
           state,
-          type,
+          navigationType,
         });
       },
     }),
@@ -69,11 +66,10 @@ export function browserLocation(
           // Ignore an event when the hash has only changed.
           return prevState;
         }
-
         return {
           url: RelativeURL.fromLocation(location),
           state: event.state,
-          type: LocationType.Pop,
+          navigationType: 'traverse',
         };
       });
     };
@@ -117,7 +113,7 @@ export function hashLocation(
     () => ({
       url: RelativeURL.fromString(trimHash(location.hash)),
       state: history.state,
-      type: LocationType.Load,
+      navigationType: null,
     }),
   );
   const locationActions = context.useMemo<LocationActions>(
@@ -127,18 +123,18 @@ export function hashLocation(
         url: RelativeURL,
         { replace = false, state = null }: NavigateOptions = {},
       ) => {
-        let type: LocationType;
+        let navigationType: NavigationType;
         if (replace) {
           history.replaceState(state, '', '#' + url.toString());
-          type = LocationType.Replace;
+          navigationType = 'replace';
         } else {
           history.pushState(state, '', '#' + url.toString());
-          type = LocationType.Push;
+          navigationType = 'push';
         }
         setLocationState({
           url,
           state,
-          type,
+          navigationType,
         });
       },
     }),
@@ -154,7 +150,7 @@ export function hashLocation(
       setLocationState({
         url: RelativeURL.fromString(trimHash(new URL(event.newURL).hash)),
         state: history.state,
-        type: LocationType.Pop,
+        navigationType: 'traverse',
       });
     };
     // Prevent the default action when hash link is clicked. So, "hashchange"
@@ -291,11 +287,12 @@ export function createHashClickHandler({
 }
 
 export function resetScrollPosition(locationState: LocationState): void {
-  const { url, type } = locationState;
+  const { url, navigationType } = locationState;
 
   if (
-    type === LocationType.Load ||
-    (type === LocationType.Pop && history.scrollRestoration === 'auto')
+    navigationType === null ||
+    ((navigationType === 'reload' || navigationType === 'traverse') &&
+      history.scrollRestoration === 'auto')
   ) {
     return;
   }
