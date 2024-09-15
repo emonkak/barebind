@@ -4,6 +4,7 @@ import {
   type ChildNodePart,
   type CommitPhase,
   CommitStatus,
+  type ComponentType,
   type Directive,
   type DirectiveContext,
   type Effect,
@@ -202,17 +203,18 @@ export class MockRenderHost implements RenderHost<RenderContext> {
 
   private _literalProcessor = new LiteralProcessor();
 
-  beginRender(
+  flushComponent<TProps, TData>(
+    type: ComponentType<TProps, TData, RenderContext>,
+    props: TProps,
     hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext>,
-  ): RenderContext {
-    return new RenderContext(this, updater, block, queue, hooks);
-  }
-
-  finishRender(context: RenderContext): void {
+  ): TemplateResult<TData, RenderContext> {
+    const context = new RenderContext(this, updater, block, queue, hooks);
+    const result = type(props, context);
     context.finalize();
+    return result;
   }
 
   flushEffects(effects: Effect[], phase: CommitPhase): void {

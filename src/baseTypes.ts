@@ -48,13 +48,14 @@ export interface UpdateQueue<TContext> {
 }
 
 export interface RenderHost<TContext> {
-  beginRender(
+  flushComponent<TProps, TData>(
+    type: ComponentType<TProps, TData, TContext>,
+    props: TProps,
     hooks: Hook[],
     updater: Updater<TContext>,
     block: Block<TContext>,
     queue: UpdateQueue<TContext>,
-  ): TContext;
-  finishRender(context: TContext): void;
+  ): TemplateResult<TData, TContext>;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
   getTemplate<TData extends readonly any[]>(
@@ -300,6 +301,21 @@ export class UpdateContext<TContext = unknown> {
     this.queue.passiveEffects.push(effect);
   }
 
+  flushComponent<TProps, TData>(
+    type: ComponentType<TProps, TData, TContext>,
+    props: TProps,
+    hooks: Hook[],
+  ): TemplateResult<TData, TContext> {
+    return this.host.flushComponent(
+      type,
+      props,
+      hooks,
+      this.updater,
+      this.block,
+      this.queue,
+    );
+  }
+
   flushUpdate(): void {
     this.updater.flushUpdate(this.queue, this.host);
   }
@@ -312,24 +328,6 @@ export class UpdateContext<TContext = unknown> {
       this.queue.layoutEffects.length > 0 ||
       this.queue.passiveEffects.length > 0
     );
-  }
-
-  render<TProps, TData>(
-    type: ComponentType<TProps, TData, TContext>,
-    props: TProps,
-    hooks: Hook[],
-  ): TemplateResult<TData, TContext> {
-    const context = this.host.beginRender(
-      hooks,
-      this.updater,
-      this.block,
-      this.queue,
-    );
-    const result = type(props, context);
-
-    this.host.finishRender(context);
-
-    return result;
   }
 
   scheduleUpdate(): void {

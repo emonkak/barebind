@@ -5,6 +5,7 @@ import {
   type Hook,
   HookType,
   PartType,
+  type TemplateResult,
   createUpdateQueue,
   literal,
 } from '../src/baseTypes.js';
@@ -23,7 +24,7 @@ import { UnsafeTemplate } from '../src/templates/unsafeTemplate.js';
 import { TextTemplate } from '../src/templates/valueTemplate.js';
 import { ChildTemplate } from '../src/templates/valueTemplate.js';
 import { SyncUpdater } from '../src/updaters/syncUpdater.js';
-import { MockBlock, TextDirective } from './mocks.js';
+import { MockBlock, MockTemplate, TextDirective } from './mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -48,22 +49,32 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 describe('ClientRenderHost', () => {
   describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
+      const result: TemplateResult<readonly [], RenderContext> = {
+        template: new MockTemplate(),
+        data: [],
+      };
+      const props = {};
+      const type = vi.fn(() => result);
+      const hooks: Hook[] = [];
       const host = new ClientRenderHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const queue = createUpdateQueue();
-      const hooks: Hook[] = [];
 
-      const context = host.beginRender(hooks, updater, block, queue);
-
-      host.finishRender(context);
-
-      expect(context.host).toBe(host);
-      expect(context.updater).toBe(updater);
-      expect(context.block).toBe(block);
-      expect(context.queue).toBe(queue);
-      expect(context.hooks).toBe(hooks);
-      expect(context.hooks).toStrictEqual([{ type: HookType.Finalizer }]);
+      expect(
+        host.flushComponent(type, props, hooks, updater, block, queue),
+      ).toBe(result);
+      expect(type).toHaveBeenCalledOnce();
+      expect(type).toHaveBeenCalledWith(
+        props,
+        expect.objectContaining({
+          hooks,
+          updater,
+          block,
+          queue,
+        }),
+      );
+      expect(hooks).toStrictEqual([{ type: HookType.Finalizer }]);
     });
   });
 

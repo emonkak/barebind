@@ -2,6 +2,7 @@ import {
   type Binding,
   type Block,
   type CommitPhase,
+  type ComponentType,
   type Effect,
   type FilterLiterals,
   type Hook,
@@ -11,6 +12,7 @@ import {
   type TaskPriority,
   type Template,
   type TemplateMode,
+  type TemplateResult,
   UpdateContext,
   type UpdateQueue,
   type Updater,
@@ -67,15 +69,6 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     this._literalProcessor = literalProcessor;
   }
 
-  beginRender(
-    hooks: Hook[],
-    updater: Updater<RenderContext>,
-    block: Block<RenderContext>,
-    queue: UpdateQueue<RenderContext>,
-  ): RenderContext {
-    return new RenderContext(this, updater, block, queue, hooks);
-  }
-
   createRoot<TValue>(
     value: TValue,
     container: Node,
@@ -112,8 +105,18 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     };
   }
 
-  finishRender(context: RenderContext): void {
+  flushComponent<TProps, TData>(
+    type: ComponentType<TProps, TData, RenderContext>,
+    props: TProps,
+    hooks: Hook[],
+    updater: Updater<RenderContext>,
+    block: Block<RenderContext>,
+    queue: UpdateQueue<RenderContext>,
+  ): TemplateResult<TData, RenderContext> {
+    const context = new RenderContext(this, updater, block, queue, hooks);
+    const result = type(props, context);
     context.finalize();
+    return result;
   }
 
   flushEffects(effects: Effect[], phase: CommitPhase): void {
