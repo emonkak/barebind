@@ -1,6 +1,6 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, memo } from '@emonkak/ebit/directives.js';
-import { hashLocation, resetScrollPosition } from '@emonkak/ebit/location.js';
+import { hashLocation, resetScrollPosition } from '@emonkak/ebit/router.js';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';

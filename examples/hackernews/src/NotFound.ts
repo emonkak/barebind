@@ -1,5 +1,5 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
-import type { RelativeURL } from '@emonkak/ebit/location.js';
+import type { RelativeURL } from '@emonkak/ebit/router.js';
 
 export interface NotFoundProps {
   url: RelativeURL;
