@@ -26,60 +26,60 @@ describe('Router', () => {
   ]);
   const state = {};
 
-  describe('.match()', () => {
+  describe('.handle()', () => {
     it('should return the handler that matches the URL', () => {
-      expect(basicRouter.match(new RelativeURL(''), state)).toBe('index');
-      expect(basicRouter.match(new RelativeURL('/'), state)).toBe('index');
-      expect(basicRouter.match(new RelativeURL('/articles/123'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL(''), state)).toBe('index');
+      expect(basicRouter.handle(new RelativeURL('/'), state)).toBe('index');
+      expect(basicRouter.handle(new RelativeURL('/articles/123'), state)).toBe(
         'showArticle(123)',
       );
       expect(
-        basicRouter.match(new RelativeURL('/articles/123/edit'), state),
+        basicRouter.handle(new RelativeURL('/articles/123/edit'), state),
       ).toBe('editArticle(123)');
-      expect(basicRouter.match(new RelativeURL('/tags'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/tags'), state)).toBe(
         'indexTags',
       );
-      expect(basicRouter.match(new RelativeURL('/tags/'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/tags/'), state)).toBe(
         'showTag()',
       );
       expect(
-        basicRouter.match(new RelativeURL('/tags/javascript'), state),
+        basicRouter.handle(new RelativeURL('/tags/javascript'), state),
       ).toBe('showTag(javascript)');
       expect(
-        basicRouter.match(new RelativeURL('/tags/GNU%2FLinux'), state),
+        basicRouter.handle(new RelativeURL('/tags/GNU%2FLinux'), state),
       ).toBe('showTag(GNU/Linux)');
-      expect(basicRouter.match(new RelativeURL('/categories'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/categories'), state)).toBe(
         'indexCategories',
       );
-      expect(basicRouter.match(new RelativeURL('/categories/'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/categories/'), state)).toBe(
         'indexCategories',
       );
-      expect(basicRouter.match(new RelativeURL('/categories/123'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/categories/123'), state)).toBe(
         'showCategory(123)',
       );
     });
 
     it('should return null if the route restricts a trailing slash', () => {
-      expect(basicRouter.match(new RelativeURL('/articles/123/'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/articles/123/'), state)).toBe(
         null,
       );
       expect(
-        basicRouter.match(new RelativeURL('/articles/123/edit/'), state),
+        basicRouter.handle(new RelativeURL('/articles/123/edit/'), state),
       ).toBe(null);
       expect(
-        basicRouter.match(new RelativeURL('/tags/javascript/'), state),
+        basicRouter.handle(new RelativeURL('/tags/javascript/'), state),
       ).toBe(null);
     });
 
     it('should return null if there is no route matches the URL', () => {
-      expect(basicRouter.match(new RelativeURL('/articles'), state)).toBe(null);
-      expect(basicRouter.match(new RelativeURL('/articles/'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/articles'), state)).toBe(null);
+      expect(basicRouter.handle(new RelativeURL('/articles/'), state)).toBe(
         null,
       );
       expect(
-        basicRouter.match(new RelativeURL('/categories/abc/'), state),
+        basicRouter.handle(new RelativeURL('/categories/abc/'), state),
       ).toBe(null);
-      expect(basicRouter.match(new RelativeURL('/not_found'), state)).toBe(
+      expect(basicRouter.handle(new RelativeURL('/not_found'), state)).toBe(
         null,
       );
     });
@@ -94,7 +94,7 @@ describe('Router', () => {
       ]);
       const url = new RelativeURL('/articles/123/comments/456');
 
-      expect(router.match(url, state)).toBe('showArticleComment(123, 456)');
+      expect(router.handle(url, state)).toBe('showArticleComment(123, 456)');
       expect(handler).toHaveBeenCalledOnce();
       expect(handler).toHaveBeenCalledWith(['123', 456], url, state);
     });
@@ -106,7 +106,7 @@ describe('Router', () => {
       ]);
       const url = new RelativeURL('/articles/123');
 
-      expect(router.match(url, state)).toBe('showArticle(123)');
+      expect(router.handle(url, state)).toBe('showArticle(123)');
       expect(matcher).toHaveBeenCalledOnce();
       expect(matcher).toHaveBeenCalledWith('123', url);
     });

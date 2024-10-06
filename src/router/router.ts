@@ -54,7 +54,7 @@ export class Router<TResult, TState = unknown> {
     this._routes = routes;
   }
 
-  match(url: RelativeURL, state: TState): TResult | null {
+  handle(url: RelativeURL, state: TState): TResult | null {
     const path = url.pathname;
     const pathWithoutInitialSlash = path[0] === '/' ? path.slice(1) : path;
     const components = pathWithoutInitialSlash.split('/');

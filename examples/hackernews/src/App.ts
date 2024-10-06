@@ -19,7 +19,7 @@ export function App(
 ): TemplateResult {
   const [locationState] = context.use(hashLocation);
   const page =
-    router.match(locationState.url, locationState.state) ??
+    router.handle(locationState.url, locationState.state) ??
     component(NotFound, { url: locationState.url });
 
   context.use([itemState, storyState, userState]);
