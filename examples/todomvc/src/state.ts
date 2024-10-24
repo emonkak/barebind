@@ -35,7 +35,7 @@ export class TodoState {
   constructor() {
     this.todos$ = new State([] as State<Todo>[]);
     this.activeTodos$ = new Computed(
-      (todos) => todos.value.filter((todo$) => !todo$.value.completed),
+      (todos$) => todos$.value.filter((todo$) => !todo$.value.completed),
       [this.todos$],
     );
     this.visibleTodos$ = new Computed(
