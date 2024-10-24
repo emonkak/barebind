@@ -1,8 +1,8 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 
 export interface NavProps {}
 
-export function Nav(_props: NavProps, context: RenderContext) {
+export function Nav(_props: NavProps, context: RenderContext): TemplateResult {
   return context.html`
     <header class="header">
       <nav class="inner">
