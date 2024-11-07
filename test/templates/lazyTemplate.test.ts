@@ -14,9 +14,10 @@ import {
 describe('LazyTemplate', () => {
   describe('.constructor()', () => {
     it('should construct a new LazyTemplate', () => {
-      const templateFactory = () => new MockTemplate();
-      const template = new LazyTemplate(templateFactory);
-      expect(template.templateFactory).toBe(templateFactory);
+      const innerTemplate = new MockTemplate();
+      const factory = () => innerTemplate;
+      const template = new LazyTemplate(factory);
+      expect(template.template).toBe(innerTemplate);
     });
   });
 

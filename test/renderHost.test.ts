@@ -186,9 +186,7 @@ describe('ClientRenderHost', () => {
 
       expect(template).toBeInstanceOf(LazyTemplate);
 
-      const innerTemplate = template.templateFactory() as TaggedTemplate<
-        unknown[]
-      >;
+      const innerTemplate = template.template as TaggedTemplate<unknown[]>;
 
       expect(innerTemplate).toBeInstanceOf(TaggedTemplate);
       expect(innerTemplate.holes).toStrictEqual([
@@ -212,9 +210,7 @@ describe('ClientRenderHost', () => {
 
       expect(template).toBeInstanceOf(LazyTemplate);
 
-      const innerTemplate = template.templateFactory() as TaggedTemplate<
-        unknown[]
-      >;
+      const innerTemplate = template.template as TaggedTemplate<unknown[]>;
 
       expect(innerTemplate).toBeInstanceOf(TaggedTemplate);
       expect(innerTemplate.holes).toStrictEqual([
@@ -239,9 +235,7 @@ describe('ClientRenderHost', () => {
 
       expect(template).toBeInstanceOf(LazyTemplate);
 
-      const innerTemplate = template.templateFactory() as TaggedTemplate<
-        unknown[]
-      >;
+      const innerTemplate = template.template as TaggedTemplate<unknown[]>;
 
       expect(innerTemplate).toBeInstanceOf(TaggedTemplate);
       expect(innerTemplate.holes).toStrictEqual([

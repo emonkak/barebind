@@ -1,30 +1,32 @@
 import type { DirectiveContext, Template, TemplateView } from '../baseTypes.js';
 import { LazyTemplateResult } from '../directives/templateResult.js';
 
+type State<TData, TContext> =
+  | { initialized: false; factory: () => Template<TData, TContext> }
+  | { initialized: true; template: Template<TData, TContext> };
+
 export class LazyTemplate<TData, TContext>
   implements Template<TData, TContext>
 {
-  private readonly _templateFactory: () => Template<TData, TContext>;
+  private _state: State<TData, TContext>;
 
-  private _memoizedTemplate: Template<TData, TContext> | null = null;
-
-  constructor(templateFactory: () => Template<TData, TContext>) {
-    this._templateFactory = templateFactory;
+  constructor(factory: () => Template<TData, TContext>) {
+    this._state = { initialized: false, factory };
   }
 
-  get templateFactory(): () => Template<TData, TContext> {
-    return this._templateFactory;
+  get template(): Template<TData, TContext> {
+    if (!this._state.initialized) {
+      const { factory } = this._state;
+      this._state = { initialized: true, template: factory() };
+    }
+    return this._state.template;
   }
 
   render(
     data: TData,
     context: DirectiveContext<TContext>,
   ): TemplateView<TData, TContext> {
-    if (this._memoizedTemplate === null) {
-      const templateFactory = this._templateFactory;
-      this._memoizedTemplate = templateFactory();
-    }
-    return this._memoizedTemplate.render(data, context);
+    return this.template.render(data, context);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
