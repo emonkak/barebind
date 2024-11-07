@@ -1,16 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
-import { ListBinding, keyedList, list } from '../../src/directives/list.js';
+import {
+  ListBinding,
+  keyedList,
+  nonKeyedList,
+} from '../../src/directives/list.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost, TextDirective } from '../mocks.js';
 import { allCombinations, permutations } from '../testUtils.js';
 
-describe('list()', () => {
+describe('nonKeyedList()', () => {
   it('should construct a new List directive', () => {
     const items = ['foo', 'bar', 'baz'];
     const valueSelector = (item: string) => item;
-    const value = list(items, valueSelector);
+    const value = nonKeyedList(items, valueSelector);
 
     expect(value.items).toBe(items);
     expect(value.keySelector.call(undefined, 'foo', 1)).toBe(1);
@@ -316,11 +320,11 @@ describe('ListBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = list(
+      const value1 = nonKeyedList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
-      const value2 = list(
+      const value2 = nonKeyedList(
         ['qux', 'baz', 'bar', 'foo'],
         (item) => new TextDirective(item),
       );
@@ -354,11 +358,14 @@ describe('ListBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = list(
+      const value1 = nonKeyedList(
         ['foo', 'bar', 'baz'],
         (item) => new TextDirective(item),
       );
-      const value2 = list(['bar', 'foo'], (item) => new TextDirective(item));
+      const value2 = nonKeyedList(
+        ['bar', 'foo'],
+        (item) => new TextDirective(item),
+      );
       const container = document.createElement('div');
       const part = {
         type: PartType.ChildNode,
