@@ -26,7 +26,7 @@ export function ensureDirective<
     )
   ) {
     throw new Error(
-      'A value must be a instance of ' +
+      'The value must be a instance of ' +
         oneOf(expectedClasses.map((expectedClass) => expectedClass.name)) +
         ' directive, but got "' +
         nameOf(actualValue) +
@@ -39,7 +39,7 @@ export function ensureDirective<
 export function ensureNonDirective(value: unknown, part: Part): void {
   if (isDirective(value)) {
     throw new Error(
-      'A value must not be a directive, but got "' +
+      'The value must not be a directive, but got "' +
         nameOf(value) +
         '". Consider using Either, Cached, or Keyed directive instead.\n' +
         reportPart(part, value),

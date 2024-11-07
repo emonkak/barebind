@@ -456,7 +456,7 @@ describe('SignalBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of Signal directive, but got "null".',
+        'The value must be a instance of Signal directive, but got "null".',
       );
     });
   });
@@ -541,6 +541,7 @@ function cleanHooks(hooks: Hook[]): void {
     }
   }
 }
+
 function isEffectHook(hook: Hook): hook is EffectHook {
   return (
     hook.type === HookType.InsertionEffect ||

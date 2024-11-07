@@ -28,7 +28,16 @@ describe('ElementBinding', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         });
-      }).toThrow('A value of ElementBinding must be an object,');
+      }).toThrow('The value of ElementBinding must be an object,');
+    });
+
+    it('should throw the error when a diretive is passed', () => {
+      expect(() => {
+        new ElementBinding(new TextDirective(), {
+          type: PartType.Element,
+          node: document.createElement('div'),
+        });
+      }).toThrow('The value must not be a directive, but got "TextDirective".');
     });
   });
 
@@ -224,7 +233,26 @@ describe('ElementBinding', () => {
 
       expect(() => {
         binding.bind(null as any, context);
-      }).toThrow('A value of ElementBinding must be an object,');
+      }).toThrow('The value of ElementBinding must be an object,');
+    });
+
+    it('should throw the error when a directive is passed', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const value = {};
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      } as const;
+      const binding = new ElementBinding(value, part);
+
+      expect(() => {
+        binding.bind(new TextDirective() as any, context);
+      }).toThrow('The value must not be a directive, but got "TextDirective".');
     });
   });
 

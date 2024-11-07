@@ -69,7 +69,7 @@ describe('StyleMapBinding', () => {
 
       const value = styleMap({
         '--my-css-property': '1',
-        color: 'black',
+        color: 'red',
         margin: '10px',
         webkitFilter: 'blur(8px)',
         filter: 'blur(8px)',
@@ -85,7 +85,7 @@ describe('StyleMapBinding', () => {
       context.flushUpdate();
 
       expect(part.node.style.cssText).toBe(
-        '--my-css-property: 1; color: black; margin: 10px; filter: blur(8px);',
+        '--my-css-property: 1; color: red; margin: 10px; filter: blur(8px);',
       );
     });
 
@@ -97,7 +97,7 @@ describe('StyleMapBinding', () => {
       );
 
       const value = styleMap({
-        color: 'black',
+        color: 'red',
       });
       const part = {
         type: PartType.Attribute,
@@ -159,7 +159,7 @@ describe('StyleMapBinding', () => {
       );
 
       const value1 = styleMap({
-        color: 'black',
+        color: 'red',
       });
       const value2 = styleMap(value1.styles);
       const part = {
@@ -186,7 +186,7 @@ describe('StyleMapBinding', () => {
       );
 
       const value = styleMap({
-        color: 'black',
+        color: 'red',
       });
       const part = {
         type: PartType.Attribute,
@@ -198,7 +198,7 @@ describe('StyleMapBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of StyleMap directive, but got "null".',
+        'The value must be a instance of StyleMap directive, but got "null".',
       );
     });
   });
@@ -213,7 +213,7 @@ describe('StyleMapBinding', () => {
 
       const value = styleMap({
         '--my-css-property': '1',
-        color: 'black',
+        color: 'red',
         margin: '10px',
         webkitFilter: 'blur(8px)',
         filter: 'blur(8px)',

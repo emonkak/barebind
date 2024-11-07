@@ -277,7 +277,7 @@ describe('EitherBinding', () => {
         expect(() => {
           binding.bind(null as any, context);
         }).toThrow(
-          'A value must be a instance of Left or Right directive, but got "null".',
+          'The value must be a instance of Left or Right directive, but got "null".',
         );
       },
     );

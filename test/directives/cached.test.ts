@@ -224,7 +224,7 @@ describe('CachedBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of Cached directive, but got "null".',
+        'The value must be a instance of Cached directive, but got "null".',
       );
     });
   });

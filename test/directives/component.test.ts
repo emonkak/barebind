@@ -93,8 +93,8 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
-      const data = {};
       const template = new MockTemplate();
+      const data = {};
       const view = new MockTemplateView(data, [document.createComment('')]);
       const value = new Component(
         () => new EagerTemplateResult(template, data),
@@ -158,8 +158,8 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
-      const data = {};
       const template = new MockTemplate();
+      const data = {};
       const view = new MockTemplateView(data, [document.createComment('')]);
       const value = new Component(
         () => new EagerTemplateResult(template, data),
@@ -212,9 +212,9 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
+      const template = new MockTemplate();
       const data1 = {};
       const data2 = {};
-      const template = new MockTemplate();
       const view = new MockTemplateView(data1, [document.createComment('')]);
       const value1 = new Component(
         () => new EagerTemplateResult(template, data1),
@@ -260,12 +260,12 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
-      const data1 = {};
-      const data2 = {};
-      const data3 = {};
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
       const template3 = new MockTemplate();
+      const data1 = {};
+      const data2 = {};
+      const data3 = {};
       const view1 = new MockTemplateView(data1, [document.createComment('')]);
       const view2 = new MockTemplateView(data2, [document.createComment('')]);
       const view3 = new MockTemplateView(data3, [document.createComment('')]);
@@ -354,9 +354,9 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
+      const template = new MockTemplate();
       const data1 = {};
       const data2 = {};
-      const template = new MockTemplate();
       const view = new MockTemplateView(data1, [document.createComment('')]);
       const value1 = new Component(
         () => new EagerTemplateResult(template, data1),
@@ -467,8 +467,8 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
-      const data = {};
       const template = new MockTemplate();
+      const data = {};
       const view = new MockTemplateView(data, [document.createComment('')]);
       const value = new Component(
         () => new EagerTemplateResult(template, data),
@@ -521,65 +521,84 @@ describe('ComponentBinding', () => {
 
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
+      const template3 = new MockTemplate();
       const data1 = {};
       const data2 = {};
+      const data3 = {};
       const view1 = new MockTemplateView(data1, [document.createComment('')]);
       const view2 = new MockTemplateView(data2, [document.createComment('')]);
-      const value1 = new Component(
-        () => new EagerTemplateResult(template1, data1),
-        {},
-      );
-      const value2 = new Component(
-        () => new EagerTemplateResult(template2, data2),
-        {},
-      );
+      const view3 = new MockTemplateView(data3, [document.createComment('')]);
+      const type = vi
+        .fn()
+        .mockReturnValueOnce(new EagerTemplateResult(template1, data1))
+        .mockReturnValueOnce(new EagerTemplateResult(template2, data2))
+        .mockReturnValueOnce(new EagerTemplateResult(template3, data3))
+        .mockReturnValueOnce(new EagerTemplateResult(template1, data3));
+      const value = new Component(type, {});
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new ComponentBinding(value1, part);
+      const binding = new ComponentBinding(value, part);
 
       const render1Spy = vi.spyOn(template1, 'render').mockReturnValue(view1);
       const render2Spy = vi.spyOn(template2, 'render').mockReturnValue(view2);
+      const render3Spy = vi.spyOn(template3, 'render').mockReturnValue(view3);
       const connect1Spy = vi.spyOn(view1, 'connect');
       const connect2Spy = vi.spyOn(view2, 'connect');
+      const connect3Spy = vi.spyOn(view3, 'connect');
       const unbind1Spy = vi.spyOn(view1, 'unbind');
       const unbind2Spy = vi.spyOn(view2, 'unbind');
+      const unbind3Spy = vi.spyOn(view3, 'unbind');
       const mount1Spy = vi.spyOn(view1, 'mount');
       const mount2Spy = vi.spyOn(view2, 'mount');
+      const mount3Spy = vi.spyOn(view3, 'mount');
       const unmount1Spy = vi.spyOn(view1, 'unmount');
       const unmount2Spy = vi.spyOn(view2, 'unmount');
+      const unmount3Spy = vi.spyOn(view3, 'unmount');
 
       binding.connect(context);
       context.flushUpdate();
 
-      binding.bind(value2, context);
+      binding.bind(value, context);
       context.flushUpdate();
 
-      binding.bind(value1, context);
+      binding.bind(value, context);
+      context.flushUpdate();
+
+      binding.bind(value, context);
       context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
       expect(render1Spy).toHaveBeenCalledWith(data1, context);
       expect(render2Spy).toHaveBeenCalledOnce();
       expect(render2Spy).toHaveBeenCalledWith(data2, context);
+      expect(render3Spy).toHaveBeenCalledOnce();
+      expect(render3Spy).toHaveBeenCalledWith(data3, context);
       expect(connect1Spy).toHaveBeenCalledOnce();
       expect(connect1Spy).toHaveBeenCalledWith(context);
-      expect(connect2Spy).toHaveBeenCalled();
+      expect(connect2Spy).toHaveBeenCalledOnce();
       expect(connect2Spy).toHaveBeenCalledWith(context);
+      expect(connect3Spy).toHaveBeenCalledOnce();
+      expect(connect3Spy).toHaveBeenCalledWith(context);
       expect(unbind1Spy).toHaveBeenCalledOnce();
       expect(unbind1Spy).toHaveBeenCalledWith(context);
-      expect(unbind2Spy).toHaveBeenCalled();
+      expect(unbind2Spy).toHaveBeenCalledOnce();
       expect(unbind2Spy).toHaveBeenCalledWith(context);
+      expect(unbind3Spy).toHaveBeenCalledOnce();
+      expect(unbind3Spy).toHaveBeenCalledWith(context);
       expect(mount1Spy).toHaveBeenCalledTimes(2);
-      expect(mount1Spy).toHaveBeenNthCalledWith(1, part);
-      expect(mount1Spy).toHaveBeenNthCalledWith(2, part);
+      expect(mount1Spy).toHaveBeenCalledWith(part);
       expect(mount2Spy).toHaveBeenCalledOnce();
       expect(mount2Spy).toHaveBeenCalledWith(part);
+      expect(mount3Spy).toHaveBeenCalledOnce();
+      expect(mount3Spy).toHaveBeenCalledWith(part);
       expect(unmount1Spy).toHaveBeenCalledOnce();
       expect(unmount1Spy).toHaveBeenCalledWith(part);
       expect(unmount2Spy).toHaveBeenCalledOnce();
       expect(unmount2Spy).toHaveBeenCalledWith(part);
+      expect(unmount3Spy).toHaveBeenCalledOnce();
+      expect(unmount3Spy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(view1.startNode);
       expect(binding.endNode).toBe(part.node);
     });

@@ -191,7 +191,7 @@ describe('KeyedBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of Keyed directive, but got "null".',
+        'The value must be a instance of Keyed directive, but got "null".',
       );
     });
   });

@@ -6,7 +6,7 @@ import {
   type UpdateContext,
   resolveBinding,
 } from '../baseTypes.js';
-import { reportPart } from '../error.js';
+import { ensureNonDirective, reportPart } from '../error.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
@@ -20,6 +20,7 @@ export class ElementBinding implements Binding<SpreadProps> {
   constructor(value: unknown, part: ElementPart) {
     DEBUG: {
       ensureSpreadProps(value, part);
+      ensureNonDirective(value, part);
     }
     this._value = value;
     this._part = part;
@@ -52,6 +53,7 @@ export class ElementBinding implements Binding<SpreadProps> {
   bind(newValue: SpreadProps, context: UpdateContext): void {
     DEBUG: {
       ensureSpreadProps(newValue, this._part);
+      ensureNonDirective(newValue, this._part);
     }
     this._updateProps(newValue, context);
     this._value = newValue;
@@ -101,14 +103,18 @@ function ensureSpreadProps(
   value: unknown,
   part: Part,
 ): asserts value is SpreadProps {
-  if (!(value != null && typeof value === 'object')) {
+  if (!isSpreadProps(value)) {
     throw new Error(
-      'A value of ElementBinding must be an object, but got "' +
+      'The value of ElementBinding must be an object, but got "' +
         value +
         '".' +
         reportPart(part, value),
     );
   }
+}
+
+function isSpreadProps(value: unknown): value is SpreadProps {
+  return value !== null && typeof value === 'object';
 }
 
 function resolveSpreadPart(name: string, element: Element): Part {

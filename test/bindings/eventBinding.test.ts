@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType, UpdateContext } from '../../src/baseTypes.js';
+import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import { EventBinding } from '../../src/bindings/eventBinding.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
@@ -22,7 +22,7 @@ describe('EventBinding', () => {
       expect(binding.value).toBe(value);
     });
 
-    it('should throw the error if the value other than an event listner is passed', () => {
+    it('should throw the error when a value other than an event listner is passed', () => {
       expect(() => {
         new EventBinding(
           {},
@@ -33,8 +33,21 @@ describe('EventBinding', () => {
           },
         );
       }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
+        'The value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
       );
+    });
+
+    it('should throw the error when a dirctive is passed', () => {
+      expect(() => {
+        new EventBinding(
+          { handleEvent: () => {}, [directiveTag]: () => {} },
+          {
+            type: PartType.Event,
+            node: document.createElement('div'),
+            name: 'hello',
+          },
+        );
+      }).toThrow('The value must not be a directive, but got "Object".');
     });
   });
 
@@ -235,7 +248,7 @@ describe('EventBinding', () => {
       },
     );
 
-    it('should throw the error if the value other than an event listner is assigned', () => {
+    it('should throw the error if a value other than an event listner is passed', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -252,8 +265,30 @@ describe('EventBinding', () => {
       expect(() => {
         binding.bind({} as any, context);
       }).toThrow(
-        'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
+        'The value of EventBinding must be EventListener, EventListenerObject, null or undefined.',
       );
+    });
+
+    it('should throw the error if a directive is passed', () => {
+      const context = new UpdateContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      const part = {
+        type: PartType.Event,
+        node: document.createElement('div'),
+        name: 'hello',
+      } as const;
+      const binding = new EventBinding(null, part);
+
+      expect(() => {
+        binding.bind(
+          { handleEvent: () => {}, [directiveTag]: () => {} } as any,
+          context,
+        );
+      }).toThrow('The value must not be a directive, but got "Object".');
     });
   });
 

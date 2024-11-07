@@ -120,7 +120,7 @@ describe('PropertyBinding', () => {
 
       expect(() => {
         binding.bind(new TextDirective() as any, context);
-      }).toThrow('A value must not be a directive,');
+      }).toThrow('The value must not be a directive,');
     });
   });
 

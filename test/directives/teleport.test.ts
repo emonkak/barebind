@@ -181,7 +181,7 @@ describe('TeloportBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'A value must be a instance of Teleport directive, but got "null".',
+        'The value must be a instance of Teleport directive, but got "null".',
       );
     });
   });

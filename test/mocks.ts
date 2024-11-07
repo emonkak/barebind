@@ -62,11 +62,11 @@ export class MockBinding<T> implements Binding<T> {
     return this._part.node;
   }
 
+  connect(_context: UpdateContext): void {}
+
   bind(newValue: T, _context: UpdateContext): void {
     this._value = newValue;
   }
-
-  connect(_context: UpdateContext): void {}
 
   unbind(_context: UpdateContext): void {}
 
@@ -332,18 +332,18 @@ export class TextBinding implements Binding<TextDirective>, Effect {
     return this._part.node;
   }
 
+  connect(context: UpdateContext): void {
+    if (this._status === CommitStatus.Committed) {
+      context.enqueueMutationEffect(this);
+    }
+    this._status = CommitStatus.Mounting;
+  }
+
   bind(newValue: TextDirective, context: UpdateContext): void {
     if (this._status === CommitStatus.Committed) {
       context.enqueueMutationEffect(this);
     }
     this._value = newValue;
-    this._status = CommitStatus.Mounting;
-  }
-
-  connect(context: UpdateContext): void {
-    if (this._status === CommitStatus.Committed) {
-      context.enqueueMutationEffect(this);
-    }
     this._status = CommitStatus.Mounting;
   }
 

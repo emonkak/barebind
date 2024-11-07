@@ -21,10 +21,10 @@ describe('ensureDirective', () => {
     } as const;
 
     expect(() => ensureDirective([TextDirective], null, part)).toThrow(
-      'A value must be a instance of TextDirective directive, but got "null".',
+      'The value must be a instance of TextDirective directive, but got "null".',
     );
     expect(() => ensureDirective([Foo, Bar, Baz], null, part)).toThrow(
-      'A value must be a instance of Foo, Bar, or Baz directive, but got "null".',
+      'The value must be a instance of Foo, Bar, or Baz directive, but got "null".',
     );
   });
 
@@ -46,7 +46,7 @@ describe('ensureNonDirective', () => {
     } as const;
 
     expect(() => ensureNonDirective(new TextDirective(), part)).toThrow(
-      'A value must not be a directive, but got "TextDirective".',
+      'The value must not be a directive, but got "TextDirective".',
     );
   });
 

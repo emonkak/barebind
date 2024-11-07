@@ -6,19 +6,16 @@ import {
   type Part,
   type UpdateContext,
 } from '../baseTypes.js';
-import { reportPart } from '../error.js';
+import { ensureNonDirective, reportPart } from '../error.js';
+
+type Nullable<T> = T | null | undefined;
 
 export class EventBinding
-  implements
-    Binding<EventListenerOrEventListenerObject | null | undefined>,
-    Effect
+  implements Binding<Nullable<EventListenerOrEventListenerObject>>, Effect
 {
-  private _pendingValue: EventListenerOrEventListenerObject | null | undefined;
+  private _pendingValue: Nullable<EventListenerOrEventListenerObject>;
 
-  private _memoizedValue:
-    | EventListenerOrEventListenerObject
-    | null
-    | undefined = null;
+  private _memoizedValue: Nullable<EventListenerOrEventListenerObject>;
 
   private readonly _part: EventPart;
 
@@ -26,13 +23,14 @@ export class EventBinding
 
   constructor(value: unknown, part: EventPart) {
     DEBUG: {
-      ensureEventListener(value, part);
+      ensureEventListenerOrNull(value, part);
+      ensureNonDirective(value, part);
     }
     this._pendingValue = value;
     this._part = part;
   }
 
-  get value(): EventListenerOrEventListenerObject | null | undefined {
+  get value(): Nullable<EventListenerOrEventListenerObject> {
     return this._pendingValue;
   }
 
@@ -54,11 +52,12 @@ export class EventBinding
   }
 
   bind(
-    newValue: EventListenerOrEventListenerObject | null | undefined,
+    newValue: Nullable<EventListenerOrEventListenerObject>,
     context: UpdateContext,
   ): void {
     DEBUG: {
-      ensureEventListener(newValue, this._part);
+      ensureEventListenerOrNull(newValue, this._part);
+      ensureNonDirective(newValue, this._part);
     }
     if (newValue !== this._memoizedValue) {
       this._requestCommit(context);
@@ -168,22 +167,23 @@ export class EventBinding
   }
 }
 
-function ensureEventListener(
+function ensureEventListenerOrNull(
   value: unknown,
   part: Part,
-): asserts value is EventListenerOrEventListenerObject | null | undefined {
-  if (!(value == null || isEventListener(value))) {
+): asserts value is Nullable<EventListenerOrEventListenerObject> {
+  if (!isEventListenerOrNull(value)) {
     throw new Error(
-      'A value of EventBinding must be EventListener, EventListenerObject, null or undefined.\n' +
+      'The value of EventBinding must be EventListener, EventListenerObject, null or undefined.\n' +
         reportPart(part, value),
     );
   }
 }
 
-function isEventListener(
+function isEventListenerOrNull(
   value: unknown,
-): value is EventListenerOrEventListenerObject {
+): value is Nullable<EventListenerOrEventListenerObject> {
   return (
+    value == null ||
     typeof value === 'function' ||
     (typeof value === 'object' &&
       typeof (value as any)?.handleEvent === 'function')
