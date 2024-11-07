@@ -54,9 +54,9 @@ describe('Router', () => {
       expect(basicRouter.handle(new RelativeURL('/categories/'), state)).toBe(
         'indexCategories',
       );
-      expect(basicRouter.handle(new RelativeURL('/categories/123'), state)).toBe(
-        'showCategory(123)',
-      );
+      expect(
+        basicRouter.handle(new RelativeURL('/categories/123'), state),
+      ).toBe('showCategory(123)');
     });
 
     it('should return null if the route restricts a trailing slash', () => {
@@ -72,7 +72,9 @@ describe('Router', () => {
     });
 
     it('should return null if there is no route matches the URL', () => {
-      expect(basicRouter.handle(new RelativeURL('/articles'), state)).toBe(null);
+      expect(basicRouter.handle(new RelativeURL('/articles'), state)).toBe(
+        null,
+      );
       expect(basicRouter.handle(new RelativeURL('/articles/'), state)).toBe(
         null,
       );
