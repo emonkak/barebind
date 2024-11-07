@@ -127,7 +127,8 @@ export class ComponentBinding<TProps, TData, TContext>
     if (this._value.type !== newValue.type) {
       // The component type has been changed, so we need to clean hooks before
       // rendering.
-      this._requestCleanHooks(context);
+      this._cleanHooks(context);
+      this._cachedViews = null;
     }
 
     this._performRender(newValue, context);
@@ -136,7 +137,7 @@ export class ComponentBinding<TProps, TData, TContext>
 
   unbind(context: UpdateContext<TContext>): void {
     this._pendingView?.unbind(context);
-    this._requestCleanHooks(context);
+    this._cleanHooks(context);
     if (this._memoizedView !== null) {
       this._requestCommit(context);
       this._status = CommitStatus.Unmounting;
@@ -147,7 +148,7 @@ export class ComponentBinding<TProps, TData, TContext>
 
   disconnect(context: UpdateContext<TContext>): void {
     this._pendingView?.disconnect(context);
-    this._requestCleanHooks(context);
+    this._cleanHooks(context);
     this._status = CommitStatus.Committed;
   }
 
@@ -165,6 +166,25 @@ export class ComponentBinding<TProps, TData, TContext>
     }
 
     this._status = CommitStatus.Committed;
+  }
+
+  private _cleanHooks(context: UpdateContext<TContext>): void {
+    // Hooks must be cleaned in reverse order.
+    for (let i = this._hooks.length - 1; i >= 0; i--) {
+      const hook = this._hooks[i]!;
+      switch (hook.type) {
+        case HookType.InsertionEffect:
+          context.enqueueMutationEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.LayoutEffect:
+          context.enqueueLayoutEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.PassiveEffect:
+          context.enqueuePassiveEffect(new CleanEffectHook(hook));
+          break;
+      }
+    }
+    this._hooks = [];
   }
 
   private _performRender(
@@ -234,25 +254,6 @@ export class ComponentBinding<TProps, TData, TContext>
     }
 
     this._memoizedTemplate = template;
-  }
-
-  private _requestCleanHooks(context: UpdateContext<TContext>): void {
-    // Clean hooks in reverse order.
-    for (let i = this._hooks.length - 1; i >= 0; i--) {
-      const hook = this._hooks[i]!;
-      switch (hook.type) {
-        case HookType.InsertionEffect:
-          context.enqueueMutationEffect(new CleanEffectHook(hook));
-          break;
-        case HookType.LayoutEffect:
-          context.enqueueLayoutEffect(new CleanEffectHook(hook));
-          break;
-        case HookType.PassiveEffect:
-          context.enqueuePassiveEffect(new CleanEffectHook(hook));
-          break;
-      }
-    }
-    this._hooks = [];
   }
 
   private _requestCommit(context: UpdateContext<TContext>): void {
