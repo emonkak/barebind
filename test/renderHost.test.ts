@@ -9,11 +9,11 @@ import {
   createUpdateQueue,
   literal,
 } from '../src/baseTypes.js';
-import { AttributeBinding } from '../src/bindings/attributeBinding.js';
-import { ElementBinding } from '../src/bindings/elementBinding.js';
-import { EventBinding } from '../src/bindings/eventBinding.js';
-import { NodeBinding } from '../src/bindings/nodeBinding.js';
-import { PropertyBinding } from '../src/bindings/propertyBinding.js';
+import { AttributeBinding } from '../src/bindings/attribute.js';
+import { ElementBinding } from '../src/bindings/element.js';
+import { EventBinding } from '../src/bindings/event.js';
+import { NodeBinding } from '../src/bindings/node.js';
+import { PropertyBinding } from '../src/bindings/property.js';
 import { LiteralProcessor } from '../src/literalProcessor.js';
 import type { RenderContext } from '../src/renderContext.js';
 import { ClientRenderHost } from '../src/renderHost.js';

@@ -17,7 +17,7 @@ import {
   directiveTag,
   nameOf,
 } from '../baseTypes.js';
-import { BlockBinding } from '../bindings/blockBinding.js';
+import { BlockBinding } from '../bindings/block.js';
 import { ensureDirective, reportPart } from '../error.js';
 
 export function component<TProps, TData, TContext>(

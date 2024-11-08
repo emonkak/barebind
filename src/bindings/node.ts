@@ -77,7 +77,7 @@ export class NodeBinding<T> implements Binding<T>, Effect {
         this._part.node.nodeValue =
           typeof this._pendingValue === 'string'
             ? this._pendingValue
-            : this._pendingValue?.toString() ?? null;
+            : (this._pendingValue?.toString() ?? null);
         this._memoizedValue = this._pendingValue;
         break;
 
