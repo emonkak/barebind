@@ -14,10 +14,10 @@ describe('cached()', () => {
   it('should construct a new Cached directive', () => {
     const key = 'foo';
     const value = new TextDirective();
-    const cachedValue = cached(key, value);
+    const directive = cached(key, value);
 
-    expect(cachedValue.key).toBe(key);
-    expect(cachedValue.value).toBe(value);
+    expect(directive.key).toBe(key);
+    expect(directive.value).toBe(value);
   });
 });
 

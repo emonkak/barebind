@@ -4,6 +4,7 @@ export * from './directives/component.js';
 export * from './directives/either.js';
 export * from './directives/keyed.js';
 export * from './directives/list.js';
+export * from './directives/live.js';
 export * from './directives/memo.js';
 export * from './directives/noValue.js';
 export * from './directives/ref.js';
