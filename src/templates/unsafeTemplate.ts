@@ -29,7 +29,6 @@ export class UnsafeTemplate implements Template<readonly []> {
   render(_data: readonly [], _context: DirectiveContext): UnsafeTemplateView {
     const template = document.createElement('template');
     if (this._mode === 'math' || this._mode === 'svg') {
-      const template = document.createElement('template');
       template.innerHTML =
         '<' + this._mode + '>' + this._content + '</' + this._mode + '>';
       return new UnsafeTemplateView([
