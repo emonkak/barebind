@@ -78,18 +78,17 @@ export class Right<TRight> implements Directive<Either<unknown, TRight>> {
 export class EitherBinding<TLeft, TRight>
   implements Binding<Either<TLeft, TRight>>
 {
-  private _value: Either<TLeft, TRight>;
-
   private _leftBinding: Binding<TLeft> | null = null;
 
   private _rightBinding: Binding<TRight> | null = null;
+
+  private _value: Either<TLeft, TRight>;
 
   constructor(
     value: Either<TLeft, TRight>,
     part: Part,
     context: DirectiveContext,
   ) {
-    this._value = value;
     if (value instanceof Left) {
       this._leftBinding = resolveBinding(value.value, part, context);
       this._rightBinding = null;
@@ -97,6 +96,7 @@ export class EitherBinding<TLeft, TRight>
       this._leftBinding = null;
       this._rightBinding = resolveBinding(value.value, part, context);
     }
+    this._value = value;
   }
 
   get value(): Either<TLeft, TRight> {
