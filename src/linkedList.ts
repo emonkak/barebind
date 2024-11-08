@@ -1,118 +1,119 @@
-export interface Node<T> {
-  prev: Node<T> | null;
-  next: Node<T> | null;
+export interface LinkedListNode<T> {
   value: T;
+  prev: LinkedListNode<T> | null;
+  next: LinkedListNode<T> | null;
 }
 
-export type NodeRef<T> = { [key: symbol]: Node<T> | undefined };
-
-export interface ReadonlyNode<T> {
-  readonly prev: ReadonlyNode<T> | null;
-  readonly next: ReadonlyNode<T> | null;
-  readonly value: T;
-}
+export type LinkedListNodeRef<T> = {
+  [key: symbol]: LinkedListNode<T> | undefined;
+};
 
 export class LinkedList<T> implements Iterable<T> {
-  private _head: Node<T> | null = null;
+  #head: LinkedListNode<T> | null = null;
 
-  private _tail: Node<T> | null = null;
+  #tail: LinkedListNode<T> | null = null;
 
   #key: symbol = Symbol();
 
   *[Symbol.iterator](): Iterator<T> {
-    for (let node = this._head; node !== null; node = node.next) {
+    for (let node = this.#head; node !== null; node = node.next) {
       yield node.value;
     }
   }
 
-  back(): ReadonlyNode<T> | null {
-    return this._tail;
+  back(): LinkedListNode<T> | null {
+    return this.#tail;
   }
 
-  front(): ReadonlyNode<T> | null {
-    return this._head;
+  front(): LinkedListNode<T> | null {
+    return this.#head;
   }
 
   isEmpty(): boolean {
-    return this._head === null;
+    return this.#head === null;
   }
 
-  popBack(): Node<T> | null {
-    const tail = this._tail;
+  popBack(): LinkedListNode<T> | null {
+    const tail = this.#tail;
 
-    if (tail !== null && tail.prev !== null) {
-      this._tail = tail.prev;
-      this._tail.next = null;
-      tail.prev = null;
-    } else {
-      this._head = null;
-      this._tail = null;
+    if (tail !== null) {
+      if (tail.prev !== null) {
+        this.#tail = tail.prev;
+        this.#tail.next = null;
+        tail.prev = null;
+      } else {
+        this.#head = null;
+        this.#tail = null;
+      }
     }
 
     return tail;
   }
 
-  popFront(): Node<T> | null {
-    const head = this._head;
+  popFront(): LinkedListNode<T> | null {
+    const head = this.#head;
 
-    if (head !== null && head.next !== null) {
-      this._head = head.next;
-      this._head.prev = null;
-      head.next = null;
-    } else {
-      this._head = null;
-      this._tail = null;
+    if (head !== null) {
+      if (head.next !== null) {
+        this.#head = head.next;
+        this.#head.prev = null;
+        head.next = null;
+      } else {
+        this.#head = null;
+        this.#tail = null;
+      }
     }
 
     return head;
   }
 
-  pushBack(value: T): NodeRef<T> {
-    const node = { prev: this._tail, next: null, value };
+  pushBack(value: T): LinkedListNodeRef<T> {
+    const node = { value, prev: this.#tail, next: null };
 
-    if (this._tail !== null) {
-      this._tail.next = node;
-      this._tail = node;
+    if (this.#tail !== null) {
+      this.#tail.next = node;
+      this.#tail = node;
     } else {
-      this._head = node;
-      this._tail = node;
+      this.#head = node;
+      this.#tail = node;
     }
 
     return { [this.#key]: node };
   }
 
-  pushFront(value: T): NodeRef<T> {
-    const node = { prev: null, next: this._head, value };
+  pushFront(value: T): LinkedListNodeRef<T> {
+    const node = { value, prev: null, next: this.#head };
 
-    if (this._head !== null) {
-      this._head.prev = node;
-      this._head = node;
+    if (this.#head !== null) {
+      this.#head.prev = node;
+      this.#head = node;
     } else {
-      this._head = node;
-      this._tail = node;
+      this.#head = node;
+      this.#tail = node;
     }
 
     return { [this.#key]: node };
   }
 
-  remove(nodeRef: NodeRef<T>): Node<T> | null {
-    const node = nodeRef[this.#key];
+  remove(ref: LinkedListNodeRef<T>): LinkedListNode<T> | null {
+    const node = ref[this.#key];
     if (node === undefined) {
       return null;
     }
-    if (node.prev !== null) {
-      node.prev.next = node.next;
+    const { prev, next } = node;
+    if (prev !== null) {
+      prev.next = next;
     } else {
-      this._head = node.next;
+      this.#head = next;
     }
-    if (node.next !== null) {
-      node.next.prev = node.prev;
+    if (next !== null) {
+      next.prev = prev;
     } else {
-      this._tail = node.prev;
+      this.#tail = prev;
     }
     node.prev = null;
     node.next = null;
-    nodeRef[this.#key] = undefined;
+    ref[this.#key] = undefined;
     return node;
   }
 }
