@@ -14,7 +14,7 @@ describe('classMap()', () => {
   });
 });
 
-describe('ClassMapDirective', () => {
+describe('ClassMap', () => {
   describe('[directiveTag]()', () => {
     it('should create a new ClassMapBinding', () => {
       const context = new UpdateContext(
