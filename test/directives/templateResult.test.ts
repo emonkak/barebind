@@ -516,7 +516,7 @@ describe('TemplateResultBinding', () => {
       expect(() => {
         binding.bind(null as any, context);
       }).toThrow(
-        'The value must be a instance of EagerTemplateResult or LazyTemplateResult directive, but got "null".',
+        'The value must be a instance of AbstractTemplateResult directive, but got "null".',
       );
     });
   });

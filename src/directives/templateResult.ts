@@ -36,12 +36,12 @@ export function lazyTemplateResult<
   return new LazyTemplateResult(template, data);
 }
 
-export class EagerTemplateResult<TData, TContext = unknown>
+abstract class AbstractTemplateResult<TData, TContext>
   implements TemplateResult<TData, TContext>
 {
-  private readonly _template: Template<TData, TContext>;
+  protected readonly _template: Template<TData, TContext>;
 
-  private readonly _data: TData;
+  protected readonly _data: TData;
 
   constructor(template: Template<TData, TContext>, data: TData) {
     this._template = template;
@@ -55,7 +55,12 @@ export class EagerTemplateResult<TData, TContext = unknown>
   get data(): TData {
     return this._data;
   }
+}
 
+export class EagerTemplateResult<
+  TData,
+  TContext = unknown,
+> extends AbstractTemplateResult<TData, TContext> {
   get [Symbol.toStringTag](): string {
     return `EagerTemplateResult(${nameOf(this._template)})`;
   }
@@ -76,26 +81,10 @@ export class EagerTemplateResult<TData, TContext = unknown>
   }
 }
 
-export class LazyTemplateResult<TData, TContext = unknown>
-  implements TemplateResult<TData, TContext>
-{
-  private readonly _template: Template<TData, TContext>;
-
-  private readonly _data: TData;
-
-  constructor(template: Template<TData, TContext>, data: TData) {
-    this._template = template;
-    this._data = data;
-  }
-
-  get template(): Template<TData, TContext> {
-    return this._template;
-  }
-
-  get data(): TData {
-    return this._data;
-  }
-
+export class LazyTemplateResult<
+  TData,
+  TContext = unknown,
+> extends AbstractTemplateResult<TData, TContext> {
   get [Symbol.toStringTag](): string {
     return `LazyTemplateResult(${nameOf(this._template)})`;
   }
@@ -175,11 +164,7 @@ export class TemplateResultBinding<TData, TContext>
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
-      ensureDirective(
-        [EagerTemplateResult, LazyTemplateResult],
-        newValue,
-        this._part,
-      );
+      ensureDirective([AbstractTemplateResult], newValue, this._part);
     }
 
     const { template, data } = newValue;
