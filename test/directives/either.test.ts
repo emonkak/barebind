@@ -5,8 +5,6 @@ import { NoValue } from '../../src/directives.js';
 import {
   Either,
   EitherBinding,
-  Left,
-  Right,
   optional,
 } from '../../src/directives/either.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
@@ -19,27 +17,29 @@ import {
 
 describe('Either.left()', () => {
   it('should construct a Left directive', () => {
-    expect(Either.left('foo')).toStrictEqual(new Left('foo'));
+    expect(Either.left('foo')).toStrictEqual(new Either.Left('foo'));
   });
 });
 
 describe('Either.right()', () => {
   it('should construct a Right directive', () => {
-    expect(Either.right('foo')).toStrictEqual(new Right('foo'));
+    expect(Either.right('foo')).toStrictEqual(new Either.Right('foo'));
   });
 });
 
 describe('optional()', () => {
   it('should construct a Right directive if the value is not null or undefined', () => {
-    expect(optional('foo')).toStrictEqual(new Right('foo'));
-    expect(optional(null)).toStrictEqual(new Left(NoValue.instance));
+    expect(optional('foo')).toStrictEqual(new Either.Right('foo'));
+    expect(optional(null)).toStrictEqual(new Either.Left(NoValue.instance));
   });
 });
 
 describe('Left', () => {
   describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new Left('foo')[Symbol.toStringTag]).toBe('Left("foo")');
+      expect(new Either.Left('foo')[Symbol.toStringTag]).toBe(
+        'Either.Left("foo")',
+      );
     });
   });
 
@@ -51,7 +51,7 @@ describe('Left', () => {
         new MockBlock(),
       );
 
-      const value = new Left(new TextDirective('foo'));
+      const value = new Either.Left(new TextDirective('foo'));
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -78,7 +78,9 @@ describe('Left', () => {
 describe('Right', () => {
   describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(new Right('foo')[Symbol.toStringTag]).toBe('Right("foo")');
+      expect(new Either.Right('foo')[Symbol.toStringTag]).toBe(
+        'Either.Right("foo")',
+      );
     });
   });
 
@@ -90,7 +92,7 @@ describe('Right', () => {
         new MockBlock(),
       );
 
-      const value = new Right(new TextDirective('foo'));
+      const value = new Either.Right(new TextDirective('foo'));
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -117,7 +119,10 @@ describe('Right', () => {
 describe('EitherBinding', () => {
   describe('.connect()', () => {
     it.each([
-      [new Left(new TextDirective('foo')), new Right(new TextDirective('bar'))],
+      [
+        new Either.Left(new TextDirective('foo')),
+        new Either.Right(new TextDirective('bar')),
+      ],
     ])('should connect the current binding', (value) => {
       const context = new UpdateContext(
         new MockRenderHost(),
@@ -144,10 +149,13 @@ describe('EitherBinding', () => {
 
   describe('.bind()', () => {
     it.each([
-      [new Left(new TextDirective('foo')), new Left(new TextDirective('bar'))],
       [
-        new Right(new TextDirective('foo')),
-        new Right(new TextDirective('bar')),
+        new Either.Left(new TextDirective('foo')),
+        new Either.Left(new TextDirective('bar')),
+      ],
+      [
+        new Either.Right(new TextDirective('foo')),
+        new Either.Right(new TextDirective('bar')),
       ],
     ])(
       'should bind a left or right value to the current binding if the previous value is also the same type',
@@ -198,8 +206,14 @@ describe('EitherBinding', () => {
     );
 
     it.each([
-      [new Left(new TextDirective('foo')), new Right(new TextDirective('bar'))],
-      [new Right(new TextDirective('foo')), new Left(new TextDirective('bar'))],
+      [
+        new Either.Left(new TextDirective('foo')),
+        new Either.Right(new TextDirective('bar')),
+      ],
+      [
+        new Either.Right(new TextDirective('foo')),
+        new Either.Left(new TextDirective('bar')),
+      ],
     ])(
       'should memoize the previous binding if the value type changes',
       (value1, value2) => {
@@ -259,7 +273,7 @@ describe('EitherBinding', () => {
       },
     );
 
-    it.each([[new Left('foo')], [new Right('bar')]])(
+    it.each([[new Either.Left('foo')], [new Either.Right('bar')]])(
       'should throw an error if the new value is not Left or Right directive',
       (value) => {
         const context = new UpdateContext(
@@ -274,10 +288,11 @@ describe('EitherBinding', () => {
         } as const;
         const binding = new EitherBinding(value, part, context);
 
+        // BUG: In vitest, "Either" becomes "Either2".
         expect(() => {
           binding.bind(null as any, context);
         }).toThrow(
-          'The value must be a instance of Left or Right directive, but got "null".',
+          'The value must be a instance of Either2 directive, but got "null".',
         );
       },
     );
@@ -285,8 +300,8 @@ describe('EitherBinding', () => {
 
   describe('.unbind()', () => {
     it.each([
-      [new Left(new TextDirective('foo'))],
-      [new Right(new TextDirective('bar'))],
+      [new Either.Left(new TextDirective('foo'))],
+      [new Either.Right(new TextDirective('bar'))],
     ])('should unbind the current binding', (value) => {
       const context = new UpdateContext(
         new MockRenderHost(),
@@ -311,8 +326,8 @@ describe('EitherBinding', () => {
 
   describe('.disconnect()', () => {
     it.each([
-      [new Left(new TextDirective('foo'))],
-      [new Right(new TextDirective('bar'))],
+      [new Either.Left(new TextDirective('foo'))],
+      [new Either.Right(new TextDirective('bar'))],
     ])('should disconnect the current binding', (value) => {
       const context = new UpdateContext(
         new MockRenderHost(),
