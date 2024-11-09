@@ -94,7 +94,7 @@ export class StyleMapBinding implements Binding<StyleMap>, Effect {
 
   bind(newValue: StyleMap, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective([StyleMap], newValue, this._part);
+      ensureDirective(StyleMap, newValue, this._part);
     }
     if (
       this._memoizedValue === null ||

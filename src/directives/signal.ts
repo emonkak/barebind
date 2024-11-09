@@ -228,7 +228,7 @@ export class SignalBinding<TValue> implements Binding<Signal<TValue>> {
 
   bind(newValue: Signal<TValue>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective([Signal], newValue, this._binding.part);
+      ensureDirective(Signal, newValue, this._binding.part);
     }
     if (this._value !== newValue) {
       this._endSubscription();

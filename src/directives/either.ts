@@ -117,7 +117,7 @@ export class EitherBinding<TLeft, TRight>
 
   bind(newValue: Either<TLeft, TRight>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective([Either.Either], newValue, this.binding.part);
+      ensureDirective(Either.Either, newValue, this.binding.part);
     }
 
     const oldValue = this._value;

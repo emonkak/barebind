@@ -49,7 +49,7 @@ export class NoValueBinding implements Binding<NoValue> {
 
   bind(newValue: NoValue, _context: UpdateContext): void {
     DEBUG: {
-      ensureDirective([NoValue], newValue, this._part);
+      ensureDirective(NoValue, newValue, this._part);
     }
   }
 

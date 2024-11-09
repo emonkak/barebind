@@ -164,7 +164,7 @@ export class TemplateResultBinding<TData, TContext>
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
-      ensureDirective([AbstractTemplateResult], newValue, this._part);
+      ensureDirective(AbstractTemplateResult, newValue, this._part);
     }
 
     const { template, data } = newValue;

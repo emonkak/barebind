@@ -76,7 +76,7 @@ export class LiveBinding<T> implements Effect, Binding<Live<T>> {
 
   bind(newValue: Live<T>, context: UpdateContext): void {
     DEBUG: {
-      ensureDirective([Live], newValue, this._part);
+      ensureDirective(Live, newValue, this._part);
     }
     const { node, name } = this._part;
     if (newValue.value !== (node as any)[name]) {

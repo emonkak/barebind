@@ -1,33 +1,17 @@
-import {
-  type Directive,
-  type Part,
-  PartType,
-  isDirective,
-  nameOf,
-} from './baseTypes.js';
-
-type DirectiveClass<TValue> = abstract new (
-  ...args: any[]
-) => Directive<TValue>;
-
-type NonEmptyArray<T> = [T, ...T[]];
+import { type Part, PartType, isDirective, nameOf } from './baseTypes.js';
 
 export function ensureDirective<
-  TExpectedClasses extends NonEmptyArray<DirectiveClass<TExpectedValue>>,
+  TExpectedClass extends Function,
   TExpectedValue,
 >(
-  expectedClasses: TExpectedClasses,
+  expectedClass: TExpectedClass,
   actualValue: unknown,
   part: Part,
 ): asserts actualValue is TExpectedValue {
-  if (
-    !expectedClasses.some(
-      (expectedClass) => actualValue instanceof expectedClass,
-    )
-  ) {
+  if (!(actualValue instanceof expectedClass)) {
     throw new Error(
       'The value must be a instance of ' +
-        oneOf(expectedClasses.map((expectedClass) => expectedClass.name)) +
+        expectedClass.name +
         ' directive, but got "' +
         nameOf(actualValue) +
         '". Consider using Either, Cached, or Keyed directive instead.\n' +
@@ -162,12 +146,6 @@ function markPart(part: Part, value: unknown): string {
 
 function markValue(value: unknown): string {
   return `[[${nameOf(value)} IS USED IN HERE!]]`;
-}
-
-function oneOf(choices: string[]): string {
-  return choices.length > 2
-    ? choices.slice(0, -1).join(', ') + ', or ' + choices.at(-1)
-    : choices.join(' or ');
 }
 
 function openTag(element: Element): string {

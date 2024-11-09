@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  type Binding,
-  type Directive,
-  PartType,
-  directiveTag,
-} from '../src/baseTypes.js';
+import { PartType } from '../src/baseTypes.js';
 import {
   ensureDirective,
   ensureNonDirective,
@@ -20,11 +15,8 @@ describe('ensureDirective', () => {
       node: document.createComment(''),
     } as const;
 
-    expect(() => ensureDirective([TextDirective], null, part)).toThrow(
+    expect(() => ensureDirective(TextDirective, null, part)).toThrow(
       'The value must be a instance of TextDirective directive, but got "null".',
-    );
-    expect(() => ensureDirective([Foo, Bar, Baz], null, part)).toThrow(
-      'The value must be a instance of Foo, Bar, or Baz directive, but got "null".',
     );
   });
 
@@ -34,7 +26,7 @@ describe('ensureDirective', () => {
       node: document.createComment(''),
     } as const;
 
-    ensureDirective([TextDirective], new TextDirective(), part);
+    ensureDirective(TextDirective, new TextDirective(), part);
   });
 });
 
@@ -268,24 +260,6 @@ describe('reportPart()', () => {
     );
   });
 });
-
-class Foo implements Directive<Foo> {
-  [directiveTag](): Binding<Foo, unknown> {
-    throw new Error('Method is not implemented.');
-  }
-}
-
-class Bar implements Directive<Bar> {
-  [directiveTag](): Binding<Bar> {
-    throw new Error('Method is not implemented.');
-  }
-}
-
-class Baz implements Directive<Baz> {
-  [directiveTag](): Binding<Baz> {
-    throw new Error('Method is not implemented.');
-  }
-}
 
 function createElement<const T extends keyof HTMLElementTagNameMap>(
   tagName: T,
