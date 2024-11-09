@@ -265,7 +265,10 @@ export class RenderContext {
     return deferredValue;
   }
 
-  useEffect(callback: EffectCallback, dependencies?: unknown[]): void {
+  useEffect(
+    callback: EffectCallback,
+    dependencies: unknown[] | null = null,
+  ): void {
     const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -305,7 +308,10 @@ export class RenderContext {
     return ':' + this._host.getHostName() + '-' + currentHook.id + ':';
   }
 
-  useInsertionEffect(callback: EffectCallback, dependencies?: unknown[]): void {
+  useInsertionEffect(
+    callback: EffectCallback,
+    dependencies: unknown[] | null = null,
+  ): void {
     const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -329,7 +335,10 @@ export class RenderContext {
     }
   }
 
-  useLayoutEffect(callback: EffectCallback, dependencies?: unknown[]): void {
+  useLayoutEffect(
+    callback: EffectCallback,
+    dependencies: unknown[] | null = null,
+  ): void {
     const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -353,7 +362,10 @@ export class RenderContext {
     }
   }
 
-  useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
+  useMemo<TResult>(
+    factory: () => TResult,
+    dependencies: unknown[] | null = null,
+  ): TResult {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {

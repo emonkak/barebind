@@ -208,7 +208,7 @@ export interface EffectHook {
     | HookType.PassiveEffect;
   callback: EffectCallback;
   cleanup: Cleanup | void;
-  dependencies: unknown[] | undefined;
+  dependencies: unknown[] | null;
 }
 
 export interface IdentifierHook {
@@ -219,7 +219,7 @@ export interface IdentifierHook {
 export interface MemoHook<TResult> {
   type: HookType.Memo;
   value: TResult;
-  dependencies: unknown[] | undefined;
+  dependencies: unknown[] | null;
 }
 
 export interface ReducerHook<TState, TAction> {

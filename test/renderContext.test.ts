@@ -614,7 +614,7 @@ describe('RenderContext', () => {
           type: HookType.PassiveEffect,
           callback: effectFn,
           cleanup: undefined,
-          dependencies: undefined,
+          dependencies: null,
         },
       ]);
       expect(context.queue.passiveEffects).toHaveLength(1);
@@ -699,7 +699,7 @@ describe('RenderContext', () => {
           type: HookType.InsertionEffect,
           callback: effectFn,
           cleanup: undefined,
-          dependencies: undefined,
+          dependencies: null,
         },
       ]);
       expect(context.queue.mutationEffects).toHaveLength(1);
@@ -766,7 +766,7 @@ describe('RenderContext', () => {
           type: HookType.LayoutEffect,
           callback: effectFn,
           cleanup: undefined,
-          dependencies: undefined,
+          dependencies: null,
         },
       ]);
       expect(context.queue.layoutEffects).toHaveLength(1);

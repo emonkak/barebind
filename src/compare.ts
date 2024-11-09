@@ -1,10 +1,10 @@
 export function dependenciesAreChanged(
-  oldDependencies: ArrayLike<unknown> | undefined,
-  newDependencies: ArrayLike<unknown> | undefined,
+  oldDependencies: ArrayLike<unknown> | null,
+  newDependencies: ArrayLike<unknown> | null,
 ): boolean {
   return (
-    oldDependencies === undefined ||
-    newDependencies === undefined ||
+    oldDependencies === null ||
+    newDependencies === null ||
     !sequentialEqual(oldDependencies, newDependencies)
   );
 }

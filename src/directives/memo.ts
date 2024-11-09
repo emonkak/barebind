@@ -13,7 +13,7 @@ import { ensureDirective } from '../error.js';
 
 export function memo<T>(
   factory: () => T,
-  dependencies: unknown[] | undefined,
+  dependencies: unknown[] | null,
 ): Memo<T> {
   return new Memo(factory, dependencies);
 }
@@ -21,9 +21,9 @@ export function memo<T>(
 export class Memo<T> implements Directive<Memo<T>> {
   private readonly _factory: () => T;
 
-  private readonly _dependencies: unknown[] | undefined;
+  private readonly _dependencies: unknown[] | null;
 
-  constructor(factory: () => T, dependencies: unknown[] | undefined) {
+  constructor(factory: () => T, dependencies: unknown[] | null) {
     this._factory = factory;
     this._dependencies = dependencies;
   }
@@ -32,7 +32,7 @@ export class Memo<T> implements Directive<Memo<T>> {
     return this._factory;
   }
 
-  get dependencies(): unknown[] | undefined {
+  get dependencies(): unknown[] | null {
     return this._dependencies;
   }
 
@@ -49,7 +49,7 @@ export class Memo<T> implements Directive<Memo<T>> {
 export class MemoBinding<T> implements Binding<Memo<T>> {
   private _value: Memo<T>;
 
-  private _memoizedDependencies: unknown[] | undefined = undefined;
+  private _memoizedDependencies: unknown[] | null = null;
 
   private readonly _binding: Binding<T>;
 
@@ -99,11 +99,11 @@ export class MemoBinding<T> implements Binding<Memo<T>> {
 
   unbind(context: UpdateContext): void {
     this._binding.unbind(context);
-    this._memoizedDependencies = undefined;
+    this._memoizedDependencies = null;
   }
 
   disconnect(context: UpdateContext): void {
     this._binding.disconnect(context);
-    this._memoizedDependencies = undefined;
+    this._memoizedDependencies = null;
   }
 }

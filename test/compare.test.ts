@@ -7,10 +7,10 @@ import {
 } from '../src/compare.js';
 
 describe('dependenciesAreChanged()', () => {
-  it('should return true if a old or new dependency is undefinied', () => {
-    expect(dependenciesAreChanged(undefined, undefined)).toBe(true);
-    expect(dependenciesAreChanged(undefined, [])).toBe(true);
-    expect(dependenciesAreChanged([], undefined)).toBe(true);
+  it('should return true if a old or new dependency is null', () => {
+    expect(dependenciesAreChanged(null, null)).toBe(true);
+    expect(dependenciesAreChanged(null, [])).toBe(true);
+    expect(dependenciesAreChanged([], null)).toBe(true);
   });
 
   it('should return true if the lengths of the new and old dependencies are different', () => {
