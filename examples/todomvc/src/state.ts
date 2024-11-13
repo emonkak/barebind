@@ -1,5 +1,10 @@
 import { type RenderContext, usableTag } from '@emonkak/ebit';
-import { Computed, type Signal, State } from '@emonkak/ebit/directives.js';
+import {
+  type Signal,
+  type State,
+  computed,
+  state,
+} from '@emonkak/ebit/directives.js';
 
 export interface Todo {
   id: string;
@@ -14,9 +19,9 @@ export enum TodoFilter {
 }
 
 export class TodoState {
-  readonly todos$ = new State<State<Todo>[]>([]);
+  readonly todos$ = state<State<Todo>[]>([]);
 
-  readonly filter$ = new State(TodoFilter.ALL);
+  readonly filter$ = state(TodoFilter.ALL);
 
   readonly activeTodos$: Signal<State<Todo>[]>;
 
@@ -33,12 +38,12 @@ export class TodoState {
   }
 
   constructor() {
-    this.todos$ = new State([] as State<Todo>[]);
-    this.activeTodos$ = new Computed(
+    this.todos$ = state([] as State<Todo>[]);
+    this.activeTodos$ = computed(
       (todos$) => todos$.value.filter((todo$) => !todo$.value.completed),
       [this.todos$],
     );
-    this.visibleTodos$ = new Computed(
+    this.visibleTodos$ = computed(
       (todos$, filter$) => {
         switch (filter$.value) {
           case TodoFilter.ALL:
@@ -59,7 +64,7 @@ export class TodoState {
 
   addTodo(title: string): void {
     this.todos$.value = this.todos$.value.concat(
-      new State<Todo>({
+      state<Todo>({
         id: getUUID(),
         title,
         completed: false,

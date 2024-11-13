@@ -20,6 +20,17 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
+export function state<TValue>(value: TValue): State<TValue> {
+  return new State(value);
+}
+
+export function computed<TResult, const TDependencies extends Signal<any>[]>(
+  producer: (...dependencies: TDependencies) => TResult,
+  dependencies: TDependencies,
+): Computed<TResult, TDependencies> {
+  return new Computed(producer, dependencies);
+}
+
 export abstract class Signal<TValue>
   implements Directive<Signal<TValue>>, UsableObject<TValue>
 {
