@@ -91,16 +91,16 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
       mount(): void {
         context.enqueueMutationEffect(new MountNode(part.node, container));
         binding.connect(context);
-        context.flushUpdate();
+        context.scheduleUpdate();
       },
       unmount(): void {
         binding.unbind(context);
         context.enqueueMutationEffect(new UnmountNode(part.node, container));
-        context.flushUpdate();
+        context.scheduleUpdate();
       },
       update(newValue: TValue): void {
         binding.bind(newValue, context);
-        context.flushUpdate();
+        context.scheduleUpdate();
       },
     };
   }
