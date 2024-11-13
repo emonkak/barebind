@@ -13,14 +13,10 @@ import {
   type Template,
   type TemplateMode,
   type TemplateResult,
-  UpdateContext,
   type UpdateQueue,
   type Updater,
-  nameOf,
-  resolveBinding,
 } from './baseTypes.js';
 import { AttributeBinding } from './bindings/attribute.js';
-import { BlockBinding } from './bindings/block.js';
 import { ElementBinding } from './bindings/element.js';
 import { EventBinding } from './bindings/event.js';
 import { NodeBinding } from './bindings/node.js';
@@ -36,12 +32,6 @@ import { ChildTemplate, TextTemplate } from './templates/valueTemplate.js';
 export interface ClientRenderHostOptions {
   hostName?: string;
   literalProcessor?: LiteralProcessor;
-}
-
-export interface Root<T> {
-  mount(): void;
-  unmount(): void;
-  update(value: T): void;
 }
 
 export class ClientRenderHost implements RenderHost<RenderContext> {
@@ -67,42 +57,6 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }: ClientRenderHostOptions = {}) {
     this._hostName = hostName;
     this._literalProcessor = literalProcessor;
-  }
-
-  createRoot<TValue>(
-    value: TValue,
-    container: Node,
-    updater: Updater<RenderContext>,
-  ): Root<TValue> {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    } as const;
-
-    DEBUG: {
-      part.node.data = nameOf(value);
-    }
-
-    const binding = resolveBinding(value, part, { host: this, block: null });
-    const block = BlockBinding.ofRoot(binding);
-    const context = new UpdateContext<RenderContext>(this, updater, block);
-
-    return {
-      mount(): void {
-        context.enqueueMutationEffect(new MountNode(part.node, container));
-        binding.connect(context);
-        context.scheduleUpdate();
-      },
-      unmount(): void {
-        binding.unbind(context);
-        context.enqueueMutationEffect(new UnmountNode(part.node, container));
-        context.scheduleUpdate();
-      },
-      update(newValue: TValue): void {
-        binding.bind(newValue, context);
-        context.scheduleUpdate();
-      },
-    };
   }
 
   flushComponent<TProps, TData>(
@@ -219,36 +173,6 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
       scope.set(key, value);
       this._namespaces.set(block, scope);
     }
-  }
-}
-
-class MountNode implements Effect {
-  private readonly _node: Node;
-
-  private readonly _container: Node;
-
-  constructor(node: Node, container: Node) {
-    this._node = node;
-    this._container = container;
-  }
-
-  commit(): void {
-    this._container.appendChild(this._node);
-  }
-}
-
-class UnmountNode implements Effect {
-  private readonly _node: Node;
-
-  private readonly _container: Node;
-
-  constructor(node: Node, container: Node) {
-    this._node = node;
-    this._container = container;
-  }
-
-  commit(): void {
-    this._container.removeChild(this._node);
   }
 }
 

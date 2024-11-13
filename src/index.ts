@@ -8,6 +8,7 @@ export * from './bindings/property.js';
 export * from './error.js';
 export * from './renderContext.js';
 export * from './renderHost.js';
+export * from './root.js';
 export * from './scheduler.js';
 export * from './templates/emptyTemplate.js';
 export * from './templates/lazyTemplate.js';
