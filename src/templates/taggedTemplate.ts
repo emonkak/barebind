@@ -237,7 +237,7 @@ export class TaggedTemplateView<TData extends readonly any[]>
     return this._bindings.length > 0 &&
       this._childNodes[0] === this._bindings[0]!.part.node
       ? this._bindings[0]!.startNode
-      : this._childNodes[0] ?? null;
+      : (this._childNodes[0] ?? null);
   }
 
   get endNode(): ChildNode | null {
@@ -446,14 +446,15 @@ function parseChildren(
             type: PartType.ChildNode,
             index,
           });
-        }
-        DEBUG: {
-          if ((currentNode as Comment).data.includes(marker)) {
-            throw new Error(
-              `Expressions inside a comment must make up the entire comment value: <!--${
-                (currentNode as Comment).data
-              }-->`,
-            );
+        } else {
+          DEBUG: {
+            if ((currentNode as Comment).data.includes(marker)) {
+              throw new Error(
+                `Expressions inside a comment must make up the entire comment value: <!--${
+                  (currentNode as Comment).data
+                }-->`,
+              );
+            }
           }
         }
         break;
