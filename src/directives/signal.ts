@@ -63,7 +63,7 @@ export abstract class Signal<TValue>
   }
 
   [usableTag](context: RenderContext): TValue {
-    context.useEffect(
+    context.useLayoutEffect(
       () =>
         this.subscribe(() => {
           context.forceUpdate();
