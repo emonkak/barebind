@@ -23,8 +23,8 @@ export function classMap(classes: ClassDeclaration): ClassMap {
 export class ClassMap implements Directive<ClassMap> {
   private readonly _classes: ClassDeclaration;
 
-  constructor(classDeclaration: ClassDeclaration) {
-    this._classes = classDeclaration;
+  constructor(classes: ClassDeclaration) {
+    this._classes = classes;
   }
 
   get classes(): ClassDeclaration {
