@@ -21,6 +21,8 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm recursive install
+      - name: Install chromium for playwright
+        run: pnpm exec playwright install chromium
       - name: Build library
         run: pnpm run build
       - name: Build examples

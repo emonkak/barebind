@@ -3,10 +3,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     browser: {
-      provider: 'webdriverio',
+      provider: 'playwright',
       enabled: true,
       headless: true,
-      name: 'chrome',
+      name: 'chromium',
       screenshotFailures: false,
     },
     coverage: {

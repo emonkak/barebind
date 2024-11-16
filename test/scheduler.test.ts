@@ -249,7 +249,7 @@ describe('yieldToMain()', () => {
     vi.unstubAllGlobals();
   });
 
-  it('should return the promise by scheduler.yield()', () => {
+  it('should return the promise by scheduler.yield()', async () => {
     vi.stubGlobal('scheduler', {
       yield() {
         return Promise.resolve();
@@ -259,11 +259,11 @@ describe('yieldToMain()', () => {
     const scheduler = getDefaultScheduler();
     const yieldSpy = vi.spyOn(globalThis.scheduler, 'yield');
 
-    expect(scheduler.yieldToMain()).resolves.toBe(undefined);
+    expect(await scheduler.yieldToMain()).toBe(undefined);
     expect(yieldSpy).toHaveBeenCalledOnce();
   });
 
-  it('should wait until the current callback has completed using setTimeout()', () => {
+  it('should wait until the current callback has completed using setTimeout()', async () => {
     vi.stubGlobal('scheduler', undefined);
 
     const scheduler = getDefaultScheduler();
@@ -274,7 +274,7 @@ describe('yieldToMain()', () => {
         return 0 as any;
       });
 
-    expect(scheduler.yieldToMain()).resolves.toBe(undefined);
+    expect(await scheduler.yieldToMain()).toBe(undefined);
     expect(setTimeoutSpy).toHaveBeenCalledOnce();
   });
 });
