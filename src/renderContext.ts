@@ -362,10 +362,7 @@ export class RenderContext {
     }
   }
 
-  useMemo<TResult>(
-    factory: () => TResult,
-    dependencies: unknown[] | null = null,
-  ): TResult {
+  useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
