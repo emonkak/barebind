@@ -22,12 +22,6 @@ describe('memo()', () => {
 });
 
 describe('Memo', () => {
-  describe('[Symbol.toStringTag]', () => {
-    it('should return a string represented itself', () => {
-      expect(memo(() => 'foo', [])[Symbol.toStringTag]).toBe('Memo("foo")');
-    });
-  });
-
   describe('[directiveTag]()', () => {
     it('should create a new MemoBinding from the non-directive value', () => {
       const context = new UpdateContext(

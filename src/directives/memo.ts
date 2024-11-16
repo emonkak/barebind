@@ -5,7 +5,6 @@ import {
   type Part,
   type UpdateContext,
   directiveTag,
-  nameOf,
   resolveBinding,
 } from '../baseTypes.js';
 import { dependenciesAreChanged } from '../compare.js';
@@ -34,11 +33,6 @@ export class Memo<T> implements Directive<Memo<T>> {
 
   get dependencies(): unknown[] | null {
     return this._dependencies;
-  }
-
-  get [Symbol.toStringTag](): string {
-    const factory = this._factory;
-    return `Memo(${nameOf(factory())})`;
   }
 
   [directiveTag](part: Part, context: DirectiveContext): MemoBinding<T> {
