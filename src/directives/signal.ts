@@ -20,8 +20,8 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-export function state<TValue>(value: TValue): State<TValue> {
-  return new State(value);
+export function atom<TValue>(value: TValue): Atom<TValue> {
+  return new Atom(value);
 }
 
 export function computed<TResult, const TDependencies extends Signal<any>[]>(
@@ -74,7 +74,7 @@ export abstract class Signal<TValue>
   }
 }
 
-export class State<TValue> extends Signal<TValue> {
+export class Atom<TValue> extends Signal<TValue> {
   private _value: TValue;
 
   private _version = 0;

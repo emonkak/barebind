@@ -8,7 +8,7 @@ import {
   UpdateContext,
   directiveTag,
 } from '../../src/baseTypes.js';
-import { SignalBinding, computed, state } from '../../src/directives/signal.js';
+import { SignalBinding, atom, computed } from '../../src/directives/signal.js';
 import { RenderContext } from '../../src/renderContext.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
@@ -21,7 +21,7 @@ import {
 describe('Signal', () => {
   describe('.toJSON()', () => {
     it('should return the value', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
 
       expect('foo').toBe(signal.toJSON());
     });
@@ -29,7 +29,7 @@ describe('Signal', () => {
 
   describe('.value', () => {
     it('should increment the version on update', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
 
       signal.value = 'bar';
       expect(signal.value).toBe('bar');
@@ -39,7 +39,7 @@ describe('Signal', () => {
 
   describe('.valueOf()', () => {
     it('should return the value of the signal', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
 
       expect('foo').toBe(signal.valueOf());
     });
@@ -47,7 +47,7 @@ describe('Signal', () => {
 
   describe('[Symbol.toStringTag]', () => {
     it('should return a string represented itself', () => {
-      expect(state('foo')[Symbol.toStringTag]).toBe('Signal("foo")');
+      expect(atom('foo')[Symbol.toStringTag]).toBe('Signal("foo")');
     });
   });
 
@@ -59,7 +59,7 @@ describe('Signal', () => {
         new MockBlock(),
       );
 
-      const value = state(new TextDirective('foo'));
+      const value = atom(new TextDirective('foo'));
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -84,7 +84,7 @@ describe('Signal', () => {
         new MockBlock(),
       );
 
-      const signal = state('foo');
+      const signal = atom('foo');
       const requstUpdateSpy = vi.spyOn(context.block, 'requestUpdate');
 
       expect(context.use(signal)).toBe('foo');
@@ -103,17 +103,17 @@ describe('Signal', () => {
   });
 });
 
-describe('State', () => {
+describe('Atom', () => {
   describe('.value', () => {
     it('should get 0 of the initial version on initalize', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
 
       expect(signal.value).toBe('foo');
       expect(signal.version).toBe(0);
     });
 
     it('should increment the version on update', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
 
       signal.value = 'bar';
       expect(signal.value).toBe('bar');
@@ -123,7 +123,7 @@ describe('State', () => {
 
   describe('.notifyUpdate()', () => {
     it('should increment the version', () => {
-      const signal = state(1);
+      const signal = atom(1);
 
       signal.notifyUpdate();
 
@@ -134,7 +134,7 @@ describe('State', () => {
 
   describe('.setUntrackedValue()', () => {
     it('should set the new value without invoking the callback', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
       const callback = vi.fn();
 
       signal.subscribe(callback);
@@ -147,7 +147,7 @@ describe('State', () => {
 
   describe('.subscribe()', () => {
     it('should invoke the callback on update', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
       const callback = vi.fn();
 
       signal.subscribe(callback);
@@ -161,7 +161,7 @@ describe('State', () => {
     });
 
     it('should not invoke the unsubscribed callback', () => {
-      const signal = state('foo');
+      const signal = atom('foo');
       const callback = vi.fn();
 
       signal.subscribe(callback)();
@@ -179,9 +179,9 @@ describe('State', () => {
 describe('Computed', () => {
   describe('.value', () => {
     it('should produce a memoized value by dependent signals', () => {
-      const foo = state(1);
-      const bar = state(2);
-      const baz = state(3);
+      const foo = atom(1);
+      const bar = atom(2);
+      const baz = atom(3);
 
       const signal = computed(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
@@ -194,9 +194,9 @@ describe('Computed', () => {
     });
 
     it('should increment the version when any dependent signal has been updated', () => {
-      const foo = state(1);
-      const bar = state(2);
-      const baz = state(3);
+      const foo = atom(1);
+      const bar = atom(2);
+      const baz = atom(3);
 
       const signal = computed(
         (foo, bar, baz) => ({ foo: foo.value, bar: bar.value, baz: baz.value }),
@@ -225,9 +225,9 @@ describe('Computed', () => {
 
   describe('.subscribe()', () => {
     it('should invoke the callback on update', () => {
-      const foo = state(1);
-      const bar = state(2);
-      const baz = state(3);
+      const foo = atom(1);
+      const bar = atom(2);
+      const baz = atom(3);
       const callback = vi.fn();
 
       const signal = computed(
@@ -249,9 +249,9 @@ describe('Computed', () => {
     });
 
     it('should not invoke the unsubscribed callback', () => {
-      const foo = state(1);
-      const bar = state(2);
-      const baz = state(3);
+      const foo = atom(1);
+      const bar = atom(2);
+      const baz = atom(3);
       const callback = vi.fn();
 
       const signal = computed(
@@ -277,7 +277,7 @@ describe('Computed', () => {
 describe('Projected', () => {
   describe('.value', () => {
     it('should apply the function to each values', () => {
-      const signal = state(1);
+      const signal = atom(1);
       const projectedSignal = signal.map((n) => n * 2);
 
       expect(projectedSignal.value).toBe(2);
@@ -297,7 +297,7 @@ describe('Projected', () => {
 
   describe('.subscribe()', () => {
     it('should invoke the callback on update', () => {
-      const signal = state(1);
+      const signal = atom(1);
       const projectedSignal = signal.map((n) => n * 2);
       const callback = vi.fn();
 
@@ -315,7 +315,7 @@ describe('Projected', () => {
     });
 
     it('should not invoke the unsubscribed callback', () => {
-      const signal = state(1);
+      const signal = atom(1);
       const projectedSignal = signal.map((n) => n * 2);
       const callback = vi.fn();
 
@@ -343,7 +343,7 @@ describe('SignalBinding', () => {
         new MockBlock(),
       );
 
-      const value = state('foo');
+      const value = atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -375,7 +375,7 @@ describe('SignalBinding', () => {
         new MockBlock(),
       );
 
-      const value = state('foo');
+      const value = atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -407,8 +407,8 @@ describe('SignalBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = state('foo');
-      const value2 = state('bar');
+      const value1 = atom('foo');
+      const value2 = atom('bar');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -445,7 +445,7 @@ describe('SignalBinding', () => {
         new MockBlock(),
       );
 
-      const value = state('foo');
+      const value = atom('foo');
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
@@ -469,7 +469,7 @@ describe('SignalBinding', () => {
         new MockBlock(),
       );
 
-      const value = state('foo');
+      const value = atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
@@ -504,7 +504,7 @@ describe('SignalBinding', () => {
         new MockBlock(),
       );
 
-      const value = state('foo');
+      const value = atom('foo');
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),

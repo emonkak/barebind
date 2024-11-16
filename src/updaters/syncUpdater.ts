@@ -5,10 +5,10 @@ import {
   type UpdateQueue,
   type Updater,
 } from '../baseTypes.js';
-import { State } from '../directives/signal.js';
+import { Atom } from '../directives/signal.js';
 
 export class SyncUpdater<TContext> implements Updater<TContext> {
-  private readonly _pendingTasks: State<number> = new State(0);
+  private readonly _pendingTasks: Atom<number> = new Atom(0);
 
   flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;

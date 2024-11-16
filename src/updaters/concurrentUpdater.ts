@@ -6,7 +6,7 @@ import {
   type Updater,
   createUpdateQueue,
 } from '../baseTypes.js';
-import { State } from '../directives/signal.js';
+import { Atom } from '../directives/signal.js';
 import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
 
 export interface ConcurrentUpdaterOptions {
@@ -16,7 +16,7 @@ export interface ConcurrentUpdaterOptions {
 export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   private readonly _scheduler: Scheduler;
 
-  private readonly _pendingTasks: State<number> = new State(0);
+  private readonly _pendingTasks: Atom<number> = new Atom(0);
 
   private readonly _processingQueues: WeakSet<UpdateQueue<TContext>> =
     new WeakSet();
