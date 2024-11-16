@@ -164,19 +164,21 @@ describe('TaggedTemplate', () => {
 
     it('should parse a hole inside a comment as ChildNodeHole', () => {
       const { template } = html`
+        <!---->
         <!--${0}-->
         <!--${1}/-->
         <!-- ${2} -->
         <!-- ${3} /-->
       `;
       expect(template.holes).toStrictEqual([
-        { type: PartType.ChildNode, index: 0 },
         { type: PartType.ChildNode, index: 2 },
         { type: PartType.ChildNode, index: 4 },
         { type: PartType.ChildNode, index: 6 },
+        { type: PartType.ChildNode, index: 8 },
       ]);
       expect(template.element.innerHTML).toBe(
         `
+        <!---->
         <!--0-->
         <!--1-->
         <!--2-->
