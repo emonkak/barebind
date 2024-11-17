@@ -45,7 +45,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     Template<any, RenderContext>
   > = new WeakMap();
 
-  private readonly _literalProcessor;
+  private readonly _literalProcessor: LiteralProcessor;
 
   private _hostName: string;
 
