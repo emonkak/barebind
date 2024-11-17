@@ -5,7 +5,7 @@ export class LiteralProcessor {
   private readonly _templateCaches: WeakMap<
     TemplateStringsArray,
     {
-      strings: readonly string[];
+      staticStrings: readonly string[];
       staticValues: readonly string[];
       staticPositions: readonly number[];
     }
@@ -40,7 +40,7 @@ export class LiteralProcessor {
       sequentialEqual(templateCache.staticPositions, staticPositions)
     ) {
       return {
-        strings: templateCache.strings,
+        strings: templateCache.staticStrings,
         values: dynamicValues as FilterLiterals<TValues>,
       };
     }
@@ -49,9 +49,9 @@ export class LiteralProcessor {
       staticValues.length > 0 ? applyLiterals(strings, values) : strings;
 
     this._templateCaches.set(strings, {
-      strings: staticStrings,
-      staticValues: staticValues,
-      staticPositions: staticPositions,
+      staticStrings,
+      staticValues,
+      staticPositions,
     });
 
     return {
