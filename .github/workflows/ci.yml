@@ -23,7 +23,7 @@ jobs:
         run: pnpm recursive install
       - name: Install chromium for playwright
         run: pnpm exec playwright install chromium
-      - name: Build library
+      - name: Build main
         run: pnpm run build
       - name: Build examples
         run: pnpm run --recursive --parallel build
