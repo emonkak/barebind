@@ -23,14 +23,8 @@ jobs:
         run: pnpm recursive install
       - name: Install chromium for playwright
         run: pnpm exec playwright install chromium
-      - name: Build main
-        run: pnpm run build
-      - name: Build examples
-        run: pnpm run --recursive --parallel build
-      - name: Lint sources
-        run: pnpm run lint
-      - name: Run tests
-        run: pnpm test -- --coverage
+      - name: Run CI
+        run: pnpm run ci
       - name: Upload coverage results
         continue-on-error: true
         uses: coverallsapp/github-action@v2
