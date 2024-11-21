@@ -12,6 +12,7 @@ import {
   resolveBinding,
 } from '../baseTypes.js';
 import { LazyTemplateResult } from '../directives/templateResult.js';
+import { reportPart } from '../error.js';
 
 export type Hole =
   | AttributeHole
@@ -70,6 +71,8 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
   `(${ATTRIBUTE_NAME_CHARS}+)${WHITESPACE_CHARS}*=${WHITESPACE_CHARS}*["']?$`,
   'u',
 );
+
+const ERROR_MAKER = '[[ERROR IN HERE]]';
 
 export class TaggedTemplate<TData extends readonly any[]>
   implements Template<TData>
@@ -354,7 +357,11 @@ function parseAttribtues(
       DEBUG: {
         if (caseSensitiveName?.toLowerCase() !== name) {
           throw new Error(
-            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute.`,
+            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute:\n` +
+              reportPart(
+                { type: PartType.Attribute, name, node: element },
+                ERROR_MAKER,
+              ),
           );
         }
       }
@@ -382,17 +389,29 @@ function parseAttribtues(
       DEBUG: {
         if (name.includes(marker)) {
           throw new Error(
-            `Expressions are not allowed as an attribute name: ${
-              (element.cloneNode() as Element).outerHTML
-            }`,
+            'Expressions are not allowed as an attribute name:\n' +
+              reportPart(
+                {
+                  type: PartType.Attribute,
+                  name,
+                  node: element,
+                },
+                ERROR_MAKER,
+              ),
           );
         }
 
         if (value.includes(marker)) {
           throw new Error(
-            `Expressions inside an attribute must make up the entire attribute value: ${
-              (element.cloneNode() as Element).outerHTML
-            }`,
+            'Expressions inside an attribute must make up the entire attribute value:\n' +
+              reportPart(
+                {
+                  type: PartType.Attribute,
+                  name,
+                  node: element,
+                },
+                ERROR_MAKER,
+              ),
           );
         }
       }
@@ -424,9 +443,11 @@ function parseChildren(
         DEBUG: {
           if ((currentNode as Element).tagName.includes(marker.toUpperCase())) {
             throw new Error(
-              `Expressions are not allowed as a tag name: ${
-                (currentNode.cloneNode() as Element).outerHTML
-              }`,
+              'Expressions are not allowed as a tag name:\n' +
+                reportPart(
+                  { type: PartType.Element, node: currentNode as Element },
+                  ERROR_MAKER,
+                ),
             );
           }
         }
@@ -450,9 +471,11 @@ function parseChildren(
           DEBUG: {
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
-                `Expressions inside a comment must make up the entire comment value: <!--${
-                  (currentNode as Comment).data
-                }-->`,
+                'Expressions inside a comment must make up the entire comment value:\n' +
+                  reportPart(
+                    { type: PartType.Node, node: currentNode },
+                    ERROR_MAKER,
+                  ),
               );
             }
           }
