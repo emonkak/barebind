@@ -11,7 +11,7 @@ import {
   directiveTag,
   nameOf,
 } from '../baseTypes.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 export function live<T>(value: T): Live<T> {
   return new Live(value);
@@ -34,7 +34,7 @@ export class Live<T> implements Directive<Live<T>> {
         'Live directive must be used in an arbitrary property, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     return new LiveBinding(this, part);

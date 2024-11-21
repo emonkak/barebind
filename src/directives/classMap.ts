@@ -12,7 +12,7 @@ import {
   nameOf,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 export type ClassDeclaration = { [key: string]: boolean };
 
@@ -37,7 +37,7 @@ export class ClassMap implements Directive<ClassMap> {
         'ClassMap directive must be used in a "class" attribute, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     return new ClassMapBinding(this, part);

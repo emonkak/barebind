@@ -18,7 +18,7 @@ import {
   nameOf,
 } from '../baseTypes.js';
 import { BlockBinding } from '../bindings/block.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 export function component<TProps, TData, TContext>(
   component: ComponentType<TProps, TData, TContext>,
@@ -60,7 +60,7 @@ export class Component<TProps, TData, TContext>
         'Component directive must be used in a child node, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     // Component directive should be used with BlockBinding. Otherwise, updates

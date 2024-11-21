@@ -15,7 +15,7 @@ export function ensureDirective<
         ' directive, but got "' +
         nameOf(actualValue) +
         '". Consider using Either, Cached, or Keyed directive instead.\n' +
-        reportPart(part, actualValue),
+        reportPart(part, reportUsedValue(actualValue)),
     );
   }
 }
@@ -26,12 +26,12 @@ export function ensureNonDirective(value: unknown, part: Part): void {
       'The value must not be a directive, but got "' +
         nameOf(value) +
         '". Consider using Either, Cached, or Keyed directive instead.\n' +
-        reportPart(part, value),
+        reportPart(part, reportUsedValue(value)),
     );
   }
 }
 
-export function reportPart(part: Part, value: unknown): string {
+export function reportPart(part: Part, marker: string): string {
   let currentNode: Node | null = part.node;
   let before = '';
   let after = '';
@@ -61,7 +61,11 @@ export function reportPart(part: Part, value: unknown): string {
     after += closeTag(currentNode);
     complexity += getComplexity(currentNode);
   } while (complexity < 10);
-  return before + markPart(part, value) + after;
+  return before + markPart(part, marker) + after;
+}
+
+export function reportUsedValue(value: unknown): string {
+  return `[[${nameOf(value)} IS USED IN HERE!]]`;
 }
 
 function appendInsideTag(element: Element, contentToAppend: string): string {
@@ -118,34 +122,27 @@ function isSelfClosingTag(element: Element): boolean {
   return !element.outerHTML.endsWith(closeTag(element));
 }
 
-function markPart(part: Part, value: unknown): string {
+function markPart(part: Part, marker: string): string {
   switch (part.type) {
     case PartType.Attribute:
-      return appendInsideTag(
-        part.node,
-        unquotedAttribute(part.name, markValue(value)),
-      );
+      return appendInsideTag(part.node, unquotedAttribute(part.name, marker));
     case PartType.ChildNode:
-      return markValue(value) + toHTML(part.node);
+      return marker + toHTML(part.node);
     case PartType.Element:
-      return appendInsideTag(part.node, markValue(value));
+      return appendInsideTag(part.node, marker);
     case PartType.Property:
       return appendInsideTag(
         part.node,
-        unquotedAttribute('.' + part.name, markValue(value)),
+        unquotedAttribute('.' + part.name, marker),
       );
     case PartType.Event:
       return appendInsideTag(
         part.node,
-        unquotedAttribute('@' + part.name, markValue(value)),
+        unquotedAttribute('@' + part.name, marker),
       );
     case PartType.Node:
-      return markValue(value);
+      return marker;
   }
-}
-
-function markValue(value: unknown): string {
-  return `[[${nameOf(value)} IS USED IN HERE!]]`;
 }
 
 function openTag(element: Element): string {

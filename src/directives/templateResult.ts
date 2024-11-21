@@ -14,7 +14,7 @@ import {
   nameOf,
 } from '../baseTypes.js';
 import { BlockBinding } from '../bindings/block.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 export function eagerTemplateResult<
   const TData extends readonly any[],
@@ -74,7 +74,7 @@ export class EagerTemplateResult<
         'EagerTemplateResult directive must be used in a child node, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     return new TemplateResultBinding(this, part);
@@ -98,7 +98,7 @@ export class LazyTemplateResult<
         'LazyTemplateResult directive must be used in a child node, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     const binding = new TemplateResultBinding(this, part);

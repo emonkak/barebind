@@ -5,6 +5,7 @@ import {
   ensureDirective,
   ensureNonDirective,
   reportPart,
+  reportUsedValue,
 } from '../src/error.js';
 import { TextDirective } from './mocks.js';
 
@@ -67,7 +68,7 @@ describe('reportPart()', () => {
     } as const;
     const value = 'my value';
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<input type="text" class=[["my value" IS USED IN HERE!]]>`,
     );
 
@@ -81,7 +82,7 @@ describe('reportPart()', () => {
       createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
     );
   });
@@ -107,7 +108,7 @@ describe('reportPart()', () => {
       ]),
     );
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<!DOCTYPE html><html><head></head><body><div><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div></body></html>`,
     );
 
@@ -123,7 +124,7 @@ describe('reportPart()', () => {
       ]),
     );
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div id="foo"><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
     );
   });
@@ -136,7 +137,7 @@ describe('reportPart()', () => {
     } as const;
     const value = 'my value';
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `[["my value" IS USED IN HERE!]]<!---->`,
     );
 
@@ -150,7 +151,7 @@ describe('reportPart()', () => {
       createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div><span>foo</span><p>bar[["my value" IS USED IN HERE!]]<!----><!----></p><span>qux</span></div>`,
     );
   });
@@ -162,7 +163,7 @@ describe('reportPart()', () => {
     } as const;
     const value = 'my value';
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div [["my value" IS USED IN HERE!]]></div>`,
     );
 
@@ -176,7 +177,7 @@ describe('reportPart()', () => {
       createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div><span>foo</span><p>bar<div [["my value" IS USED IN HERE!]]></div><!----></p><span>qux</span></div>`,
     );
   });
@@ -189,7 +190,7 @@ describe('reportPart()', () => {
     } as const;
     const value = 'my value';
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<button type="button" @click=[["my value" IS USED IN HERE!]]></button>`,
     );
 
@@ -203,7 +204,7 @@ describe('reportPart()', () => {
       createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div><span>foo</span><p>bar<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!----></p><span>qux</span></div>`,
     );
   });
@@ -216,7 +217,9 @@ describe('reportPart()', () => {
     } as const;
     const value = 'my value';
 
-    expect(reportPart(part, value)).toBe(`[["my value" IS USED IN HERE!]]`);
+    expect(reportPart(part, reportUsedValue(value))).toBe(
+      `[["my value" IS USED IN HERE!]]`,
+    );
 
     createElement('div', {}, [
       createElement('span', {}, [document.createTextNode('foo')]),
@@ -228,7 +231,7 @@ describe('reportPart()', () => {
       createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div><span>foo</span><p>bar[["my value" IS USED IN HERE!]]<!----></p><span>qux</span></div>`,
     );
   });
@@ -241,7 +244,7 @@ describe('reportPart()', () => {
     } as const;
     const value = 'my value';
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<input type="text" .value=[["my value" IS USED IN HERE!]]>`,
     );
 
@@ -255,7 +258,7 @@ describe('reportPart()', () => {
       createElement('span', {}, [document.createTextNode('qux')]),
     ]);
 
-    expect(reportPart(part, value)).toBe(
+    expect(reportPart(part, reportUsedValue(value))).toBe(
       `<div><span>foo</span><p>bar<input type="text" .value=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
     );
   });

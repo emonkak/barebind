@@ -12,7 +12,7 @@ import {
   nameOf,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 export type StyleDeclaration = {
   [P in JSStyleProperties]?: string;
@@ -50,7 +50,7 @@ export class StyleMap implements Directive<StyleMap> {
         'StyleMap directive must be used in a "style" attribute, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     return new StyleMapBinding(this, part);

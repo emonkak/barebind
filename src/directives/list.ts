@@ -11,7 +11,7 @@ import {
   nameOf,
   resolveBinding,
 } from '../baseTypes.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 
@@ -70,7 +70,7 @@ export class List<TItem, TKey, TValue>
         'List directive must be used in a child node, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     return new ListBinding(this, part);

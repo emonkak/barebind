@@ -14,7 +14,7 @@ import {
   directiveTag,
   nameOf,
 } from '../baseTypes.js';
-import { ensureDirective, reportPart } from '../error.js';
+import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
 export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
 
@@ -39,7 +39,7 @@ export class Ref implements Directive<Ref> {
         'Ref directive must be used in a "ref" attribute, but it is used here in ' +
           nameOf(context.block?.binding.value ?? 'ROOT') +
           ':\n' +
-          reportPart(part, this),
+          reportPart(part, reportUsedValue(this)),
       );
     }
     return new RefBinding(this, part);
