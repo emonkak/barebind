@@ -12,12 +12,12 @@ import {
 
 describe('keyed()', () => {
   it('should construct a new Keyed directive', () => {
-    const key = 'foo';
     const value = new TextDirective();
-    const keyedValue = keyed(key, value);
+    const key = 'foo';
+    const keyedValue = keyed(value, key);
 
-    expect(keyedValue.key).toBe(key);
     expect(keyedValue.value).toBe(value);
+    expect(keyedValue.key).toBe(key);
   });
 });
 
@@ -38,7 +38,7 @@ describe('Keyed', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', new TextDirective('bar'));
+      const value = keyed(new TextDirective('foo'), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -67,7 +67,7 @@ describe('Keyed', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', new TextDirective());
+      const value = keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -100,7 +100,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', new TextDirective());
+      const value = keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -125,7 +125,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = new Keyed('foo', new TextDirective());
+      const value = new Keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -151,8 +151,8 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = new Keyed('foo', new TextDirective());
-      const value2 = new Keyed('bar', new TextDirective());
+      const value1 = new Keyed(new TextDirective(), 'foo');
+      const value2 = new Keyed(new TextDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -181,7 +181,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', new TextDirective());
+      const value = keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -204,7 +204,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', () => new TextDirective());
+      const value = keyed(() => new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -228,7 +228,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = keyed('foo', () => new TextDirective());
+      const value = keyed(() => new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

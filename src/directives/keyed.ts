@@ -10,52 +10,52 @@ import {
 } from '../baseTypes.js';
 import { ensureDirective } from '../error.js';
 
-export function keyed<TKey, TValue>(
-  key: TKey,
+export function keyed<TValue, TKey>(
   value: TValue,
-): Keyed<TKey, TValue> {
-  return new Keyed(key, value);
+  key: TKey,
+): Keyed<TValue, TKey> {
+  return new Keyed(value, key);
 }
 
-export class Keyed<TKey, TValue> implements Directive<Keyed<TKey, TValue>> {
-  private readonly _key: TKey;
-
+export class Keyed<TValue, TKey> implements Directive<Keyed<TValue, TKey>> {
   private readonly _value: TValue;
 
-  constructor(key: TKey, value: TValue) {
-    this._key = key;
-    this._value = value;
-  }
+  private readonly _key: TKey;
 
-  get key(): TKey {
-    return this._key;
+  constructor(value: TValue, key: TKey) {
+    this._value = value;
+    this._key = key;
   }
 
   get value(): TValue {
     return this._value;
   }
 
+  get key(): TKey {
+    return this._key;
+  }
+
   get [Symbol.toStringTag](): string {
-    return `Keyed(${nameOf(this._key)}, ${nameOf(this._value)})`;
+    return `Keyed(${nameOf(this._value)}, ${nameOf(this._key)})`;
   }
 
   [directiveTag](
     part: Part,
     context: DirectiveContext,
-  ): KeyedBinding<TKey, TValue> {
+  ): KeyedBinding<TValue, TKey> {
     return new KeyedBinding(this, part, context);
   }
 }
 
-export class KeyedBinding<TKey, TValue>
-  implements Binding<Keyed<TKey, TValue>>
+export class KeyedBinding<TValue, TKey>
+  implements Binding<Keyed<TValue, TKey>>
 {
-  private _value: Keyed<TKey, TValue>;
+  private _value: Keyed<TValue, TKey>;
 
   private _binding: Binding<TValue>;
 
   constructor(
-    value: Keyed<TKey, TValue>,
+    value: Keyed<TValue, TKey>,
     part: Part,
     context: DirectiveContext,
   ) {
@@ -63,7 +63,7 @@ export class KeyedBinding<TKey, TValue>
     this._binding = resolveBinding(value.value, part, context);
   }
 
-  get value(): Keyed<TKey, TValue> {
+  get value(): Keyed<TValue, TKey> {
     return this._value;
   }
 
@@ -87,7 +87,7 @@ export class KeyedBinding<TKey, TValue>
     this._binding.connect(context);
   }
 
-  bind(newValue: Keyed<TKey, TValue>, context: UpdateContext): void {
+  bind(newValue: Keyed<TValue, TKey>, context: UpdateContext): void {
     DEBUG: {
       ensureDirective(Keyed, newValue, this._binding.part);
     }
