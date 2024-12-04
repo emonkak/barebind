@@ -13,7 +13,7 @@ export class RelativeURL {
 
   private readonly _hash: string;
 
-  static from(value: RelativeURL | URL | LocationLike | string): RelativeURL {
+  static from(value: string | RelativeURL | URL | LocationLike): RelativeURL {
     if (value instanceof RelativeURL) {
       return value;
     }
@@ -33,7 +33,7 @@ export class RelativeURL {
 
   static fromString(
     urlString: string,
-    base: string | RelativeURL = '',
+    base: string | LocationLike = '',
   ): RelativeURL {
     // SAFETY: Relative URLs can always be safely initialized.
     const baseURL = new URL(
@@ -81,7 +81,7 @@ export class RelativeURL {
     return this._pathname + this.search + this._hash;
   }
 
-  toURL(base: URL | string): URL {
+  toURL(base: string | URL): URL {
     return new URL(this.toString(), base);
   }
 }

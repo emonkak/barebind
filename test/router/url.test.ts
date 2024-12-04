@@ -42,7 +42,11 @@ describe('RelativeURL', () => {
       expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
     });
 
-    it.each([['/foo'], [new RelativeURL('/foo')]])(
+    it.each([
+      ['/foo'],
+      [new RelativeURL('/foo')],
+      [new URL('/foo', 'file://')],
+    ])(
       'should construct a new RelativeURL from the String with base URL',
       (base) => {
         const url = RelativeURL.fromString('?bar=123#baz', base);
