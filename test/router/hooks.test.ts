@@ -16,7 +16,7 @@ import {
   currentLocation,
   hashLocation,
   resetScrollPosition,
-} from '../../src/router/location.js';
+} from '../../src/router/hooks.js';
 import { RelativeURL } from '../../src/router/url.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock } from '../mocks.js';
