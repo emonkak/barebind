@@ -179,7 +179,7 @@ export function createBrowserClickHandler({
 }: LocationActions): (event: MouseEvent) => void {
   return (event) => {
     if (
-      isPressedModifierKeys(event) ||
+      anyModifierKeyPressed(event) ||
       event.button !== 0 ||
       event.defaultPrevented
     ) {
@@ -259,7 +259,7 @@ export function createHashClickHandler({
 }: LocationActions): (event: MouseEvent) => void {
   return (event) => {
     if (
-      isPressedModifierKeys(event) ||
+      anyModifierKeyPressed(event) ||
       event.button !== 0 ||
       event.defaultPrevented
     ) {
@@ -310,6 +310,10 @@ export function resetScrollPosition(locationState: LocationState): void {
   scrollTo(0, 0);
 }
 
+function anyModifierKeyPressed(event: MouseEvent): boolean {
+  return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
+}
+
 function isInternalLink(element: Element): element is HTMLAnchorElement {
   return (
     element.tagName === 'A' &&
@@ -318,10 +322,6 @@ function isInternalLink(element: Element): element is HTMLAnchorElement {
     !element.hasAttribute('download') &&
     element.getAttribute('rel') !== 'external'
   );
-}
-
-function isPressedModifierKeys(event: MouseEvent): boolean {
-  return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
 }
 
 function trimHash(hash: string): string {
