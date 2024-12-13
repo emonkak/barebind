@@ -44,11 +44,10 @@ export function getDefaultScheduler({
         channel.port1.onmessage = () => callback();
         channel.port2.postMessage(null);
         return;
-      } else if (priority === 'background') {
-        if (typeof requestIdleCallback === 'function') {
-          requestIdleCallback(() => callback());
-          return;
-        }
+      }
+      if (priority === 'background' && typeof requestIdleCallback === 'function') {
+        requestIdleCallback(() => callback());
+        return;
       }
       setTimeout(callback);
     };
