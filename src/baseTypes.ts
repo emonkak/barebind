@@ -1,6 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-export const directiveTag = Symbol('Directive');
+export const directiveTag: unique symbol = Symbol('Directive');
 
 export interface Binding<TValue, TContext = unknown> {
   get value(): TValue;

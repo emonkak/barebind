@@ -22,7 +22,7 @@ import {
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
 
-export const usableTag = Symbol('Usable');
+export const usableTag: unique symbol = Symbol('Usable');
 
 export type Usable<TResult> = UsableObject<TResult> | UsableCallback<TResult>;
 
