@@ -194,12 +194,12 @@ export class RenderContext {
     return this._host.getTemplate(strings, values, 'html').wrapInResult(values);
   }
 
-  isFirstRender(): boolean {
-    return this._hooks.at(-1)?.type !== HookType.Finalizer;
+  isFinalized(): boolean {
+    return this._hooks[this._hookIndex - 1]?.type === HookType.Finalizer;
   }
 
-  isRendering(): boolean {
-    return this._hooks[this._hookIndex - 1]?.type !== HookType.Finalizer;
+  isFirstRender(): boolean {
+    return this._hooks.at(-1)?.type !== HookType.Finalizer;
   }
 
   math<TData extends readonly any[]>(

@@ -295,6 +295,26 @@ describe('RenderContext', () => {
     });
   });
 
+  describe('.isFinalized()', () => {
+    it('should check whether the context is finalized', () => {
+      let context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      expect(context.isFinalized()).toBe(false);
+      context.finalize();
+      expect(context.isFinalized()).toBe(true);
+
+      context = context.clone();
+
+      expect(context.isFinalized()).toBe(false);
+      context.finalize();
+      expect(context.isFinalized()).toBe(true);
+    });
+  });
+
   describe('.isFirstRender()', () => {
     it('should check whether the render is the first one', () => {
       let context = new RenderContext(
@@ -312,26 +332,6 @@ describe('RenderContext', () => {
       expect(context.isFirstRender()).toBe(false);
       context.finalize();
       expect(context.isFirstRender()).toBe(false);
-    });
-  });
-
-  describe('.isRendering()', () => {
-    it('should check whether the render is in progress', () => {
-      let context = new RenderContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      expect(context.isRendering()).toBe(true);
-      context.finalize();
-      expect(context.isRendering()).toBe(false);
-
-      context = context.clone();
-
-      expect(context.isRendering()).toBe(true);
-      context.finalize();
-      expect(context.isRendering()).toBe(false);
     });
   });
 
