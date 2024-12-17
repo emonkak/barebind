@@ -401,9 +401,10 @@ export class RenderContext {
         state:
           typeof initialState === 'function' ? initialState() : initialState,
         dispatch: (action: TAction, priority?: TaskPriority) => {
-          const nextState = reducer(hook.state, action);
-          if (!Object.is(hook.state, nextState)) {
-            hook.state = nextState;
+          const oldState = hook.state;
+          const newState = reducer(oldState, action);
+          if (!Object.is(oldState, newState)) {
+            hook.state = newState;
             this.forceUpdate(priority);
           }
         },
