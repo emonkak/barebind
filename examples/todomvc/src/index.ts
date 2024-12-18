@@ -9,8 +9,7 @@ const updater = new ConcurrentUpdater();
 const root = createRoot(
   component(App, { state: new TodoState() }),
   document.body,
-  host,
-  updater,
+  { host, updater },
 );
 
 root.mount();

@@ -15,7 +15,7 @@ describe('createRoot()', () => {
 
     const flushUpdateSpy = vi.spyOn(updater, 'flushUpdate');
 
-    const root = createRoot(value1, container, host, updater);
+    const root = createRoot(value1, container, { host, updater });
     root.mount();
     await updater.waitForUpdate();
 

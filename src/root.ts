@@ -15,11 +15,15 @@ export interface Root<T> {
   update(value: T): void;
 }
 
+export interface RootContext<TContext> {
+  readonly host: RenderHost<TContext>;
+  readonly updater: Updater<TContext>;
+}
+
 export function createRoot<TValue, TContext>(
   value: TValue,
   container: Node,
-  host: RenderHost<TContext>,
-  updater: Updater<TContext>,
+  { host, updater }: RootContext<TContext>,
 ): Root<TValue> {
   const part = {
     type: PartType.ChildNode,

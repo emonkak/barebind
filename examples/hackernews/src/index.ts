@@ -13,8 +13,7 @@ const root = createRoot(
     userState: new UserState(),
   }),
   document.body,
-  host,
-  updater,
+  { host, updater },
 );
 
 root.mount();
