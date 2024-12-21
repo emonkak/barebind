@@ -301,17 +301,12 @@ export class UpdateContext<TContext = unknown> {
   }
 }
 
-export function createUpdateQueue<TContext>(
-  blocks: Block<TContext>[] = [],
-  mutationEffects: Effect[] = [],
-  layoutEffects: Effect[] = [],
-  passiveEffects: Effect[] = [],
-): UpdateQueue<TContext> {
+export function createUpdateQueue<TContext>(): UpdateQueue<TContext> {
   return {
-    blocks,
-    mutationEffects,
-    layoutEffects,
-    passiveEffects,
+    blocks: [],
+    mutationEffects: [],
+    layoutEffects: [],
+    passiveEffects: [],
   };
 }
 

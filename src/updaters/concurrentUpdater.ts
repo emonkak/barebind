@@ -111,7 +111,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         async () => {
           try {
-            const queue = createUpdateQueue([block]);
+            const queue = createUpdateQueue();
+            queue.blocks.push(block);
             await this.flushUpdate(queue, host);
           } finally {
             this._pendingTasks.value--;
