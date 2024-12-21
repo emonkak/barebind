@@ -12,12 +12,15 @@ import {
 import { EagerTemplateResult } from '../directives/templateResult.js';
 
 export class ChildTemplate<T> implements Template<readonly [T]> {
-  render(data: readonly [T], context: DirectiveContext): ValueTemplateView<T> {
+  render(
+    values: readonly [T],
+    context: DirectiveContext,
+  ): ValueTemplateView<T> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
-    const value = data[0];
+    const value = values[0];
     const binding = resolveBinding(value, part, context);
     DEBUG: {
       part.node.data = nameOf(value);
@@ -29,18 +32,21 @@ export class ChildTemplate<T> implements Template<readonly [T]> {
     return this === other;
   }
 
-  wrapInResult(data: readonly [T]): EagerTemplateResult<readonly [T]> {
-    return new EagerTemplateResult(this, data);
+  wrapInResult(values: readonly [T]): EagerTemplateResult<readonly [T]> {
+    return new EagerTemplateResult(this, values);
   }
 }
 
 export class TextTemplate<T> implements Template<readonly [T]> {
-  render(data: readonly [T], context: DirectiveContext): ValueTemplateView<T> {
+  render(
+    values: readonly [T],
+    context: DirectiveContext,
+  ): ValueTemplateView<T> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
-    const binding = resolveBinding(data[0], part, context);
+    const binding = resolveBinding(values[0], part, context);
     return new ValueTemplateView(binding);
   }
 
@@ -48,8 +54,8 @@ export class TextTemplate<T> implements Template<readonly [T]> {
     return this === other;
   }
 
-  wrapInResult(data: readonly [T]): EagerTemplateResult<readonly [T]> {
-    return new EagerTemplateResult(this, data);
+  wrapInResult(values: readonly [T]): EagerTemplateResult<readonly [T]> {
+    return new EagerTemplateResult(this, values);
   }
 }
 
@@ -76,14 +82,14 @@ export class ValueTemplateView<T> implements TemplateView<readonly [T]> {
     this._binding.connect(context);
   }
 
-  bind(data: readonly [T], context: UpdateContext): void {
+  bind(values: readonly [T], context: UpdateContext): void {
     const binding = this._binding;
     DEBUG: {
       if (binding.part.type === PartType.ChildNode) {
-        binding.part.node.data = nameOf(data[0]);
+        binding.part.node.data = nameOf(values[0]);
       }
     }
-    binding.bind(data[0], context);
+    binding.bind(values[0], context);
   }
 
   unbind(context: UpdateContext): void {

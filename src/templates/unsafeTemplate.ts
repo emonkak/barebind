@@ -26,7 +26,7 @@ export class UnsafeTemplate implements Template<readonly []> {
     return this._mode;
   }
 
-  render(_data: readonly [], _context: DirectiveContext): UnsafeTemplateView {
+  render(_values: readonly [], _context: DirectiveContext): UnsafeTemplateView {
     const template = document.createElement('template');
     if (this._mode === 'math' || this._mode === 'svg') {
       template.innerHTML =
@@ -49,8 +49,8 @@ export class UnsafeTemplate implements Template<readonly []> {
     );
   }
 
-  wrapInResult(data: readonly []): LazyTemplateResult<readonly []> {
-    return new LazyTemplateResult(this, data);
+  wrapInResult(values: readonly []): LazyTemplateResult<readonly []> {
+    return new LazyTemplateResult(this, values);
   }
 }
 
@@ -75,7 +75,7 @@ export class UnsafeTemplateView implements TemplateView<readonly []> {
 
   connect(_context: UpdateContext): void {}
 
-  bind(_data: readonly [], _context: UpdateContext): void {}
+  bind(_values: readonly [], _context: UpdateContext): void {}
 
   unbind(_context: UpdateContext): void {}
 

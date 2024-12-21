@@ -347,7 +347,7 @@ describe('TaggedTemplate', () => {
 
   describe('.render()', () => {
     it('should create a new TaggedTemplateView', () => {
-      const { template, data } = html`
+      const { template, values } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
@@ -356,12 +356,14 @@ describe('TaggedTemplate', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
       const context = new UpdateContext(host, updater, new MockBlock());
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       expect(context.isPending()).toBe(false);
       expect(view).toBeInstanceOf(TaggedTemplateView);
-      expect(view.bindings).toHaveLength(data.length);
-      expect(view.bindings.map((binding) => binding.value)).toStrictEqual(data);
+      expect(view.bindings).toHaveLength(values.length);
+      expect(view.bindings.map((binding) => binding.value)).toStrictEqual(
+        values,
+      );
       expect(view.bindings[0]).toBeInstanceOf(AttributeBinding);
       expect(view.bindings[0]?.part).toMatchObject({
         type: PartType.Attribute,
@@ -457,8 +459,8 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const { template, data } = html`${new TextDirective('foo')}`;
-      const view = template.render(data, context);
+      const { template, values } = html`${new TextDirective('foo')}`;
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -468,7 +470,7 @@ describe('TaggedTemplate', () => {
       expect(view).toBeInstanceOf(TaggedTemplateView);
       expect(view.bindings).toHaveLength(1);
       expect(view.bindings[0]).toBeInstanceOf(TextBinding);
-      expect(view.bindings[0]!.value).toBe(data[0]);
+      expect(view.bindings[0]!.value).toBe(values[0]);
       expect(view.childNodes).toStrictEqual([view.bindings[0]!.part.node]);
       expect(view.startNode).toBeInstanceOf(Text);
       expect(view.startNode!.nodeValue).toBe('foo');
@@ -503,12 +505,12 @@ describe('TaggedTemplate', () => {
 
   describe('.wrapInResult()', () => {
     it('should wrap this template in LazyTemplateResult', () => {
-      const { template, data } = html`<div>${'foo'}</div>`;
-      const result = template.wrapInResult(data);
+      const { template, values } = html`<div>${'foo'}</div>`;
+      const result = template.wrapInResult(values);
 
       expect(result).toBeInstanceOf(LazyTemplateResult);
       expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
+      expect(result.values).toBe(values);
     });
   });
 });
@@ -522,13 +524,13 @@ describe('TaggedTemplateView', () => {
         new MockBlock(),
       );
 
-      const { template, data } = html`
+      const { template, values } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
           <input type="text" .value=${'baz'} @onchange=${() => {}} ${{ class: 'qux' }}><span>${new TextDirective()}</span>
         </div>
       `;
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       view.connect(context);
       context.flushUpdate();
@@ -551,10 +553,10 @@ describe('TaggedTemplateView', () => {
         new MockBlock(),
       );
 
-      const { template, data } = html`
+      const { template, values } = html`
         <div class="${'foo'}">${'bar'}</div><!--${'baz'}-->
       `;
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       view.connect(context);
       context.flushUpdate();
@@ -580,10 +582,10 @@ describe('TaggedTemplateView', () => {
         new MockBlock(),
       );
 
-      const { template, data } = html`
+      const { template, values } = html`
         <p>Count: ${0}</p>
       `;
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       expect(() => {
         view.bind([] as any, context);
@@ -604,10 +606,10 @@ describe('TaggedTemplateView', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const { template, data } = html`
+      const { template, values } = html`
         ${'foo'}<div class=${'bar'}>${'baz'}</div><!--${'qux'}-->
       `;
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -662,10 +664,10 @@ describe('TaggedTemplateView', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const { template, data } = html`
+      const { template, values } = html`
         ${'foo'}<div></div><!--${'baz'}-->
       `;
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -714,7 +716,7 @@ describe('TaggedTemplateView', () => {
       );
 
       const value = new TextDirective();
-      const { template, data } = html`
+      const { template, values } = html`
         <div>${value}</div>
       `;
       let disconnects = 0;
@@ -728,7 +730,7 @@ describe('TaggedTemplateView', () => {
         });
         return binding;
       });
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       expect(disconnects).toBe(0);
 
@@ -751,10 +753,10 @@ describe('TaggedTemplateView', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const { template, data } = html`
+      const { template, values } = html`
         <p>Hello, ${'World'}!</p>
       `;
-      const view = template.render(data, context);
+      const view = template.render(values, context);
 
       container.appendChild(part.node);
       view.connect(context);
@@ -788,33 +790,33 @@ describe('createMarker()', () => {
   });
 });
 
-function html<TData extends readonly any[]>(
+function html<TValues extends readonly any[]>(
   strings: TemplateStringsArray,
-  ...data: TData
-): { template: TaggedTemplate<TData>; data: TData } {
+  ...values: TValues
+): { template: TaggedTemplate<TValues>; values: TValues } {
   return {
-    template: TaggedTemplate.parse(strings, data, MARKER, 'html'),
-    data,
+    template: TaggedTemplate.parse(strings, values, MARKER, 'html'),
+    values,
   };
 }
 
-function math<const TData extends readonly any[]>(
+function math<const TValues extends readonly any[]>(
   strings: TemplateStringsArray,
-  ...data: TData
-): { template: TaggedTemplate<TData>; data: TData } {
+  ...values: TValues
+): { template: TaggedTemplate<TValues>; values: TValues } {
   return {
-    template: TaggedTemplate.parse(strings, data, MARKER, 'math'),
-    data,
+    template: TaggedTemplate.parse(strings, values, MARKER, 'math'),
+    values,
   };
 }
 
-function svg<const TData extends readonly any[]>(
+function svg<const TValues extends readonly any[]>(
   strings: TemplateStringsArray,
-  ...data: TData
-): { template: TaggedTemplate<TData>; data: TData } {
+  ...values: TValues
+): { template: TaggedTemplate<TValues>; values: TValues } {
   return {
-    template: TaggedTemplate.parse(strings, data, MARKER, 'svg'),
-    data,
+    template: TaggedTemplate.parse(strings, values, MARKER, 'svg'),
+    values,
   };
 }
 

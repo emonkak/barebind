@@ -51,7 +51,7 @@ describe('ClientRenderHost', () => {
     it('should create a new MockRenderContext', () => {
       const result: TemplateResult<readonly [], RenderContext> = {
         template: new MockTemplate(),
-        data: [],
+        values: [],
       };
       const props = {};
       const type = vi.fn(() => result);
@@ -420,9 +420,9 @@ describe('ClientRenderHost', () => {
   });
 });
 
-function tmpl<TData extends readonly any[]>(
+function tmpl<TValues extends readonly any[]>(
   strings: TemplateStringsArray,
-  ...values: TData
-): { strings: TemplateStringsArray; values: TData } {
+  ...values: TValues
+): { strings: TemplateStringsArray; values: TValues } {
   return { strings, values };
 }

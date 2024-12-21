@@ -51,7 +51,7 @@ describe('RenderContext', () => {
         context.dynamicHTML`<${literal('div')}>Hello, ${'World'}!</${literal('div')}>`,
       ).toStrictEqual({
         template,
-        data: ['World'],
+        values: ['World'],
       });
       expect(processLiteralsSpy).toHaveBeenCalledOnce();
       expect(processLiteralsSpy).toHaveBeenCalledWith(
@@ -85,7 +85,7 @@ describe('RenderContext', () => {
         context.dynamicMath`<${literal('mi')}>${'x'}</${literal('mi')}>`,
       ).toStrictEqual({
         template,
-        data: ['x'],
+        values: ['x'],
       });
       expect(processLiteralsSpy).toHaveBeenCalledOnce();
       expect(processLiteralsSpy).toHaveBeenCalledWith(
@@ -119,7 +119,7 @@ describe('RenderContext', () => {
         context.dynamicSVG`<${literal('text')}>Hello, ${'World'}!</${literal('text')}>`,
       ).toStrictEqual({
         template,
-        data: ['World'],
+        values: ['World'],
       });
       expect(processLiteralsSpy).toHaveBeenCalledOnce();
       expect(processLiteralsSpy).toHaveBeenCalledWith(
@@ -284,7 +284,7 @@ describe('RenderContext', () => {
 
       expect(context.html`<div>Hello, ${'World'}!</div>`).toStrictEqual({
         template,
-        data: ['World'],
+        values: ['World'],
       });
       expect(getTemplateSpy).toHaveBeenCalledOnce();
       expect(getTemplateSpy).toHaveBeenCalledWith(
@@ -350,7 +350,7 @@ describe('RenderContext', () => {
 
       expect(context.math`<mi>${'x'}</mi>`).toStrictEqual({
         template,
-        data: ['x'],
+        values: ['x'],
       });
       expect(getTemplateSpy).toHaveBeenCalledOnce();
       expect(getTemplateSpy).toHaveBeenCalledWith(
@@ -393,7 +393,7 @@ describe('RenderContext', () => {
 
       expect(context.svg`<text>Hello, ${'World'}!</text>`).toStrictEqual({
         template,
-        data: ['World'],
+        values: ['World'],
       });
       expect(getTemplateSpy).toHaveBeenCalledOnce();
       expect(getTemplateSpy).toHaveBeenCalledWith(
@@ -470,7 +470,10 @@ describe('RenderContext', () => {
         .spyOn(context.host, 'getUnsafeTemplate')
         .mockReturnValue(template);
 
-      expect(context.unsafeHTML(content)).toStrictEqual({ template, data: [] });
+      expect(context.unsafeHTML(content)).toStrictEqual({
+        template,
+        values: [],
+      });
       expect(getUnsafeTemplateSpy).toHaveBeenCalledOnce();
       expect(getUnsafeTemplateSpy).toHaveBeenCalledWith(content, 'html');
     });
@@ -490,7 +493,10 @@ describe('RenderContext', () => {
         .spyOn(context.host, 'getUnsafeTemplate')
         .mockReturnValue(template);
 
-      expect(context.unsafeMath(content)).toStrictEqual({ template, data: [] });
+      expect(context.unsafeMath(content)).toStrictEqual({
+        template,
+        values: [],
+      });
       expect(getUnsafeTemplateSpy).toHaveBeenCalledOnce();
       expect(getUnsafeTemplateSpy).toHaveBeenCalledWith(content, 'math');
     });
@@ -510,7 +516,10 @@ describe('RenderContext', () => {
         .spyOn(context.host, 'getUnsafeTemplate')
         .mockReturnValue(template);
 
-      expect(context.unsafeSVG(content)).toStrictEqual({ template, data: [] });
+      expect(context.unsafeSVG(content)).toStrictEqual({
+        template,
+        values: [],
+      });
       expect(getUnsafeTemplateSpy).toHaveBeenCalledOnce();
       expect(getUnsafeTemplateSpy).toHaveBeenCalledWith(content, 'svg');
     });

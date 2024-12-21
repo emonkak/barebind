@@ -35,10 +35,10 @@ export interface Block<TContext = unknown> {
 // Re-export TaskPriority in Scheduler API.
 export type TaskPriority = globalThis.TaskPriority;
 
-export type ComponentType<TProps, TData, TContext> = (
+export type ComponentType<TProps, TValues, TContext> = (
   props: TProps,
   context: TContext,
-) => TemplateResult<TData, TContext>;
+) => TemplateResult<TValues, TContext>;
 
 export interface UpdateQueue<TContext> {
   blocks: Block<TContext>[];
@@ -48,21 +48,21 @@ export interface UpdateQueue<TContext> {
 }
 
 export interface RenderHost<TContext> {
-  flushComponent<TProps, TData>(
-    type: ComponentType<TProps, TData, TContext>,
+  flushComponent<TProps, TValues>(
+    type: ComponentType<TProps, TValues, TContext>,
     props: TProps,
     hooks: Hook[],
     updater: Updater<TContext>,
     block: Block<TContext>,
     queue: UpdateQueue<TContext>,
-  ): TemplateResult<TData, TContext>;
+  ): TemplateResult<TValues, TContext>;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
-  getTemplate<TData extends readonly any[]>(
+  getTemplate<TValues extends readonly any[]>(
     strings: readonly string[],
-    data: TData,
+    values: TValues,
     mode: TemplateMode,
-  ): Template<TData, TContext>;
+  ): Template<TValues, TContext>;
   getHostName(): string;
   getScopedValue(key: unknown, block: Block<TContext>): unknown;
   getUnsafeTemplate(
@@ -91,25 +91,25 @@ export interface Updater<TContext> {
   waitForUpdate(): Promise<void>;
 }
 
-export interface Template<TData, TContext = unknown> {
+export interface Template<TValues, TContext = unknown> {
   render(
-    data: TData,
+    values: TValues,
     context: DirectiveContext<TContext>,
-  ): TemplateView<TData, TContext>;
+  ): TemplateView<TValues, TContext>;
   isSameTemplate(other: Template<unknown, unknown>): boolean;
-  wrapInResult(data: TData): TemplateResult<TData, TContext>;
+  wrapInResult(values: TValues): TemplateResult<TValues, TContext>;
 }
 
-export interface TemplateResult<TData = unknown, TContext = unknown> {
-  get template(): Template<TData, TContext>;
-  get data(): TData;
+export interface TemplateResult<TValues = unknown, TContext = unknown> {
+  get template(): Template<TValues, TContext>;
+  get values(): TValues;
 }
 
-export interface TemplateView<TData, TContext = unknown> {
+export interface TemplateView<TValues, TContext = unknown> {
   get startNode(): ChildNode | null;
   get endNode(): ChildNode | null;
   connect(context: UpdateContext<TContext>): void;
-  bind(data: TData, context: UpdateContext<TContext>): void;
+  bind(values: TValues, context: UpdateContext<TContext>): void;
   unbind(context: UpdateContext<TContext>): void;
   disconnect(context: UpdateContext<TContext>): void;
   mount(part: ChildNodePart): void;
@@ -301,11 +301,11 @@ export class UpdateContext<TContext = unknown> {
     this.queue.passiveEffects.push(effect);
   }
 
-  flushComponent<TProps, TData>(
-    type: ComponentType<TProps, TData, TContext>,
+  flushComponent<TProps, TValues>(
+    type: ComponentType<TProps, TValues, TContext>,
     props: TProps,
     hooks: Hook[],
-  ): TemplateResult<TData, TContext> {
+  ): TemplateResult<TValues, TContext> {
     return this.host.flushComponent(
       type,
       props,

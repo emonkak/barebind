@@ -1,20 +1,20 @@
 import type { DirectiveContext, Template, TemplateView } from '../baseTypes.js';
 import { LazyTemplateResult } from '../directives/templateResult.js';
 
-type State<TData, TContext> =
-  | { initialized: false; factory: () => Template<TData, TContext> }
-  | { initialized: true; template: Template<TData, TContext> };
+type State<TValues, TContext> =
+  | { initialized: false; factory: () => Template<TValues, TContext> }
+  | { initialized: true; template: Template<TValues, TContext> };
 
-export class LazyTemplate<TData, TContext>
-  implements Template<TData, TContext>
+export class LazyTemplate<TValues, TContext>
+  implements Template<TValues, TContext>
 {
-  private _state: State<TData, TContext>;
+  private _state: State<TValues, TContext>;
 
-  constructor(factory: () => Template<TData, TContext>) {
+  constructor(factory: () => Template<TValues, TContext>) {
     this._state = { initialized: false, factory };
   }
 
-  get template(): Template<TData, TContext> {
+  get template(): Template<TValues, TContext> {
     if (!this._state.initialized) {
       const { factory } = this._state;
       this._state = { initialized: true, template: factory() };
@@ -23,17 +23,17 @@ export class LazyTemplate<TData, TContext>
   }
 
   render(
-    data: TData,
+    values: TValues,
     context: DirectiveContext<TContext>,
-  ): TemplateView<TData, TContext> {
-    return this.template.render(data, context);
+  ): TemplateView<TValues, TContext> {
+    return this.template.render(values, context);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
   }
 
-  wrapInResult(data: TData): LazyTemplateResult<TData, TContext> {
-    return new LazyTemplateResult(this, data);
+  wrapInResult(values: TValues): LazyTemplateResult<TValues, TContext> {
+    return new LazyTemplateResult(this, values);
   }
 }

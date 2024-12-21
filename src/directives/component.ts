@@ -20,26 +20,26 @@ import {
 import { BlockBinding } from '../bindings/block.js';
 import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
 
-export function component<TProps, TData, TContext>(
-  component: ComponentType<TProps, TData, TContext>,
+export function component<TProps, TValues, TContext>(
+  component: ComponentType<TProps, TValues, TContext>,
   props: TProps,
-): Component<TProps, TData, TContext> {
+): Component<TProps, TValues, TContext> {
   return new Component(component, props);
 }
 
-export class Component<TProps, TData, TContext>
-  implements Directive<Component<TProps, TData, TContext>, TContext>
+export class Component<TProps, TValues, TContext>
+  implements Directive<Component<TProps, TValues, TContext>, TContext>
 {
-  private readonly _type: ComponentType<TProps, TData, TContext>;
+  private readonly _type: ComponentType<TProps, TValues, TContext>;
 
   private readonly _props: TProps;
 
-  constructor(type: ComponentType<TProps, TData, TContext>, props: TProps) {
+  constructor(type: ComponentType<TProps, TValues, TContext>, props: TProps) {
     this._type = type;
     this._props = props;
   }
 
-  get type(): ComponentType<TProps, TData, TContext> {
+  get type(): ComponentType<TProps, TValues, TContext> {
     return this._type;
   }
 
@@ -54,7 +54,7 @@ export class Component<TProps, TData, TContext>
   [directiveTag](
     part: Part,
     context: DirectiveContext,
-  ): BlockBinding<Component<TProps, TData, TContext>, TContext> {
+  ): BlockBinding<Component<TProps, TValues, TContext>, TContext> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here in ' +
@@ -69,10 +69,10 @@ export class Component<TProps, TData, TContext>
   }
 }
 
-export class ComponentBinding<TProps, TData, TContext>
-  implements Binding<Component<TProps, TData, TContext>, TContext>, Effect
+export class ComponentBinding<TProps, TValues, TContext>
+  implements Binding<Component<TProps, TValues, TContext>, TContext>, Effect
 {
-  private _value: Component<TProps, TData, TContext>;
+  private _value: Component<TProps, TValues, TContext>;
 
   private readonly _part: ChildNodePart;
 
@@ -91,12 +91,15 @@ export class ComponentBinding<TProps, TData, TContext>
 
   private _status = CommitStatus.Committed;
 
-  constructor(value: Component<TProps, TData, TContext>, part: ChildNodePart) {
+  constructor(
+    value: Component<TProps, TValues, TContext>,
+    part: ChildNodePart,
+  ) {
     this._value = value;
     this._part = part;
   }
 
-  get value(): Component<TProps, TData, TContext> {
+  get value(): Component<TProps, TValues, TContext> {
     return this._value;
   }
 
@@ -117,7 +120,7 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   bind(
-    newValue: Component<TProps, TData, TContext>,
+    newValue: Component<TProps, TValues, TContext>,
     context: UpdateContext<TContext>,
   ): void {
     DEBUG: {
@@ -188,11 +191,15 @@ export class ComponentBinding<TProps, TData, TContext>
   }
 
   private _performRender(
-    component: Component<TProps, TData, TContext>,
+    component: Component<TProps, TValues, TContext>,
     context: UpdateContext<TContext>,
   ) {
     const { type, props } = component;
-    const { template, data } = context.flushComponent(type, props, this._hooks);
+    const { template, values } = context.flushComponent(
+      type,
+      props,
+      this._hooks,
+    );
 
     if (this._pendingView !== null) {
       // Safety: If a pending view exists, there will always be a memoized
@@ -207,9 +214,9 @@ export class ComponentBinding<TProps, TData, TContext>
           this._status = CommitStatus.Committed;
         }
 
-        this._pendingView.bind(data, context);
+        this._pendingView.bind(values, context);
       } else {
-        // Here the template has been changed, so first, we unbind data from the
+        // Here the template has been changed, so first, we unbind values from the
         // current view.
         this._pendingView.unbind(context);
 
@@ -217,23 +224,23 @@ export class ComponentBinding<TProps, TData, TContext>
         this._requestCommit(context);
         this._status = CommitStatus.Mounting;
 
-        let newView: TemplateView<TData, TContext>;
+        let newView: TemplateView<TValues, TContext>;
 
         // Finally, render the new template.
         if (this._cachedViews !== null) {
           const cachedView = this._cachedViews.get(template);
           if (cachedView !== undefined) {
-            cachedView.bind(data, context);
+            cachedView.bind(values, context);
             newView = cachedView;
           } else {
-            newView = template.render(data, context);
+            newView = template.render(values, context);
             newView.connect(context);
           }
         } else {
           // It is rare that different templates are returned, so we defer
           // creating view caches.
           this._cachedViews = new WeakMap();
-          newView = template.render(data, context);
+          newView = template.render(values, context);
           newView.connect(context);
         }
 
@@ -249,7 +256,7 @@ export class ComponentBinding<TProps, TData, TContext>
       this._requestCommit(context);
       this._status = CommitStatus.Mounting;
 
-      this._pendingView = template.render(data, context);
+      this._pendingView = template.render(values, context);
       this._pendingView.connect(context);
     }
 

@@ -137,12 +137,12 @@ describe('UnsafeTemplate', () => {
   describe('.wrapInResult()', () => {
     it('should wrap this template in LazyTemplateResult', () => {
       const template = new UnsafeTemplate('foo', 'html');
-      const data = [] as const;
-      const result = template.wrapInResult(data);
+      const values = [] as const;
+      const result = template.wrapInResult(values);
 
       expect(result).toBeInstanceOf(LazyTemplateResult);
       expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
+      expect(result.values).toBe(values);
     });
   });
 });

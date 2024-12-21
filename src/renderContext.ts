@@ -114,10 +114,10 @@ export class RenderContext {
     );
   }
 
-  dynamicHTML<TData extends readonly any[]>(
+  dynamicHTML<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
-    ...values: TData
-  ): TemplateResult<FilterLiterals<TData>, RenderContext> {
+    ...values: TValues
+  ): TemplateResult<FilterLiterals<TValues>, RenderContext> {
     const { strings: staticStrings, values: dynamicValues } =
       this._host.processLiterals(strings, values);
     return this._host
@@ -125,10 +125,10 @@ export class RenderContext {
       .wrapInResult(dynamicValues);
   }
 
-  dynamicMath<TData extends readonly any[]>(
+  dynamicMath<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
-    ...values: TData
-  ): TemplateResult<FilterLiterals<TData>, RenderContext> {
+    ...values: TValues
+  ): TemplateResult<FilterLiterals<TValues>, RenderContext> {
     const { strings: staticStrings, values: dynamicValues } =
       this._host.processLiterals(strings, values);
     return this._host
@@ -136,10 +136,10 @@ export class RenderContext {
       .wrapInResult(dynamicValues);
   }
 
-  dynamicSVG<TData extends readonly any[]>(
+  dynamicSVG<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
-    ...values: TData
-  ): TemplateResult<FilterLiterals<TData>, RenderContext> {
+    ...values: TValues
+  ): TemplateResult<FilterLiterals<TValues>, RenderContext> {
     const { strings: staticStrings, values: dynamicValues } =
       this._host.processLiterals(strings, values);
     return this._host
@@ -187,10 +187,10 @@ export class RenderContext {
     return this._host.getScopedValue(key, this._block);
   }
 
-  html<TData extends readonly any[]>(
+  html<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
-    ...values: TData
-  ): TemplateResult<TData, RenderContext> {
+    ...values: TValues
+  ): TemplateResult<TValues, RenderContext> {
     return this._host.getTemplate(strings, values, 'html').wrapInResult(values);
   }
 
@@ -202,10 +202,10 @@ export class RenderContext {
     return this._hooks.at(-1)?.type !== HookType.Finalizer;
   }
 
-  math<TData extends readonly any[]>(
+  math<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
-    ...values: TData
-  ): TemplateResult<TData, RenderContext> {
+    ...values: TValues
+  ): TemplateResult<TValues, RenderContext> {
     return this._host.getTemplate(strings, values, 'math').wrapInResult(values);
   }
 
@@ -213,10 +213,10 @@ export class RenderContext {
     this._host.setScopedValue(key, value, this._block);
   }
 
-  svg<TData extends readonly any[]>(
+  svg<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
-    ...values: TData
-  ): TemplateResult<TData, RenderContext> {
+    ...values: TValues
+  ): TemplateResult<TValues, RenderContext> {
     return this._host.getTemplate(strings, values, 'svg').wrapInResult(values);
   }
 

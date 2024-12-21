@@ -16,7 +16,7 @@ export class EmptyTemplate implements Template<readonly []> {
     }
   }
 
-  render(_data: readonly [], _context: DirectiveContext): EmptyTemplateView {
+  render(_values: readonly [], _context: DirectiveContext): EmptyTemplateView {
     return new EmptyTemplateView();
   }
 
@@ -24,8 +24,8 @@ export class EmptyTemplate implements Template<readonly []> {
     return other === this;
   }
 
-  wrapInResult(data: readonly []): EagerTemplateResult<readonly []> {
-    return new EagerTemplateResult(this, data);
+  wrapInResult(values: readonly []): EagerTemplateResult<readonly []> {
+    return new EagerTemplateResult(this, values);
   }
 }
 
@@ -40,7 +40,7 @@ export class EmptyTemplateView implements TemplateView<readonly []> {
 
   connect(_context: UpdateContext): void {}
 
-  bind(_data: readonly [], _context: UpdateContext): void {}
+  bind(_values: readonly [], _context: UpdateContext): void {}
 
   unbind(_context: UpdateContext): void {}
 

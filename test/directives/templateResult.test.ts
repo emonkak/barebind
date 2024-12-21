@@ -16,24 +16,24 @@ import {
 } from '../mocks.js';
 
 describe('eagerTemplateResult()', () => {
-  it('should construct a new EagerTemplateResult with template and data', () => {
+  it('should construct a new EagerTemplateResult with template and values', () => {
     const template = new MockTemplate<unknown[], unknown>();
-    const data = ['foo'];
-    const value = eagerTemplateResult(template, ...data);
+    const values = ['foo'];
+    const value = eagerTemplateResult(template, ...values);
 
     expect(value.template).toBe(template);
-    expect(value.data).toStrictEqual(data);
+    expect(value.values).toStrictEqual(values);
   });
 });
 
 describe('lazyTemplateResult()', () => {
-  it('should construct a new LazyTemplate with template and data', () => {
+  it('should construct a new LazyTemplate with template and values', () => {
     const template = new MockTemplate<unknown[], unknown>();
-    const data = ['foo'];
-    const value = lazyTemplateResult(template, ...data);
+    const values = ['foo'];
+    const value = lazyTemplateResult(template, ...values);
 
     expect(value.template).toBe(template);
-    expect(value.data).toStrictEqual(data);
+    expect(value.values).toStrictEqual(values);
   });
 });
 
@@ -156,7 +156,7 @@ describe('TemplateResultBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const view = new MockTemplateView(value.data, [
+      const view = new MockTemplateView(value.values, [
         document.createComment(''),
       ]);
       const binding = new TemplateResultBinding(value, part);
@@ -175,11 +175,11 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value.data, context);
+      expect(bindSpy).toHaveBeenCalledWith(value.values, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(view.startNode);
@@ -198,7 +198,7 @@ describe('TemplateResultBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const view = new MockTemplateView(value.data, [
+      const view = new MockTemplateView(value.values, [
         document.createComment(''),
       ]);
       const binding = new TemplateResultBinding(value, part);
@@ -222,11 +222,11 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value.data, context);
+      expect(bindSpy).toHaveBeenCalledWith(value.values, context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledTimes(2);
@@ -240,7 +240,7 @@ describe('TemplateResultBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should bind data to the current view if it is a renderd from the same template', () => {
+    it('should bind values to the current view if it is a renderd from the same template', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -250,7 +250,7 @@ describe('TemplateResultBinding', () => {
       const template = new MockTemplate();
       const value1 = new EagerTemplateResult(template, {});
       const value2 = new EagerTemplateResult(template, {});
-      const view = new MockTemplateView(value1.data, [
+      const view = new MockTemplateView(value1.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -273,18 +273,18 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value1.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value1.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value2.data, context);
+      expect(bindSpy).toHaveBeenCalledWith(value2.values, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should unbind data from the current view if it is a renderd from a different template', () => {
+    it('should unbind values from the current view if it is a renderd from a different template', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -293,10 +293,10 @@ describe('TemplateResultBinding', () => {
 
       const value1 = new EagerTemplateResult(new MockTemplate(), []);
       const value2 = new EagerTemplateResult(new MockTemplate(), []);
-      const view1 = new MockTemplateView(value1.data, [
+      const view1 = new MockTemplateView(value1.values, [
         document.createComment(''),
       ]);
-      const view2 = new MockTemplateView(value2.data, [
+      const view2 = new MockTemplateView(value2.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -327,9 +327,9 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
-      expect(render1Spy).toHaveBeenCalledWith(value1.data, context);
+      expect(render1Spy).toHaveBeenCalledWith(value1.values, context);
       expect(render2Spy).toHaveBeenCalledOnce();
-      expect(render2Spy).toHaveBeenCalledWith(value2.data, context);
+      expect(render2Spy).toHaveBeenCalledWith(value2.values, context);
       expect(connect1Spy).toHaveBeenCalledOnce();
       expect(connect1Spy).toHaveBeenCalledWith(context);
       expect(connect2Spy).toHaveBeenCalled();
@@ -357,7 +357,7 @@ describe('TemplateResultBinding', () => {
 
       const value1 = new EagerTemplateResult(new MockTemplate(), []);
       const value2 = new EagerTemplateResult(new MockTemplate(), []);
-      const view = new MockTemplateView(value1.data, [
+      const view = new MockTemplateView(value1.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -377,7 +377,7 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value2.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value2.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).not.toHaveBeenCalled();
@@ -396,10 +396,10 @@ describe('TemplateResultBinding', () => {
 
       const value1 = new EagerTemplateResult(new MockTemplate(), []);
       const value2 = new EagerTemplateResult(new MockTemplate(), []);
-      const view1 = new MockTemplateView(value1.data, [
+      const view1 = new MockTemplateView(value1.values, [
         document.createComment(''),
       ]);
-      const view2 = new MockTemplateView(value2.data, [
+      const view2 = new MockTemplateView(value2.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -428,9 +428,9 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
-      expect(render1Spy).toHaveBeenCalledWith(value1.data, context);
+      expect(render1Spy).toHaveBeenCalledWith(value1.values, context);
       expect(render2Spy).toHaveBeenCalledOnce();
-      expect(render2Spy).toHaveBeenCalledWith(value2.data, context);
+      expect(render2Spy).toHaveBeenCalledWith(value2.values, context);
       expect(connect1Spy).toHaveBeenCalledOnce();
       expect(connect1Spy).toHaveBeenCalledWith(context);
       expect(connect2Spy).toHaveBeenCalled();
@@ -455,7 +455,7 @@ describe('TemplateResultBinding', () => {
       );
 
       const value = new EagerTemplateResult(new MockTemplate(), []);
-      const view = new MockTemplateView(value.data, [
+      const view = new MockTemplateView(value.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -483,11 +483,11 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value.data, context);
+      expect(bindSpy).toHaveBeenCalledWith(value.values, context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledTimes(2);
@@ -522,7 +522,7 @@ describe('TemplateResultBinding', () => {
   });
 
   describe('.unbind()', () => {
-    it('should unbind data from the current view', () => {
+    it('should unbind values from the current view', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -530,7 +530,7 @@ describe('TemplateResultBinding', () => {
       );
 
       const value = new LazyTemplateResult(new MockTemplate(), []);
-      const view = new MockTemplateView(value.data, [
+      const view = new MockTemplateView(value.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -553,7 +553,7 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(unbindSpy).toHaveBeenCalledOnce();
@@ -572,7 +572,7 @@ describe('TemplateResultBinding', () => {
       );
 
       const value = new LazyTemplateResult(new MockTemplate(), []);
-      const view = new MockTemplateView(value.data, [
+      const view = new MockTemplateView(value.values, [
         document.createComment(''),
       ]);
       const part = {
@@ -609,7 +609,7 @@ describe('TemplateResultBinding', () => {
       );
 
       const value = new LazyTemplateResult(new MockTemplate(), []);
-      const view = new MockTemplateView(value.data);
+      const view = new MockTemplateView(value.values);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -627,7 +627,7 @@ describe('TemplateResultBinding', () => {
       binding.disconnect(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(value.data, context);
+      expect(renderSpy).toHaveBeenCalledWith(value.values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledWith(context);
@@ -641,9 +641,9 @@ describe('TemplateResultBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const value = new LazyTemplateResult(template, data);
-      const view = new MockTemplateView(value.data);
+      const values = {};
+      const value = new LazyTemplateResult(template, values);
+      const view = new MockTemplateView(value.values);
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -664,11 +664,11 @@ describe('TemplateResultBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data, context);
+      expect(bindSpy).toHaveBeenCalledWith(values, context);
       expect(disconnectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledOnce();

@@ -29,15 +29,15 @@ describe('LazyTemplate', () => {
 
       const template = new MockTemplate();
       const lazyTemplate = new LazyTemplate(() => template);
-      const data = [] as const;
-      const view = new MockTemplateView(data);
+      const values = [] as const;
+      const view = new MockTemplateView(values);
 
       const renderSpy = vi.spyOn(template, 'render').mockReturnValue(view);
 
-      expect(lazyTemplate.render(data, context)).toBe(view);
-      expect(lazyTemplate.render(data, context)).toBe(view);
+      expect(lazyTemplate.render(values, context)).toBe(view);
+      expect(lazyTemplate.render(values, context)).toBe(view);
       expect(renderSpy).toHaveBeenCalledTimes(2);
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
     });
   });
 
@@ -53,12 +53,12 @@ describe('LazyTemplate', () => {
   describe('.wrapInResult()', () => {
     it('should wrap this template in LazyTemplateResult', () => {
       const template = new LazyTemplate(() => new MockTemplate());
-      const data = ['foo'] as const;
-      const result = template.wrapInResult(data);
+      const values = ['foo'] as const;
+      const result = template.wrapInResult(values);
 
       expect(result).toBeInstanceOf(LazyTemplateResult);
       expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
+      expect(result.values).toBe(values);
     });
   });
 });

@@ -59,14 +59,14 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     this._literalProcessor = literalProcessor;
   }
 
-  flushComponent<TProps, TData>(
-    type: ComponentType<TProps, TData, RenderContext>,
+  flushComponent<TProps, TValues>(
+    type: ComponentType<TProps, TValues, RenderContext>,
     props: TProps,
     hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext>,
-  ): TemplateResult<TData, RenderContext> {
+  ): TemplateResult<TValues, RenderContext> {
     const context = new RenderContext(this, updater, block, queue, hooks);
     const result = type(props, context);
     context.finalize();
@@ -92,11 +92,11 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     return this._hostName;
   }
 
-  getTemplate<TData extends readonly any[]>(
+  getTemplate<TValues extends readonly any[]>(
     strings: readonly string[],
-    values: TData,
+    values: TValues,
     mode: TemplateMode,
-  ): Template<TData, RenderContext> {
+  ): Template<TValues, RenderContext> {
     let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
@@ -176,12 +176,12 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   }
 }
 
-function getTemplate<TData extends readonly any[], TContext>(
+function getTemplate<TValues extends readonly any[], TContext>(
   strings: readonly string[],
-  values: TData,
+  values: TValues,
   mode: TemplateMode,
   hostName: string,
-): Template<TData, TContext> {
+): Template<TValues, TContext> {
   if (values.length === 0 && strings[0]!.trim() === '') {
     // Assumption: strings.length === 1
     return EmptyTemplate.instance as Template<any, TContext>;

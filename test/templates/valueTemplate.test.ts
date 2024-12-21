@@ -26,13 +26,13 @@ describe('ChildTemplate', () => {
         new MockBlock(),
       );
 
-      const data = [new TextDirective('foo')] as const;
-      const view = new ChildTemplate().render(data, context);
+      const values = [new TextDirective('foo')] as const;
+      const view = new ChildTemplate().render(values, context);
 
       context.flushUpdate();
 
       expect(view.binding).toBeInstanceOf(TextBinding);
-      expect(view.binding.value).toBe(data[0]);
+      expect(view.binding.value).toBe(values[0]);
       expect(view.binding.part).toMatchObject({
         type: PartType.ChildNode,
         node: expect.any(Comment),
@@ -55,12 +55,12 @@ describe('ChildTemplate', () => {
   describe('.wrapInResult()', () => {
     it('should wrap this template in EagerTemplateResult', () => {
       const template = new ChildTemplate();
-      const data = [new TextDirective('foo')] as const;
-      const result = template.wrapInResult(data);
+      const values = [new TextDirective('foo')] as const;
+      const result = template.wrapInResult(values);
 
       expect(result).toBeInstanceOf(EagerTemplateResult);
       expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
+      expect(result.values).toBe(values);
     });
   });
 });
@@ -75,12 +75,12 @@ describe('TextTemplate', () => {
       );
 
       const template = new TextTemplate();
-      const data = ['foo'] as const;
-      const view = template.render(data, context);
+      const values = ['foo'] as const;
+      const view = template.render(values, context);
 
       expect(view).toBeInstanceOf(ValueTemplateView);
       expect(view.binding).toBeInstanceOf(NodeBinding);
-      expect(view.binding.value).toBe(data[0]);
+      expect(view.binding.value).toBe(values[0]);
       expect(view.binding.part).toMatchObject({
         type: PartType.Node,
         node: expect.any(Text),
@@ -101,12 +101,12 @@ describe('TextTemplate', () => {
   describe('.wrapInResult()', () => {
     it('should wrap this template in EagerTemplateResult', () => {
       const template = new TextTemplate();
-      const data = ['foo'] as const;
-      const result = template.wrapInResult(data);
+      const values = ['foo'] as const;
+      const result = template.wrapInResult(values);
 
       expect(result).toBeInstanceOf(EagerTemplateResult);
       expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
+      expect(result.values).toBe(values);
     });
   });
 });
@@ -146,21 +146,21 @@ describe('ValueTemplateView', () => {
         new MockBlock(),
       );
 
-      const data1 = ['foo'] as [string];
-      const data2 = ['bar'] as [string];
+      const values1 = ['foo'] as [string];
+      const values2 = ['bar'] as [string];
       const part = {
         type: PartType.Node,
         node: document.createTextNode(''),
       } as const;
-      const binding = new NodeBinding(data1[0], part);
+      const binding = new NodeBinding(values1[0], part);
       const view = new ValueTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      view.bind(data2, context);
+      view.bind(values2, context);
 
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data2[0], context);
+      expect(bindSpy).toHaveBeenCalledWith(values2[0], context);
     });
 
     it('should bind a new TextDirective to TextBinding', () => {
@@ -170,21 +170,21 @@ describe('ValueTemplateView', () => {
         new MockBlock(),
       );
 
-      const data1 = [new TextDirective('foo')] as const;
-      const data2 = [new TextDirective('bar')] as const;
+      const values1 = [new TextDirective('foo')] as const;
+      const values2 = [new TextDirective('bar')] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
-      const binding = new TextBinding(data1[0], part);
+      const binding = new TextBinding(values1[0], part);
       const view = new ValueTemplateView(binding);
 
       const bindSpy = vi.spyOn(binding, 'bind');
 
-      view.bind(data2, context);
+      view.bind(values2, context);
 
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data2[0], context);
+      expect(bindSpy).toHaveBeenCalledWith(values2[0], context);
     });
   });
 

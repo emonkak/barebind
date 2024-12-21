@@ -137,37 +137,37 @@ export class MockScheduler implements Scheduler {
   }
 }
 
-export class MockTemplate<TData, TContext>
-  implements Template<TData, TContext>
+export class MockTemplate<TValues, TContext>
+  implements Template<TValues, TContext>
 {
   render(
-    data: TData,
+    values: TValues,
     _context: UpdateContext<TContext>,
-  ): MockTemplateView<TData, TContext> {
-    return new MockTemplateView(data);
+  ): MockTemplateView<TValues, TContext> {
+    return new MockTemplateView(values);
   }
 
   isSameTemplate(other: Template<unknown>): boolean {
     return other === this;
   }
 
-  wrapInResult(data: TData): TemplateResult<TData, TContext> {
+  wrapInResult(values: TValues): TemplateResult<TValues, TContext> {
     return {
       template: this,
-      data,
+      values,
     };
   }
 }
 
-export class MockTemplateView<TData, TContext>
-  implements TemplateView<TData, TContext>
+export class MockTemplateView<TValues, TContext>
+  implements TemplateView<TValues, TContext>
 {
-  private _data: TData;
+  private _values: TValues;
 
   private readonly _childNodes: ChildNode[];
 
-  constructor(data: TData, childNodes: ChildNode[] = []) {
-    this._data = data;
+  constructor(values: TValues, childNodes: ChildNode[] = []) {
+    this._values = values;
     this._childNodes = childNodes;
   }
 
@@ -179,14 +179,14 @@ export class MockTemplateView<TData, TContext>
     return this._childNodes.at(-1) ?? null;
   }
 
-  get data(): TData {
-    return this._data;
+  get values(): TValues {
+    return this._values;
   }
 
   connect(_context: UpdateContext<TContext>): void {}
 
-  bind(data: TData, _context: UpdateContext<TContext>): void {
-    this._data = data;
+  bind(values: TValues, _context: UpdateContext<TContext>): void {
+    this._values = values;
   }
 
   unbind(_context: UpdateContext<TContext>): void {}
@@ -203,14 +203,14 @@ export class MockRenderHost implements RenderHost<RenderContext> {
 
   private _literalProcessor = new LiteralProcessor();
 
-  flushComponent<TProps, TData>(
-    type: ComponentType<TProps, TData, RenderContext>,
+  flushComponent<TProps, TValues>(
+    type: ComponentType<TProps, TValues, RenderContext>,
     props: TProps,
     hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext>,
-  ): TemplateResult<TData, RenderContext> {
+  ): TemplateResult<TValues, RenderContext> {
     const context = new RenderContext(this, updater, block, queue, hooks);
     const result = type(props, context);
     context.finalize();
@@ -231,11 +231,11 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     return '__test__';
   }
 
-  getTemplate<TData extends readonly any[]>(
+  getTemplate<TValues extends readonly any[]>(
     _strings: readonly string[],
-    _values: TData,
+    _values: TValues,
     _mode: TemplateMode,
-  ): Template<TData, RenderContext> {
+  ): Template<TValues, RenderContext> {
     return new MockTemplate();
   }
 

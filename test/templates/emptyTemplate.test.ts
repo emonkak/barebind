@@ -45,11 +45,11 @@ describe('EmptyTemplate', () => {
   describe('.wrapInResult()', () => {
     it('should wrap this template in EagerTemplateResult', () => {
       const template = EmptyTemplate.instance;
-      const data = [] as const;
-      const result = template.wrapInResult(data);
+      const values = [] as const;
+      const result = template.wrapInResult(values);
 
       expect(result.template).toBe(template);
-      expect(result.data).toBe(data);
+      expect(result.values).toBe(values);
     });
   });
 });

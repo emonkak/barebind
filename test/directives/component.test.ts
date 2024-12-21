@@ -94,10 +94,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data, [document.createComment('')]);
+      const values = {};
+      const view = new MockTemplateView(values, [document.createComment('')]);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -116,7 +116,7 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(view.startNode);
@@ -159,10 +159,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data, [document.createComment('')]);
+      const values = {};
+      const view = new MockTemplateView(values, [document.createComment('')]);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -188,11 +188,11 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data, context);
+      expect(bindSpy).toHaveBeenCalledWith(values, context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledTimes(2);
@@ -205,7 +205,7 @@ describe('ComponentBinding', () => {
   });
 
   describe('.bind()', () => {
-    it('should bind data to the current view if it is a renderd from the same template', () => {
+    it('should bind values to the current view if it is a renderd from the same template', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -213,15 +213,15 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data1 = {};
-      const data2 = {};
-      const view = new MockTemplateView(data1, [document.createComment('')]);
+      const values1 = {};
+      const values2 = {};
+      const view = new MockTemplateView(values1, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplateResult(template, data1),
+        () => new EagerTemplateResult(template, values1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplateResult(template, data2),
+        () => new EagerTemplateResult(template, values2),
         {},
       );
       const part = {
@@ -242,18 +242,18 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data1, context);
+      expect(renderSpy).toHaveBeenCalledWith(values1, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data2, context);
+      expect(bindSpy).toHaveBeenCalledWith(values2, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
       expect(binding.startNode).toBe(view.startNode);
       expect(binding.endNode).toBe(part.node);
     });
 
-    it('should unbind data from the current view if it is a renderd from a different template', () => {
+    it('should unbind values from the current view if it is a renderd from a different template', () => {
       const context = new UpdateContext(
         new MockRenderHost(),
         new SyncUpdater(),
@@ -263,22 +263,22 @@ describe('ComponentBinding', () => {
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
       const template3 = new MockTemplate();
-      const data1 = {};
-      const data2 = {};
-      const data3 = {};
-      const view1 = new MockTemplateView(data1, [document.createComment('')]);
-      const view2 = new MockTemplateView(data2, [document.createComment('')]);
-      const view3 = new MockTemplateView(data3, [document.createComment('')]);
+      const values1 = {};
+      const values2 = {};
+      const values3 = {};
+      const view1 = new MockTemplateView(values1, [document.createComment('')]);
+      const view2 = new MockTemplateView(values2, [document.createComment('')]);
+      const view3 = new MockTemplateView(values3, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplateResult(template1, data1),
+        () => new EagerTemplateResult(template1, values1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplateResult(template2, data2),
+        () => new EagerTemplateResult(template2, values2),
         {},
       );
       const value3 = new Component(
-        () => new EagerTemplateResult(template3, data3),
+        () => new EagerTemplateResult(template3, values3),
         {},
       );
       const part = {
@@ -319,11 +319,11 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
-      expect(render1Spy).toHaveBeenCalledWith(data1, context);
+      expect(render1Spy).toHaveBeenCalledWith(values1, context);
       expect(render2Spy).toHaveBeenCalledOnce();
-      expect(render2Spy).toHaveBeenCalledWith(data2, context);
+      expect(render2Spy).toHaveBeenCalledWith(values2, context);
       expect(render3Spy).toHaveBeenCalledOnce();
-      expect(render3Spy).toHaveBeenCalledWith(data2, context);
+      expect(render3Spy).toHaveBeenCalledWith(values2, context);
       expect(connect1Spy).toHaveBeenCalledOnce();
       expect(connect1Spy).toHaveBeenCalledWith(context);
       expect(connect2Spy).toHaveBeenCalledOnce();
@@ -355,15 +355,15 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data1 = {};
-      const data2 = {};
-      const view = new MockTemplateView(data1, [document.createComment('')]);
+      const values1 = {};
+      const values2 = {};
+      const view = new MockTemplateView(values1, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplateResult(template, data1),
+        () => new EagerTemplateResult(template, values1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplateResult(template, data2),
+        () => new EagerTemplateResult(template, values2),
         {},
       );
       const part = {
@@ -381,7 +381,7 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data2, context);
+      expect(renderSpy).toHaveBeenCalledWith(values2, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).not.toHaveBeenCalled();
@@ -398,18 +398,18 @@ describe('ComponentBinding', () => {
         new MockBlock(),
       );
 
-      const data1 = { name: 'foo' };
-      const data2 = { name: 'bar' };
+      const values1 = { name: 'foo' };
+      const values2 = { name: 'bar' };
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
-      const view1 = new MockTemplateView(data1, [document.createComment('')]);
-      const view2 = new MockTemplateView(data2, [document.createComment('')]);
+      const view1 = new MockTemplateView(values1, [document.createComment('')]);
+      const view2 = new MockTemplateView(values2, [document.createComment('')]);
       const value1 = new Component(
-        () => new EagerTemplateResult(template1, data1),
+        () => new EagerTemplateResult(template1, values1),
         {},
       );
       const value2 = new Component(
-        () => new EagerTemplateResult(template2, data2),
+        () => new EagerTemplateResult(template2, values2),
         {},
       );
       const part = {
@@ -440,9 +440,9 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
-      expect(render1Spy).toHaveBeenCalledWith(data1, context);
+      expect(render1Spy).toHaveBeenCalledWith(values1, context);
       expect(render2Spy).toHaveBeenCalledOnce();
-      expect(render2Spy).toHaveBeenCalledWith(data2, context);
+      expect(render2Spy).toHaveBeenCalledWith(values2, context);
       expect(connect1Spy).toHaveBeenCalledOnce();
       expect(connect2Spy).toHaveBeenCalledOnce();
       expect(connect2Spy).toHaveBeenCalledWith(context);
@@ -468,10 +468,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data, [document.createComment('')]);
+      const values = {};
+      const view = new MockTemplateView(values, [document.createComment('')]);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -497,11 +497,11 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data, context);
+      expect(bindSpy).toHaveBeenCalledWith(values, context);
       expect(unbindSpy).toHaveBeenCalledOnce();
       expect(unbindSpy).toHaveBeenCalledWith(context);
       expect(mountSpy).toHaveBeenCalledTimes(2);
@@ -522,18 +522,18 @@ describe('ComponentBinding', () => {
       const template1 = new MockTemplate();
       const template2 = new MockTemplate();
       const template3 = new MockTemplate();
-      const data1 = {};
-      const data2 = {};
-      const data3 = {};
-      const view1 = new MockTemplateView(data1, [document.createComment('')]);
-      const view2 = new MockTemplateView(data2, [document.createComment('')]);
-      const view3 = new MockTemplateView(data3, [document.createComment('')]);
+      const values1 = {};
+      const values2 = {};
+      const values3 = {};
+      const view1 = new MockTemplateView(values1, [document.createComment('')]);
+      const view2 = new MockTemplateView(values2, [document.createComment('')]);
+      const view3 = new MockTemplateView(values3, [document.createComment('')]);
       const type = vi
         .fn()
-        .mockReturnValueOnce(new EagerTemplateResult(template1, data1))
-        .mockReturnValueOnce(new EagerTemplateResult(template2, data2))
-        .mockReturnValueOnce(new EagerTemplateResult(template3, data3))
-        .mockReturnValueOnce(new EagerTemplateResult(template1, data3));
+        .mockReturnValueOnce(new EagerTemplateResult(template1, values1))
+        .mockReturnValueOnce(new EagerTemplateResult(template2, values2))
+        .mockReturnValueOnce(new EagerTemplateResult(template3, values3))
+        .mockReturnValueOnce(new EagerTemplateResult(template1, values3));
       const value = new Component(type, {});
       const part = {
         type: PartType.ChildNode,
@@ -570,11 +570,11 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(render1Spy).toHaveBeenCalledOnce();
-      expect(render1Spy).toHaveBeenCalledWith(data1, context);
+      expect(render1Spy).toHaveBeenCalledWith(values1, context);
       expect(render2Spy).toHaveBeenCalledOnce();
-      expect(render2Spy).toHaveBeenCalledWith(data2, context);
+      expect(render2Spy).toHaveBeenCalledWith(values2, context);
       expect(render3Spy).toHaveBeenCalledOnce();
-      expect(render3Spy).toHaveBeenCalledWith(data3, context);
+      expect(render3Spy).toHaveBeenCalledWith(values3, context);
       expect(connect1Spy).toHaveBeenCalledOnce();
       expect(connect1Spy).toHaveBeenCalledWith(context);
       expect(connect2Spy).toHaveBeenCalledOnce();
@@ -654,10 +654,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data);
+      const values = {};
+      const view = new MockTemplateView(values);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -678,7 +678,7 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(unbindSpy).toHaveBeenCalledOnce();
@@ -697,10 +697,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data);
+      const values = {};
+      const view = new MockTemplateView(values);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -768,10 +768,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data);
+      const values = {};
+      const view = new MockTemplateView(values);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -790,7 +790,7 @@ describe('ComponentBinding', () => {
 
       expect(context.isPending()).toBe(false);
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(disconnectSpy).toHaveBeenCalledOnce();
     });
 
@@ -871,10 +871,10 @@ describe('ComponentBinding', () => {
       );
 
       const template = new MockTemplate();
-      const data = {};
-      const view = new MockTemplateView(data);
+      const values = {};
+      const view = new MockTemplateView(values);
       const value = new Component(
-        () => new EagerTemplateResult(template, data),
+        () => new EagerTemplateResult(template, values),
         {},
       );
       const part = {
@@ -900,11 +900,11 @@ describe('ComponentBinding', () => {
       context.flushUpdate();
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(data, context);
+      expect(renderSpy).toHaveBeenCalledWith(values, context);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(data, context);
+      expect(bindSpy).toHaveBeenCalledWith(values, context);
       expect(mountSpy).toHaveBeenCalledOnce();
       expect(mountSpy).toHaveBeenCalledWith(part);
     });

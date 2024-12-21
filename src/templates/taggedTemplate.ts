@@ -74,15 +74,15 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
 
 const ERROR_MAKER = '[[ERROR IN HERE]]';
 
-export class TaggedTemplate<TData extends readonly any[]>
-  implements Template<TData>
+export class TaggedTemplate<TValues extends readonly any[]>
+  implements Template<TValues>
 {
-  static parse<TData extends readonly any[]>(
+  static parse<TValues extends readonly any[]>(
     strings: readonly string[],
-    values: TData,
+    values: TValues,
     marker: string,
     mode: TemplateMode,
-  ): TaggedTemplate<TData> {
+  ): TaggedTemplate<TValues> {
     DEBUG: {
       ensureValidMarker(marker);
     }
@@ -120,11 +120,14 @@ export class TaggedTemplate<TData extends readonly any[]>
     return this._holes;
   }
 
-  render(data: TData, context: DirectiveContext): TaggedTemplateView<TData> {
+  render(
+    values: TValues,
+    context: DirectiveContext,
+  ): TaggedTemplateView<TValues> {
     const holes = this._holes;
 
     DEBUG: {
-      assertNumberOfValues(holes.length, data.length);
+      assertNumberOfValues(holes.length, values.length);
     }
 
     const bindings = new Array(holes.length);
@@ -189,7 +192,11 @@ export class TaggedTemplate<TData extends readonly any[]>
               break;
           }
 
-          bindings[holeIndex] = resolveBinding(data[holeIndex], part, context);
+          bindings[holeIndex] = resolveBinding(
+            values[holeIndex],
+            part,
+            context,
+          );
           holeIndex++;
 
           if (holeIndex >= holes.length) {
@@ -215,13 +222,13 @@ export class TaggedTemplate<TData extends readonly any[]>
     return other === this;
   }
 
-  wrapInResult(data: TData): LazyTemplateResult<TData> {
-    return new LazyTemplateResult(this, data);
+  wrapInResult(values: TValues): LazyTemplateResult<TValues> {
+    return new LazyTemplateResult(this, values);
   }
 }
 
-export class TaggedTemplateView<TData extends readonly any[]>
-  implements TemplateView<TData>
+export class TaggedTemplateView<TValues extends readonly any[]>
+  implements TemplateView<TValues>
 {
   private readonly _bindings: Binding<unknown>[];
 
@@ -257,9 +264,9 @@ export class TaggedTemplateView<TData extends readonly any[]>
     }
   }
 
-  bind(data: TData, context: UpdateContext): void {
+  bind(values: TValues, context: UpdateContext): void {
     DEBUG: {
-      assertNumberOfValues(this._bindings.length, data.length);
+      assertNumberOfValues(this._bindings.length, values.length);
     }
 
     for (let i = 0, l = this._bindings.length; i < l; i++) {
@@ -267,11 +274,11 @@ export class TaggedTemplateView<TData extends readonly any[]>
 
       DEBUG: {
         if (binding.part.type === PartType.ChildNode) {
-          binding.part.node.data = nameOf(data[i]);
+          binding.part.node.data = nameOf(values[i]);
         }
       }
 
-      binding.bind(data[i]!, context);
+      binding.bind(values[i]!, context);
     }
   }
 
