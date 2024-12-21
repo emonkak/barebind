@@ -2,65 +2,63 @@ export interface LinkedListNode<T> {
   value: T;
   prev: LinkedListNode<T> | null;
   next: LinkedListNode<T> | null;
-  ownership: symbol | null;
+  owner: LinkedList<T> | null;
 }
 
 export class LinkedList<T> implements Iterable<T> {
-  #head: LinkedListNode<T> | null = null;
+  private _head: LinkedListNode<T> | null = null;
 
-  #tail: LinkedListNode<T> | null = null;
-
-  #ownership: symbol = Symbol();
+  private _tail: LinkedListNode<T> | null = null;
 
   *[Symbol.iterator](): Iterator<T> {
-    for (let node = this.#head; node !== null; node = node.next) {
+    for (let node = this._head; node !== null; node = node.next) {
       yield node.value;
     }
   }
 
   back(): LinkedListNode<T> | null {
-    return this.#tail;
+    return this._tail;
   }
 
   front(): LinkedListNode<T> | null {
-    return this.#head;
+    return this._head;
   }
 
   isEmpty(): boolean {
-    return this.#head === null;
+    return this._head === null;
   }
 
   popBack(): LinkedListNode<T> | null {
-    const tail = this.#tail;
+    const tail = this._tail;
 
     if (tail !== null) {
       if (tail.prev !== null) {
-        this.#tail = tail.prev;
-        this.#tail.next = null;
+        this._tail = tail.prev;
+        this._tail.next = null;
         tail.prev = null;
       } else {
-        this.#head = null;
-        this.#tail = null;
+        this._head = null;
+        this._tail = null;
       }
-      tail.ownership = null;
+      tail.owner = null;
     }
 
     return tail;
   }
 
   popFront(): LinkedListNode<T> | null {
-    const head = this.#head;
+    const head = this._head;
 
     if (head !== null) {
       if (head.next !== null) {
-        this.#head = head.next;
-        this.#head.prev = null;
+        this._head = head.next;
+        this._head.prev = null;
         head.next = null;
       } else {
-        this.#head = null;
-        this.#tail = null;
+        this._head = null;
+        this._tail = null;
       }
-      head.ownership = null;
+      head.owner = null;
     }
 
     return head;
@@ -69,17 +67,17 @@ export class LinkedList<T> implements Iterable<T> {
   pushBack(value: T): LinkedListNode<T> {
     const node = {
       value,
-      prev: this.#tail,
+      prev: this._tail,
       next: null,
-      ownership: this.#ownership,
+      owner: this,
     };
 
-    if (this.#tail !== null) {
-      this.#tail.next = node;
-      this.#tail = node;
+    if (this._tail !== null) {
+      this._tail.next = node;
+      this._tail = node;
     } else {
-      this.#head = node;
-      this.#tail = node;
+      this._head = node;
+      this._tail = node;
     }
 
     return node;
@@ -89,39 +87,39 @@ export class LinkedList<T> implements Iterable<T> {
     const node = {
       value,
       prev: null,
-      next: this.#head,
-      ownership: this.#ownership,
+      next: this._head,
+      owner: this,
     };
 
-    if (this.#head !== null) {
-      this.#head.prev = node;
-      this.#head = node;
+    if (this._head !== null) {
+      this._head.prev = node;
+      this._head = node;
     } else {
-      this.#head = node;
-      this.#tail = node;
+      this._head = node;
+      this._tail = node;
     }
 
     return node;
   }
 
   remove(node: LinkedListNode<T>): boolean {
-    const { ownership, prev, next } = node;
-    if (ownership !== this.#ownership) {
+    const { prev, next, owner } = node;
+    if (owner !== this) {
       return false;
     }
     if (prev !== null) {
       prev.next = next;
     } else {
-      this.#head = next;
+      this._head = next;
     }
     if (next !== null) {
       next.prev = prev;
     } else {
-      this.#tail = prev;
+      this._tail = prev;
     }
     node.prev = null;
     node.next = null;
-    node.ownership = null;
+    node.owner = null;
     return true;
   }
 }

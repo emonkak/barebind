@@ -22,7 +22,7 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()).toBe(foo);
@@ -41,19 +41,19 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: bar,
         next: null,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(bar).toStrictEqual({
         value: 'bar',
         prev: baz,
         next: foo,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(baz).toStrictEqual({
         value: 'baz',
         prev: null,
         next: bar,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()).toBe(baz);
@@ -72,7 +72,7 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()?.value).toBe('foo');
@@ -91,19 +91,19 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: bar,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(bar).toStrictEqual({
         value: 'bar',
         prev: foo,
         next: baz,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(baz).toStrictEqual({
         value: 'baz',
         prev: bar,
         next: null,
-        ownership: expect.any(Symbol),
+        owner: expect.any(LinkedList),
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()).toBe(foo);
@@ -144,19 +144,19 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
       expect(bar).toStrictEqual({
         value: 'bar',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
       expect(baz).toStrictEqual({
         value: 'baz',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
     });
   });
@@ -193,19 +193,19 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
       expect(bar).toStrictEqual({
         value: 'bar',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
       expect(baz).toStrictEqual({
         value: 'baz',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
     });
   });
@@ -228,7 +228,7 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
     });
 
@@ -249,7 +249,7 @@ describe('LinkedList', () => {
         value: 'baz',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
     });
 
@@ -270,7 +270,7 @@ describe('LinkedList', () => {
         value: 'bar',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
     });
 
@@ -293,7 +293,7 @@ describe('LinkedList', () => {
         value: 'bar',
         prev: null,
         next: null,
-        ownership: null,
+        owner: null,
       });
     });
 
