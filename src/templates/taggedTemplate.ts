@@ -276,7 +276,8 @@ export class TaggedTemplateView<TData extends readonly any[]>
   }
 
   unbind(context: UpdateContext): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
+    // Unbind in reverse order.
+    for (let i = this._bindings.length - 1; i >= 0; i--) {
       const binding = this._bindings[i]!;
       const part = binding.part;
 
@@ -294,7 +295,8 @@ export class TaggedTemplateView<TData extends readonly any[]>
   }
 
   disconnect(context: UpdateContext): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
+    // Disconnect in reverse order.
+    for (let i = this._bindings.length - 1; i >= 0; i--) {
       this._bindings[i]!.disconnect(context);
     }
   }
