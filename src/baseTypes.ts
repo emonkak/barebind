@@ -359,23 +359,6 @@ export function literal(string: string): Literal {
   return new Literal(string);
 }
 
-export function nameOf(value: unknown): string {
-  if (typeof value === 'object') {
-    return value === null
-      ? 'null'
-      : Symbol.toStringTag in value
-        ? (value[Symbol.toStringTag] as string)
-        : value.constructor.name;
-  }
-  if (typeof value === 'function') {
-    return value.name !== '' ? value.name : 'Function';
-  }
-  if (typeof value === 'undefined') {
-    return 'undefined';
-  }
-  return JSON.stringify(value);
-}
-
 export function resolveBinding<TValue, TContext>(
   value: TValue,
   part: Part,

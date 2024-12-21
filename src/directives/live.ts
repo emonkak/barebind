@@ -9,9 +9,13 @@ import {
   type PropertyPart,
   type UpdateContext,
   directiveTag,
-  nameOf,
 } from '../baseTypes.js';
-import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
+import {
+  ensureDirective,
+  nameOf,
+  reportPart,
+  reportUsedValue,
+} from '../debug.js';
 
 export function live<T>(value: T): Live<T> {
   return new Live(value);

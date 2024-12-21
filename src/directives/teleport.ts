@@ -9,7 +9,7 @@ import {
   directiveTag,
   resolveBinding,
 } from '../baseTypes.js';
-import { ensureDirective } from '../error.js';
+import { ensureDirective } from '../debug.js';
 
 export function teleport<T>(value: T, container: Element): Teleport<T> {
   return new Teleport(value, container);

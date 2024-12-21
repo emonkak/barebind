@@ -6,7 +6,7 @@ import {
   type Part,
   type UpdateContext,
 } from '../baseTypes.js';
-import { ensureNonDirective, reportPart, reportUsedValue } from '../error.js';
+import { ensureNonDirective, reportPart, reportUsedValue } from '../debug.js';
 
 type Nullable<T> = T | null | undefined;
 

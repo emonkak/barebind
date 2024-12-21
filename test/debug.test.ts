@@ -4,9 +4,10 @@ import { PartType } from '../src/baseTypes.js';
 import {
   ensureDirective,
   ensureNonDirective,
+  nameOf,
   reportPart,
   reportUsedValue,
-} from '../src/error.js';
+} from '../src/debug.js';
 import { TextDirective } from './mocks.js';
 
 describe('ensureDirective', () => {
@@ -56,6 +57,21 @@ describe('ensureNonDirective', () => {
     ensureNonDirective(true, part);
     ensureNonDirective({}, part);
     ensureNonDirective(() => {}, part);
+  });
+});
+
+describe('nameOf()', () => {
+  it('should return the name of the value', () => {
+    expect(nameOf(null)).toBe('null');
+    expect(nameOf(undefined)).toBe('undefined');
+    expect(nameOf('foo')).toBe('"foo"');
+    expect(nameOf(123)).toBe('123');
+    expect(nameOf(true)).toBe('true');
+    expect(nameOf({})).toBe('Object');
+    expect(nameOf(new Date())).toBe('Date');
+    expect(nameOf(() => {})).toBe('Function');
+    expect(nameOf(function foo() {})).toBe('foo');
+    expect(nameOf({ [Symbol.toStringTag]: 'foo' })).toBe('foo');
   });
 });
 

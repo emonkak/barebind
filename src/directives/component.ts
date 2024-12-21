@@ -15,10 +15,14 @@ import {
   type TemplateView,
   type UpdateContext,
   directiveTag,
-  nameOf,
 } from '../baseTypes.js';
 import { BlockBinding } from '../bindings/block.js';
-import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
+import {
+  ensureDirective,
+  nameOf,
+  reportPart,
+  reportUsedValue,
+} from '../debug.js';
 
 export function component<TProps, TValues, TContext>(
   component: ComponentType<TProps, TValues, TContext>,

@@ -5,7 +5,7 @@ import {
   type PropertyPart,
   type UpdateContext,
 } from '../baseTypes.js';
-import { ensureNonDirective } from '../error.js';
+import { ensureNonDirective } from '../debug.js';
 
 export class PropertyBinding<T> implements Binding<T>, Effect {
   private _pendingValue: T;

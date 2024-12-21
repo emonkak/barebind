@@ -5,10 +5,9 @@ import {
   type Part,
   type UpdateContext,
   directiveTag,
-  nameOf,
   resolveBinding,
 } from '../baseTypes.js';
-import { ensureDirective } from '../error.js';
+import { ensureDirective, nameOf } from '../debug.js';
 import { NoValue } from './noValue.js';
 
 export type Either<TLeft, TRight> = Either.Left<TLeft> | Either.Right<TRight>;

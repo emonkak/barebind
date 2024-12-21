@@ -12,9 +12,13 @@ import {
   type RefObject,
   type UpdateContext,
   directiveTag,
-  nameOf,
 } from '../baseTypes.js';
-import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
+import {
+  ensureDirective,
+  nameOf,
+  reportPart,
+  reportUsedValue,
+} from '../debug.js';
 
 export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
 

@@ -9,10 +9,14 @@ import {
   PartType,
   type UpdateContext,
   directiveTag,
-  nameOf,
 } from '../baseTypes.js';
 import { shallowEqual } from '../compare.js';
-import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
+import {
+  ensureDirective,
+  nameOf,
+  reportPart,
+  reportUsedValue,
+} from '../debug.js';
 
 export type ClassDeclaration = { [key: string]: boolean };
 

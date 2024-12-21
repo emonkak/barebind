@@ -6,9 +6,9 @@ import {
   type Template,
   type TemplateView,
   type UpdateContext,
-  nameOf,
   resolveBinding,
 } from '../baseTypes.js';
+import { nameOf } from '../debug.js';
 import { EagerTemplateResult } from '../directives/templateResult.js';
 
 export class ChildTemplate<T> implements Template<readonly [T]> {

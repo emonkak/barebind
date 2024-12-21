@@ -1,4 +1,4 @@
-import { type Part, PartType, isDirective, nameOf } from './baseTypes.js';
+import { type Part, PartType, isDirective } from './baseTypes.js';
 
 export function ensureDirective<
   TExpectedClass extends Function,
@@ -29,6 +29,23 @@ export function ensureNonDirective(value: unknown, part: Part): void {
         reportPart(part, reportUsedValue(value)),
     );
   }
+}
+
+export function nameOf(value: unknown): string {
+  if (typeof value === 'object') {
+    return value === null
+      ? 'null'
+      : Symbol.toStringTag in value
+        ? (value[Symbol.toStringTag] as string)
+        : value.constructor.name;
+  }
+  if (typeof value === 'function') {
+    return value.name !== '' ? value.name : 'Function';
+  }
+  if (typeof value === 'undefined') {
+    return 'undefined';
+  }
+  return JSON.stringify(value);
 }
 
 export function reportPart(part: Part, marker: string): string {

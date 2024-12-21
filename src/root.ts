@@ -4,10 +4,10 @@ import {
   type RenderHost,
   UpdateContext,
   type Updater,
-  nameOf,
   resolveBinding,
 } from './baseTypes.js';
 import { BlockBinding } from './bindings/block.js';
+import { nameOf } from './debug.js';
 
 export interface Root<T> {
   mount(): void;

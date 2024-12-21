@@ -8,7 +8,7 @@ import {
   resolveBinding,
 } from '../baseTypes.js';
 import { dependenciesAreChanged } from '../compare.js';
-import { ensureDirective } from '../error.js';
+import { ensureDirective } from '../debug.js';
 
 export function memo<T>(
   factory: () => T,

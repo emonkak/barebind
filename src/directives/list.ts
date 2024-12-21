@@ -8,10 +8,14 @@ import {
   PartType,
   type UpdateContext,
   directiveTag,
-  nameOf,
   resolveBinding,
 } from '../baseTypes.js';
-import { ensureDirective, reportPart, reportUsedValue } from '../error.js';
+import {
+  ensureDirective,
+  nameOf,
+  reportPart,
+  reportUsedValue,
+} from '../debug.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 

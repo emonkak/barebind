@@ -8,11 +8,10 @@ import {
   type TemplateMode,
   type TemplateView,
   type UpdateContext,
-  nameOf,
   resolveBinding,
 } from '../baseTypes.js';
+import { nameOf, reportPart } from '../debug.js';
 import { LazyTemplateResult } from '../directives/templateResult.js';
-import { reportPart } from '../error.js';
 
 export type Hole =
   | AttributeHole

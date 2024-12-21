@@ -6,7 +6,7 @@ import {
   type UpdateContext,
   directiveTag,
 } from '../baseTypes.js';
-import { ensureDirective } from '../error.js';
+import { ensureDirective } from '../debug.js';
 
 export class NoValue implements Directive<NoValue> {
   static readonly instance = new NoValue();
