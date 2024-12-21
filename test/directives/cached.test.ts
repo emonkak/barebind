@@ -45,19 +45,12 @@ describe('Cached', () => {
       } as const;
       const binding = value[directiveTag](part, context);
 
-      const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
-      const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
-      const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
-
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.binding.value).toBe(value.value);
-      expect(getPartSpy).toHaveBeenCalledOnce();
-      expect(getStartNodeSpy).toHaveBeenCalledOnce();
-      expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
     it('should create a new CachedBinding from a directive value', () => {
@@ -74,19 +67,12 @@ describe('Cached', () => {
       } as const;
       const binding = value[directiveTag](part, context);
 
-      const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
-      const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
-      const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
-
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.binding.value).toBe(value.value);
-      expect(getPartSpy).toHaveBeenCalledOnce();
-      expect(getStartNodeSpy).toHaveBeenCalledOnce();
-      expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
   });
 });

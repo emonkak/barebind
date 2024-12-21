@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
-import { Keyed, KeyedBinding, keyed } from '../../src/directives/keyed.js';
+import { NodeBinding } from '../../src/bindings/node.js';
+import { KeyedBinding, keyed } from '../../src/directives/keyed.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import {
   MockBlock,
@@ -38,26 +39,19 @@ describe('Keyed', () => {
         new MockBlock(),
       );
 
-      const value = keyed(new TextDirective('foo'), 'bar');
+      const value = keyed('foo', 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
       } as const;
       const binding = value[directiveTag](part, context);
 
-      const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
-      const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
-      const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
-
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
-      expect(binding.binding).toBeInstanceOf(TextBinding);
+      expect(binding.binding).toBeInstanceOf(NodeBinding);
       expect(binding.binding.value).toBe(value.value);
-      expect(getPartSpy).toHaveBeenCalledOnce();
-      expect(getStartNodeSpy).toHaveBeenCalledOnce();
-      expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
 
     it('should create a new KeyedBinding from a directive value', () => {
@@ -74,19 +68,12 @@ describe('Keyed', () => {
       } as const;
       const binding = value[directiveTag](part, context);
 
-      const getPartSpy = vi.spyOn(binding.binding, 'part', 'get');
-      const getStartNodeSpy = vi.spyOn(binding.binding, 'startNode', 'get');
-      const getEndNodeSpy = vi.spyOn(binding.binding, 'endNode', 'get');
-
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
       expect(binding.startNode).toBe(part.node);
       expect(binding.endNode).toBe(part.node);
       expect(binding.binding).toBeInstanceOf(TextBinding);
       expect(binding.binding.value).toBe(value.value);
-      expect(getPartSpy).toHaveBeenCalledOnce();
-      expect(getStartNodeSpy).toHaveBeenCalledOnce();
-      expect(getEndNodeSpy).toHaveBeenCalledOnce();
     });
   });
 });
@@ -125,7 +112,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = new Keyed(new TextDirective(), 'foo');
+      const value = keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -151,8 +138,8 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value1 = new Keyed(new TextDirective(), 'foo');
-      const value2 = new Keyed(new TextDirective(), 'bar');
+      const value1 = keyed(new TextDirective(), 'foo');
+      const value2 = keyed(new TextDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -204,7 +191,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = keyed(() => new TextDirective(), 'foo');
+      const value = keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -228,7 +215,7 @@ describe('KeyedBinding', () => {
         new MockBlock(),
       );
 
-      const value = keyed(() => new TextDirective(), 'foo');
+      const value = keyed(new TextDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
