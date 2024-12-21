@@ -13,6 +13,8 @@ interface StaticTemplate {
   literalPositions: readonly number[];
 }
 
+export class Literal extends String {}
+
 export class LiteralProcessor {
   private readonly _staticTemplates: WeakMap<
     TemplateStringsArray,
@@ -66,22 +68,6 @@ export class LiteralProcessor {
       strings: staticStrings,
       values: nonLiteralValues as NonLiteralValues<TValues>,
     };
-  }
-}
-
-export class Literal {
-  readonly #string: string;
-
-  constructor(string: string) {
-    this.#string = string;
-  }
-
-  toString(): string {
-    return this.#string;
-  }
-
-  valueOf(): string {
-    return this.#string;
   }
 }
 
