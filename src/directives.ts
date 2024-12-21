@@ -1,4 +1,5 @@
 export * from './directives/cached.js';
+export * from './directives/chain.js';
 export * from './directives/classMap.js';
 export * from './directives/component.js';
 export * from './directives/either.js';
