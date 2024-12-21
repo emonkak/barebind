@@ -4,7 +4,6 @@ import {
   PartType,
   directiveTag,
   isDirective,
-  literal,
   resolveBinding,
 } from '../src/baseTypes.js';
 import {
@@ -13,29 +12,6 @@ import {
   TextBinding,
   TextDirective,
 } from './mocks.js';
-
-describe('Literal', () => {
-  describe('[Symbol.toStringTag]', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(literal(s)[Symbol.toStringTag]).toBe(s);
-    });
-  });
-
-  describe('.toString()', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(literal(s).toString()).toBe(s);
-    });
-  });
-
-  describe('.valueOf()', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(literal(s).valueOf()).toBe(s);
-    });
-  });
-});
 
 describe('isDirective()', () => {
   it('should return true if the value is directive', () => {

@@ -4,7 +4,6 @@ import {
   type Effect,
   type EffectCallback,
   type EffectHook,
-  type FilterLiterals,
   type FinalizerHook,
   type Hook,
   HookType,
@@ -21,6 +20,7 @@ import {
   createUpdateQueue,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
+import { LiteralProcessor, type NonLiteralValues } from './literal.js';
 
 export const usableTag: unique symbol = Symbol('Usable');
 
@@ -55,6 +55,8 @@ export class RenderContext {
 
   private readonly _block: Block<RenderContext>;
 
+  private readonly _literalProcessor: LiteralProcessor;
+
   private readonly _queue: UpdateQueue<RenderContext>;
 
   private readonly _hooks: Hook[];
@@ -65,12 +67,14 @@ export class RenderContext {
     host: RenderHost<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
+    literalProcessor: LiteralProcessor = new LiteralProcessor(),
     queue: UpdateQueue<RenderContext> = createUpdateQueue(),
     hooks: Hook[] = [],
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
+    this._literalProcessor = literalProcessor;
     this._queue = queue;
     this._hooks = hooks;
   }
@@ -85,6 +89,13 @@ export class RenderContext {
 
   get block(): Block<RenderContext> {
     return this._block;
+  }
+
+  /**
+   * @internal
+   */
+  get literalProcessor(): LiteralProcessor {
+    return this._literalProcessor;
   }
 
   /**
@@ -109,6 +120,7 @@ export class RenderContext {
       this._host,
       this._updater,
       this._block,
+      this._literalProcessor,
       this._queue,
       this._hooks,
     );
@@ -117,9 +129,9 @@ export class RenderContext {
   dynamicHTML<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TValues
-  ): TemplateResult<FilterLiterals<TValues>, RenderContext> {
+  ): TemplateResult<NonLiteralValues<TValues>, RenderContext> {
     const { strings: staticStrings, values: dynamicValues } =
-      this._host.processLiterals(strings, values);
+      this._literalProcessor.process(strings, values);
     return this._host
       .getTemplate(staticStrings, dynamicValues, 'html')
       .wrapInResult(dynamicValues);
@@ -128,9 +140,9 @@ export class RenderContext {
   dynamicMath<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TValues
-  ): TemplateResult<FilterLiterals<TValues>, RenderContext> {
+  ): TemplateResult<NonLiteralValues<TValues>, RenderContext> {
     const { strings: staticStrings, values: dynamicValues } =
-      this._host.processLiterals(strings, values);
+      this._literalProcessor.process(strings, values);
     return this._host
       .getTemplate(staticStrings, dynamicValues, 'math')
       .wrapInResult(dynamicValues);
@@ -139,9 +151,9 @@ export class RenderContext {
   dynamicSVG<TValues extends readonly any[]>(
     strings: TemplateStringsArray,
     ...values: TValues
-  ): TemplateResult<FilterLiterals<TValues>, RenderContext> {
+  ): TemplateResult<NonLiteralValues<TValues>, RenderContext> {
     const { strings: staticStrings, values: dynamicValues } =
-      this._host.processLiterals(strings, values);
+      this._literalProcessor.process(strings, values);
     return this._host
       .getTemplate(staticStrings, dynamicValues, 'svg')
       .wrapInResult(dynamicValues);

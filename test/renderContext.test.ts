@@ -1,11 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  type Hook,
-  HookType,
-  createUpdateQueue,
-  literal,
-} from '../src/baseTypes.js';
+import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
+import { Literal, LiteralProcessor } from '../src/literal.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
 import { SyncUpdater } from '../src/updaters/syncUpdater.js';
 import {
@@ -21,13 +17,22 @@ describe('RenderContext', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
+      const literalProcessor = new LiteralProcessor();
       const hooks: Hook[] = [];
       const queue = createUpdateQueue();
-      const context = new RenderContext(host, updater, block, queue, hooks);
+      const context = new RenderContext(
+        host,
+        updater,
+        block,
+        literalProcessor,
+        queue,
+        hooks,
+      );
 
       expect(context.host).toBe(host);
       expect(context.updater).toBe(updater);
       expect(context.block).toBe(block);
+      expect(context.literalProcessor).toBe(literalProcessor);
       expect(context.queue).toBe(queue);
       expect(context.hooks).toBe(hooks);
     });
@@ -42,21 +47,21 @@ describe('RenderContext', () => {
       );
 
       const template = new MockTemplate<any, RenderContext>();
-      const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
+      const processSpy = vi.spyOn(context.literalProcessor, 'process');
       const getTemplateSpy = vi
         .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(
-        context.dynamicHTML`<${literal('div')}>Hello, ${'World'}!</${literal('div')}>`,
+        context.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`,
       ).toStrictEqual({
         template,
         values: ['World'],
       });
-      expect(processLiteralsSpy).toHaveBeenCalledOnce();
-      expect(processLiteralsSpy).toHaveBeenCalledWith(
+      expect(processSpy).toHaveBeenCalledOnce();
+      expect(processSpy).toHaveBeenCalledWith(
         ['<', '>Hello, ', '!</', '>'],
-        [literal('div'), 'World', literal('div')],
+        [new Literal('div'), 'World', new Literal('div')],
       );
       expect(getTemplateSpy).toHaveBeenCalledOnce();
       expect(getTemplateSpy).toHaveBeenCalledWith(
@@ -76,13 +81,13 @@ describe('RenderContext', () => {
       );
 
       const template = new MockTemplate<any, RenderContext>();
-      const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
+      const processLiteralsSpy = vi.spyOn(context.literalProcessor, 'process');
       const getTemplateSpy = vi
         .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(
-        context.dynamicMath`<${literal('mi')}>${'x'}</${literal('mi')}>`,
+        context.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`,
       ).toStrictEqual({
         template,
         values: ['x'],
@@ -90,7 +95,7 @@ describe('RenderContext', () => {
       expect(processLiteralsSpy).toHaveBeenCalledOnce();
       expect(processLiteralsSpy).toHaveBeenCalledWith(
         ['<', '>', '</', '>'],
-        [literal('mi'), 'x', literal('mi')],
+        [new Literal('mi'), 'x', new Literal('mi')],
       );
       expect(getTemplateSpy).toHaveBeenCalledOnce();
       expect(getTemplateSpy).toHaveBeenCalledWith(
@@ -110,21 +115,21 @@ describe('RenderContext', () => {
       );
 
       const template = new MockTemplate<any, RenderContext>();
-      const processLiteralsSpy = vi.spyOn(context.host, 'processLiterals');
+      const processSpy = vi.spyOn(context.literalProcessor, 'process');
       const getTemplateSpy = vi
         .spyOn(context.host, 'getTemplate')
         .mockReturnValue(template);
 
       expect(
-        context.dynamicSVG`<${literal('text')}>Hello, ${'World'}!</${literal('text')}>`,
+        context.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`,
       ).toStrictEqual({
         template,
         values: ['World'],
       });
-      expect(processLiteralsSpy).toHaveBeenCalledOnce();
-      expect(processLiteralsSpy).toHaveBeenCalledWith(
+      expect(processSpy).toHaveBeenCalledOnce();
+      expect(processSpy).toHaveBeenCalledWith(
         ['<', '>Hello, ', '!</', '>'],
-        [literal('text'), 'World', literal('text')],
+        [new Literal('text'), 'World', new Literal('text')],
       );
       expect(getTemplateSpy).toHaveBeenCalledOnce();
       expect(getTemplateSpy).toHaveBeenCalledWith(

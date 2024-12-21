@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { type Literal, literal } from '../src/baseTypes.js';
-import { LiteralProcessor } from '../src/literalProcessor.js';
+import { Literal, LiteralProcessor } from '../src/literal.js';
 
 describe('LiteralProcessor', () => {
   const createTag = (type: string | Literal, children: string | Literal) =>
@@ -28,8 +27,8 @@ describe('LiteralProcessor', () => {
 
   it('should return the same strings as previous one if static strings is the same', () => {
     const literalProcessor = new LiteralProcessor();
-    const template1 = createTag(literal('div'), 'foo');
-    const template2 = createTag(literal('div'), 'bar');
+    const template1 = createTag(new Literal('div'), 'foo');
+    const template2 = createTag(new Literal('div'), 'bar');
     const processedTemplate1 = literalProcessor.process(
       template1.strings,
       template1.values,
@@ -47,8 +46,8 @@ describe('LiteralProcessor', () => {
 
   it('should return a new strings if the literal changes', () => {
     const literalProcessor = new LiteralProcessor();
-    const template1 = createTag(literal('div'), 'foo');
-    const template2 = createTag(literal('span'), 'foo');
+    const template1 = createTag(new Literal('div'), 'foo');
+    const template2 = createTag(new Literal('span'), 'foo');
     const processedTemplate1 = literalProcessor.process(
       template1.strings,
       template1.values,
@@ -66,8 +65,8 @@ describe('LiteralProcessor', () => {
 
   it('should return a new strings if the literal position changes', () => {
     const literalProcessor = new LiteralProcessor();
-    const template1 = createDate(literal('1990'), literal('01'), '01');
-    const template2 = createDate(literal('1990'), '01', literal('01'));
+    const template1 = createDate(new Literal('1990'), new Literal('01'), '01');
+    const template2 = createDate(new Literal('1990'), '01', new Literal('01'));
     const processedTemplate1 = literalProcessor.process(
       template1.strings,
       template1.values,
@@ -107,6 +106,22 @@ describe('LiteralProcessor', () => {
     expect(processedTemplate1.strings).not.toBe(processedTemplate2.strings);
     expect(processedTemplate1.values).toStrictEqual(['World']);
     expect(processedTemplate2.values).toStrictEqual(['World']);
+  });
+});
+
+describe('Literal', () => {
+  describe('.toString()', () => {
+    it('should return the string', () => {
+      const s = 'foo';
+      expect(new Literal(s).toString()).toBe(s);
+    });
+  });
+
+  describe('.valueOf()', () => {
+    it('should return the string', () => {
+      const s = 'foo';
+      expect(new Literal(s).valueOf()).toBe(s);
+    });
   });
 });
 

@@ -7,14 +7,12 @@ import {
   PartType,
   type TemplateResult,
   createUpdateQueue,
-  literal,
 } from '../src/baseTypes.js';
 import { AttributeBinding } from '../src/bindings/attribute.js';
 import { ElementBinding } from '../src/bindings/element.js';
 import { EventBinding } from '../src/bindings/event.js';
 import { NodeBinding } from '../src/bindings/node.js';
 import { PropertyBinding } from '../src/bindings/property.js';
-import { LiteralProcessor } from '../src/literalProcessor.js';
 import type { RenderContext } from '../src/renderContext.js';
 import { ClientRenderHost } from '../src/renderHost.js';
 import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
@@ -292,29 +290,6 @@ describe('ClientRenderHost', () => {
       const template = host.getUnsafeTemplate(content, 'html');
 
       expect(template).toStrictEqual(new UnsafeTemplate(content, 'html'));
-    });
-  });
-
-  describe('.processLiterals()', () => {
-    it('should process literals by LiteralProcessor', () => {
-      const literalProcessor = new LiteralProcessor();
-      const host = new ClientRenderHost({
-        literalProcessor,
-      });
-
-      const processLiteralsSpy = vi.spyOn(host, 'processLiterals');
-
-      const { strings, values } =
-        tmpl`<${literal('div')}>${'foo'}</${literal('div')}>`;
-      const template = host.processLiterals(strings, values);
-
-      expect(template.strings).toStrictEqual(['<div>', '</div>']);
-      expect(template.values).toStrictEqual(['foo']);
-      expect(processLiteralsSpy).toHaveBeenCalledOnce();
-      expect(processLiteralsSpy).toHaveBeenCalledWith(
-        ['<', '>', '</', '>'],
-        [literal('div'), 'foo', literal('div')],
-      );
     });
   });
 

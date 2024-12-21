@@ -4,7 +4,6 @@ import {
   type CommitPhase,
   type ComponentType,
   type Effect,
-  type FilterLiterals,
   type Hook,
   type Part,
   PartType,
@@ -21,7 +20,7 @@ import { ElementBinding } from './bindings/element.js';
 import { EventBinding } from './bindings/event.js';
 import { NodeBinding } from './bindings/node.js';
 import { PropertyBinding } from './bindings/property.js';
-import { LiteralProcessor } from './literalProcessor.js';
+import { LiteralProcessor } from './literal.js';
 import { RenderContext } from './renderContext.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { LazyTemplate } from './templates/lazyTemplate.js';
@@ -67,7 +66,14 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
     block: Block<RenderContext>,
     queue: UpdateQueue<RenderContext>,
   ): TemplateResult<TValues, RenderContext> {
-    const context = new RenderContext(this, updater, block, queue, hooks);
+    const context = new RenderContext(
+      this,
+      updater,
+      block,
+      this._literalProcessor,
+      queue,
+      hooks,
+    );
     const result = type(props, context);
     context.finalize();
     return result;
@@ -128,16 +134,6 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
 
   nextIdentifier(): number {
     return ++this._idCounter;
-  }
-
-  processLiterals<TValues extends readonly any[]>(
-    strings: TemplateStringsArray,
-    values: TValues,
-  ): {
-    strings: readonly string[];
-    values: FilterLiterals<TValues>;
-  } {
-    return this._literalProcessor.process(strings, values);
   }
 
   resolveBinding<TValue>(
