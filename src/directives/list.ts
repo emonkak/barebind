@@ -139,7 +139,8 @@ export class ListBinding<TItem, TKey, TValue>
   }
 
   disconnect(context: UpdateContext): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+    // Disconnect items in reverse order.
+    for (let i = this._pendingBindings.length - 1; i >= 0; i--) {
       this._pendingBindings[i]!.disconnect(context);
     }
     this._dirty = false;
@@ -154,7 +155,8 @@ export class ListBinding<TItem, TKey, TValue>
   }
 
   private _clearItems(context: UpdateContext): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+    // Remove items in reverse order.
+    for (let i = this._pendingBindings.length - 1; i >= 0; i--) {
       removeItem(this._pendingBindings[i]!, context);
     }
 
