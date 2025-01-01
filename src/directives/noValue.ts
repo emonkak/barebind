@@ -58,4 +58,4 @@ export class NoValueBinding implements Binding<NoValue> {
   disconnect(_context: UpdateContext): void {}
 }
 
-export const noValue = NoValue.instance;
+export const noValue: NoValue = NoValue.instance;
