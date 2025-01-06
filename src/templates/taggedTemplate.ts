@@ -533,7 +533,7 @@ function parseChildren(
   }
 
   DEBUG: {
-    assertNumberOfHoles(values.length, holes.length);
+    assertNumberOfHoles(values.length, holes.length, strings);
   }
 
   return holes;
@@ -553,10 +553,12 @@ function assertNumberOfValues(
 function assertNumberOfHoles(
   expectedLength: number,
   actualLength: number,
+  strings: readonly string[],
 ): void {
   if (expectedLength !== actualLength) {
     throw new Error(
-      `The number of holes must be ${expectedLength}, but got ${actualLength}. There may be multiple holes indicating the same attribute.`,
+      `The number of holes must be ${expectedLength}, but got ${actualLength}. There may be multiple holes indicating the same attribute:\n` +
+        strings.join('${...}').trim(),
     );
   }
 }
