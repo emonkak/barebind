@@ -6,7 +6,7 @@ import {
   type UpdateContext,
   resolveBinding,
 } from '../baseTypes.js';
-import { ensureNonDirective, reportPart, reportUsedValue } from '../debug.js';
+import { ensureNonDirective, inspectPart, markUsedValue } from '../debug.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
@@ -108,7 +108,7 @@ function ensureSpreadProps(
       'The value of ElementBinding must be an object, but got "' +
         value +
         '".' +
-        reportPart(part, reportUsedValue(value)),
+        inspectPart(part, markUsedValue(value)),
     );
   }
 }

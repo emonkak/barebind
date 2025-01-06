@@ -77,8 +77,8 @@ export class MockBlock<TContext> implements Block<TContext> {
 
   private readonly _parent: Block<TContext> | null;
 
-  constructor(parent: Block<TContext> | null = null) {
-    this._binding = new MockBinding(null, {
+  constructor(value: unknown = null, parent: Block<TContext> | null = null) {
+    this._binding = new MockBinding(value, {
       type: PartType.ChildNode,
       node: document.createComment(''),
     });

@@ -15,9 +15,9 @@ import {
 } from '../baseTypes.js';
 import {
   ensureDirective,
-  nameOf,
-  reportPart,
-  reportUsedValue,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
 } from '../debug.js';
 
 export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
@@ -41,9 +41,9 @@ export class Ref implements Directive<Ref> {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
         'Ref directive must be used in a "ref" attribute, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     return new RefBinding(this, part);

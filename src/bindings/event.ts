@@ -6,7 +6,7 @@ import {
   type Part,
   type UpdateContext,
 } from '../baseTypes.js';
-import { ensureNonDirective, reportPart, reportUsedValue } from '../debug.js';
+import { ensureNonDirective, inspectPart, markUsedValue } from '../debug.js';
 
 type Nullable<T> = T | null | undefined;
 
@@ -174,7 +174,7 @@ function ensureEventListenerOrNull(
   if (!isEventListenerOrNull(value)) {
     throw new Error(
       'The value of EventBinding must be EventListener, EventListenerObject, null or undefined.\n' +
-        reportPart(part, reportUsedValue(value)),
+        inspectPart(part, markUsedValue(value)),
     );
   }
 }

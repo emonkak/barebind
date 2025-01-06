@@ -13,9 +13,9 @@ import {
 import { shallowEqual } from '../compare.js';
 import {
   ensureDirective,
-  nameOf,
-  reportPart,
-  reportUsedValue,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
 } from '../debug.js';
 
 export type ClassDeclaration = { [key: string]: boolean };
@@ -39,9 +39,9 @@ export class ClassMap implements Directive<ClassMap> {
     if (part.type !== PartType.Attribute || part.name !== 'class') {
       throw new Error(
         'ClassMap directive must be used in a "class" attribute, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     return new ClassMapBinding(this, part);

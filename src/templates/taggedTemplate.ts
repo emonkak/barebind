@@ -10,7 +10,7 @@ import {
   type UpdateContext,
   resolveBinding,
 } from '../baseTypes.js';
-import { nameOf, reportPart } from '../debug.js';
+import { inspectPart, nameOf } from '../debug.js';
 import { LazyTemplateResult } from '../directives/templateResult.js';
 
 export type Hole =
@@ -366,7 +366,7 @@ function parseAttribtues(
         if (caseSensitiveName?.toLowerCase() !== name) {
           throw new Error(
             `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute:\n` +
-              reportPart(
+              inspectPart(
                 { type: PartType.Attribute, name, node: element },
                 ERROR_MAKER,
               ),
@@ -398,7 +398,7 @@ function parseAttribtues(
         if (name.includes(marker)) {
           throw new Error(
             'Expressions are not allowed as an attribute name:\n' +
-              reportPart(
+              inspectPart(
                 {
                   type: PartType.Attribute,
                   name,
@@ -412,7 +412,7 @@ function parseAttribtues(
         if (value.includes(marker)) {
           throw new Error(
             'Expressions inside an attribute must make up the entire attribute value:\n' +
-              reportPart(
+              inspectPart(
                 {
                   type: PartType.Attribute,
                   name,
@@ -452,7 +452,7 @@ function parseChildren(
           if ((currentNode as Element).tagName.includes(marker.toUpperCase())) {
             throw new Error(
               'Expressions are not allowed as a tag name:\n' +
-                reportPart(
+                inspectPart(
                   { type: PartType.Element, node: currentNode as Element },
                   ERROR_MAKER,
                 ),
@@ -480,7 +480,7 @@ function parseChildren(
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
-                  reportPart(
+                  inspectPart(
                     { type: PartType.Node, node: currentNode },
                     ERROR_MAKER,
                   ),

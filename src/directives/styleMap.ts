@@ -13,9 +13,9 @@ import {
 import { shallowEqual } from '../compare.js';
 import {
   ensureDirective,
-  nameOf,
-  reportPart,
-  reportUsedValue,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
 } from '../debug.js';
 
 export type StyleDeclaration = {
@@ -52,9 +52,9 @@ export class StyleMap implements Directive<StyleMap> {
     if (part.type !== PartType.Attribute || part.name !== 'style') {
       throw new Error(
         'StyleMap directive must be used in a "style" attribute, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     return new StyleMapBinding(this, part);

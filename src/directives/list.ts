@@ -12,9 +12,10 @@ import {
 } from '../baseTypes.js';
 import {
   ensureDirective,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
   nameOf,
-  reportPart,
-  reportUsedValue,
 } from '../debug.js';
 
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
@@ -72,9 +73,9 @@ export class List<TItem, TKey, TValue>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'List directive must be used in a child node, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     return new ListBinding(this, part);

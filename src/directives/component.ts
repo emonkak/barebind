@@ -19,9 +19,10 @@ import {
 import { BlockBinding } from '../bindings/block.js';
 import {
   ensureDirective,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
   nameOf,
-  reportPart,
-  reportUsedValue,
 } from '../debug.js';
 
 export function component<TProps, TValues, TContext>(
@@ -62,9 +63,9 @@ export class Component<TProps, TValues, TContext>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Component directive must be used in a child node, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     // Component directive should be used with BlockBinding. Otherwise, updates

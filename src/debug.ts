@@ -1,4 +1,4 @@
-import { type Part, PartType, isDirective } from './baseTypes.js';
+import { type Block, type Part, PartType, isDirective } from './baseTypes.js';
 
 export function ensureDirective<
   TExpectedClass extends Function,
@@ -15,7 +15,7 @@ export function ensureDirective<
         ' directive, but got "' +
         nameOf(actualValue) +
         '". Consider using Either, Cached, or Keyed directive instead.\n' +
-        reportPart(part, reportUsedValue(actualValue)),
+        inspectPart(part, markUsedValue(actualValue)),
     );
   }
 }
@@ -26,29 +26,24 @@ export function ensureNonDirective(value: unknown, part: Part): void {
       'The value must not be a directive, but got "' +
         nameOf(value) +
         '". Consider using Either, Cached, or Keyed directive instead.\n' +
-        reportPart(part, reportUsedValue(value)),
+        inspectPart(part, markUsedValue(value)),
     );
   }
 }
 
-export function nameOf(value: unknown): string {
-  if (typeof value === 'object') {
-    return value === null
-      ? 'null'
-      : Symbol.toStringTag in value
-        ? (value[Symbol.toStringTag] as string)
-        : value.constructor.name;
+export function inspectBlock(block: Block<unknown> | null): string {
+  const stack = [];
+  for (
+    let currentBlock = block;
+    currentBlock !== null;
+    currentBlock = currentBlock.parent
+  ) {
+    stack.push(nameOf(currentBlock.binding.value));
   }
-  if (typeof value === 'function') {
-    return value.name !== '' ? value.name : 'Function';
-  }
-  if (typeof value === 'undefined') {
-    return 'undefined';
-  }
-  return JSON.stringify(value);
+  return '/' + stack.reverse().join('/');
 }
 
-export function reportPart(part: Part, marker: string): string {
+export function inspectPart(part: Part, marker: string): string {
   let currentNode: Node | null = part.node;
   let before = '';
   let after = '';
@@ -81,8 +76,25 @@ export function reportPart(part: Part, marker: string): string {
   return before + markPart(part, marker) + after;
 }
 
-export function reportUsedValue(value: unknown): string {
+export function markUsedValue(value: unknown): string {
   return `[[${nameOf(value)} IS USED IN HERE!]]`;
+}
+
+export function nameOf(value: unknown): string {
+  if (typeof value === 'object') {
+    return value === null
+      ? 'null'
+      : Symbol.toStringTag in value
+        ? (value[Symbol.toStringTag] as string)
+        : value.constructor.name;
+  }
+  if (typeof value === 'function') {
+    return value.name !== '' ? value.name : 'Function';
+  }
+  if (typeof value === 'undefined') {
+    return 'undefined';
+  }
+  return JSON.stringify(value);
 }
 
 function appendInsideTag(element: Element, contentToAppend: string): string {

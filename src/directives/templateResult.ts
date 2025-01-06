@@ -15,9 +15,10 @@ import {
 import { BlockBinding } from '../bindings/block.js';
 import {
   ensureDirective,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
   nameOf,
-  reportPart,
-  reportUsedValue,
 } from '../debug.js';
 
 export function eagerTemplateResult<
@@ -76,9 +77,9 @@ export class EagerTemplateResult<
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'EagerTemplateResult directive must be used in a child node, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     return new TemplateResultBinding(this, part);
@@ -100,9 +101,9 @@ export class LazyTemplateResult<
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'LazyTemplateResult directive must be used in a child node, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     const binding = new TemplateResultBinding(this, part);

@@ -12,9 +12,9 @@ import {
 } from '../baseTypes.js';
 import {
   ensureDirective,
-  nameOf,
-  reportPart,
-  reportUsedValue,
+  inspectBlock,
+  inspectPart,
+  markUsedValue,
 } from '../debug.js';
 
 export function live<T>(value: T): Live<T> {
@@ -36,9 +36,9 @@ export class Live<T> implements Directive<Live<T>> {
     if (part.type !== PartType.Property) {
       throw new Error(
         'Live directive must be used in an arbitrary property, but it is used here in ' +
-          nameOf(context.block?.binding.value ?? 'ROOT') +
+          inspectBlock(context.block) +
           ':\n' +
-          reportPart(part, reportUsedValue(this)),
+          inspectPart(part, markUsedValue(this)),
       );
     }
     return new LiveBinding(this, part);

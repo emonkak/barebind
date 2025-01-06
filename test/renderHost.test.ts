@@ -275,7 +275,7 @@ describe('ClientRenderHost', () => {
     it('should get a scoped value from the parent block scope', () => {
       const host = new ClientRenderHost({});
       const parent = new MockBlock();
-      const block = new MockBlock(parent);
+      const block = new MockBlock(null, parent);
 
       host.setScopedValue('foo', 456, parent);
 
