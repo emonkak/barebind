@@ -35,7 +35,7 @@ export function Main(
                 .checked=${visibleTodos.every((todo$) => todo$.value.completed)}
                 @change=${handleToggleAll}
               >
-              <label class="toggle-all-label" htmlFor="toggle-all">
+              <label class="toggle-all-label" for="toggle-all">
                 Toggle All Input
               </label>
             </div>

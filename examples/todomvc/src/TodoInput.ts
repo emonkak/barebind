@@ -55,7 +55,7 @@ export function TodoInput(
         @blur=${onBlur}
         @keydown=${handleKeyDown}
       >
-      <label class="visually-hidden" htmlFor="todo-input">
+      <label class="visually-hidden" for="todo-input">
         ${label}
       </label>
     </div>
