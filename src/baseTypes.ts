@@ -93,7 +93,10 @@ export interface Template<TValues, TContext = unknown> {
   wrapInResult(values: TValues): TemplateResult<TValues, TContext>;
 }
 
-export interface TemplateResult<TValues = unknown, TContext = unknown> {
+export interface TemplateResult<
+  TValues = readonly unknown[],
+  TContext = unknown,
+> {
   get template(): Template<TValues, TContext>;
   get values(): TValues;
 }
