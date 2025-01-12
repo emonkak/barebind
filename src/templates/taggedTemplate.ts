@@ -86,14 +86,14 @@ export class TaggedTemplate<TValues extends readonly any[]>
       ensureValidMarker(marker);
     }
     const template = document.createElement('template');
-    if (mode === 'math' || mode === 'svg') {
+    if (mode === 'html') {
+      template.innerHTML = strings.join(marker).trim();
+    } else {
       template.innerHTML =
         '<' + mode + '>' + strings.join(marker).trim() + '</' + mode + '>';
       template.content.replaceChildren(
         ...template.content.firstChild!.childNodes,
       );
-    } else {
-      template.innerHTML = strings.join(marker).trim();
     }
     const holes =
       values.length > 0

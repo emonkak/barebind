@@ -28,15 +28,15 @@ export class UnsafeTemplate implements Template<readonly []> {
 
   render(_values: readonly [], _context: DirectiveContext): UnsafeTemplateView {
     const template = document.createElement('template');
-    if (this._mode === 'math' || this._mode === 'svg') {
+    if (this._mode === 'html') {
+      template.innerHTML = this._content;
+      return new UnsafeTemplateView([...template.content.childNodes]);
+    } else {
       template.innerHTML =
         '<' + this._mode + '>' + this._content + '</' + this._mode + '>';
       return new UnsafeTemplateView([
         ...template.content.firstChild!.childNodes,
       ]);
-    } else {
-      template.innerHTML = this._content;
-      return new UnsafeTemplateView([...template.content.childNodes]);
     }
   }
 
