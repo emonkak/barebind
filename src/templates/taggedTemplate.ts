@@ -71,7 +71,7 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
   'u',
 );
 
-const ERROR_MAKER = '[[ERROR IN HERE]]';
+const ERROR_MAKER = '[[ERROR IN HERE!]]';
 
 export class TaggedTemplate<TValues extends readonly any[]>
   implements Template<TValues>
