@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { getDefaultScheduler } from '../src/scheduler.js';
+import { getScheduler } from '../src/scheduler.js';
 
 describe('getCurrentTime()', () => {
   afterEach(() => {
@@ -17,7 +17,7 @@ describe('getCurrentTime()', () => {
 
     const now = Date.now();
     const performanceNowSpy = vi.spyOn(performance, 'now').mockReturnValue(now);
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     expect(scheduler.getCurrentTime()).toBe(now);
     expect(performanceNowSpy).toHaveBeenCalledOnce();
@@ -28,7 +28,7 @@ describe('getCurrentTime()', () => {
 
     const now = Date.now();
     const dateNowSpy = vi.spyOn(Date, 'now').mockReturnValue(now);
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     expect(scheduler.getCurrentTime()).toBe(now);
     expect(dateNowSpy).toHaveBeenCalledOnce();
@@ -51,7 +51,7 @@ describe('requestCallback()', () => {
     const callback = vi.fn();
     const options = { priority: 'user-blocking' } as const;
     const postTaskSpy = vi.spyOn(globalThis.scheduler, 'postTask');
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     scheduler.requestCallback(callback, options);
 
@@ -67,7 +67,7 @@ describe('requestCallback()', () => {
     const callback = vi.fn();
     const setOnmessageSpy = vi.spyOn(MessagePort.prototype, 'onmessage', 'set');
     const postMessageSpy = vi.spyOn(MessagePort.prototype, 'postMessage');
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     scheduler.requestCallback(callback, { priority: 'user-blocking' });
 
@@ -91,7 +91,7 @@ describe('requestCallback()', () => {
         callback();
         return 0 as any;
       });
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     scheduler.requestCallback(callback);
     scheduler.requestCallback(callback, { priority: 'user-visible' });
@@ -113,7 +113,7 @@ describe('requestCallback()', () => {
         callback();
         return 0 as any;
       });
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     scheduler.requestCallback(callback);
     scheduler.requestCallback(callback, { priority: 'background' });
@@ -133,7 +133,7 @@ describe('requestCallback()', () => {
 
     const callback = vi.fn();
     const requestIdleCallbackSpy = vi.spyOn(globalThis, 'requestIdleCallback');
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     scheduler.requestCallback(callback, { priority: 'background' });
 
@@ -159,7 +159,7 @@ describe('shouldYieldToMain()', () => {
       },
     } as Partial<Navigator>);
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     expect(scheduler.shouldYieldToMain(0)).toBe(false);
     expect(scheduler.shouldYieldToMain(4)).toBe(false);
@@ -174,7 +174,7 @@ describe('shouldYieldToMain()', () => {
       },
     } as Partial<Navigator>);
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
     const isInputPendingSpy = vi
       .spyOn(navigator.scheduling, 'isInputPending')
       .mockReturnValue(false);
@@ -201,7 +201,7 @@ describe('shouldYieldToMain()', () => {
       },
     } as Partial<Navigator>);
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
     const isInputPendingSpy = vi
       .spyOn(navigator.scheduling, 'isInputPending')
       .mockReturnValue(false);
@@ -228,14 +228,14 @@ describe('shouldYieldToMain()', () => {
       },
     } as Partial<Navigator>);
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
     expect(scheduler.shouldYieldToMain(300)).toBe(true);
   });
 
   it('should return true if the elapsed time >= 5ms if isInputPending() is not available', () => {
     vi.stubGlobal('navigator', {});
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
 
     expect(scheduler.shouldYieldToMain(0)).toBe(false);
     expect(scheduler.shouldYieldToMain(4)).toBe(false);
@@ -256,7 +256,7 @@ describe('yieldToMain()', () => {
       },
     } as Partial<Scheduler>);
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
     const yieldSpy = vi.spyOn(globalThis.scheduler, 'yield');
 
     expect(await scheduler.yieldToMain()).toBe(undefined);
@@ -266,7 +266,7 @@ describe('yieldToMain()', () => {
   it('should wait until the current callback has completed using setTimeout()', async () => {
     vi.stubGlobal('scheduler', undefined);
 
-    const scheduler = getDefaultScheduler();
+    const scheduler = getScheduler();
     const setTimeoutSpy = vi
       .spyOn(globalThis, 'setTimeout')
       .mockImplementation((callback) => {

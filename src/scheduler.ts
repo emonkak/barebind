@@ -18,7 +18,7 @@ export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
 
-export function getDefaultScheduler({
+export function getScheduler({
   frameYieldInterval = 5,
   continuousInputInterval = 50,
   maxYieldInterval = 300,

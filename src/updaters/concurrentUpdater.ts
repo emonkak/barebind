@@ -7,7 +7,7 @@ import {
   createUpdateQueue,
 } from '../baseTypes.js';
 import { Atom } from '../directives/signal.js';
-import { type Scheduler, getDefaultScheduler } from '../scheduler.js';
+import { type Scheduler, getScheduler } from '../scheduler.js';
 
 export interface ConcurrentUpdaterOptions {
   scheduler?: Scheduler;
@@ -22,7 +22,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     new WeakSet();
 
   constructor({
-    scheduler = getDefaultScheduler(),
+    scheduler = getScheduler(),
   }: ConcurrentUpdaterOptions = {}) {
     this._scheduler = scheduler;
   }
