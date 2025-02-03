@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CommitPhase,
@@ -95,23 +95,28 @@ describe('BrowserRenderHost', () => {
   });
 
   describe('.getCurrentPriority()', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('should return "user-visible" if there is no current event', () => {
       const host = new BrowserRenderHost();
 
-      vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
+      const getEventSpy = vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
 
       expect(host.getCurrentPriority()).toBe('user-visible');
+      expect(getEventSpy).toHaveBeenCalledOnce();
     });
 
     it('should return "user-blocking" if the current event is not continuous', () => {
       const host = new BrowserRenderHost();
 
-      const eventMock = vi
+      const getEventSpy = vi
         .spyOn(globalThis, 'event', 'get')
         .mockReturnValue(new MouseEvent('click'));
 
       expect(host.getCurrentPriority()).toBe('user-blocking');
-      expect(eventMock).toHaveBeenCalled();
+      expect(getEventSpy).toHaveBeenCalled();
     });
 
     it.each(CONTINUOUS_EVENT_TYPES)(
@@ -119,12 +124,12 @@ describe('BrowserRenderHost', () => {
       (eventType) => {
         const host = new BrowserRenderHost();
 
-        const eventMock = vi
+        const getEventSpy = vi
           .spyOn(globalThis, 'event', 'get')
           .mockReturnValue(new CustomEvent(eventType));
 
         expect(host.getCurrentPriority()).toBe('user-visible');
-        expect(eventMock).toHaveBeenCalled();
+        expect(getEventSpy).toHaveBeenCalled();
       },
     );
   });

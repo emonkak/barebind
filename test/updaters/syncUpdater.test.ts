@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
@@ -44,6 +44,10 @@ describe('SyncUpdater', () => {
   });
 
   describe('.scheduleUpdate()', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
     it('should update the block on a microtask', async () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();

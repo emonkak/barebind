@@ -46,11 +46,11 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@vitest/browser": "^2.1.8",
-    "@vitest/coverage-istanbul": "^2.1.8",
-    "playwright": "^1.49.1",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "@vitest/browser": "^3.0.4",
+    "@vitest/coverage-istanbul": "^3.0.4",
+    "playwright": "^1.50.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
   },
   "sideEffects": false
 }
