@@ -1,4 +1,8 @@
-import { BrowserRenderHost, ConcurrentUpdater, createRoot } from '@emonkak/ebit';
+import {
+  BrowserRenderHost,
+  ConcurrentUpdater,
+  createRoot,
+} from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { App } from './App.js';

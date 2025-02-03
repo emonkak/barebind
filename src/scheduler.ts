@@ -45,7 +45,10 @@ export function getScheduler({
         channel.port2.postMessage(null);
         return;
       }
-      if (priority === 'background' && typeof requestIdleCallback === 'function') {
+      if (
+        priority === 'background' &&
+        typeof requestIdleCallback === 'function'
+      ) {
         requestIdleCallback(() => callback());
         return;
       }

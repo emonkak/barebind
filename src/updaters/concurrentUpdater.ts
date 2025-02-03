@@ -21,9 +21,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   private readonly _processingQueues: WeakSet<UpdateQueue<TContext>> =
     new WeakSet();
 
-  constructor({
-    scheduler = getScheduler(),
-  }: ConcurrentUpdaterOptions = {}) {
+  constructor({ scheduler = getScheduler() }: ConcurrentUpdaterOptions = {}) {
     this._scheduler = scheduler;
   }
 

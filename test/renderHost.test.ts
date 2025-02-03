@@ -102,7 +102,9 @@ describe('BrowserRenderHost', () => {
     it('should return "user-visible" if there is no current event', () => {
       const host = new BrowserRenderHost();
 
-      const getEventSpy = vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
+      const getEventSpy = vi
+        .spyOn(globalThis, 'event', 'get')
+        .mockReturnValue(undefined);
 
       expect(host.getCurrentPriority()).toBe('user-visible');
       expect(getEventSpy).toHaveBeenCalledOnce();
