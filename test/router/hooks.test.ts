@@ -6,7 +6,6 @@ import {
   HookType,
   createUpdateQueue,
 } from '../../src/baseTypes.js';
-import { LiteralProcessor } from '../../src/literal.js';
 import { RenderContext } from '../../src/renderContext.js';
 import { BrowserRenderHost } from '../../src/renderHost.js';
 import {
@@ -41,7 +40,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -66,7 +64,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -95,7 +92,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -125,7 +121,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -176,7 +171,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -217,7 +211,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -261,7 +254,6 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -308,7 +300,6 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -332,7 +323,6 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -363,7 +353,6 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -395,7 +384,6 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -409,7 +397,6 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );
@@ -451,7 +438,6 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      new LiteralProcessor(),
       queue,
       hooks,
     );

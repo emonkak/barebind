@@ -214,9 +214,9 @@ export class MockRenderHost implements RenderHost<RenderContext> {
       this,
       updater,
       block,
-      this._literalProcessor,
       queue,
       hooks,
+      this._literalProcessor,
     );
     const result = type(props, context);
     context.finalize();

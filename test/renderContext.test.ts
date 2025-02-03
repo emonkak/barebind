@@ -24,9 +24,9 @@ describe('RenderContext', () => {
         host,
         updater,
         block,
-        literalProcessor,
         queue,
         hooks,
+        literalProcessor,
       );
 
       expect(context.host).toBe(host);

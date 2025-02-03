@@ -55,11 +55,11 @@ export class RenderContext {
 
   private readonly _block: Block<RenderContext>;
 
-  private readonly _literalProcessor: LiteralProcessor;
-
   private readonly _queue: UpdateQueue<RenderContext>;
 
   private readonly _hooks: Hook[];
+
+  private readonly _literalProcessor: LiteralProcessor;
 
   private _hookIndex = 0;
 
@@ -67,16 +67,16 @@ export class RenderContext {
     host: RenderHost<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    literalProcessor: LiteralProcessor = new LiteralProcessor(),
     queue: UpdateQueue<RenderContext> = createUpdateQueue(),
     hooks: Hook[] = [],
+    literalProcessor: LiteralProcessor = new LiteralProcessor(),
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
-    this._literalProcessor = literalProcessor;
     this._queue = queue;
     this._hooks = hooks;
+    this._literalProcessor = literalProcessor;
   }
 
   get host(): RenderHost<RenderContext> {
@@ -120,9 +120,9 @@ export class RenderContext {
       this._host,
       this._updater,
       this._block,
-      this._literalProcessor,
       this._queue,
       this._hooks,
+      this._literalProcessor,
     );
   }
 
