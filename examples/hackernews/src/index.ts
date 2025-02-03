@@ -1,10 +1,10 @@
-import { ClientRenderHost, ConcurrentUpdater, createRoot } from '@emonkak/ebit';
+import { BrowserRenderHost, ConcurrentUpdater, createRoot } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { App } from './App.js';
 import { ItemState, StoryState, UserState } from './state.js';
 
-const host = new ClientRenderHost();
+const host = new BrowserRenderHost();
 const updater = new ConcurrentUpdater();
 const root = createRoot(
   component(App, {

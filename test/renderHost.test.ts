@@ -14,7 +14,7 @@ import { EventBinding } from '../src/bindings/event.js';
 import { NodeBinding } from '../src/bindings/node.js';
 import { PropertyBinding } from '../src/bindings/property.js';
 import type { RenderContext } from '../src/renderContext.js';
-import { ClientRenderHost } from '../src/renderHost.js';
+import { BrowserRenderHost } from '../src/renderHost.js';
 import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
 import { LazyTemplate } from '../src/templates/lazyTemplate.js';
 import { TaggedTemplate } from '../src/templates/taggedTemplate.js';
@@ -44,7 +44,7 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'wheel',
 ];
 
-describe('ClientRenderHost', () => {
+describe('BrowserRenderHost', () => {
   describe('.beginRender()', () => {
     it('should create a new MockRenderContext', () => {
       const result: TemplateResult<readonly [], RenderContext> = {
@@ -54,7 +54,7 @@ describe('ClientRenderHost', () => {
       const props = {};
       const type = vi.fn(() => result);
       const hooks: Hook[] = [];
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
       const queue = createUpdateQueue();
@@ -78,7 +78,7 @@ describe('ClientRenderHost', () => {
 
   describe('.flushEffects()', () => {
     it('should perform given effects', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const effect1 = {
         commit: vi.fn(),
       };
@@ -96,7 +96,7 @@ describe('ClientRenderHost', () => {
 
   describe('.getCurrentPriority()', () => {
     it('should return "user-visible" if there is no current event', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
 
       vi.spyOn(globalThis, 'event', 'get').mockReturnValue(undefined);
 
@@ -104,7 +104,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should return "user-blocking" if the current event is not continuous', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
 
       const eventMock = vi
         .spyOn(globalThis, 'event', 'get')
@@ -117,7 +117,7 @@ describe('ClientRenderHost', () => {
     it.each(CONTINUOUS_EVENT_TYPES)(
       'should return "user-visible" if the current event is continuous',
       (eventType) => {
-        const host = new ClientRenderHost();
+        const host = new BrowserRenderHost();
 
         const eventMock = vi
           .spyOn(globalThis, 'event', 'get')
@@ -132,17 +132,17 @@ describe('ClientRenderHost', () => {
   describe('.getHostName()', () => {
     it('should return the unpredictable host name', () => {
       expect(
-        new ClientRenderHost({
+        new BrowserRenderHost({
           hostName: '__test__',
         }).getHostName(),
       ).toBe('__test__');
-      expect(new ClientRenderHost().getHostName()).toMatch(/^[0-9a-z]+$/);
+      expect(new BrowserRenderHost().getHostName()).toMatch(/^[0-9a-z]+$/);
     });
   });
 
   describe('.getTemplate()', () => {
     it('should create a TaggedTemplate representing HTML fragment', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const { strings, values } = tmpl`<div>${'Hello'}, ${'World'}!</div>`;
       const template = host.getTemplate(
         strings,
@@ -166,7 +166,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should create a TaggedTemplate representing MathML fragment', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const { strings, values } = tmpl`<msup><mi>${0}</mi><mn>${1}</mn></msup>`;
       const template = host.getTemplate(
         strings,
@@ -192,7 +192,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should create a TaggedTemplate representing SVG fragment', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const { strings, values } = tmpl`<text>${'Hello'}, ${'World'}!</text>`;
       const template = host.getTemplate(strings, values, 'svg') as LazyTemplate<
         any,
@@ -217,7 +217,7 @@ describe('ClientRenderHost', () => {
     it.each([[tmpl``], [tmpl` `]])(
       'should create a EmptyTemplate if there is no contents',
       ({ strings, values }) => {
-        const host = new ClientRenderHost();
+        const host = new BrowserRenderHost();
         const template = host.getTemplate(strings, values, 'html');
 
         expect(template).toBeInstanceOf(EmptyTemplate);
@@ -233,7 +233,7 @@ describe('ClientRenderHost', () => {
     ])(
       'should create a ChildTemplate if there is a only child value',
       ({ strings, values }) => {
-        const host = new ClientRenderHost();
+        const host = new BrowserRenderHost();
         const template = host.getTemplate(strings, values, 'html');
 
         expect(template).toBeInstanceOf(ChildTemplate);
@@ -243,7 +243,7 @@ describe('ClientRenderHost', () => {
     it.each([[tmpl`${'foo'}`], [tmpl` ${'foo'} `]])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
-        const host = new ClientRenderHost();
+        const host = new BrowserRenderHost();
         const template = host.getTemplate(strings, values, 'html');
 
         expect(template).toBeInstanceOf(TextTemplate);
@@ -251,7 +251,7 @@ describe('ClientRenderHost', () => {
     );
 
     it('should get a template from the cache if avaiable', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const { strings, values } = tmpl`<div>Hello, ${'World'}!</div>`;
       const template = host.getTemplate(strings, values, 'html');
 
@@ -262,7 +262,7 @@ describe('ClientRenderHost', () => {
 
   describe('.getScopedValue()', () => {
     it('should get a scoped value from the block scope', () => {
-      const host = new ClientRenderHost({});
+      const host = new BrowserRenderHost({});
       const block = new MockBlock();
 
       host.setScopedValue('foo', 456, block);
@@ -273,7 +273,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should get a scoped value from the parent block scope', () => {
-      const host = new ClientRenderHost({});
+      const host = new BrowserRenderHost({});
       const parent = new MockBlock();
       const block = new MockBlock(null, parent);
 
@@ -285,7 +285,7 @@ describe('ClientRenderHost', () => {
 
   describe('.getUnsafeTemplate()', () => {
     it('should create a template by raw document string', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const content = '<div>foo</div>';
       const template = host.getUnsafeTemplate(content, 'html');
 
@@ -295,7 +295,7 @@ describe('ClientRenderHost', () => {
 
   describe('.resolveBinding()', () => {
     it('should resolve the value as an AttributeBinding if the part is a AttributePart', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.Attribute,
@@ -310,7 +310,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should resolve the value as an EventBinding if the part is a EventPart', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const value = vi.fn();
       const part = {
         type: PartType.Event,
@@ -325,7 +325,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should resolve the value as a PropertyBinding if the part is a PropertyPart', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.Property,
@@ -340,7 +340,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should resolve the value as a NodeBinding if the part is a NodePart', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.Node,
@@ -353,7 +353,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should resolve the value as a NodeBinding if the part is a ChildNodePart', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -367,7 +367,7 @@ describe('ClientRenderHost', () => {
     });
 
     it('should resolve the value as an ElementBinding if the part is a ElementPart', () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
       const value = {
         class: 'foo',
         title: 'bar',
@@ -386,7 +386,7 @@ describe('ClientRenderHost', () => {
 
   describe('.nextIdentifier()', () => {
     it('should return a next identifier', async () => {
-      const host = new ClientRenderHost();
+      const host = new BrowserRenderHost();
 
       expect(host.nextIdentifier()).toBe(1);
       expect(host.nextIdentifier()).toBe(2);

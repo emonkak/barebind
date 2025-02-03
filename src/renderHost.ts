@@ -28,12 +28,12 @@ import { TaggedTemplate, createMarker } from './templates/taggedTemplate.js';
 import { UnsafeTemplate } from './templates/unsafeTemplate.js';
 import { ChildTemplate, TextTemplate } from './templates/valueTemplate.js';
 
-export interface ClientRenderHostOptions {
+export interface BrowserRenderHostOptions {
   hostName?: string;
   literalProcessor?: LiteralProcessor;
 }
 
-export class ClientRenderHost implements RenderHost<RenderContext> {
+export class BrowserRenderHost implements RenderHost<RenderContext> {
   private readonly _namespaces: WeakMap<
     Block<RenderContext>,
     Map<unknown, unknown>
@@ -53,7 +53,7 @@ export class ClientRenderHost implements RenderHost<RenderContext> {
   constructor({
     hostName = getRandomString(8),
     literalProcessor = new LiteralProcessor(),
-  }: ClientRenderHostOptions = {}) {
+  }: BrowserRenderHostOptions = {}) {
     this._hostName = hostName;
     this._literalProcessor = literalProcessor;
   }
