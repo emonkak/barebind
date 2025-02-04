@@ -212,7 +212,7 @@ export class ListBinding<TItem, TKey, TValue>
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newTail] = oldBindings[oldHead]!);
         binding.bind(newValues[newTail]!, context);
-        reorderItem(
+        moveItem(
           binding,
           newBindings[newTail + 1] ?? null,
           this._part,
@@ -224,7 +224,7 @@ export class ListBinding<TItem, TKey, TValue>
         // Old tail matches new head; update and move to new head.
         const binding = (newBindings[newHead] = oldBindings[oldTail]!);
         binding.bind(newValues[newHead]!, context);
-        reorderItem(binding, oldBindings[oldHead]!, this._part, context);
+        moveItem(binding, oldBindings[oldHead]!, this._part, context);
         oldTail--;
         newHead++;
       } else {
@@ -250,7 +250,7 @@ export class ListBinding<TItem, TKey, TValue>
             // Reuse the old binding.
             const binding = (newBindings[newHead] = oldBindings[oldIndex]!);
             binding.bind(newValues[newHead]!, context);
-            reorderItem(binding, oldBindings[oldHead]!, this._part, context);
+            moveItem(binding, oldBindings[oldHead]!, this._part, context);
             // This marks the old binding as having been used, so that it will
             // be skipped in the first two checks above.
             oldBindings[oldIndex] = null;
@@ -381,7 +381,7 @@ class MountItem<TValue> implements Effect {
   }
 }
 
-class ReorderItem<TValue> implements Effect {
+class MoveItem<TValue> implements Effect {
   private readonly _binding: Binding<TValue>;
 
   private readonly _referenceBinding: Binding<TValue> | null;
@@ -474,22 +474,21 @@ function insertItem<TKey, TValue>(
   return binding;
 }
 
-function removeItem<TValue>(
-  binding: Binding<TValue>,
-  context: UpdateContext,
-): void {
-  binding.unbind(context);
-
-  context.enqueueMutationEffect(new UnmountItem(binding));
-}
-
-function reorderItem<TValue>(
+function moveItem<TValue>(
   binding: Binding<TValue>,
   referenceBinding: Binding<TValue> | null,
   listPart: ChildNodePart,
   context: UpdateContext,
 ): void {
   context.enqueueMutationEffect(
-    new ReorderItem(binding, referenceBinding, listPart),
+    new MoveItem(binding, referenceBinding, listPart),
   );
+}
+
+function removeItem<TValue>(
+  binding: Binding<TValue>,
+  context: UpdateContext,
+): void {
+  binding.unbind(context);
+  context.enqueueMutationEffect(new UnmountItem(binding));
 }
