@@ -1,3 +1,5 @@
+/// <reference path="../../typings/moveBefore.d.ts" />
+
 import {
   type Binding,
   type ChildNodePart,
@@ -414,7 +416,16 @@ class MoveItem<TValue> implements Effect {
       currentNode = currentNode.nextSibling;
     } while (currentNode !== null);
 
-    referenceNode.before(...targetNodes);
+    if (typeof Element.prototype.moveBefore === 'function') {
+      // Use moveBefore() alternative to insertBefore(). This preserves states
+      // of moves.
+      const parentNode = referenceNode.parentNode!;
+      for (let i = 0, l = targetNodes.length; i < l; i++) {
+        parentNode.moveBefore(targetNodes[i]!, referenceNode);
+      }
+    } else {
+      referenceNode.before(...targetNodes);
+    }
   }
 }
 

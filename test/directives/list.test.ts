@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { PartType, UpdateContext, directiveTag } from '../../src/baseTypes.js';
 import {
@@ -86,141 +86,104 @@ describe('List', () => {
   });
 });
 
-describe('ListBinding', () => {
-  describe('.connect()', () => {
-    it('should connect new bindings from items', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
+describe.each([{ usesMoveBefore: true }, { usesMoveBefore: false }])(
+  'ListBinding',
+  ({ usesMoveBefore }) => {
+    const originalMoveBefore = Element.prototype.moveBefore;
 
-      const value = keyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(binding.value).toBe(value);
-      expect(binding.startNode.nodeValue).toBe('foo');
-      expect(
-        binding.bindings.map((binding) => binding.value.content),
-      ).toStrictEqual(['foo', 'bar', 'baz']);
-      expect(
-        binding.bindings.map((binding) => binding.part.node.nodeValue),
-      ).toStrictEqual([
-        'TextDirective@"foo"',
-        'TextDirective@"bar"',
-        'TextDirective@"baz"',
-      ]);
-      expect(
-        binding.bindings.map((binding) => binding.startNode.nodeValue),
-      ).toStrictEqual(['foo', 'bar', 'baz']);
-      expect(binding.bindings.map((binding) => binding.endNode)).toStrictEqual(
-        binding.bindings.map((binding) => binding.part.node),
-      );
-      expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
-      );
-    });
-
-    it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = keyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value, part);
-
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      binding.connect(context);
-      binding.connect(context);
-      context.flushUpdate();
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.bind()', () => {
-    it('should update items according to keys', () => {
-      const source = ['foo', 'bar', 'baz', 'qux'];
-
-      for (const items1 of allCombinations(source)) {
-        for (const items2 of allCombinations(source)) {
-          const context = new UpdateContext(
-            new MockRenderHost(),
-            new SyncUpdater(),
-            new MockBlock(),
-          );
-
-          const value1 = keyedList(
-            items1,
-            (item) => item,
-            (item) => new TextDirective(item),
-          );
-          const value2 = keyedList(
-            items2,
-            (item) => item,
-            (item) => new TextDirective(item),
-          );
-          const container = document.createElement('div');
-          const part = {
-            type: PartType.ChildNode,
-            node: document.createComment(''),
-          } as const;
-          const binding = new ListBinding(value1, part);
-
-          container.appendChild(part.node);
-          binding.connect(context);
-          context.flushUpdate();
-
-          binding.bind(value2, context);
-          context.flushUpdate();
-
-          expect(binding.value).toBe(value2);
-          expect(
-            binding.bindings.map((binding) => binding.value.content),
-          ).toStrictEqual(value2.items);
-          expect(container.innerHTML).toBe(
-            items2
-              .map((item) => item + '<!--TextDirective@"' + item + '"-->')
-              .join('') + '<!---->',
-          );
-        }
+    beforeEach(() => {
+      if (usesMoveBefore) {
+        Element.prototype.moveBefore ??= Element.prototype.insertBefore;
+      } else {
+        Element.prototype.moveBefore = undefined as any;
       }
     });
 
-    it('should update items containing duplicate keys', () => {
-      const source1 = ['foo', 'bar', 'baz', 'baz', 'baz'];
-      const source2 = ['foo', 'bar', 'baz'];
+    afterEach(() => {
+      Element.prototype.moveBefore = originalMoveBefore;
+    });
 
-      for (const permutation1 of permutations(source1)) {
-        for (const permutation2 of permutations(source2)) {
-          for (const [items1, items2] of [
-            [permutation1, permutation2],
-            [permutation2, permutation1],
-          ]) {
+    describe('.connect()', () => {
+      it('should connect new bindings from items', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const value = keyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => item,
+          (item) => new TextDirective(item),
+        );
+        const container = document.createElement('div');
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value, part);
+
+        container.appendChild(part.node);
+        binding.connect(context);
+        context.flushUpdate();
+
+        expect(binding.value).toBe(value);
+        expect(binding.startNode.nodeValue).toBe('foo');
+        expect(
+          binding.bindings.map((binding) => binding.value.content),
+        ).toStrictEqual(['foo', 'bar', 'baz']);
+        expect(
+          binding.bindings.map((binding) => binding.part.node.nodeValue),
+        ).toStrictEqual([
+          'TextDirective@"foo"',
+          'TextDirective@"bar"',
+          'TextDirective@"baz"',
+        ]);
+        expect(
+          binding.bindings.map((binding) => binding.startNode.nodeValue),
+        ).toStrictEqual(['foo', 'bar', 'baz']);
+        expect(
+          binding.bindings.map((binding) => binding.endNode),
+        ).toStrictEqual(binding.bindings.map((binding) => binding.part.node));
+        expect(container.innerHTML).toBe(
+          'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
+        );
+      });
+
+      it('should not enqueue self as a mutation effect if already scheduled', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const value = keyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => item,
+          (item) => new TextDirective(item),
+        );
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value, part);
+
+        const commitSpy = vi.spyOn(binding, 'commit');
+
+        binding.connect(context);
+        binding.connect(context);
+        context.flushUpdate();
+
+        expect(commitSpy).toHaveBeenCalledOnce();
+      });
+    });
+
+    describe('.bind()', () => {
+      it('should update items according to keys', () => {
+        const source = ['foo', 'bar', 'baz', 'qux'];
+
+        for (const items1 of allCombinations(source)) {
+          for (const items2 of allCombinations(source)) {
             const context = new UpdateContext(
               new MockRenderHost(),
               new SyncUpdater(),
@@ -228,12 +191,12 @@ describe('ListBinding', () => {
             );
 
             const value1 = keyedList(
-              items1!,
+              items1,
               (item) => item,
               (item) => new TextDirective(item),
             );
             const value2 = keyedList(
-              items2!,
+              items2,
               (item) => item,
               (item) => new TextDirective(item),
             );
@@ -256,267 +219,321 @@ describe('ListBinding', () => {
               binding.bindings.map((binding) => binding.value.content),
             ).toStrictEqual(value2.items);
             expect(container.innerHTML).toBe(
-              items2!
+              items2
                 .map((item) => item + '<!--TextDirective@"' + item + '"-->')
                 .join('') + '<!---->',
             );
           }
         }
-      }
-    });
+      });
 
-    it('should swap items according to keys', () => {
-      const source = ['foo', 'bar', 'baz'];
+      it('should update items containing duplicate keys', () => {
+        const source1 = ['foo', 'bar', 'baz', 'baz', 'baz'];
+        const source2 = ['foo', 'bar', 'baz'];
 
-      for (const items1 of permutations(source)) {
-        for (const items2 of permutations(source)) {
-          const context = new UpdateContext(
-            new MockRenderHost(),
-            new SyncUpdater(),
-            new MockBlock(),
-          );
+        for (const permutation1 of permutations(source1)) {
+          for (const permutation2 of permutations(source2)) {
+            for (const [items1, items2] of [
+              [permutation1, permutation2],
+              [permutation2, permutation1],
+            ]) {
+              const context = new UpdateContext(
+                new MockRenderHost(),
+                new SyncUpdater(),
+                new MockBlock(),
+              );
 
-          const value1 = keyedList(
-            items1,
-            (item) => item,
-            (item) => new TextDirective(item),
-          );
-          const value2 = keyedList(
-            items2,
-            (item) => item,
-            (item) => new TextDirective(item),
-          );
-          const container = document.createElement('div');
-          const part = {
-            type: PartType.ChildNode,
-            node: document.createComment(''),
-          } as const;
-          const binding = new ListBinding(value1, part);
+              const value1 = keyedList(
+                items1!,
+                (item) => item,
+                (item) => new TextDirective(item),
+              );
+              const value2 = keyedList(
+                items2!,
+                (item) => item,
+                (item) => new TextDirective(item),
+              );
+              const container = document.createElement('div');
+              const part = {
+                type: PartType.ChildNode,
+                node: document.createComment(''),
+              } as const;
+              const binding = new ListBinding(value1, part);
 
-          container.appendChild(part.node);
-          binding.connect(context);
-          context.flushUpdate();
+              container.appendChild(part.node);
+              binding.connect(context);
+              context.flushUpdate();
 
-          binding.bind(value2, context);
-          context.flushUpdate();
+              binding.bind(value2, context);
+              context.flushUpdate();
 
-          expect(binding.value).toBe(value2);
-          expect(
-            binding.bindings.map((binding) => binding.value.content),
-          ).toStrictEqual(value2.items);
-          expect(container.innerHTML).toBe(
-            items2
-              .map((item) => item + '<!--TextDirective@"' + item + '"-->')
-              .join('') + '<!---->',
-          );
+              expect(binding.value).toBe(value2);
+              expect(
+                binding.bindings.map((binding) => binding.value.content),
+              ).toStrictEqual(value2.items);
+              expect(container.innerHTML).toBe(
+                items2!
+                  .map((item) => item + '<!--TextDirective@"' + item + '"-->')
+                  .join('') + '<!---->',
+              );
+            }
+          }
         }
-      }
+      });
+
+      it('should swap items according to keys', () => {
+        const source = ['foo', 'bar', 'baz'];
+
+        for (const items1 of permutations(source)) {
+          for (const items2 of permutations(source)) {
+            const context = new UpdateContext(
+              new MockRenderHost(),
+              new SyncUpdater(),
+              new MockBlock(),
+            );
+
+            const value1 = keyedList(
+              items1,
+              (item) => item,
+              (item) => new TextDirective(item),
+            );
+            const value2 = keyedList(
+              items2,
+              (item) => item,
+              (item) => new TextDirective(item),
+            );
+            const container = document.createElement('div');
+            const part = {
+              type: PartType.ChildNode,
+              node: document.createComment(''),
+            } as const;
+            const binding = new ListBinding(value1, part);
+
+            container.appendChild(part.node);
+            binding.connect(context);
+            context.flushUpdate();
+
+            binding.bind(value2, context);
+            context.flushUpdate();
+
+            expect(binding.value).toBe(value2);
+            expect(
+              binding.bindings.map((binding) => binding.value.content),
+            ).toStrictEqual(value2.items);
+            expect(container.innerHTML).toBe(
+              items2
+                .map((item) => item + '<!--TextDirective@"' + item + '"-->')
+                .join('') + '<!---->',
+            );
+          }
+        }
+      });
+
+      it('should update with longer list than last time', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const value1 = nonKeyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => new TextDirective(item),
+        );
+        const value2 = nonKeyedList(
+          ['qux', 'baz', 'bar', 'foo'],
+          (item) => new TextDirective(item),
+        );
+        const container = document.createElement('div');
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value1, part);
+
+        container.appendChild(part.node);
+        binding.connect(context);
+        context.flushUpdate();
+
+        binding.bind(value2, context);
+        context.flushUpdate();
+
+        expect(binding.value).toBe(value2);
+        expect(
+          binding.bindings.map((binding) => binding.value.content),
+        ).toStrictEqual(value2.items);
+        expect(container.innerHTML).toBe(
+          'qux<!--TextDirective@0-->baz<!--TextDirective@1-->bar<!--TextDirective@2-->foo<!--TextDirective@3--><!---->',
+        );
+      });
+
+      it('should update with shoter list than last time', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const value1 = nonKeyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => new TextDirective(item),
+        );
+        const value2 = nonKeyedList(
+          ['bar', 'foo'],
+          (item) => new TextDirective(item),
+        );
+        const container = document.createElement('div');
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value1, part);
+
+        container.appendChild(part.node);
+        binding.connect(context);
+        context.flushUpdate();
+
+        binding.bind(value2, context);
+        context.flushUpdate();
+
+        expect(binding.value).toBe(value2);
+        expect(
+          binding.bindings.map((binding) => binding.value.content),
+        ).toStrictEqual(value2.items);
+        expect(container.innerHTML).toBe(
+          'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
+        );
+      });
     });
 
-    it('should update with longer list than last time', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
+    describe('.unbind()', () => {
+      it('should unbind current bindings', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
 
-      const value1 = nonKeyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => new TextDirective(item),
-      );
-      const value2 = nonKeyedList(
-        ['qux', 'baz', 'bar', 'foo'],
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value1, part);
+        const value = keyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => item,
+          (item) => item,
+        );
+        const container = document.createElement('div');
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value, part);
 
-      container.appendChild(part.node);
-      binding.connect(context);
-      context.flushUpdate();
+        container.appendChild(part.node);
+        binding.connect(context);
+        context.flushUpdate();
 
-      binding.bind(value2, context);
-      context.flushUpdate();
+        binding.unbind(context);
+        context.flushUpdate();
 
-      expect(binding.value).toBe(value2);
-      expect(
-        binding.bindings.map((binding) => binding.value.content),
-      ).toStrictEqual(value2.items);
-      expect(container.innerHTML).toBe(
-        'qux<!--TextDirective@0-->baz<!--TextDirective@1-->bar<!--TextDirective@2-->foo<!--TextDirective@3--><!---->',
-      );
+        expect(binding.bindings).toHaveLength(0);
+        expect(container.innerHTML).toBe('<!---->');
+      });
+
+      it('should not enqueue self as a mutation effect if already scheduled', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const value = keyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => item,
+          (item) => item,
+        );
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value, part);
+
+        const commitSpy = vi.spyOn(binding, 'commit');
+
+        binding.unbind(context);
+        binding.unbind(context);
+        context.flushUpdate();
+
+        expect(commitSpy).toHaveBeenCalledOnce();
+      });
     });
 
-    it('should update with shoter list than last time', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
+    describe('.disconnect()', () => {
+      it('should disconnect current bindings', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
 
-      const value1 = nonKeyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => new TextDirective(item),
-      );
-      const value2 = nonKeyedList(
-        ['bar', 'foo'],
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value1, part);
+        const value = keyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => item,
+          (item) => new TextDirective(item),
+        );
+        const container = document.createElement('div');
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value, part);
 
-      container.appendChild(part.node);
-      binding.connect(context);
-      context.flushUpdate();
+        container.appendChild(part.node);
+        binding.connect(context);
+        context.flushUpdate();
 
-      binding.bind(value2, context);
-      context.flushUpdate();
+        const disconnectSpies = binding.bindings.map((binding) =>
+          vi.spyOn(binding, 'disconnect'),
+        );
 
-      expect(binding.value).toBe(value2);
-      expect(
-        binding.bindings.map((binding) => binding.value.content),
-      ).toStrictEqual(value2.items);
-      expect(container.innerHTML).toBe(
-        'bar<!--TextDirective@0-->foo<!--TextDirective@1--><!---->',
-      );
+        binding.disconnect(context);
+
+        expect(disconnectSpies).toHaveLength(3);
+        for (const disconnectSpy of disconnectSpies) {
+          expect(disconnectSpy).toHaveBeenCalledOnce();
+          expect(disconnectSpy).toHaveBeenCalledWith(context);
+        }
+        expect(container.innerHTML).toBe(
+          'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
+        );
+      });
+
+      it('should not commit pending bindings', () => {
+        const context = new UpdateContext(
+          new MockRenderHost(),
+          new SyncUpdater(),
+          new MockBlock(),
+        );
+
+        const value = keyedList(
+          ['foo', 'bar', 'baz'],
+          (item) => item,
+          (item) => new TextDirective(item),
+        );
+        const container = document.createElement('div');
+        const part = {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+        } as const;
+        const binding = new ListBinding(value, part);
+
+        container.appendChild(part.node);
+        binding.connect(context);
+        binding.disconnect(context);
+        context.flushUpdate();
+
+        expect(container.innerHTML).toBe(
+          '<!--TextDirective@"foo"--><!--TextDirective@"bar"--><!--TextDirective@"baz"--><!---->',
+        );
+        expect(binding.startNode).toBe(part.node);
+      });
     });
-  });
-
-  describe('.unbind()', () => {
-    it('should unbind current bindings', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = keyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      context.flushUpdate();
-
-      binding.unbind(context);
-      context.flushUpdate();
-
-      expect(binding.bindings).toHaveLength(0);
-      expect(container.innerHTML).toBe('<!---->');
-    });
-
-    it('should not enqueue self as a mutation effect if already scheduled', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = keyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => item,
-      );
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value, part);
-
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      binding.unbind(context);
-      binding.unbind(context);
-      context.flushUpdate();
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-    });
-  });
-
-  describe('.disconnect()', () => {
-    it('should disconnect current bindings', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = keyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      context.flushUpdate();
-
-      const disconnectSpies = binding.bindings.map((binding) =>
-        vi.spyOn(binding, 'disconnect'),
-      );
-
-      binding.disconnect(context);
-
-      expect(disconnectSpies).toHaveLength(3);
-      for (const disconnectSpy of disconnectSpies) {
-        expect(disconnectSpy).toHaveBeenCalledOnce();
-        expect(disconnectSpy).toHaveBeenCalledWith(context);
-      }
-      expect(container.innerHTML).toBe(
-        'foo<!--TextDirective@"foo"-->bar<!--TextDirective@"bar"-->baz<!--TextDirective@"baz"--><!---->',
-      );
-    });
-
-    it('should not commit pending bindings', () => {
-      const context = new UpdateContext(
-        new MockRenderHost(),
-        new SyncUpdater(),
-        new MockBlock(),
-      );
-
-      const value = keyedList(
-        ['foo', 'bar', 'baz'],
-        (item) => item,
-        (item) => new TextDirective(item),
-      );
-      const container = document.createElement('div');
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = new ListBinding(value, part);
-
-      container.appendChild(part.node);
-      binding.connect(context);
-      binding.disconnect(context);
-      context.flushUpdate();
-
-      expect(container.innerHTML).toBe(
-        '<!--TextDirective@"foo"--><!--TextDirective@"bar"--><!--TextDirective@"baz"--><!---->',
-      );
-      expect(binding.startNode).toBe(part.node);
-    });
-  });
-});
+  },
+);
