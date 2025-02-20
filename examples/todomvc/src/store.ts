@@ -18,7 +18,7 @@ export enum TodoFilter {
   COMPLETED,
 }
 
-export class TodoState {
+export class TodoStore {
   readonly todos$ = atom<Atom<Todo>[]>([]);
 
   readonly filter$ = atom(TodoFilter.ALL);
@@ -27,14 +27,14 @@ export class TodoState {
 
   readonly visibleTodos$: Signal<Atom<Todo>[]>;
 
-  static [usableTag](context: RenderContext): TodoState {
-    const state = context.getContextValue(TodoState);
-    if (!(state instanceof TodoState)) {
+  static [usableTag](context: RenderContext): TodoStore {
+    const store = context.getContextValue(TodoStore);
+    if (!(store instanceof TodoStore)) {
       throw new Error(
-        'A context value for TodoState does not exist, please ensure it is registered by context.use(...).',
+        'A context value for TodoStore does not exist, please ensure it is registered by context.use(TodoStore).',
       );
     }
-    return state;
+    return store;
   }
 
   constructor() {
@@ -59,7 +59,7 @@ export class TodoState {
   }
 
   [usableTag](context: RenderContext): void {
-    context.setContextValue(TodoState, this);
+    context.setContextValue(TodoStore, this);
   }
 
   addTodo(title: string): void {

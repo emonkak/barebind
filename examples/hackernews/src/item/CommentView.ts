@@ -6,7 +6,7 @@ import {
   optional,
 } from '@emonkak/ebit/directives.js';
 
-import type { Comment } from '../state.js';
+import type { Comment } from '../store.js';
 
 interface CommentProps {
   comment: Comment;

@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { optional } from '@emonkak/ebit/directives.js';
 
-import type { Story } from '../state.js';
+import type { Story } from '../store.js';
 
 export interface StoryProps {
   story: Story;

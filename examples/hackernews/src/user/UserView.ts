@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { optional } from '@emonkak/ebit/directives.js';
 
-import type { User } from '../state.js';
+import type { User } from '../store.js';
 
 export interface UserProps {
   user: User;

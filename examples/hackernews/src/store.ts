@@ -19,7 +19,7 @@ export type StoryType = 'news' | 'newest' | 'show' | 'ask' | 'jobs';
 const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';
 
-export class StoryState {
+export class StoryStore {
   readonly stories$ = atom<Story[]>([]);
 
   readonly type$ = atom<StoryType | null>(null);
@@ -28,12 +28,12 @@ export class StoryState {
 
   readonly isLoading$ = atom(false);
 
-  static [usableTag](context: RenderContext): StoryState {
-    const state = context.getContextValue(this);
-    if (!(state instanceof this)) {
-      throw new Error(`The context value for ${this.name} could not be found.`);
+  static [usableTag](context: RenderContext): StoryStore {
+    const store = context.getContextValue(this);
+    if (!(store instanceof this)) {
+      throw new Error(`The context value for ${this.name} is not registered.`);
     }
-    return state;
+    return store;
   }
 
   [usableTag](context: RenderContext): void {
@@ -95,11 +95,11 @@ export class ItemState {
   readonly error$ = atom<Error | null>(null);
 
   static [usableTag](context: RenderContext): ItemState {
-    const state = context.getContextValue(this);
-    if (!(state instanceof this)) {
-      throw new Error(`The context value for ${this.name} could not be found.`);
+    const store = context.getContextValue(this);
+    if (!(store instanceof this)) {
+      throw new Error(`The context value for ${this.name} is not registered.`);
     }
-    return state;
+    return store;
   }
 
   [usableTag](context: RenderContext): void {
@@ -136,19 +136,19 @@ export interface User {
   submitted: number[];
 }
 
-export class UserState {
+export class UserStore {
   readonly user$ = atom<User | null>(null);
 
   readonly isLoading$ = atom(false);
 
   readonly error$ = atom<Error | null>(null);
 
-  static [usableTag](context: RenderContext): UserState {
-    const state = context.getContextValue(this);
-    if (!(state instanceof this)) {
+  static [usableTag](context: RenderContext): UserStore {
+    const store = context.getContextValue(this);
+    if (!(store instanceof this)) {
       throw new Error(`The context value for ${this.name} could not be found.`);
     }
-    return state;
+    return store;
   }
 
   [usableTag](context: RenderContext): void {

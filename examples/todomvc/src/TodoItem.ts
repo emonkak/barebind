@@ -7,7 +7,7 @@ import {
 } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
-import { type Todo, TodoState } from './state.js';
+import { type Todo, TodoStore } from './store.js';
 
 export interface TodoItemProps {
   todo$: Atom<Todo>;
@@ -18,7 +18,7 @@ export function TodoItem(
   context: RenderContext,
 ): TemplateResult {
   const [isEditing, setIsEditing] = context.useState(false);
-  const state = context.use(TodoState);
+  const store = context.use(TodoStore);
   const todo = context.use(todo$);
 
   const handleStartEditing = () => {
@@ -31,19 +31,19 @@ export function TodoItem(
 
   const handleUpdate = (title: string) => {
     if (title.length === 0) {
-      state.removeTodo(todo.id);
+      store.removeTodo(todo.id);
     } else {
-      state.updateTodo(todo.id, title);
+      store.updateTodo(todo.id, title);
     }
     setIsEditing(false);
   };
 
   const handleToggleItem = () => {
-    state.toggleTodo(todo.id);
+    store.toggleTodo(todo.id);
   };
 
   const handleRemoveItem = () => {
-    state.removeTodo(todo.id);
+    store.removeTodo(todo.id);
   };
 
   return context.html`

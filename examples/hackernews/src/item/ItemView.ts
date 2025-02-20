@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, keyedList, optional } from '@emonkak/ebit/directives.js';
 
-import type { Item } from '../state.js';
+import type { Item } from '../store.js';
 import { CommentView } from './CommentView.js';
 
 export interface ItemProps {

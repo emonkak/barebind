@@ -2,7 +2,7 @@ import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/directives.js';
 
 import { TodoInput } from './TodoInput.js';
-import { TodoState } from './state.js';
+import { TodoStore } from './store.js';
 
 export interface HeaderProps {}
 
@@ -10,10 +10,10 @@ export function Header(
   _props: HeaderProps,
   context: RenderContext,
 ): TemplateResult {
-  const state = context.use(TodoState);
+  const store = context.use(TodoStore);
 
   const handleSubmit = (title: string) => {
-    state.addTodo(title);
+    store.addTodo(title);
   };
 
   return context.html`

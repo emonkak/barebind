@@ -7,7 +7,7 @@ import {
 } from '@emonkak/ebit/directives.js';
 
 import { TodoItem } from './TodoItem.js';
-import { TodoState } from './state.js';
+import { TodoStore } from './store.js';
 
 export interface MainProps {}
 
@@ -15,11 +15,11 @@ export function Main(
   _props: MainProps,
   context: RenderContext,
 ): TemplateResult {
-  const state = context.use(TodoState);
-  const visibleTodos = context.use(state.visibleTodos$);
+  const store = context.use(TodoStore);
+  const visibleTodos = context.use(store.visibleTodos$);
 
   const handleToggleAll = () => {
-    state.toggleAllTodos();
+    store.toggleAllTodos();
   };
 
   return context.html`

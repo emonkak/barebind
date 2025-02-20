@@ -5,12 +5,12 @@ import { hashLocation, resetScrollPosition } from '@emonkak/ebit/router.js';
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
 import { router } from './router.js';
-import type { ItemState, StoryState, UserState } from './state.js';
+import type { ItemState, StoryStore, UserStore } from './store.js';
 
 interface AppProps {
   itemState: ItemState;
-  storyState: StoryState;
-  userState: UserState;
+  storyState: StoryStore;
+  userState: UserStore;
 }
 
 export function App(

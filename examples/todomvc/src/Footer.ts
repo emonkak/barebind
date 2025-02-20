@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { classMap } from '@emonkak/ebit/directives.js';
 
-import { TodoFilter, TodoState } from './state.js';
+import { TodoFilter, TodoStore } from './store.js';
 
 export interface FooterProps {}
 
@@ -9,11 +9,11 @@ export function Footer(
   _props: FooterProps,
   context: RenderContext,
 ): TemplateResult {
-  const state = context.use(TodoState);
+  const store = context.use(TodoStore);
   const [todos, activeTodos, filter] = context.use([
-    state.todos$,
-    state.activeTodos$,
-    state.filter$,
+    store.todos$,
+    store.activeTodos$,
+    store.filter$,
   ]);
 
   if (todos.length === 0) {
@@ -22,12 +22,12 @@ export function Footer(
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
-    state.filter$.value = newFilter;
+    store.filter$.value = newFilter;
   };
 
   const handleRemoveCompletedTodos = (event: Event) => {
     event.preventDefault();
-    state.clearCompletedTodos();
+    store.clearCompletedTodos();
   };
 
   return context.html`

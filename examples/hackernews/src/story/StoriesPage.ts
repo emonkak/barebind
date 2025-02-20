@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, keyedList } from '@emonkak/ebit/directives.js';
 
-import { StoryState, type StoryType } from '../state.js';
+import { StoryStore, type StoryType } from '../store.js';
 import { StoryView } from './StoryView.js';
 
 export interface StoriesPageProps {
@@ -15,12 +15,12 @@ export function StoriesPage(
   { type, page = 1 }: StoriesPageProps,
   context: RenderContext,
 ): TemplateResult {
-  const state = context.use(StoryState);
-  const [stories, isLoading] = context.use([state.stories$, state.isLoading$]);
+  const store = context.use(StoryStore);
+  const [stories, isLoading] = context.use([store.stories$, store.isLoading$]);
 
   context.useEffect(() => {
-    if (state.type$.value !== type || state.page$.value !== page) {
-      state.fetchStories(type, page);
+    if (store.type$.value !== type || store.page$.value !== page) {
+      store.fetchStories(type, page);
     }
   }, [type, page]);
 
