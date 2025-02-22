@@ -27,8 +27,8 @@ type JSStyleProperties =
   | `--${string}`;
 
 type ExtractStringProperties<T> = {
-  [P in keyof T]: P extends string ? (T[P] extends string ? P : never) : never;
-}[keyof T];
+  [P in keyof T]: T[P] extends string ? P : never;
+}[keyof T & string];
 
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
