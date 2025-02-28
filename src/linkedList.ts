@@ -1,14 +1,27 @@
-export interface LinkedListNode<T> {
-  value: T;
-  prev: LinkedListNode<T> | null;
-  next: LinkedListNode<T> | null;
-  owner: LinkedList<T> | null;
+export namespace LinkedList {
+  export interface Node<T> {
+    readonly value: T;
+    readonly prev: Node<T> | null;
+    readonly next: Node<T> | null;
+    readonly owner: LinkedList<T> | null;
+  }
+
+  export interface MutableNode<T> {
+    value: T;
+    prev: MutableNode<T> | null;
+    next: MutableNode<T> | null;
+    owner: LinkedList<T> | null;
+  }
 }
 
-export class LinkedList<T> implements Iterable<T> {
-  private _head: LinkedListNode<T> | null = null;
+type Node<T> = LinkedList.Node<T>;
 
-  private _tail: LinkedListNode<T> | null = null;
+type MutableNode<T> = LinkedList.MutableNode<T>;
+
+export class LinkedList<T> implements Iterable<T> {
+  private _head: MutableNode<T> | null = null;
+
+  private _tail: MutableNode<T> | null = null;
 
   *[Symbol.iterator](): Iterator<T> {
     for (let node = this._head; node !== null; node = node.next) {
@@ -16,11 +29,11 @@ export class LinkedList<T> implements Iterable<T> {
     }
   }
 
-  back(): LinkedListNode<T> | null {
+  back(): Node<T> | null {
     return this._tail;
   }
 
-  front(): LinkedListNode<T> | null {
+  front(): Node<T> | null {
     return this._head;
   }
 
@@ -28,7 +41,7 @@ export class LinkedList<T> implements Iterable<T> {
     return this._head === null;
   }
 
-  popBack(): LinkedListNode<T> | null {
+  popBack(): Node<T> | null {
     const tail = this._tail;
 
     if (tail !== null) {
@@ -46,7 +59,7 @@ export class LinkedList<T> implements Iterable<T> {
     return tail;
   }
 
-  popFront(): LinkedListNode<T> | null {
+  popFront(): Node<T> | null {
     const head = this._head;
 
     if (head !== null) {
@@ -64,7 +77,7 @@ export class LinkedList<T> implements Iterable<T> {
     return head;
   }
 
-  pushBack(value: T): LinkedListNode<T> {
+  pushBack(value: T): Node<T> {
     const node = {
       value,
       prev: this._tail,
@@ -83,7 +96,7 @@ export class LinkedList<T> implements Iterable<T> {
     return node;
   }
 
-  pushFront(value: T): LinkedListNode<T> {
+  pushFront(value: T): Node<T> {
     const node = {
       value,
       prev: null,
@@ -102,7 +115,7 @@ export class LinkedList<T> implements Iterable<T> {
     return node;
   }
 
-  remove(node: LinkedListNode<T>): boolean {
+  remove(node: MutableNode<T>): boolean {
     const { prev, next, owner } = node;
     if (owner !== this) {
       return false;
