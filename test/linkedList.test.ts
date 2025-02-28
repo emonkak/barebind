@@ -22,7 +22,7 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()).toBe(foo);
@@ -41,19 +41,19 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: bar,
         next: null,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(bar).toStrictEqual({
         value: 'bar',
         prev: baz,
         next: foo,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(baz).toStrictEqual({
         value: 'baz',
         prev: null,
         next: bar,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()).toBe(baz);
@@ -72,7 +72,7 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: null,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()?.value).toBe('foo');
@@ -91,19 +91,19 @@ describe('LinkedList', () => {
         value: 'foo',
         prev: null,
         next: bar,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(bar).toStrictEqual({
         value: 'bar',
         prev: foo,
         next: baz,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(baz).toStrictEqual({
         value: 'baz',
         prev: bar,
         next: null,
-        owner: expect.any(LinkedList),
+        owner: list,
       });
       expect(list.isEmpty()).toBe(false);
       expect(list.front()).toBe(foo);
