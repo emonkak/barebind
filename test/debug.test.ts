@@ -68,11 +68,12 @@ describe('nameOf()', () => {
     expect(nameOf('foo')).toBe('"foo"');
     expect(nameOf(123)).toBe('123');
     expect(nameOf(true)).toBe('true');
-    expect(nameOf({})).toBe('Object');
+    expect(nameOf({})).toBe('{}');
+    expect(nameOf([])).toBe('[]');
     expect(nameOf(new Date())).toBe('Date');
     expect(nameOf(() => {})).toBe('Function');
     expect(nameOf(function foo() {})).toBe('foo');
-    expect(nameOf({ [Symbol.toStringTag]: 'foo' })).toBe('foo');
+    expect(nameOf(new Map())).toBe('Map');
   });
 });
 

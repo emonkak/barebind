@@ -81,20 +81,23 @@ export function markUsedValue(value: unknown): string {
 }
 
 export function nameOf(value: unknown): string {
-  if (typeof value === 'object') {
-    return value === null
-      ? 'null'
-      : Symbol.toStringTag in value
-        ? (value[Symbol.toStringTag] as string)
-        : value.constructor.name;
-  }
-  if (typeof value === 'function') {
-    return value.name !== '' ? value.name : 'Function';
-  }
-  if (typeof value === 'undefined') {
+  if (
+    typeof value === 'string' ||
+    typeof value === 'boolean' ||
+    typeof value === 'number' ||
+    (typeof value === 'object' &&
+      (value === null ||
+        value.constructor === Object ||
+        value.constructor === Array))
+  ) {
+    return JSON.stringify(value);
+  } else if (typeof value === 'undefined') {
     return 'undefined';
+  } else if (typeof value === 'function') {
+    return value.name !== '' ? value.name : value.constructor.name;
+  } else {
+    return (value as any)[Symbol.toStringTag] ?? value.constructor.name;
   }
-  return JSON.stringify(value);
 }
 
 function appendInsideTag(element: Element, contentToAppend: string): string {

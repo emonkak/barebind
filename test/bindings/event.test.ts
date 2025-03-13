@@ -47,7 +47,7 @@ describe('EventBinding', () => {
             name: 'hello',
           },
         );
-      }).toThrow('The value must not be a directive, but got "Object".');
+      }).toThrow('The value must not be a directive, but got "{}".');
     });
   });
 
@@ -288,7 +288,7 @@ describe('EventBinding', () => {
           { handleEvent: () => {}, [directiveTag]: () => {} } as any,
           context,
         );
-      }).toThrow('The value must not be a directive, but got "Object".');
+      }).toThrow('The value must not be a directive, but got "{}".');
     });
   });
 
