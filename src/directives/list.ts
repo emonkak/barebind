@@ -23,14 +23,14 @@ import {
 type Selector<TItem, TResult> = (item: TItem, index: number) => TResult;
 
 export function nonKeyedList<TItem, TValue>(
-  items: TItem[],
+  items: Iterable<TItem>,
   valueSelector: Selector<TItem, TValue>,
 ): List<TItem, number, TValue> {
   return new List(items, indexSelector, valueSelector);
 }
 
 export function keyedList<TItem, TKey, TValue>(
-  items: TItem[],
+  items: Iterable<TItem>,
   keySelector: Selector<TItem, TKey>,
   valueSelector: Selector<TItem, TValue>,
 ): List<TItem, TKey, TValue> {
@@ -40,14 +40,14 @@ export function keyedList<TItem, TKey, TValue>(
 export class List<TItem, TKey, TValue>
   implements Directive<List<TItem, TKey, TValue>>
 {
-  private readonly _items: TItem[];
+  private readonly _items: Iterable<TItem>;
 
   private readonly _keySelector: Selector<TItem, TKey>;
 
   private readonly _valueSelector: Selector<TItem, TValue>;
 
   constructor(
-    items: TItem[],
+    items: Iterable<TItem>,
     keySelector: Selector<TItem, TKey>,
     valueSelector: Selector<TItem, TValue>,
   ) {
@@ -56,7 +56,7 @@ export class List<TItem, TKey, TValue>
     this._valueSelector = valueSelector;
   }
 
-  get items(): TItem[] {
+  get items(): Iterable<TItem> {
     return this._items;
   }
 
@@ -171,23 +171,29 @@ export class ListBinding<TItem, TKey, TValue>
   }
 
   private _reconcileItems(
-    items: TItem[],
+    items: Iterable<TItem>,
     keySelector: Selector<TItem, TKey>,
     valueSelector: Selector<TItem, TValue>,
     context: UpdateContext,
   ): void {
-    const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
-    const newBindings = new Array<Binding<TValue>>(items.length);
     const oldKeys = this._memoizedKeys;
-    const newKeys = items.map(keySelector);
-    const newValues = items.map(valueSelector);
+    const oldBindings: (Binding<TValue> | null)[] = this._pendingBindings;
+    const newKeys = [];
+    const newValues = [];
+    let index = 0;
 
+    for (const item of items) {
+      newKeys.push(keySelector(item, index));
+      newValues.push(valueSelector(item, index));
+      index++;
+    }
+
+    const newBindings: Binding<TValue>[] = new Array(newKeys.length);
     // Head and tail pointers to old bindings and new bindings.
     let oldHead = 0;
     let newHead = 0;
     let oldTail = oldBindings.length - 1;
     let newTail = newBindings.length - 1;
-
     let oldKeyToIndexMap: Map<TKey, number> | null = null;
     let newKeyToIndexMap: Map<TKey, number> | null = null;
 
@@ -299,38 +305,42 @@ export class ListBinding<TItem, TKey, TValue>
   }
 
   private _replaceItems(
-    items: TItem[],
+    items: Iterable<TItem>,
     keySelector: (item: TItem, index: number) => TKey,
     valueSelector: (item: TItem, index: number) => TValue,
     context: UpdateContext,
   ): void {
-    const newKeys = new Array<TKey>(items.length);
     const oldBindings = this._pendingBindings;
-    const newBindings = new Array<Binding<TValue>>(items.length);
+    const newKeys: TKey[] = [];
+    const newValues: TValue[] = [];
+    let index = 0;
+
+    for (const item of items) {
+      newKeys.push(keySelector(item, index));
+      newValues.push(valueSelector(item, index));
+      index++;
+    }
+
+    const newBindings = new Array<Binding<TValue>>(newKeys.length);
 
     for (
-      let i = 0, l = Math.min(oldBindings.length, items.length);
+      let i = 0, l = Math.min(oldBindings.length, newKeys.length);
       i < l;
       i++
     ) {
-      const item = items[i]!;
-      const key = keySelector(item, i);
-      const value = valueSelector(item, i);
+      const value = newValues[i]!;
       const binding = this._pendingBindings[i]!;
       binding.bind(value, context);
-      newKeys[i] = key;
       newBindings[i] = binding;
     }
 
-    for (let i = oldBindings.length, l = items.length; i < l; i++) {
-      const item = items[i]!;
-      const key = keySelector(item, i);
-      const value = valueSelector(item, i);
-      newKeys[i] = key;
+    for (let i = oldBindings.length, l = newKeys.length; i < l; i++) {
+      const key = newKeys[i]!;
+      const value = newValues[i]!;
       newBindings[i] = insertItem(key, value, null, this._part, context);
     }
 
-    for (let i = items.length, l = oldBindings.length; i < l; i++) {
+    for (let i = newKeys.length, l = oldBindings.length; i < l; i++) {
       removeItem(oldBindings[i]!, context);
     }
 
@@ -346,7 +356,7 @@ export class ListBinding<TItem, TKey, TValue>
   }
 
   private _updateItems(
-    items: TItem[],
+    items: Iterable<TItem>,
     keySelector: Selector<TItem, TKey>,
     valueSelector: Selector<TItem, TValue>,
     context: UpdateContext,
