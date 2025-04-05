@@ -1,7 +1,7 @@
 import type { RenderContext, TemplateResult } from '@emonkak/ebit';
 import { component, optional } from '@emonkak/ebit/directives.js';
 
-import { ItemState } from '../store.js';
+import { ItemStore } from '../store.js';
 import { ItemView } from './ItemView.js';
 
 export interface ItemPageProps {
@@ -12,7 +12,7 @@ export function ItemPage(
   { id }: ItemPageProps,
   context: RenderContext,
 ): TemplateResult {
-  const store = context.use(ItemState);
+  const store = context.use(ItemStore);
   const [item, error, isLoading] = context.use([
     store.item$,
     store.error$,

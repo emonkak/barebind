@@ -87,14 +87,14 @@ export interface Comment {
   user: string;
 }
 
-export class ItemState {
+export class ItemStore {
   readonly item$ = atom<Item | null>(null);
 
   readonly isLoading$ = atom(false);
 
   readonly error$ = atom<Error | null>(null);
 
-  static [usableTag](context: RenderContext): ItemState {
+  static [usableTag](context: RenderContext): ItemStore {
     const store = context.getContextValue(this);
     if (!(store instanceof this)) {
       throw new Error(`The context value for ${this.name} is not registered.`);
