@@ -32,13 +32,12 @@ export interface UsableObject<TResult> {
 
 export type UsableCallback<TResult> = (context: RenderContext) => TResult;
 
-export type Use<TUsable> = TUsable extends Usable<infer TResult>
-  ? TResult
-  : TUsable extends []
-    ? []
-    : TUsable extends [Usable<infer THead>, ...infer TTail]
-      ? [THead, ...Use<TTail>]
-      : never;
+export type UseArray<TArray> = TArray extends [
+  Usable<infer THead>,
+  ...infer TTail,
+]
+  ? [THead, ...UseArray<TTail>]
+  : [];
 
 export type InitialState<TState> = [TState] extends [Function]
   ? () => TState
@@ -244,11 +243,11 @@ export class RenderContext {
     return this._host.getUnsafeTemplate(content, 'svg').wrapInResult([]);
   }
 
-  use<const TUsable extends Usable<any> | Usable<any>[]>(
-    usable: TUsable,
-  ): Use<TUsable> {
+  use<T>(usable: Usable<T>): T;
+  use<const TArray extends Usable<any>[]>(usable: TArray): UseArray<TArray>;
+  use<T>(usable: Usable<T> | Usable<T>[]): T | T[] {
     if (Array.isArray(usable)) {
-      return usable.map((usable) => use(usable, this)) as Use<TUsable>;
+      return usable.map((usable) => use(usable, this));
     } else {
       return use(usable, this);
     }
