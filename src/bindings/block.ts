@@ -6,10 +6,10 @@ import type {
   UpdateContext,
 } from '../baseTypes.js';
 
-const FLAG_NONE = 0;
-const FLAG_DIRTY = 1 << 0;
-const FLAG_CONNECTED = 1 << 1;
-const FLAG_UPDATING = 1 << 2;
+const FLAG_NONE = 0b0;
+const FLAG_DIRTY = 0b1;
+const FLAG_CONNECTED = 0b10;
+const FLAG_UPDATING = 0b100;
 
 export class BlockBinding<TValue, TContext>
   implements Binding<TValue>, Block<TContext>
