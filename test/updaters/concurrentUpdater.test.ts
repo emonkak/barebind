@@ -86,7 +86,7 @@ describe('ConcurrentUpdater', () => {
       },
     );
 
-    it('should commit effects enqueued during an update', async () => {
+    it('should commit effects that enqueued during an update', async () => {
       const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
@@ -201,7 +201,7 @@ describe('ConcurrentUpdater', () => {
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
-    it('should block an update while the update queue is running', async () => {
+    it('should prevent an update when an update is in progress', async () => {
       const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({

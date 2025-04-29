@@ -2,6 +2,7 @@ import {
   CommitPhase,
   type RenderHost,
   UpdateContext,
+  UpdateFlag,
   type UpdateQueue,
   type Updater,
 } from '../baseTypes.js';
@@ -12,6 +13,8 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
 
   flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void {
     const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;
+
+    queue.flags |= UpdateFlag.InProgress;
 
     try {
       // block.length may be grow.
@@ -28,6 +31,7 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
       }
     } finally {
       queue.blocks.length = 0;
+      queue.flags &= ~UpdateFlag.InProgress;
     }
 
     if (mutationEffects.length > 0) {
@@ -54,6 +58,10 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): void {
+    if ((queue.flags & UpdateFlag.InProgress) !== 0) {
+      // Prevent an update when an update is in progress.
+      return;
+    }
     queueMicrotask(() => {
       try {
         this.flushUpdate(queue, host);

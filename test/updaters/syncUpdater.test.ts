@@ -109,6 +109,27 @@ describe('SyncUpdater', () => {
       expect(cancelUpdateSpy).toHaveBeenCalledOnce();
     });
 
+    it('should prevent an update when an update is in progress', async () => {
+      const host = new MockRenderHost();
+      const updater = new SyncUpdater();
+
+      const queue = createUpdateQueue();
+      const block = new MockBlock();
+
+      const updateSpy = vi
+        .spyOn(block, 'update')
+        .mockImplementation((context) => {
+          context.scheduleUpdate();
+        });
+
+      queue.blocks.push(block);
+      updater.scheduleUpdate(queue, host);
+
+      await updater.waitForUpdate();
+
+      expect(updateSpy).toHaveBeenCalledOnce();
+    });
+
     it('should commit effects on a microtask', async () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();

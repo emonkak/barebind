@@ -45,6 +45,12 @@ export interface UpdateQueue<TContext> {
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
+  flags: number;
+}
+
+export enum UpdateFlag {
+  None = 0b0,
+  InProgress = 0b1,
 }
 
 export interface RenderHost<TContext> {
@@ -304,12 +310,15 @@ export class UpdateContext<TContext = unknown> {
   }
 }
 
-export function createUpdateQueue<TContext>(): UpdateQueue<TContext> {
+export function createUpdateQueue<TContext>(
+  flags: number = UpdateFlag.None,
+): UpdateQueue<TContext> {
   return {
     blocks: [],
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],
+    flags,
   };
 }
 

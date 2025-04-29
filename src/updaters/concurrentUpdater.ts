@@ -2,6 +2,7 @@ import {
   CommitPhase,
   type RenderHost,
   UpdateContext,
+  UpdateFlag,
   type UpdateQueue,
   type Updater,
   createUpdateQueue,
@@ -18,9 +19,6 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
 
   private readonly _pendingTasks: Atom<number> = new Atom(0);
 
-  private readonly _processingQueues: WeakSet<UpdateQueue<TContext>> =
-    new WeakSet();
-
   constructor({ scheduler = getScheduler() }: ConcurrentUpdaterOptions = {}) {
     this._scheduler = scheduler;
   }
@@ -29,7 +27,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): Promise<void> {
-    this._processingQueues.add(queue);
+    queue.flags |= UpdateFlag.InProgress;
 
     try {
       const { blocks } = queue;
@@ -54,13 +52,12 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
           }
 
           const context = new UpdateContext(host, this, block, queue);
-
           block.update(context);
         } while (++i < l);
       }
     } finally {
-      queue.blocks.length = 0;
-      this._processingQueues.delete(queue);
+      queue.blocks = [];
+      queue.flags &= ~UpdateFlag.InProgress;
     }
 
     this._scheduleEffects(queue, host);
@@ -74,8 +71,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    if (this._processingQueues.has(queue)) {
-      // Block an update while rendering.
+    if ((queue.flags & UpdateFlag.InProgress) !== 0) {
+      // Prevent an update when an update is in progress.
       return;
     }
     this._scheduleBlocks(queue, host);
@@ -109,9 +106,9 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._scheduler.requestCallback(
         async () => {
           try {
-            const queue = createUpdateQueue();
-            queue.blocks.push(block);
-            await this.flushUpdate(queue, host);
+            const childQueue = createUpdateQueue(queue.flags);
+            childQueue.blocks.push(block);
+            await this.flushUpdate(childQueue, host);
           } finally {
             this._pendingTasks.value--;
           }
@@ -143,9 +140,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         },
         { priority: 'user-blocking' },
       );
-
       queue.mutationEffects = [];
-
       this._pendingTasks.value++;
     }
 
@@ -160,9 +155,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         },
         { priority: 'user-blocking' },
       );
-
       queue.layoutEffects = [];
-
       this._pendingTasks.value++;
     }
 
@@ -177,9 +170,7 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         },
         { priority: 'background' },
       );
-
       queue.passiveEffects = [];
-
       this._pendingTasks.value++;
     }
   }
