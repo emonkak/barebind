@@ -7,7 +7,7 @@ import {
   createUpdateQueue,
 } from '../../src/baseTypes.js';
 import { RenderContext } from '../../src/renderContext.js';
-import { BrowserRenderHost } from '../../src/renderHost.js';
+import { BrowserRenderHost } from '../../src/renderHosts/browserRenderHost.js';
 import {
   browserLocation,
   createBrowserClickHandler,

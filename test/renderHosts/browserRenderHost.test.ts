@@ -7,22 +7,22 @@ import {
   PartType,
   type TemplateResult,
   createUpdateQueue,
-} from '../src/baseTypes.js';
-import { AttributeBinding } from '../src/bindings/attribute.js';
-import { ElementBinding } from '../src/bindings/element.js';
-import { EventBinding } from '../src/bindings/event.js';
-import { NodeBinding } from '../src/bindings/node.js';
-import { PropertyBinding } from '../src/bindings/property.js';
-import type { RenderContext } from '../src/renderContext.js';
-import { BrowserRenderHost } from '../src/renderHost.js';
-import { EmptyTemplate } from '../src/templates/emptyTemplate.js';
-import { LazyTemplate } from '../src/templates/lazyTemplate.js';
-import { TaggedTemplate } from '../src/templates/taggedTemplate.js';
-import { UnsafeTemplate } from '../src/templates/unsafeTemplate.js';
-import { TextTemplate } from '../src/templates/valueTemplate.js';
-import { ChildTemplate } from '../src/templates/valueTemplate.js';
-import { SyncUpdater } from '../src/updaters/syncUpdater.js';
-import { MockBlock, MockTemplate } from './mocks.js';
+} from '../../src/baseTypes.js';
+import { AttributeBinding } from '../../src/bindings/attribute.js';
+import { ElementBinding } from '../../src/bindings/element.js';
+import { EventBinding } from '../../src/bindings/event.js';
+import { NodeBinding } from '../../src/bindings/node.js';
+import { PropertyBinding } from '../../src/bindings/property.js';
+import type { RenderContext } from '../../src/renderContext.js';
+import { BrowserRenderHost } from '../../src/renderHosts/browserRenderHost.js';
+import { EmptyTemplate } from '../../src/templates/emptyTemplate.js';
+import { LazyTemplate } from '../../src/templates/lazyTemplate.js';
+import { TaggedTemplate } from '../../src/templates/taggedTemplate.js';
+import { UnsafeTemplate } from '../../src/templates/unsafeTemplate.js';
+import { TextTemplate } from '../../src/templates/valueTemplate.js';
+import { ChildTemplate } from '../../src/templates/valueTemplate.js';
+import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
+import { MockBlock, MockTemplate } from '../mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -392,7 +392,7 @@ describe('BrowserRenderHost', () => {
   });
 
   describe('.nextIdentifier()', () => {
-    it('should return a next identifier', async () => {
+    it('should return a next identifier', () => {
       const host = new BrowserRenderHost();
 
       expect(host.nextIdentifier()).toBe(1);

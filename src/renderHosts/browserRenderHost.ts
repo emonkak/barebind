@@ -14,19 +14,19 @@ import {
   type TemplateResult,
   type UpdateQueue,
   type Updater,
-} from './baseTypes.js';
-import { AttributeBinding } from './bindings/attribute.js';
-import { ElementBinding } from './bindings/element.js';
-import { EventBinding } from './bindings/event.js';
-import { NodeBinding } from './bindings/node.js';
-import { PropertyBinding } from './bindings/property.js';
-import { LiteralProcessor } from './literal.js';
-import { RenderContext } from './renderContext.js';
-import { EmptyTemplate } from './templates/emptyTemplate.js';
-import { LazyTemplate } from './templates/lazyTemplate.js';
-import { TaggedTemplate, createMarker } from './templates/taggedTemplate.js';
-import { UnsafeTemplate } from './templates/unsafeTemplate.js';
-import { ChildTemplate, TextTemplate } from './templates/valueTemplate.js';
+} from '../baseTypes.js';
+import { AttributeBinding } from '../bindings/attribute.js';
+import { ElementBinding } from '../bindings/element.js';
+import { EventBinding } from '../bindings/event.js';
+import { NodeBinding } from '../bindings/node.js';
+import { PropertyBinding } from '../bindings/property.js';
+import { LiteralProcessor } from '../literal.js';
+import { RenderContext } from '../renderContext.js';
+import { EmptyTemplate } from '../templates/emptyTemplate.js';
+import { LazyTemplate } from '../templates/lazyTemplate.js';
+import { TaggedTemplate, createMarker } from '../templates/taggedTemplate.js';
+import { UnsafeTemplate } from '../templates/unsafeTemplate.js';
+import { ChildTemplate, TextTemplate } from '../templates/valueTemplate.js';
 
 export interface BrowserRenderHostOptions {
   hostName?: string;

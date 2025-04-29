@@ -8,7 +8,7 @@ export * from './bindings/property.js';
 export * from './debug.js';
 export * from './literal.js';
 export * from './renderContext.js';
-export * from './renderHost.js';
+export * from './renderHosts/browserRenderHost.js';
 export * from './root.js';
 export * from './scheduler.js';
 export * from './templates/emptyTemplate.js';
