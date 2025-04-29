@@ -210,8 +210,8 @@ export class RenderContext {
     return this._hooks[this._hookIndex - 1]?.type === HookType.Finalizer;
   }
 
-  isFirstRender(): boolean {
-    return this._hooks.at(-1)?.type !== HookType.Finalizer;
+  isRendered(): boolean {
+    return this._hooks.at(-1)?.type === HookType.Finalizer;
   }
 
   math<TValues extends readonly any[]>(

@@ -320,23 +320,23 @@ describe('RenderContext', () => {
     });
   });
 
-  describe('.isFirstRender()', () => {
-    it('should check whether the render is the first one', () => {
+  describe('.isRendered()', () => {
+    it('should check whether the context is rendered at least once', () => {
       let context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
       );
 
-      expect(context.isFirstRender()).toBe(true);
+      expect(context.isRendered()).toBe(false);
       context.finalize();
-      expect(context.isFirstRender()).toBe(false);
+      expect(context.isRendered()).toBe(true);
 
       context = context.clone();
 
-      expect(context.isFirstRender()).toBe(false);
+      expect(context.isRendered()).toBe(true);
       context.finalize();
-      expect(context.isFirstRender()).toBe(false);
+      expect(context.isRendered()).toBe(true);
     });
   });
 
