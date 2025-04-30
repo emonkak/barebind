@@ -132,7 +132,7 @@ describe('ComponentBinding', () => {
 
       const value = new Component<{}, unknown, RenderContext>(
         (_props, context) => {
-          context.forceUpdate('user-blocking');
+          context.forceUpdate({ priority: 'user-blocking' });
           return new EagerTemplateResult(new MockTemplate(), {});
         },
         {},

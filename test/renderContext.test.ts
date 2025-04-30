@@ -214,7 +214,7 @@ describe('RenderContext', () => {
       const requestUpdateSpy = vi.spyOn(context.block, 'requestUpdate');
 
       context = context.clone();
-      context.forceUpdate('background');
+      context.forceUpdate({ priority: 'background' });
 
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith(
@@ -925,7 +925,7 @@ describe('RenderContext', () => {
         (messages, message) => [...messages, message],
         [],
       );
-      addMessage('foo', 'user-blocking');
+      addMessage('foo', { priority: 'user-blocking' });
 
       expect(message).toStrictEqual([]);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
@@ -944,7 +944,7 @@ describe('RenderContext', () => {
         (messages, message) => [...messages, message],
         [],
       );
-      addMessage('bar', 'background');
+      addMessage('bar', { priority: 'background' });
 
       expect(message).toStrictEqual(['foo']);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
@@ -1119,7 +1119,7 @@ describe('RenderContext', () => {
       const requestUpdateSpy = vi.spyOn(context.block, 'requestUpdate');
 
       let [count, setCount] = context.useState(0);
-      setCount(1, 'user-blocking');
+      setCount(1, { priority: 'user-blocking' });
 
       expect(count).toBe(0);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(1);
@@ -1135,7 +1135,7 @@ describe('RenderContext', () => {
 
       context = context.clone();
       [count, setCount] = context.useState(0);
-      setCount((n) => n + 2, 'background');
+      setCount((n) => n + 2, { priority: 'background' });
 
       expect(count).toBe(1);
       expect(requestUpdateSpy).toHaveBeenCalledTimes(2);
@@ -1287,7 +1287,9 @@ describe('RenderContext', () => {
         .mockReturnValue('user-blocking');
 
       expect(
-        context.useSyncEnternalStore(subscribe, getSnapshot, 'background'),
+        context.useSyncEnternalStore(subscribe, getSnapshot, {
+          priority: 'background',
+        }),
       ).toBe('foo');
 
       context.flushUpdate();

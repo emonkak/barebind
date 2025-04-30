@@ -32,6 +32,10 @@ export interface UsableObject<TResult> {
 
 export type UsableCallback<TResult> = (context: RenderContext) => TResult;
 
+export interface UpdateOptions {
+  priority?: TaskPriority;
+}
+
 type UseArray<TArray> = TArray extends [Usable<infer THead>, ...infer TTail]
   ? [THead, ...UseArray<TTail>]
   : [];
@@ -178,7 +182,7 @@ export class RenderContext {
     this._updater.flushUpdate(this._queue, this._host);
   }
 
-  forceUpdate(priority?: TaskPriority): void {
+  forceUpdate(options: UpdateOptions = {}): void {
     const context = new UpdateContext(
       this._host,
       this._updater,
@@ -186,7 +190,7 @@ export class RenderContext {
       this._queue,
     );
     this._block.requestUpdate(
-      priority ?? this._host.getCurrentPriority(),
+      options.priority ?? this._host.getCurrentPriority(),
       context,
     );
   }
@@ -267,7 +271,7 @@ export class RenderContext {
     );
 
     this.useEffect(() => {
-      setDeferredValue(value, 'background');
+      setDeferredValue(value, { priority: 'background' });
     }, [value]);
 
     return deferredValue;
@@ -395,7 +399,7 @@ export class RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): [TState, (action: TAction, priority?: TaskPriority) => void] {
+  ): [TState, (action: TAction, options?: UpdateOptions) => void] {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -408,12 +412,12 @@ export class RenderContext {
         type: HookType.Reducer,
         state:
           typeof initialState === 'function' ? initialState() : initialState,
-        dispatch: (action: TAction, priority?: TaskPriority) => {
+        dispatch: (action: TAction, options?: UpdateOptions) => {
           const oldState = hook.state;
           const newState = reducer(oldState, action);
           if (!Object.is(oldState, newState)) {
             hook.state = newState;
-            this.forceUpdate(priority);
+            this.forceUpdate(options);
           }
         },
       };
@@ -430,7 +434,7 @@ export class RenderContext {
 
   useState<TState>(
     initialState: InitialState<TState>,
-  ): [TState, (newState: NewState<TState>, priority?: TaskPriority) => void] {
+  ): [TState, (newState: NewState<TState>, options?: UpdateOptions) => void] {
     return this.useReducer(
       (state, action) =>
         typeof action === 'function' ? action(state) : action,
@@ -441,14 +445,14 @@ export class RenderContext {
   useSyncEnternalStore<T>(
     subscribe: (subscruber: () => void) => Cleanup | void,
     getSnapshot: () => T,
-    priority?: TaskPriority,
+    options?: UpdateOptions,
   ): T {
     this.useEffect(
       () =>
         subscribe(() => {
-          this.forceUpdate(priority);
+          this.forceUpdate(options);
         }),
-      [subscribe, priority],
+      [subscribe],
     );
     return getSnapshot();
   }
