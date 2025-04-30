@@ -32,18 +32,15 @@ export interface UsableObject<TResult> {
 
 export type UsableCallback<TResult> = (context: RenderContext) => TResult;
 
-export type UseArray<TArray> = TArray extends [
-  Usable<infer THead>,
-  ...infer TTail,
-]
+type UseArray<TArray> = TArray extends [Usable<infer THead>, ...infer TTail]
   ? [THead, ...UseArray<TTail>]
   : [];
 
-export type InitialState<TState> = [TState] extends [Function]
+type InitialState<TState> = [TState] extends [Function]
   ? () => TState
   : (() => TState) | TState;
 
-export type NewState<TState> = [TState] extends [Function]
+type NewState<TState> = [TState] extends [Function]
   ? (prevState: TState) => TState
   : ((prevState: TState) => TState) | TState;
 
