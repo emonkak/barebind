@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
+import {
+  CommitPhase,
+  UpdateFlag,
+  createUpdateQueue,
+} from '../../src/baseTypes.js';
 import { ConcurrentUpdater } from '../../src/updaters/concurrentUpdater.js';
 import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
 
@@ -120,11 +124,11 @@ describe('ConcurrentUpdater', () => {
       expect(layoutEffect.commit).toHaveBeenCalledWith(CommitPhase.Layout);
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledWith(CommitPhase.Passive);
-      expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
       expect(updateSpy).toHaveBeenCalledOnce();
     });
 
-    it('should commit mutation and layout effects with "user-blocking" priority', async () => {
+    it('should commit UI effects with "user-blocking" priority', async () => {
       const host = new MockRenderHost();
       const scheduler = new MockScheduler();
       const updater = new ConcurrentUpdater({
@@ -145,10 +149,37 @@ describe('ConcurrentUpdater', () => {
 
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
-      expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
+      expect(requestCallbackSpy).toHaveBeenCalledOnce();
       expect(requestCallbackSpy).toHaveBeenCalledWith(expect.any(Function), {
         priority: 'user-blocking',
       });
+    });
+
+    it('should commit UI effects in view transition', async () => {
+      const host = new MockRenderHost();
+      const scheduler = new MockScheduler();
+      const updater = new ConcurrentUpdater({
+        scheduler,
+      });
+
+      const queue = createUpdateQueue(UpdateFlag.ViewTransition);
+      const mutationEffect = { commit: vi.fn() };
+      const layoutEffect = { commit: vi.fn() };
+
+      const startViewTransitionSpy = vi.spyOn(host, 'startViewTransition');
+      const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
+
+      queue.mutationEffects.push(mutationEffect);
+      queue.layoutEffects.push(layoutEffect);
+      updater.scheduleUpdate(queue, host);
+
+      await updater.waitForUpdate();
+
+      expect(queue.flags).toBe(UpdateFlag.None);
+      expect(mutationEffect.commit).toHaveBeenCalledOnce();
+      expect(layoutEffect.commit).toHaveBeenCalledOnce();
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+      expect(requestCallbackSpy).not.toHaveBeenCalled();
     });
 
     it('should commit passive effects with "background" priority', async () => {

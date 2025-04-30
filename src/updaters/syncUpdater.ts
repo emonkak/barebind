@@ -48,6 +48,8 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
       host.flushEffects(passiveEffects, CommitPhase.Passive);
       queue.passiveEffects.length = 0;
     }
+
+    queue.flags &= ~UpdateFlag.ViewTransition;
   }
 
   isScheduled(): boolean {
@@ -63,8 +65,16 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
       return;
     }
     queueMicrotask(() => {
+      const shouldStartViewTransition =
+        (queue.flags & UpdateFlag.ViewTransition) !== 0;
       try {
-        this.flushUpdate(queue, host);
+        if (shouldStartViewTransition) {
+          host.startViewTransition(() => {
+            this.flushUpdate(queue, host);
+          });
+        } else {
+          this.flushUpdate(queue, host);
+        }
       } finally {
         this._pendingTasks.value--;
       }

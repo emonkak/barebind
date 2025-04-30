@@ -15,6 +15,7 @@ import {
   type TaskPriority,
   type TemplateResult,
   UpdateContext,
+  UpdateFlag,
   type UpdateQueue,
   type Updater,
   createUpdateQueue,
@@ -34,6 +35,7 @@ export type UsableCallback<TResult> = (context: RenderContext) => TResult;
 
 export interface UpdateOptions {
   priority?: TaskPriority;
+  viewTransition?: boolean;
 }
 
 type UseArray<TArray> = TArray extends [Usable<infer THead>, ...infer TTail]
@@ -182,17 +184,20 @@ export class RenderContext {
     this._updater.flushUpdate(this._queue, this._host);
   }
 
-  forceUpdate(options: UpdateOptions = {}): void {
+  forceUpdate({
+    priority = this._host.getCurrentPriority(),
+    viewTransition = false,
+  }: UpdateOptions = {}): void {
     const context = new UpdateContext(
       this._host,
       this._updater,
       this._block,
       this._queue,
     );
-    this._block.requestUpdate(
-      options.priority ?? this._host.getCurrentPriority(),
-      context,
-    );
+    if (viewTransition) {
+      this._queue.flags |= UpdateFlag.ViewTransition;
+    }
+    this._block.requestUpdate(priority, context);
   }
 
   getContextValue(key: unknown): unknown {

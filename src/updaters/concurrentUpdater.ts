@@ -127,36 +127,36 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
     queue: UpdateQueue<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    const { passiveEffects, mutationEffects, layoutEffects } = queue;
+    const { passiveEffects, mutationEffects, layoutEffects, flags } = queue;
 
-    if (mutationEffects.length > 0) {
-      this._scheduler.requestCallback(
-        () => {
+    if (mutationEffects.length > 0 || layoutEffects.length > 0) {
+      const shouldStartViewTransition =
+        (flags & UpdateFlag.ViewTransition) !== 0;
+      if (shouldStartViewTransition) {
+        host.startViewTransition(() => {
           try {
             host.flushEffects(mutationEffects, CommitPhase.Mutation);
-          } finally {
-            this._pendingTasks.value--;
-          }
-        },
-        { priority: 'user-blocking' },
-      );
-      queue.mutationEffects = [];
-      this._pendingTasks.value++;
-    }
-
-    if (layoutEffects.length > 0) {
-      this._scheduler.requestCallback(
-        () => {
-          try {
             host.flushEffects(layoutEffects, CommitPhase.Layout);
           } finally {
             this._pendingTasks.value--;
           }
-        },
-        { priority: 'user-blocking' },
-      );
-      queue.layoutEffects = [];
+        });
+      } else {
+        this._scheduler.requestCallback(
+          () => {
+            try {
+              host.flushEffects(mutationEffects, CommitPhase.Mutation);
+              host.flushEffects(layoutEffects, CommitPhase.Layout);
+            } finally {
+              this._pendingTasks.value--;
+            }
+          },
+          { priority: 'user-blocking' },
+        );
+      }
       this._pendingTasks.value++;
+      queue.mutationEffects = [];
+      queue.layoutEffects = [];
     }
 
     if (passiveEffects.length > 0) {
@@ -170,8 +170,10 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         },
         { priority: 'background' },
       );
-      queue.passiveEffects = [];
       this._pendingTasks.value++;
+      queue.passiveEffects = [];
     }
+
+    queue.flags &= ~UpdateFlag.ViewTransition;
   }
 }

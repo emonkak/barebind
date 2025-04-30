@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { type Hook, HookType, createUpdateQueue } from '../src/baseTypes.js';
+import {
+  type Hook,
+  HookType,
+  UpdateFlag,
+  createUpdateQueue,
+} from '../src/baseTypes.js';
 import { Literal, LiteralProcessor } from '../src/literal.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
 import { SyncUpdater } from '../src/updaters/syncUpdater.js';
@@ -205,7 +210,7 @@ describe('RenderContext', () => {
 
   describe('.forceUpdate()', () => {
     it('should request update with the given priority', () => {
-      let context = new RenderContext(
+      const context = new RenderContext(
         new MockRenderHost(),
         new SyncUpdater(),
         new MockBlock(),
@@ -213,9 +218,9 @@ describe('RenderContext', () => {
 
       const requestUpdateSpy = vi.spyOn(context.block, 'requestUpdate');
 
-      context = context.clone();
       context.forceUpdate({ priority: 'background' });
 
+      expect(context.queue.flags).toBe(UpdateFlag.None);
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
@@ -242,6 +247,7 @@ describe('RenderContext', () => {
 
       context.forceUpdate();
 
+      expect(context.queue.flags).toBe(UpdateFlag.None);
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -253,6 +259,18 @@ describe('RenderContext', () => {
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
+    });
+
+    it('should request update with view transition', () => {
+      const context = new RenderContext(
+        new MockRenderHost(),
+        new SyncUpdater(),
+        new MockBlock(),
+      );
+
+      context.forceUpdate({ viewTransition: true });
+
+      expect(context.queue.flags).toBe(UpdateFlag.ViewTransition);
     });
   });
 

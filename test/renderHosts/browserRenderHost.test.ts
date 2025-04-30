@@ -400,6 +400,44 @@ describe('BrowserRenderHost', () => {
       expect(host.nextIdentifier()).toBe(3);
     });
   });
+
+  describe('.startViewTransition()', () => {
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    it.runIf(typeof document.startViewTransition === 'function')(
+      'should delegate to document.startViewTransition()',
+      async () => {
+        const startViewTransitionSpy = vi
+          .spyOn(document, 'startViewTransition')
+          .mockImplementation((callback) => {
+            callback?.();
+            return {} as ViewTransition;
+          });
+        const callback = vi.fn();
+        const host = new BrowserRenderHost();
+
+        await host.startViewTransition(callback);
+
+        expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+        expect(startViewTransitionSpy).toHaveBeenCalledWith(callback);
+        expect(callback).toHaveBeenCalledOnce();
+      },
+    );
+
+    it('should call the callback directly', async () => {
+      vi.spyOn(document as any, 'startViewTransition', 'get').mockReturnValue(
+        undefined,
+      );
+      const callback = vi.fn();
+      const host = new BrowserRenderHost();
+
+      await host.startViewTransition(callback);
+
+      expect(callback).toHaveBeenCalledOnce();
+    });
+  });
 });
 
 function tmpl<TValues extends readonly any[]>(

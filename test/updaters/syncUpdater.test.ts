@@ -1,6 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { CommitPhase, createUpdateQueue } from '../../src/baseTypes.js';
+import {
+  CommitPhase,
+  UpdateFlag,
+  createUpdateQueue,
+} from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
 
@@ -156,6 +160,30 @@ describe('SyncUpdater', () => {
       expect(layoutEffect.commit).toHaveBeenCalledWith(CommitPhase.Layout);
       expect(passiveEffect.commit).toHaveBeenCalledOnce();
       expect(passiveEffect.commit).toHaveBeenCalledWith(CommitPhase.Passive);
+    });
+
+    it('should commit UI effects in view transition', async () => {
+      const host = new MockRenderHost();
+      const updater = new SyncUpdater();
+
+      const queue = createUpdateQueue(UpdateFlag.ViewTransition);
+      const mutationEffect = { commit: vi.fn() };
+      const layoutEffect = { commit: vi.fn() };
+
+      const startViewTransitionSpy = vi.spyOn(host, 'startViewTransition');
+      const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
+
+      queue.mutationEffects.push(mutationEffect);
+      queue.layoutEffects.push(layoutEffect);
+      updater.scheduleUpdate(queue, host);
+
+      await updater.waitForUpdate();
+
+      expect(queue.flags).toBe(UpdateFlag.None);
+      expect(mutationEffect.commit).toHaveBeenCalledOnce();
+      expect(layoutEffect.commit).toHaveBeenCalledOnce();
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
+      expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
     });
   });
 });

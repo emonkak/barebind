@@ -51,6 +51,7 @@ export interface UpdateQueue<TContext> {
 export enum UpdateFlag {
   None = 0b0,
   InProgress = 0b1,
+  ViewTransition = 0b10,
 }
 
 export interface RenderHost<TContext> {
@@ -78,6 +79,7 @@ export interface RenderHost<TContext> {
   nextIdentifier(): number;
   resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue, TContext>;
   setScopedValue(key: unknown, value: unknown, block: Block<TContext>): void;
+  startViewTransition(callback: () => void | Promise<void>): Promise<void>;
 }
 
 export interface Updater<TContext> {

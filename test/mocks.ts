@@ -282,6 +282,10 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     _value: unknown,
     _block: Block<RenderContext>,
   ): void {}
+
+  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
+    return Promise.resolve().then(callback);
+  }
 }
 
 export class MockUsableObject<T> implements UsableObject<T> {

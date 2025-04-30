@@ -170,6 +170,14 @@ export class BrowserRenderHost implements RenderHost<RenderContext> {
       this._namespaces.set(block, scope);
     }
   }
+
+  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
+    if (typeof document.startViewTransition === 'function') {
+      return document.startViewTransition(callback).updateCallbackDone;
+    } else {
+      return Promise.resolve().then(callback);
+    }
+  }
 }
 
 function getTemplate<TValues extends readonly any[], TContext>(
