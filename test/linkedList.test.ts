@@ -120,19 +120,19 @@ describe('LinkedList', () => {
       const bar = list.pushBack('bar');
       const baz = list.pushBack('baz');
 
-      expect(list.popFront()).toBe(foo);
+      expect(list.popFront()).toBe(foo.value);
       expect(list.isEmpty()).toBe(false);
       expect(list.front()?.value).toBe('bar');
       expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toStrictEqual(['bar', 'baz']);
 
-      expect(list.popFront()).toBe(bar);
+      expect(list.popFront()).toBe(bar.value);
       expect(list.isEmpty()).toBe(false);
       expect(list.front()?.value).toBe('baz');
       expect(list.back()?.value).toBe('baz');
       expect(Array.from(list)).toStrictEqual(['baz']);
 
-      expect(list.popFront()).toBe(baz);
+      expect(list.popFront()).toBe(baz.value);
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);
@@ -169,19 +169,19 @@ describe('LinkedList', () => {
       const bar = list.pushBack('bar');
       const baz = list.pushBack('baz');
 
-      expect(list.popBack()).toBe(baz);
+      expect(list.popBack()).toBe(baz.value);
       expect(list.isEmpty()).toBe(false);
       expect(list.front()?.value).toBe('foo');
       expect(list.back()?.value).toBe('bar');
       expect(Array.from(list)).toStrictEqual(['foo', 'bar']);
 
-      expect(list.popBack()).toBe(bar);
+      expect(list.popBack()).toBe(bar.value);
       expect(list.isEmpty()).toBe(false);
       expect(list.front()?.value).toBe('foo');
       expect(list.back()?.value).toBe('foo');
       expect(Array.from(list)).toStrictEqual(['foo']);
 
-      expect(list.popBack()).toBe(foo);
+      expect(list.popBack()).toBe(foo.value);
       expect(list.isEmpty()).toBe(true);
       expect(list.front()).toBe(null);
       expect(list.back()).toBe(null);

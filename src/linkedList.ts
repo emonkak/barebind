@@ -41,40 +41,38 @@ export class LinkedList<T> implements Iterable<T> {
     return this._head === null;
   }
 
-  popBack(): Node<T> | null {
+  popBack(): T | null {
     const tail = this._tail;
-
-    if (tail !== null) {
-      if (tail.prev !== null) {
-        this._tail = tail.prev;
-        this._tail.next = null;
-        tail.prev = null;
-      } else {
-        this._head = null;
-        this._tail = null;
-      }
-      tail.owner = null;
+    if (tail === null) {
+      return null;
     }
-
-    return tail;
+    if (tail.prev !== null) {
+      this._tail = tail.prev;
+      this._tail.next = null;
+      tail.prev = null;
+    } else {
+      this._head = null;
+      this._tail = null;
+    }
+    tail.owner = null;
+    return tail.value;
   }
 
-  popFront(): Node<T> | null {
+  popFront(): T | null {
     const head = this._head;
-
-    if (head !== null) {
-      if (head.next !== null) {
-        this._head = head.next;
-        this._head.prev = null;
-        head.next = null;
-      } else {
-        this._head = null;
-        this._tail = null;
-      }
-      head.owner = null;
+    if (head === null) {
+      return null;
     }
-
-    return head;
+    if (head.next !== null) {
+      this._head = head.next;
+      this._head.prev = null;
+      head.next = null;
+    } else {
+      this._head = null;
+      this._tail = null;
+    }
+    head.owner = null;
+    return head.value;
   }
 
   pushBack(value: T): Node<T> {
