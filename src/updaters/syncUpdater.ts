@@ -1,9 +1,9 @@
 import {
   CommitPhase,
+  RenderFlag,
+  type RenderFrame,
   type RenderHost,
   UpdateContext,
-  UpdateFlag,
-  type UpdateQueue,
   type Updater,
 } from '../baseTypes.js';
 import { Atom } from '../directives/signal.js';
@@ -11,10 +11,10 @@ import { Atom } from '../directives/signal.js';
 export class SyncUpdater<TContext> implements Updater<TContext> {
   private readonly _pendingTasks: Atom<number> = new Atom(0);
 
-  flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void {
-    const { blocks, mutationEffects, layoutEffects, passiveEffects } = queue;
+  flushUpdate(frame: RenderFrame<TContext>, host: RenderHost<TContext>): void {
+    const { blocks, mutationEffects, layoutEffects, passiveEffects } = frame;
 
-    queue.flags |= UpdateFlag.InProgress;
+    frame.flags |= RenderFlag.InProgress;
 
     try {
       // block.length may be grow.
@@ -25,31 +25,31 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
             block.cancelUpdate();
             continue;
           }
-          const context = new UpdateContext(host, this, block, queue);
+          const context = new UpdateContext(host, this, block, frame);
           block.update(context);
         } while (++i < l);
       }
     } finally {
-      queue.blocks.length = 0;
-      queue.flags &= ~UpdateFlag.InProgress;
+      frame.blocks.length = 0;
+      frame.flags &= ~RenderFlag.InProgress;
     }
 
     if (mutationEffects.length > 0) {
       host.flushEffects(mutationEffects, CommitPhase.Mutation);
-      queue.mutationEffects.length = 0;
+      frame.mutationEffects.length = 0;
     }
 
     if (layoutEffects.length > 0) {
       host.flushEffects(layoutEffects, CommitPhase.Layout);
-      queue.layoutEffects.length = 0;
+      frame.layoutEffects.length = 0;
     }
 
     if (passiveEffects.length > 0) {
       host.flushEffects(passiveEffects, CommitPhase.Passive);
-      queue.passiveEffects.length = 0;
+      frame.passiveEffects.length = 0;
     }
 
-    queue.flags &= ~UpdateFlag.ViewTransition;
+    frame.flags &= ~RenderFlag.ViewTransition;
   }
 
   isScheduled(): boolean {
@@ -57,23 +57,23 @@ export class SyncUpdater<TContext> implements Updater<TContext> {
   }
 
   scheduleUpdate(
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    if ((queue.flags & UpdateFlag.InProgress) !== 0) {
+    if ((frame.flags & RenderFlag.InProgress) !== 0) {
       // Prevent an update when an update is in progress.
       return;
     }
     queueMicrotask(() => {
       const shouldStartViewTransition =
-        (queue.flags & UpdateFlag.ViewTransition) !== 0;
+        (frame.flags & RenderFlag.ViewTransition) !== 0;
       try {
         if (shouldStartViewTransition) {
           host.startViewTransition(() => {
-            this.flushUpdate(queue, host);
+            this.flushUpdate(frame, host);
           });
         } else {
-          this.flushUpdate(queue, host);
+          this.flushUpdate(frame, host);
         }
       } finally {
         this._pendingTasks.value--;

@@ -7,12 +7,12 @@ import {
   type Hook,
   type Part,
   PartType,
+  type RenderFrame,
   type RenderHost,
   type TaskPriority,
   type Template,
   type TemplateMode,
   type TemplateResult,
-  type UpdateQueue,
   type Updater,
 } from '../baseTypes.js';
 import { AttributeBinding } from '../bindings/attribute.js';
@@ -64,13 +64,13 @@ export class BrowserRenderHost implements RenderHost<RenderContext> {
     hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    queue: UpdateQueue<RenderContext>,
+    frame: RenderFrame<RenderContext>,
   ): TemplateResult<TValues, RenderContext> {
     const context = new RenderContext(
       this,
       updater,
       block,
-      queue,
+      frame,
       hooks,
       this._literalProcessor,
     );

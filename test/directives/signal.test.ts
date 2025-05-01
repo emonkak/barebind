@@ -89,7 +89,7 @@ describe('Signal', () => {
 
       expect(context.use(signal)).toBe('foo');
       context.finalize();
-      context.updater.flushUpdate(context.queue, context.host);
+      context.updater.flushUpdate(context.frame, context.host);
 
       expect(requstUpdateSpy).not.toHaveBeenCalled();
 

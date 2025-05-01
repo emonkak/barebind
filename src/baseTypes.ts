@@ -40,20 +40,6 @@ export type ComponentType<TProps, TValues, TContext> = (
   context: TContext,
 ) => TemplateResult<TValues, TContext>;
 
-export interface UpdateQueue<TContext> {
-  blocks: Block<TContext>[];
-  mutationEffects: Effect[];
-  layoutEffects: Effect[];
-  passiveEffects: Effect[];
-  flags: number;
-}
-
-export enum UpdateFlag {
-  None = 0b0,
-  InProgress = 0b1,
-  ViewTransition = 0b10,
-}
-
 export interface RenderHost<TContext> {
   flushComponent<TProps, TValues>(
     type: ComponentType<TProps, TValues, TContext>,
@@ -61,7 +47,7 @@ export interface RenderHost<TContext> {
     hooks: Hook[],
     updater: Updater<TContext>,
     block: Block<TContext>,
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
   ): TemplateResult<TValues, TContext>;
   flushEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
@@ -84,12 +70,26 @@ export interface RenderHost<TContext> {
 
 export interface Updater<TContext> {
   isScheduled(): boolean;
-  flushUpdate(queue: UpdateQueue<TContext>, host: RenderHost<TContext>): void;
+  flushUpdate(frame: RenderFrame<TContext>, host: RenderHost<TContext>): void;
   scheduleUpdate(
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
     host: RenderHost<TContext>,
   ): void;
   waitForUpdate(): Promise<void>;
+}
+
+export interface RenderFrame<TContext> {
+  blocks: Block<TContext>[];
+  mutationEffects: Effect[];
+  layoutEffects: Effect[];
+  passiveEffects: Effect[];
+  flags: number;
+}
+
+export enum RenderFlag {
+  None = 0b0,
+  InProgress = 0b1,
+  ViewTransition = 0b10,
 }
 
 export interface Template<TValues, TContext = unknown> {
@@ -259,23 +259,23 @@ export class UpdateContext<TContext = unknown> {
     /**
      * @internal
      */
-    public readonly queue: UpdateQueue<TContext> = createUpdateQueue(),
+    public readonly frame: RenderFrame<TContext> = createRenderFrame(),
   ) {}
 
   enqueueBlock(block: Block<TContext>): void {
-    this.queue.blocks.push(block);
+    this.frame.blocks.push(block);
   }
 
   enqueueMutationEffect(effect: Effect): void {
-    this.queue.mutationEffects.push(effect);
+    this.frame.mutationEffects.push(effect);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
-    this.queue.layoutEffects.push(effect);
+    this.frame.layoutEffects.push(effect);
   }
 
   enqueuePassiveEffect(effect: Effect): void {
-    this.queue.passiveEffects.push(effect);
+    this.frame.passiveEffects.push(effect);
   }
 
   flushComponent<TProps, TValues>(
@@ -289,32 +289,32 @@ export class UpdateContext<TContext = unknown> {
       hooks,
       this.updater,
       this.block,
-      this.queue,
+      this.frame,
     );
   }
 
   flushUpdate(): void {
-    this.updater.flushUpdate(this.queue, this.host);
+    this.updater.flushUpdate(this.frame, this.host);
   }
 
   isPending(): boolean {
     return (
       this.updater.isScheduled() ||
-      this.queue.blocks.length > 0 ||
-      this.queue.mutationEffects.length > 0 ||
-      this.queue.layoutEffects.length > 0 ||
-      this.queue.passiveEffects.length > 0
+      this.frame.blocks.length > 0 ||
+      this.frame.mutationEffects.length > 0 ||
+      this.frame.layoutEffects.length > 0 ||
+      this.frame.passiveEffects.length > 0
     );
   }
 
   scheduleUpdate(): void {
-    this.updater.scheduleUpdate(this.queue, this.host);
+    this.updater.scheduleUpdate(this.frame, this.host);
   }
 }
 
-export function createUpdateQueue<TContext>(
-  flags: number = UpdateFlag.None,
-): UpdateQueue<TContext> {
+export function createRenderFrame<TContext>(
+  flags: number = RenderFlag.None,
+): RenderFrame<TContext> {
   return {
     blocks: [],
     mutationEffects: [],

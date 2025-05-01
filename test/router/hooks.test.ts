@@ -4,7 +4,7 @@ import {
   type EffectHook,
   type Hook,
   HookType,
-  createUpdateQueue,
+  createRenderFrame,
 } from '../../src/baseTypes.js';
 import { RenderContext } from '../../src/renderContext.js';
 import { BrowserRenderHost } from '../../src/renderHosts/browserRenderHost.js';
@@ -24,12 +24,12 @@ import { MockBlock } from '../mocks.js';
 describe('browserLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
-  let queue = createUpdateQueue();
+  let frame = createRenderFrame();
   let hooks: Hook[] = [];
 
   afterEach(() => {
     cleanHooks(hooks);
-    queue = createUpdateQueue();
+    frame = createRenderFrame();
     hooks = [];
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
@@ -40,7 +40,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const state = { key: 'foo' };
@@ -64,7 +64,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
 
@@ -92,7 +92,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
 
@@ -121,7 +121,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
 
@@ -171,7 +171,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const element = createElement('a', { href: '/articles/123' });
@@ -211,7 +211,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const element = createElement('form', {
@@ -254,7 +254,7 @@ describe('browserLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
 
@@ -285,12 +285,12 @@ describe('hashLocation', () => {
   const originalState = history.state;
   const originalUrl = location.href;
   let hooks: Hook[] = [];
-  let queue = createUpdateQueue();
+  let frame = createRenderFrame();
 
   afterEach(() => {
     cleanHooks(hooks);
     hooks = [];
-    queue = createUpdateQueue();
+    frame = createRenderFrame();
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -300,7 +300,7 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const state = { key: 'foo' };
@@ -323,7 +323,7 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
 
@@ -353,7 +353,7 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const state = { key: 'foo' };
@@ -384,7 +384,7 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const locationState = context.use(hashLocation);
@@ -397,7 +397,7 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const event = new HashChangeEvent('hashchange', {
@@ -438,7 +438,7 @@ describe('hashLocation', () => {
       new BrowserRenderHost(),
       new SyncUpdater(),
       new MockBlock(),
-      queue,
+      frame,
       hooks,
     );
     const element = createElement('a', { href: '#/articles/foo%2Fbar' });

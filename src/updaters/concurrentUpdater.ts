@@ -1,11 +1,11 @@
 import {
   CommitPhase,
+  RenderFlag,
+  type RenderFrame,
   type RenderHost,
   UpdateContext,
-  UpdateFlag,
-  type UpdateQueue,
   type Updater,
-  createUpdateQueue,
+  createRenderFrame,
 } from '../baseTypes.js';
 import { Atom } from '../directives/signal.js';
 import { type Scheduler, getScheduler } from '../scheduler.js';
@@ -24,13 +24,13 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   async flushUpdate(
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
     host: RenderHost<TContext>,
   ): Promise<void> {
-    queue.flags |= UpdateFlag.InProgress;
+    frame.flags |= RenderFlag.InProgress;
 
     try {
-      const { blocks } = queue;
+      const { blocks } = frame;
       let startTime = this._scheduler.getCurrentTime();
 
       // block.length may be grow.
@@ -51,16 +51,16 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
             startTime = this._scheduler.getCurrentTime();
           }
 
-          const context = new UpdateContext(host, this, block, queue);
+          const context = new UpdateContext(host, this, block, frame);
           block.update(context);
         } while (++i < l);
       }
     } finally {
-      queue.blocks = [];
-      queue.flags &= ~UpdateFlag.InProgress;
+      frame.blocks = [];
+      frame.flags &= ~RenderFlag.InProgress;
     }
 
-    this._scheduleEffects(queue, host);
+    this._scheduleEffects(frame, host);
   }
 
   isScheduled(): boolean {
@@ -68,15 +68,15 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   scheduleUpdate(
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    if ((queue.flags & UpdateFlag.InProgress) !== 0) {
+    if ((frame.flags & RenderFlag.InProgress) !== 0) {
       // Prevent an update when an update is in progress.
       return;
     }
-    this._scheduleBlocks(queue, host);
-    this._scheduleEffects(queue, host);
+    this._scheduleBlocks(frame, host);
+    this._scheduleEffects(frame, host);
   }
 
   waitForUpdate(): Promise<void> {
@@ -96,17 +96,17 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
   }
 
   private _scheduleBlocks(
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    const { blocks } = queue;
+    const { blocks } = frame;
 
     for (let i = 0, l = blocks.length; i < l; i++) {
       const block = blocks[i]!;
       this._scheduler.requestCallback(
         async () => {
           try {
-            const childQueue = createUpdateQueue(queue.flags);
+            const childQueue = createRenderFrame(frame.flags);
             childQueue.blocks.push(block);
             await this.flushUpdate(childQueue, host);
           } finally {
@@ -120,18 +120,18 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
       this._pendingTasks.value++;
     }
 
-    queue.blocks = [];
+    frame.blocks = [];
   }
 
   private _scheduleEffects(
-    queue: UpdateQueue<TContext>,
+    frame: RenderFrame<TContext>,
     host: RenderHost<TContext>,
   ): void {
-    const { passiveEffects, mutationEffects, layoutEffects, flags } = queue;
+    const { passiveEffects, mutationEffects, layoutEffects, flags } = frame;
 
     if (mutationEffects.length > 0 || layoutEffects.length > 0) {
       const shouldStartViewTransition =
-        (flags & UpdateFlag.ViewTransition) !== 0;
+        (flags & RenderFlag.ViewTransition) !== 0;
       if (shouldStartViewTransition) {
         host.startViewTransition(() => {
           try {
@@ -155,8 +155,8 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         );
       }
       this._pendingTasks.value++;
-      queue.mutationEffects = [];
-      queue.layoutEffects = [];
+      frame.mutationEffects = [];
+      frame.layoutEffects = [];
     }
 
     if (passiveEffects.length > 0) {
@@ -171,9 +171,9 @@ export class ConcurrentUpdater<TContext> implements Updater<TContext> {
         { priority: 'background' },
       );
       this._pendingTasks.value++;
-      queue.passiveEffects = [];
+      frame.passiveEffects = [];
     }
 
-    queue.flags &= ~UpdateFlag.ViewTransition;
+    frame.flags &= ~RenderFlag.ViewTransition;
   }
 }

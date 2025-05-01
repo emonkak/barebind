@@ -11,6 +11,7 @@ import {
   type Hook,
   type Part,
   PartType,
+  type RenderFrame,
   type RenderHost,
   type TaskPriority,
   type Template,
@@ -18,7 +19,6 @@ import {
   type TemplateResult,
   type TemplateView,
   type UpdateContext,
-  type UpdateQueue,
   type Updater,
   directiveTag,
 } from '../src/baseTypes.js';
@@ -208,13 +208,13 @@ export class MockRenderHost implements RenderHost<RenderContext> {
     hooks: Hook[],
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    queue: UpdateQueue<RenderContext>,
+    frame: RenderFrame<RenderContext>,
   ): TemplateResult<TValues, RenderContext> {
     const context = new RenderContext(
       this,
       updater,
       block,
-      queue,
+      frame,
       hooks,
       this._literalProcessor,
     );

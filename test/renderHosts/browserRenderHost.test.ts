@@ -6,7 +6,7 @@ import {
   HookType,
   PartType,
   type TemplateResult,
-  createUpdateQueue,
+  createRenderFrame,
 } from '../../src/baseTypes.js';
 import { AttributeBinding } from '../../src/bindings/attribute.js';
 import { ElementBinding } from '../../src/bindings/element.js';
@@ -57,10 +57,10 @@ describe('BrowserRenderHost', () => {
       const host = new BrowserRenderHost();
       const updater = new SyncUpdater();
       const block = new MockBlock();
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
 
       expect(
-        host.flushComponent(type, props, hooks, updater, block, queue),
+        host.flushComponent(type, props, hooks, updater, block, frame),
       ).toBe(result);
       expect(type).toHaveBeenCalledOnce();
       expect(type).toHaveBeenCalledWith(
@@ -69,7 +69,7 @@ describe('BrowserRenderHost', () => {
           hooks,
           updater,
           block,
-          queue,
+          frame,
         }),
       );
       expect(hooks).toStrictEqual([{ type: HookType.Finalizer }]);

@@ -2,8 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   CommitPhase,
-  UpdateFlag,
-  createUpdateQueue,
+  RenderFlag,
+  createRenderFrame,
 } from '../../src/baseTypes.js';
 import { SyncUpdater } from '../../src/updaters/syncUpdater.js';
 import { MockBlock, MockRenderHost } from '../mocks.js';
@@ -14,8 +14,8 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue1 = createUpdateQueue();
-      const queue2 = createUpdateQueue();
+      const queue1 = createRenderFrame();
+      const queue2 = createRenderFrame();
 
       expect(updater.isScheduled()).toBe(false);
 
@@ -56,7 +56,7 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
@@ -71,8 +71,8 @@ describe('SyncUpdater', () => {
         });
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      queue.blocks.push(block);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block);
+      updater.scheduleUpdate(frame, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -91,7 +91,7 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block = new MockBlock();
 
       const updateSpy = vi.spyOn(block, 'update');
@@ -101,8 +101,8 @@ describe('SyncUpdater', () => {
       const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      queue.blocks.push(block);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block);
+      updater.scheduleUpdate(frame, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -117,7 +117,7 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block = new MockBlock();
 
       const updateSpy = vi
@@ -126,8 +126,8 @@ describe('SyncUpdater', () => {
           context.scheduleUpdate();
         });
 
-      queue.blocks.push(block);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
@@ -138,17 +138,17 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
       const passiveEffect = { commit: vi.fn() };
 
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      queue.mutationEffects.push(mutationEffect);
-      queue.layoutEffects.push(layoutEffect);
-      queue.passiveEffects.push(passiveEffect);
-      updater.scheduleUpdate(queue, host);
+      frame.mutationEffects.push(mutationEffect);
+      frame.layoutEffects.push(layoutEffect);
+      frame.passiveEffects.push(passiveEffect);
+      updater.scheduleUpdate(frame, host);
 
       expect(queueMicrotaskSpy).toHaveBeenCalledOnce();
 
@@ -166,20 +166,20 @@ describe('SyncUpdater', () => {
       const host = new MockRenderHost();
       const updater = new SyncUpdater();
 
-      const queue = createUpdateQueue(UpdateFlag.ViewTransition);
+      const frame = createRenderFrame(RenderFlag.ViewTransition);
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
 
       const startViewTransitionSpy = vi.spyOn(host, 'startViewTransition');
       const queueMicrotaskSpy = vi.spyOn(globalThis, 'queueMicrotask');
 
-      queue.mutationEffects.push(mutationEffect);
-      queue.layoutEffects.push(layoutEffect);
-      updater.scheduleUpdate(queue, host);
+      frame.mutationEffects.push(mutationEffect);
+      frame.layoutEffects.push(layoutEffect);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
-      expect(queue.flags).toBe(UpdateFlag.None);
+      expect(frame.flags).toBe(RenderFlag.None);
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(startViewTransitionSpy).toHaveBeenCalledOnce();

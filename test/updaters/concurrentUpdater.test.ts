@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   CommitPhase,
-  UpdateFlag,
-  createUpdateQueue,
+  RenderFlag,
+  createRenderFrame,
 } from '../../src/baseTypes.js';
 import { ConcurrentUpdater } from '../../src/updaters/concurrentUpdater.js';
 import { MockBlock, MockRenderHost, MockScheduler } from '../mocks.js';
@@ -23,13 +23,13 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
 
-      queue.blocks.push(new MockBlock());
+      frame.blocks.push(new MockBlock());
 
       expect(updater.isScheduled()).toBe(false);
 
-      updater.scheduleUpdate(queue, host);
+      updater.scheduleUpdate(frame, host);
       expect(updater.isScheduled()).toBe(true);
 
       await updater.waitForUpdate();
@@ -64,10 +64,10 @@ describe('ConcurrentUpdater', () => {
           scheduler,
         });
 
-        const queue = createUpdateQueue();
+        const frame = createRenderFrame();
         const block = new MockBlock();
 
-        queue.blocks.push(block);
+        frame.blocks.push(block);
 
         const getPrioritySpy = vi
           .spyOn(block, 'priority', 'get')
@@ -75,7 +75,7 @@ describe('ConcurrentUpdater', () => {
         const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
         const updateSpy = vi.spyOn(block, 'update');
 
-        updater.scheduleUpdate(queue, host);
+        updater.scheduleUpdate(frame, host);
 
         expect(getPrioritySpy).toHaveBeenCalledOnce();
         expect(requestCallbackSpy).toHaveBeenCalledOnce();
@@ -97,7 +97,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block = new MockBlock();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
@@ -113,8 +113,8 @@ describe('ConcurrentUpdater', () => {
           context.scheduleUpdate();
         });
 
-      queue.blocks.push(block);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
@@ -135,15 +135,15 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
-      queue.mutationEffects.push(mutationEffect);
-      queue.layoutEffects.push(layoutEffect);
-      updater.scheduleUpdate(queue, host);
+      frame.mutationEffects.push(mutationEffect);
+      frame.layoutEffects.push(layoutEffect);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
@@ -162,20 +162,20 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue(UpdateFlag.ViewTransition);
+      const frame = createRenderFrame(RenderFlag.ViewTransition);
       const mutationEffect = { commit: vi.fn() };
       const layoutEffect = { commit: vi.fn() };
 
       const startViewTransitionSpy = vi.spyOn(host, 'startViewTransition');
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
-      queue.mutationEffects.push(mutationEffect);
-      queue.layoutEffects.push(layoutEffect);
-      updater.scheduleUpdate(queue, host);
+      frame.mutationEffects.push(mutationEffect);
+      frame.layoutEffects.push(layoutEffect);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
-      expect(queue.flags).toBe(UpdateFlag.None);
+      expect(frame.flags).toBe(RenderFlag.None);
       expect(mutationEffect.commit).toHaveBeenCalledOnce();
       expect(layoutEffect.commit).toHaveBeenCalledOnce();
       expect(startViewTransitionSpy).toHaveBeenCalledOnce();
@@ -189,13 +189,13 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const passiveEffect = { commit: vi.fn() };
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
-      queue.passiveEffects.push(passiveEffect);
-      updater.scheduleUpdate(queue, host);
+      frame.passiveEffects.push(passiveEffect);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
@@ -213,7 +213,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block = new MockBlock();
 
       const updateSpy = vi.spyOn(block, 'update');
@@ -222,8 +222,8 @@ describe('ConcurrentUpdater', () => {
         .mockReturnValue(false);
       const cancelUpdateSpy = vi.spyOn(block, 'cancelUpdate');
 
-      queue.blocks.push(block);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 
@@ -239,7 +239,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block = new MockBlock();
 
       const updateSpy = vi
@@ -248,8 +248,8 @@ describe('ConcurrentUpdater', () => {
           context.scheduleUpdate();
         });
 
-      queue.blocks.push(block);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block);
+      updater.scheduleUpdate(frame, host);
 
       const requestCallbackSpy = vi.spyOn(scheduler, 'requestCallback');
 
@@ -266,7 +266,7 @@ describe('ConcurrentUpdater', () => {
         scheduler,
       });
 
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const block1 = new MockBlock();
       const block2 = new MockBlock();
       let ticks = 0;
@@ -284,9 +284,9 @@ describe('ConcurrentUpdater', () => {
       const update1Spy = vi.spyOn(block1, 'update');
       const update2Spy = vi.spyOn(block1, 'update');
 
-      queue.blocks.push(block1);
-      queue.blocks.push(block2);
-      updater.scheduleUpdate(queue, host);
+      frame.blocks.push(block1);
+      frame.blocks.push(block2);
+      updater.scheduleUpdate(frame, host);
 
       await updater.waitForUpdate();
 

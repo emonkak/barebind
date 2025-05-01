@@ -3,8 +3,8 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   type Hook,
   HookType,
-  UpdateFlag,
-  createUpdateQueue,
+  RenderFlag,
+  createRenderFrame,
 } from '../src/baseTypes.js';
 import { Literal, LiteralProcessor } from '../src/literal.js';
 import { RenderContext, usableTag } from '../src/renderContext.js';
@@ -24,12 +24,12 @@ describe('RenderContext', () => {
       const block = new MockBlock();
       const literalProcessor = new LiteralProcessor();
       const hooks: Hook[] = [];
-      const queue = createUpdateQueue();
+      const frame = createRenderFrame();
       const context = new RenderContext(
         host,
         updater,
         block,
-        queue,
+        frame,
         hooks,
         literalProcessor,
       );
@@ -38,7 +38,7 @@ describe('RenderContext', () => {
       expect(context.updater).toBe(updater);
       expect(context.block).toBe(block);
       expect(context.literalProcessor).toBe(literalProcessor);
-      expect(context.queue).toBe(queue);
+      expect(context.frame).toBe(frame);
       expect(context.hooks).toBe(hooks);
     });
   });
@@ -220,7 +220,7 @@ describe('RenderContext', () => {
 
       context.forceUpdate({ priority: 'background' });
 
-      expect(context.queue.flags).toBe(UpdateFlag.None);
+      expect(context.frame.flags).toBe(RenderFlag.None);
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'background',
@@ -228,7 +228,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
     });
@@ -247,7 +247,7 @@ describe('RenderContext', () => {
 
       context.forceUpdate();
 
-      expect(context.queue.flags).toBe(UpdateFlag.None);
+      expect(context.frame.flags).toBe(RenderFlag.None);
       expect(requestUpdateSpy).toHaveBeenCalledOnce();
       expect(requestUpdateSpy).toHaveBeenCalledWith(
         'user-blocking',
@@ -255,7 +255,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
@@ -270,7 +270,7 @@ describe('RenderContext', () => {
 
       context.forceUpdate({ viewTransition: true });
 
-      expect(context.queue.flags).toBe(UpdateFlag.ViewTransition);
+      expect(context.frame.flags).toBe(RenderFlag.ViewTransition);
     });
   });
 
@@ -597,7 +597,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
 
@@ -649,7 +649,7 @@ describe('RenderContext', () => {
           dependencies: null,
         },
       ]);
-      expect(context.queue.passiveEffects).toHaveLength(1);
+      expect(context.frame.passiveEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledTimes(1);
@@ -657,7 +657,7 @@ describe('RenderContext', () => {
 
       context = context.clone();
       context.useEffect(effectFn);
-      expect(context.queue.passiveEffects).toHaveLength(1);
+      expect(context.frame.passiveEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledTimes(2);
@@ -682,14 +682,14 @@ describe('RenderContext', () => {
           dependencies: [],
         },
       ]);
-      expect(context.queue.passiveEffects).toHaveLength(1);
+      expect(context.frame.passiveEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledOnce();
 
       context = context.clone();
       context.useEffect(effectFn, []);
-      expect(context.queue.passiveEffects).toHaveLength(0);
+      expect(context.frame.passiveEffects).toHaveLength(0);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledOnce();
@@ -734,7 +734,7 @@ describe('RenderContext', () => {
           dependencies: null,
         },
       ]);
-      expect(context.queue.mutationEffects).toHaveLength(1);
+      expect(context.frame.mutationEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledTimes(1);
@@ -742,7 +742,7 @@ describe('RenderContext', () => {
 
       context = context.clone();
       context.useInsertionEffect(effectFn);
-      expect(context.queue.mutationEffects).toHaveLength(1);
+      expect(context.frame.mutationEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledTimes(2);
@@ -767,14 +767,14 @@ describe('RenderContext', () => {
           dependencies: [],
         },
       ]);
-      expect(context.queue.mutationEffects).toHaveLength(1);
+      expect(context.frame.mutationEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledOnce();
 
       context = context.clone();
       context.useInsertionEffect(effectFn, []);
-      expect(context.queue.mutationEffects).toHaveLength(0);
+      expect(context.frame.mutationEffects).toHaveLength(0);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledOnce();
@@ -801,7 +801,7 @@ describe('RenderContext', () => {
           dependencies: null,
         },
       ]);
-      expect(context.queue.layoutEffects).toHaveLength(1);
+      expect(context.frame.layoutEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledTimes(1);
@@ -809,7 +809,7 @@ describe('RenderContext', () => {
 
       context = context.clone();
       context.useLayoutEffect(effectFn);
-      expect(context.queue.layoutEffects).toHaveLength(1);
+      expect(context.frame.layoutEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledTimes(2);
@@ -835,14 +835,14 @@ describe('RenderContext', () => {
           dependencies: [],
         },
       ]);
-      expect(context.queue.layoutEffects).toHaveLength(1);
+      expect(context.frame.layoutEffects).toHaveLength(1);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledOnce();
 
       context = context.clone();
       context.useLayoutEffect(effectFn, []);
-      expect(context.queue.layoutEffects).toHaveLength(0);
+      expect(context.frame.layoutEffects).toHaveLength(0);
 
       context.flushUpdate();
       expect(effectFn).toHaveBeenCalledOnce();
@@ -896,7 +896,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(1);
@@ -916,7 +916,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(2);
@@ -953,7 +953,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
 
@@ -972,7 +972,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
 
@@ -1099,7 +1099,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(1);
@@ -1116,7 +1116,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledTimes(2);
@@ -1147,7 +1147,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
 
@@ -1163,7 +1163,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
 
@@ -1276,7 +1276,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).toHaveBeenCalledOnce();
@@ -1323,7 +1323,7 @@ describe('RenderContext', () => {
           host: context.host,
           updater: context.updater,
           block: context.block,
-          queue: context.queue,
+          frame: context.frame,
         }),
       );
       expect(getCurrentPrioritySpy).not.toHaveBeenCalled();

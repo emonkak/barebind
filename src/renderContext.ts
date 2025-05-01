@@ -11,14 +11,14 @@ import {
   type MemoHook,
   type ReducerHook,
   type RefObject,
+  RenderFlag,
+  type RenderFrame,
   type RenderHost,
   type TaskPriority,
   type TemplateResult,
   UpdateContext,
-  UpdateFlag,
-  type UpdateQueue,
   type Updater,
-  createUpdateQueue,
+  createRenderFrame,
 } from './baseTypes.js';
 import { dependenciesAreChanged } from './compare.js';
 import { LiteralProcessor, type NonLiteralValues } from './literal.js';
@@ -57,7 +57,7 @@ export class RenderContext {
 
   private readonly _block: Block<RenderContext>;
 
-  private readonly _queue: UpdateQueue<RenderContext>;
+  private readonly _frame: RenderFrame<RenderContext>;
 
   private readonly _hooks: Hook[];
 
@@ -69,14 +69,14 @@ export class RenderContext {
     host: RenderHost<RenderContext>,
     updater: Updater<RenderContext>,
     block: Block<RenderContext>,
-    queue: UpdateQueue<RenderContext> = createUpdateQueue(),
+    frame: RenderFrame<RenderContext> = createRenderFrame(),
     hooks: Hook[] = [],
     literalProcessor: LiteralProcessor = new LiteralProcessor(),
   ) {
     this._host = host;
     this._updater = updater;
     this._block = block;
-    this._queue = queue;
+    this._frame = frame;
     this._hooks = hooks;
     this._literalProcessor = literalProcessor;
   }
@@ -103,8 +103,8 @@ export class RenderContext {
   /**
    * @internal
    */
-  get queue(): UpdateQueue<RenderContext> {
-    return this._queue;
+  get frame(): RenderFrame<RenderContext> {
+    return this._frame;
   }
 
   /**
@@ -122,7 +122,7 @@ export class RenderContext {
       this._host,
       this._updater,
       this._block,
-      this._queue,
+      this._frame,
       this._hooks,
       this._literalProcessor,
     );
@@ -181,7 +181,7 @@ export class RenderContext {
    * @internal
    */
   flushUpdate(): void {
-    this._updater.flushUpdate(this._queue, this._host);
+    this._updater.flushUpdate(this._frame, this._host);
   }
 
   forceUpdate({
@@ -192,10 +192,10 @@ export class RenderContext {
       this._host,
       this._updater,
       this._block,
-      this._queue,
+      this._frame,
     );
     if (viewTransition) {
-      this._queue.flags |= UpdateFlag.ViewTransition;
+      this._frame.flags |= RenderFlag.ViewTransition;
     }
     this._block.requestUpdate(priority, context);
   }
@@ -292,7 +292,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.PassiveEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._queue.passiveEffects.push(new InvokeEffectHook(currentHook));
+        this._frame.passiveEffects.push(new InvokeEffectHook(currentHook));
       }
 
       currentHook.callback = callback;
@@ -305,7 +305,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._queue.passiveEffects.push(new InvokeEffectHook(hook));
+      this._frame.passiveEffects.push(new InvokeEffectHook(hook));
     }
   }
 
@@ -335,7 +335,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.InsertionEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._queue.mutationEffects.push(new InvokeEffectHook(currentHook));
+        this._frame.mutationEffects.push(new InvokeEffectHook(currentHook));
       }
 
       currentHook.callback = callback;
@@ -348,7 +348,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._queue.mutationEffects.push(new InvokeEffectHook(hook));
+      this._frame.mutationEffects.push(new InvokeEffectHook(hook));
     }
   }
 
@@ -362,7 +362,7 @@ export class RenderContext {
       ensureHookType<EffectHook>(HookType.LayoutEffect, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._queue.layoutEffects.push(new InvokeEffectHook(currentHook));
+        this._frame.layoutEffects.push(new InvokeEffectHook(currentHook));
       }
 
       currentHook.callback = callback;
@@ -375,7 +375,7 @@ export class RenderContext {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._queue.layoutEffects.push(new InvokeEffectHook(hook));
+      this._frame.layoutEffects.push(new InvokeEffectHook(hook));
     }
   }
 
