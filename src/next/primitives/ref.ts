@@ -46,10 +46,10 @@ export class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
   }
 
   mount(value: RefValue, part: AttributePart): void {
-    if (typeof value === 'function') {
-      this._memoizedCleanup = value(part.node);
-    } else {
+    if (typeof value === 'object') {
       value.current = part.node;
+    } else {
+      this._memoizedCleanup = value(part.node);
     }
   }
 

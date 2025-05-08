@@ -56,11 +56,11 @@ export class MemoBinding<T> implements Binding<DirectiveValue<T>> {
     this._binding.connect(context);
   }
 
-  bind(newValue: DirectiveValue<T>, context: UpdateProtocol): void {
+  bind(value: DirectiveValue<T>, context: UpdateProtocol): void {
     const oldBinding = this._binding;
-    const newElement = isDirectiveElement(newValue)
-      ? newValue
-      : context.resolvePrimitiveElement(newValue, this._binding.part);
+    const newElement = isDirectiveElement(value)
+      ? value
+      : context.resolvePrimitiveElement(value, this._binding.part);
     if (oldBinding.directive !== newElement.directive) {
       const memoizedBinding = this._memoizedBindings.get(newElement.directive);
       if (memoizedBinding !== undefined) {

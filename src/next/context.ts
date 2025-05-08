@@ -16,6 +16,7 @@ import {
   resolveBindingTag,
 } from './coreTypes.js';
 import {
+  type ContextualKey,
   type EffectHook,
   type FinalizerHook,
   type Hook,
@@ -28,7 +29,6 @@ import {
   type RefObject,
   type UpdateOptions,
   type UserHook,
-  type ValueContext,
   ensureHookType,
   userHookTag,
 } from './hook.js';
@@ -45,7 +45,7 @@ interface RenderFrame {
 
 interface ContextualScope {
   parent: ContextualScope | null;
-  context: ValueContext<unknown>;
+  key: ContextualKey<unknown>;
   value: unknown;
 }
 
@@ -103,10 +103,10 @@ export class UpdateContext implements UpdateProtocol {
     this._renderFrame.passiveEffects.push(effect);
   }
 
-  enterContextualScope<T>(context: ValueContext<T>, value: T): UpdateContext {
+  enterContextualScope<T>(key: ContextualKey<T>, value: T): UpdateContext {
     const contextualScope = {
       parent: this._contextualScope,
-      context,
+      key,
       value,
     };
     return new UpdateContext(
@@ -168,15 +168,15 @@ export class UpdateContext implements UpdateProtocol {
     }
   }
 
-  getContextualValue<T>(context: ValueContext<T>): T | undefined {
+  getContextualValue<T>(key: ContextualKey<T>): T | undefined {
     let contextualScope = this._contextualScope;
     while (contextualScope !== null) {
-      if (contextualScope.context === context) {
+      if (contextualScope.key === key) {
         return contextualScope.value as T;
       }
       contextualScope = contextualScope.parent;
     }
-    return context.defaultValue;
+    return key.defaultValue;
   }
 
   getTemplate<TBinds extends readonly any[]>(
@@ -386,7 +386,7 @@ export class RenderContext implements RenderProtocol {
     return this.useMemo(() => callback, dependencies);
   }
 
-  useContext<T>(context: ValueContext<T>): T | undefined {
+  useContext<T>(context: ContextualKey<T>): T | undefined {
     return this._updateContext.getContextualValue(context);
   }
 

@@ -1,4 +1,4 @@
-import type { Hook, HookProtocol, ValueContext } from './hook.js';
+import type { ContextualKey, Hook, HookProtocol } from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
 
 export const resolveBindingTag = Symbol('Directive.resolveBinding');
@@ -82,7 +82,7 @@ export interface UpdateProtocol extends DirectiveProtocol {
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
-  enterContextualScope<T>(key: ValueContext<T>, value: T): UpdateProtocol;
+  enterContextualScope<T>(context: ContextualKey<T>, value: T): UpdateProtocol;
   renderComponent<TProps>(
     component: ComponentFunction<TProps>,
     props: TProps,

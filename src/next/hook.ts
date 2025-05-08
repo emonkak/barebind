@@ -18,7 +18,7 @@ export interface RefObject<T> {
 export interface HookProtocol {
   forceUpdate(options?: UpdateOptions): void;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
-  useContext<T>(context: ValueContext<T>): T | undefined;
+  useContext<T>(key: ContextualKey<T>): T | undefined;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
     callback: () => VoidFunction | void,
@@ -49,8 +49,8 @@ export interface HookProtocol {
   ): T;
 }
 
-export interface ValueContext<T> {
-  defaultValue: T | undefined;
+export interface ContextualKey<T> {
+  defaultValue?: T | undefined;
 }
 
 export type Hook =
@@ -103,12 +103,6 @@ export interface ReducerHook<TState, TAction> {
 
 export interface FinalizerHook {
   type: HookType.Finalizer;
-}
-
-export function createValueContext<T>(defaultValue?: T): ValueContext<T> {
-  return {
-    defaultValue,
-  };
 }
 
 export function ensureHookType<TExpectedHook extends Hook>(
