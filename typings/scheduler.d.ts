@@ -9,12 +9,12 @@ interface Scheduler {
 interface SchedulerPostTaskOptions {
   delay?: number;
   priority?: TaskPriority;
-  signal?: TaskSignal;
+  signal?: TaskSignal | AbortSignal;
 }
 
 interface SchedulerYieldOptions {
   priority?: TaskPriority | 'inherit';
-  signal?: TaskSignal | 'inherit';
+  signal?: TaskSignal | AbortSignal | 'inherit';
 }
 
 declare var Scheduler: {
