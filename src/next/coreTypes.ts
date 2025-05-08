@@ -78,6 +78,7 @@ export interface RenderProtocol extends HookProtocol {
 }
 
 export interface UpdateProtocol extends DirectiveProtocol {
+  enqueueBinding(binding: Binding<unknown>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;

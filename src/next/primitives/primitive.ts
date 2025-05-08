@@ -10,6 +10,8 @@ export interface Primitive<T> extends Directive<T> {
   ensureValue(value: unknown, part: Part): asserts value is T;
 }
 
+const noValue = Symbol('noValue');
+
 enum PrimitiveStatus {
   Idle,
   Mounting,
@@ -21,7 +23,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 {
   private _pendingValue: TValue;
 
-  protected _memoizedValue: TValue | null = null;
+  protected _memoizedValue: TValue | typeof noValue = noValue;
 
   private _part: TPart;
 
@@ -69,7 +71,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   commit(_context: EffectProtocol): void {
     switch (this._status) {
       case PrimitiveStatus.Mounting:
-        if (this._memoizedValue !== null) {
+        if (this._memoizedValue !== noValue) {
           this.update(this._pendingValue, this._memoizedValue, this._part);
         } else {
           this.mount(this._pendingValue, this._part);
@@ -78,7 +80,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
         break;
       case PrimitiveStatus.Unmouting:
         this.unmount(this._pendingValue, this._part);
-        this._memoizedValue = null;
+        this._memoizedValue = noValue;
         break;
     }
     this._status = PrimitiveStatus.Idle;

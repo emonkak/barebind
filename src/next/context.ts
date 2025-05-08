@@ -37,6 +37,7 @@ import type { Primitive } from './primitives/primitive.js';
 import type { RenderHost } from './renderHost.js';
 
 interface RenderFrame {
+  pendingBindings: Binding<unknown>[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
@@ -50,6 +51,7 @@ interface ContextualScope {
 
 interface GlobalState {
   cachedTemplates: WeakMap<readonly string[], Template<unknown>>;
+  dirtyBindings: WeakSet<Binding<unknown>>;
   identifierCount: number;
 }
 
@@ -85,6 +87,10 @@ export class UpdateContext implements UpdateProtocol {
     return ':' + this._renderHost.getHostName() + '-' + count + ':';
   }
 
+  enqueueBinding(binding: Binding<unknown>): void {
+    this._renderFrame.pendingBindings.push(binding);
+  }
+
   enqueueLayoutEffect(effect: Effect): void {
     this._renderFrame.layoutEffects.push(effect);
   }
@@ -109,6 +115,57 @@ export class UpdateContext implements UpdateProtocol {
       contextualScope,
       this._globalState,
     );
+  }
+
+  async flushUpdate(
+    binding: Binding<unknown>,
+    options?: UpdateOptions,
+  ): Promise<void> {
+    const { dirtyBindings } = this._globalState;
+    let pendingBindings = [binding];
+
+    while (true) {
+      for (let i = 0, l = pendingBindings.length; i < l; i++) {
+        const pendingBinding = pendingBindings[i]!;
+        pendingBinding.connect(this);
+        dirtyBindings.delete(binding);
+      }
+      if (this._renderFrame.pendingBindings.length === 0) {
+        break;
+      }
+      pendingBindings = consumePendingBindings(this._renderFrame);
+      await this._renderHost.yieldToMain();
+    }
+
+    const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
+      this._renderFrame,
+    );
+    const callback = () => {
+      binding.commit({ phase: EffectPhase.Mutation });
+      this._commitEffects(mutationEffects, {
+        phase: EffectPhase.Mutation,
+      });
+      this._commitEffects(layoutEffects, { phase: EffectPhase.Layout });
+    };
+
+    if (options?.viewTransition) {
+      await this._renderHost.startViewTransition(callback);
+    } else {
+      await this._renderHost.requestCallback(callback, {
+        priority: 'user-blocking',
+      });
+    }
+
+    if (passiveEffects.length > 0) {
+      await this._renderHost.requestCallback(
+        () => {
+          this._commitEffects(passiveEffects, {
+            phase: EffectPhase.Passive,
+          });
+        },
+        { priority: 'background' },
+      );
+    }
   }
 
   getContextualValue<T>(context: ValueContext<T>): T | undefined {
@@ -212,42 +269,18 @@ export class UpdateContext implements UpdateProtocol {
 
   scheduleUpdate(
     binding: Binding<unknown>,
-    options: UpdateOptions = {},
+    options?: UpdateOptions,
   ): Promise<void> {
+    this._globalState.dirtyBindings.add(binding);
+
     return this._renderHost.requestCallback(
-      async () => {
-        binding.connect(this);
-
-        const { mutationEffects, layoutEffects, passiveEffects } =
-          consumeRenderFrame(this._renderFrame);
-        const callback = () => {
-          binding.commit({ phase: EffectPhase.Mutation });
-          this._commitEffects(mutationEffects, {
-            phase: EffectPhase.Mutation,
-          });
-          this._commitEffects(layoutEffects, { phase: EffectPhase.Layout });
-        };
-
-        if (options.viewTransition) {
-          await this._renderHost.startViewTransition(callback);
-        } else {
-          await this._renderHost.requestCallback(callback, {
-            priority: 'user-blocking',
-          });
+      () => {
+        if (!this._globalState.dirtyBindings.has(binding)) {
+          return Promise.resolve();
         }
-
-        if (passiveEffects.length > 0) {
-          await this._renderHost.requestCallback(
-            () => {
-              this._commitEffects(passiveEffects, {
-                phase: EffectPhase.Passive,
-              });
-            },
-            { priority: 'background' },
-          );
-        }
+        return this.flushUpdate(binding, options);
       },
-      { priority: options.priority ?? this._renderHost.getTaskPriority() },
+      { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
   }
 
@@ -265,7 +298,7 @@ export class RenderContext implements RenderProtocol {
 
   private readonly _updateContext: UpdateContext;
 
-  private _isUpdating = false;
+  private _pendingUpdateOptions: UpdateOptions | null = null;
 
   private _hookIndex = 0;
 
@@ -293,13 +326,17 @@ export class RenderContext implements RenderProtocol {
     }
   }
 
-  forceUpdate(options?: UpdateOptions): void {
-    if (!this._isUpdating) {
-      this._updateContext.scheduleUpdate(this._binding, options).finally(() => {
-        this._isUpdating = false;
+  forceUpdate(options: UpdateOptions = {}): void {
+    if (this._pendingUpdateOptions === null) {
+      queueMicrotask(() => {
+        this._updateContext.scheduleUpdate(
+          this._binding,
+          this._pendingUpdateOptions!,
+        );
+        this._pendingUpdateOptions = null;
       });
-      this._isUpdating = true;
     }
+    this._pendingUpdateOptions = options;
   }
 
   html<TBinds extends readonly any[]>(
@@ -564,7 +601,9 @@ class InvokeEffectHook implements Effect {
   }
 }
 
-function consumeRenderFrame(renderFrame: RenderFrame) {
+function consumeEffects(
+  renderFrame: RenderFrame,
+): Pick<RenderFrame, 'mutationEffects' | 'layoutEffects' | 'passiveEffects'> {
   const { mutationEffects, layoutEffects, passiveEffects } = renderFrame;
   renderFrame.mutationEffects = [];
   renderFrame.layoutEffects = [];
@@ -576,12 +615,23 @@ function consumeRenderFrame(renderFrame: RenderFrame) {
   };
 }
 
+function consumePendingBindings(renderFrame: RenderFrame): Binding<unknown>[] {
+  const { pendingBindings } = renderFrame;
+  renderFrame.pendingBindings = [];
+  return pendingBindings;
+}
+
 function createGlobalState(): GlobalState {
-  return { cachedTemplates: new WeakMap(), identifierCount: 0 };
+  return {
+    cachedTemplates: new WeakMap(),
+    dirtyBindings: new WeakSet(),
+    identifierCount: 0,
+  };
 }
 
 function createRenderFrame(): RenderFrame {
   return {
+    pendingBindings: [],
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],

@@ -26,6 +26,7 @@ export interface RenderHost {
   ): Promise<void>;
   resolvePrimitive(part: Part): Primitive<unknown>;
   startViewTransition(callback: () => void | Promise<void>): Promise<void>;
+  yieldToMain(): Promise<void>;
 }
 
 export interface RequestCallbackOptions {
@@ -122,6 +123,14 @@ export class BrowserHost implements RenderHost {
       return document.startViewTransition(callback).finished;
     } else {
       return Promise.resolve().then(callback);
+    }
+  }
+
+  yieldToMain(): Promise<void> {
+    if (typeof globalThis.scheduler?.yield === 'function') {
+      return scheduler.yield();
+    } else {
+      return new Promise((resolve) => setTimeout(resolve));
     }
   }
 }

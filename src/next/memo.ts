@@ -15,12 +15,12 @@ export function memo<T>(
   value: DirectiveValue<T>,
 ): DirectiveElement<DirectiveValue<T>> {
   return {
-    directive: Memo as Directive<T>,
+    directive: Memo as Directive<DirectiveValue<T>>,
     value,
   };
 }
 
-export const Memo: Directive<unknown> = {
+export const Memo: Directive<DirectiveValue<unknown>> = {
   [resolveBindingTag](
     value: unknown,
     part: Part,
@@ -40,8 +40,8 @@ export class MemoBinding<T> implements Binding<DirectiveValue<T>> {
     this._binding = binding;
   }
 
-  get directive(): Directive<T> {
-    return this._binding.directive;
+  get directive(): Directive<DirectiveValue<T>> {
+    return Memo as Directive<DirectiveValue<T>>;
   }
 
   get value(): DirectiveValue<T> {
