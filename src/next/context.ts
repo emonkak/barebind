@@ -35,6 +35,7 @@ import {
 import type { Part } from './part.js';
 import type { Primitive } from './primitives/primitive.js';
 import type { RenderHost } from './renderHost.js';
+import { TemplateLiteralPreprocessor } from './templateLiteral.js';
 
 interface RenderFrame {
   pendingBindings: Binding<unknown>[];
@@ -53,6 +54,7 @@ interface GlobalState {
   cachedTemplates: WeakMap<readonly string[], Template<unknown>>;
   dirtyBindings: WeakSet<Binding<unknown>>;
   identifierCount: number;
+  templateLiteralPreprocessor: TemplateLiteralPreprocessor;
 }
 
 type UseUserHooks<TArray> = TArray extends [
@@ -81,6 +83,10 @@ export class UpdateContext implements UpdateProtocol {
     this._renderFrame = renderFrame;
     this._contextualScope = contextualScope;
     this._globalState = globalState;
+  }
+
+  get templateLiteralPreprocessor(): TemplateLiteralPreprocessor {
+    return this._globalState.templateLiteralPreprocessor;
   }
 
   createIdentifier(count: number): string {
@@ -312,6 +318,66 @@ export class RenderContext implements RenderProtocol {
     this._updateContext = updateContext;
   }
 
+  dynamicHTML(
+    strings: TemplateStringsArray,
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]> {
+    const { strings: expandedStrings, values: expandedBinds } =
+      this._updateContext.templateLiteralPreprocessor.expandLiterals(
+        strings,
+        binds,
+      );
+    const template = this._updateContext.getTemplate(
+      expandedStrings,
+      expandedBinds,
+      'html',
+    );
+    return {
+      directive: template,
+      value: binds,
+    };
+  }
+
+  dynamicMath(
+    strings: TemplateStringsArray,
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]> {
+    const { strings: expandedStrings, values: expandedBinds } =
+      this._updateContext.templateLiteralPreprocessor.expandLiterals(
+        strings,
+        binds,
+      );
+    const template = this._updateContext.getTemplate(
+      expandedStrings,
+      expandedBinds,
+      'math',
+    );
+    return {
+      directive: template,
+      value: binds,
+    };
+  }
+
+  dynamicSVG(
+    strings: TemplateStringsArray,
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]> {
+    const { strings: expandedStrings, values: expandedBinds } =
+      this._updateContext.templateLiteralPreprocessor.expandLiterals(
+        strings,
+        binds,
+      );
+    const template = this._updateContext.getTemplate(
+      expandedStrings,
+      expandedBinds,
+      'svg',
+    );
+    return {
+      directive: template,
+      value: binds,
+    };
+  }
+
   /** @internal */
   finalize(): void {
     const currentHook = this._hooks[this._hookIndex++];
@@ -339,12 +405,13 @@ export class RenderContext implements RenderProtocol {
     this._pendingUpdateOptions = options;
   }
 
-  html<TBinds extends readonly any[]>(
+  html(
     strings: TemplateStringsArray,
-    ...binds: TBinds
-  ): DirectiveElement<TBinds> {
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]> {
+    const template = this._updateContext.getTemplate(strings, binds, 'html');
     return {
-      directive: this._updateContext.getTemplate(strings, binds, 'html'),
+      directive: template,
       value: binds,
     };
   }
@@ -353,8 +420,9 @@ export class RenderContext implements RenderProtocol {
     strings: TemplateStringsArray,
     ...binds: TBinds
   ): DirectiveElement<TBinds> {
+    const template = this._updateContext.getTemplate(strings, binds, 'math');
     return {
-      directive: this._updateContext.getTemplate(strings, binds, 'math'),
+      directive: template,
       value: binds,
     };
   }
@@ -363,8 +431,9 @@ export class RenderContext implements RenderProtocol {
     strings: TemplateStringsArray,
     ...binds: TBinds
   ): DirectiveElement<TBinds> {
+    const template = this._updateContext.getTemplate(strings, binds, 'svg');
     return {
-      directive: this._updateContext.getTemplate(strings, binds, 'svg'),
+      directive: template,
       value: binds,
     };
   }
@@ -626,6 +695,7 @@ function createGlobalState(): GlobalState {
     cachedTemplates: new WeakMap(),
     dirtyBindings: new WeakSet(),
     identifierCount: 0,
+    templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
   };
 }
 

@@ -63,18 +63,30 @@ export enum EffectPhase {
 }
 
 export interface RenderProtocol extends HookProtocol {
-  html<TBinds extends any[]>(
+  dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: TBinds
-  ): DirectiveElement<TBinds>;
-  math<TBinds extends any[]>(
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]>;
+  dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: TBinds
-  ): DirectiveElement<TBinds>;
-  svg<TBinds extends any[]>(
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]>;
+  dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: TBinds
-  ): DirectiveElement<TBinds>;
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]>;
+  html(
+    strings: TemplateStringsArray,
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]>;
+  math(
+    strings: TemplateStringsArray,
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]>;
+  svg(
+    strings: TemplateStringsArray,
+    ...binds: unknown[]
+  ): DirectiveElement<unknown[]>;
 }
 
 export interface UpdateProtocol extends DirectiveProtocol {
