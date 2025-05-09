@@ -7,7 +7,7 @@ import {
   type UpdateProtocol,
   resolveBindingTag,
 } from '../coreTypes.js';
-import { nameOf } from '../debug.js';
+import { inspectValue } from '../debug.js';
 import { type ChildNodePart, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
@@ -22,7 +22,7 @@ export const ChildTemplate: Template<readonly [unknown]> = {
     } as const;
     const binding = context.resolveBinding(binds[0], part);
     DEBUG: {
-      part.node.data = nameOf(binds[0]);
+      part.node.data = inspectValue(binds[0]);
     }
     return new SingleTemplateInstance(binding);
   },
@@ -78,7 +78,7 @@ export class SingleTemplateInstance<T>
     const binding = this._binding;
     DEBUG: {
       if (binding.part.type === PartType.ChildNode) {
-        binding.part.node.data = nameOf(values[0]);
+        binding.part.node.data = inspectValue(values[0]);
       }
     }
     binding.bind(values[0], context);

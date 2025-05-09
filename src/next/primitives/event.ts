@@ -1,5 +1,5 @@
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
-import { inspectPart, markUsedValue, nameOf } from '../debug.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type EventPart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
 
@@ -15,7 +15,7 @@ export const EventPrimitive: Primitive<EventValue> = {
       )
     ) {
       throw new Error(
-        `The value of class primitive must be EventListener, EventListenerObject, null or undefined, but got "${nameOf(value)}".\n` +
+        `The value of class primitive must be EventListener, EventListenerObject, null or undefined, but got "${inspectValue(value)}".\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

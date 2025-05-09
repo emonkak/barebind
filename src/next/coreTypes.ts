@@ -80,27 +80,27 @@ export interface RenderProtocol extends HookProtocol {
   dynamicHTML(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]>;
+  ): DirectiveElement<readonly unknown[]>;
   dynamicMath(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]>;
+  ): DirectiveElement<readonly unknown[]>;
   dynamicSVG(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]>;
+  ): DirectiveElement<readonly unknown[]>;
   html(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]>;
+  ): DirectiveElement<readonly unknown[]>;
   math(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]>;
+  ): DirectiveElement<readonly unknown[]>;
   svg(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]>;
+  ): DirectiveElement<readonly unknown[]>;
 }
 
 export interface UpdateProtocol extends DirectiveProtocol {

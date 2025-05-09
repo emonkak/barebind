@@ -54,7 +54,7 @@ interface ContextualScope {
 }
 
 interface GlobalState {
-  cachedTemplates: WeakMap<readonly string[], Template<unknown>>;
+  cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   dirtyBindings: WeakSet<Binding<unknown>>;
   identifierCount: number;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
@@ -93,7 +93,7 @@ export class UpdateContext implements UpdateProtocol {
   }
 
   createIdentifier(count: number): string {
-    return ':' + this._renderHost.getHostName() + '-' + count + ':';
+    return ':' + this._renderHost.getPlaceholder() + '-' + count + ':';
   }
 
   enqueueBinding(binding: Binding<unknown>): void {
@@ -188,11 +188,11 @@ export class UpdateContext implements UpdateProtocol {
     return key.defaultValue;
   }
 
-  getTemplate<TBinds extends readonly any[]>(
+  getTemplate(
     strings: readonly string[],
-    binds: TBinds,
+    binds: unknown[],
     mode: TemplateMode,
-  ): Template<TBinds> {
+  ): Template<readonly unknown[]> {
     let template = this._globalState.cachedTemplates.get(strings);
 
     if (template === undefined) {
@@ -200,7 +200,7 @@ export class UpdateContext implements UpdateProtocol {
       this._globalState.cachedTemplates.set(strings, template);
     }
 
-    return template as Template<TBinds>;
+    return template;
   }
 
   nextIdentifier(): number {
@@ -398,23 +398,23 @@ export class RenderContext implements RenderProtocol {
   html(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]> {
+  ): DirectiveElement<readonly unknown[]> {
     const template = this._updateContext.getTemplate(strings, binds, 'html');
     return createDirectiveElement(template, binds);
   }
 
-  math<TBinds extends readonly any[]>(
+  math(
     strings: TemplateStringsArray,
-    ...binds: TBinds
-  ): DirectiveElement<TBinds> {
+    ...binds: unknown[]
+  ): DirectiveElement<readonly unknown[]> {
     const template = this._updateContext.getTemplate(strings, binds, 'math');
     return createDirectiveElement(template, binds);
   }
 
-  svg<TBinds extends readonly any[]>(
+  svg(
     strings: TemplateStringsArray,
-    ...binds: TBinds
-  ): DirectiveElement<TBinds> {
+    ...binds: unknown[]
+  ): DirectiveElement<readonly unknown[]> {
     const template = this._updateContext.getTemplate(strings, binds, 'svg');
     return createDirectiveElement(template, binds);
   }

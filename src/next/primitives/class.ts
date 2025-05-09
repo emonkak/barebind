@@ -1,6 +1,6 @@
 import { shallowEqual } from '../compare.js';
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
-import { inspectPart, markUsedValue, nameOf } from '../debug.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
@@ -18,7 +18,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
       )
     ) {
       throw new Error(
-        `The value of class primitive must be String, Object or Array, but got "${nameOf(value)}".\n` +
+        `The value of class primitive must be String, Object or Array, but got "${inspectValue(value)}".\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

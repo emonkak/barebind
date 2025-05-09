@@ -1,6 +1,6 @@
 import { shallowEqual } from '../compare.js';
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
-import { inspectPart, markUsedValue, nameOf } from '../debug.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
@@ -21,7 +21,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
   ensureValue(value: unknown, part: Part): asserts value is StyleValue {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of style primitive must be Object, but got "${nameOf(value)}".\n` +
+        `The value of style primitive must be Object, but got "${inspectValue(value)}".\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

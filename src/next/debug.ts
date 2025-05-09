@@ -33,11 +33,7 @@ export function inspectPart(part: Part, marker: string): string {
   return before + markPart(part, marker) + after;
 }
 
-export function markUsedValue(value: unknown): string {
-  return `[[${nameOf(value)} IS USED IN HERE!]]`;
-}
-
-export function nameOf(value: unknown): string {
+export function inspectValue(value: unknown): string {
   if (
     typeof value === 'string' ||
     typeof value === 'boolean' ||
@@ -55,6 +51,10 @@ export function nameOf(value: unknown): string {
   } else {
     return (value as any)[Symbol.toStringTag] ?? value.constructor.name;
   }
+}
+
+export function markUsedValue(value: unknown): string {
+  return `[[${inspectValue(value)} IS USED IN HERE!]]`;
 }
 
 function appendInsideTag(element: Element, contentToAppend: string): string {

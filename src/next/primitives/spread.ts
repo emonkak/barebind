@@ -5,7 +5,7 @@ import {
   type UpdateProtocol,
   resolveBindingTag,
 } from '../coreTypes.js';
-import { inspectPart, markUsedValue, nameOf } from '../debug.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import type { Primitive } from './primitive.js';
 
@@ -15,7 +15,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
     if (!isSpreadProps(value)) {
       throw new Error(
-        `The value of spread primitive must be Object, but got "${nameOf(value)}".\n` +
+        `The value of spread primitive must be Object, but got "${inspectValue(value)}".\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

@@ -12,15 +12,18 @@ import { PropertyPrimitive } from './primitives/property.js';
 import { RefPrimitive } from './primitives/ref.js';
 import { SpreadPrimitive } from './primitives/spread.js';
 import { StylePrimitive } from './primitives/style.js';
+import { EmptyTemplate } from './templates/emptyTemplate.js';
+import { ChildTemplate, TextTemplate } from './templates/singleTemplate.js';
+import { TaggedTemplate } from './templates/taggedTemplate.js';
 
 export interface RenderHost {
+  getPlaceholder(): string;
   getTaskPriority(): TaskPriority;
-  getHostName(): string;
-  createTemplate<TBinds extends readonly any[]>(
+  createTemplate(
     strings: readonly string[],
-    binds: TBinds,
+    binds: unknown[],
     mode: TemplateMode,
-  ): Template<TBinds>;
+  ): Template<readonly unknown[]>;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
@@ -35,26 +38,50 @@ export interface RequestCallbackOptions {
 }
 
 export interface BrowserHostOptions {
-  hostName?: string;
+  placeholder?: string;
 }
 
 export class BrowserHost implements RenderHost {
-  private readonly _hostName: string;
+  private readonly _placeholder: string;
 
-  constructor({ hostName = getRandomString(8) }: BrowserHostOptions = {}) {
-    this._hostName = hostName;
+  constructor({ placeholder = getRandomString(8) }: BrowserHostOptions = {}) {
+    this._placeholder = placeholder;
   }
 
-  createTemplate<TBinds extends readonly any[]>(
-    _strings: readonly string[],
-    _binds: TBinds,
-    _mode: TemplateMode,
-  ): Template<TBinds> {
-    throw new Error('Method not implemented.');
+  createTemplate(
+    strings: readonly string[],
+    binds: unknown[],
+    mode: TemplateMode,
+  ): Template<readonly unknown[]> {
+    if (binds.length === 0 && strings[0]!.trim() === '') {
+      // Assumption: strings.length === 1
+      return EmptyTemplate;
+    }
+
+    if (binds.length === 1) {
+      // Assumption: strings.length === 2
+      const beforeString = strings[0]!.trim();
+      const afterString = strings[1]!.trim();
+
+      if (beforeString === '' && afterString === '') {
+        // The tag is nowhere, so it's text.
+        return TextTemplate;
+      }
+
+      if (
+        (beforeString === '<' || beforeString === '<!--') &&
+        (afterString === '>' || afterString === '/>' || afterString === '-->')
+      ) {
+        // There is only one tag.
+        return ChildTemplate;
+      }
+    }
+
+    return TaggedTemplate.parse(strings, binds, this._placeholder, mode);
   }
 
-  getHostName(): string {
-    return this._hostName;
+  getPlaceholder(): string {
+    return this._placeholder;
   }
 
   getTaskPriority(): TaskPriority {

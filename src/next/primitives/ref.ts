@@ -1,5 +1,5 @@
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
-import { inspectPart, markUsedValue, nameOf } from '../debug.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
@@ -18,7 +18,7 @@ export const RefPrimitive: Primitive<RefValue> = {
       )
     ) {
       throw new Error(
-        `The value of ref primitive must be Function or Object, but got "${nameOf(value)}".\n` +
+        `The value of ref primitive must be Function or Object, but got "${inspectValue(value)}".\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

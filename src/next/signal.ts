@@ -8,7 +8,7 @@ import {
   directiveTag,
   resolveBindingTag,
 } from './coreTypes.js';
-import { nameOf } from './debug.js';
+import { inspectValue } from './debug.js';
 import { type HookProtocol, type UserHook, userHookTag } from './hook.js';
 import { LinkedList } from './linkedList.js';
 import type { Part } from './part.js';
@@ -51,7 +51,7 @@ export abstract class Signal<T>
   }
 
   get [Symbol.toStringTag](): string {
-    return `Signal(${nameOf(this.value)})`;
+    return `Signal(${inspectValue(this.value)})`;
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
