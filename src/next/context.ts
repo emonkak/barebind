@@ -207,7 +207,7 @@ export class UpdateContext implements UpdateProtocol {
   prepareBinding<T>(value: DirectiveValue<T>, part: Part): Binding<T> {
     const element = isDirectiveElement(value)
       ? value
-      : this.resolvePrimitiveElement(value, part);
+      : this.resolveDirectiveElement(value, part);
     const binding = element.directive[resolveBindingTag](
       element.value,
       part,
@@ -223,7 +223,7 @@ export class UpdateContext implements UpdateProtocol {
   ): Binding<T> {
     const element = isDirectiveElement(value)
       ? value
-      : this.resolvePrimitiveElement(value, binding.part);
+      : this.resolveDirectiveElement(value, binding.part);
     if (binding.directive === element.directive) {
       binding.bind(element.value, this);
     } else {
@@ -263,7 +263,7 @@ export class UpdateContext implements UpdateProtocol {
     return template.render(binds, this);
   }
 
-  resolvePrimitiveElement<T>(value: T, part: Part): DirectiveElement<T> {
+  resolveDirectiveElement<T>(value: T, part: Part): DirectiveElement<T> {
     type EnsureValue = (value: unknown, part: Part) => void;
     const directive = this._renderHost.resolvePrimitive(part) as Primitive<T>;
     (directive.ensureValue as EnsureValue)(value, part);

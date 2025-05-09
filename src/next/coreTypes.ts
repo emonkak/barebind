@@ -117,7 +117,7 @@ export interface UpdateProtocol extends DirectiveProtocol {
 }
 
 export interface DirectiveProtocol {
-  resolvePrimitiveElement<T>(value: T, part: Part): DirectiveElement<T>;
+  resolveDirectiveElement<T>(value: T, part: Part): DirectiveElement<T>;
   prepareBinding<T>(value: DirectiveValue<T>, part: Part): Binding<T>;
   reconcileBinding<T>(
     binding: Binding<T>,
