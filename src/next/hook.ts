@@ -6,15 +6,6 @@ export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
   : ((prevState: T) => T) | T;
 
-export interface UpdateOptions {
-  priority?: TaskPriority;
-  viewTransition?: boolean;
-}
-
-export interface RefObject<T> {
-  current: T;
-}
-
 export interface HookProtocol {
   forceUpdate(options?: UpdateOptions): void;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
@@ -47,10 +38,6 @@ export interface HookProtocol {
     getSnapshot: () => T,
     options?: UpdateOptions,
   ): T;
-}
-
-export interface ContextualKey<T> {
-  defaultValue?: T | undefined;
 }
 
 export type Hook =
@@ -103,6 +90,19 @@ export interface ReducerHook<TState, TAction> {
 
 export interface FinalizerHook {
   type: HookType.Finalizer;
+}
+
+export interface ContextualKey<T> {
+  defaultValue?: T | undefined;
+}
+
+export interface RefObject<T> {
+  current: T;
+}
+
+export interface UpdateOptions {
+  priority?: TaskPriority;
+  viewTransition?: boolean;
 }
 
 export function ensureHookType<TExpectedHook extends Hook>(

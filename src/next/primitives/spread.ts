@@ -117,7 +117,7 @@ export class SpreadBinding implements Binding<SpreadValue> {
           this._pendingBindings.set(name, newBinding);
         }
       } else {
-        const part = resolveSpreadPart(name, this._part.node);
+        const part = resolveNamedPart(name, this._part.node);
         const newBinding = context.prepareBinding(value, part);
         this._pendingBindings.set(name, newBinding);
       }
@@ -129,7 +129,7 @@ function isSpreadProps(value: unknown): value is SpreadValue {
   return value !== null && typeof value === 'object';
 }
 
-function resolveSpreadPart(name: string, node: Element): Part {
+function resolveNamedPart(name: string, node: Element): Part {
   switch (name[0]) {
     case '@':
       return {

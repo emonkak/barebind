@@ -1,4 +1,9 @@
-import type { ContextualKey, Hook, HookProtocol } from './hook.js';
+import type {
+  ContextualKey,
+  Hook,
+  HookProtocol,
+  UpdateOptions,
+} from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
 
 export const resolveBindingTag = Symbol('Directive.resolveBinding');
@@ -53,10 +58,10 @@ export interface Effect {
 }
 
 export interface EffectProtocol {
-  phase: EffectPhase;
+  phase: CommitPhase;
 }
 
-export enum EffectPhase {
+export enum CommitPhase {
   Mutation,
   Layout,
   Passive,
@@ -105,6 +110,10 @@ export interface UpdateProtocol extends DirectiveProtocol {
     template: Template<TBinds>,
     binds: TBinds,
   ): TemplateInstance<TBinds>;
+  scheduleUpdate(
+    binding: Binding<unknown>,
+    options?: UpdateOptions,
+  ): Promise<void>;
 }
 
 export interface DirectiveProtocol {

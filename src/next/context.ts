@@ -1,11 +1,11 @@
 import { dependenciesAreChanged } from './compare.js';
 import {
   type Binding,
+  CommitPhase,
   type ComponentFunction,
   type DirectiveElement,
   type DirectiveValue,
   type Effect,
-  EffectPhase,
   type EffectProtocol,
   type RenderProtocol,
   type Template,
@@ -147,11 +147,11 @@ export class UpdateContext implements UpdateProtocol {
       this._renderFrame,
     );
     const callback = () => {
-      binding.commit({ phase: EffectPhase.Mutation });
-      this._commitEffects(mutationEffects, {
-        phase: EffectPhase.Mutation,
+      binding.commit({ phase: CommitPhase.Mutation });
+      commitEffects(mutationEffects, {
+        phase: CommitPhase.Mutation,
       });
-      this._commitEffects(layoutEffects, { phase: EffectPhase.Layout });
+      commitEffects(layoutEffects, { phase: CommitPhase.Layout });
     };
 
     if (options?.viewTransition) {
@@ -165,8 +165,8 @@ export class UpdateContext implements UpdateProtocol {
     if (passiveEffects.length > 0) {
       await this._renderHost.requestCallback(
         () => {
-          this._commitEffects(passiveEffects, {
-            phase: EffectPhase.Passive,
+          commitEffects(passiveEffects, {
+            phase: CommitPhase.Passive,
           });
         },
         { priority: 'background' },
@@ -277,23 +277,17 @@ export class UpdateContext implements UpdateProtocol {
     binding: Binding<unknown>,
     options?: UpdateOptions,
   ): Promise<void> {
-    this._globalState.dirtyBindings.add(binding);
-
+    const { dirtyBindings } = this._globalState;
+    dirtyBindings.add(binding);
     return this._renderHost.requestCallback(
       () => {
-        if (!this._globalState.dirtyBindings.has(binding)) {
+        if (!dirtyBindings.has(binding)) {
           return Promise.resolve();
         }
         return this.flushUpdate(binding, options);
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
-  }
-
-  private _commitEffects(effects: Effect[], context: EffectProtocol): void {
-    for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(context);
-    }
   }
 }
 
@@ -667,6 +661,12 @@ class InvokeEffectHook implements Effect {
     const { cleanup, callback } = this._hook;
     cleanup?.();
     this._hook.cleanup = callback();
+  }
+}
+
+function commitEffects(effects: Effect[], context: EffectProtocol): void {
+  for (let i = 0, l = effects.length; i < l; i++) {
+    effects[i]!.commit(context);
   }
 }
 
