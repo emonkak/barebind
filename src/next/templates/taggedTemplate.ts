@@ -247,13 +247,6 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
 
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
-
-      DEBUG: {
-        if (binding.part.type === PartType.ChildNode) {
-          binding.part.node.data = inspectValue(binds[i]);
-        }
-      }
-
       binding.bind(binds[i]!, context);
     }
   }
@@ -286,7 +279,13 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
 
   commit(context: EffectProtocol): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.commit(context);
+      const binding = this._bindings[i]!;
+      DEBUG: {
+        if (binding.part.type === PartType.ChildNode) {
+          binding.part.node.data = inspectValue(binding.value);
+        }
+      }
+      binding.commit(context);
     }
   }
 
@@ -475,11 +474,7 @@ function parseChildren(
         if (
           trimTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
-          let hint = '';
-          DEBUG: {
-            hint = inspectValue(binds[holes.length]);
-          }
-          (currentNode as Comment).data = hint;
+          (currentNode as Comment).data = '';
           holes.push({
             type: PartType.ChildNode,
             index,

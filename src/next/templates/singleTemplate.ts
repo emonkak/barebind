@@ -75,13 +75,7 @@ export class SingleTemplateInstance<T>
   }
 
   bind(values: readonly [T], context: UpdateProtocol): void {
-    const binding = this._binding;
-    DEBUG: {
-      if (binding.part.type === PartType.ChildNode) {
-        binding.part.node.data = inspectValue(values[0]);
-      }
-    }
-    binding.bind(values[0], context);
+    this._binding.bind(values[0], context);
   }
 
   unbind(context: UpdateProtocol): void {
@@ -93,6 +87,11 @@ export class SingleTemplateInstance<T>
   }
 
   commit(context: EffectProtocol): void {
+    DEBUG: {
+      if (this._binding.part.type === PartType.ChildNode) {
+        this._binding.part.node.data = inspectValue(this._binding.value);
+      }
+    }
     this._binding.commit(context);
   }
 
