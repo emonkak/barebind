@@ -118,7 +118,8 @@ export class SpreadBinding implements Binding<SpreadValue> {
         }
       } else {
         const part = resolveNamedPart(name, this._part.node);
-        const newBinding = context.prepareBinding(value, part);
+        const newBinding = context.resolveBinding(value, part);
+        newBinding.connect(context);
         this._pendingBindings.set(name, newBinding);
       }
     }

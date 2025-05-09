@@ -68,10 +68,12 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
       this._hooks,
       this,
     );
-    this._binding =
-      this._binding !== null
-        ? context.reconcileBinding(this._binding, element)
-        : context.prepareBinding(element, this._part);
+    if (this._binding !== null) {
+      this._binding = context.reconcileBinding(this._binding, element);
+    } else {
+      this._binding = context.resolveBinding(element, this._part);
+      this._binding.connect(context);
+    }
   }
 
   bind(props: TProps, context: UpdateProtocol): void {
@@ -82,10 +84,12 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
         this._hooks,
         this,
       );
-      this._binding =
-        this._binding !== null
-          ? context.reconcileBinding(this._binding, element)
-          : context.prepareBinding(element, this._part);
+      if (this._binding !== null) {
+        this._binding = context.reconcileBinding(this._binding, element);
+      } else {
+        this._binding = context.resolveBinding(element, this._part);
+        this._binding.connect(context);
+      }
     }
     this._pendingProps = props;
   }

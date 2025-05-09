@@ -207,7 +207,7 @@ export class UpdateContext implements UpdateProtocol {
     return ++this._globalState.identifierCount;
   }
 
-  prepareBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
+  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
     const element = this.resolveDirectiveElement(value, part);
     const binding = element.directive[resolveBindingTag](
       element.value,

@@ -130,7 +130,7 @@ export interface DirectiveProtocol {
     value: Bindable<T>,
     part: Part,
   ): DirectiveElement<T>;
-  prepareBinding<T>(value: Bindable<T>, part: Part): Binding<T>;
+  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T>;
   reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T>;
 }
 

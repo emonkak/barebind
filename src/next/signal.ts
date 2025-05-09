@@ -23,7 +23,7 @@ const SignalDirective: Directive<Signal<unknown>> = {
     part: Part,
     context: DirectiveProtocol,
   ): SignalBinding<unknown> {
-    const binding = context.prepareBinding(value.value, part);
+    const binding = context.resolveBinding(value.value, part);
     return new SignalBinding(binding, value);
   },
 };

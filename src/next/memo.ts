@@ -21,7 +21,7 @@ export const Memo: Directive<Bindable<unknown>> = {
     part: Part,
     context: DirectiveProtocol,
   ): MemoBinding<unknown> {
-    const binding = context.prepareBinding(value, part);
+    const binding = context.resolveBinding(value, part);
     return new MemoBinding(binding);
   },
 };

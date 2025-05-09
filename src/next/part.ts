@@ -25,7 +25,7 @@ export interface AttributePart {
 
 export interface ChildNodePart {
   type: PartType.ChildNode;
-  node: ChildNode;
+  node: Comment;
 }
 
 export interface ElementPart {

@@ -11,7 +11,7 @@ import { TemplateBinding } from '../template.js';
 
 export const EmptyTemplate: Template<readonly []> = {
   render(
-    _values: readonly [],
+    _binds: readonly [],
     _context: DirectiveProtocol,
   ): typeof EmptyTemplateInstance {
     return EmptyTemplateInstance;

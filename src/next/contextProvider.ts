@@ -41,7 +41,7 @@ export class ContextProvider<TValue, TChild>
     part: Part,
     context: DirectiveProtocol,
   ): Binding<ContextProviderValue<TValue, TChild>> {
-    const binding = context.prepareBinding(value.child, part);
+    const binding = context.resolveBinding(value.child, part);
     return new ContextProviderBinding(this, value, binding);
   }
 }
