@@ -9,7 +9,7 @@ import {
   resolveBindingTag,
 } from '../coreTypes.js';
 import { inspectPart, markUsedValue, nameOf } from '../debug.js';
-import type { ElementPart, Part } from '../part.js';
+import type { Part } from '../part.js';
 import { Signal } from '../signal.js';
 import type { Primitive } from './primitive.js';
 
@@ -21,10 +21,7 @@ export function signal<T>(value: Signal<T>): DirectiveElement<Signal<T>> {
 }
 
 export const SignalPrimitive: Primitive<Signal<unknown>> = {
-  ensureValue(
-    value: unknown,
-    part: ElementPart,
-  ): asserts value is Signal<unknown> {
+  ensureValue(value: unknown, part: Part): asserts value is Signal<unknown> {
     if (!(value instanceof Signal)) {
       throw new Error(
         `The value of spread primitive must be Signal, but got "${nameOf(value)}".\n` +
@@ -43,7 +40,7 @@ export const SignalPrimitive: Primitive<Signal<unknown>> = {
 };
 
 export class SignalBinding<T> implements Binding<Signal<T>> {
-  private _binding: Binding<T>;
+  private readonly _binding: Binding<T>;
 
   private _value: Signal<T>;
 
@@ -69,14 +66,17 @@ export class SignalBinding<T> implements Binding<Signal<T>> {
   connect(context: UpdateProtocol): void {
     this._binding.connect(context);
     this._subscription ??= this._value.subscribe(() => {
+      this._binding.bind(this._value.value, context);
       context.scheduleUpdate(this._binding);
     });
   }
 
   bind(value: Signal<T>, context: UpdateProtocol): void {
     if (this._value !== value) {
+      this._binding.bind(value.value, context);
       this._subscription?.();
       this._subscription ??= value.subscribe(() => {
+        this._binding.bind(value.value, context);
         context.scheduleUpdate(this._binding, { priority: 'background' });
       });
       this._value = value;

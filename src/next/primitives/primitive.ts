@@ -10,7 +10,7 @@ export interface Primitive<T> extends Directive<T> {
   ensureValue(value: unknown, part: Part): asserts value is T;
 }
 
-const noValue = Symbol('noValue');
+export const noValue = Symbol('noValue');
 
 enum PrimitiveStatus {
   Idle,
@@ -44,14 +44,16 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     return this._part;
   }
 
+  abstract shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
+
   connect(): void {
     this._status = PrimitiveStatus.Mounting;
   }
 
   bind(value: TValue, _context: UpdateProtocol): void {
     if (
-      this._memoizedValue === null ||
-      !Object.is(this._pendingValue, this._memoizedValue)
+      this._memoizedValue === noValue ||
+      this.shouldUpdate(this._pendingValue, this._memoizedValue)
     ) {
       this._status = PrimitiveStatus.Mounting;
     }

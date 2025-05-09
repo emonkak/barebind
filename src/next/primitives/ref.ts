@@ -30,7 +30,7 @@ export const RefPrimitive: Primitive<RefValue> = {
   ): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(
-        'Ref primitive must be used in a ":ref" attribute, but it is used here in:\n' +
+        'Ref primitive must be used in a ":ref" attribute part, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -43,6 +43,10 @@ export class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
 
   get directive(): typeof RefPrimitive {
     return RefPrimitive;
+  }
+
+  shouldUpdate(_newValue: RefValue, _oldValue: RefValue): boolean {
+    return true;
   }
 
   mount(value: RefValue, part: AttributePart): void {

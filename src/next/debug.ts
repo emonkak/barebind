@@ -124,6 +124,11 @@ function markPart(part: Part, marker: string): string {
         part.node,
         unquotedAttribute('.' + part.name, marker),
       );
+    case PartType.Live:
+      return appendInsideTag(
+        part.node,
+        unquotedAttribute('$' + part.name, marker),
+      );
     case PartType.Event:
       return appendInsideTag(
         part.node,

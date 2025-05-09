@@ -127,7 +127,7 @@ function resolveBinding<TProps>(
   _context: DirectiveProtocol,
 ): LazyBinding<TProps> {
   if (part.type !== PartType.ChildNode) {
-    throw new Error('Component must be used in a child node.');
+    throw new Error('Component must be used in a child node part.');
   }
   return new LazyBinding(new ComponentBinding(this, props, part));
 }

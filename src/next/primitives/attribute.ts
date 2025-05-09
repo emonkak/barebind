@@ -9,10 +9,10 @@ export const AttributePrimitive: Primitive<unknown> = {
     value: unknown,
     part: Part,
     _context: DirectiveProtocol,
-  ): AttributeBinding {
+  ): AttributeBinding<unknown> {
     if (part.type !== PartType.Attribute) {
       throw new Error(
-        'Attribute primitive must be used in an attribute, but it is used here:\n' +
+        'Attribute primitive must be used in an attribute part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -20,12 +20,16 @@ export const AttributePrimitive: Primitive<unknown> = {
   },
 };
 
-export class AttributeBinding extends PrimitiveBinding<unknown, AttributePart> {
-  get directive(): Primitive<unknown> {
-    return AttributePrimitive;
+export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
+  get directive(): Primitive<T> {
+    return AttributePrimitive as Primitive<T>;
   }
 
-  mount(value: unknown, part: AttributePart): void {
+  shouldUpdate(newValue: T, oldValue: unknown): boolean {
+    return !Object.is(newValue, oldValue);
+  }
+
+  mount(value: T, part: AttributePart): void {
     switch (typeof value) {
       case 'string':
         part.node.setAttribute(part.name, value);
@@ -42,11 +46,11 @@ export class AttributeBinding extends PrimitiveBinding<unknown, AttributePart> {
     }
   }
 
-  unmount(_value: unknown, part: AttributePart): void {
+  unmount(_value: T, part: AttributePart): void {
     part.node.removeAttribute(part.name);
   }
 
-  update(newValue: unknown, _oldValue: unknown, part: AttributePart): void {
+  update(newValue: T, _oldValue: T, part: AttributePart): void {
     this.mount(newValue, part);
   }
 }

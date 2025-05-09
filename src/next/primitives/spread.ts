@@ -12,7 +12,7 @@ import type { Primitive } from './primitive.js';
 export type SpreadValue = { [key: string]: unknown };
 
 export const SpreadPrimitive: Primitive<SpreadValue> = {
-  ensureValue(value: unknown, part: ElementPart): asserts value is SpreadValue {
+  ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
     if (!isSpreadProps(value)) {
       throw new Error(
         `The value of spread primitive must be Object, but got "${nameOf(value)}".\n` +
@@ -27,7 +27,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
-        'Spread primitive must be used in an element, but it is used here:\n' +
+        'Spread primitive must be used in an element part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -131,15 +131,21 @@ function isSpreadProps(value: unknown): value is SpreadValue {
 
 function resolveNamedPart(name: string, node: Element): Part {
   switch (name[0]) {
-    case '@':
+    case '$':
       return {
-        type: PartType.Event,
+        type: PartType.Live,
         node,
         name: name.slice(1),
       };
     case '.':
       return {
         type: PartType.Property,
+        node,
+        name: name.slice(1),
+      };
+    case '@':
+      return {
+        type: PartType.Event,
         node,
         name: name.slice(1),
       };

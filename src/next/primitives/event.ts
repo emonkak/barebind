@@ -1,12 +1,12 @@
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, markUsedValue, nameOf } from '../debug.js';
 import { type EventPart, type Part, PartType } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
 
 export type EventValue = EventListenerOrEventListenerObject | null | undefined;
 
 export const EventPrimitive: Primitive<EventValue> = {
-  ensureValue(value: unknown, part: EventPart): asserts value is EventValue {
+  ensureValue(value: unknown, part: Part): asserts value is EventValue {
     if (
       !(
         value == null ||
@@ -27,7 +27,7 @@ export const EventPrimitive: Primitive<EventValue> = {
   ): EventBinding {
     if (part.type !== PartType.Event) {
       throw new Error(
-        'Event primitive must be used in an event, but it is used here:\n' +
+        'Event primitive must be used in an event part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -38,6 +38,10 @@ export const EventPrimitive: Primitive<EventValue> = {
 export class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
   get directive(): Primitive<EventValue> {
     return EventPrimitive;
+  }
+
+  shouldUpdate(newValue: EventValue, oldValue: EventValue): boolean {
+    return newValue !== oldValue;
   }
 
   mount(value: EventValue, part: EventPart): void {
@@ -66,7 +70,7 @@ export class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
   handleEvent(event: Event): void {
     if (typeof this._memoizedValue === 'function') {
       this._memoizedValue(event);
-    } else {
+    } else if (this._memoizedValue !== noValue) {
       this._memoizedValue?.handleEvent(event);
     }
   }

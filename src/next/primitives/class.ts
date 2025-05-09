@@ -1,12 +1,13 @@
-import { PartType } from '../../baseTypes.js';
+import { shallowEqual } from '../compare.js';
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, markUsedValue, nameOf } from '../debug.js';
+import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
 export type ClassMap = { [key: string]: boolean };
 
-export type ClassValue = string | ClassMap | (string | ClassMap)[];
+export type ClassValue = string | ClassMap | ClassValue[];
 
 export const ClassPrimitive: Primitive<ClassValue> = {
   ensureValue(value: unknown, part: Part): asserts value is ClassValue {
@@ -29,7 +30,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
   ): ClassBinding {
     if (part.type !== PartType.Attribute || part.name !== ':class') {
       throw new Error(
-        'ClassMap primitive must be used in a ":class" attribute, but it is used here:\n' +
+        'ClassMap primitive must be used in a ":class" attribute part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -40,6 +41,29 @@ export const ClassPrimitive: Primitive<ClassValue> = {
 export class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
   get directive(): typeof ClassPrimitive {
     return ClassPrimitive;
+  }
+
+  shouldUpdate(newValue: ClassValue, oldValue: ClassValue): boolean {
+    switch (typeof newValue) {
+      case 'string':
+        return typeof oldValue === 'string' && newValue !== oldValue;
+      case 'object':
+        if (Array.isArray(newValue)) {
+          return (
+            Array.isArray(oldValue) &&
+            (newValue.length !== oldValue.length ||
+              newValue.some((value, i) =>
+                this.shouldUpdate(value, oldValue[i]!),
+              ))
+          );
+        } else {
+          return (
+            typeof oldValue === 'object' &&
+            !Array.isArray(oldValue) &&
+            shallowEqual(newValue, oldValue)
+          );
+        }
+    }
   }
 
   mount(value: ClassValue, part: AttributePart): void {
@@ -86,14 +110,7 @@ function* iterateClasses(
     yield [value, true];
   } else if (Array.isArray(value)) {
     for (let i = 0, l = value.length; i < l; i++) {
-      const childValue = value[i]!;
-      if (typeof childValue === 'string') {
-        yield [childValue, true];
-      } else {
-        for (const key in childValue) {
-          yield [key, childValue[key]!];
-        }
-      }
+      iterateClasses(value[i]!);
     }
   } else {
     for (const key in value) {

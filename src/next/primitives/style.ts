@@ -1,3 +1,4 @@
+import { shallowEqual } from '../compare.js';
 import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, markUsedValue, nameOf } from '../debug.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
@@ -32,7 +33,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
   ): StyleBinding {
     if (part.type !== PartType.Attribute || part.name !== ':style') {
       throw new Error(
-        'Style primitive must be used in a ":style" attribute, but it is used here in:\n' +
+        'Style primitive must be used in a ":style" attribute part, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -43,6 +44,10 @@ export const StylePrimitive: Primitive<StyleValue> = {
 export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
   get directive(): typeof StylePrimitive {
     return StylePrimitive;
+  }
+
+  shouldUpdate(newValue: StyleValue, oldValue: StyleValue): boolean {
+    return shallowEqual(newValue, oldValue);
   }
 
   mount(value: StyleValue, part: AttributePart): void {

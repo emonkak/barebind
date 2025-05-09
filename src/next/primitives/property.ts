@@ -15,7 +15,7 @@ export const PropertyPrimitive: Primitive<unknown> = {
   ): PrimitiveBinding<unknown, PropertyPart> {
     if (part.type !== PartType.Property) {
       throw new Error(
-        'Property primitive must be used in a node, but it is used here:\n' +
+        'Property primitive must be used in a property part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -23,18 +23,22 @@ export const PropertyPrimitive: Primitive<unknown> = {
   },
 };
 
-export class PropertyBinding extends PrimitiveBinding<unknown, PropertyPart> {
-  get directive(): typeof PropertyPrimitive {
-    return PropertyPrimitive;
+export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
+  get directive(): Primitive<T> {
+    return PropertyPrimitive as Primitive<T>;
   }
 
-  mount(value: unknown, part: PropertyPart): void {
+  shouldUpdate(newValue: T, oldValue: T): boolean {
+    return !Object.is(newValue, oldValue);
+  }
+
+  mount(value: T, part: PropertyPart): void {
     (part.node as any)[part.name] = value;
   }
 
-  unmount(_value: unknown, _part: PropertyPart): void {}
+  unmount(_value: T, _part: PropertyPart): void {}
 
-  update(newValue: unknown, _oldValue: unknown, part: PropertyPart): void {
+  update(newValue: T, _oldValue: T, part: PropertyPart): void {
     this.mount(newValue, part);
   }
 }

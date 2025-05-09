@@ -9,10 +9,10 @@ export const NodePrimitive: Primitive<unknown> = {
     value: unknown,
     part: Part,
     _context: DirectiveProtocol,
-  ): NodeBinding {
+  ): NodeBinding<unknown> {
     if (part.type !== PartType.Node) {
       throw new Error(
-        'Node primitive must be used in a node, but it is used here:\n' +
+        'Node primitive must be used in a node part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -20,21 +20,25 @@ export const NodePrimitive: Primitive<unknown> = {
   },
 };
 
-export class NodeBinding extends PrimitiveBinding<unknown, NodePart> {
-  get directive(): Primitive<unknown> {
-    return NodePrimitive;
+export class NodeBinding<T> extends PrimitiveBinding<T, NodePart> {
+  get directive(): Primitive<T> {
+    return NodePrimitive as Primitive<T>;
   }
 
-  mount(value: unknown, part: Part): void {
+  shouldUpdate(newValue: T, oldValue: T): boolean {
+    return !Object.is(newValue, oldValue);
+  }
+
+  mount(value: T, part: Part): void {
     part.node.nodeValue =
       typeof value === 'string' ? value : (value?.toString() ?? null);
   }
 
-  unmount(_value: unknown, part: NodePart): void {
+  unmount(_value: T, part: NodePart): void {
     part.node.nodeValue = null;
   }
 
-  update(newValue: unknown, _oldValue: unknown, part: NodePart): void {
+  update(newValue: T, _oldValue: T, part: NodePart): void {
     this.mount(newValue, part);
   }
 }

@@ -5,6 +5,7 @@ import { type Part, PartType } from './part.js';
 import { AttributePrimitive } from './primitives/attribute.js';
 import { ClassPrimitive } from './primitives/class.js';
 import { EventPrimitive } from './primitives/event.js';
+import { LivePrimitive } from './primitives/live.js';
 import { NodePrimitive } from './primitives/node.js';
 import type { Primitive } from './primitives/primitive.js';
 import { PropertyPrimitive } from './primitives/property.js';
@@ -21,7 +22,7 @@ export interface RenderHost {
     mode: TemplateMode,
   ): Template<TBinds>;
   requestCallback(
-    callback: () => void,
+    callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void>;
   resolvePrimitive(part: Part): Primitive<unknown>;
@@ -66,7 +67,7 @@ export class BrowserHost implements RenderHost {
   }
 
   requestCallback(
-    callback: () => void,
+    callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void> {
     if (typeof globalThis.scheduler?.postTask === 'function') {
@@ -113,6 +114,8 @@ export class BrowserHost implements RenderHost {
         return SpreadPrimitive;
       case PartType.Event:
         return EventPrimitive;
+      case PartType.Live:
+        return LivePrimitive;
       case PartType.Property:
         return PropertyPrimitive;
     }

@@ -3,6 +3,7 @@ export type Part =
   | ChildNodePart
   | ElementPart
   | EventPart
+  | LivePart
   | NodePart
   | PropertyPart;
 
@@ -11,6 +12,7 @@ export enum PartType {
   ChildNode,
   Element,
   Event,
+  Live,
   Node,
   Property,
 }
@@ -33,6 +35,12 @@ export interface ElementPart {
 
 export interface EventPart {
   type: PartType.Event;
+  node: Element;
+  name: string;
+}
+
+export interface LivePart {
+  type: PartType.Live;
   node: Element;
   name: string;
 }
