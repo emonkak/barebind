@@ -8,7 +8,7 @@ import type { Part } from './part.js';
 
 const noValue = Symbol('noValue');
 
-export class LazyBinding<T> implements Binding<T> {
+export class SuspenseBinding<T> implements Binding<T> {
   private readonly _binding: Binding<T>;
 
   private _pendingValue: T | typeof noValue = noValue;

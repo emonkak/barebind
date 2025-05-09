@@ -11,8 +11,8 @@ import {
   resolveBindingTag,
 } from './coreTypes.js';
 import { type EffectHook, type Hook, HookType } from './hook.js';
-import { LazyBinding } from './lazy.js';
 import { type ChildNodePart, type Part, PartType } from './part.js';
+import { SuspenseBinding } from './suspense.js';
 
 export interface ComponentDirective<TProps>
   extends Directive<TProps>,
@@ -148,11 +148,11 @@ function resolveBinding<TProps>(
   props: TProps,
   part: Part,
   _context: DirectiveProtocol,
-): LazyBinding<TProps> {
+): SuspenseBinding<TProps> {
   if (part.type !== PartType.ChildNode) {
     throw new Error('Component must be used in a child node part.');
   }
-  return new LazyBinding(new ComponentBinding(this, props, part));
+  return new SuspenseBinding(new ComponentBinding(this, props, part));
 }
 
 function treatComponentDirective<TProps>(
