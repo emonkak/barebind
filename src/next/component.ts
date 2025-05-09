@@ -29,7 +29,9 @@ export function component<TProps>(
 export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
   private readonly _component: ComponentDirective<TProps>;
 
-  private _props: TProps;
+  private _pendingProps: TProps;
+
+  private _memoizedProps: TProps | null = null;
 
   private _binding: Binding<unknown> | null = null;
 
@@ -43,7 +45,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
     part: ChildNodePart,
   ) {
     this._component = component;
-    this._props = props;
+    this._pendingProps = props;
     this._part = part;
   }
 
@@ -52,7 +54,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
   }
 
   get value(): TProps {
-    return this._props;
+    return this._pendingProps;
   }
 
   get part(): ChildNodePart {
@@ -62,7 +64,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
   connect(context: UpdateProtocol): void {
     const element = context.renderComponent(
       this._component,
-      this._props,
+      this._pendingProps,
       this._hooks,
       this,
     );
@@ -73,17 +75,19 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
   }
 
   bind(props: TProps, context: UpdateProtocol): void {
-    const element = context.renderComponent(
-      this._component,
-      props,
-      this._hooks,
-      this,
-    );
-    this._binding =
-      this._binding !== null
-        ? context.reconcileBinding(this._binding, element)
-        : context.prepareBinding(element, this._part);
-    this._props = props;
+    if (props !== this._memoizedProps) {
+      const element = context.renderComponent(
+        this._component,
+        props,
+        this._hooks,
+        this,
+      );
+      this._binding =
+        this._binding !== null
+          ? context.reconcileBinding(this._binding, element)
+          : context.prepareBinding(element, this._part);
+    }
+    this._pendingProps = props;
   }
 
   unbind(context: UpdateProtocol): void {
@@ -100,6 +104,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
 
   commit(context: EffectProtocol): void {
     this._binding?.commit(context);
+    this._memoizedProps = this._pendingProps;
   }
 }
 

@@ -18,7 +18,9 @@ enum TemplateStatus {
 export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
   private readonly _template: Template<TBinds>;
 
-  private _binds: TBinds;
+  private _pendingBinds: TBinds;
+
+  private _memoizedBinds: TBinds | null = null;
 
   private readonly _part: ChildNodePart;
 
@@ -28,7 +30,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
 
   constructor(template: Template<TBinds>, binds: TBinds, part: ChildNodePart) {
     this._template = template;
-    this._binds = binds;
+    this._pendingBinds = binds;
     this._part = part;
   }
 
@@ -37,7 +39,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
   }
 
   get value(): TBinds {
-    return this._binds;
+    return this._pendingBinds;
   }
 
   get part(): ChildNodePart {
@@ -51,7 +53,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     } else {
       this._templateInstance = context.renderTemplate(
         this._template,
-        this._binds,
+        this._pendingBinds,
       );
       this._templateInstance.connect(context);
       this._status = TemplateStatus.Mouting;
@@ -60,17 +62,21 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
 
   bind(binds: TBinds, context: UpdateProtocol): void {
     if (this._templateInstance !== null) {
-      this._templateInstance.bind(binds, context);
-      this._status = TemplateStatus.Dirty;
+      if (binds !== this._memoizedBinds) {
+        this._templateInstance.bind(binds, context);
+        this._status = TemplateStatus.Dirty;
+      } else {
+        this._status = TemplateStatus.Idle;
+      }
     } else {
       this._templateInstance = context.renderTemplate(
         this._template,
-        this._binds,
+        this._pendingBinds,
       );
       this._templateInstance.connect(context);
       this._status = TemplateStatus.Mouting;
     }
-    this._binds = binds;
+    this._pendingBinds = binds;
   }
 
   unbind(context: UpdateProtocol): void {
@@ -109,6 +115,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
         break;
       }
     }
+    this._memoizedBinds = this._pendingBinds;
     this._status = TemplateStatus.Idle;
   }
 }
