@@ -65,37 +65,41 @@ export class SignalBinding<T> implements Binding<Signal<T>> {
 
   connect(context: UpdateProtocol): void {
     this._binding.connect(context);
-    this._subscription ??= this._value.subscribe(() => {
-      this._binding.bind(this._value.value, context);
-      context.scheduleUpdate(this._binding);
-    });
+    this._beginSubscription(context);
   }
 
   bind(value: Signal<T>, context: UpdateProtocol): void {
     if (this._value !== value) {
-      this._binding.bind(value.value, context);
       this._subscription?.();
-      this._subscription ??= value.subscribe(() => {
-        this._binding.bind(value.value, context);
-        context.scheduleUpdate(this._binding, { priority: 'background' });
-      });
+      this._binding.bind(value.value, context);
       this._value = value;
+      this._beginSubscription(context);
     }
   }
 
   unbind(context: UpdateProtocol): void {
+    this._abortSubscription();
     this._binding.unbind(context);
-    this._subscription?.();
-    this._subscription = null;
   }
 
   disconnect(context: UpdateProtocol): void {
+    this._abortSubscription();
     this._binding.disconnect(context);
-    this._subscription?.();
-    this._subscription = null;
   }
 
   commit(context: EffectProtocol): void {
     this._binding.commit(context);
+  }
+
+  private _abortSubscription(): void {
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  private _beginSubscription(context: UpdateProtocol): void {
+    this._subscription ??= this._value.subscribe(() => {
+      this._binding.bind(this._value.value, context);
+      context.scheduleUpdate(this._binding, { priority: 'background' });
+    });
   }
 }
