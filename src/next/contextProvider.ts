@@ -22,19 +22,18 @@ export function createContext<TValue, TChild = unknown>(
   return new ContextProvider(defaultValue);
 }
 
-export function provideContext<TValue, TChild>(
-  directive: ContextProvider<TValue, TChild>,
-  value: ContextProviderValue<TValue, TChild>,
-): DirectiveElement<ContextProviderValue<TValue, TChild>> {
-  return createDirectiveElement(directive, value);
-}
-
 export class ContextProvider<TValue, TChild>
   implements
     ContextualKey<TValue>,
     Directive<ContextProviderValue<TValue, TChild>>
 {
   constructor(public readonly defaultValue?: TValue) {}
+
+  provide(
+    value: ContextProviderValue<TValue, TChild>,
+  ): DirectiveElement<ContextProviderValue<TValue, TChild>> {
+    return createDirectiveElement(this, value);
+  }
 
   [resolveBindingTag](
     value: ContextProviderValue<TValue, TChild>,
