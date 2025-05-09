@@ -1,10 +1,32 @@
+import {
+  type Binding,
+  type Directive,
+  type DirectiveProtocol,
+  type DirectiveValue,
+  type EffectProtocol,
+  type UpdateProtocol,
+  directiveTag,
+  resolveBindingTag,
+} from './coreTypes.js';
 import { nameOf } from './debug.js';
 import { type HookProtocol, type UserHook, userHookTag } from './hook.js';
 import { LinkedList } from './linkedList.js';
+import type { Part } from './part.js';
 
 export type Subscriber = () => void;
 
 export type Subscription = () => void;
+
+const SignalDirective: Directive<Signal<unknown>> = {
+  [resolveBindingTag](
+    value: Signal<unknown>,
+    part: Part,
+    context: DirectiveProtocol,
+  ): SignalBinding<unknown> {
+    const binding = context.prepareBinding(value.value, part);
+    return new SignalBinding(binding, value);
+  },
+};
 
 export function atom<TValue>(value: TValue): Atom<TValue> {
   return new Atom(value);
@@ -17,10 +39,16 @@ export function computed<TResult, const TDependencies extends Signal<any>[]>(
   return new Computed(producer, dependencies);
 }
 
-export abstract class Signal<TValue> implements UserHook<TValue> {
-  abstract get value(): TValue;
+export abstract class Signal<T>
+  implements DirectiveValue<Signal<T>>, UserHook<T>
+{
+  abstract get value(): T;
 
   abstract get version(): number;
+
+  get [directiveTag](): Directive<Signal<T>> {
+    return SignalDirective as Directive<Signal<T>>;
+  }
 
   get [Symbol.toStringTag](): string {
     return `Signal(${nameOf(this.value)})`;
@@ -28,21 +56,19 @@ export abstract class Signal<TValue> implements UserHook<TValue> {
 
   abstract subscribe(subscriber: Subscriber): Subscription;
 
-  map<TResult>(
-    selector: (value: TValue) => TResult,
-  ): Projected<TValue, TResult> {
+  map<TResult>(selector: (value: T) => TResult): Projected<T, TResult> {
     return new Projected(this, selector);
   }
 
-  toJSON(): TValue {
+  toJSON(): T {
     return this.value;
   }
 
-  valueOf(): TValue {
+  valueOf(): T {
     return this.value;
   }
 
-  [userHookTag](context: HookProtocol): TValue {
+  [userHookTag](context: HookProtocol): T {
     context.useLayoutEffect(
       () =>
         this.subscribe(() => {
@@ -54,23 +80,91 @@ export abstract class Signal<TValue> implements UserHook<TValue> {
   }
 }
 
-export class Atom<TValue> extends Signal<TValue> {
-  private _value: TValue;
+export class SignalBinding<T> implements Binding<Signal<T>> {
+  private _binding: Binding<T>;
+
+  private _value: Signal<T>;
+
+  private _subscription: Subscription | null = null;
+
+  constructor(binding: Binding<T>, value: Signal<T>) {
+    this._binding = binding;
+    this._value = value;
+  }
+
+  get directive(): Directive<Signal<T>> {
+    return SignalDirective as Directive<Signal<T>>;
+  }
+
+  get value(): Signal<T> {
+    return this._value;
+  }
+
+  get part(): Part {
+    return this._binding.part;
+  }
+
+  connect(context: UpdateProtocol): void {
+    this._binding.connect(context);
+    this._beginSubscription(context);
+  }
+
+  bind(value: Signal<T>, context: UpdateProtocol): void {
+    if (value !== this._value) {
+      this._abortSubscription();
+    }
+    this._binding = context.reconcileBinding(this._binding, value.value);
+    this._value = value;
+    this._beginSubscription(context);
+  }
+
+  unbind(context: UpdateProtocol): void {
+    this._abortSubscription();
+    this._binding.unbind(context);
+  }
+
+  disconnect(context: UpdateProtocol): void {
+    this._abortSubscription();
+    this._binding.disconnect(context);
+  }
+
+  commit(context: EffectProtocol): void {
+    this._binding.commit(context);
+  }
+
+  private _abortSubscription(): void {
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  private _beginSubscription(context: UpdateProtocol): void {
+    this._subscription ??= this._value.subscribe(() => {
+      this._binding = context.reconcileBinding(
+        this._binding,
+        this._value.value,
+      );
+      context.scheduleUpdate(this._binding, { priority: 'background' });
+    });
+  }
+}
+
+export class Atom<T> extends Signal<T> {
+  private _value: T;
 
   private _version = 0;
 
   private readonly _subscribers = new LinkedList<Subscriber>();
 
-  constructor(value: TValue) {
+  constructor(value: T) {
     super();
     this._value = value;
   }
 
-  get value(): TValue {
+  get value(): T {
     return this._value;
   }
 
-  set value(newValue: TValue) {
+  set value(newValue: T) {
     this._value = newValue;
     this.notifySubscribers();
   }
@@ -91,7 +185,7 @@ export class Atom<TValue> extends Signal<TValue> {
     }
   }
 
-  setUntrackedValue(newValue: TValue): void {
+  setUntrackedValue(newValue: T): void {
     this._value = newValue;
   }
 

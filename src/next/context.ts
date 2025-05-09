@@ -1,10 +1,10 @@
 import { dependenciesAreChanged } from './compare.js';
 import {
+  type Bindable,
   type Binding,
   CommitPhase,
   type ComponentFunction,
   type DirectiveElement,
-  type DirectiveValue,
   type Effect,
   type EffectProtocol,
   type RenderProtocol,
@@ -12,7 +12,10 @@ import {
   type TemplateInstance,
   type TemplateMode,
   type UpdateProtocol,
+  createDirectiveElement,
+  directiveTag,
   isDirectiveElement,
+  isDirectiveValue,
   resolveBindingTag,
 } from './coreTypes.js';
 import {
@@ -204,10 +207,8 @@ export class UpdateContext implements UpdateProtocol {
     return ++this._globalState.identifierCount;
   }
 
-  prepareBinding<T>(value: DirectiveValue<T>, part: Part): Binding<T> {
-    const element = isDirectiveElement(value)
-      ? value
-      : this.resolveDirectiveElement(value, part);
+  prepareBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
+    const element = this.resolveDirectiveElement(value, part);
     const binding = element.directive[resolveBindingTag](
       element.value,
       part,
@@ -217,13 +218,8 @@ export class UpdateContext implements UpdateProtocol {
     return binding;
   }
 
-  reconcileBinding<T>(
-    binding: Binding<T>,
-    value: DirectiveValue<T>,
-  ): Binding<T> {
-    const element = isDirectiveElement(value)
-      ? value
-      : this.resolveDirectiveElement(value, binding.part);
+  reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T> {
+    const element = this.resolveDirectiveElement(value, binding.part);
     if (binding.directive === element.directive) {
       binding.bind(element.value, this);
     } else {
@@ -263,14 +259,23 @@ export class UpdateContext implements UpdateProtocol {
     return template.render(binds, this);
   }
 
-  resolveDirectiveElement<T>(value: T, part: Part): DirectiveElement<T> {
-    type EnsureValue = (value: unknown, part: Part) => void;
-    const directive = this._renderHost.resolvePrimitive(part) as Primitive<T>;
-    (directive.ensureValue as EnsureValue)(value, part);
-    return {
-      directive,
-      value,
-    };
+  resolveDirectiveElement<T>(
+    value: Bindable<T>,
+    part: Part,
+  ): DirectiveElement<T> {
+    switch (true) {
+      case isDirectiveElement(value):
+        return value;
+      case isDirectiveValue(value):
+        return createDirectiveElement(value[directiveTag], value as T);
+      default:
+        type EnsureValue = (value: unknown, part: Part) => void;
+        const directive = this._renderHost.resolvePrimitive(
+          part,
+        ) as Primitive<T>;
+        (directive.ensureValue as EnsureValue)(value, part);
+        return createDirectiveElement(directive, value);
+    }
   }
 
   scheduleUpdate(
@@ -326,10 +331,7 @@ export class RenderContext implements RenderProtocol {
       expandedBinds,
       'html',
     );
-    return {
-      directive: template,
-      value: binds,
-    };
+    return createDirectiveElement(template, binds);
   }
 
   dynamicMath(
@@ -346,10 +348,7 @@ export class RenderContext implements RenderProtocol {
       expandedBinds,
       'math',
     );
-    return {
-      directive: template,
-      value: binds,
-    };
+    return createDirectiveElement(template, binds);
   }
 
   dynamicSVG(
@@ -366,10 +365,7 @@ export class RenderContext implements RenderProtocol {
       expandedBinds,
       'svg',
     );
-    return {
-      directive: template,
-      value: binds,
-    };
+    return createDirectiveElement(template, binds);
   }
 
   /** @internal */
@@ -404,10 +400,7 @@ export class RenderContext implements RenderProtocol {
     ...binds: unknown[]
   ): DirectiveElement<unknown[]> {
     const template = this._updateContext.getTemplate(strings, binds, 'html');
-    return {
-      directive: template,
-      value: binds,
-    };
+    return createDirectiveElement(template, binds);
   }
 
   math<TBinds extends readonly any[]>(
@@ -415,10 +408,7 @@ export class RenderContext implements RenderProtocol {
     ...binds: TBinds
   ): DirectiveElement<TBinds> {
     const template = this._updateContext.getTemplate(strings, binds, 'math');
-    return {
-      directive: template,
-      value: binds,
-    };
+    return createDirectiveElement(template, binds);
   }
 
   svg<TBinds extends readonly any[]>(
@@ -426,10 +416,7 @@ export class RenderContext implements RenderProtocol {
     ...binds: TBinds
   ): DirectiveElement<TBinds> {
     const template = this._updateContext.getTemplate(strings, binds, 'svg');
-    return {
-      directive: template,
-      value: binds,
-    };
+    return createDirectiveElement(template, binds);
   }
 
   use<T>(hook: UserHook<T>): T;

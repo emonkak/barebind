@@ -7,6 +7,7 @@ import {
   type Effect,
   type EffectProtocol,
   type UpdateProtocol,
+  createDirectiveElement,
   resolveBindingTag,
 } from './coreTypes.js';
 import { type EffectHook, type Hook, HookType } from './hook.js';
@@ -22,7 +23,7 @@ export function component<TProps>(
   props: TProps,
 ): DirectiveElement<TProps> {
   treatComponentDirective(component);
-  return { directive: component, value: props };
+  return createDirectiveElement(component, props);
 }
 
 export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
@@ -102,6 +103,19 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
   }
 }
 
+class CleanEffectHook implements Effect {
+  private _hook: EffectHook;
+
+  constructor(hook: EffectHook) {
+    this._hook = hook;
+  }
+
+  commit(): void {
+    this._hook.cleanup?.();
+    this._hook.cleanup = undefined;
+  }
+}
+
 function requestCleanHooks(hooks: Hook[], context: UpdateProtocol): void {
   // Hooks must be cleaned in reverse order.
   for (let i = hooks.length - 1; i >= 0; i--) {
@@ -135,19 +149,9 @@ function resolveBinding<TProps>(
 function treatComponentDirective<TProps>(
   component: ComponentFunction<TProps>,
 ): asserts component is ComponentDirective<TProps> {
-  (component as ComponentDirective<TProps>)[resolveBindingTag] ??=
-    resolveBinding;
-}
-
-class CleanEffectHook implements Effect {
-  private _hook: EffectHook;
-
-  constructor(hook: EffectHook) {
-    this._hook = hook;
-  }
-
-  commit(): void {
-    this._hook.cleanup?.();
-    this._hook.cleanup = undefined;
+  if (!(resolveBindingTag in component)) {
+    Object.defineProperty(component, resolveBindingTag, {
+      value: resolveBinding,
+    });
   }
 }

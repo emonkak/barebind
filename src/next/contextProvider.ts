@@ -5,6 +5,7 @@ import {
   type DirectiveProtocol,
   type EffectProtocol,
   type UpdateProtocol,
+  createDirectiveElement,
   resolveBindingTag,
 } from './coreTypes.js';
 import type { ContextualKey } from './hook.js';
@@ -25,10 +26,7 @@ export function provideContext<TValue, TChild>(
   directive: ContextProvider<TValue, TChild>,
   value: ContextProviderValue<TValue, TChild>,
 ): DirectiveElement<ContextProviderValue<TValue, TChild>> {
-  return {
-    directive,
-    value,
-  };
+  return createDirectiveElement(directive, value);
 }
 
 export class ContextProvider<TValue, TChild>

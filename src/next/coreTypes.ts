@@ -8,19 +8,16 @@ import type { ChildNodePart, Part } from './part.js';
 
 export const resolveBindingTag = Symbol('Directive.resolveBinding');
 
+export const directiveTag = Symbol('DirectiveValue.directive');
+
+const directiveElementTag = Symbol('DirectiveElement');
+
 export interface Directive<T> {
   [resolveBindingTag](
     value: T,
     part: Part,
     context: DirectiveProtocol,
   ): Binding<T>;
-}
-
-export type DirectiveValue<T> = T | DirectiveElement<T>;
-
-export interface DirectiveElement<T> {
-  readonly directive: Directive<T>;
-  readonly value: T;
 }
 
 export interface Binding<T> extends Effect {
@@ -31,6 +28,18 @@ export interface Binding<T> extends Effect {
   bind(value: T, context: UpdateProtocol): void;
   unbind(context: UpdateProtocol): void;
   disconnect(context: UpdateProtocol): void;
+}
+
+export type Bindable<T> = T | DirectiveElement<T> | DirectiveValue<T>;
+
+export interface DirectiveElement<T> {
+  readonly directive: Directive<T>;
+  readonly value: T;
+  readonly __tag: typeof directiveElementTag;
+}
+
+export interface DirectiveValue<T> {
+  get [directiveTag](): Directive<T>;
 }
 
 export interface Template<T> extends Directive<T> {
@@ -51,7 +60,7 @@ export interface TemplateInstance<TBinds> extends Effect {
 export type ComponentFunction<T> = (
   props: T,
   context: RenderProtocol,
-) => DirectiveValue<unknown>;
+) => Bindable<unknown>;
 
 export interface Effect {
   commit(context: EffectProtocol): void;
@@ -117,26 +126,37 @@ export interface UpdateProtocol extends DirectiveProtocol {
 }
 
 export interface DirectiveProtocol {
-  resolveDirectiveElement<T>(value: T, part: Part): DirectiveElement<T>;
-  prepareBinding<T>(value: DirectiveValue<T>, part: Part): Binding<T>;
-  reconcileBinding<T>(
-    binding: Binding<T>,
-    value: DirectiveValue<T>,
-  ): Binding<T>;
+  resolveDirectiveElement<T>(
+    value: Bindable<T>,
+    part: Part,
+  ): DirectiveElement<T>;
+  prepareBinding<T>(value: Bindable<T>, part: Part): Binding<T>;
+  reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T>;
+}
+
+export function createDirectiveElement<T>(
+  directive: Directive<T>,
+  value: T,
+): DirectiveElement<T> {
+  return {
+    directive,
+    value,
+    __tag: directiveElementTag,
+  };
 }
 
 export function isDirective(value: unknown): value is Directive<unknown> {
-  return (
-    typeof value === 'object' && value !== null && resolveBindingTag in value
-  );
+  return typeof (value as any)?.[resolveBindingTag] === 'function';
 }
 
 export function isDirectiveElement(
   value: unknown,
 ): value is DirectiveElement<unknown> {
-  return (
-    typeof value === 'object' &&
-    value !== null &&
-    isDirective((value as DirectiveElement<unknown>).directive)
-  );
+  return (value as any)?.__tag === directiveElementTag;
+}
+
+export function isDirectiveValue(
+  value: unknown,
+): value is DirectiveValue<unknown> {
+  return isDirective((value as any)?.[directiveTag]);
 }
