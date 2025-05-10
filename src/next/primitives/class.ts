@@ -39,7 +39,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
 };
 
 export class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
-  get directive(): typeof ClassPrimitive {
+  get directive(): Primitive<ClassValue> {
     return ClassPrimitive;
   }
 

@@ -42,7 +42,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
 };
 
 export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
-  get directive(): typeof StylePrimitive {
+  get directive(): Primitive<StyleValue> {
     return StylePrimitive;
   }
 
