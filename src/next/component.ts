@@ -10,6 +10,7 @@ import {
   createDirectiveElement,
   resolveBindingTag,
 } from './coreTypes.js';
+import { inspectPart, markUsedValue } from './debug.js';
 import { type EffectHook, type Hook, HookType } from './hook.js';
 import { type ChildNodePart, type Part, PartType } from './part.js';
 import { SuspenseBinding } from './suspense.js';
@@ -150,7 +151,10 @@ function resolveBinding<TProps>(
   _context: DirectiveContext,
 ): SuspenseBinding<TProps> {
   if (part.type !== PartType.ChildNode) {
-    throw new Error('Component must be used in a child node part.');
+    throw new Error(
+      'Component directive must be used in a child node, but it is used here in:\n' +
+        inspectPart(part, markUsedValue(this)),
+    );
   }
   return new SuspenseBinding(new ComponentBinding(this, props, part));
 }

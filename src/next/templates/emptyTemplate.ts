@@ -6,7 +6,8 @@ import {
   type UpdateContext,
   resolveBindingTag,
 } from '../coreTypes.js';
-import type { ChildNodePart } from '../part.js';
+import { inspectPart, markUsedValue } from '../debug.js';
+import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
 export const EmptyTemplate: Template<readonly []> = {
@@ -18,9 +19,15 @@ export const EmptyTemplate: Template<readonly []> = {
   },
   [resolveBindingTag](
     binds: readonly [],
-    part: ChildNodePart,
+    part: Part,
     _context: DirectiveContext,
   ): TemplateBinding<readonly []> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error(
+        'Template directive must be used in a child node, but it is used here in:\n' +
+          inspectPart(part, markUsedValue(this)),
+      );
+    }
     return new TemplateBinding(this, binds, part);
   },
 };
