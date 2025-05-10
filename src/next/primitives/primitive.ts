@@ -1,8 +1,8 @@
 import type {
   Binding,
   Directive,
-  EffectProtocol,
-  UpdateProtocol,
+  EffectContext,
+  UpdateContext,
 } from '../coreTypes.js';
 import type { Part } from '../part.js';
 
@@ -50,7 +50,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._status = PrimitiveStatus.Mounting;
   }
 
-  bind(value: TValue, _context: UpdateProtocol): void {
+  bind(value: TValue, _context: UpdateContext): void {
     if (
       this._memoizedValue === noValue ||
       this.shouldUpdate(this._pendingValue, this._memoizedValue)
@@ -60,17 +60,17 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._pendingValue = value;
   }
 
-  unbind(_context: UpdateProtocol): void {
+  unbind(_context: UpdateContext): void {
     if (this._memoizedValue !== null) {
       this._status = PrimitiveStatus.Unmouting;
     }
   }
 
-  disconnect(_context: UpdateProtocol): void {
+  disconnect(_context: UpdateContext): void {
     this._status = PrimitiveStatus.Idle;
   }
 
-  commit(_context: EffectProtocol): void {
+  commit(_context: EffectContext): void {
     switch (this._status) {
       case PrimitiveStatus.Mounting:
         if (this._memoizedValue !== noValue) {

@@ -2,11 +2,11 @@ import {
   type Binding,
   type ComponentFunction,
   type Directive,
+  type DirectiveContext,
   type DirectiveElement,
-  type DirectiveProtocol,
   type Effect,
-  type EffectProtocol,
-  type UpdateProtocol,
+  type EffectContext,
+  type UpdateContext,
   createDirectiveElement,
   resolveBindingTag,
 } from './coreTypes.js';
@@ -61,7 +61,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
     return this._part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     const element = context.renderComponent(
       this._component,
       this._pendingProps,
@@ -76,7 +76,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
     }
   }
 
-  bind(props: TProps, context: UpdateProtocol): void {
+  bind(props: TProps, context: UpdateContext): void {
     if (props !== this._memoizedProps) {
       const element = context.renderComponent(
         this._component,
@@ -94,19 +94,19 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
     this._pendingProps = props;
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     requestCleanHooks(this._hooks, context);
     this._binding?.unbind(context);
     this._hooks = [];
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     requestCleanHooks(this._hooks, context);
     this._binding?.disconnect(context);
     this._hooks = [];
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     this._binding?.commit(context);
     this._memoizedProps = this._pendingProps;
   }
@@ -125,7 +125,7 @@ class CleanEffectHook implements Effect {
   }
 }
 
-function requestCleanHooks(hooks: Hook[], context: UpdateProtocol): void {
+function requestCleanHooks(hooks: Hook[], context: UpdateContext): void {
   // Hooks must be cleaned in reverse order.
   for (let i = hooks.length - 1; i >= 0; i--) {
     const hook = hooks[i]!;
@@ -147,7 +147,7 @@ function resolveBinding<TProps>(
   this: ComponentDirective<TProps>,
   props: TProps,
   part: Part,
-  _context: DirectiveProtocol,
+  _context: DirectiveContext,
 ): SuspenseBinding<TProps> {
   if (part.type !== PartType.ChildNode) {
     throw new Error('Component must be used in a child node part.');

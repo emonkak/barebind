@@ -1,7 +1,7 @@
 import type {
   ContextualKey,
   Hook,
-  HookProtocol,
+  HookContext,
   UpdateOptions,
 } from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
@@ -16,7 +16,7 @@ export interface Directive<T> {
   [resolveBindingTag](
     value: T,
     part: Part,
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): Binding<T>;
 }
 
@@ -24,10 +24,10 @@ export interface Binding<T> extends Effect {
   get directive(): Directive<T>;
   get value(): T;
   get part(): Part;
-  connect(context: UpdateProtocol): void;
-  bind(value: T, context: UpdateProtocol): void;
-  unbind(context: UpdateProtocol): void;
-  disconnect(context: UpdateProtocol): void;
+  connect(context: UpdateContext): void;
+  bind(value: T, context: UpdateContext): void;
+  unbind(context: UpdateContext): void;
+  disconnect(context: UpdateContext): void;
 }
 
 export type Bindable<T> = T | DirectiveElement<T> | DirectiveValue<T>;
@@ -43,30 +43,30 @@ export interface DirectiveValue<T> {
 }
 
 export interface Template<T> extends Directive<T> {
-  render(binds: T, context: DirectiveProtocol): TemplateInstance<T>;
+  render(binds: T, context: DirectiveContext): TemplateInstance<T>;
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg';
 
 export interface TemplateInstance<TBinds> extends Effect {
-  connect(context: UpdateProtocol): void;
-  bind(binds: TBinds, context: UpdateProtocol): void;
-  unbind(context: UpdateProtocol): void;
-  disconnect(context: UpdateProtocol): void;
+  connect(context: UpdateContext): void;
+  bind(binds: TBinds, context: UpdateContext): void;
+  unbind(context: UpdateContext): void;
+  disconnect(context: UpdateContext): void;
   mount(part: ChildNodePart): void;
   unmount(part: ChildNodePart): void;
 }
 
 export type ComponentFunction<T> = (
   props: T,
-  context: RenderProtocol,
+  context: RenderContext,
 ) => Bindable<unknown>;
 
 export interface Effect {
-  commit(context: EffectProtocol): void;
+  commit(context: EffectContext): void;
 }
 
-export interface EffectProtocol {
+export interface EffectContext {
   phase: CommitPhase;
 }
 
@@ -76,7 +76,7 @@ export enum CommitPhase {
   Passive,
 }
 
-export interface RenderProtocol extends HookProtocol {
+export interface RenderContext extends HookContext {
   dynamicHTML(
     strings: TemplateStringsArray,
     ...binds: unknown[]
@@ -103,12 +103,12 @@ export interface RenderProtocol extends HookProtocol {
   ): DirectiveElement<readonly unknown[]>;
 }
 
-export interface UpdateProtocol extends DirectiveProtocol {
+export interface UpdateContext extends DirectiveContext {
   enqueueBinding(binding: Binding<unknown>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
-  enterContextualScope<T>(context: ContextualKey<T>, value: T): UpdateProtocol;
+  enterContextualScope<T>(context: ContextualKey<T>, value: T): UpdateContext;
   renderComponent<TProps>(
     component: ComponentFunction<TProps>,
     props: TProps,
@@ -125,7 +125,7 @@ export interface UpdateProtocol extends DirectiveProtocol {
   ): Promise<void>;
 }
 
-export interface DirectiveProtocol {
+export interface DirectiveContext {
   resolveDirectiveElement<T>(
     value: Bindable<T>,
     part: Part,

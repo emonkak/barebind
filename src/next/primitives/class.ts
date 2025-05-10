@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
+import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
@@ -26,7 +26,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
   [resolveBindingTag](
     value: ClassValue,
     part: Part,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): ClassBinding {
     if (part.type !== PartType.Attribute || part.name !== ':class') {
       throw new Error(

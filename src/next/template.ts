@@ -1,10 +1,10 @@
 import type {
   Binding,
   Effect,
-  EffectProtocol,
+  EffectContext,
   Template,
   TemplateInstance,
-  UpdateProtocol,
+  UpdateContext,
 } from './coreTypes.js';
 import type { ChildNodePart } from './part.js';
 
@@ -46,7 +46,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     return this._part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     if (this._templateInstance !== null) {
       this._templateInstance.connect(context);
       this._status = TemplateStatus.Dirty;
@@ -60,7 +60,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     }
   }
 
-  bind(binds: TBinds, context: UpdateProtocol): void {
+  bind(binds: TBinds, context: UpdateContext): void {
     if (this._templateInstance !== null) {
       if (binds !== this._memoizedBinds) {
         this._templateInstance.bind(binds, context);
@@ -79,7 +79,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     this._pendingBinds = binds;
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     if (this._templateInstance !== null) {
       this._templateInstance.unbind(context);
       this._status = TemplateStatus.Unmouting;
@@ -88,12 +88,12 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     }
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     this._templateInstance?.disconnect(context);
     this._status = TemplateStatus.Idle;
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     switch (this._status) {
       case TemplateStatus.Mouting: {
         if (this._templateInstance !== null) {

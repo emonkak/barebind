@@ -1,4 +1,4 @@
-import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
+import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { type NodePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
@@ -8,7 +8,7 @@ export const NodePrimitive: Primitive<unknown> = {
   [resolveBindingTag](
     value: unknown,
     part: Part,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): NodeBinding<unknown> {
     if (part.type !== PartType.Node) {
       throw new Error(

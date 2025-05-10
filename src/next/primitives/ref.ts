@@ -1,4 +1,4 @@
-import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
+import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
@@ -26,7 +26,7 @@ export const RefPrimitive: Primitive<RefValue> = {
   [resolveBindingTag](
     value: RefValue,
     part: Part,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== 'ref') {
       throw new Error(

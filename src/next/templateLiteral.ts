@@ -73,6 +73,10 @@ export class TemplateLiteralPreprocessor {
 
 export class Literal {
   constructor(public readonly value: string) {}
+
+  valueOf(): string {
+    return this.value;
+  }
 }
 
 function expandLiterals(

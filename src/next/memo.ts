@@ -2,10 +2,10 @@ import {
   type Bindable,
   type Binding,
   type Directive,
+  type DirectiveContext,
   type DirectiveElement,
-  type DirectiveProtocol,
-  type EffectProtocol,
-  type UpdateProtocol,
+  type EffectContext,
+  type UpdateContext,
   createDirectiveElement,
   resolveBindingTag,
 } from './coreTypes.js';
@@ -19,7 +19,7 @@ export const Memo: Directive<Bindable<unknown>> = {
   [resolveBindingTag](
     value: unknown,
     part: Part,
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): MemoBinding<unknown> {
     const binding = context.resolveBinding(value, part);
     return new MemoBinding(binding);
@@ -47,11 +47,11 @@ export class MemoBinding<T> implements Binding<Bindable<T>> {
     return this._binding.part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
   }
 
-  bind(value: Bindable<T>, context: UpdateProtocol): void {
+  bind(value: Bindable<T>, context: UpdateContext): void {
     const oldBinding = this._binding;
     const newElement = context.resolveDirectiveElement(
       value,
@@ -76,15 +76,15 @@ export class MemoBinding<T> implements Binding<Bindable<T>> {
     }
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     this._binding.disconnect(context);
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     this._binding.commit(context);
   }
 }

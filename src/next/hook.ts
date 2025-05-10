@@ -6,7 +6,7 @@ export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
   : ((prevState: T) => T) | T;
 
-export interface HookProtocol {
+export interface HookContext {
   forceUpdate(options?: UpdateOptions): void;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
   useContext<T>(key: ContextualKey<T>): T | undefined;
@@ -58,7 +58,7 @@ export enum HookType {
 }
 
 export interface UserHook<T> {
-  [userHookTag](context: HookProtocol): T;
+  [userHookTag](context: HookContext): T;
 }
 
 export interface EffectHook {

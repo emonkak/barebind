@@ -1,8 +1,8 @@
 import {
   type Binding,
-  type DirectiveProtocol,
-  type EffectProtocol,
-  type UpdateProtocol,
+  type DirectiveContext,
+  type EffectContext,
+  type UpdateContext,
   resolveBindingTag,
 } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
@@ -23,7 +23,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   [resolveBindingTag](
     value: SpreadValue,
     part: Part,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
@@ -61,28 +61,28 @@ export class SpreadBinding implements Binding<SpreadValue> {
     return this._part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     this._reconcileBindings(this._value, context);
   }
 
-  bind(newValue: SpreadValue, context: UpdateProtocol): void {
+  bind(newValue: SpreadValue, context: UpdateContext): void {
     this._reconcileBindings(newValue, context);
     this._value = newValue;
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     for (const binding of this._memoizedBindings.values()) {
       binding.unbind(context);
     }
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     for (const binding of this._memoizedBindings.values()) {
       binding.disconnect(context);
     }
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     for (const [name, binding] of this._memoizedBindings.entries()) {
       if (!this._pendingBindings.has(name)) {
         binding.commit(context);
@@ -94,10 +94,7 @@ export class SpreadBinding implements Binding<SpreadValue> {
     this._memoizedBindings = new Map(this._pendingBindings);
   }
 
-  private _reconcileBindings(
-    props: SpreadValue,
-    context: UpdateProtocol,
-  ): void {
+  private _reconcileBindings(props: SpreadValue, context: UpdateContext): void {
     for (const [name, binding] of this._pendingBindings.entries()) {
       if (!Object.hasOwn(props, name) || props[name] === undefined) {
         binding.unbind(context);

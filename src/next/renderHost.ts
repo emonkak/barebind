@@ -13,7 +13,7 @@ import { RefPrimitive } from './primitives/ref.js';
 import { SpreadPrimitive } from './primitives/spread.js';
 import { StylePrimitive } from './primitives/style.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
-import { ChildTemplate, TextTemplate } from './templates/singleTemplate.js';
+import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
 import { TaggedTemplate } from './templates/taggedTemplate.js';
 
 export interface RenderHost {
@@ -64,7 +64,7 @@ export class BrowserHost implements RenderHost {
       const afterString = strings[1]!.trim();
 
       if (beforeString === '' && afterString === '') {
-        // The tag is nowhere, so it's text.
+        // Tags are nowhere, so it's plain text.
         return TextTemplate;
       }
 
@@ -73,7 +73,7 @@ export class BrowserHost implements RenderHost {
         (afterString === '>' || afterString === '/>' || afterString === '-->')
       ) {
         // There is only one tag.
-        return ChildTemplate;
+        return ChildNodeTemplate;
       }
     }
 

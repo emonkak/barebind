@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { type DirectiveProtocol, resolveBindingTag } from '../coreTypes.js';
+import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
@@ -29,7 +29,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
   [resolveBindingTag](
     value: StyleValue,
     part: Part,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): StyleBinding {
     if (part.type !== PartType.Attribute || part.name !== ':style') {
       throw new Error(

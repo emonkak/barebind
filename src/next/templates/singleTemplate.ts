@@ -1,20 +1,20 @@
 import {
   type Binding,
-  type DirectiveProtocol,
-  type EffectProtocol,
+  type DirectiveContext,
+  type EffectContext,
   type Template,
   type TemplateInstance,
-  type UpdateProtocol,
+  type UpdateContext,
   resolveBindingTag,
 } from '../coreTypes.js';
 import { inspectValue } from '../debug.js';
 import { type ChildNodePart, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
-export const ChildTemplate: Template<readonly [unknown]> = {
+export const ChildNodeTemplate: Template<readonly [unknown]> = {
   render(
     binds: readonly [unknown],
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): SingleTemplateInstance<unknown> {
     const part = {
       type: PartType.ChildNode,
@@ -29,7 +29,7 @@ export const ChildTemplate: Template<readonly [unknown]> = {
   [resolveBindingTag](
     binds: readonly [unknown],
     part: ChildNodePart,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): TemplateBinding<readonly [unknown]> {
     return new TemplateBinding(this, binds, part);
   },
@@ -38,7 +38,7 @@ export const ChildTemplate: Template<readonly [unknown]> = {
 export const TextTemplate: Template<readonly [unknown]> = {
   render(
     binds: readonly [unknown],
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): SingleTemplateInstance<unknown> {
     const part = {
       type: PartType.Node,
@@ -51,7 +51,7 @@ export const TextTemplate: Template<readonly [unknown]> = {
   [resolveBindingTag](
     binds: readonly [unknown],
     part: ChildNodePart,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): TemplateBinding<readonly [unknown]> {
     return new TemplateBinding(this, binds, part);
   },
@@ -70,23 +70,23 @@ export class SingleTemplateInstance<T>
     return this._binding;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
   }
 
-  bind(values: readonly [T], context: UpdateProtocol): void {
+  bind(values: readonly [T], context: UpdateContext): void {
     this._binding.bind(values[0], context);
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     this._binding.disconnect(context);
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     DEBUG: {
       if (this._binding.part.type === PartType.ChildNode) {
         this._binding.part.node.data = inspectValue(this._binding.value);

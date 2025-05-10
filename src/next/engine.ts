@@ -6,12 +6,12 @@ import {
   type ComponentFunction,
   type DirectiveElement,
   type Effect,
-  type EffectProtocol,
-  type RenderProtocol,
+  type EffectContext,
+  type RenderContext,
   type Template,
   type TemplateInstance,
   type TemplateMode,
-  type UpdateProtocol,
+  type UpdateContext,
   createDirectiveElement,
   directiveTag,
   isDirectiveElement,
@@ -67,7 +67,7 @@ type UseUserHooks<TArray> = TArray extends [
   ? [THead, ...UseUserHooks<TTail>]
   : [];
 
-export class UpdateContext implements UpdateProtocol {
+export class UpdateEngine implements UpdateContext {
   private readonly _renderHost: RenderHost;
 
   private readonly _renderFrame: RenderFrame;
@@ -112,13 +112,13 @@ export class UpdateContext implements UpdateProtocol {
     this._renderFrame.passiveEffects.push(effect);
   }
 
-  enterContextualScope<T>(key: ContextualKey<T>, value: T): UpdateContext {
+  enterContextualScope<T>(key: ContextualKey<T>, value: T): UpdateEngine {
     const contextualScope = {
       parent: this._contextualScope,
       key,
       value,
     };
-    return new UpdateContext(
+    return new UpdateEngine(
       this._renderHost,
       this._renderFrame,
       contextualScope,
@@ -240,15 +240,15 @@ export class UpdateContext implements UpdateProtocol {
     hooks: Hook[],
     binding: Binding<TProps>,
   ): unknown {
-    const updateContext = new UpdateContext(
+    const updateEngine = new UpdateEngine(
       this._renderHost,
       createRenderFrame(),
       this._contextualScope,
       this._globalState,
     );
-    const renderContext = new RenderContext(hooks, binding, updateContext);
-    const element = component(props, renderContext);
-    renderContext.finalize();
+    const renderEngine = new RenderEngine(hooks, binding, updateEngine);
+    const element = component(props, renderEngine);
+    renderEngine.finalize();
     return element;
   }
 
@@ -296,12 +296,12 @@ export class UpdateContext implements UpdateProtocol {
   }
 }
 
-export class RenderContext implements RenderProtocol {
+export class RenderEngine implements RenderContext {
   private readonly _hooks: Hook[];
 
   private readonly _binding: Binding<unknown>;
 
-  private readonly _updateContext: UpdateContext;
+  private readonly _updateEngine: UpdateEngine;
 
   private _pendingUpdateOptions: UpdateOptions | null = null;
 
@@ -310,23 +310,23 @@ export class RenderContext implements RenderProtocol {
   constructor(
     hooks: Hook[],
     binding: Binding<unknown>,
-    updateContext: UpdateContext,
+    updateEngine: UpdateEngine,
   ) {
     this._binding = binding;
     this._hooks = hooks;
-    this._updateContext = updateContext;
+    this._updateEngine = updateEngine;
   }
 
   dynamicHTML(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]> {
+  ): DirectiveElement<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
-      this._updateContext.templateLiteralPreprocessor.expandLiterals(
+      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
         strings,
         binds,
       );
-    const template = this._updateContext.getTemplate(
+    const template = this._updateEngine.getTemplate(
       expandedStrings,
       expandedBinds,
       'html',
@@ -337,13 +337,13 @@ export class RenderContext implements RenderProtocol {
   dynamicMath(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]> {
+  ): DirectiveElement<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
-      this._updateContext.templateLiteralPreprocessor.expandLiterals(
+      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
         strings,
         binds,
       );
-    const template = this._updateContext.getTemplate(
+    const template = this._updateEngine.getTemplate(
       expandedStrings,
       expandedBinds,
       'math',
@@ -354,13 +354,13 @@ export class RenderContext implements RenderProtocol {
   dynamicSVG(
     strings: TemplateStringsArray,
     ...binds: unknown[]
-  ): DirectiveElement<unknown[]> {
+  ): DirectiveElement<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
-      this._updateContext.templateLiteralPreprocessor.expandLiterals(
+      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
         strings,
         binds,
       );
-    const template = this._updateContext.getTemplate(
+    const template = this._updateEngine.getTemplate(
       expandedStrings,
       expandedBinds,
       'svg',
@@ -385,7 +385,7 @@ export class RenderContext implements RenderProtocol {
   forceUpdate(options: UpdateOptions = {}): void {
     if (this._pendingUpdateOptions === null) {
       queueMicrotask(() => {
-        this._updateContext.scheduleUpdate(
+        this._updateEngine.scheduleUpdate(
           this._binding,
           this._pendingUpdateOptions!,
         );
@@ -399,7 +399,7 @@ export class RenderContext implements RenderProtocol {
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const template = this._updateContext.getTemplate(strings, binds, 'html');
+    const template = this._updateEngine.getTemplate(strings, binds, 'html');
     return createDirectiveElement(template, binds);
   }
 
@@ -407,7 +407,7 @@ export class RenderContext implements RenderProtocol {
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const template = this._updateContext.getTemplate(strings, binds, 'math');
+    const template = this._updateEngine.getTemplate(strings, binds, 'math');
     return createDirectiveElement(template, binds);
   }
 
@@ -415,7 +415,7 @@ export class RenderContext implements RenderProtocol {
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const template = this._updateContext.getTemplate(strings, binds, 'svg');
+    const template = this._updateEngine.getTemplate(strings, binds, 'svg');
     return createDirectiveElement(template, binds);
   }
 
@@ -437,7 +437,7 @@ export class RenderContext implements RenderProtocol {
   }
 
   useContext<T>(context: ContextualKey<T>): T | undefined {
-    return this._updateContext.getContextualValue(context);
+    return this._updateEngine.getContextualValue(context);
   }
 
   useDeferredValue<TValue>(
@@ -465,7 +465,7 @@ export class RenderContext implements RenderProtocol {
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(HookType.PassiveEffect, currentHook);
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updateContext.enqueuePassiveEffect(
+        this._updateEngine.enqueuePassiveEffect(
           new InvokeEffectHook(currentHook),
         );
       }
@@ -479,7 +479,7 @@ export class RenderContext implements RenderProtocol {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._updateContext.enqueuePassiveEffect(new InvokeEffectHook(hook));
+      this._updateEngine.enqueuePassiveEffect(new InvokeEffectHook(hook));
     }
   }
 
@@ -491,12 +491,12 @@ export class RenderContext implements RenderProtocol {
     } else {
       currentHook = {
         type: HookType.Identifier,
-        id: this._updateContext.nextIdentifier(),
+        id: this._updateEngine.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
 
-    return this._updateContext.createIdentifier(currentHook.id);
+    return this._updateEngine.createIdentifier(currentHook.id);
   }
 
   useInsertionEffect(
@@ -508,7 +508,7 @@ export class RenderContext implements RenderProtocol {
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(HookType.InsertionEffect, currentHook);
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updateContext.enqueueMutationEffect(
+        this._updateEngine.enqueueMutationEffect(
           new InvokeEffectHook(currentHook),
         );
       }
@@ -522,7 +522,7 @@ export class RenderContext implements RenderProtocol {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._updateContext.enqueueMutationEffect(new InvokeEffectHook(hook));
+      this._updateEngine.enqueueMutationEffect(new InvokeEffectHook(hook));
     }
   }
 
@@ -535,7 +535,7 @@ export class RenderContext implements RenderProtocol {
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(HookType.LayoutEffect, currentHook);
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updateContext.enqueueLayoutEffect(
+        this._updateEngine.enqueueLayoutEffect(
           new InvokeEffectHook(currentHook),
         );
       }
@@ -549,7 +549,7 @@ export class RenderContext implements RenderProtocol {
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._updateContext.enqueueLayoutEffect(new InvokeEffectHook(hook));
+      this._updateEngine.enqueueLayoutEffect(new InvokeEffectHook(hook));
     }
   }
 
@@ -651,7 +651,7 @@ class InvokeEffectHook implements Effect {
   }
 }
 
-function commitEffects(effects: Effect[], context: EffectProtocol): void {
+function commitEffects(effects: Effect[], context: EffectContext): void {
   for (let i = 0, l = effects.length; i < l; i++) {
     effects[i]!.commit(context);
   }

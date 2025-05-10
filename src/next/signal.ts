@@ -1,15 +1,15 @@
 import {
   type Binding,
   type Directive,
-  type DirectiveProtocol,
+  type DirectiveContext,
   type DirectiveValue,
-  type EffectProtocol,
-  type UpdateProtocol,
+  type EffectContext,
+  type UpdateContext,
   directiveTag,
   resolveBindingTag,
 } from './coreTypes.js';
 import { inspectValue } from './debug.js';
-import { type HookProtocol, type UserHook, userHookTag } from './hook.js';
+import { type HookContext, type UserHook, userHookTag } from './hook.js';
 import { LinkedList } from './linkedList.js';
 import type { Part } from './part.js';
 
@@ -21,7 +21,7 @@ const SignalDirective: Directive<Signal<unknown>> = {
   [resolveBindingTag](
     value: Signal<unknown>,
     part: Part,
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): SignalBinding<unknown> {
     const binding = context.resolveBinding(value.value, part);
     return new SignalBinding(binding, value);
@@ -68,7 +68,7 @@ export abstract class Signal<T>
     return this.value;
   }
 
-  [userHookTag](context: HookProtocol): T {
+  [userHookTag](context: HookContext): T {
     context.useLayoutEffect(
       () =>
         this.subscribe(() => {
@@ -104,12 +104,12 @@ export class SignalBinding<T> implements Binding<Signal<T>> {
     return this._binding.part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     this._binding.connect(context);
     this._beginSubscription(context);
   }
 
-  bind(value: Signal<T>, context: UpdateProtocol): void {
+  bind(value: Signal<T>, context: UpdateContext): void {
     if (value !== this._value) {
       this._abortSubscription();
     }
@@ -118,17 +118,17 @@ export class SignalBinding<T> implements Binding<Signal<T>> {
     this._beginSubscription(context);
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     this._abortSubscription();
     this._binding.unbind(context);
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     this._abortSubscription();
     this._binding.disconnect(context);
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     this._binding.commit(context);
   }
 
@@ -137,7 +137,7 @@ export class SignalBinding<T> implements Binding<Signal<T>> {
     this._subscription = null;
   }
 
-  private _beginSubscription(context: UpdateProtocol): void {
+  private _beginSubscription(context: UpdateContext): void {
     this._subscription ??= this._value.subscribe(() => {
       this._binding = context.reconcileBinding(
         this._binding,

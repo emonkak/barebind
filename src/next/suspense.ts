@@ -1,8 +1,8 @@
 import type {
   Binding,
   Directive,
-  EffectProtocol,
-  UpdateProtocol,
+  EffectContext,
+  UpdateContext,
 } from './coreTypes.js';
 import type { Part } from './part.js';
 
@@ -29,7 +29,7 @@ export class SuspenseBinding<T> implements Binding<T> {
     return this._binding.part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     if (this._pendingValue === noValue) {
       context.enqueueBinding(this._binding);
     } else {
@@ -38,20 +38,20 @@ export class SuspenseBinding<T> implements Binding<T> {
     }
   }
 
-  bind(newValue: T, context: UpdateProtocol): void {
+  bind(newValue: T, context: UpdateContext): void {
     context.enqueueBinding(this);
     this._pendingValue = newValue;
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     this._binding.unbind(context);
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     this._binding.disconnect(context);
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     this._binding.commit(context);
   }
 }

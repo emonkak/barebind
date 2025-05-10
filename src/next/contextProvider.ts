@@ -1,10 +1,10 @@
 import {
   type Binding,
   type Directive,
+  type DirectiveContext,
   type DirectiveElement,
-  type DirectiveProtocol,
-  type EffectProtocol,
-  type UpdateProtocol,
+  type EffectContext,
+  type UpdateContext,
   createDirectiveElement,
   resolveBindingTag,
 } from './coreTypes.js';
@@ -38,7 +38,7 @@ export class ContextProvider<TValue, TChild>
   [resolveBindingTag](
     value: ContextProviderValue<TValue, TChild>,
     part: Part,
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): Binding<ContextProviderValue<TValue, TChild>> {
     const binding = context.resolveBinding(value.child, part);
     return new ContextProviderBinding(this, value, binding);
@@ -76,7 +76,7 @@ export class ContextProviderBinding<TValue, TChild>
     return this._binding.part;
   }
 
-  connect(context: UpdateProtocol): void {
+  connect(context: UpdateContext): void {
     const subContext = context.enterContextualScope(
       this._key,
       this._value.value,
@@ -86,13 +86,13 @@ export class ContextProviderBinding<TValue, TChild>
 
   bind(
     newValue: ContextProviderValue<TValue, TChild>,
-    context: UpdateProtocol,
+    context: UpdateContext,
   ): void {
     const subContext = context.enterContextualScope(this._key, newValue.value);
     this._binding.bind(newValue.child, subContext);
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     const subContext = context.enterContextualScope(
       this._key,
       this._value.value,
@@ -100,7 +100,7 @@ export class ContextProviderBinding<TValue, TChild>
     this._binding.unbind(subContext);
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     const subContext = context.enterContextualScope(
       this._key,
       this._value.value,
@@ -108,7 +108,7 @@ export class ContextProviderBinding<TValue, TChild>
     this._binding.disconnect(subContext);
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     this._binding.commit(context);
   }
 }

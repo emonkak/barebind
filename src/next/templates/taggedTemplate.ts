@@ -1,11 +1,11 @@
 import {
   type Binding,
-  type DirectiveProtocol,
-  type EffectProtocol,
+  type DirectiveContext,
+  type EffectContext,
   type Template,
   type TemplateInstance,
   type TemplateMode,
-  type UpdateProtocol,
+  type UpdateContext,
   resolveBindingTag,
 } from '../coreTypes.js';
 import { inspectPart, inspectValue } from '../debug.js';
@@ -113,7 +113,7 @@ export class TaggedTemplate<TBinds extends readonly any[]>
 
   render(
     binds: TBinds,
-    context: DirectiveProtocol,
+    context: DirectiveContext,
   ): TaggedTemplateInstance<TBinds> {
     const holes = this._holes;
 
@@ -208,7 +208,7 @@ export class TaggedTemplate<TBinds extends readonly any[]>
   [resolveBindingTag](
     binds: TBinds,
     part: ChildNodePart,
-    _context: DirectiveProtocol,
+    _context: DirectiveContext,
   ): TemplateBinding<TBinds> {
     return new TemplateBinding(this, binds, part);
   }
@@ -226,21 +226,21 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
     this._childNodes = childNodes;
   }
 
-  get childNodes(): ChildNode[] {
-    return this._childNodes;
-  }
-
   get bindings(): Binding<unknown>[] {
     return this._bindings;
   }
 
-  connect(context: UpdateProtocol): void {
+  get childNodes(): ChildNode[] {
+    return this._childNodes;
+  }
+
+  connect(context: UpdateContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       this._bindings[i]!.connect(context);
     }
   }
 
-  bind(binds: TBinds, context: UpdateProtocol): void {
+  bind(binds: TBinds, context: UpdateContext): void {
     DEBUG: {
       assertNumberOfBinds(this._bindings.length, binds.length);
     }
@@ -251,7 +251,7 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
     }
   }
 
-  unbind(context: UpdateProtocol): void {
+  unbind(context: UpdateContext): void {
     // Unbind in reverse order.
     for (let i = this._bindings.length - 1; i >= 0; i--) {
       const binding = this._bindings[i]!;
@@ -270,14 +270,14 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
     }
   }
 
-  disconnect(context: UpdateProtocol): void {
+  disconnect(context: UpdateContext): void {
     // Disconnect in reverse order.
     for (let i = this._bindings.length - 1; i >= 0; i--) {
       this._bindings[i]!.disconnect(context);
     }
   }
 
-  commit(context: EffectProtocol): void {
+  commit(context: EffectContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       DEBUG: {
