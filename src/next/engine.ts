@@ -15,7 +15,7 @@ import {
   createDirectiveElement,
   directiveTag,
   isDirectiveElement,
-  isDirectiveValue,
+  isDirectiveObject,
   resolveBindingTag,
 } from './coreTypes.js';
 import {
@@ -266,7 +266,7 @@ export class UpdateEngine implements UpdateContext {
     switch (true) {
       case isDirectiveElement(value):
         return value;
-      case isDirectiveValue(value):
+      case isDirectiveObject(value):
         return createDirectiveElement(value[directiveTag], value as T);
       default:
         type EnsureValue = (value: unknown, part: Part) => void;

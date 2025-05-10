@@ -2,7 +2,7 @@ import {
   type Binding,
   type Directive,
   type DirectiveContext,
-  type DirectiveValue,
+  type DirectiveObject,
   type EffectContext,
   type UpdateContext,
   directiveTag,
@@ -40,7 +40,7 @@ export function computed<TResult, const TDependencies extends Signal<any>[]>(
 }
 
 export abstract class Signal<T>
-  implements DirectiveValue<Signal<T>>, UserHook<T>
+  implements DirectiveObject<Signal<T>>, UserHook<T>
 {
   abstract get value(): T;
 

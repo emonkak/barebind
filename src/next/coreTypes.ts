@@ -8,7 +8,7 @@ import type { ChildNodePart, Part } from './part.js';
 
 export const resolveBindingTag = Symbol('Directive.resolveBinding');
 
-export const directiveTag = Symbol('DirectiveValue.directive');
+export const directiveTag = Symbol('DirectiveObject.directive');
 
 const directiveElementTag = Symbol('DirectiveElement');
 
@@ -30,7 +30,7 @@ export interface Binding<T> extends Effect {
   disconnect(context: UpdateContext): void;
 }
 
-export type Bindable<T> = T | DirectiveElement<T> | DirectiveValue<T>;
+export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
 
 export interface DirectiveElement<T> {
   readonly directive: Directive<T>;
@@ -38,7 +38,7 @@ export interface DirectiveElement<T> {
   readonly __tag: typeof directiveElementTag;
 }
 
-export interface DirectiveValue<T> {
+export interface DirectiveObject<T> {
   get [directiveTag](): Directive<T>;
 }
 
@@ -155,8 +155,8 @@ export function isDirectiveElement(
   return (value as any)?.__tag === directiveElementTag;
 }
 
-export function isDirectiveValue(
+export function isDirectiveObject(
   value: unknown,
-): value is DirectiveValue<unknown> {
+): value is DirectiveObject<unknown> {
   return isDirective((value as any)?.[directiveTag]);
 }
