@@ -6,12 +6,10 @@ import type {
 } from './coreTypes.js';
 import type { Part } from './part.js';
 
-const noValue = Symbol('noValue');
-
 export class SuspenseBinding<T> implements Binding<T> {
   private readonly _binding: Binding<T>;
 
-  private _pendingValue: T | typeof noValue = noValue;
+  private _pendingValue: T | null = null;
 
   constructor(binding: Binding<T>) {
     this._binding = binding;
@@ -30,11 +28,11 @@ export class SuspenseBinding<T> implements Binding<T> {
   }
 
   connect(context: UpdateContext): void {
-    if (this._pendingValue === noValue) {
+    if (this._pendingValue === null) {
       context.enqueueBinding(this._binding);
     } else {
       this._binding.bind(this._pendingValue, context);
-      this._pendingValue = noValue;
+      this._pendingValue = null;
     }
   }
 
