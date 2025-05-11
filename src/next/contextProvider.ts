@@ -17,7 +17,7 @@ export interface ContextProviderValue<TValue, TChild> {
 }
 
 export function createContext<TValue, TChild = unknown>(
-  defaultValue: TValue,
+  defaultValue?: TValue,
 ): ContextProvider<TValue, TChild> {
   return new ContextProvider(defaultValue);
 }
