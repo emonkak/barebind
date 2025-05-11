@@ -463,11 +463,12 @@ export class RenderEngine implements RenderContext {
   useEffect(
     callback: () => VoidFunction | void,
     dependencies: unknown[] | null = null,
+    type: EffectHook['type'] = HookType.PassiveEffect,
   ): void {
     const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(HookType.PassiveEffect, currentHook);
+      ensureHookType<EffectHook>(type, currentHook);
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
         this._updateEngine.enqueuePassiveEffect(
           new InvokeEffectHook(currentHook),
@@ -477,7 +478,7 @@ export class RenderEngine implements RenderContext {
       currentHook.dependencies = dependencies;
     } else {
       const hook: EffectHook = {
-        type: HookType.PassiveEffect,
+        type,
         callback,
         dependencies,
         cleanup: undefined,
@@ -507,54 +508,14 @@ export class RenderEngine implements RenderContext {
     callback: () => VoidFunction | void,
     dependencies: unknown[] | null = null,
   ): void {
-    const currentHook = this._hooks[this._hookIndex++];
-
-    if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(HookType.InsertionEffect, currentHook);
-      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updateEngine.enqueueMutationEffect(
-          new InvokeEffectHook(currentHook),
-        );
-      }
-      currentHook.callback = callback;
-      currentHook.dependencies = dependencies;
-    } else {
-      const hook: EffectHook = {
-        type: HookType.InsertionEffect,
-        callback,
-        dependencies,
-        cleanup: undefined,
-      };
-      this._hooks.push(hook);
-      this._updateEngine.enqueueMutationEffect(new InvokeEffectHook(hook));
-    }
+    return this.useEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => VoidFunction | void,
     dependencies: unknown[] | null = null,
   ): void {
-    const currentHook = this._hooks[this._hookIndex++];
-
-    if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(HookType.LayoutEffect, currentHook);
-      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updateEngine.enqueueLayoutEffect(
-          new InvokeEffectHook(currentHook),
-        );
-      }
-      currentHook.callback = callback;
-      currentHook.dependencies = dependencies;
-    } else {
-      const hook: EffectHook = {
-        type: HookType.LayoutEffect,
-        callback,
-        dependencies,
-        cleanup: undefined,
-      };
-      this._hooks.push(hook);
-      this._updateEngine.enqueueLayoutEffect(new InvokeEffectHook(hook));
-    }
+    return this.useEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
