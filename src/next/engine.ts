@@ -57,6 +57,7 @@ interface GlobalState {
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   dirtyBindings: WeakSet<Binding<unknown>>;
   identifierCount: number;
+  templatePlaceholder: string;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
 }
 
@@ -93,7 +94,7 @@ export class UpdateEngine implements UpdateContext {
   }
 
   createIdentifier(count: number): string {
-    return ':' + this._renderHost.getPlaceholder() + '-' + count + ':';
+    return ':' + this._globalState.templatePlaceholder + '-' + count + ':';
   }
 
   enqueueBinding(binding: Binding<unknown>): void {
@@ -194,7 +195,12 @@ export class UpdateEngine implements UpdateContext {
     let template = this._globalState.cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._renderHost.createTemplate(strings, binds, mode);
+      template = this._renderHost.createTemplate(
+        strings,
+        binds,
+        this._globalState.templatePlaceholder,
+        mode,
+      );
       this._globalState.cachedTemplates.set(strings, template);
     }
 
@@ -685,6 +691,7 @@ function createGlobalState(): GlobalState {
     dirtyBindings: new WeakSet(),
     identifierCount: 0,
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
+    templatePlaceholder: getRandomString(8),
   };
 }
 
@@ -695,4 +702,10 @@ function createRenderFrame(): RenderFrame {
     layoutEffects: [],
     passiveEffects: [],
   };
+}
+
+function getRandomString(length: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
+    (byte % 36).toString(36),
+  ).join('');
 }

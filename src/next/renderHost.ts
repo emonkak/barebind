@@ -17,11 +17,11 @@ import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
 import { TaggedTemplate } from './templates/taggedTemplate.js';
 
 export interface RenderHost {
-  getPlaceholder(): string;
   getTaskPriority(): TaskPriority;
   createTemplate(
     strings: readonly string[],
     binds: unknown[],
+    placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   requestCallback(
@@ -42,15 +42,10 @@ export interface BrowserHostOptions {
 }
 
 export class BrowserHost implements RenderHost {
-  private readonly _placeholder: string;
-
-  constructor({ placeholder = getRandomString(8) }: BrowserHostOptions = {}) {
-    this._placeholder = placeholder;
-  }
-
   createTemplate(
     strings: readonly string[],
     binds: unknown[],
+    placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     if (binds.length === 0 && strings[0]!.trim() === '') {
@@ -77,11 +72,7 @@ export class BrowserHost implements RenderHost {
       }
     }
 
-    return TaggedTemplate.parse(strings, binds, this._placeholder, mode);
-  }
-
-  getPlaceholder(): string {
-    return this._placeholder;
+    return TaggedTemplate.parse(strings, binds, placeholder, mode);
   }
 
   getTaskPriority(): TaskPriority {
@@ -163,12 +154,6 @@ export class BrowserHost implements RenderHost {
       return new Promise((resolve) => setTimeout(resolve));
     }
   }
-}
-
-function getRandomString(length: number): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
-    (byte % 36).toString(36),
-  ).join('');
 }
 
 function isContinuousEvent(event: Event): boolean {
