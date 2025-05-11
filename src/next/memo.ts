@@ -1,5 +1,4 @@
 import {
-  type Bindable,
   type Binding,
   type Directive,
   type DirectiveContext,
@@ -11,11 +10,11 @@ import {
 } from './coreTypes.js';
 import type { Part } from './part.js';
 
-export function memo<T>(value: Bindable<T>): DirectiveElement<Bindable<T>> {
-  return createDirectiveElement(Memo as Directive<Bindable<T>>, value);
+export function memo<T>(value: T): DirectiveElement<T> {
+  return createDirectiveElement(Memo as Directive<T>, value);
 }
 
-export const Memo: Directive<Bindable<unknown>> = {
+export const Memo: Directive<unknown> = {
   [resolveBindingTag](
     value: unknown,
     part: Part,
@@ -26,7 +25,7 @@ export const Memo: Directive<Bindable<unknown>> = {
   },
 };
 
-export class MemoBinding<T> implements Binding<Bindable<T>> {
+export class MemoBinding<T> implements Binding<T> {
   private _binding: Binding<T>;
 
   private readonly _memoizedBindings: Map<Directive<T>, Binding<T>> = new Map();
@@ -35,11 +34,11 @@ export class MemoBinding<T> implements Binding<Bindable<T>> {
     this._binding = binding;
   }
 
-  get directive(): Directive<Bindable<T>> {
-    return Memo as Directive<Bindable<T>>;
+  get directive(): Directive<T> {
+    return Memo as Directive<T>;
   }
 
-  get value(): Bindable<T> {
+  get value(): T {
     return this._binding.value;
   }
 
@@ -51,7 +50,7 @@ export class MemoBinding<T> implements Binding<Bindable<T>> {
     this._binding.connect(context);
   }
 
-  bind(value: Bindable<T>, context: UpdateContext): void {
+  bind(value: T, context: UpdateContext): void {
     const oldBinding = this._binding;
     const newElement = context.resolveDirectiveElement(
       value,
