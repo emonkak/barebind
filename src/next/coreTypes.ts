@@ -1,9 +1,4 @@
-import type {
-  ContextualKey,
-  Hook,
-  HookContext,
-  UpdateOptions,
-} from './hook.js';
+import type { Hook, HookContext, UpdateOptions } from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
 
 export const resolveBindingTag = Symbol('Directive.resolveBinding');
@@ -108,7 +103,6 @@ export interface UpdateContext extends DirectiveContext {
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
-  enterContextualScope<T>(context: ContextualKey<T>, value: T): UpdateContext;
   renderComponent<TProps>(
     component: ComponentFunction<TProps>,
     props: TProps,

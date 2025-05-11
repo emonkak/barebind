@@ -49,8 +49,8 @@ interface RenderFrame {
 
 interface ContextualScope {
   parent: ContextualScope | null;
-  key: ContextualKey<unknown>;
-  value: unknown;
+  context: UpdateContext;
+  registry: WeakMap<WeakKey, unknown>;
 }
 
 interface GlobalState {
@@ -72,7 +72,7 @@ export class UpdateEngine implements UpdateContext {
 
   private readonly _renderFrame: RenderFrame;
 
-  private readonly _contextualScope: ContextualScope | null;
+  private _contextualScope: ContextualScope | null;
 
   private readonly _globalState: GlobalState;
 
@@ -112,18 +112,15 @@ export class UpdateEngine implements UpdateContext {
     this._renderFrame.passiveEffects.push(effect);
   }
 
-  enterContextualScope<T>(key: ContextualKey<T>, value: T): UpdateEngine {
-    const contextualScope = {
-      parent: this._contextualScope,
-      key,
-      value,
-    };
-    return new UpdateEngine(
-      this._renderHost,
-      this._renderFrame,
-      contextualScope,
-      this._globalState,
-    );
+  setContextualValue(key: WeakKey, value: unknown): void {
+    if (this._contextualScope?.context !== this) {
+      this._contextualScope ??= {
+        parent: this._contextualScope,
+        context: this,
+        registry: new WeakMap(),
+      };
+    }
+    this._contextualScope.registry.set(key, value);
   }
 
   async flushUpdate(
@@ -177,11 +174,12 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  getContextualValue<T>(key: ContextualKey<T>): T | undefined {
+  getContextualValue<T>(key: ContextualKey<T>): T {
     let contextualScope = this._contextualScope;
     while (contextualScope !== null) {
-      if (contextualScope.key === key) {
-        return contextualScope.value as T;
+      const value = contextualScope.registry.get(key);
+      if (value !== undefined) {
+        return value as T;
       }
       contextualScope = contextualScope.parent;
     }
@@ -368,6 +366,10 @@ export class RenderEngine implements RenderContext {
     return createDirectiveElement(template, binds);
   }
 
+  getContextualValue<T>(key: ContextualKey<T>): T {
+    return this._updateEngine.getContextualValue(key);
+  }
+
   /** @internal */
   finalize(): void {
     const currentHook = this._hooks[this._hookIndex++];
@@ -411,6 +413,10 @@ export class RenderEngine implements RenderContext {
     return createDirectiveElement(template, binds);
   }
 
+  setContextualValue<T>(key: ContextualKey<T>, value: T): void {
+    return this._updateEngine.setContextualValue(key, value);
+  }
+
   svg(
     strings: TemplateStringsArray,
     ...binds: unknown[]
@@ -434,10 +440,6 @@ export class RenderEngine implements RenderContext {
     dependencies: unknown[],
   ): TCallback {
     return this.useMemo(() => callback, dependencies);
-  }
-
-  useContext<T>(context: ContextualKey<T>): T | undefined {
-    return this._updateEngine.getContextualValue(context);
   }
 
   useDeferredValue<TValue>(

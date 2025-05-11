@@ -8,8 +8,9 @@ export type NewState<T> = [T] extends [Function]
 
 export interface HookContext {
   forceUpdate(options?: UpdateOptions): void;
+  getContextualValue<T>(key: ContextualKey<T>): T;
+  setContextualValue<T>(key: ContextualKey<T>, value: T): void;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
-  useContext<T>(key: ContextualKey<T>): T | undefined;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
     callback: () => VoidFunction | void,
@@ -93,7 +94,7 @@ export interface FinalizerHook {
 }
 
 export interface ContextualKey<T> {
-  defaultValue?: T | undefined;
+  defaultValue: T;
 }
 
 export interface RefObject<T> {
@@ -103,6 +104,14 @@ export interface RefObject<T> {
 export interface UpdateOptions {
   priority?: TaskPriority;
   viewTransition?: boolean;
+}
+
+export function createContext<T>(): ContextualKey<T | undefined>;
+export function createContext<T>(defaultValue: T): ContextualKey<T>;
+export function createContext<T>(
+  defaultValue?: T,
+): ContextualKey<T | undefined> {
+  return { defaultValue };
 }
 
 export function ensureHookType<TExpectedHook extends Hook>(

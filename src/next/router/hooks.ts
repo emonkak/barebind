@@ -1,6 +1,5 @@
-import { createContext } from '../contextProvider.js';
 import type { ContextualKey, HookContext } from '../hook.js';
-import { type UserHook, userHookTag } from '../hook.js';
+import { type UserHook, createContext, userHookTag } from '../hook.js';
 import { RelativeURL } from './relativeURL.js';
 
 export interface LocationState {
@@ -27,7 +26,7 @@ export interface NavigateOptions {
 }
 
 const CurrentLocationContext: ContextualKey<
-  [LocationState, LocationNavigator]
+  [LocationState, LocationNavigator] | undefined
 > = createContext();
 
 export const CurrentLocation: UserHook<
@@ -36,7 +35,7 @@ export const CurrentLocation: UserHook<
   [userHookTag](
     context: HookContext,
   ): readonly [LocationState, LocationNavigator] {
-    const value = context.useContext(CurrentLocationContext);
+    const value = context.getContextualValue(CurrentLocationContext);
 
     if (value == undefined) {
       throw new Error(
@@ -115,6 +114,11 @@ export const BrowserLocation: UserHook<
       };
     }, []);
 
+    context.setContextualValue(CurrentLocationContext, [
+      locationState,
+      locationNavigator,
+    ]);
+
     return [locationState, locationNavigator] as const;
   },
 };
@@ -179,6 +183,11 @@ export const HashLocation: UserHook<
         removeEventListener('click', handleClick);
       };
     }, []);
+
+    context.setContextualValue(CurrentLocationContext, [
+      locationState,
+      locationNavigator,
+    ]);
 
     return [locationState, locationNavigator] as const;
   },
