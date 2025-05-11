@@ -1,9 +1,8 @@
-import {
-  type Binding,
-  type DirectiveContext,
-  type EffectContext,
-  type UpdateContext,
-  resolveBindingTag,
+import type {
+  Binding,
+  DirectiveContext,
+  EffectContext,
+  UpdateContext,
 } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
@@ -20,7 +19,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
       );
     }
   },
-  [resolveBindingTag](
+  resolveBinding(
     value: SpreadValue,
     part: Part,
     _context: DirectiveContext,
@@ -40,9 +39,9 @@ export class SpreadBinding implements Binding<SpreadValue> {
 
   private readonly _part: ElementPart;
 
-  private readonly _pendingBindings: Map<string, Binding<any>> = new Map();
+  private readonly _pendingBindings: Map<string, Binding<unknown>> = new Map();
 
-  private _memoizedBindings: Map<string, Binding<any>> = new Map();
+  private _memoizedBindings: Map<string, Binding<unknown>> = new Map();
 
   constructor(value: SpreadValue, part: ElementPart) {
     this._value = value;

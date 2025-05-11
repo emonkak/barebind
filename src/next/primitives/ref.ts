@@ -1,4 +1,4 @@
-import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
+import type { DirectiveContext } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
@@ -23,7 +23,7 @@ export const RefPrimitive: Primitive<RefValue> = {
       );
     }
   },
-  [resolveBindingTag](
+  resolveBinding(
     value: RefValue,
     part: Part,
     _context: DirectiveContext,

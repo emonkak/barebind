@@ -1,19 +1,25 @@
 import type { Hook, HookContext, UpdateOptions } from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
 
-export const resolveBindingTag = Symbol('Directive.resolveBinding');
-
 export const directiveTag = Symbol('DirectiveObject.directive');
 
 const directiveElementTag = Symbol('DirectiveElement');
 
 export interface Directive<T> {
-  [resolveBindingTag](
-    value: T,
-    part: Part,
-    context: DirectiveContext,
-  ): Binding<T>;
+  resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
+
+export interface DirectiveElement<T> {
+  readonly directive: Directive<T>;
+  readonly value: T;
+  readonly __tag: typeof directiveElementTag;
+}
+
+export interface DirectiveObject<T> {
+  readonly [directiveTag]: Directive<T>;
+}
+
+export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
 
 export interface Binding<T> extends Effect {
   get directive(): Directive<T>;
@@ -23,18 +29,6 @@ export interface Binding<T> extends Effect {
   bind(value: T, context: UpdateContext): void;
   unbind(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
-}
-
-export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
-
-export interface DirectiveElement<T> {
-  readonly directive: Directive<T>;
-  readonly value: T;
-  readonly __tag: typeof directiveElementTag;
-}
-
-export interface DirectiveObject<T> {
-  get [directiveTag](): Directive<T>;
 }
 
 export interface Template<T> extends Directive<T> {
@@ -52,10 +46,10 @@ export interface TemplateInstance<TBinds> extends Effect {
   unmount(part: ChildNodePart): void;
 }
 
-export type ComponentFunction<T> = (
-  props: T,
+export type Component<TProps, TResult> = (
+  props: TProps,
   context: RenderContext,
-) => Bindable<unknown>;
+) => TResult;
 
 export interface Effect {
   commit(context: EffectContext): void;
@@ -103,12 +97,12 @@ export interface UpdateContext extends DirectiveContext {
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
-  renderComponent<TProps>(
-    component: ComponentFunction<TProps>,
+  renderComponent<TProps, TResult>(
+    component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
     binding: Binding<TProps>,
-  ): unknown;
+  ): TResult;
   renderTemplate<TBinds>(
     template: Template<TBinds>,
     binds: TBinds,
@@ -139,18 +133,14 @@ export function createDirectiveElement<T>(
   };
 }
 
-export function isDirective(value: unknown): value is Directive<unknown> {
-  return typeof (value as any)?.[resolveBindingTag] === 'function';
-}
-
 export function isDirectiveElement(
   value: unknown,
 ): value is DirectiveElement<unknown> {
-  return (value as any)?.__tag === directiveElementTag;
+  return (value as DirectiveElement<unknown>)?.__tag === directiveElementTag;
 }
 
 export function isDirectiveObject(
   value: unknown,
 ): value is DirectiveObject<unknown> {
-  return isDirective((value as any)?.[directiveTag]);
+  return (value as DirectiveObject<unknown>)?.[directiveTag] != null;
 }

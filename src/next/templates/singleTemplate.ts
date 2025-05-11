@@ -1,11 +1,10 @@
-import {
-  type Binding,
-  type DirectiveContext,
-  type EffectContext,
-  type Template,
-  type TemplateInstance,
-  type UpdateContext,
-  resolveBindingTag,
+import type {
+  Binding,
+  DirectiveContext,
+  EffectContext,
+  Template,
+  TemplateInstance,
+  UpdateContext,
 } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
@@ -26,7 +25,7 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
     }
     return new SingleTemplateInstance(binding);
   },
-  [resolveBindingTag](
+  resolveBinding(
     binds: readonly [unknown],
     part: Part,
     _context: DirectiveContext,
@@ -54,7 +53,7 @@ export const TextTemplate: Template<readonly [unknown]> = {
     const binding = context.resolveBinding(value, part);
     return new SingleTemplateInstance(binding);
   },
-  [resolveBindingTag](
+  resolveBinding(
     binds: readonly [unknown],
     part: ChildNodePart,
     _context: DirectiveContext,

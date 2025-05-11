@@ -6,7 +6,6 @@ import {
   type EffectContext,
   type UpdateContext,
   directiveTag,
-  resolveBindingTag,
 } from './coreTypes.js';
 import { inspectValue } from './debug.js';
 import { type HookContext, type UserHook, userHookTag } from './hook.js';
@@ -18,7 +17,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 const SignalDirective: Directive<Signal<unknown>> = {
-  [resolveBindingTag](
+  resolveBinding(
     value: Signal<unknown>,
     part: Part,
     context: DirectiveContext,

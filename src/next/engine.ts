@@ -3,7 +3,8 @@ import {
   type Bindable,
   type Binding,
   CommitPhase,
-  type ComponentFunction,
+  type Component,
+  type Directive,
   type DirectiveElement,
   type Effect,
   type EffectContext,
@@ -16,7 +17,6 @@ import {
   directiveTag,
   isDirectiveElement,
   isDirectiveObject,
-  resolveBindingTag,
 } from './coreTypes.js';
 import {
   type ContextualKey,
@@ -213,11 +213,7 @@ export class UpdateEngine implements UpdateContext {
 
   resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
     const element = this.resolveDirectiveElement(value, part);
-    const binding = element.directive[resolveBindingTag](
-      element.value,
-      part,
-      this,
-    );
+    const binding = element.directive.resolveBinding(element.value, part, this);
     binding.connect(this);
     return binding;
   }
@@ -228,7 +224,7 @@ export class UpdateEngine implements UpdateContext {
       binding.bind(element.value, this);
     } else {
       binding.unbind(this);
-      binding = element.directive[resolveBindingTag](
+      binding = element.directive.resolveBinding(
         element.value,
         binding.part,
         this,
@@ -238,12 +234,12 @@ export class UpdateEngine implements UpdateContext {
     return binding;
   }
 
-  renderComponent<TProps>(
-    component: ComponentFunction<TProps>,
+  renderComponent<TProps, TResult>(
+    component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
     binding: Binding<TProps>,
-  ): unknown {
+  ): TResult {
     const updateEngine = new UpdateEngine(
       this._renderHost,
       createRenderFrame(),
@@ -267,18 +263,18 @@ export class UpdateEngine implements UpdateContext {
     value: Bindable<T>,
     part: Part,
   ): DirectiveElement<T> {
-    switch (true) {
-      case isDirectiveElement(value):
-        return value;
-      case isDirectiveObject(value):
-        return createDirectiveElement(value[directiveTag], value as T);
-      default:
-        type EnsureValue = (value: unknown, part: Part) => void;
-        const directive = this._renderHost.resolvePrimitive(
-          part,
-        ) as Primitive<T>;
-        (directive.ensureValue as EnsureValue)(value, part);
-        return createDirectiveElement(directive, value);
+    if (isDirectiveElement(value)) {
+      return value;
+    } else if (isDirectiveObject(value)) {
+      return createDirectiveElement(
+        value[directiveTag] as Directive<T>,
+        value as T,
+      );
+    } else {
+      type EnsureValue = (value: unknown, part: Part) => void;
+      const directive = this._renderHost.resolvePrimitive(part) as Primitive<T>;
+      (directive.ensureValue as EnsureValue)(value, part);
+      return createDirectiveElement(directive, value);
     }
   }
 
@@ -580,7 +576,7 @@ export class RenderEngine implements RenderContext {
       this._hooks.push(currentHook);
     }
 
-    return currentHook.value;
+    return currentHook.value as TResult;
   }
 
   useReducer<TState, TAction>(
@@ -612,7 +608,7 @@ export class RenderEngine implements RenderContext {
       this._hooks.push(hook);
     }
 
-    return [currentHook.state, currentHook.dispatch];
+    return [currentHook.state as TState, currentHook.dispatch];
   }
 
   useRef<T>(initialValue: T): RefObject<T> {

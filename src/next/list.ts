@@ -9,7 +9,6 @@ import {
   type EffectContext,
   type UpdateContext,
   createDirectiveElement,
-  resolveBindingTag,
 } from './coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from './debug.js';
 import { type ChildNodePart, type Part, PartType } from './part.js';
@@ -57,7 +56,7 @@ export function list<TItem, TKey, TValue>(
 }
 
 export const List: Directive<ListValue<unknown, unknown, unknown>> = {
-  [resolveBindingTag](
+  resolveBinding(
     value: ListValue<unknown, unknown, unknown>,
     part: Part,
     _context: DirectiveContext,

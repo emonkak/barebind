@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
+import type { DirectiveContext } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
@@ -23,7 +23,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
       );
     }
   },
-  [resolveBindingTag](
+  resolveBinding(
     value: ClassValue,
     part: Part,
     _context: DirectiveContext,

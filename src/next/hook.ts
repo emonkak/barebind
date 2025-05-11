@@ -44,8 +44,8 @@ export interface HookContext {
 export type Hook =
   | EffectHook
   | IdentifierHook
-  | MemoHook<any>
-  | ReducerHook<any, any>
+  | MemoHook<unknown>
+  | ReducerHook<unknown, any>
   | FinalizerHook;
 
 export enum HookType {

@@ -1,6 +1,6 @@
 import {
   type Binding,
-  type ComponentFunction,
+  type Component,
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
@@ -8,50 +8,67 @@ import {
   type EffectContext,
   type UpdateContext,
   createDirectiveElement,
-  resolveBindingTag,
 } from './coreTypes.js';
 import { inspectPart, markUsedValue } from './debug.js';
 import { type EffectHook, type Hook, HookType } from './hook.js';
 import { type ChildNodePart, type Part, PartType } from './part.js';
 import { SuspenseBinding } from './suspense.js';
 
-export interface ComponentDirective<TProps>
-  extends Directive<TProps>,
-    ComponentFunction<TProps> {}
+const componentDirectiveTag = Symbol('Component.directive');
 
-export function component<TProps>(
-  component: ComponentFunction<TProps>,
+export function component<TProps, TResult>(
+  component: Component<TProps, TResult>,
   props: TProps,
 ): DirectiveElement<TProps> {
-  treatComponentDirective(component);
-  return createDirectiveElement(component, props);
+  const directive = defineComponentDirective(component);
+  return createDirectiveElement(directive, props);
 }
 
-export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
-  private readonly _component: ComponentDirective<TProps>;
+export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
+  constructor(readonly component: Component<TProps, TResult>) {}
+
+  resolveBinding(
+    props: TProps,
+    part: Part,
+    _context: DirectiveContext,
+  ): SuspenseBinding<TProps> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error(
+        'Component directive must be used in a child node, but it is used here in:\n' +
+          inspectPart(part, markUsedValue(component)),
+      );
+    }
+    return new SuspenseBinding(new ComponentBinding(this, props, part));
+  }
+}
+
+export class ComponentBinding<TProps, TResult>
+  implements Binding<TProps>, Effect
+{
+  private readonly _directive: ComponentDirective<TProps, TResult>;
 
   private _pendingProps: TProps;
 
   private _memoizedProps: TProps | null = null;
 
-  private _binding: Binding<unknown> | null = null;
+  private _binding: Binding<TResult> | null = null;
 
   private readonly _part: ChildNodePart;
 
   private _hooks: Hook[] = [];
 
   constructor(
-    component: ComponentDirective<TProps>,
+    directive: ComponentDirective<TProps, TResult>,
     props: TProps,
     part: ChildNodePart,
   ) {
-    this._component = component;
+    this._directive = directive;
     this._pendingProps = props;
     this._part = part;
   }
 
-  get directive(): ComponentDirective<TProps> {
-    return this._component;
+  get directive(): ComponentDirective<TProps, TResult> {
+    return this._directive;
   }
 
   get value(): TProps {
@@ -64,7 +81,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
 
   connect(context: UpdateContext): void {
     const element = context.renderComponent(
-      this._component,
+      this._directive.component,
       this._pendingProps,
       this._hooks,
       this,
@@ -80,7 +97,7 @@ export class ComponentBinding<TProps> implements Binding<TProps>, Effect {
   bind(props: TProps, context: UpdateContext): void {
     if (props !== this._memoizedProps) {
       const element = context.renderComponent(
-        this._component,
+        this._directive.component,
         props,
         this._hooks,
         this,
@@ -126,6 +143,14 @@ class CleanEffectHook implements Effect {
   }
 }
 
+function defineComponentDirective<TProps, TResult>(
+  component: Component<TProps, TResult>,
+): Directive<TProps> {
+  return ((component as any)[componentDirectiveTag] ??= new ComponentDirective(
+    component,
+  ));
+}
+
 function requestCleanHooks(hooks: Hook[], context: UpdateContext): void {
   // Hooks must be cleaned in reverse order.
   for (let i = hooks.length - 1; i >= 0; i--) {
@@ -141,30 +166,5 @@ function requestCleanHooks(hooks: Hook[], context: UpdateContext): void {
         context.enqueuePassiveEffect(new CleanEffectHook(hook));
         break;
     }
-  }
-}
-
-function resolveBinding<TProps>(
-  this: ComponentDirective<TProps>,
-  props: TProps,
-  part: Part,
-  _context: DirectiveContext,
-): SuspenseBinding<TProps> {
-  if (part.type !== PartType.ChildNode) {
-    throw new Error(
-      'Component directive must be used in a child node, but it is used here in:\n' +
-        inspectPart(part, markUsedValue(this)),
-    );
-  }
-  return new SuspenseBinding(new ComponentBinding(this, props, part));
-}
-
-function treatComponentDirective<TProps>(
-  component: ComponentFunction<TProps>,
-): asserts component is ComponentDirective<TProps> {
-  if (!(resolveBindingTag in component)) {
-    Object.defineProperty(component, resolveBindingTag, {
-      value: resolveBinding,
-    });
   }
 }

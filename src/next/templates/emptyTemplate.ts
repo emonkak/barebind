@@ -1,10 +1,9 @@
-import {
-  type DirectiveContext,
-  type EffectContext,
-  type Template,
-  type TemplateInstance,
-  type UpdateContext,
-  resolveBindingTag,
+import type {
+  DirectiveContext,
+  EffectContext,
+  Template,
+  TemplateInstance,
+  UpdateContext,
 } from '../coreTypes.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
@@ -17,7 +16,7 @@ export const EmptyTemplate: Template<readonly []> = {
   ): typeof EmptyTemplateInstance {
     return EmptyTemplateInstance;
   },
-  [resolveBindingTag](
+  resolveBinding(
     binds: readonly [],
     part: Part,
     _context: DirectiveContext,

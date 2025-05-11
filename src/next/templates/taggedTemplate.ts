@@ -1,12 +1,11 @@
-import {
-  type Binding,
-  type DirectiveContext,
-  type EffectContext,
-  type Template,
-  type TemplateInstance,
-  type TemplateMode,
-  type UpdateContext,
-  resolveBindingTag,
+import type {
+  Binding,
+  DirectiveContext,
+  EffectContext,
+  Template,
+  TemplateInstance,
+  TemplateMode,
+  UpdateContext,
 } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
@@ -205,7 +204,7 @@ export class TaggedTemplate<TBinds extends readonly any[]>
     return new TaggedTemplateInstance(bindings, childNodes);
   }
 
-  [resolveBindingTag](
+  resolveBinding(
     binds: TBinds,
     part: Part,
     _context: DirectiveContext,

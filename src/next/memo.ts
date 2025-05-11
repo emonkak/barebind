@@ -6,7 +6,6 @@ import {
   type EffectContext,
   type UpdateContext,
   createDirectiveElement,
-  resolveBindingTag,
 } from './coreTypes.js';
 import type { Part } from './part.js';
 
@@ -15,7 +14,7 @@ export function memo<T>(value: T): DirectiveElement<T> {
 }
 
 export const Memo: Directive<unknown> = {
-  [resolveBindingTag](
+  resolveBinding(
     value: unknown,
     part: Part,
     context: DirectiveContext,
@@ -62,7 +61,7 @@ export class MemoBinding<T> implements Binding<T> {
         memoizedBinding.bind(newElement.value, context);
         this._binding = memoizedBinding;
       } else {
-        this._binding = newElement.directive[resolveBindingTag](
+        this._binding = newElement.directive.resolveBinding(
           newElement.value,
           oldBinding.part,
           context,

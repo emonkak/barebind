@@ -1,4 +1,4 @@
-import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
+import type { DirectiveContext } from '../coreTypes.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { type Part, PartType, type PropertyPart } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
@@ -8,7 +8,7 @@ export const PropertyPrimitive: Primitive<unknown> = {
     _value: unknown,
     _part: PropertyPart,
   ): asserts _value is unknown {},
-  [resolveBindingTag](
+  resolveBinding(
     value: unknown,
     part: Part,
     _context: DirectiveContext,

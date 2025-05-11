@@ -1,4 +1,4 @@
-import { type DirectiveContext, resolveBindingTag } from '../coreTypes.js';
+import type { DirectiveContext } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type EventPart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
@@ -20,7 +20,7 @@ export const EventPrimitive: Primitive<EventValue> = {
       );
     }
   },
-  [resolveBindingTag](
+  resolveBinding(
     value: EventValue,
     part: Part,
     _context: DirectiveContext,
