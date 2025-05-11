@@ -55,7 +55,7 @@ export function list<TItem, TKey, TValue>(
   );
 }
 
-export const List: Directive<ListValue<unknown, unknown, unknown>> = {
+const List: Directive<ListValue<unknown, unknown, unknown>> = {
   resolveBinding(
     value: ListValue<unknown, unknown, unknown>,
     part: Part,
@@ -71,7 +71,7 @@ export const List: Directive<ListValue<unknown, unknown, unknown>> = {
   },
 };
 
-export class ListBinding<TItem, TKey, TValue>
+class ListBinding<TItem, TKey, TValue>
   implements Binding<ListValue<TItem, TKey, TValue>>, Effect
 {
   private _value: ListValue<TItem, TKey, TValue>;

@@ -24,7 +24,7 @@ export function component<TProps, TResult>(
   return createDirectiveElement(directive, props);
 }
 
-export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
+class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   constructor(readonly component: Component<TProps, TResult>) {}
 
   resolveBinding(
@@ -42,9 +42,7 @@ export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   }
 }
 
-export class ComponentBinding<TProps, TResult>
-  implements Binding<TProps>, Effect
-{
+class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   private readonly _directive: ComponentDirective<TProps, TResult>;
 
   private _pendingProps: TProps;

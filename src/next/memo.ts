@@ -13,7 +13,7 @@ export function memo<T>(value: T): DirectiveElement<T> {
   return createDirectiveElement(Memo as Directive<T>, value);
 }
 
-export const Memo: Directive<unknown> = {
+const Memo: Directive<unknown> = {
   resolveBinding(
     value: unknown,
     part: Part,
@@ -24,7 +24,7 @@ export const Memo: Directive<unknown> = {
   },
 };
 
-export class MemoBinding<T> implements Binding<T> {
+class MemoBinding<T> implements Binding<T> {
   private _binding: Binding<T>;
 
   private readonly _memoizedBindings: Map<Directive<T>, Binding<T>> = new Map();

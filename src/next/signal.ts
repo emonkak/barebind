@@ -27,17 +27,6 @@ const SignalDirective: Directive<Signal<unknown>> = {
   },
 };
 
-export function atom<TValue>(value: TValue): Atom<TValue> {
-  return new Atom(value);
-}
-
-export function computed<TResult, const TDependencies extends Signal<any>[]>(
-  producer: (...dependencies: TDependencies) => TResult,
-  dependencies: TDependencies,
-): Computed<TResult, TDependencies> {
-  return new Computed(producer, dependencies);
-}
-
 export abstract class Signal<T>
   implements DirectiveObject<Signal<T>>, UserHook<T>
 {
@@ -76,74 +65,6 @@ export abstract class Signal<T>
       [this],
     );
     return this.value;
-  }
-}
-
-export class SignalBinding<T> implements Binding<Signal<T>> {
-  private _binding: Binding<T>;
-
-  private _value: Signal<T>;
-
-  private _subscription: Subscription | null = null;
-
-  constructor(binding: Binding<T>, value: Signal<T>) {
-    this._binding = binding;
-    this._value = value;
-  }
-
-  get directive(): Directive<Signal<T>> {
-    return SignalDirective as Directive<Signal<T>>;
-  }
-
-  get value(): Signal<T> {
-    return this._value;
-  }
-
-  get part(): Part {
-    return this._binding.part;
-  }
-
-  connect(context: UpdateContext): void {
-    this._binding.connect(context);
-    this._beginSubscription(context);
-  }
-
-  bind(value: Signal<T>, context: UpdateContext): void {
-    if (value !== this._value) {
-      this._abortSubscription();
-    }
-    this._binding = context.reconcileBinding(this._binding, value.value);
-    this._value = value;
-    this._beginSubscription(context);
-  }
-
-  unbind(context: UpdateContext): void {
-    this._abortSubscription();
-    this._binding.unbind(context);
-  }
-
-  disconnect(context: UpdateContext): void {
-    this._abortSubscription();
-    this._binding.disconnect(context);
-  }
-
-  commit(context: EffectContext): void {
-    this._binding.commit(context);
-  }
-
-  private _abortSubscription(): void {
-    this._subscription?.();
-    this._subscription = null;
-  }
-
-  private _beginSubscription(context: UpdateContext): void {
-    this._subscription ??= this._value.subscribe(() => {
-      this._binding = context.reconcileBinding(
-        this._binding,
-        this._value.value,
-      );
-      context.scheduleUpdate(this._binding, { priority: 'background' });
-    });
   }
 }
 
@@ -270,5 +191,73 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 
   subscribe(subscriber: Subscriber): Subscription {
     return this._signal.subscribe(subscriber);
+  }
+}
+
+class SignalBinding<T> implements Binding<Signal<T>> {
+  private _binding: Binding<T>;
+
+  private _value: Signal<T>;
+
+  private _subscription: Subscription | null = null;
+
+  constructor(binding: Binding<T>, value: Signal<T>) {
+    this._binding = binding;
+    this._value = value;
+  }
+
+  get directive(): Directive<Signal<T>> {
+    return SignalDirective as Directive<Signal<T>>;
+  }
+
+  get value(): Signal<T> {
+    return this._value;
+  }
+
+  get part(): Part {
+    return this._binding.part;
+  }
+
+  connect(context: UpdateContext): void {
+    this._binding.connect(context);
+    this._beginSubscription(context);
+  }
+
+  bind(value: Signal<T>, context: UpdateContext): void {
+    if (value !== this._value) {
+      this._abortSubscription();
+    }
+    this._binding = context.reconcileBinding(this._binding, value.value);
+    this._value = value;
+    this._beginSubscription(context);
+  }
+
+  unbind(context: UpdateContext): void {
+    this._abortSubscription();
+    this._binding.unbind(context);
+  }
+
+  disconnect(context: UpdateContext): void {
+    this._abortSubscription();
+    this._binding.disconnect(context);
+  }
+
+  commit(context: EffectContext): void {
+    this._binding.commit(context);
+  }
+
+  private _abortSubscription(): void {
+    this._subscription?.();
+    this._subscription = null;
+  }
+
+  private _beginSubscription(context: UpdateContext): void {
+    this._subscription ??= this._value.subscribe(() => {
+      this._binding = context.reconcileBinding(
+        this._binding,
+        this._value.value,
+      );
+      context.scheduleEffect(this._binding, { priority: 'background' });
+    });
   }
 }

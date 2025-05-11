@@ -59,6 +59,10 @@ export interface EffectContext {
   phase: CommitPhase;
 }
 
+export interface EffectOptions {
+  priority?: TaskPriority;
+}
+
 export enum CommitPhase {
   Mutation,
   Layout,
@@ -107,6 +111,7 @@ export interface UpdateContext extends DirectiveContext {
     template: Template<TBinds>,
     binds: TBinds,
   ): TemplateInstance<TBinds>;
+  scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void>;
   scheduleUpdate(
     binding: Binding<unknown>,
     options?: UpdateOptions,

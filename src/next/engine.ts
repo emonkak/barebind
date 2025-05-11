@@ -8,6 +8,7 @@ import {
   type DirectiveElement,
   type Effect,
   type EffectContext,
+  type EffectOptions,
   type RenderContext,
   type Template,
   type TemplateInstance,
@@ -131,6 +132,8 @@ export class UpdateEngine implements UpdateContext {
     const { dirtyBindings } = this._globalState;
     let pendingBindings = [binding];
 
+    this._renderFrame.mutationEffects.push(binding);
+
     while (true) {
       for (let i = 0, l = pendingBindings.length; i < l; i++) {
         const pendingBinding = pendingBindings[i]!;
@@ -148,7 +151,6 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
     const callback = () => {
-      binding.commit({ phase: CommitPhase.Mutation });
       commitEffects(mutationEffects, {
         phase: CommitPhase.Mutation,
       });
@@ -278,6 +280,17 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
+  scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void> {
+    return this._renderHost.requestCallback(
+      () => {
+        effect.commit({
+          phase: CommitPhase.Mutation,
+        });
+      },
+      { priority: options?.priority ?? this._renderHost.getTaskPriority() },
+    );
+  }
+
   scheduleUpdate(
     binding: Binding<unknown>,
     options?: UpdateOptions,
@@ -285,11 +298,11 @@ export class UpdateEngine implements UpdateContext {
     const { dirtyBindings } = this._globalState;
     dirtyBindings.add(binding);
     return this._renderHost.requestCallback(
-      () => {
+      async () => {
         if (!dirtyBindings.has(binding)) {
-          return Promise.resolve();
+          return;
         }
-        return this.flushUpdate(binding, options);
+        await this.flushUpdate(binding);
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
@@ -372,7 +385,6 @@ export class RenderEngine implements RenderContext {
     return this._updateEngine.getContextualValue(key);
   }
 
-  /** @internal */
   finalize(): void {
     const currentHook = this._hooks[this._hookIndex++];
 

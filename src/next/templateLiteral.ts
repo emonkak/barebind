@@ -1,4 +1,10 @@
 import { sequentialEqual } from './compare.js';
+import { Literal } from './literal.js';
+
+export interface TemplateLiteral<TValues extends readonly any[]> {
+  strings: readonly string[];
+  values: TValues;
+}
 
 export type NonLiteralValues<TValues extends readonly any[]> =
   TValues extends readonly [infer THead, ...infer TTail]
@@ -6,11 +12,6 @@ export type NonLiteralValues<TValues extends readonly any[]> =
       ? NonLiteralValues<TTail>
       : [THead, ...NonLiteralValues<TTail>]
     : [];
-
-export interface TemplateLiteral<TValues extends readonly any[]> {
-  strings: readonly string[];
-  values: TValues;
-}
 
 interface TemplateInformation {
   strings: readonly string[];
@@ -35,7 +36,7 @@ export class TemplateLiteralPreprocessor {
     for (let i = 0, l = values.length; i < l; i++) {
       const value = values[i];
       if (value instanceof Literal) {
-        literalStrings.push(value.value);
+        literalStrings.push(value.toString());
         literalPositions.push(i);
       } else {
         nonLiteralValues.push(value);
@@ -68,14 +69,6 @@ export class TemplateLiteralPreprocessor {
       strings: expandedStrings,
       values: nonLiteralValues as NonLiteralValues<TValues>,
     };
-  }
-}
-
-export class Literal {
-  constructor(public readonly value: string) {}
-
-  valueOf(): string {
-    return this.value;
   }
 }
 
