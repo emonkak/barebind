@@ -6,7 +6,7 @@ import type {
   TemplateInstance,
   UpdateContext,
 } from './coreTypes.js';
-import type { ChildNodePart } from './part.js';
+import type { Part } from './part.js';
 
 enum TemplateStatus {
   Idle,
@@ -15,26 +15,28 @@ enum TemplateStatus {
   Unmouting,
 }
 
-export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
-  private readonly _template: Template<TBinds>;
+export class TemplateBinding<TBinds, TPart extends Part>
+  implements Binding<TBinds>, Effect
+{
+  private readonly _template: Template<TBinds, TPart>;
 
   private _pendingBinds: TBinds;
 
   private _memoizedBinds: TBinds | null = null;
 
-  private readonly _part: ChildNodePart;
+  private readonly _part: TPart;
 
-  private _templateInstance: TemplateInstance<TBinds> | null = null;
+  private _templateInstance: TemplateInstance<TBinds, TPart> | null = null;
 
   private _status: TemplateStatus = TemplateStatus.Idle;
 
-  constructor(template: Template<TBinds>, binds: TBinds, part: ChildNodePart) {
+  constructor(template: Template<TBinds, TPart>, binds: TBinds, part: TPart) {
     this._template = template;
     this._pendingBinds = binds;
     this._part = part;
   }
 
-  get directive(): Template<TBinds> {
+  get directive(): Template<TBinds, TPart> {
     return this._template;
   }
 
@@ -42,7 +44,7 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     return this._pendingBinds;
   }
 
-  get part(): ChildNodePart {
+  get part(): TPart {
     return this._part;
   }
 
@@ -97,21 +99,19 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
     switch (this._status) {
       case TemplateStatus.Mouting: {
         if (this._templateInstance !== null) {
-          this._templateInstance.mount(this._part);
-          this._templateInstance.commit(context);
+          this._templateInstance.mount(this._part, context);
         }
         break;
       }
       case TemplateStatus.Unmouting: {
         if (this._templateInstance !== null) {
-          this._templateInstance.commit(context);
-          this._templateInstance.unmount(this._part);
+          this._templateInstance.unmount(this._part, context);
           this._templateInstance = null;
         }
         break;
       }
       case TemplateStatus.Dirty: {
-        this._templateInstance?.commit(context);
+        this._templateInstance?.update(this._part, context);
         break;
       }
     }

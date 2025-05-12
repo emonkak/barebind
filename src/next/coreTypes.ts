@@ -1,7 +1,7 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import type { Hook, HookContext, UpdateOptions } from './hook.js';
-import type { ChildNodePart, Part } from './part.js';
+import type { Part } from './part.js';
 
 export const directiveTag: unique symbol = Symbol('DirectiveObject.directive');
 
@@ -33,19 +33,24 @@ export interface Binding<T> extends Effect {
   disconnect(context: UpdateContext): void;
 }
 
-export interface Template<T> extends Directive<T> {
-  render(binds: T, context: DirectiveContext): TemplateInstance<T>;
+export interface Template<TBinds, TPart extends Part = Part>
+  extends Directive<TBinds> {
+  render(
+    binds: TBinds,
+    context: DirectiveContext,
+  ): TemplateInstance<TBinds, TPart>;
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg';
 
-export interface TemplateInstance<TBinds> extends Effect {
+export interface TemplateInstance<TBinds, TPart extends Part> {
   connect(context: UpdateContext): void;
   bind(binds: TBinds, context: UpdateContext): void;
   unbind(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
-  mount(part: ChildNodePart): void;
-  unmount(part: ChildNodePart): void;
+  mount(part: TPart, context: EffectContext): void;
+  unmount(part: TPart, context: EffectContext): void;
+  update(part: TPart, context: EffectContext): void;
 }
 
 export type Component<TProps, TResult> = (
@@ -109,10 +114,10 @@ export interface UpdateContext extends DirectiveContext {
     hooks: Hook[],
     binding: Binding<TProps>,
   ): TResult;
-  renderTemplate<TBinds>(
-    template: Template<TBinds>,
+  renderTemplate<TBinds, TPart extends Part>(
+    template: Template<TBinds, TPart>,
     binds: TBinds,
-  ): TemplateInstance<TBinds>;
+  ): TemplateInstance<TBinds, TPart>;
   scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void>;
   scheduleUpdate(
     binding: Binding<unknown>,

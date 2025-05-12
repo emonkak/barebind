@@ -10,7 +10,7 @@ import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
-export const ChildNodeTemplate: Template<readonly [unknown]> = {
+export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
   render(
     binds: readonly [unknown],
     context: DirectiveContext,
@@ -29,7 +29,7 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
     binds: readonly [unknown],
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [unknown]> {
+  ): TemplateBinding<readonly [unknown], ChildNodePart> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Template directive must be used in a child node, but it is used here in:\n' +
@@ -40,7 +40,7 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
   },
 };
 
-export const TextTemplate: Template<readonly [unknown]> = {
+export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
   render(
     binds: readonly [unknown],
     context: DirectiveContext,
@@ -57,13 +57,13 @@ export const TextTemplate: Template<readonly [unknown]> = {
     binds: readonly [unknown],
     part: ChildNodePart,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [unknown]> {
+  ): TemplateBinding<readonly [unknown], ChildNodePart> {
     return new TemplateBinding(this, binds, part);
   },
 };
 
 export class SingleTemplateInstance<T>
-  implements TemplateInstance<readonly [T]>
+  implements TemplateInstance<readonly [T], ChildNodePart>
 {
   private readonly _binding: Binding<T>;
 
@@ -91,20 +91,22 @@ export class SingleTemplateInstance<T>
     this._binding.disconnect(context);
   }
 
-  commit(context: EffectContext): void {
+  mount(part: ChildNodePart, context: EffectContext): void {
+    part.node.before(this._binding.part.node);
+    this.update(part, context);
+  }
+
+  unmount(part: ChildNodePart, context: EffectContext): void {
+    this.update(part, context);
+    this._binding.part.node.remove();
+  }
+
+  update(_part: ChildNodePart, context: EffectContext): void {
     DEBUG: {
       if (this._binding.part.type === PartType.ChildNode) {
         this._binding.part.node.data = inspectValue(this._binding.value);
       }
     }
     this._binding.commit(context);
-  }
-
-  mount(part: ChildNodePart): void {
-    part.node.before(this._binding.part.node);
-  }
-
-  unmount(_part: ChildNodePart): void {
-    this._binding.part.node.remove();
   }
 }

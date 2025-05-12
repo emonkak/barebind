@@ -254,10 +254,10 @@ export class UpdateEngine implements UpdateContext {
     return element;
   }
 
-  renderTemplate<TBinds>(
-    template: Template<TBinds>,
+  renderTemplate<TBinds, TPart extends Part>(
+    template: Template<TBinds, TPart>,
     binds: TBinds,
-  ): TemplateInstance<TBinds> {
+  ): TemplateInstance<TBinds, TPart> {
     return template.render(binds, this);
   }
 

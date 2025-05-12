@@ -67,7 +67,7 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
 const ERROR_MAKER = '[[ERROR IN HERE!]]';
 
 export class TaggedTemplate<TBinds extends readonly any[]>
-  implements Template<TBinds>
+  implements Template<TBinds, ChildNodePart>
 {
   static parse<TBinds extends readonly any[]>(
     strings: readonly string[],
@@ -208,7 +208,7 @@ export class TaggedTemplate<TBinds extends readonly any[]>
     binds: TBinds,
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<TBinds> {
+  ): TemplateBinding<TBinds, ChildNodePart> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'Template directive must be used in a child node, but it is used here in:\n' +
@@ -220,7 +220,7 @@ export class TaggedTemplate<TBinds extends readonly any[]>
 }
 
 export class TaggedTemplateInstance<TBinds extends readonly any[]>
-  implements TemplateInstance<TBinds>
+  implements TemplateInstance<TBinds, ChildNodePart>
 {
   private readonly _bindings: Binding<unknown>[];
 
@@ -282,7 +282,19 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
     }
   }
 
-  commit(context: EffectContext): void {
+  mount(part: ChildNodePart, context: EffectContext): void {
+    part.node.before(...this._childNodes);
+    this.update(part, context);
+  }
+
+  unmount(part: ChildNodePart, context: EffectContext): void {
+    this.update(part, context);
+    for (let i = 0, l = this._childNodes.length; i < l; i++) {
+      this._childNodes[i]!.remove();
+    }
+  }
+
+  update(_part: ChildNodePart, context: EffectContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       DEBUG: {
@@ -291,17 +303,6 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
         }
       }
       binding.commit(context);
-    }
-  }
-
-  mount(part: ChildNodePart): void {
-    const referenceNode = part.node;
-    referenceNode.before(...this._childNodes);
-  }
-
-  unmount(_part: ChildNodePart): void {
-    for (let i = 0, l = this._childNodes.length; i < l; i++) {
-      this._childNodes[i]!.remove();
     }
   }
 }
