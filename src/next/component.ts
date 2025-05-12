@@ -9,9 +9,8 @@ import {
   type UpdateContext,
   createDirectiveElement,
 } from './coreTypes.js';
-import { inspectPart, markUsedValue } from './debug.js';
 import { type EffectHook, type Hook, HookType } from './hook.js';
-import { type ChildNodePart, type Part, PartType } from './part.js';
+import type { Part } from './part.js';
 import { SuspenseBinding } from './suspense.js';
 
 const componentDirectiveTag = Symbol('Component.directive');
@@ -32,12 +31,6 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
     part: Part,
     _context: DirectiveContext,
   ): SuspenseBinding<TProps> {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'Component directive must be used in a child node, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(component)),
-      );
-    }
     return new SuspenseBinding(new ComponentBinding(this, props, part));
   }
 }
@@ -45,23 +38,21 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
 class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   private readonly _directive: ComponentDirective<TProps, TResult>;
 
-  private _pendingProps: TProps;
-
-  private _memoizedProps: TProps | null = null;
+  private _props: TProps;
 
   private _binding: Binding<TResult> | null = null;
 
-  private readonly _part: ChildNodePart;
+  private readonly _part: Part;
 
   private _hooks: Hook[] = [];
 
   constructor(
     directive: ComponentDirective<TProps, TResult>,
     props: TProps,
-    part: ChildNodePart,
+    part: Part,
   ) {
     this._directive = directive;
-    this._pendingProps = props;
+    this._props = props;
     this._part = part;
   }
 
@@ -70,17 +61,17 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   get value(): TProps {
-    return this._pendingProps;
+    return this._props;
   }
 
-  get part(): ChildNodePart {
+  get part(): Part {
     return this._part;
   }
 
   connect(context: UpdateContext): void {
     const element = context.renderComponent(
       this._directive.component,
-      this._pendingProps,
+      this._props,
       this._hooks,
       this,
     );
@@ -93,21 +84,19 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   bind(props: TProps, context: UpdateContext): void {
-    if (props !== this._memoizedProps) {
-      const element = context.renderComponent(
-        this._directive.component,
-        props,
-        this._hooks,
-        this,
-      );
-      if (this._binding !== null) {
-        this._binding = context.reconcileBinding(this._binding, element);
-      } else {
-        this._binding = context.resolveBinding(element, this._part);
-        this._binding.connect(context);
-      }
+    const element = context.renderComponent(
+      this._directive.component,
+      props,
+      this._hooks,
+      this,
+    );
+    if (this._binding !== null) {
+      this._binding = context.reconcileBinding(this._binding, element);
+    } else {
+      this._binding = context.resolveBinding(element, this._part);
+      this._binding.connect(context);
     }
-    this._pendingProps = props;
+    this._props = props;
   }
 
   unbind(context: UpdateContext): void {
@@ -124,7 +113,6 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   commit(context: EffectContext): void {
     this._binding?.commit(context);
-    this._memoizedProps = this._pendingProps;
   }
 }
 
