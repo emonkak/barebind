@@ -56,6 +56,8 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
       this.shouldUpdate(this._pendingValue, this._memoizedValue)
     ) {
       this._status = PrimitiveStatus.Mounting;
+    } else {
+      this._status = PrimitiveStatus.Idle;
     }
     this._pendingValue = value;
   }
