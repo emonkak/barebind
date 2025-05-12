@@ -33,7 +33,7 @@ type Action<TKey, TValue> =
     }
   | { type: ActionType.Unmount; slot: Slot<TKey, TValue> };
 
-enum ActionType {
+const enum ActionType {
   Mount,
   Update,
   Move,

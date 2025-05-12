@@ -35,10 +35,18 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   }
 }
 
+const enum ComponentStatus {
+  Idle,
+  Mounting,
+  Unmounting,
+}
+
 class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   private readonly _directive: ComponentDirective<TProps, TResult>;
 
-  private _props: TProps;
+  private _pendingProps: TProps;
+
+  private _memoizedProps: TProps | null = null;
 
   private _binding: Binding<TResult> | null = null;
 
@@ -46,13 +54,15 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   private _hooks: Hook[] = [];
 
+  private _status = ComponentStatus.Idle;
+
   constructor(
     directive: ComponentDirective<TProps, TResult>,
     props: TProps,
     part: Part,
   ) {
     this._directive = directive;
-    this._props = props;
+    this._pendingProps = props;
     this._part = part;
   }
 
@@ -61,7 +71,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   get value(): TProps {
-    return this._props;
+    return this._pendingProps;
   }
 
   get part(): Part {
@@ -71,7 +81,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   connect(context: UpdateContext): void {
     const element = context.renderComponent(
       this._directive.component,
-      this._props,
+      this._pendingProps,
       this._hooks,
       this,
     );
@@ -84,35 +94,52 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   bind(props: TProps, context: UpdateContext): void {
-    const element = context.renderComponent(
-      this._directive.component,
-      props,
-      this._hooks,
-      this,
-    );
-    if (this._binding !== null) {
-      this._binding = context.reconcileBinding(this._binding, element);
+    if (props !== this._memoizedProps) {
+      const element = context.renderComponent(
+        this._directive.component,
+        props,
+        this._hooks,
+        this,
+      );
+      if (this._binding !== null) {
+        this._binding = context.reconcileBinding(this._binding, element);
+      } else {
+        this._binding = context.resolveBinding(element, this._part);
+        this._binding.connect(context);
+      }
+      this._status = ComponentStatus.Mounting;
     } else {
-      this._binding = context.resolveBinding(element, this._part);
-      this._binding.connect(context);
+      this._status = ComponentStatus.Idle;
     }
-    this._props = props;
+    this._pendingProps = props;
   }
 
   unbind(context: UpdateContext): void {
     requestCleanHooks(this._hooks, context);
     this._binding?.unbind(context);
     this._hooks = [];
+    this._status = ComponentStatus.Unmounting;
   }
 
   disconnect(context: UpdateContext): void {
     requestCleanHooks(this._hooks, context);
     this._binding?.disconnect(context);
     this._hooks = [];
+    this._status = ComponentStatus.Idle;
   }
 
   commit(context: EffectContext): void {
-    this._binding?.commit(context);
+    switch (this._status) {
+      case ComponentStatus.Mounting:
+        this._binding?.commit(context);
+        this._memoizedProps = this._pendingProps;
+        break;
+      case ComponentStatus.Unmounting:
+        this._binding?.commit(context);
+        this._memoizedProps = null;
+        break;
+    }
+    this._status = ComponentStatus.Idle;
   }
 }
 

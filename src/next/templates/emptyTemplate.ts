@@ -39,7 +39,7 @@ export const EmptyTemplateInstance: TemplateInstance<
   bind(_binds: readonly [], _context: UpdateContext): void {},
   unbind(_context: UpdateContext): void {},
   disconnect(_context: UpdateContext): void {},
-  mount(_part: ChildNodePart, _context: EffectContext): void {},
-  unmount(_part: ChildNodePart, _context: EffectContext): void {},
-  update(_part: ChildNodePart, _context: EffectContext): void {},
+  mount(_part: ChildNodePart): void {},
+  unmount(_part: ChildNodePart): void {},
+  commit(_context: EffectContext): void {},
 };

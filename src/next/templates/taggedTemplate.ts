@@ -282,24 +282,22 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
     }
   }
 
-  mount(part: ChildNodePart, context: EffectContext): void {
+  mount(part: ChildNodePart): void {
     part.node.before(...this._childNodes);
-    this.update(part, context);
   }
 
-  unmount(part: ChildNodePart, context: EffectContext): void {
-    this.update(part, context);
+  unmount(): void {
     for (let i = 0, l = this._childNodes.length; i < l; i++) {
       this._childNodes[i]!.remove();
     }
   }
 
-  update(_part: ChildNodePart, context: EffectContext): void {
+  commit(context: EffectContext): void {
     for (let i = 0, l = this._bindings.length; i < l; i++) {
       const binding = this._bindings[i]!;
       DEBUG: {
         if (binding.part.type === PartType.ChildNode) {
-          binding.part.node.data = inspectValue(binding.value);
+          binding.part.node.data = inspectValue(binding.directive);
         }
       }
       binding.commit(context);

@@ -91,17 +91,15 @@ export class SingleTemplateInstance<T>
     this._binding.disconnect(context);
   }
 
-  mount(part: ChildNodePart, context: EffectContext): void {
+  mount(part: ChildNodePart): void {
     part.node.before(this._binding.part.node);
-    this.update(part, context);
   }
 
-  unmount(part: ChildNodePart, context: EffectContext): void {
-    this.update(part, context);
+  unmount(_part: ChildNodePart): void {
     this._binding.part.node.remove();
   }
 
-  update(_part: ChildNodePart, context: EffectContext): void {
+  commit(context: EffectContext): void {
     DEBUG: {
       if (this._binding.part.type === PartType.ChildNode) {
         this._binding.part.node.data = inspectValue(this._binding.value);

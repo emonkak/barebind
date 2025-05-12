@@ -8,10 +8,10 @@ import type {
 } from './coreTypes.js';
 import type { Part } from './part.js';
 
-enum TemplateStatus {
+const enum TemplateStatus {
   Idle,
-  Dirty,
   Mouting,
+  Updating,
   Unmouting,
 }
 
@@ -51,7 +51,7 @@ export class TemplateBinding<TBinds, TPart extends Part>
   connect(context: UpdateContext): void {
     if (this._templateInstance !== null) {
       this._templateInstance.connect(context);
-      this._status = TemplateStatus.Dirty;
+      this._status = TemplateStatus.Updating;
     } else {
       this._templateInstance = context.renderTemplate(
         this._template,
@@ -66,7 +66,7 @@ export class TemplateBinding<TBinds, TPart extends Part>
     if (this._templateInstance !== null) {
       if (binds !== this._memoizedBinds) {
         this._templateInstance.bind(binds, context);
-        this._status = TemplateStatus.Dirty;
+        this._status = TemplateStatus.Updating;
       } else {
         this._status = TemplateStatus.Idle;
       }
@@ -99,23 +99,27 @@ export class TemplateBinding<TBinds, TPart extends Part>
     switch (this._status) {
       case TemplateStatus.Mouting: {
         if (this._templateInstance !== null) {
-          this._templateInstance.mount(this._part, context);
+          this._templateInstance.mount(this._part);
+          this._templateInstance.commit(context);
         }
+        this._memoizedBinds = this._pendingBinds;
+        break;
+      }
+      case TemplateStatus.Updating: {
+        this._templateInstance?.commit(context);
+        this._memoizedBinds = this._pendingBinds;
         break;
       }
       case TemplateStatus.Unmouting: {
         if (this._templateInstance !== null) {
-          this._templateInstance.unmount(this._part, context);
+          this._templateInstance.unmount(this._part);
+          this._templateInstance.commit(context);
           this._templateInstance = null;
+          this._memoizedBinds = null;
         }
         break;
       }
-      case TemplateStatus.Dirty: {
-        this._templateInstance?.update(this._part, context);
-        break;
-      }
     }
-    this._memoizedBinds = this._pendingBinds;
     this._status = TemplateStatus.Idle;
   }
 }

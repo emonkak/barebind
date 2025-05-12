@@ -12,7 +12,7 @@ export interface Primitive<T> extends Directive<T> {
 
 export const noValue: unique symbol = Symbol('noValue');
 
-enum PrimitiveStatus {
+const enum PrimitiveStatus {
   Idle,
   Mounting,
   Unmouting,

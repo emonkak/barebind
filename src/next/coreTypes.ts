@@ -43,14 +43,13 @@ export interface Template<TBinds, TPart extends Part = Part>
 
 export type TemplateMode = 'html' | 'math' | 'svg';
 
-export interface TemplateInstance<TBinds, TPart extends Part> {
+export interface TemplateInstance<TBinds, TPart extends Part> extends Effect {
   connect(context: UpdateContext): void;
   bind(binds: TBinds, context: UpdateContext): void;
   unbind(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
-  mount(part: TPart, context: EffectContext): void;
-  unmount(part: TPart, context: EffectContext): void;
-  update(part: TPart, context: EffectContext): void;
+  mount(part: TPart): void;
+  unmount(part: TPart): void;
 }
 
 export type Component<TProps, TResult> = (
