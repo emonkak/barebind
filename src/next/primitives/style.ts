@@ -18,6 +18,9 @@ const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export const StylePrimitive: Primitive<StyleValue> = {
+  get name(): string {
+    return 'StylePrimitive';
+  },
   ensureValue(value: unknown, part: Part): asserts value is StyleValue {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(

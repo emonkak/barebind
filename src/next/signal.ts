@@ -7,7 +7,6 @@ import {
   type UpdateContext,
   directiveTag,
 } from './coreTypes.js';
-import { inspectValue } from './debug.js';
 import { type HookContext, type UserHook, userHookTag } from './hook.js';
 import { LinkedList } from './linkedList.js';
 import type { Part } from './part.js';
@@ -17,6 +16,9 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 const SignalDirective: Directive<Signal<unknown>> = {
+  get name(): string {
+    return 'Signal';
+  },
   resolveBinding(
     value: Signal<unknown>,
     part: Part,
@@ -36,10 +38,6 @@ export abstract class Signal<T>
 
   get [directiveTag](): Directive<Signal<T>> {
     return SignalDirective as Directive<Signal<T>>;
-  }
-
-  get [Symbol.toStringTag](): string {
-    return `Signal(${inspectValue(this.value)})`;
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;

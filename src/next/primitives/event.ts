@@ -6,6 +6,9 @@ import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
 export type EventValue = EventListenerOrEventListenerObject | null | undefined;
 
 export const EventPrimitive: Primitive<EventValue> = {
+  get name(): string {
+    return 'EventPrimitive';
+  },
   ensureValue(value: unknown, part: Part): asserts value is EventValue {
     if (
       !(

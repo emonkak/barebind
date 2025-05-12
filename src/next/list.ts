@@ -76,6 +76,9 @@ export function sortableList<TItem, TKey, TValue>(
 }
 
 const List: Directive<ListValue<unknown, unknown, unknown>> = {
+  get name(): string {
+    return 'List';
+  },
   resolveBinding(
     value: ListValue<unknown, unknown, unknown>,
     part: Part,
@@ -337,7 +340,7 @@ function commitMount<TKey, TValue>(
 ): void {
   referenceNode.before(sentinelNode, binding.part.node);
   DEBUG: {
-    sentinelNode.nodeValue = `${inspectValue(key)}: ${inspectValue(binding.value)})>`;
+    sentinelNode.nodeValue = `${inspectValue(key)}: ${binding.directive.name})>`;
     binding.part.node.nodeValue = `${inspectValue(key)}: END`;
   }
   binding.commit(context);
@@ -374,7 +377,7 @@ function commitUpdate<TKey, TValue>(
   context: EffectContext,
 ): void {
   DEBUG: {
-    sentinelNode.nodeValue = `${inspectValue(key)}: ${inspectValue(binding.value)})>`;
+    sentinelNode.nodeValue = `${inspectValue(key)}: ${binding.directive.name})>`;
     binding.part.node.nodeValue = `${inspectValue(key)}: END`;
   }
   binding.commit(context);

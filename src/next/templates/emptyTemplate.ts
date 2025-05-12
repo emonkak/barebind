@@ -10,6 +10,9 @@ import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
 export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
+  get name(): string {
+    return 'EmptyTemplate';
+  },
   render(
     _binds: readonly [],
     _context: DirectiveContext,

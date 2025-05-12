@@ -10,6 +10,9 @@ export type ClassMap = { [key: string]: boolean };
 export type ClassValue = string | ClassMap | ClassValue[];
 
 export const ClassPrimitive: Primitive<ClassValue> = {
+  get name(): string {
+    return 'ClassPrimitive';
+  },
   ensureValue(value: unknown, part: Part): asserts value is ClassValue {
     if (
       !(

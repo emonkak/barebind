@@ -9,6 +9,9 @@ export type RefValue = RefCallback<Element> | RefObject<Element | null>;
 export type RefCallback<T> = (value: T) => VoidFunction | void;
 
 export const RefPrimitive: Primitive<RefValue> = {
+  get name(): string {
+    return 'RefPrimitive';
+  },
   ensureValue(value: unknown, part: Part): asserts value is RefValue {
     if (
       !(

@@ -7,7 +7,7 @@ import type {
   TemplateMode,
   UpdateContext,
 } from '../coreTypes.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
@@ -100,6 +100,10 @@ export class TaggedTemplate<TBinds extends readonly any[]>
   private constructor(element: HTMLTemplateElement, holes: Hole[]) {
     this._element = element;
     this._holes = holes;
+  }
+
+  get name(): string {
+    return 'TaggedTemplate';
   }
 
   get element(): HTMLTemplateElement {
@@ -297,7 +301,7 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
       const binding = this._bindings[i]!;
       DEBUG: {
         if (binding.part.type === PartType.ChildNode) {
-          binding.part.node.data = inspectValue(binding.directive);
+          binding.part.node.data = binding.directive.name;
         }
       }
       binding.commit(context);

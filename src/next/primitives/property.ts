@@ -4,6 +4,9 @@ import { type Part, PartType, type PropertyPart } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
 export const PropertyPrimitive: Primitive<unknown> = {
+  get name(): string {
+    return 'PropertyPrimitive';
+  },
   ensureValue(
     _value: unknown,
     _part: PropertyPart,

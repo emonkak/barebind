@@ -24,7 +24,15 @@ export function component<TProps, TResult>(
 }
 
 class ComponentDirective<TProps, TResult> implements Directive<TProps> {
-  constructor(readonly component: Component<TProps, TResult>) {}
+  readonly component: Component<TProps, TResult>;
+
+  constructor(component: Component<TProps, TResult>) {
+    this.component = component;
+  }
+
+  get name(): string {
+    return this.component.name;
+  }
 
   resolveBinding(
     props: TProps,

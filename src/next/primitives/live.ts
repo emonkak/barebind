@@ -4,6 +4,9 @@ import { type LivePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
 export const LivePrimitive: Primitive<unknown> = {
+  get name(): string {
+    return 'LivePrimitive';
+  },
   ensureValue(_value: unknown, _part: Part): asserts _value is unknown {},
   resolveBinding(
     value: unknown,

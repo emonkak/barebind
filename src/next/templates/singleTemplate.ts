@@ -6,11 +6,14 @@ import type {
   TemplateInstance,
   UpdateContext,
 } from '../coreTypes.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
 export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
+  get name(): string {
+    return 'ChildNodeTemplate';
+  },
   render(
     binds: readonly [unknown],
     context: DirectiveContext,
@@ -21,7 +24,7 @@ export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
     } as const;
     const binding = context.resolveBinding(binds[0], part);
     DEBUG: {
-      part.node.data = inspectValue(binds[0]);
+      part.node.data = binding.directive.name;
     }
     return new SingleTemplateInstance(binding);
   },
@@ -41,6 +44,9 @@ export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
 };
 
 export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
+  get name(): string {
+    return 'TextTemplate';
+  },
   render(
     binds: readonly [unknown],
     context: DirectiveContext,
@@ -102,7 +108,7 @@ export class SingleTemplateInstance<T>
   commit(context: EffectContext): void {
     DEBUG: {
       if (this._binding.part.type === PartType.ChildNode) {
-        this._binding.part.node.data = inspectValue(this._binding.value);
+        this._binding.part.node.data = this._binding.directive.name;
       }
     }
     this._binding.commit(context);

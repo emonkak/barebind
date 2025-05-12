@@ -8,6 +8,7 @@ export const directiveTag: unique symbol = Symbol('DirectiveObject.directive');
 const directiveElementTag = Symbol('DirectiveElement');
 
 export interface Directive<T> {
+  get name(): string;
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 

@@ -14,6 +14,9 @@ export function memo<T>(value: T): DirectiveElement<T> {
 }
 
 const Memo: Directive<unknown> = {
+  get name(): string {
+    return 'Memo';
+  },
   resolveBinding(
     value: unknown,
     part: Part,

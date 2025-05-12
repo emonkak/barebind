@@ -11,6 +11,9 @@ import type { Primitive } from './primitive.js';
 export type SpreadValue = { [key: string]: unknown };
 
 export const SpreadPrimitive: Primitive<SpreadValue> = {
+  get name(): string {
+    return 'SpreadPrimitive';
+  },
   ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
     if (!isSpreadProps(value)) {
       throw new Error(
