@@ -20,7 +20,7 @@ export interface RenderHost {
   getTaskPriority(): TaskPriority;
   createTemplate(
     strings: readonly string[],
-    binds: unknown[],
+    binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
@@ -44,7 +44,7 @@ export interface BrowserHostOptions {
 export class BrowserHost implements RenderHost {
   createTemplate(
     strings: readonly string[],
-    binds: unknown[],
+    binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {

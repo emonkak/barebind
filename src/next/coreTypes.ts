@@ -79,27 +79,27 @@ export enum CommitPhase {
 export interface RenderContext extends HookContext {
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]>;
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]>;
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]>;
   html(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]>;
   math(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]>;
   svg(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]>;
 }
 

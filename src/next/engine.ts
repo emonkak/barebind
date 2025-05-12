@@ -191,7 +191,7 @@ export class UpdateEngine implements UpdateContext {
 
   getTemplate(
     strings: readonly string[],
-    binds: unknown[],
+    binds: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     let template = this._globalState.cachedTemplates.get(strings);
@@ -332,21 +332,21 @@ export class RenderEngine implements RenderContext {
 
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
@@ -383,14 +383,14 @@ export class RenderEngine implements RenderContext {
 
   html(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]> {
     return this._template(strings, binds, 'html');
   }
 
   math(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]> {
     return this._template(strings, binds, 'math');
   }
@@ -401,7 +401,7 @@ export class RenderEngine implements RenderContext {
 
   svg(
     strings: TemplateStringsArray,
-    ...binds: unknown[]
+    ...binds: readonly unknown[]
   ): DirectiveElement<readonly unknown[]> {
     return this._template(strings, binds, 'svg');
   }
@@ -582,7 +582,7 @@ export class RenderEngine implements RenderContext {
 
   private _dynamicTemplate(
     strings: TemplateStringsArray,
-    binds: unknown[],
+    binds: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveElement<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
@@ -600,7 +600,7 @@ export class RenderEngine implements RenderContext {
 
   private _template(
     strings: TemplateStringsArray,
-    binds: unknown[],
+    binds: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveElement<readonly unknown[]> {
     const template = this._updateEngine.getTemplate(strings, binds, mode);
