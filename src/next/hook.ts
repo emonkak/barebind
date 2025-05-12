@@ -1,3 +1,5 @@
+/// <reference path="../../typings/scheduler.d.ts" />
+
 export const userHookTag: unique symbol = Symbol('UserHook');
 
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;

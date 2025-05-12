@@ -1,7 +1,9 @@
+/// <reference path="../../typings/scheduler.d.ts" />
+
 import type { Hook, HookContext, UpdateOptions } from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
 
-export const directiveTag = Symbol('DirectiveObject.directive');
+export const directiveTag: unique symbol = Symbol('DirectiveObject.directive');
 
 const directiveElementTag = Symbol('DirectiveElement');
 

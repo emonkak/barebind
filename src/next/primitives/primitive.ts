@@ -10,7 +10,7 @@ export interface Primitive<T> extends Directive<T> {
   ensureValue(value: unknown, part: Part): asserts value is T;
 }
 
-export const noValue = Symbol('noValue');
+export const noValue: unique symbol = Symbol('noValue');
 
 enum PrimitiveStatus {
   Idle,
