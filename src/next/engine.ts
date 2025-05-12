@@ -334,51 +334,21 @@ export class RenderEngine implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const { strings: expandedStrings, values: expandedBinds } =
-      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
-        strings,
-        binds,
-      );
-    const template = this._updateEngine.getTemplate(
-      expandedStrings,
-      expandedBinds,
-      'html',
-    );
-    return createDirectiveElement(template, binds);
+    return this._dynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const { strings: expandedStrings, values: expandedBinds } =
-      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
-        strings,
-        binds,
-      );
-    const template = this._updateEngine.getTemplate(
-      expandedStrings,
-      expandedBinds,
-      'math',
-    );
-    return createDirectiveElement(template, binds);
+    return this._dynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const { strings: expandedStrings, values: expandedBinds } =
-      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
-        strings,
-        binds,
-      );
-    const template = this._updateEngine.getTemplate(
-      expandedStrings,
-      expandedBinds,
-      'svg',
-    );
-    return createDirectiveElement(template, binds);
+    return this._dynamicTemplate(strings, binds, 'svg');
   }
 
   getContextualValue<T>(key: ContextualKey<T>): T {
@@ -415,16 +385,14 @@ export class RenderEngine implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const template = this._updateEngine.getTemplate(strings, binds, 'html');
-    return createDirectiveElement(template, binds);
+    return this._template(strings, binds, 'html');
   }
 
   math(
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const template = this._updateEngine.getTemplate(strings, binds, 'math');
-    return createDirectiveElement(template, binds);
+    return this._template(strings, binds, 'math');
   }
 
   setContextualValue<T>(key: ContextualKey<T>, value: T): void {
@@ -435,8 +403,7 @@ export class RenderEngine implements RenderContext {
     strings: TemplateStringsArray,
     ...binds: unknown[]
   ): DirectiveElement<readonly unknown[]> {
-    const template = this._updateEngine.getTemplate(strings, binds, 'svg');
-    return createDirectiveElement(template, binds);
+    return this._template(strings, binds, 'svg');
   }
 
   use<T>(hook: UserHook<T>): T;
@@ -611,6 +578,33 @@ export class RenderEngine implements RenderContext {
       [subscribe],
     );
     return getSnapshot();
+  }
+
+  private _dynamicTemplate(
+    strings: TemplateStringsArray,
+    binds: unknown[],
+    mode: TemplateMode,
+  ): DirectiveElement<readonly unknown[]> {
+    const { strings: expandedStrings, values: expandedBinds } =
+      this._updateEngine.templateLiteralPreprocessor.expandLiterals(
+        strings,
+        binds,
+      );
+    const template = this._updateEngine.getTemplate(
+      expandedStrings,
+      expandedBinds,
+      mode,
+    );
+    return createDirectiveElement(template, binds);
+  }
+
+  private _template(
+    strings: TemplateStringsArray,
+    binds: unknown[],
+    mode: TemplateMode,
+  ): DirectiveElement<readonly unknown[]> {
+    const template = this._updateEngine.getTemplate(strings, binds, mode);
+    return createDirectiveElement(template, binds);
   }
 }
 
