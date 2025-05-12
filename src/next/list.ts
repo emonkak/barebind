@@ -15,8 +15,8 @@ import { type ChildNodePart, type Part, PartType } from './part.js';
 
 export type ListValue<TItem, TKey, TResult> = {
   items: readonly TItem[] | Iterable<TItem>;
-  keySelector?: (item: TItem, index: number) => TKey;
-  valueSelector?: (item: TItem, index: number) => TResult;
+  keySelector: (item: TItem, index: number) => TKey;
+  valueSelector: (item: TItem, index: number) => TResult;
 };
 
 type Action<TKey, TValue> =
@@ -46,12 +46,32 @@ interface Slot<TKey, TValue> {
   key: TKey;
 }
 
-export function list<TItem, TKey, TValue>(
-  value: ListValue<TItem, TKey, TValue>,
+export function inPlaceList<TItem, TKey, TValue>(
+  items: readonly TItem[] | Iterable<TItem>,
+  valueSelector: (item: TItem, key: number) => TValue = defaultValueSelector,
 ): DirectiveElement<ListValue<TItem, TKey, TValue>> {
   return createDirectiveElement(
     List as Directive<ListValue<TItem, TKey, TValue>>,
-    value,
+    {
+      items,
+      keySelector: defaultKeySelector,
+      valueSelector,
+    },
+  );
+}
+
+export function sortableList<TItem, TKey, TValue>(
+  items: readonly TItem[] | Iterable<TItem>,
+  keySelector: (item: TItem, key: number) => TKey,
+  valueSelector: (item: TItem, key: number) => TValue = defaultValueSelector,
+): DirectiveElement<ListValue<TItem, TKey, TValue>> {
+  return createDirectiveElement(
+    List as Directive<ListValue<TItem, TKey, TValue>>,
+    {
+      items,
+      keySelector,
+      valueSelector,
+    },
   );
 }
 
@@ -168,11 +188,7 @@ class ListBinding<TItem, TKey, TValue>
   }
 
   private _reconcileItems(
-    {
-      items,
-      keySelector = defaultKeySelector,
-      valueSelector = defaultValueSelector,
-    }: ListValue<TItem, TKey, TValue>,
+    { items, keySelector, valueSelector }: ListValue<TItem, TKey, TValue>,
     context: UpdateContext,
   ): void {
     const oldSlots = this._memoizedSlots;
