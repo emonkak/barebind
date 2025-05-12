@@ -11,7 +11,6 @@ import type { Part } from './part.js';
 const enum TemplateStatus {
   Idle,
   Mouting,
-  Updating,
   Unmouting,
 }
 
@@ -26,7 +25,9 @@ export class TemplateBinding<TBinds, TPart extends Part>
 
   private readonly _part: TPart;
 
-  private _templateInstance: TemplateInstance<TBinds, TPart> | null = null;
+  private _pendingInstance: TemplateInstance<TBinds, TPart> | null = null;
+
+  private _memoizedInstance: TemplateInstance<TBinds, TPart> | null = null;
 
   private _status: TemplateStatus = TemplateStatus.Idle;
 
@@ -40,50 +41,49 @@ export class TemplateBinding<TBinds, TPart extends Part>
     return this._template;
   }
 
-  get value(): TBinds {
-    return this._pendingBinds;
-  }
-
   get part(): TPart {
     return this._part;
   }
 
+  get value(): TBinds {
+    return this._pendingBinds;
+  }
+
   connect(context: UpdateContext): void {
-    if (this._templateInstance !== null) {
-      this._templateInstance.connect(context);
-      this._status = TemplateStatus.Updating;
+    if (this._pendingInstance !== null) {
+      this._pendingInstance.connect(context);
     } else {
-      this._templateInstance = context.renderTemplate(
+      this._pendingInstance = context.renderTemplate(
         this._template,
         this._pendingBinds,
       );
-      this._templateInstance.connect(context);
-      this._status = TemplateStatus.Mouting;
+      this._pendingInstance.connect(context);
     }
+    this._status = TemplateStatus.Mouting;
   }
 
   bind(binds: TBinds, context: UpdateContext): void {
-    if (this._templateInstance !== null) {
+    if (this._pendingInstance !== null) {
       if (binds !== this._memoizedBinds) {
-        this._templateInstance.bind(binds, context);
-        this._status = TemplateStatus.Updating;
+        this._pendingInstance.bind(binds, context);
+        this._status = TemplateStatus.Mouting;
       } else {
         this._status = TemplateStatus.Idle;
       }
     } else {
-      this._templateInstance = context.renderTemplate(
+      this._pendingInstance = context.renderTemplate(
         this._template,
         this._pendingBinds,
       );
-      this._templateInstance.connect(context);
+      this._pendingInstance.connect(context);
       this._status = TemplateStatus.Mouting;
     }
     this._pendingBinds = binds;
   }
 
   unbind(context: UpdateContext): void {
-    if (this._templateInstance !== null) {
-      this._templateInstance.unbind(context);
+    if (this._memoizedInstance !== null) {
+      this._memoizedInstance.unbind(context);
       this._status = TemplateStatus.Unmouting;
     } else {
       this._status = TemplateStatus.Idle;
@@ -91,32 +91,30 @@ export class TemplateBinding<TBinds, TPart extends Part>
   }
 
   disconnect(context: UpdateContext): void {
-    this._templateInstance?.disconnect(context);
+    this._memoizedInstance?.disconnect(context);
     this._status = TemplateStatus.Idle;
   }
 
   commit(context: EffectContext): void {
     switch (this._status) {
       case TemplateStatus.Mouting: {
-        if (this._templateInstance !== null) {
-          this._templateInstance.mount(this._part);
-          this._templateInstance.commit(context);
+        if (this._pendingInstance !== null) {
+          if (this._memoizedInstance === null) {
+            this._pendingInstance.mount(this._part);
+          }
+          this._pendingInstance.commit(context);
         }
-        this._memoizedBinds = this._pendingBinds;
-        break;
-      }
-      case TemplateStatus.Updating: {
-        this._templateInstance?.commit(context);
+        this._memoizedInstance = this._pendingInstance;
         this._memoizedBinds = this._pendingBinds;
         break;
       }
       case TemplateStatus.Unmouting: {
-        if (this._templateInstance !== null) {
-          this._templateInstance.unmount(this._part);
-          this._templateInstance.commit(context);
-          this._templateInstance = null;
-          this._memoizedBinds = null;
+        if (this._memoizedInstance !== null) {
+          this._memoizedInstance.unmount(this._part);
+          this._memoizedInstance.commit(context);
         }
+        this._memoizedInstance = null;
+        this._memoizedBinds = null;
         break;
       }
     }

@@ -86,7 +86,7 @@ export class SpreadBinding implements Binding<SpreadValue> {
 
   commit(context: EffectContext): void {
     for (const [name, binding] of this._memoizedBindings.entries()) {
-      if (!this._pendingBindings.has(name)) {
+      if (binding !== this._pendingBindings.get(name)) {
         binding.commit(context);
       }
     }

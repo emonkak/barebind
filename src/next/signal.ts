@@ -193,15 +193,17 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 }
 
 class SignalBinding<T> implements Binding<Signal<T>> {
-  private _binding: Binding<T>;
+  private _pendingBinding: Binding<T>;
 
-  private _value: Signal<T>;
+  private _memoizedBinding: Binding<T> | null = null;
+
+  private _signal: Signal<T>;
 
   private _subscription: Subscription | null = null;
 
   constructor(binding: Binding<T>, value: Signal<T>) {
-    this._binding = binding;
-    this._value = value;
+    this._pendingBinding = binding;
+    this._signal = value;
   }
 
   get directive(): Directive<Signal<T>> {
@@ -209,39 +211,53 @@ class SignalBinding<T> implements Binding<Signal<T>> {
   }
 
   get value(): Signal<T> {
-    return this._value;
+    return this._signal;
   }
 
   get part(): Part {
-    return this._binding.part;
+    return this._pendingBinding.part;
   }
 
   connect(context: UpdateContext): void {
-    this._binding.connect(context);
-    this._beginSubscription(context);
+    if (this._signal.version > 0) {
+      this._pendingBinding = context.reconcileBinding(
+        this._pendingBinding,
+        this._signal.value,
+      );
+    } else {
+      this._pendingBinding.connect(context);
+    }
+    this._subscription ??= this._createSubscription(context);
   }
 
-  bind(value: Signal<T>, context: UpdateContext): void {
-    if (value !== this._value) {
+  bind(signal: Signal<T>, context: UpdateContext): void {
+    if (signal !== this._signal) {
       this._abortSubscription();
     }
-    this._binding = context.reconcileBinding(this._binding, value.value);
-    this._value = value;
-    this._beginSubscription(context);
+    this._pendingBinding = context.reconcileBinding(
+      this._pendingBinding,
+      signal.value,
+    );
+    this._signal = signal;
+    this._subscription ??= this._createSubscription(context);
   }
 
   unbind(context: UpdateContext): void {
     this._abortSubscription();
-    this._binding.unbind(context);
+    this._memoizedBinding?.unbind(context);
   }
 
   disconnect(context: UpdateContext): void {
     this._abortSubscription();
-    this._binding.disconnect(context);
+    this._memoizedBinding?.disconnect(context);
   }
 
   commit(context: EffectContext): void {
-    this._binding.commit(context);
+    if (this._memoizedBinding !== this._pendingBinding) {
+      this._memoizedBinding?.commit(context);
+    }
+    this._pendingBinding.commit(context);
+    this._memoizedBinding = this._pendingBinding;
   }
 
   private _abortSubscription(): void {
@@ -249,13 +265,9 @@ class SignalBinding<T> implements Binding<Signal<T>> {
     this._subscription = null;
   }
 
-  private _beginSubscription(context: UpdateContext): void {
-    this._subscription ??= this._value.subscribe(() => {
-      this._binding = context.reconcileBinding(
-        this._binding,
-        this._value.value,
-      );
-      context.scheduleEffect(this._binding, { priority: 'background' });
+  private _createSubscription(context: UpdateContext): Subscription {
+    return this._signal.subscribe(() => {
+      context.scheduleUpdate(this._pendingBinding, { priority: 'background' });
     });
   }
 }

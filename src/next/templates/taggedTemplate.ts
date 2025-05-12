@@ -226,17 +226,19 @@ export class TaggedTemplate<TBinds extends readonly any[]>
 export class TaggedTemplateInstance<TBinds extends readonly any[]>
   implements TemplateInstance<TBinds, ChildNodePart>
 {
-  private readonly _bindings: Binding<unknown>[];
+  private readonly _pendingBindings: Binding<unknown>[];
+
+  private _memoizedBindings: Binding<unknown>[] | null = null;
 
   private readonly _childNodes: ChildNode[];
 
   constructor(bindings: Binding<unknown>[], childNodes: ChildNode[]) {
-    this._bindings = bindings;
+    this._pendingBindings = bindings;
     this._childNodes = childNodes;
   }
 
   get bindings(): Binding<unknown>[] {
-    return this._bindings;
+    return this._pendingBindings;
   }
 
   get childNodes(): ChildNode[] {
@@ -244,45 +246,49 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
   }
 
   connect(context: UpdateContext): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.connect(context);
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      this._pendingBindings[i]!.connect(context);
     }
   }
 
   bind(binds: TBinds, context: UpdateContext): void {
     DEBUG: {
-      assertNumberOfBinds(this._bindings.length, binds.length);
+      assertNumberOfBinds(this._pendingBindings.length, binds.length);
     }
 
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      const binding = this._bindings[i]!;
-      binding.bind(binds[i]!, context);
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      const binding = this._pendingBindings[i]!;
+      this._pendingBindings[i] = context.reconcileBinding(binding, binds[i]!);
     }
   }
 
   unbind(context: UpdateContext): void {
-    // Unbind in reverse order.
-    for (let i = this._bindings.length - 1; i >= 0; i--) {
-      const binding = this._bindings[i]!;
-      const part = binding.part;
+    if (this._memoizedBindings !== null) {
+      // Unbind in reverse order.
+      for (let i = this._memoizedBindings.length - 1; i >= 0; i--) {
+        const binding = this._memoizedBindings[i]!;
+        const part = binding.part;
 
-      if (
-        (part.type === PartType.ChildNode || part.type === PartType.Node) &&
-        this._childNodes.includes(part.node)
-      ) {
-        // This binding is mounted as a child of the root, so it must be unbound.
-        binding.unbind(context);
-      } else {
-        // Otherwise, it does not need to be unbound.
-        binding.disconnect(context);
+        if (
+          (part.type === PartType.ChildNode || part.type === PartType.Node) &&
+          this._childNodes.includes(part.node)
+        ) {
+          // This binding is mounted as a child of the root, so it must be unbound.
+          binding.unbind(context);
+        } else {
+          // Otherwise, it does not need to be unbound.
+          binding.disconnect(context);
+        }
       }
     }
   }
 
   disconnect(context: UpdateContext): void {
-    // Disconnect in reverse order.
-    for (let i = this._bindings.length - 1; i >= 0; i--) {
-      this._bindings[i]!.disconnect(context);
+    if (this._memoizedBindings !== null) {
+      // Disconnect in reverse order.
+      for (let i = this._memoizedBindings.length - 1; i >= 0; i--) {
+        this._memoizedBindings[i]!.disconnect(context);
+      }
     }
   }
 
@@ -291,21 +297,38 @@ export class TaggedTemplateInstance<TBinds extends readonly any[]>
   }
 
   unmount(): void {
-    for (let i = 0, l = this._childNodes.length; i < l; i++) {
+    for (let i = this._childNodes.length; i >= 0; i--) {
       this._childNodes[i]!.remove();
     }
   }
 
   commit(context: EffectContext): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      const binding = this._bindings[i]!;
-      DEBUG: {
-        if (binding.part.type === PartType.ChildNode) {
-          binding.part.node.data = binding.directive.name;
+    if (this._memoizedBindings !== null) {
+      for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+        const newBinding = this._pendingBindings[i]!;
+        const oldBinding = this._memoizedBindings[i]!;
+        if (newBinding !== oldBinding) {
+          oldBinding.commit(context);
         }
+        DEBUG: {
+          if (newBinding.part.type === PartType.ChildNode) {
+            newBinding.part.node.data = newBinding.directive.name;
+          }
+        }
+        newBinding.commit(context);
       }
-      binding.commit(context);
+    } else {
+      for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+        const newBinding = this._pendingBindings[i]!;
+        DEBUG: {
+          if (newBinding.part.type === PartType.ChildNode) {
+            newBinding.part.node.data = newBinding.directive.name;
+          }
+        }
+        newBinding.commit(context);
+      }
     }
+    this._memoizedBindings = this._pendingBindings;
   }
 }
 

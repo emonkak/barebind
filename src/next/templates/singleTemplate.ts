@@ -71,46 +71,52 @@ export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
 export class SingleTemplateInstance<T>
   implements TemplateInstance<readonly [T], ChildNodePart>
 {
-  private readonly _binding: Binding<T>;
+  private _pendingBinding: Binding<T>;
+
+  private _memoizedBinding: Binding<T> | null = null;
 
   constructor(binding: Binding<T>) {
-    this._binding = binding;
-  }
-
-  get binding(): Binding<T> {
-    return this._binding;
+    this._pendingBinding = binding;
   }
 
   connect(context: UpdateContext): void {
-    this._binding.connect(context);
+    this._pendingBinding.connect(context);
   }
 
   bind(values: readonly [T], context: UpdateContext): void {
-    this._binding.bind(values[0], context);
+    this._pendingBinding = context.reconcileBinding(
+      this._pendingBinding,
+      values[0],
+    );
   }
 
   unbind(context: UpdateContext): void {
-    this._binding.unbind(context);
+    this._memoizedBinding?.unbind(context);
   }
 
   disconnect(context: UpdateContext): void {
-    this._binding.disconnect(context);
+    this._memoizedBinding?.disconnect(context);
   }
 
   mount(part: ChildNodePart): void {
-    part.node.before(this._binding.part.node);
+    part.node.before(this._pendingBinding.part.node);
   }
 
   unmount(_part: ChildNodePart): void {
-    this._binding.part.node.remove();
+    this._pendingBinding.part.node.remove();
   }
 
   commit(context: EffectContext): void {
+    if (this._pendingBinding !== this._memoizedBinding) {
+      this._memoizedBinding?.commit(context);
+    }
     DEBUG: {
-      if (this._binding.part.type === PartType.ChildNode) {
-        this._binding.part.node.data = this._binding.directive.name;
+      if (this._pendingBinding.part.type === PartType.ChildNode) {
+        this._pendingBinding.part.node.data =
+          this._pendingBinding.directive.name;
       }
     }
-    this._binding.commit(context);
+    this._pendingBinding.commit(context);
+    this._memoizedBinding = this._pendingBinding;
   }
 }

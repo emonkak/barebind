@@ -56,7 +56,9 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   private _memoizedProps: TProps | null = null;
 
-  private _binding: Binding<TResult> | null = null;
+  private _pendingBinding: Binding<TResult> | null = null;
+
+  private _memoizedBinding: Binding<TResult> | null = null;
 
   private readonly _part: Part;
 
@@ -93,12 +95,16 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
       this._hooks,
       this,
     );
-    if (this._binding !== null) {
-      this._binding = context.reconcileBinding(this._binding, element);
+    if (this._pendingBinding !== null) {
+      this._pendingBinding = context.reconcileBinding(
+        this._pendingBinding,
+        element,
+      );
     } else {
-      this._binding = context.resolveBinding(element, this._part);
-      this._binding.connect(context);
+      this._pendingBinding = context.resolveBinding(element, this._part);
+      this._pendingBinding.connect(context);
     }
+    this._status = ComponentStatus.Mounting;
   }
 
   bind(props: TProps, context: UpdateContext): void {
@@ -109,11 +115,14 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
         this._hooks,
         this,
       );
-      if (this._binding !== null) {
-        this._binding = context.reconcileBinding(this._binding, element);
+      if (this._pendingBinding !== null) {
+        this._pendingBinding = context.reconcileBinding(
+          this._pendingBinding,
+          element,
+        );
       } else {
-        this._binding = context.resolveBinding(element, this._part);
-        this._binding.connect(context);
+        this._pendingBinding = context.resolveBinding(element, this._part);
+        this._pendingBinding.connect(context);
       }
       this._status = ComponentStatus.Mounting;
     } else {
@@ -124,14 +133,14 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   unbind(context: UpdateContext): void {
     requestCleanHooks(this._hooks, context);
-    this._binding?.unbind(context);
+    this._memoizedBinding?.unbind(context);
     this._hooks = [];
     this._status = ComponentStatus.Unmounting;
   }
 
   disconnect(context: UpdateContext): void {
     requestCleanHooks(this._hooks, context);
-    this._binding?.disconnect(context);
+    this._memoizedBinding?.disconnect(context);
     this._hooks = [];
     this._status = ComponentStatus.Idle;
   }
@@ -139,12 +148,17 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   commit(context: EffectContext): void {
     switch (this._status) {
       case ComponentStatus.Mounting:
-        this._binding?.commit(context);
+        if (this._memoizedBinding !== this._pendingBinding) {
+          this._memoizedBinding?.commit(context);
+        }
+        this._pendingBinding?.commit(context);
         this._memoizedProps = this._pendingProps;
+        this._memoizedBinding = this._pendingBinding;
         break;
       case ComponentStatus.Unmounting:
-        this._binding?.commit(context);
+        this._memoizedBinding?.commit(context);
         this._memoizedProps = null;
+        this._memoizedBinding = null;
         break;
     }
     this._status = ComponentStatus.Idle;
