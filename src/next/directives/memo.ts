@@ -6,16 +6,16 @@ import {
   type EffectContext,
   type UpdateContext,
   createDirectiveElement,
-} from './coreTypes.js';
-import type { Part } from './part.js';
+} from '../coreTypes.js';
+import type { Part } from '../part.js';
 
 export function memo<T>(value: T): DirectiveElement<T> {
-  return createDirectiveElement(Memo as Directive<T>, value);
+  return createDirectiveElement(MemoDirective as Directive<T>, value);
 }
 
-const Memo: Directive<unknown> = {
+const MemoDirective: Directive<unknown> = {
   get name(): string {
-    return 'Memo';
+    return 'MemoDirective';
   },
   resolveBinding(
     value: unknown,
@@ -27,27 +27,19 @@ const Memo: Directive<unknown> = {
   },
 };
 
-const enum MemoStatus {
-  Idle,
-  Mounting,
-  Unmouting,
-}
-
 class MemoBinding<T> implements Binding<T> {
   private _pendingBinding: Binding<T>;
 
   private _memoizedBinding: Binding<T> | null = null;
 
-  private readonly _memoizedBindings: Map<Directive<T>, Binding<T>> = new Map();
-
-  private _status: MemoStatus = MemoStatus.Idle;
+  private readonly _cachedBindings: Map<Directive<T>, Binding<T>> = new Map();
 
   constructor(binding: Binding<T>) {
     this._pendingBinding = binding;
   }
 
   get directive(): Directive<T> {
-    return Memo as Directive<T>;
+    return MemoDirective as Directive<T>;
   }
 
   get value(): T {
@@ -60,7 +52,6 @@ class MemoBinding<T> implements Binding<T> {
 
   connect(context: UpdateContext): void {
     this._pendingBinding.connect(context);
-    this._status = MemoStatus.Idle;
   }
 
   bind(value: T, context: UpdateContext): void {
@@ -69,12 +60,11 @@ class MemoBinding<T> implements Binding<T> {
     if (binding.directive === element.directive) {
       this._pendingBinding.bind(element.value, context);
     } else {
-      const memoizedBinding = this._memoizedBindings.get(element.directive);
-      binding.unbind(context);
-      context.enqueueMutationEffect(binding);
-      if (memoizedBinding !== undefined) {
-        memoizedBinding.bind(element.value, context);
-        this._pendingBinding = memoizedBinding;
+      const cachedBinding = this._cachedBindings.get(element.directive);
+      binding.disconnect(context);
+      if (cachedBinding !== undefined) {
+        cachedBinding.bind(element.value, context);
+        this._pendingBinding = cachedBinding;
       } else {
         this._pendingBinding = element.directive.resolveBinding(
           element.value,
@@ -83,35 +73,24 @@ class MemoBinding<T> implements Binding<T> {
         );
         this._pendingBinding.connect(context);
       }
-      this._memoizedBindings.set(binding.directive, binding);
+      this._cachedBindings.set(binding.directive, binding);
     }
-    this._status = MemoStatus.Mounting;
-  }
-
-  unbind(context: UpdateContext): void {
-    this._memoizedBinding?.unbind(context);
-    this._status = MemoStatus.Unmouting;
   }
 
   disconnect(context: UpdateContext): void {
     this._memoizedBinding?.disconnect(context);
-    this._status = MemoStatus.Idle;
   }
 
   commit(context: EffectContext): void {
-    switch (this._status) {
-      case MemoStatus.Mounting:
-        if (this._memoizedBinding !== this._pendingBinding) {
-          this._memoizedBinding?.commit(context);
-        }
-        this._pendingBinding.commit(context);
-        this._memoizedBinding = this._pendingBinding;
-        break;
-      case MemoStatus.Mounting:
-        this._memoizedBinding?.commit(context);
-        this._memoizedBinding = null;
-        break;
+    if (this._memoizedBinding !== this._pendingBinding) {
+      this._memoizedBinding?.rollback(context);
     }
-    this._status = MemoStatus.Idle;
+    this._pendingBinding.commit(context);
+    this._memoizedBinding = this._pendingBinding;
+  }
+
+  rollback(context: EffectContext): void {
+    this._memoizedBinding?.rollback(context);
+    this._memoizedBinding = null;
   }
 }

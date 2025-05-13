@@ -41,15 +41,15 @@ export class SuspenseBinding<T> implements Binding<T> {
     this._pendingValue = newValue;
   }
 
-  unbind(context: UpdateContext): void {
-    this._binding.unbind(context);
-  }
-
   disconnect(context: UpdateContext): void {
     this._binding.disconnect(context);
   }
 
   commit(context: EffectContext): void {
+    this._binding.commit(context);
+  }
+
+  rollback(context: EffectContext): void {
     this._binding.commit(context);
   }
 }

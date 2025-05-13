@@ -2,7 +2,7 @@ import { shallowEqual } from '../compare.js';
 import type { DirectiveContext } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
 
 export type StyleValue = {
   [P in StyleProperties]?: string;
@@ -44,7 +44,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
   },
 };
 
-export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
+class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
   get directive(): Primitive<StyleValue> {
     return StylePrimitive;
   }
@@ -53,39 +53,36 @@ export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
     return shallowEqual(newValue, oldValue);
   }
 
-  mount(value: StyleValue, part: AttributePart): void {
-    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
-    for (const property in value) {
-      const cssProperty = toCSSProperty(property);
-      const cssValue = value[property as StyleProperties]!;
+  mount(): void {
+    const newValue = this._pendingValue;
+    const oldValue = this._memoizedValue;
+    const { style } = this._part.node as
+      | HTMLElement
+      | MathMLElement
+      | SVGElement;
+    for (const key in newValue) {
+      const cssProperty = toCSSProperty(key);
+      const cssValue = newValue[cssProperty as StyleProperties]!;
       style.setProperty(cssProperty, cssValue);
+    }
+    if (oldValue !== noValue) {
+      for (const key in oldValue) {
+        if (!Object.hasOwn(newValue, key)) {
+          const cssProperty = toCSSProperty(key);
+          style.removeProperty(cssProperty);
+        }
+      }
     }
   }
 
-  unmount(value: StyleValue, part: AttributePart): void {
-    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
-    for (const property in value) {
-      const cssProperty = toCSSProperty(property);
-      style.removeProperty(cssProperty);
-    }
-  }
-
-  update(
-    oldValue: StyleValue,
-    newValue: StyleValue,
-    part: AttributePart,
-  ): void {
-    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
-
-    for (const newProperty in newValue) {
-      const cssProperty = toCSSProperty(newProperty);
-      const cssValue = newValue[newProperty as StyleProperties]!;
-      style.setProperty(cssProperty, cssValue);
-    }
-
-    for (const oldProperty in oldValue) {
-      if (!Object.hasOwn(newValue, oldProperty)) {
-        const cssProperty = toCSSProperty(oldProperty);
+  unmount(): void {
+    if (this._memoizedValue !== noValue) {
+      const { style } = this._part.node as
+        | HTMLElement
+        | MathMLElement
+        | SVGElement;
+      for (const property in this._memoizedValue) {
+        const cssProperty = toCSSProperty(property);
         style.removeProperty(cssProperty);
       }
     }
@@ -105,8 +102,8 @@ export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
  * toCSSProperty('--my-css-property'); // => '--my-css-property'
  * toCSSProperty('padding-block'); // => 'padding-block'
  */
-function toCSSProperty(jsProperty: string): string {
-  return jsProperty
+function toCSSProperty(key: string): string {
+  return key
     .replace(VENDOR_PREFIX_PATTERN, '-$1')
     .replace(UPPERCASE_LETTER_PATTERN, (c) => '-' + c.toLowerCase());
 }

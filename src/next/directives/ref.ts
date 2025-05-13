@@ -41,7 +41,7 @@ export const RefPrimitive: Primitive<RefValue> = {
   },
 };
 
-export class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
+class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
   private _memoizedCleanup: VoidFunction | void = void 0;
 
   get directive(): Primitive<RefValue> {
@@ -52,23 +52,33 @@ export class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
     return true;
   }
 
-  mount(value: RefValue, part: AttributePart): void {
-    if (typeof value === 'object') {
-      value.current = part.node;
+  mount(): void {
+    const oldRef = this._memoizedValue;
+    const newRef = this._pendingValue;
+    if (oldRef !== null) {
+      if (typeof oldRef === 'object') {
+        oldRef.current = null;
+      } else {
+        this._memoizedCleanup?.();
+        this._memoizedCleanup = void 0;
+      }
+    }
+    if (typeof newRef === 'object') {
+      newRef.current = this._part.node;
     } else {
-      this._memoizedCleanup = value(part.node);
+      this._memoizedCleanup = newRef(this._part.node);
     }
   }
 
-  unmount(value: RefValue, _part: AttributePart): void {
-    this._memoizedCleanup?.();
-    if (typeof value === 'object') {
-      value.current = null;
+  unmount(): void {
+    const ref = this._memoizedValue;
+    if (ref != null) {
+      if (typeof ref === 'object') {
+        ref.current = null;
+      } else {
+        this._memoizedCleanup?.();
+        this._memoizedCleanup = void 0;
+      }
     }
-  }
-
-  update(newValue: RefValue, oldValue: RefValue, part: AttributePart): void {
-    this.unmount(oldValue, part);
-    this.mount(newValue, part);
   }
 }

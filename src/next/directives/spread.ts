@@ -37,7 +37,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   },
 };
 
-export class SpreadBinding implements Binding<SpreadValue> {
+class SpreadBinding implements Binding<SpreadValue> {
   private _value: SpreadValue;
 
   private readonly _part: ElementPart;
@@ -72,12 +72,6 @@ export class SpreadBinding implements Binding<SpreadValue> {
     this._value = newValue;
   }
 
-  unbind(context: UpdateContext): void {
-    for (const binding of this._memoizedBindings.values()) {
-      binding.unbind(context);
-    }
-  }
-
   disconnect(context: UpdateContext): void {
     for (const binding of this._memoizedBindings.values()) {
       binding.disconnect(context);
@@ -87,7 +81,7 @@ export class SpreadBinding implements Binding<SpreadValue> {
   commit(context: EffectContext): void {
     for (const [name, binding] of this._memoizedBindings.entries()) {
       if (binding !== this._pendingBindings.get(name)) {
-        binding.commit(context);
+        binding.rollback(context);
       }
     }
     for (const binding of this._pendingBindings.values()) {
@@ -96,10 +90,21 @@ export class SpreadBinding implements Binding<SpreadValue> {
     this._memoizedBindings = new Map(this._pendingBindings);
   }
 
+  rollback(context: EffectContext): void {
+    if (this._memoizedBindings !== null) {
+      for (const [name, binding] of this._memoizedBindings.entries()) {
+        if (binding !== this._pendingBindings.get(name)) {
+          binding.rollback(context);
+        }
+      }
+    }
+    this._memoizedBindings = new Map();
+  }
+
   private _reconcileBindings(props: SpreadValue, context: UpdateContext): void {
     for (const [name, binding] of this._pendingBindings.entries()) {
       if (!Object.hasOwn(props, name) || props[name] === undefined) {
-        binding.unbind(context);
+        binding.disconnect(context);
         this._pendingBindings.delete(name);
       }
     }

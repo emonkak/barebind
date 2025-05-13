@@ -11,7 +11,7 @@ import {
   type EffectOptions,
   type RenderContext,
   type Template,
-  type TemplateInstance,
+  type TemplateBlock,
   type TemplateMode,
   type UpdateContext,
   createDirectiveElement,
@@ -19,6 +19,7 @@ import {
   isDirectiveElement,
   isDirectiveObject,
 } from './coreTypes.js';
+import type { Primitive } from './directives/primitive.js';
 import {
   type ContextualKey,
   type EffectHook,
@@ -37,7 +38,6 @@ import {
   userHookTag,
 } from './hook.js';
 import type { Part } from './part.js';
-import type { Primitive } from './primitives/primitive.js';
 import type { RenderHost } from './renderHost.js';
 import { TemplateLiteralPreprocessor } from './templateLiteral.js';
 
@@ -132,8 +132,6 @@ export class UpdateEngine implements UpdateContext {
     const { dirtyBindings } = this._globalState;
     let pendingBindings = [binding];
 
-    this._renderFrame.mutationEffects.push(binding);
-
     while (true) {
       for (let i = 0, l = pendingBindings.length; i < l; i++) {
         const pendingBinding = pendingBindings[i]!;
@@ -151,6 +149,9 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
     const callback = () => {
+      binding.commit({
+        phase: CommitPhase.Mutation,
+      });
       commitEffects(mutationEffects, {
         phase: CommitPhase.Mutation,
       });
@@ -225,7 +226,7 @@ export class UpdateEngine implements UpdateContext {
     if (binding.directive === element.directive) {
       binding.bind(element.value, this);
     } else {
-      binding.unbind(this);
+      binding.disconnect(this);
       binding = element.directive.resolveBinding(
         element.value,
         binding.part,
@@ -257,7 +258,7 @@ export class UpdateEngine implements UpdateContext {
   renderTemplate<TBinds, TPart extends Part>(
     template: Template<TBinds, TPart>,
     binds: TBinds,
-  ): TemplateInstance<TBinds, TPart> {
+  ): TemplateBlock<TBinds, TPart> {
     return template.render(binds, this);
   }
 

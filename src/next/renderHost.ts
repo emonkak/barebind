@@ -1,17 +1,17 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import type { Template, TemplateMode } from './coreTypes.js';
+import { AttributePrimitive } from './directives/attribute.js';
+import { ClassPrimitive } from './directives/class.js';
+import { EventPrimitive } from './directives/event.js';
+import { LivePrimitive } from './directives/live.js';
+import { NodePrimitive } from './directives/node.js';
+import type { Primitive } from './directives/primitive.js';
+import { PropertyPrimitive } from './directives/property.js';
+import { RefPrimitive } from './directives/ref.js';
+import { SpreadPrimitive } from './directives/spread.js';
+import { StylePrimitive } from './directives/style.js';
 import { type Part, PartType } from './part.js';
-import { AttributePrimitive } from './primitives/attribute.js';
-import { ClassPrimitive } from './primitives/class.js';
-import { EventPrimitive } from './primitives/event.js';
-import { LivePrimitive } from './primitives/live.js';
-import { NodePrimitive } from './primitives/node.js';
-import type { Primitive } from './primitives/primitive.js';
-import { PropertyPrimitive } from './primitives/property.js';
-import { RefPrimitive } from './primitives/ref.js';
-import { SpreadPrimitive } from './primitives/spread.js';
-import { StylePrimitive } from './primitives/style.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
 import { TaggedTemplate } from './templates/taggedTemplate.js';
@@ -35,10 +35,6 @@ export interface RenderHost {
 
 export interface RequestCallbackOptions {
   priority?: TaskPriority;
-}
-
-export interface BrowserHostOptions {
-  placeholder?: string;
 }
 
 export class BrowserHost implements RenderHost {

@@ -23,7 +23,7 @@ export const LivePrimitive: Primitive<unknown> = {
   },
 };
 
-export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
+class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
   get directive(): Primitive<T> {
     return LivePrimitive as Primitive<T>;
   }
@@ -32,16 +32,13 @@ export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
     return true;
   }
 
-  mount(value: T, part: LivePart): void {
-    const liveValue = (part.node as any)[part.name];
-    if (!Object.is(liveValue, value)) {
-      (part.node as any)[part.name] = value;
+  mount(): void {
+    const { node, name } = this._part;
+    const currentValue = (node as any)[name];
+    if (!Object.is(currentValue, this._pendingValue)) {
+      (this._part.node as any)[this._part.name] = this._pendingValue;
     }
   }
 
-  unmount(_value: T, _part: LivePart): void {}
-
-  update(newValue: T, _oldValue: T, part: LivePart): void {
-    this.mount(newValue, part);
-  }
+  unmount(): void {}
 }

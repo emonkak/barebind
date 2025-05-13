@@ -31,7 +31,7 @@ export function createRoot<T>(value: T, container: Element): Root<T> {
     },
     unmount(options) {
       const effect = new UnmountRoot(binding, container);
-      binding.unbind(context);
+      binding.disconnect(context);
       return context.scheduleEffect(effect, options);
     },
   };

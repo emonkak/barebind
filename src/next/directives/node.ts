@@ -23,7 +23,7 @@ export const NodePrimitive: Primitive<unknown> = {
   },
 };
 
-export class NodeBinding<T> extends PrimitiveBinding<T, NodePart> {
+class NodeBinding<T> extends PrimitiveBinding<T, NodePart> {
   get directive(): Primitive<T> {
     return NodePrimitive as Primitive<T>;
   }
@@ -32,16 +32,14 @@ export class NodeBinding<T> extends PrimitiveBinding<T, NodePart> {
     return !Object.is(newValue, oldValue);
   }
 
-  mount(value: T, part: Part): void {
-    part.node.nodeValue =
-      typeof value === 'string' ? value : (value?.toString() ?? null);
+  mount(): void {
+    this._part.node.nodeValue =
+      typeof this._pendingValue === 'string'
+        ? this._pendingValue
+        : (this._pendingValue?.toString() ?? null);
   }
 
-  unmount(_value: T, part: NodePart): void {
-    part.node.nodeValue = null;
-  }
-
-  update(newValue: T, _oldValue: T, part: NodePart): void {
-    this.mount(newValue, part);
+  unmount(): void {
+    this._part.node.nodeValue = null;
   }
 }

@@ -26,7 +26,7 @@ export const PropertyPrimitive: Primitive<unknown> = {
   },
 };
 
-export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
+class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
   get directive(): Primitive<T> {
     return PropertyPrimitive as Primitive<T>;
   }
@@ -35,13 +35,10 @@ export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
     return !Object.is(newValue, oldValue);
   }
 
-  mount(value: T, part: PropertyPart): void {
-    (part.node as any)[part.name] = value;
+  mount(): void {
+    const { node, name } = this._part;
+    (node as any)[name] = this._pendingValue;
   }
 
-  unmount(_value: T, _part: PropertyPart): void {}
-
-  update(newValue: T, _oldValue: T, part: PropertyPart): void {
-    this.mount(newValue, part);
-  }
+  unmount(): void {}
 }

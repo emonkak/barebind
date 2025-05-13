@@ -24,14 +24,15 @@ export interface DirectiveObject<T> {
 
 export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
 
-export interface Binding<T> extends Effect {
+export interface Binding<T> {
   get directive(): Directive<T>;
   get value(): T;
   get part(): Part;
   connect(context: UpdateContext): void;
   bind(value: T, context: UpdateContext): void;
-  unbind(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
+  commit(context: EffectContext): void;
+  rollback(context: EffectContext): void;
 }
 
 export interface Template<TBinds, TPart extends Part = Part>
@@ -39,16 +40,17 @@ export interface Template<TBinds, TPart extends Part = Part>
   render(
     binds: TBinds,
     context: DirectiveContext,
-  ): TemplateInstance<TBinds, TPart>;
+  ): TemplateBlock<TBinds, TPart>;
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg';
 
-export interface TemplateInstance<TBinds, TPart extends Part> extends Effect {
+export interface TemplateBlock<TBinds, TPart extends Part> {
   connect(context: UpdateContext): void;
   bind(binds: TBinds, context: UpdateContext): void;
-  unbind(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
+  commit(context: EffectContext): void;
+  rollback(context: EffectContext): void;
   mount(part: TPart): void;
   unmount(part: TPart): void;
 }
@@ -117,7 +119,7 @@ export interface UpdateContext extends DirectiveContext {
   renderTemplate<TBinds, TPart extends Part>(
     template: Template<TBinds, TPart>,
     binds: TBinds,
-  ): TemplateInstance<TBinds, TPart>;
+  ): TemplateBlock<TBinds, TPart>;
   scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void>;
   scheduleUpdate(
     binding: Binding<unknown>,

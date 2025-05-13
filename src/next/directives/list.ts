@@ -1,4 +1,4 @@
-/// <reference path="../../typings/moveBefore.d.ts" />
+/// <reference path="../../../typings/moveBefore.d.ts" />
 
 import {
   type Binding,
@@ -9,9 +9,9 @@ import {
   type EffectContext,
   type UpdateContext,
   createDirectiveElement,
-} from './coreTypes.js';
-import { inspectPart, inspectValue, markUsedValue } from './debug.js';
-import { type ChildNodePart, type Part, PartType } from './part.js';
+} from '../coreTypes.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { type ChildNodePart, type Part, PartType } from '../part.js';
 
 export type ListValue<TItem, TKey, TResult> = {
   items: readonly TItem[] | Iterable<TItem>;
@@ -21,7 +21,7 @@ export type ListValue<TItem, TKey, TResult> = {
 
 type Action<TKey, TValue> =
   | {
-      type: ActionType.Mount;
+      type: ActionType.Insert;
       slot: Slot<TKey, TValue>;
       reference: Slot<TKey, TValue> | undefined;
     }
@@ -31,13 +31,13 @@ type Action<TKey, TValue> =
       slot: Slot<TKey, TValue>;
       reference: Slot<TKey, TValue> | undefined;
     }
-  | { type: ActionType.Unmount; slot: Slot<TKey, TValue> };
+  | { type: ActionType.Remove; slot: Slot<TKey, TValue> };
 
 const enum ActionType {
-  Mount,
+  Insert,
   Update,
   Move,
-  Unmount,
+  Remove,
 }
 
 interface Slot<TKey, TValue> {
@@ -45,14 +45,15 @@ interface Slot<TKey, TValue> {
   memoizedBinding: Binding<TValue> | null;
   sentinelNode: Comment;
   key: TKey;
+  dirty: boolean;
 }
 
-export function inPlaceList<TItem, TKey, TValue>(
+export function list<TItem, TKey, TValue>(
   items: readonly TItem[] | Iterable<TItem>,
   valueSelector: (item: TItem, key: number) => TValue = defaultValueSelector,
 ): DirectiveElement<ListValue<TItem, TKey, TValue>> {
   return createDirectiveElement(
-    List as Directive<ListValue<TItem, TKey, TValue>>,
+    ListDirective as Directive<ListValue<TItem, TKey, TValue>>,
     {
       items,
       keySelector: defaultKeySelector,
@@ -67,7 +68,7 @@ export function sortableList<TItem, TKey, TValue>(
   valueSelector: (item: TItem, key: number) => TValue = defaultValueSelector,
 ): DirectiveElement<ListValue<TItem, TKey, TValue>> {
   return createDirectiveElement(
-    List as Directive<ListValue<TItem, TKey, TValue>>,
+    ListDirective as Directive<ListValue<TItem, TKey, TValue>>,
     {
       items,
       keySelector,
@@ -76,7 +77,7 @@ export function sortableList<TItem, TKey, TValue>(
   );
 }
 
-const List: Directive<ListValue<unknown, unknown, unknown>> = {
+const ListDirective: Directive<ListValue<unknown, unknown, unknown>> = {
   get name(): string {
     return 'List';
   },
@@ -114,7 +115,7 @@ class ListBinding<TItem, TKey, TValue>
   }
 
   get directive(): Directive<ListValue<TItem, TKey, TValue>> {
-    return List as Directive<ListValue<TItem, TKey, TValue>>;
+    return ListDirective as Directive<ListValue<TItem, TKey, TValue>>;
   }
 
   get value(): ListValue<TItem, TKey, TValue> {
@@ -134,69 +135,64 @@ class ListBinding<TItem, TKey, TValue>
     this._value = value;
   }
 
-  unbind(context: UpdateContext): void {
-    const newActions: Action<TKey, TValue>[] = [];
-
+  disconnect(context: UpdateContext): void {
     // Unbind slots in reverse order.
     for (let i = this._memoizedSlots.length - 1; i >= 0; i--) {
       const slot = this._memoizedSlots[i]!;
-      slot.pendingBinding.unbind(context);
-      newActions.push({
-        type: ActionType.Unmount,
-        slot,
-      });
+      slot.memoizedBinding?.disconnect(context);
     }
-
-    this._pendingActions = newActions;
-    this._pendingSlots = [];
-  }
-
-  disconnect(context: UpdateContext): void {
-    // Disconnect slots in reverse order.
-    for (let i = this._memoizedSlots.length - 1; i >= 0; i--) {
-      this._memoizedSlots[i]!.pendingBinding.disconnect(context);
-    }
-
-    this._pendingActions = [];
-    this._pendingSlots = this._memoizedSlots;
   }
 
   commit(context: EffectContext): void {
     for (let i = 0, l = this._pendingActions.length; i < l; i++) {
       const action = this._pendingActions[i]!;
+      const { slot } = action;
+      if (!slot.dirty) {
+        continue;
+      }
       switch (action.type) {
-        case ActionType.Mount: {
+        case ActionType.Insert: {
           const referenceNode =
             action.reference?.sentinelNode ?? this._part.node;
-          commitMount(action.slot, referenceNode, context);
+          commitInsert(slot, referenceNode, context);
           break;
         }
         case ActionType.Update: {
-          commitUpdate(action.slot, context);
+          commitUpdate(slot, context);
           break;
         }
         case ActionType.Move: {
           const referenceNode =
             action.reference?.sentinelNode ?? this._part.node;
-          commitMove(action.slot, referenceNode, context);
+          commitMove(slot, referenceNode, context);
           break;
         }
-        case ActionType.Unmount:
-          commitUnmount(action.slot, context);
+        case ActionType.Remove:
+          commitRemove(slot, context);
           break;
       }
+      slot.dirty = false;
     }
 
     this._pendingActions = [];
     this._memoizedSlots = this._pendingSlots;
   }
 
+  rollback(context: EffectContext): void {
+    for (let i = 0, l = this._memoizedSlots.length; i < l; i++) {
+      const slot = this._memoizedSlots[i]!;
+      commitRemove(slot, context);
+    }
+
+    this._memoizedSlots = [];
+  }
+
   private _reconcileSlots(
     { items, keySelector, valueSelector }: ListValue<TItem, TKey, TValue>,
     context: UpdateContext,
   ): void {
-    const oldSlots = this._memoizedSlots;
-    const newActions: Action<TKey, TValue>[] = [];
+    const pendingActions = this._pendingActions;
+    const oldSlots = this._pendingSlots;
     let newSlots: Slot<TKey, TValue>[];
     let newKeys: TKey[];
     let newValues: TValue[];
@@ -231,10 +227,11 @@ class ListBinding<TItem, TKey, TValue>
         sentinelNode: document.createComment(''),
         pendingBinding: binding,
         memoizedBinding: null,
+        dirty: true,
       };
       newSlots[index] = slot;
-      newActions.push({
-        type: ActionType.Mount,
+      pendingActions.push({
+        type: ActionType.Insert,
         slot,
         reference,
       });
@@ -244,8 +241,9 @@ class ListBinding<TItem, TKey, TValue>
         slot.pendingBinding,
         newValues[index]!,
       );
+      slot.dirty = true;
       newSlots[index] = slot;
-      newActions.push({
+      pendingActions.push({
         type: ActionType.Update,
         slot,
       });
@@ -259,17 +257,19 @@ class ListBinding<TItem, TKey, TValue>
         slot.pendingBinding,
         newValues[index]!,
       );
+      slot.dirty = true;
       newSlots[index] = slot;
-      newActions.push({
+      pendingActions.push({
         type: ActionType.Move,
         slot,
         reference,
       });
     };
     const removeSlot = (slot: Slot<TKey, TValue>) => {
-      slot.pendingBinding.unbind(context);
-      newActions.push({
-        type: ActionType.Unmount,
+      slot.pendingBinding.disconnect(context);
+      slot.dirty = true;
+      pendingActions.push({
+        type: ActionType.Remove,
         slot,
       });
     };
@@ -336,12 +336,11 @@ class ListBinding<TItem, TKey, TValue>
       }
     }
 
-    this._pendingActions = newActions;
     this._pendingSlots = newSlots;
   }
 }
 
-function commitMount<TKey, TValue>(
+function commitInsert<TKey, TValue>(
   slot: Slot<TKey, TValue>,
   referenceNode: ChildNode,
   context: EffectContext,
@@ -349,8 +348,8 @@ function commitMount<TKey, TValue>(
   const { pendingBinding, sentinelNode, key } = slot;
   referenceNode.before(sentinelNode, pendingBinding.part.node);
   DEBUG: {
-    sentinelNode.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name})>`;
-    pendingBinding.part.node.nodeValue = `${inspectValue(key)}: END`;
+    sentinelNode.nodeValue = inspectValue(key);
+    pendingBinding.part.node.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name}`;
   }
   pendingBinding.commit(context);
   slot.memoizedBinding = pendingBinding;
@@ -364,7 +363,7 @@ function commitMove<TKey, TValue>(
   const { pendingBinding, memoizedBinding, sentinelNode } = slot;
   const parentNode = sentinelNode.parentNode;
   if (memoizedBinding !== pendingBinding) {
-    memoizedBinding?.commit(context);
+    memoizedBinding?.rollback(context);
   }
   if (parentNode !== null) {
     const insertOrMoveBefore =
@@ -378,13 +377,13 @@ function commitMove<TKey, TValue>(
   slot.memoizedBinding = pendingBinding;
 }
 
-function commitUnmount<TKey, TValue>(
+function commitRemove<TKey, TValue>(
   slot: Slot<TKey, TValue>,
   context: EffectContext,
 ): void {
   const { memoizedBinding, sentinelNode } = slot;
   if (memoizedBinding !== null) {
-    memoizedBinding.commit(context);
+    memoizedBinding.rollback(context);
     memoizedBinding.part.node.remove();
     sentinelNode.remove();
     slot.memoizedBinding = null;
@@ -397,11 +396,11 @@ function commitUpdate<TKey, TValue>(
 ): void {
   const { pendingBinding, memoizedBinding, sentinelNode, key } = slot;
   if (memoizedBinding !== pendingBinding) {
-    memoizedBinding?.commit(context);
+    memoizedBinding?.rollback(context);
   }
   DEBUG: {
-    sentinelNode.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name})>`;
-    pendingBinding.part.node.nodeValue = `${inspectValue(key)}: END`;
+    sentinelNode.nodeValue = inspectValue(key);
+    pendingBinding.part.node.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name}`;
   }
   pendingBinding.commit(context);
   slot.memoizedBinding = pendingBinding;

@@ -3,16 +3,10 @@ import type {
   Effect,
   EffectContext,
   Template,
-  TemplateInstance,
+  TemplateBlock,
   UpdateContext,
 } from './coreTypes.js';
 import type { Part } from './part.js';
-
-const enum TemplateStatus {
-  Idle,
-  Mouting,
-  Unmouting,
-}
 
 export class TemplateBinding<TBinds, TPart extends Part>
   implements Binding<TBinds>, Effect
@@ -25,11 +19,11 @@ export class TemplateBinding<TBinds, TPart extends Part>
 
   private readonly _part: TPart;
 
-  private _pendingInstance: TemplateInstance<TBinds, TPart> | null = null;
+  private _pendingBlock: TemplateBlock<TBinds, TPart> | null = null;
 
-  private _memoizedInstance: TemplateInstance<TBinds, TPart> | null = null;
+  private _memoizedBlock: TemplateBlock<TBinds, TPart> | null = null;
 
-  private _status: TemplateStatus = TemplateStatus.Idle;
+  private _dirty = false;
 
   constructor(template: Template<TBinds, TPart>, binds: TBinds, part: TPart) {
     this._template = template;
@@ -50,74 +44,62 @@ export class TemplateBinding<TBinds, TPart extends Part>
   }
 
   connect(context: UpdateContext): void {
-    if (this._pendingInstance !== null) {
-      this._pendingInstance.connect(context);
+    if (this._pendingBlock !== null) {
+      this._pendingBlock.connect(context);
     } else {
-      this._pendingInstance = context.renderTemplate(
+      this._pendingBlock = context.renderTemplate(
         this._template,
         this._pendingBinds,
       );
-      this._pendingInstance.connect(context);
+      this._pendingBlock.connect(context);
     }
-    this._status = TemplateStatus.Mouting;
+    this._dirty = true;
   }
 
   bind(binds: TBinds, context: UpdateContext): void {
-    if (this._pendingInstance !== null) {
-      if (binds !== this._memoizedBinds) {
-        this._pendingInstance.bind(binds, context);
-        this._status = TemplateStatus.Mouting;
-      } else {
-        this._status = TemplateStatus.Idle;
+    if (this._pendingBlock !== null) {
+      const dirty = binds !== this._memoizedBinds;
+      if (dirty) {
+        this._pendingBlock.bind(binds, context);
       }
+      this._dirty ||= dirty;
     } else {
-      this._pendingInstance = context.renderTemplate(
+      this._pendingBlock = context.renderTemplate(
         this._template,
         this._pendingBinds,
       );
-      this._pendingInstance.connect(context);
-      this._status = TemplateStatus.Mouting;
+      this._pendingBlock.connect(context);
+      this._dirty = true;
     }
     this._pendingBinds = binds;
   }
 
-  unbind(context: UpdateContext): void {
-    if (this._memoizedInstance !== null) {
-      this._memoizedInstance.unbind(context);
-      this._status = TemplateStatus.Unmouting;
-    } else {
-      this._status = TemplateStatus.Idle;
-    }
-  }
-
   disconnect(context: UpdateContext): void {
-    this._memoizedInstance?.disconnect(context);
-    this._status = TemplateStatus.Idle;
+    this._memoizedBlock?.disconnect(context);
   }
 
   commit(context: EffectContext): void {
-    switch (this._status) {
-      case TemplateStatus.Mouting: {
-        if (this._pendingInstance !== null) {
-          if (this._memoizedInstance === null) {
-            this._pendingInstance.mount(this._part);
-          }
-          this._pendingInstance.commit(context);
-        }
-        this._memoizedInstance = this._pendingInstance;
-        this._memoizedBinds = this._pendingBinds;
-        break;
-      }
-      case TemplateStatus.Unmouting: {
-        if (this._memoizedInstance !== null) {
-          this._memoizedInstance.unmount(this._part);
-          this._memoizedInstance.commit(context);
-        }
-        this._memoizedInstance = null;
-        this._memoizedBinds = null;
-        break;
-      }
+    if (!this._dirty) {
+      return;
     }
-    this._status = TemplateStatus.Idle;
+    if (this._pendingBlock !== null) {
+      if (this._memoizedBlock === null) {
+        this._pendingBlock.mount(this._part);
+      }
+      this._pendingBlock.commit(context);
+    }
+    this._memoizedBlock = this._pendingBlock;
+    this._memoizedBinds = this._pendingBinds;
+    this._dirty = false;
+  }
+
+  rollback(context: EffectContext): void {
+    if (this._memoizedBlock !== null) {
+      this._memoizedBlock.unmount(this._part);
+      this._memoizedBlock.rollback(context);
+    }
+    this._memoizedBlock = null;
+    this._memoizedBinds = null;
+    this._dirty = false;
   }
 }

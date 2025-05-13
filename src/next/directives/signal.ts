@@ -6,16 +6,16 @@ import {
   type EffectContext,
   type UpdateContext,
   directiveTag,
-} from './coreTypes.js';
-import { type HookContext, type UserHook, userHookTag } from './hook.js';
-import { LinkedList } from './linkedList.js';
-import type { Part } from './part.js';
+} from '../coreTypes.js';
+import { type HookContext, type UserHook, userHookTag } from '../hook.js';
+import { LinkedList } from '../linkedList.js';
+import type { Part } from '../part.js';
 
 export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-const SignalDirective: Directive<Signal<unknown>> = {
+export const SignalDirective: Directive<Signal<unknown>> = {
   get name(): string {
     return 'Signal';
   },
@@ -242,11 +242,6 @@ class SignalBinding<T> implements Binding<Signal<T>> {
     this._subscription ??= this._createSubscription(context);
   }
 
-  unbind(context: UpdateContext): void {
-    this._abortSubscription();
-    this._memoizedBinding?.unbind(context);
-  }
-
   disconnect(context: UpdateContext): void {
     this._abortSubscription();
     this._memoizedBinding?.disconnect(context);
@@ -254,10 +249,15 @@ class SignalBinding<T> implements Binding<Signal<T>> {
 
   commit(context: EffectContext): void {
     if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.commit(context);
+      this._memoizedBinding?.rollback(context);
     }
     this._pendingBinding.commit(context);
     this._memoizedBinding = this._pendingBinding;
+  }
+
+  rollback(context: EffectContext): void {
+    this._memoizedBinding?.rollback(context);
+    this._memoizedBinding = null;
   }
 
   private _abortSubscription(): void {
@@ -267,7 +267,7 @@ class SignalBinding<T> implements Binding<Signal<T>> {
 
   private _createSubscription(context: UpdateContext): Subscription {
     return this._signal.subscribe(() => {
-      context.scheduleUpdate(this._pendingBinding, { priority: 'background' });
+      context.scheduleUpdate(this, { priority: 'background' });
     });
   }
 }

@@ -8,10 +8,10 @@ import {
   type EffectContext,
   type UpdateContext,
   createDirectiveElement,
-} from './coreTypes.js';
-import { type EffectHook, type Hook, HookType } from './hook.js';
-import type { Part } from './part.js';
-import { SuspenseBinding } from './suspense.js';
+} from '../coreTypes.js';
+import { type EffectHook, type Hook, HookType } from '../hook.js';
+import type { Part } from '../part.js';
+import { SuspenseBinding } from '../suspense.js';
 
 const componentDirectiveTag = Symbol('Component.directive');
 
@@ -24,14 +24,18 @@ export function component<TProps, TResult>(
 }
 
 class ComponentDirective<TProps, TResult> implements Directive<TProps> {
-  readonly component: Component<TProps, TResult>;
+  private readonly _component: Component<TProps, TResult>;
 
   constructor(component: Component<TProps, TResult>) {
-    this.component = component;
+    this._component = component;
   }
 
   get name(): string {
-    return this.component.name;
+    return this._component.name;
+  }
+
+  get component(): Component<TProps, TResult> {
+    return this._component;
   }
 
   resolveBinding(
@@ -41,12 +45,6 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   ): SuspenseBinding<TProps> {
     return new SuspenseBinding(new ComponentBinding(this, props, part));
   }
-}
-
-const enum ComponentStatus {
-  Idle,
-  Mounting,
-  Unmounting,
 }
 
 class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
@@ -64,7 +62,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   private _hooks: Hook[] = [];
 
-  private _status = ComponentStatus.Idle;
+  private _dirty = false;
 
   constructor(
     directive: ComponentDirective<TProps, TResult>,
@@ -89,7 +87,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   connect(context: UpdateContext): void {
-    const element = context.renderComponent(
+    const result = context.renderComponent(
       this._directive.component,
       this._pendingProps,
       this._hooks,
@@ -98,18 +96,19 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     if (this._pendingBinding !== null) {
       this._pendingBinding = context.reconcileBinding(
         this._pendingBinding,
-        element,
+        result,
       );
     } else {
-      this._pendingBinding = context.resolveBinding(element, this._part);
+      this._pendingBinding = context.resolveBinding(result, this._part);
       this._pendingBinding.connect(context);
     }
-    this._status = ComponentStatus.Mounting;
+    this._dirty = true;
   }
 
   bind(props: TProps, context: UpdateContext): void {
-    if (props !== this._memoizedProps) {
-      const element = context.renderComponent(
+    const dirty = props !== this._memoizedProps;
+    if (dirty) {
+      const result = context.renderComponent(
         this._directive.component,
         props,
         this._hooks,
@@ -118,50 +117,56 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
       if (this._pendingBinding !== null) {
         this._pendingBinding = context.reconcileBinding(
           this._pendingBinding,
-          element,
+          result,
         );
       } else {
-        this._pendingBinding = context.resolveBinding(element, this._part);
+        this._pendingBinding = context.resolveBinding(result, this._part);
         this._pendingBinding.connect(context);
       }
-      this._status = ComponentStatus.Mounting;
-    } else {
-      this._status = ComponentStatus.Idle;
     }
     this._pendingProps = props;
-  }
-
-  unbind(context: UpdateContext): void {
-    requestCleanHooks(this._hooks, context);
-    this._memoizedBinding?.unbind(context);
-    this._hooks = [];
-    this._status = ComponentStatus.Unmounting;
+    this._dirty ||= dirty;
   }
 
   disconnect(context: UpdateContext): void {
-    requestCleanHooks(this._hooks, context);
+    // Hooks must be cleaned in reverse order.
+    for (let i = this._hooks.length - 1; i >= 0; i--) {
+      const hook = this._hooks[i]!;
+      switch (hook.type) {
+        case HookType.InsertionEffect:
+          context.enqueueMutationEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.LayoutEffect:
+          context.enqueueLayoutEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.PassiveEffect:
+          context.enqueuePassiveEffect(new CleanEffectHook(hook));
+          break;
+      }
+    }
+
     this._memoizedBinding?.disconnect(context);
     this._hooks = [];
-    this._status = ComponentStatus.Idle;
   }
 
   commit(context: EffectContext): void {
-    switch (this._status) {
-      case ComponentStatus.Mounting:
-        if (this._memoizedBinding !== this._pendingBinding) {
-          this._memoizedBinding?.commit(context);
-        }
-        this._pendingBinding?.commit(context);
-        this._memoizedProps = this._pendingProps;
-        this._memoizedBinding = this._pendingBinding;
-        break;
-      case ComponentStatus.Unmounting:
-        this._memoizedBinding?.commit(context);
-        this._memoizedProps = null;
-        this._memoizedBinding = null;
-        break;
+    if (!this._dirty) {
+      return;
     }
-    this._status = ComponentStatus.Idle;
+    if (this._memoizedBinding !== this._pendingBinding) {
+      this._memoizedBinding?.rollback(context);
+    }
+    this._pendingBinding?.commit(context);
+    this._memoizedProps = this._pendingProps;
+    this._memoizedBinding = this._pendingBinding;
+    this._dirty = false;
+  }
+
+  rollback(context: EffectContext): void {
+    this._memoizedBinding?.commit(context);
+    this._memoizedProps = null;
+    this._memoizedBinding = null;
+    this._dirty = false;
   }
 }
 
@@ -184,22 +189,4 @@ function defineComponentDirective<TProps, TResult>(
   return ((component as any)[componentDirectiveTag] ??= new ComponentDirective(
     component,
   ));
-}
-
-function requestCleanHooks(hooks: Hook[], context: UpdateContext): void {
-  // Hooks must be cleaned in reverse order.
-  for (let i = hooks.length - 1; i >= 0; i--) {
-    const hook = hooks[i]!;
-    switch (hook.type) {
-      case HookType.InsertionEffect:
-        context.enqueueMutationEffect(new CleanEffectHook(hook));
-        break;
-      case HookType.LayoutEffect:
-        context.enqueueLayoutEffect(new CleanEffectHook(hook));
-        break;
-      case HookType.PassiveEffect:
-        context.enqueuePassiveEffect(new CleanEffectHook(hook));
-        break;
-    }
-  }
 }

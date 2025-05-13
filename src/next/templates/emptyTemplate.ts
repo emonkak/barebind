@@ -2,7 +2,7 @@ import type {
   DirectiveContext,
   EffectContext,
   Template,
-  TemplateInstance,
+  TemplateBlock,
   UpdateContext,
 } from '../coreTypes.js';
 import { inspectPart, markUsedValue } from '../debug.js';
@@ -16,8 +16,8 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
   render(
     _binds: readonly [],
     _context: DirectiveContext,
-  ): typeof EmptyTemplateInstance {
-    return EmptyTemplateInstance;
+  ): typeof EmptyTemplateBlock {
+    return EmptyTemplateBlock;
   },
   resolveBinding(
     binds: readonly [],
@@ -34,15 +34,15 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
   },
 };
 
-export const EmptyTemplateInstance: TemplateInstance<
+export const EmptyTemplateBlock: TemplateBlock<
   readonly [],
   ChildNodePart
 > = {
   connect(_context: UpdateContext): void {},
   bind(_binds: readonly [], _context: UpdateContext): void {},
-  unbind(_context: UpdateContext): void {},
   disconnect(_context: UpdateContext): void {},
+  commit(_context: EffectContext): void {},
+  rollback(_context: EffectContext): void {},
   mount(_part: ChildNodePart): void {},
   unmount(_part: ChildNodePart): void {},
-  commit(_context: EffectContext): void {},
 };

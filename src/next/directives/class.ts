@@ -3,7 +3,7 @@ import type { DirectiveContext } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
 
 export type ClassMap = { [key: string]: boolean };
 
@@ -41,7 +41,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
   },
 };
 
-export class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
+class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
   get directive(): Primitive<ClassValue> {
     return ClassPrimitive;
   }
@@ -69,37 +69,30 @@ export class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
     }
   }
 
-  mount(value: ClassValue, part: AttributePart): void {
-    const { classList } = part.node;
-    for (const [className, enabled] of iterateClasses(value)) {
-      classList.toggle(className, enabled);
-    }
-  }
-
-  unmount(value: ClassValue, part: AttributePart): void {
-    const { classList } = part.node;
-    for (const [className, enabled] of iterateClasses(value)) {
-      if (enabled) {
-        classList.remove(className);
+  mount(): void {
+    const { classList } = this._part.node;
+    if (this._memoizedValue !== noValue) {
+      const existingClasses = new Set();
+      for (const [className, enabled] of iterateClasses(this._memoizedValue)) {
+        classList.toggle(className, enabled);
+        existingClasses.add(className);
+      }
+      for (const [className, enabled] of iterateClasses(this._pendingValue)) {
+        if (enabled && !existingClasses.has(className)) {
+          classList.remove(className);
+        }
+      }
+    } else {
+      for (const [className, enabled] of iterateClasses(this._pendingValue)) {
+        classList.toggle(className, enabled);
       }
     }
   }
 
-  update(
-    oldValue: ClassValue,
-    newValue: ClassValue,
-    part: AttributePart,
-  ): void {
-    const { classList } = part.node;
-    const existingClasses = new Set();
-
-    for (const [className, enabled] of iterateClasses(newValue)) {
-      classList.toggle(className, enabled);
-      existingClasses.add(className);
-    }
-
-    for (const [className, enabled] of iterateClasses(oldValue)) {
-      if (enabled && !existingClasses.has(className)) {
+  unmount(): void {
+    const { classList } = this._part.node;
+    for (const [className, enabled] of iterateClasses(this._pendingValue)) {
+      if (enabled) {
         classList.remove(className);
       }
     }

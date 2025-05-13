@@ -3,7 +3,7 @@ import type {
   DirectiveContext,
   EffectContext,
   Template,
-  TemplateInstance,
+  TemplateBlock,
   UpdateContext,
 } from '../coreTypes.js';
 import { inspectPart, markUsedValue } from '../debug.js';
@@ -17,7 +17,7 @@ export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
   render(
     binds: readonly [unknown],
     context: DirectiveContext,
-  ): SingleTemplateInstance<unknown> {
+  ): SingleTemplateBlock<unknown> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -26,7 +26,7 @@ export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
     DEBUG: {
       part.node.data = binding.directive.name;
     }
-    return new SingleTemplateInstance(binding);
+    return new SingleTemplateBlock(binding);
   },
   resolveBinding(
     binds: readonly [unknown],
@@ -50,14 +50,14 @@ export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
   render(
     binds: readonly [unknown],
     context: DirectiveContext,
-  ): SingleTemplateInstance<unknown> {
+  ): SingleTemplateBlock<unknown> {
     const part = {
       type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
     const value = binds[0];
     const binding = context.resolveBinding(value, part);
-    return new SingleTemplateInstance(binding);
+    return new SingleTemplateBlock(binding);
   },
   resolveBinding(
     binds: readonly [unknown],
@@ -68,8 +68,8 @@ export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
   },
 };
 
-export class SingleTemplateInstance<T>
-  implements TemplateInstance<readonly [T], ChildNodePart>
+export class SingleTemplateBlock<T>
+  implements TemplateBlock<readonly [T], ChildNodePart>
 {
   private _pendingBinding: Binding<T>;
 
@@ -90,12 +90,36 @@ export class SingleTemplateInstance<T>
     );
   }
 
-  unbind(context: UpdateContext): void {
-    this._memoizedBinding?.unbind(context);
-  }
-
   disconnect(context: UpdateContext): void {
     this._memoizedBinding?.disconnect(context);
+  }
+
+  commit(context: EffectContext): void {
+    if (this._pendingBinding !== this._memoizedBinding) {
+      this._memoizedBinding?.rollback(context);
+    }
+
+    DEBUG: {
+      if (this._pendingBinding.part.type === PartType.ChildNode) {
+        this._pendingBinding.part.node.data =
+          this._pendingBinding.directive.name;
+      }
+    }
+
+    this._pendingBinding.commit(context);
+    this._memoizedBinding = this._pendingBinding;
+  }
+
+  rollback(context: EffectContext): void {
+    this._memoizedBinding?.rollback(context);
+
+    DEBUG: {
+      if (this._pendingBinding.part.type === PartType.ChildNode) {
+        this._pendingBinding.part.node.data = '';
+      }
+    }
+
+    this._memoizedBinding = null;
   }
 
   mount(part: ChildNodePart): void {
@@ -104,19 +128,5 @@ export class SingleTemplateInstance<T>
 
   unmount(_part: ChildNodePart): void {
     this._pendingBinding.part.node.remove();
-  }
-
-  commit(context: EffectContext): void {
-    if (this._pendingBinding !== this._memoizedBinding) {
-      this._memoizedBinding?.commit(context);
-    }
-    DEBUG: {
-      if (this._pendingBinding.part.type === PartType.ChildNode) {
-        this._pendingBinding.part.node.data =
-          this._pendingBinding.directive.name;
-      }
-    }
-    this._pendingBinding.commit(context);
-    this._memoizedBinding = this._pendingBinding;
   }
 }

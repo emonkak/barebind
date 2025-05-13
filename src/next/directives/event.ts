@@ -38,7 +38,7 @@ export const EventPrimitive: Primitive<EventValue> = {
   },
 };
 
-export class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
+class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
   get directive(): Primitive<EventValue> {
     return EventPrimitive;
   }
@@ -47,33 +47,25 @@ export class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
     return newValue !== oldValue;
   }
 
-  mount(value: EventValue, part: EventPart): void {
-    if (value != null) {
-      attachEventListener(part, this, value);
+  mount(): void {
+    if (this._memoizedValue != null && this._memoizedValue !== noValue) {
+      detachEventListener(this._part, this, this._memoizedValue);
+    }
+    if (this._pendingValue != null) {
+      attachEventListener(this._part, this, this._pendingValue);
     }
   }
 
-  unmount(value: EventValue, part: EventPart): void {
-    if (value != null) {
-      detachEventListener(part, this, value);
-    }
-  }
-
-  update(newValue: EventValue, oldValue: EventValue, part: EventPart): void {
-    if (typeof oldValue === 'object' || typeof newValue === 'object') {
-      if (oldValue != null) {
-        detachEventListener(part, this, oldValue);
-      }
-      if (newValue != null) {
-        attachEventListener(part, this, newValue);
-      }
+  unmount(): void {
+    if (this._memoizedValue != null && this._memoizedValue !== noValue) {
+      detachEventListener(this._part, this, this._memoizedValue);
     }
   }
 
   handleEvent(event: Event): void {
     if (typeof this._memoizedValue === 'function') {
       this._memoizedValue(event);
-    } else if (this._memoizedValue !== noValue) {
+    } else if (typeof this._memoizedValue === 'object') {
       this._memoizedValue?.handleEvent(event);
     }
   }
