@@ -15,6 +15,7 @@ export type Hole =
   | ChildNodeHole
   | ElementHole
   | EventHole
+  | LiveHole
   | NodeHole
   | PropertyHole;
 
@@ -36,6 +37,12 @@ export interface ElementHole {
 
 export interface EventHole {
   type: PartType.Event;
+  index: number;
+  name: string;
+}
+
+export interface LiveHole {
+  type: PartType.Live;
   index: number;
   name: string;
 }
@@ -166,6 +173,13 @@ export class TaggedTemplate<TBinds extends readonly any[]>
             case PartType.Event:
               part = {
                 type: PartType.Event,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.Live:
+              part = {
+                type: PartType.Live,
                 node: currentNode as Element,
                 name: currentHole.name,
               };
@@ -406,13 +420,19 @@ function parseAttribtues(
         }
       }
 
-      if (caseSensitiveName.length > 1 && caseSensitiveName[0] === '@') {
+      if (caseSensitiveName[0] === '@' && caseSensitiveName.length > 1) {
         holes.push({
           type: PartType.Event,
           index,
           name: caseSensitiveName.slice(1),
         });
-      } else if (caseSensitiveName.length > 1 && caseSensitiveName[0] === '.') {
+      } else if (caseSensitiveName[0] === '$' && caseSensitiveName.length > 1) {
+        holes.push({
+          type: PartType.Live,
+          index,
+          name: caseSensitiveName.slice(1),
+        });
+      } else if (caseSensitiveName[0] === '.' && caseSensitiveName.length > 1) {
         holes.push({
           type: PartType.Property,
           index,
