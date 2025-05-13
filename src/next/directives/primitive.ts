@@ -46,7 +46,9 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
       this.shouldUpdate(this._pendingValue, this._memoizedValue);
   }
 
-  disconnect(_context: UpdateContext): void {}
+  disconnect(_context: UpdateContext): void {
+    this._dirty = true;
+  }
 
   commit(): void {
     if (!this._dirty) {

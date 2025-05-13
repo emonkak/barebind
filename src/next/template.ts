@@ -75,6 +75,7 @@ export class TemplateBinding<TBinds, TPart extends Part>
 
   disconnect(context: UpdateContext): void {
     this._memoizedBlock?.disconnect(context);
+    this._dirty = true;
   }
 
   commit(): void {

@@ -118,6 +118,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
     this._memoizedBinding?.disconnect(context);
     this._hooks = [];
+    this._dirty = true;
   }
 
   commit(): void {
