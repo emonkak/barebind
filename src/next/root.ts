@@ -1,5 +1,5 @@
 import type { UpdateOptions } from '../renderContext.js';
-import type { Binding, Effect, EffectContext } from './coreTypes.js';
+import type { Binding, Effect } from './coreTypes.js';
 import { UpdateEngine } from './engine.js';
 import { PartType } from './part.js';
 import { BrowserHost } from './renderHost.js';
@@ -47,9 +47,9 @@ class MountRoot<T> implements Effect {
     this._container = container;
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     this._container.appendChild(this._binding.part.node);
-    this._binding.commit(context);
+    this._binding.commit();
   }
 }
 
@@ -63,8 +63,8 @@ class UnmountRoot<T> implements Effect {
     this._container = container;
   }
 
-  commit(context: EffectContext): void {
-    this._binding.commit(context);
+  commit(): void {
+    this._binding.commit();
     this._container.removeChild(this._binding.part.node);
   }
 }

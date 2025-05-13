@@ -1,6 +1,5 @@
 import type {
   DirectiveContext,
-  EffectContext,
   Template,
   TemplateBlock,
   UpdateContext,
@@ -34,15 +33,12 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
   },
 };
 
-export const EmptyTemplateBlock: TemplateBlock<
-  readonly [],
-  ChildNodePart
-> = {
+export const EmptyTemplateBlock: TemplateBlock<readonly [], ChildNodePart> = {
   connect(_context: UpdateContext): void {},
   bind(_binds: readonly [], _context: UpdateContext): void {},
   disconnect(_context: UpdateContext): void {},
-  commit(_context: EffectContext): void {},
-  rollback(_context: EffectContext): void {},
+  commit(): void {},
+  rollback(): void {},
   mount(_part: ChildNodePart): void {},
   unmount(_part: ChildNodePart): void {},
 };

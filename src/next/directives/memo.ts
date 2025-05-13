@@ -3,7 +3,6 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
-  type EffectContext,
   type UpdateContext,
   createDirectiveElement,
 } from '../coreTypes.js';
@@ -81,16 +80,16 @@ class MemoBinding<T> implements Binding<T> {
     this._memoizedBinding?.disconnect(context);
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback(context);
+      this._memoizedBinding?.rollback();
     }
-    this._pendingBinding.commit(context);
+    this._pendingBinding.commit();
     this._memoizedBinding = this._pendingBinding;
   }
 
-  rollback(context: EffectContext): void {
-    this._memoizedBinding?.rollback(context);
+  rollback(): void {
+    this._memoizedBinding?.rollback();
     this._memoizedBinding = null;
   }
 }

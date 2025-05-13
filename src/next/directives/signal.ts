@@ -3,7 +3,6 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveObject,
-  type EffectContext,
   type UpdateContext,
   directiveTag,
 } from '../coreTypes.js';
@@ -247,16 +246,16 @@ class SignalBinding<T> implements Binding<Signal<T>> {
     this._memoizedBinding?.disconnect(context);
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback(context);
+      this._memoizedBinding?.rollback();
     }
-    this._pendingBinding.commit(context);
+    this._pendingBinding.commit();
     this._memoizedBinding = this._pendingBinding;
   }
 
-  rollback(context: EffectContext): void {
-    this._memoizedBinding?.rollback(context);
+  rollback(): void {
+    this._memoizedBinding?.rollback();
     this._memoizedBinding = null;
   }
 

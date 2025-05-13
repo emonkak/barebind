@@ -1,7 +1,6 @@
 import type {
   Binding,
   Effect,
-  EffectContext,
   Template,
   TemplateBlock,
   UpdateContext,
@@ -78,7 +77,7 @@ export class TemplateBinding<TBinds, TPart extends Part>
     this._memoizedBlock?.disconnect(context);
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     if (!this._dirty) {
       return;
     }
@@ -86,17 +85,17 @@ export class TemplateBinding<TBinds, TPart extends Part>
       if (this._memoizedBlock === null) {
         this._pendingBlock.mount(this._part);
       }
-      this._pendingBlock.commit(context);
+      this._pendingBlock.commit();
     }
     this._memoizedBlock = this._pendingBlock;
     this._memoizedBinds = this._pendingBinds;
     this._dirty = false;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(): void {
     if (this._memoizedBlock !== null) {
       this._memoizedBlock.unmount(this._part);
-      this._memoizedBlock.rollback(context);
+      this._memoizedBlock.rollback();
     }
     this._memoizedBlock = null;
     this._memoizedBinds = null;

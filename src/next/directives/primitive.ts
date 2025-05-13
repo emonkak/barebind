@@ -1,9 +1,4 @@
-import type {
-  Binding,
-  Directive,
-  EffectContext,
-  UpdateContext,
-} from '../coreTypes.js';
+import type { Binding, Directive, UpdateContext } from '../coreTypes.js';
 import type { Part } from '../part.js';
 
 export interface Primitive<T> extends Directive<T> {
@@ -53,7 +48,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   disconnect(_context: UpdateContext): void {}
 
-  commit(_context: EffectContext): void {
+  commit(): void {
     if (!this._dirty) {
       return;
     }
@@ -62,7 +57,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._dirty = false;
   }
 
-  rollback(_context: EffectContext): void {
+  rollback(): void {
     this.unmount();
     this._memoizedValue = noValue;
     this._dirty = false;

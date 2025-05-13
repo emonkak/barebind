@@ -1,7 +1,6 @@
 import type {
   Binding,
   DirectiveContext,
-  EffectContext,
   Template,
   TemplateBlock,
   UpdateContext,
@@ -94,9 +93,9 @@ export class SingleTemplateBlock<T>
     this._memoizedBinding?.disconnect(context);
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     if (this._pendingBinding !== this._memoizedBinding) {
-      this._memoizedBinding?.rollback(context);
+      this._memoizedBinding?.rollback();
     }
 
     DEBUG: {
@@ -106,12 +105,12 @@ export class SingleTemplateBlock<T>
       }
     }
 
-    this._pendingBinding.commit(context);
+    this._pendingBinding.commit();
     this._memoizedBinding = this._pendingBinding;
   }
 
-  rollback(context: EffectContext): void {
-    this._memoizedBinding?.rollback(context);
+  rollback(): void {
+    this._memoizedBinding?.rollback();
 
     DEBUG: {
       if (this._pendingBinding.part.type === PartType.ChildNode) {

@@ -1,9 +1,4 @@
-import type {
-  Binding,
-  Directive,
-  EffectContext,
-  UpdateContext,
-} from './coreTypes.js';
+import type { Binding, Directive, UpdateContext } from './coreTypes.js';
 import type { Part } from './part.js';
 
 export class SuspenseBinding<T> implements Binding<T> {
@@ -45,11 +40,11 @@ export class SuspenseBinding<T> implements Binding<T> {
     this._binding.disconnect(context);
   }
 
-  commit(context: EffectContext): void {
-    this._binding.commit(context);
+  commit(): void {
+    this._binding.commit();
   }
 
-  rollback(context: EffectContext): void {
-    this._binding.commit(context);
+  rollback(): void {
+    this._binding.commit();
   }
 }

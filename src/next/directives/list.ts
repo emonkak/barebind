@@ -6,7 +6,6 @@ import {
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
-  type EffectContext,
   type UpdateContext,
   createDirectiveElement,
 } from '../coreTypes.js';
@@ -143,7 +142,7 @@ class ListBinding<TItem, TKey, TValue>
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     for (let i = 0, l = this._pendingActions.length; i < l; i++) {
       const action = this._pendingActions[i]!;
       const { slot } = action;
@@ -154,34 +153,34 @@ class ListBinding<TItem, TKey, TValue>
         case ActionType.Insert: {
           const referenceNode =
             action.reference?.sentinelNode ?? this._part.node;
-          commitInsert(slot, referenceNode, context);
+          commitInsert(slot, referenceNode);
           break;
         }
         case ActionType.Update: {
-          commitUpdate(slot, context);
+          commitUpdate(slot);
           break;
         }
         case ActionType.Move: {
           const referenceNode =
             action.reference?.sentinelNode ?? this._part.node;
-          commitMove(slot, referenceNode, context);
+          commitMove(slot, referenceNode);
           break;
         }
         case ActionType.Remove:
-          commitRemove(slot, context);
+          commitRemove(slot);
           break;
       }
-      slot.dirty = false;
+      slot.dirty = true;
     }
 
     this._pendingActions = [];
     this._memoizedSlots = this._pendingSlots;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(): void {
     for (let i = 0, l = this._memoizedSlots.length; i < l; i++) {
       const slot = this._memoizedSlots[i]!;
-      commitRemove(slot, context);
+      commitRemove(slot);
     }
 
     this._memoizedSlots = [];
@@ -343,7 +342,6 @@ class ListBinding<TItem, TKey, TValue>
 function commitInsert<TKey, TValue>(
   slot: Slot<TKey, TValue>,
   referenceNode: ChildNode,
-  context: EffectContext,
 ): void {
   const { pendingBinding, sentinelNode, key } = slot;
   referenceNode.before(sentinelNode, pendingBinding.part.node);
@@ -351,19 +349,18 @@ function commitInsert<TKey, TValue>(
     sentinelNode.nodeValue = inspectValue(key);
     pendingBinding.part.node.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name}`;
   }
-  pendingBinding.commit(context);
+  pendingBinding.commit();
   slot.memoizedBinding = pendingBinding;
 }
 
 function commitMove<TKey, TValue>(
   slot: Slot<TKey, TValue>,
   referenceNode: ChildNode,
-  context: EffectContext,
 ): void {
   const { pendingBinding, memoizedBinding, sentinelNode } = slot;
   const parentNode = sentinelNode.parentNode;
   if (memoizedBinding !== pendingBinding) {
-    memoizedBinding?.rollback(context);
+    memoizedBinding?.rollback();
   }
   if (parentNode !== null) {
     const insertOrMoveBefore =
@@ -373,36 +370,30 @@ function commitMove<TKey, TValue>(
       insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
     }
   }
-  pendingBinding.commit(context);
+  pendingBinding.commit();
   slot.memoizedBinding = pendingBinding;
 }
 
-function commitRemove<TKey, TValue>(
-  slot: Slot<TKey, TValue>,
-  context: EffectContext,
-): void {
+function commitRemove<TKey, TValue>(slot: Slot<TKey, TValue>): void {
   const { memoizedBinding, sentinelNode } = slot;
   if (memoizedBinding !== null) {
-    memoizedBinding.rollback(context);
+    memoizedBinding.rollback();
     memoizedBinding.part.node.remove();
     sentinelNode.remove();
     slot.memoizedBinding = null;
   }
 }
 
-function commitUpdate<TKey, TValue>(
-  slot: Slot<TKey, TValue>,
-  context: EffectContext,
-): void {
+function commitUpdate<TKey, TValue>(slot: Slot<TKey, TValue>): void {
   const { pendingBinding, memoizedBinding, sentinelNode, key } = slot;
   if (memoizedBinding !== pendingBinding) {
-    memoizedBinding?.rollback(context);
+    memoizedBinding?.rollback();
   }
   DEBUG: {
     sentinelNode.nodeValue = inspectValue(key);
     pendingBinding.part.node.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name}`;
   }
-  pendingBinding.commit(context);
+  pendingBinding.commit();
   slot.memoizedBinding = pendingBinding;
 }
 

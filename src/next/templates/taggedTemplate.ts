@@ -1,7 +1,6 @@
 import type {
   Binding,
   DirectiveContext,
-  EffectContext,
   Template,
   TemplateBlock,
   TemplateMode,
@@ -273,13 +272,13 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
       const newBinding = this._pendingBindings[i]!;
       const oldBinding = this._memoizedBindings[i];
 
       if (newBinding !== oldBinding) {
-        oldBinding?.rollback(context);
+        oldBinding?.rollback();
       }
 
       DEBUG: {
@@ -288,12 +287,12 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
         }
       }
 
-      newBinding.commit(context);
+      newBinding.commit();
     }
     this._memoizedBindings = this._pendingBindings;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(): void {
     for (let i = this._memoizedBindings.length - 1; i >= 0; i--) {
       const binding = this._memoizedBindings[i]!;
       const part = binding.part;
@@ -303,7 +302,7 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
         this._childNodes.includes(part.node)
       ) {
         // This binding is mounted as a child of the root, so we must rollback it.
-        binding.rollback(context);
+        binding.rollback();
       }
 
       DEBUG: {

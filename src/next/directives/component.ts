@@ -5,7 +5,6 @@ import {
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
-  type EffectContext,
   type UpdateContext,
   createDirectiveElement,
 } from '../coreTypes.js';
@@ -149,21 +148,21 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     this._hooks = [];
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     if (!this._dirty) {
       return;
     }
     if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback(context);
+      this._memoizedBinding?.rollback();
     }
-    this._pendingBinding?.commit(context);
+    this._pendingBinding?.commit();
     this._memoizedProps = this._pendingProps;
     this._memoizedBinding = this._pendingBinding;
     this._dirty = false;
   }
 
-  rollback(context: EffectContext): void {
-    this._memoizedBinding?.commit(context);
+  rollback(): void {
+    this._memoizedBinding?.commit();
     this._memoizedProps = null;
     this._memoizedBinding = null;
     this._dirty = false;

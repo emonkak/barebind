@@ -1,9 +1,4 @@
-import type {
-  Binding,
-  DirectiveContext,
-  EffectContext,
-  UpdateContext,
-} from '../coreTypes.js';
+import type { Binding, DirectiveContext, UpdateContext } from '../coreTypes.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import type { Primitive } from './primitive.js';
@@ -78,23 +73,23 @@ class SpreadBinding implements Binding<SpreadValue> {
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(): void {
     for (const [name, binding] of this._memoizedBindings.entries()) {
       if (binding !== this._pendingBindings.get(name)) {
-        binding.rollback(context);
+        binding.rollback();
       }
     }
     for (const binding of this._pendingBindings.values()) {
-      binding.commit(context);
+      binding.commit();
     }
     this._memoizedBindings = new Map(this._pendingBindings);
   }
 
-  rollback(context: EffectContext): void {
+  rollback(): void {
     if (this._memoizedBindings !== null) {
       for (const [name, binding] of this._memoizedBindings.entries()) {
         if (binding !== this._pendingBindings.get(name)) {
-          binding.rollback(context);
+          binding.rollback();
         }
       }
     }

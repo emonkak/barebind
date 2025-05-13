@@ -2,12 +2,10 @@ import { dependenciesAreChanged } from './compare.js';
 import {
   type Bindable,
   type Binding,
-  CommitPhase,
   type Component,
   type Directive,
   type DirectiveElement,
   type Effect,
-  type EffectContext,
   type EffectOptions,
   type RenderContext,
   type Template,
@@ -149,13 +147,9 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
     const callback = () => {
-      binding.commit({
-        phase: CommitPhase.Mutation,
-      });
-      commitEffects(mutationEffects, {
-        phase: CommitPhase.Mutation,
-      });
-      commitEffects(layoutEffects, { phase: CommitPhase.Layout });
+      binding.commit();
+      commitEffects(mutationEffects);
+      commitEffects(layoutEffects);
     };
 
     if (options?.viewTransition) {
@@ -169,9 +163,7 @@ export class UpdateEngine implements UpdateContext {
     if (passiveEffects.length > 0) {
       await this._renderHost.requestCallback(
         () => {
-          commitEffects(passiveEffects, {
-            phase: CommitPhase.Passive,
-          });
+          commitEffects(passiveEffects);
         },
         { priority: 'background' },
       );
@@ -284,9 +276,7 @@ export class UpdateEngine implements UpdateContext {
   scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void> {
     return this._renderHost.requestCallback(
       () => {
-        effect.commit({
-          phase: CommitPhase.Mutation,
-        });
+        effect.commit();
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
@@ -623,9 +613,9 @@ class InvokeEffectHook implements Effect {
   }
 }
 
-function commitEffects(effects: Effect[], context: EffectContext): void {
+function commitEffects(effects: Effect[]): void {
   for (let i = 0, l = effects.length; i < l; i++) {
-    effects[i]!.commit(context);
+    effects[i]!.commit();
   }
 }
 

@@ -31,8 +31,8 @@ export interface Binding<T> {
   connect(context: UpdateContext): void;
   bind(value: T, context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
-  commit(context: EffectContext): void;
-  rollback(context: EffectContext): void;
+  commit(): void;
+  rollback(): void;
 }
 
 export interface Template<TBinds, TPart extends Part = Part>
@@ -49,8 +49,8 @@ export interface TemplateBlock<TBinds, TPart extends Part> {
   connect(context: UpdateContext): void;
   bind(binds: TBinds, context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
-  commit(context: EffectContext): void;
-  rollback(context: EffectContext): void;
+  commit(): void;
+  rollback(): void;
   mount(part: TPart): void;
   unmount(part: TPart): void;
 }
@@ -61,21 +61,11 @@ export type Component<TProps, TResult> = (
 ) => TResult;
 
 export interface Effect {
-  commit(context: EffectContext): void;
-}
-
-export interface EffectContext {
-  phase: CommitPhase;
+  commit(): void;
 }
 
 export interface EffectOptions {
   priority?: TaskPriority;
-}
-
-export enum CommitPhase {
-  Mutation,
-  Layout,
-  Passive,
 }
 
 export interface RenderContext extends HookContext {
