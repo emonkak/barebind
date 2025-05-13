@@ -34,7 +34,7 @@ export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
   ): TemplateBinding<readonly [unknown], ChildNodePart> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'Template directive must be used in a child node, but it is used here in:\n' +
+        'Single template must be used in a child node, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }

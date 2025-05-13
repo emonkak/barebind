@@ -25,7 +25,7 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
   ): TemplateBinding<readonly [], ChildNodePart> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'Template directive must be used in a child node, but it is used here in:\n' +
+        'Empty template must be used in a child node, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
