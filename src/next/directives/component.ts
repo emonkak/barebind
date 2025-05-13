@@ -86,42 +86,14 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   connect(context: UpdateContext): void {
-    const result = context.renderComponent(
-      this._directive.component,
-      this._pendingProps,
-      this._hooks,
-      this,
-    );
-    if (this._pendingBinding !== null) {
-      this._pendingBinding = context.reconcileBinding(
-        this._pendingBinding,
-        result,
-      );
-    } else {
-      this._pendingBinding = context.resolveBinding(result, this._part);
-      this._pendingBinding.connect(context);
-    }
+    this._performRender(this._pendingProps, context);
     this._dirty = true;
   }
 
   bind(props: TProps, context: UpdateContext): void {
     const dirty = props !== this._memoizedProps;
     if (dirty) {
-      const result = context.renderComponent(
-        this._directive.component,
-        props,
-        this._hooks,
-        this,
-      );
-      if (this._pendingBinding !== null) {
-        this._pendingBinding = context.reconcileBinding(
-          this._pendingBinding,
-          result,
-        );
-      } else {
-        this._pendingBinding = context.resolveBinding(result, this._part);
-        this._pendingBinding.connect(context);
-      }
+      this._performRender(props, context);
     }
     this._pendingProps = props;
     this._dirty ||= dirty;
@@ -166,6 +138,24 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     this._memoizedProps = null;
     this._memoizedBinding = null;
     this._dirty = false;
+  }
+
+  private _performRender(props: TProps, context: UpdateContext): void {
+    const result = context.renderComponent(
+      this._directive.component,
+      props,
+      this._hooks,
+      this,
+    );
+    if (this._pendingBinding !== null) {
+      this._pendingBinding = context.reconcileBinding(
+        this._pendingBinding,
+        result,
+      );
+    } else {
+      this._pendingBinding = context.resolveBinding(result, this._part);
+      this._pendingBinding.connect(context);
+    }
   }
 }
 
