@@ -60,6 +60,9 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   }
 
   rollback(): void {
+    if (!this._dirty) {
+      return;
+    }
     this.unmount();
     this._memoizedValue = noValue;
     this._dirty = false;

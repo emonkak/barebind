@@ -94,6 +94,9 @@ export class TemplateBinding<TBinds, TPart extends Part>
   }
 
   rollback(): void {
+    if (!this._dirty) {
+      return;
+    }
     if (this._memoizedBlock !== null) {
       this._memoizedBlock.unmount(this._part);
       this._memoizedBlock.rollback();

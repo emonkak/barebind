@@ -135,6 +135,9 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   rollback(): void {
+    if (!this._dirty) {
+      return;
+    }
     this._memoizedBinding?.commit();
     this._memoizedProps = null;
     this._memoizedBinding = null;
