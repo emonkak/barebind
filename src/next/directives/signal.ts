@@ -16,7 +16,7 @@ export type Subscription = () => void;
 
 export const SignalDirective: Directive<Signal<unknown>> = {
   get name(): string {
-    return 'Signal';
+    return 'SignalDirective';
   },
   resolveBinding(
     value: Signal<unknown>,

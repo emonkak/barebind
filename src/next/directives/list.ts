@@ -78,7 +78,7 @@ export function sortableList<TItem, TKey, TValue>(
 
 const ListDirective: Directive<ListValue<unknown, unknown, unknown>> = {
   get name(): string {
-    return 'List';
+    return 'ListDirective';
   },
   resolveBinding(
     value: ListValue<unknown, unknown, unknown>,
