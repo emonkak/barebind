@@ -36,7 +36,7 @@ class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
     const { node, name } = this._part;
     const currentValue = (node as any)[name];
     if (!Object.is(currentValue, this._pendingValue)) {
-      (this._part.node as any)[this._part.name] = this._pendingValue;
+      (node as any)[name] = this._pendingValue;
     }
   }
 
