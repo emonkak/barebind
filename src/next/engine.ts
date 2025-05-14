@@ -49,7 +49,7 @@ interface RenderFrame {
 interface ContextualScope {
   parent: ContextualScope | null;
   context: UpdateContext;
-  registry: WeakMap<WeakKey, unknown>;
+  registry: Map<WeakKey, unknown>;
 }
 
 interface GlobalState {
@@ -117,7 +117,7 @@ export class UpdateEngine implements UpdateContext {
       this._contextualScope ??= {
         parent: this._contextualScope,
         context: this,
-        registry: new WeakMap(),
+        registry: new Map(),
       };
     }
     this._contextualScope.registry.set(key, value);
