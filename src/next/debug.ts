@@ -34,22 +34,25 @@ export function inspectPart(part: Part, marker: string): string {
 }
 
 export function inspectValue(value: unknown): string {
-  if (
-    typeof value === 'string' ||
-    typeof value === 'boolean' ||
-    typeof value === 'number' ||
-    (typeof value === 'object' &&
-      (value === null ||
+  switch (typeof value) {
+    case 'string':
+      return JSON.stringify(value);
+    case 'undefined':
+      return typeof undefined;
+    case 'function':
+      return value.name !== '' ? value.name : value.constructor.name;
+    case 'object':
+      if (
+        value === null ||
         value.constructor === Object ||
-        value.constructor === Array))
-  ) {
-    return JSON.stringify(value);
-  } else if (typeof value === 'undefined') {
-    return 'undefined';
-  } else if (typeof value === 'function') {
-    return value.name !== '' ? value.name : value.constructor.name;
-  } else {
-    return (value as any)[Symbol.toStringTag] ?? value.constructor.name;
+        value.constructor === Array
+      ) {
+        return JSON.stringify(value);
+      } else {
+        return (value as any)[Symbol.toStringTag] ?? value.constructor.name;
+      }
+    default:
+      return value!.toString();
   }
 }
 

@@ -21,7 +21,7 @@ export const RefPrimitive: Primitive<RefValue> = {
       )
     ) {
       throw new Error(
-        `The value of ref primitive must be Function or Object, but got "${inspectValue(value)}".\n` +
+        `The value of ref primitive must be Function or Object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

@@ -18,7 +18,7 @@ export const EventPrimitive: Primitive<EventValue> = {
       )
     ) {
       throw new Error(
-        `The value of class primitive must be EventListener, EventListenerObject, null or undefined, but got "${inspectValue(value)}".\n` +
+        `The value of class primitive must be EventListener, EventListenerObject, null or undefined, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

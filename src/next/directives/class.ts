@@ -21,7 +21,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
       )
     ) {
       throw new Error(
-        `The value of class primitive must be String, Object or Array, but got "${inspectValue(value)}".\n` +
+        `The value of class primitive must be String, Object or Array, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

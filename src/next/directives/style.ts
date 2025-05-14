@@ -24,7 +24,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
   ensureValue(value: unknown, part: Part): asserts value is StyleValue {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of style primitive must be Object, but got "${inspectValue(value)}".\n` +
+        `The value of style primitive must be Object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

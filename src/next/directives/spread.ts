@@ -12,7 +12,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
     if (!isSpreadProps(value)) {
       throw new Error(
-        `The value of spread primitive must be Object, but got "${inspectValue(value)}".\n` +
+        `The value of spread primitive must be Object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }

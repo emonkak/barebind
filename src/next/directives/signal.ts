@@ -223,32 +223,35 @@ class SignalBinding<T> implements Binding<Signal<T>> {
   }
 
   connect(context: UpdateContext): void {
-    if (this._signal.version > 0) {
+    if (this._subscription !== null) {
       this._pendingBinding = context.reconcileBinding(
         this._pendingBinding,
         this._signal.value,
       );
     } else {
       this._pendingBinding.connect(context);
+      this._subscription = this._subscribeSignal(this._signal, context);
     }
-    this._subscription ??= this._createSubscription(context);
   }
 
   bind(signal: Signal<T>, context: UpdateContext): void {
-    if (signal !== this._signal) {
-      this._abortSubscription();
-    }
     this._pendingBinding = context.reconcileBinding(
       this._pendingBinding,
       signal.value,
     );
+    if (signal !== this._signal) {
+      this._subscription?.();
+      this._subscription = this._subscribeSignal(signal, context);
+    } else {
+      this._subscription ??= this._subscribeSignal(signal, context);
+    }
     this._signal = signal;
-    this._subscription ??= this._createSubscription(context);
   }
 
   disconnect(context: UpdateContext): void {
-    this._abortSubscription();
+    this._subscription?.();
     this._memoizedBinding?.disconnect(context);
+    this._subscription = null;
   }
 
   commit(): void {
@@ -264,13 +267,11 @@ class SignalBinding<T> implements Binding<Signal<T>> {
     this._memoizedBinding = null;
   }
 
-  private _abortSubscription(): void {
-    this._subscription?.();
-    this._subscription = null;
-  }
-
-  private _createSubscription(context: UpdateContext): Subscription {
-    return this._signal.subscribe(() => {
+  private _subscribeSignal(
+    signal: Signal<T>,
+    context: UpdateContext,
+  ): Subscription {
+    return signal.subscribe(() => {
       context.scheduleUpdate(this, { priority: 'background' });
     });
   }
