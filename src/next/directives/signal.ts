@@ -1,10 +1,11 @@
 import {
+  BindableType,
   type Binding,
   type Directive,
   type DirectiveContext,
   type DirectiveObject,
   type UpdateContext,
-  directiveTag,
+  bindableTag,
 } from '../coreTypes.js';
 import { type HookContext, type UserHook, userHookTag } from '../hook.js';
 import { LinkedList } from '../linkedList.js';
@@ -35,8 +36,12 @@ export abstract class Signal<T>
 
   abstract get version(): number;
 
-  get [directiveTag](): Directive<Signal<T>> {
+  get directive(): Directive<Signal<T>> {
     return SignalDirective as Directive<Signal<T>>;
+  }
+
+  get [bindableTag](): BindableType.Object {
+    return BindableType.Object;
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;

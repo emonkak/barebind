@@ -3,9 +3,14 @@
 import type { Hook, HookContext, UpdateOptions } from './hook.js';
 import type { Part } from './part.js';
 
-export const directiveTag: unique symbol = Symbol('DirectiveObject.directive');
+export const bindableTag: unique symbol = Symbol('Bindable');
 
-const directiveElementTag = Symbol('DirectiveElement');
+export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
+
+export enum BindableType {
+  Element,
+  Object,
+}
 
 export interface Directive<T> {
   get name(): string;
@@ -15,14 +20,13 @@ export interface Directive<T> {
 export interface DirectiveElement<T> {
   readonly directive: Directive<T>;
   readonly value: T;
-  readonly __tag: typeof directiveElementTag;
+  readonly [bindableTag]: BindableType.Element;
 }
 
 export interface DirectiveObject<T> {
-  readonly [directiveTag]: Directive<T>;
+  readonly directive: Directive<T>;
+  readonly [bindableTag]: BindableType.Object;
 }
-
-export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
 
 export interface Binding<T> {
   get directive(): Directive<T>;
@@ -133,18 +137,22 @@ export function createDirectiveElement<T>(
   return {
     directive,
     value,
-    __tag: directiveElementTag,
+    [bindableTag]: BindableType.Element,
   };
 }
 
 export function isDirectiveElement(
   value: unknown,
 ): value is DirectiveElement<unknown> {
-  return (value as DirectiveElement<unknown>)?.__tag === directiveElementTag;
+  return (
+    (value as DirectiveElement<unknown>)?.[bindableTag] === BindableType.Element
+  );
 }
 
 export function isDirectiveObject(
   value: unknown,
 ): value is DirectiveObject<unknown> {
-  return (value as DirectiveObject<unknown>)?.[directiveTag] != null;
+  return (
+    (value as DirectiveObject<unknown>)?.[bindableTag] === BindableType.Object
+  );
 }

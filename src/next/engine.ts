@@ -3,7 +3,6 @@ import {
   type Bindable,
   type Binding,
   type Component,
-  type Directive,
   type DirectiveElement,
   type Effect,
   type EffectOptions,
@@ -13,7 +12,6 @@ import {
   type TemplateMode,
   type UpdateContext,
   createDirectiveElement,
-  directiveTag,
   isDirectiveElement,
   isDirectiveObject,
 } from './coreTypes.js';
@@ -261,10 +259,7 @@ export class UpdateEngine implements UpdateContext {
     if (isDirectiveElement(value)) {
       return value;
     } else if (isDirectiveObject(value)) {
-      return createDirectiveElement(
-        value[directiveTag] as Directive<T>,
-        value as T,
-      );
+      return createDirectiveElement(value.directive, value as T);
     } else {
       type EnsureValue = (value: unknown, part: Part) => void;
       const directive = this._renderHost.resolvePrimitive(part) as Primitive<T>;
