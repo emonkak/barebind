@@ -44,7 +44,6 @@ interface Slot<TKey, TValue> {
   memoizedBinding: Binding<TValue> | null;
   sentinelNode: Comment;
   key: TKey;
-  dirty: boolean;
 }
 
 export function list<TItem, TKey, TValue>(
@@ -146,9 +145,6 @@ class ListBinding<TItem, TKey, TValue>
     for (let i = 0, l = this._pendingActions.length; i < l; i++) {
       const action = this._pendingActions[i]!;
       const { slot } = action;
-      if (!slot.dirty) {
-        continue;
-      }
       switch (action.type) {
         case ActionType.Insert: {
           const referenceNode =
@@ -170,7 +166,6 @@ class ListBinding<TItem, TKey, TValue>
           commitRemove(slot);
           break;
       }
-      slot.dirty = true;
     }
 
     this._pendingActions = [];
@@ -226,7 +221,6 @@ class ListBinding<TItem, TKey, TValue>
         sentinelNode: document.createComment(''),
         pendingBinding: binding,
         memoizedBinding: null,
-        dirty: true,
       };
       newSlots[index] = slot;
       pendingActions.push({
@@ -240,7 +234,6 @@ class ListBinding<TItem, TKey, TValue>
         slot.pendingBinding,
         newValues[index]!,
       );
-      slot.dirty = true;
       newSlots[index] = slot;
       pendingActions.push({
         type: ActionType.Update,
@@ -256,7 +249,6 @@ class ListBinding<TItem, TKey, TValue>
         slot.pendingBinding,
         newValues[index]!,
       );
-      slot.dirty = true;
       newSlots[index] = slot;
       pendingActions.push({
         type: ActionType.Move,
@@ -266,7 +258,6 @@ class ListBinding<TItem, TKey, TValue>
     };
     const removeSlot = (slot: Slot<TKey, TValue>) => {
       slot.pendingBinding.disconnect(context);
-      slot.dirty = true;
       pendingActions.push({
         type: ActionType.Remove,
         slot,
