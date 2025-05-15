@@ -5,7 +5,6 @@ import {
   type Component,
   type DirectiveElement,
   type Effect,
-  type EffectOptions,
   type RenderContext,
   type Template,
   type TemplateBlock,
@@ -110,34 +109,19 @@ export class UpdateEngine implements UpdateContext {
     this._renderFrame.passiveEffects.push(effect);
   }
 
-  setContextualValue(key: WeakKey, value: unknown): void {
-    if (this._contextualScope?.context !== this) {
-      this._contextualScope ??= {
-        parent: this._contextualScope,
-        context: this,
-        registry: new Map(),
-      };
-    }
-    this._contextualScope.registry.set(key, value);
-  }
-
-  async flushUpdate(
-    binding: Binding<unknown>,
-    options?: UpdateOptions,
-  ): Promise<void> {
+  async flushFrame(options?: UpdateOptions): Promise<void> {
     const { dirtyBindings } = this._globalState;
-    let pendingBindings = [binding];
 
     while (true) {
+      const pendingBindings = consumePendingBindings(this._renderFrame);
       for (let i = 0, l = pendingBindings.length; i < l; i++) {
         const pendingBinding = pendingBindings[i]!;
         pendingBinding.connect(this);
-        dirtyBindings.delete(binding);
+        dirtyBindings.delete(pendingBinding);
       }
       if (this._renderFrame.pendingBindings.length === 0) {
         break;
       }
-      pendingBindings = consumePendingBindings(this._renderFrame);
       await this._renderHost.yieldToMain();
     }
 
@@ -145,7 +129,6 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
     const callback = () => {
-      binding.commit();
       commitEffects(mutationEffects);
       commitEffects(layoutEffects);
     };
@@ -166,6 +149,17 @@ export class UpdateEngine implements UpdateContext {
         { priority: 'background' },
       );
     }
+  }
+
+  setContextualValue(key: WeakKey, value: unknown): void {
+    if (this._contextualScope?.context !== this) {
+      this._contextualScope ??= {
+        parent: this._contextualScope,
+        context: this,
+        registry: new Map(),
+      };
+    }
+    this._contextualScope.registry.set(key, value);
   }
 
   getContextualValue<T>(key: ContextualKey<T>): T {
@@ -268,15 +262,6 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void> {
-    return this._renderHost.requestCallback(
-      () => {
-        effect.commit();
-      },
-      { priority: options?.priority ?? this._renderHost.getTaskPriority() },
-    );
-  }
-
   scheduleUpdate(
     binding: Binding<unknown>,
     options?: UpdateOptions,
@@ -288,7 +273,8 @@ export class UpdateEngine implements UpdateContext {
         if (!dirtyBindings.has(binding)) {
           return;
         }
-        await this.flushUpdate(binding);
+        this._renderFrame.pendingBindings.push(binding);
+        await this.flushFrame(options);
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );

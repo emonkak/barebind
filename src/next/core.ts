@@ -104,6 +104,7 @@ export interface UpdateContext extends DirectiveContext {
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
+  flushFrame(options?: UpdateOptions): Promise<void>;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
@@ -114,7 +115,6 @@ export interface UpdateContext extends DirectiveContext {
     template: Template<TBinds, TPart>,
     binds: TBinds,
   ): TemplateBlock<TBinds, TPart>;
-  scheduleEffect(effect: Effect, options?: EffectOptions): Promise<void>;
   scheduleUpdate(
     binding: Binding<unknown>,
     options?: UpdateOptions,

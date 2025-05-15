@@ -31,9 +31,9 @@ export class SuspenseBinding<T> implements Binding<T> {
     }
   }
 
-  bind(newValue: T, context: UpdateContext): void {
+  bind(value: T, context: UpdateContext): void {
     context.enqueueBinding(this);
-    this._pendingValue = newValue;
+    this._pendingValue = value;
   }
 
   disconnect(context: UpdateContext): void {
