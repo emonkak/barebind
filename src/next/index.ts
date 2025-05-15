@@ -1,4 +1,4 @@
-export * from './coreTypes.js';
+export * from './core.js';
 export * from './directives/component.js';
 export * from './directives/list.js';
 export * from './directives/memo.js';

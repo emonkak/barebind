@@ -4,7 +4,7 @@ import type {
   Template,
   TemplateBlock,
   UpdateContext,
-} from './coreTypes.js';
+} from './core.js';
 import type { Part } from './part.js';
 
 export class TemplateBinding<TBinds, TPart extends Part>

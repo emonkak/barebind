@@ -1,4 +1,4 @@
-import type { Binding, DirectiveContext, UpdateContext } from '../coreTypes.js';
+import type { Binding, DirectiveContext, UpdateContext } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import type { Primitive } from './primitive.js';

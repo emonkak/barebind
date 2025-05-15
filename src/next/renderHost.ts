@@ -1,6 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import type { Template, TemplateMode } from './coreTypes.js';
+import type { Template, TemplateMode } from './core.js';
 import { AttributePrimitive } from './directives/attribute.js';
 import { ClassPrimitive } from './directives/class.js';
 import { EventPrimitive } from './directives/event.js';

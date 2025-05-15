@@ -8,7 +8,7 @@ import {
   type Effect,
   type UpdateContext,
   createDirectiveElement,
-} from '../coreTypes.js';
+} from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 

@@ -14,7 +14,7 @@ import {
   createDirectiveElement,
   isDirectiveElement,
   isDirectiveObject,
-} from './coreTypes.js';
+} from './core.js';
 import type { Primitive } from './directives/primitive.js';
 import {
   type ContextualKey,

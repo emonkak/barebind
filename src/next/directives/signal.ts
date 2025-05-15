@@ -6,7 +6,7 @@ import {
   type DirectiveObject,
   type UpdateContext,
   bindableTag,
-} from '../coreTypes.js';
+} from '../core.js';
 import { type HookContext, type UserHook, userHookTag } from '../hook.js';
 import { LinkedList } from '../linkedList.js';
 import type { Part } from '../part.js';

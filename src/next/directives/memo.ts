@@ -5,7 +5,7 @@ import {
   type DirectiveElement,
   type UpdateContext,
   createDirectiveElement,
-} from '../coreTypes.js';
+} from '../core.js';
 import type { Part } from '../part.js';
 
 export function memo<T>(value: T): DirectiveElement<T> {

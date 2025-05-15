@@ -1,4 +1,4 @@
-import type { DirectiveContext } from '../coreTypes.js';
+import type { DirectiveContext } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';

@@ -47,8 +47,6 @@ export interface Template<TBinds, TPart extends Part = Part>
   ): TemplateBlock<TBinds, TPart>;
 }
 
-export type TemplateMode = 'html' | 'math' | 'svg';
-
 export interface TemplateBlock<TBinds, TPart extends Part> {
   connect(context: UpdateContext): void;
   bind(binds: TBinds, context: UpdateContext): void;
@@ -58,6 +56,8 @@ export interface TemplateBlock<TBinds, TPart extends Part> {
   mount(part: TPart): void;
   unmount(part: TPart): void;
 }
+
+export type TemplateMode = 'html' | 'math' | 'svg';
 
 export type Component<TProps, TResult> = (
   props: TProps,

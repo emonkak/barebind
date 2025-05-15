@@ -5,7 +5,7 @@ import type {
   TemplateBlock,
   TemplateMode,
   UpdateContext,
-} from '../coreTypes.js';
+} from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
