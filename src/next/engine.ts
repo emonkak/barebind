@@ -51,7 +51,7 @@ interface ContextualScope {
 
 interface GlobalState {
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
-  dirtyBindings: WeakSet<Binding<unknown>>;
+  dirtyBindings: Set<Binding<unknown>>;
   identifierCount: number;
   templatePlaceholder: string;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
@@ -267,6 +267,9 @@ export class UpdateEngine implements UpdateContext {
     options?: UpdateOptions,
   ): Promise<void> {
     const { dirtyBindings } = this._globalState;
+    if (dirtyBindings.has(binding)) {
+      return Promise.resolve();
+    }
     dirtyBindings.add(binding);
     return this._renderHost.requestCallback(
       async () => {
@@ -274,6 +277,7 @@ export class UpdateEngine implements UpdateContext {
           return;
         }
         this._renderFrame.pendingBindings.push(binding);
+        this._renderFrame.mutationEffects.push(binding);
         await this.flushFrame(options);
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
@@ -623,7 +627,7 @@ function consumePendingBindings(renderFrame: RenderFrame): Binding<unknown>[] {
 function createGlobalState(): GlobalState {
   return {
     cachedTemplates: new WeakMap(),
-    dirtyBindings: new WeakSet(),
+    dirtyBindings: new Set(),
     identifierCount: 0,
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
     templatePlaceholder: getRandomString(8),
