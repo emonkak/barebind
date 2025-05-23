@@ -243,8 +243,8 @@ class ListBinding<TItem, TKey, TValue>
     };
     const moveSlot = (
       slot: Slot<TKey, TValue>,
-      reference: Slot<TKey, TValue> | undefined,
       index: number,
+      reference: Slot<TKey, TValue> | undefined,
     ) => {
       slot.pendingBinding = context.reconcileBinding(
         slot.pendingBinding,
@@ -268,7 +268,7 @@ class ListBinding<TItem, TKey, TValue>
     let oldHead = 0;
     let oldTail = oldSlots.length - 1;
     let newHead = 0;
-    let newTail = newKeys.length - 1;
+    let newTail = newSlots.length - 1;
 
     loop: while (true) {
       switch (true) {
@@ -295,12 +295,12 @@ class ListBinding<TItem, TKey, TValue>
           oldTail--;
           break;
         case oldSlots[oldHead]!.key === newKeys[newTail]:
-          moveSlot(oldSlots[oldHead]!, newSlots[newTail + 1], newTail);
+          moveSlot(oldSlots[oldHead]!, newTail, newSlots[newTail + 1]);
           newTail--;
           oldHead++;
           break;
         case oldSlots[oldTail]!.key === newKeys[newHead]:
-          moveSlot(oldSlots[oldTail]!, oldSlots[oldHead]!, newHead);
+          moveSlot(oldSlots[oldTail]!, newHead, oldSlots[oldHead]!);
           newHead++;
           oldTail--;
           break;
@@ -313,7 +313,7 @@ class ListBinding<TItem, TKey, TValue>
             const key = newKeys[newTail];
             const oldIndex = oldIndexMap.get(key);
             if (oldIndex !== undefined) {
-              moveSlot(oldSlots[oldIndex]!, newSlots[newTail + 1], newTail);
+              moveSlot(oldSlots[oldIndex]!, newTail, newSlots[newTail + 1]);
               oldIndexMap.delete(key);
             } else {
               insertSlot(newTail, newSlots[newTail + 1]);
