@@ -222,6 +222,7 @@ class ListBinding<TItem, TKey, TValue>
         pendingBinding: binding,
         memoizedBinding: null,
       };
+      binding.connect(context);
       newSlots[index] = slot;
       pendingActions.push({
         type: ActionType.Insert,

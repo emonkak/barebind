@@ -200,9 +200,7 @@ export class UpdateEngine implements UpdateContext {
 
   resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
     const element = this.resolveDirectiveElement(value, part);
-    const binding = element.directive.resolveBinding(element.value, part, this);
-    binding.connect(this);
-    return binding;
+    return element.directive.resolveBinding(element.value, part, this);
   }
 
   reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T> {
