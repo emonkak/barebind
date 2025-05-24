@@ -5,13 +5,6 @@ import type { Part } from './part.js';
 
 export const bindableTag: unique symbol = Symbol('Bindable');
 
-export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
-
-export enum BindableType {
-  Element,
-  Object,
-}
-
 export interface Directive<T> {
   get name(): string;
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
@@ -26,6 +19,13 @@ export interface DirectiveElement<T> {
 export interface DirectiveObject<T> {
   readonly directive: Directive<T>;
   readonly [bindableTag]: BindableType.Object;
+}
+
+export type Bindable<T> = T | DirectiveElement<T> | DirectiveObject<T>;
+
+export enum BindableType {
+  Element,
+  Object,
 }
 
 export interface Binding<T> {
@@ -66,10 +66,6 @@ export type Component<TProps, TResult> = (
 
 export interface Effect {
   commit(): void;
-}
-
-export interface EffectOptions {
-  priority?: TaskPriority;
 }
 
 export interface RenderContext extends HookContext {

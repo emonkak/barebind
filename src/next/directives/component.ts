@@ -7,7 +7,7 @@ import {
   type Effect,
   type UpdateContext,
   createDirectiveElement,
-} from '../core.js';
+} from '../directive.js';
 import { type EffectHook, type Hook, HookType } from '../hook.js';
 import type { Part } from '../part.js';
 import { SuspenseBinding } from '../suspense.js';

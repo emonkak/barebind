@@ -1,11 +1,11 @@
+import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
   DirectiveContext,
   Template,
   TemplateBlock,
   UpdateContext,
-} from '../core.js';
-import { inspectPart, markUsedValue } from '../debug.js';
+} from '../directive.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 

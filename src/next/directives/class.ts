@@ -1,6 +1,6 @@
 import { shallowEqual } from '../compare.js';
-import type { DirectiveContext } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import type { DirectiveContext } from '../directive.js';
 import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
 import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';

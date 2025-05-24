@@ -13,7 +13,7 @@ import {
   createDirectiveElement,
   isDirectiveElement,
   isDirectiveObject,
-} from './core.js';
+} from './directive.js';
 import type { Primitive } from './directives/primitive.js';
 import {
   type ContextualKey,

@@ -1,5 +1,6 @@
 /// <reference path="../../../typings/moveBefore.d.ts" />
 
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import {
   type Binding,
   type Directive,
@@ -8,8 +9,7 @@ import {
   type Effect,
   type UpdateContext,
   createDirectiveElement,
-} from '../core.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+} from '../directive.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 
 export type ListValue<TItem, TKey, TResult> = {

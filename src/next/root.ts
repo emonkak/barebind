@@ -1,5 +1,5 @@
 import type { UpdateOptions } from '../renderContext.js';
-import type { Binding, Directive, Effect, UpdateContext } from './core.js';
+import type { Binding, Directive, Effect, UpdateContext } from './directive.js';
 import { UpdateEngine } from './engine.js';
 import { type Part, PartType } from './part.js';
 import { BrowserHost } from './renderHost.js';

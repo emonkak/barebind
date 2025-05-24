@@ -1,4 +1,4 @@
-import type { Binding, Directive, UpdateContext } from '../core.js';
+import type { Binding, Directive, UpdateContext } from '../directive.js';
 import type { Part } from '../part.js';
 
 export interface Primitive<T> extends Directive<T> {

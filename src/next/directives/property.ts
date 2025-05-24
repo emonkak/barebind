@@ -1,5 +1,5 @@
-import type { DirectiveContext } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import type { DirectiveContext } from '../directive.js';
 import { type Part, PartType, type PropertyPart } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
