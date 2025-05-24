@@ -18,21 +18,21 @@ export type ListValue<TItem, TKey, TResult> = {
   valueSelector: (item: TItem, index: number) => TResult;
 };
 
-type Action<TKey, TValue> =
+type Operation<TKey, TValue> =
   | {
-      type: ActionType.Insert;
+      type: OperationType.Insert;
       slot: Slot<TKey, TValue>;
       reference: Slot<TKey, TValue> | undefined;
     }
-  | { type: ActionType.Update; slot: Slot<TKey, TValue> }
+  | { type: OperationType.Update; slot: Slot<TKey, TValue> }
   | {
-      type: ActionType.Move;
+      type: OperationType.Move;
       slot: Slot<TKey, TValue>;
       reference: Slot<TKey, TValue> | undefined;
     }
-  | { type: ActionType.Remove; slot: Slot<TKey, TValue> };
+  | { type: OperationType.Remove; slot: Slot<TKey, TValue> };
 
-const enum ActionType {
+const enum OperationType {
   Insert,
   Update,
   Move,
@@ -101,7 +101,7 @@ class ListBinding<TItem, TKey, TValue>
 
   private readonly _part: ChildNodePart;
 
-  private _pendingActions: Action<TKey, TValue>[] = [];
+  private _pendingOperations: Operation<TKey, TValue>[] = [];
 
   private _pendingSlots: Slot<TKey, TValue>[] = [];
 
@@ -142,33 +142,33 @@ class ListBinding<TItem, TKey, TValue>
   }
 
   commit(): void {
-    for (let i = 0, l = this._pendingActions.length; i < l; i++) {
-      const action = this._pendingActions[i]!;
+    for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
+      const action = this._pendingOperations[i]!;
       const { slot } = action;
       switch (action.type) {
-        case ActionType.Insert: {
+        case OperationType.Insert: {
           const referenceNode =
             action.reference?.sentinelNode ?? this._part.node;
           commitInsert(slot, referenceNode);
           break;
         }
-        case ActionType.Update: {
+        case OperationType.Update: {
           commitUpdate(slot);
           break;
         }
-        case ActionType.Move: {
+        case OperationType.Move: {
           const referenceNode =
             action.reference?.sentinelNode ?? this._part.node;
           commitMove(slot, referenceNode);
           break;
         }
-        case ActionType.Remove:
+        case OperationType.Remove:
           commitRemove(slot);
           break;
       }
     }
 
-    this._pendingActions = [];
+    this._pendingOperations = [];
     this._memoizedSlots = this._pendingSlots;
   }
 
@@ -185,7 +185,6 @@ class ListBinding<TItem, TKey, TValue>
     { items, keySelector, valueSelector }: ListValue<TItem, TKey, TValue>,
     context: UpdateContext,
   ): void {
-    const pendingActions = this._pendingActions;
     const oldSlots = this._pendingSlots;
     let newSlots: Slot<TKey, TValue>[];
     let newKeys: TKey[];
@@ -224,8 +223,8 @@ class ListBinding<TItem, TKey, TValue>
       };
       binding.connect(context);
       newSlots[index] = slot;
-      pendingActions.push({
-        type: ActionType.Insert,
+      this._pendingOperations.push({
+        type: OperationType.Insert,
         slot,
         reference,
       });
@@ -236,8 +235,8 @@ class ListBinding<TItem, TKey, TValue>
         newValues[index]!,
       );
       newSlots[index] = slot;
-      pendingActions.push({
-        type: ActionType.Update,
+      this._pendingOperations.push({
+        type: OperationType.Update,
         slot,
       });
     };
@@ -251,16 +250,16 @@ class ListBinding<TItem, TKey, TValue>
         newValues[index]!,
       );
       newSlots[index] = slot;
-      pendingActions.push({
-        type: ActionType.Move,
+      this._pendingOperations.push({
+        type: OperationType.Move,
         slot,
         reference,
       });
     };
     const removeSlot = (slot: Slot<TKey, TValue>) => {
       slot.pendingBinding.disconnect(context);
-      pendingActions.push({
-        type: ActionType.Remove,
+      this._pendingOperations.push({
+        type: OperationType.Remove,
         slot,
       });
     };
