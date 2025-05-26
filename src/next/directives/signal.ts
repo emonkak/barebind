@@ -272,7 +272,9 @@ class SignalBinding<T> implements Binding<Signal<T>> {
     context: UpdateContext,
   ): Subscription {
     return signal.subscribe(() => {
-      context.scheduleUpdate(this, { priority: 'background' });
+      if (this._memoizedBinding !== null) {
+        context.scheduleUpdate(this, { priority: 'background' });
+      }
     });
   }
 }
