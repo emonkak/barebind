@@ -20,7 +20,7 @@ export class TemplateBinding<TBinds, TPart extends Part>
 
   private _memoizedBlock: TemplateBlock<TBinds, TPart> | null = null;
 
-  private _dirty = true;
+  private _dirty = false;
 
   constructor(template: Template<TBinds, TPart>, binds: TBinds, part: TPart) {
     this._template = template;
@@ -40,21 +40,20 @@ export class TemplateBinding<TBinds, TPart extends Part>
     return this._part;
   }
 
-  bind(binds: TBinds, _context: UpdateContext): void {
-    this._dirty ||= binds !== this._binds;
+  bind(binds: TBinds, _context: UpdateContext): boolean {
+    const dirty = binds !== this._binds;
     this._binds = binds;
+    return dirty;
   }
 
   connect(context: UpdateContext): void {
-    if (!this._dirty) {
-      return;
-    }
     if (this._pendingBlock !== null) {
       this._pendingBlock.bind(this._binds, context);
     } else {
       this._pendingBlock = context.renderTemplate(this._template, this._binds);
     }
     this._pendingBlock.connect(context);
+    this._dirty = true;
   }
 
   disconnect(context: UpdateContext): void {

@@ -51,6 +51,7 @@ export function createRoot<TValue, TContext>(
     },
     update(newValue: TValue): void {
       binding.bind(newValue, context);
+      binding.connect(context);
       context.scheduleUpdate();
     },
   };

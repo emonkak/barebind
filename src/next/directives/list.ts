@@ -150,106 +150,17 @@ class ListBinding<TItem, TKey, TValue>
     return this._part;
   }
 
-  bind(value: ListValue<TItem, TKey, TValue>, context: UpdateContext): void {
+  bind(
+    value: ListValue<TItem, TKey, TValue>,
+    _context: UpdateContext,
+  ): boolean {
     const dirty = value !== this._value;
-    if (!dirty) {
-      return;
-    }
-    this._pendingSlots = this._reconcileSlots(value, context);
     this._value = value;
-    this._dirty = true;
+    return dirty;
   }
 
   connect(context: UpdateContext): void {
-    if (!this._dirty) {
-      return;
-    }
-    for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
-      const slot = this._pendingSlots[i]!;
-      slot.pendingBinding.connect(context);
-    }
-  }
-
-  disconnect(context: UpdateContext): void {
-    for (let i = this._pendingSlots.length - 1; i >= 0; i--) {
-      const slot = this._pendingSlots[i]!;
-      slot.pendingBinding.disconnect(context);
-    }
-    this._dirty = true;
-  }
-
-  commit(): void {
-    if (!this._dirty) {
-      return;
-    }
-
-    if (this._memoizedSlots.length === 0) {
-      for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
-        const slot = this._pendingSlots[i]!;
-        commitInsert(slot, this._part.node);
-      }
-    } else {
-      for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
-        const action = this._pendingOperations[i]!;
-        switch (action.type) {
-          case OperationType.Insert: {
-            const referenceNode =
-              action.forwardSlot?.sentinelNode ?? this._part.node;
-            commitInsert(action.slot, referenceNode);
-            break;
-          }
-          case OperationType.Move: {
-            const referenceNode =
-              action.forwardSlot?.sentinelNode ?? this._part.node;
-            commitMove(action.slot, referenceNode);
-            break;
-          }
-          case OperationType.Remove:
-            commitRemove(action.slot);
-            break;
-        }
-      }
-    }
-
-    for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
-      const slot = this._pendingSlots[i]!;
-      const { pendingBinding, memoizedBinding, sentinelNode, key } = slot;
-      if (memoizedBinding !== pendingBinding) {
-        memoizedBinding?.rollback();
-      }
-      DEBUG: {
-        sentinelNode.nodeValue = inspectValue(key);
-        pendingBinding.part.node.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name}`;
-      }
-      pendingBinding.commit();
-      slot.memoizedBinding = pendingBinding;
-    }
-
-    this._pendingOperations = [];
-    this._memoizedSlots = this._pendingSlots;
-    this._dirty = false;
-  }
-
-  rollback(): void {
-    if (!this._dirty) {
-      return;
-    }
-
-    for (let i = this._memoizedSlots.length - 1; i >= 0; i--) {
-      const slot = this._memoizedSlots[i]!;
-      commitRemove(slot);
-    }
-
-    this._pendingOperations = [];
-    this._memoizedSlots = [];
-    this._dirty = false;
-  }
-
-  private _reconcileSlots(
-    value: ListValue<TItem, TKey, TValue>,
-    context: UpdateContext,
-  ): Slot<TKey, TValue>[] {
-    const { items, keySelector, valueSelector } = value;
+    const { items, keySelector, valueSelector } = this._value;
     const oldSlots = this._pendingSlots;
     const newSlots = new Array(items.length);
     const newKeys = items.map(keySelector);
@@ -370,7 +281,83 @@ class ListBinding<TItem, TKey, TValue>
       }
     }
 
-    return newSlots;
+    this._pendingSlots = newSlots;
+    this._dirty = true;
+  }
+
+  disconnect(context: UpdateContext): void {
+    for (let i = this._pendingSlots.length - 1; i >= 0; i--) {
+      const slot = this._pendingSlots[i]!;
+      slot.pendingBinding.disconnect(context);
+    }
+    this._dirty = true;
+  }
+
+  commit(): void {
+    if (!this._dirty) {
+      return;
+    }
+
+    if (this._memoizedSlots.length === 0) {
+      for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
+        const slot = this._pendingSlots[i]!;
+        commitInsert(slot, this._part.node);
+      }
+    } else {
+      for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
+        const action = this._pendingOperations[i]!;
+        switch (action.type) {
+          case OperationType.Insert: {
+            const referenceNode =
+              action.forwardSlot?.sentinelNode ?? this._part.node;
+            commitInsert(action.slot, referenceNode);
+            break;
+          }
+          case OperationType.Move: {
+            const referenceNode =
+              action.forwardSlot?.sentinelNode ?? this._part.node;
+            commitMove(action.slot, referenceNode);
+            break;
+          }
+          case OperationType.Remove:
+            commitRemove(action.slot);
+            break;
+        }
+      }
+    }
+
+    for (let i = 0, l = this._pendingSlots.length; i < l; i++) {
+      const slot = this._pendingSlots[i]!;
+      const { pendingBinding, memoizedBinding, sentinelNode, key } = slot;
+      if (memoizedBinding !== pendingBinding) {
+        memoizedBinding?.rollback();
+      }
+      DEBUG: {
+        sentinelNode.nodeValue = inspectValue(key);
+        pendingBinding.part.node.nodeValue = `${inspectValue(key)}: ${pendingBinding.directive.name}`;
+      }
+      pendingBinding.commit();
+      slot.memoizedBinding = pendingBinding;
+    }
+
+    this._pendingOperations = [];
+    this._memoizedSlots = this._pendingSlots;
+    this._dirty = false;
+  }
+
+  rollback(): void {
+    if (!this._dirty) {
+      return;
+    }
+
+    for (let i = this._memoizedSlots.length - 1; i >= 0; i--) {
+      const slot = this._memoizedSlots[i]!;
+      commitRemove(slot);
+    }
+
+    this._pendingOperations = [];
+    this._memoizedSlots = [];
+    this._dirty = false;
   }
 }
 

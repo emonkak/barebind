@@ -49,25 +49,31 @@ class MemoBinding<T> implements Binding<T> {
     return this._pendingBinding.part;
   }
 
-  bind(value: T, context: UpdateContext): void {
-    const binding = this._pendingBinding;
-    const element = context.resolveDirectiveElement(value, binding.part);
-    if (binding.directive === element.directive) {
-      binding.bind(element.value, context);
+  bind(value: T, context: UpdateContext): boolean {
+    const element = context.resolveDirectiveElement(
+      value,
+      this._pendingBinding.part,
+    );
+    if (this._pendingBinding.directive === element.directive) {
+      return this._pendingBinding.bind(element.value, context);
     } else {
       const cachedBinding = this._cachedBindings.get(element.directive);
-      binding.disconnect(context);
+      this._pendingBinding.disconnect(context);
       if (cachedBinding !== undefined) {
         cachedBinding.bind(element.value, context);
         this._pendingBinding = cachedBinding;
       } else {
         this._pendingBinding = element.directive.resolveBinding(
           element.value,
-          binding.part,
+          this._pendingBinding.part,
           context,
         );
       }
-      this._cachedBindings.set(binding.directive, binding);
+      this._cachedBindings.set(
+        this._pendingBinding.directive,
+        this._pendingBinding,
+      );
+      return true;
     }
   }
 

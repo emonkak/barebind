@@ -60,16 +60,13 @@ class SpreadBinding implements Binding<SpreadProps> {
     return this._part;
   }
 
-  bind(props: SpreadProps, _context: UpdateContext): void {
-    this._dirty ||= props !== this._props;
+  bind(props: SpreadProps, _context: UpdateContext): boolean {
+    const dirty = props !== this._props;
     this._props = props;
+    return dirty;
   }
 
   connect(context: UpdateContext): void {
-    if (!this._dirty) {
-      return;
-    }
-
     for (const [name, binding] of this._pendingBindings.entries()) {
       if (!Object.hasOwn(this._props, name) || this._props[name] == null) {
         binding.disconnect(context);
@@ -96,6 +93,8 @@ class SpreadBinding implements Binding<SpreadProps> {
         newBinding.connect(context);
       }
     }
+
+    this._dirty = true;
   }
 
   disconnect(context: UpdateContext): void {

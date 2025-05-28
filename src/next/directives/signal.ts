@@ -29,6 +29,75 @@ export const SignalDirective: Directive<Signal<unknown>> = {
   },
 };
 
+class SignalBinding<T> implements Binding<Signal<T>> {
+  private _signal: Signal<T>;
+
+  private _pendingBinding: Binding<T>;
+
+  private _memoizedBinding: Binding<T> | null = null;
+
+  private _subscription: Subscription | null = null;
+
+  constructor(signal: Signal<T>, binding: Binding<T>) {
+    this._signal = signal;
+    this._pendingBinding = binding;
+  }
+
+  get directive(): Directive<Signal<T>> {
+    return SignalDirective as Directive<Signal<T>>;
+  }
+
+  get value(): Signal<T> {
+    return this._signal;
+  }
+
+  get part(): Part {
+    return this._pendingBinding.part;
+  }
+
+  bind(signal: Signal<T>, context: UpdateContext): boolean {
+    const dirty = signal !== this._signal;
+    if (dirty) {
+      this._subscription?.();
+      this._subscription = null;
+    }
+    this._pendingBinding = context.reconcileBinding(
+      this._pendingBinding,
+      signal.value,
+    );
+    this._signal = signal;
+    return dirty;
+  }
+
+  connect(context: UpdateContext): void {
+    this._pendingBinding.connect(context);
+    this._subscription ??= this._signal.subscribe(() => {
+      if (this._memoizedBinding !== null) {
+        context.scheduleUpdate(this, { priority: 'background' });
+      }
+    });
+  }
+
+  disconnect(context: UpdateContext): void {
+    this._subscription?.();
+    this._pendingBinding.disconnect(context);
+    this._subscription = null;
+  }
+
+  commit(): void {
+    if (this._memoizedBinding !== this._pendingBinding) {
+      this._memoizedBinding?.rollback();
+    }
+    this._pendingBinding.commit();
+    this._memoizedBinding = this._pendingBinding;
+  }
+
+  rollback(): void {
+    this._memoizedBinding?.rollback();
+    this._memoizedBinding = null;
+  }
+}
+
 export abstract class Signal<T>
   implements DirectiveObject<Signal<T>>, UserHook<T>
 {
@@ -193,72 +262,5 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 
   subscribe(subscriber: Subscriber): Subscription {
     return this._signal.subscribe(subscriber);
-  }
-}
-
-class SignalBinding<T> implements Binding<Signal<T>> {
-  private _signal: Signal<T>;
-
-  private _pendingBinding: Binding<T>;
-
-  private _memoizedBinding: Binding<T> | null = null;
-
-  private _subscription: Subscription | null = null;
-
-  constructor(signal: Signal<T>, binding: Binding<T>) {
-    this._signal = signal;
-    this._pendingBinding = binding;
-  }
-
-  get directive(): Directive<Signal<T>> {
-    return SignalDirective as Directive<Signal<T>>;
-  }
-
-  get value(): Signal<T> {
-    return this._signal;
-  }
-
-  get part(): Part {
-    return this._pendingBinding.part;
-  }
-
-  bind(signal: Signal<T>, context: UpdateContext): void {
-    if (signal !== this._signal) {
-      this._subscription?.();
-      this._subscription = null;
-    }
-    this._pendingBinding = context.reconcileBinding(
-      this._pendingBinding,
-      signal.value,
-    );
-    this._signal = signal;
-  }
-
-  connect(context: UpdateContext): void {
-    this._pendingBinding.connect(context);
-    this._subscription ??= this._signal.subscribe(() => {
-      if (this._memoizedBinding !== null) {
-        context.scheduleUpdate(this, { priority: 'background' });
-      }
-    });
-  }
-
-  disconnect(context: UpdateContext): void {
-    this._subscription?.();
-    this._pendingBinding.disconnect(context);
-    this._subscription = null;
-  }
-
-  commit(): void {
-    if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback();
-    }
-    this._pendingBinding.commit();
-    this._memoizedBinding = this._pendingBinding;
-  }
-
-  rollback(): void {
-    this._memoizedBinding?.rollback();
-    this._memoizedBinding = null;
   }
 }

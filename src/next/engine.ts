@@ -151,17 +151,6 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  setContextualValue(key: WeakKey, value: unknown): void {
-    if (this._contextualScope?.context !== this) {
-      this._contextualScope ??= {
-        parent: this._contextualScope,
-        context: this,
-        registry: new Map(),
-      };
-    }
-    this._contextualScope.registry.set(key, value);
-  }
-
   getContextualValue<T>(key: ContextualKey<T>): T {
     let contextualScope = this._contextualScope;
     while (contextualScope !== null) {
@@ -198,15 +187,12 @@ export class UpdateEngine implements UpdateContext {
     return ++this._globalState.identifierCount;
   }
 
-  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
-    const element = this.resolveDirectiveElement(value, part);
-    return element.directive.resolveBinding(element.value, part, this);
-  }
-
   reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T> {
     const element = this.resolveDirectiveElement(value, binding.part);
     if (binding.directive === element.directive) {
-      binding.bind(element.value, this);
+      if (binding.bind(element.value, this)) {
+        binding.connect(this);
+      }
     } else {
       binding.disconnect(this);
       binding = element.directive.resolveBinding(
@@ -214,6 +200,7 @@ export class UpdateEngine implements UpdateContext {
         binding.part,
         this,
       );
+      binding.connect(this);
     }
     return binding;
   }
@@ -243,6 +230,11 @@ export class UpdateEngine implements UpdateContext {
     return template.render(binds, this);
   }
 
+  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
+    const element = this.resolveDirectiveElement(value, part);
+    return element.directive.resolveBinding(element.value, part, this);
+  }
+
   resolveDirectiveElement<T>(
     value: Bindable<T>,
     part: Part,
@@ -257,6 +249,17 @@ export class UpdateEngine implements UpdateContext {
       (directive.ensureValue as EnsureValue)(value, part);
       return createDirectiveElement(directive, value);
     }
+  }
+
+  setContextualValue(key: WeakKey, value: unknown): void {
+    if (this._contextualScope?.context !== this) {
+      this._contextualScope ??= {
+        parent: this._contextualScope,
+        context: this,
+        registry: new Map(),
+      };
+    }
+    this._contextualScope.registry.set(key, value);
   }
 
   scheduleUpdate(

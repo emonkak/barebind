@@ -21,13 +21,6 @@ export function component<TProps, TResult>(
   return createDirectiveElement(directive, props);
 }
 
-const enum ComponentStatus {
-  Idle,
-  Skip,
-  Suspend,
-  Dirty,
-}
-
 class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   private readonly _component: Component<TProps, TResult>;
 
@@ -65,7 +58,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   private _hooks: Hook[] = [];
 
-  private _status = ComponentStatus.Idle;
+  private _dirty = false;
 
   constructor(
     directive: ComponentDirective<TProps, TResult>,
@@ -89,40 +82,32 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     return this._part;
   }
 
-  bind(props: TProps, _context: UpdateContext): void {
-    if (this._status === ComponentStatus.Idle && this._props === props) {
-      this._status = ComponentStatus.Skip;
-    }
+  bind(props: TProps, _context: UpdateContext): boolean {
+    const dirty = this._props !== props;
     this._props = props;
+    return dirty;
   }
 
   connect(context: UpdateContext): void {
-    switch (this._status) {
-      case ComponentStatus.Idle:
-        context.enqueueBinding(this);
-        this._status = ComponentStatus.Suspend;
-        break;
-      case ComponentStatus.Skip:
-        this._status = ComponentStatus.Idle;
-        break;
-      case ComponentStatus.Suspend:
-        const result = context.renderComponent(
-          this._directive.component,
-          this._props,
-          this._hooks,
-          this,
+    if (this._dirty) {
+      const result = context.renderComponent(
+        this._directive.component,
+        this._props,
+        this._hooks,
+        this,
+      );
+      if (this._pendingBinding !== null) {
+        this._pendingBinding = context.reconcileBinding(
+          this._pendingBinding,
+          result,
         );
-        if (this._pendingBinding !== null) {
-          this._pendingBinding = context.reconcileBinding(
-            this._pendingBinding,
-            result,
-          );
-        } else {
-          this._pendingBinding = context.resolveBinding(result, this._part);
-        }
+      } else {
+        this._pendingBinding = context.resolveBinding(result, this._part);
         this._pendingBinding.connect(context);
-        this._status = ComponentStatus.Dirty;
-        break;
+      }
+    } else {
+      context.enqueueBinding(this);
+      this._dirty = true;
     }
   }
 
@@ -145,11 +130,11 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
     this._pendingBinding?.disconnect(context);
     this._hooks = [];
-    this._status = ComponentStatus.Dirty;
+    this._dirty = true;
   }
 
   commit(): void {
-    if (this._status !== ComponentStatus.Dirty) {
+    if (!this._dirty) {
       return;
     }
     if (this._memoizedBinding !== this._pendingBinding) {
@@ -157,16 +142,16 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     }
     this._pendingBinding?.commit();
     this._memoizedBinding = this._pendingBinding;
-    this._status = ComponentStatus.Idle;
+    this._dirty = false;
   }
 
   rollback(): void {
-    if (this._status !== ComponentStatus.Dirty) {
+    if (!this._dirty) {
       return;
     }
     this._memoizedBinding?.rollback();
     this._memoizedBinding = null;
-    this._status = ComponentStatus.Idle;
+    this._dirty = false;
   }
 }
 
