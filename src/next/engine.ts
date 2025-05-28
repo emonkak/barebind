@@ -214,7 +214,6 @@ export class UpdateEngine implements UpdateContext {
         binding.part,
         this,
       );
-      binding.connect(this);
     }
     return binding;
   }

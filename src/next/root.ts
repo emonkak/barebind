@@ -65,15 +65,15 @@ class RootBinding<T> implements Binding<T> {
     return this._pendingBinding.part;
   }
 
-  connect(context: UpdateContext): void {
-    this._pendingBinding.connect(context);
-  }
-
   bind(value: T, context: UpdateContext): void {
     this._pendingBinding = context.reconcileBinding(
       this._pendingBinding,
       value,
     );
+  }
+
+  connect(context: UpdateContext): void {
+    this._pendingBinding.connect(context);
   }
 
   disconnect(context: UpdateContext): void {

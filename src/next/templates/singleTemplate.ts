@@ -78,19 +78,19 @@ export class SingleTemplateBlock<T>
     this._pendingBinding = binding;
   }
 
+  bind(binds: readonly [T], context: UpdateContext): void {
+    this._pendingBinding = context.reconcileBinding(
+      this._pendingBinding,
+      binds[0],
+    );
+  }
+
   connect(context: UpdateContext): void {
     this._pendingBinding.connect(context);
   }
 
-  bind(values: readonly [T], context: UpdateContext): void {
-    this._pendingBinding = context.reconcileBinding(
-      this._pendingBinding,
-      values[0],
-    );
-  }
-
   disconnect(context: UpdateContext): void {
-    this._memoizedBinding?.disconnect(context);
+    this._pendingBinding.disconnect(context);
   }
 
   commit(): void {

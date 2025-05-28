@@ -16,7 +16,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   protected readonly _part: TPart;
 
-  private _dirty = false;
+  private _dirty = true;
 
   constructor(value: TValue, part: TPart) {
     this._pendingValue = value;
@@ -35,16 +35,14 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   abstract shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
 
-  connect(): void {
-    this._dirty = true;
-  }
-
   bind(value: TValue, _context: UpdateContext): void {
-    this._pendingValue = value;
     this._dirty ||=
       this._memoizedValue === noValue ||
-      this.shouldUpdate(this._pendingValue, this._memoizedValue);
+      this.shouldUpdate(value, this._memoizedValue);
+    this._pendingValue = value;
   }
+
+  connect(_context: UpdateContext): void {}
 
   disconnect(_context: UpdateContext): void {
     this._dirty = true;

@@ -258,12 +258,6 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
     return this._childNodes;
   }
 
-  connect(context: UpdateContext): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      this._pendingBindings[i]!.connect(context);
-    }
-  }
-
   bind(binds: TBinds, context: UpdateContext): void {
     DEBUG: {
       assertNumberOfBinds(this._pendingBindings.length, binds.length);
@@ -272,17 +266,23 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
     const newBindings = new Array(this._pendingBindings.length);
 
     for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      const binding = this._pendingBindings[i]!;
-      newBindings[i] = context.reconcileBinding(binding, binds[i]!);
+      const oldBinding = this._pendingBindings[i]!;
+      newBindings[i] = context.reconcileBinding(oldBinding, binds[i]!);
     }
 
     this._pendingBindings = newBindings;
   }
 
+  connect(context: UpdateContext): void {
+    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
+      this._pendingBindings[i]!.connect(context);
+    }
+  }
+
   disconnect(context: UpdateContext): void {
     // Unbind in reverse order.
-    for (let i = this._memoizedBindings.length - 1; i >= 0; i--) {
-      this._memoizedBindings[i]!.disconnect(context);
+    for (let i = this._pendingBindings.length - 1; i >= 0; i--) {
+      this._pendingBindings[i]!.disconnect(context);
     }
   }
 

@@ -3,13 +3,13 @@ import type { Binding, DirectiveContext, UpdateContext } from '../directive.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import type { Primitive } from './primitive.js';
 
-export type SpreadValue = { [key: string]: unknown };
+export type SpreadProps = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadValue> = {
+export const SpreadPrimitive: Primitive<SpreadProps> = {
   get name(): string {
     return 'SpreadPrimitive';
   },
-  ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
+  ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new Error(
         `The value of spread primitive must be Object, but got ${inspectValue(value)}.\n` +
@@ -18,7 +18,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
     }
   },
   resolveBinding(
-    value: SpreadValue,
+    value: SpreadProps,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
@@ -32,8 +32,8 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   },
 };
 
-class SpreadBinding implements Binding<SpreadValue> {
-  private _value: SpreadValue;
+class SpreadBinding implements Binding<SpreadProps> {
+  private _props: SpreadProps;
 
   private readonly _part: ElementPart;
 
@@ -41,39 +41,75 @@ class SpreadBinding implements Binding<SpreadValue> {
 
   private _memoizedBindings: Map<string, Binding<unknown>> = new Map();
 
-  constructor(value: SpreadValue, part: ElementPart) {
-    this._value = value;
+  private _dirty = true;
+
+  constructor(props: SpreadProps, part: ElementPart) {
+    this._props = props;
     this._part = part;
   }
 
-  get directive(): Primitive<SpreadValue> {
+  get directive(): Primitive<SpreadProps> {
     return SpreadPrimitive;
   }
 
-  get value(): SpreadValue {
-    return this._value;
+  get value(): SpreadProps {
+    return this._props;
   }
 
   get part(): ElementPart {
     return this._part;
   }
 
-  connect(context: UpdateContext): void {
-    this._reconcileBindings(this._value, context);
+  bind(props: SpreadProps, _context: UpdateContext): void {
+    this._dirty ||= props !== this._props;
+    this._props = props;
   }
 
-  bind(newValue: SpreadValue, context: UpdateContext): void {
-    this._reconcileBindings(newValue, context);
-    this._value = newValue;
+  connect(context: UpdateContext): void {
+    if (!this._dirty) {
+      return;
+    }
+
+    for (const [name, binding] of this._pendingBindings.entries()) {
+      if (!Object.hasOwn(this._props, name) || this._props[name] == null) {
+        binding.disconnect(context);
+        this._pendingBindings.delete(name);
+      }
+    }
+
+    for (const name in this._props) {
+      const value = this._props[name];
+      if (value == null) {
+        continue;
+      }
+      const oldBinding = this._pendingBindings.get(name);
+      if (oldBinding !== undefined) {
+        const newBinding = context.reconcileBinding(oldBinding, value);
+        if (newBinding !== oldBinding) {
+          this._pendingBindings.set(name, newBinding);
+        }
+        newBinding.connect(context);
+      } else {
+        const part = resolveNamedPart(name, this._part.node);
+        const newBinding = context.resolveBinding(value, part);
+        this._pendingBindings.set(name, newBinding);
+        newBinding.connect(context);
+      }
+    }
   }
 
   disconnect(context: UpdateContext): void {
     for (const binding of this._memoizedBindings.values()) {
       binding.disconnect(context);
     }
+    this._dirty = true;
   }
 
   commit(): void {
+    if (!this._dirty) {
+      return;
+    }
+
     for (const [name, binding] of this._memoizedBindings.entries()) {
       if (binding !== this._pendingBindings.get(name)) {
         binding.rollback();
@@ -82,10 +118,16 @@ class SpreadBinding implements Binding<SpreadValue> {
     for (const binding of this._pendingBindings.values()) {
       binding.commit();
     }
+
     this._memoizedBindings = new Map(this._pendingBindings);
+    this._dirty = false;
   }
 
   rollback(): void {
+    if (!this._dirty) {
+      return;
+    }
+
     if (this._memoizedBindings !== null) {
       for (const [name, binding] of this._memoizedBindings.entries()) {
         if (binding !== this._pendingBindings.get(name)) {
@@ -93,39 +135,13 @@ class SpreadBinding implements Binding<SpreadValue> {
         }
       }
     }
+
     this._memoizedBindings = new Map();
-  }
-
-  private _reconcileBindings(props: SpreadValue, context: UpdateContext): void {
-    for (const [name, binding] of this._pendingBindings.entries()) {
-      if (!Object.hasOwn(props, name) || props[name] === undefined) {
-        binding.disconnect(context);
-        this._pendingBindings.delete(name);
-      }
-    }
-
-    for (const name in props) {
-      const value = props[name];
-      if (value === undefined) {
-        continue;
-      }
-      const binding = this._pendingBindings.get(name);
-      if (binding !== undefined) {
-        const newBinding = context.reconcileBinding(binding, value);
-        if (newBinding !== binding) {
-          this._pendingBindings.set(name, newBinding);
-        }
-      } else {
-        const part = resolveNamedPart(name, this._part.node);
-        const newBinding = context.resolveBinding(value, part);
-        newBinding.connect(context);
-        this._pendingBindings.set(name, newBinding);
-      }
-    }
+    this._dirty = false;
   }
 }
 
-function isSpreadProps(value: unknown): value is SpreadValue {
+function isSpreadProps(value: unknown): value is SpreadProps {
   return value !== null && typeof value === 'object';
 }
 

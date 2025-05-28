@@ -1,10 +1,10 @@
+import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
   Template,
   TemplateBlock,
   UpdateContext,
 } from '../directive.js';
-import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template.js';
 
@@ -34,8 +34,8 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
 };
 
 export const EmptyTemplateBlock: TemplateBlock<readonly [], ChildNodePart> = {
-  connect(_context: UpdateContext): void {},
   bind(_binds: readonly [], _context: UpdateContext): void {},
+  connect(_context: UpdateContext): void {},
   disconnect(_context: UpdateContext): void {},
   commit(): void {},
   rollback(): void {},

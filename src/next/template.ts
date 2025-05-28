@@ -12,9 +12,7 @@ export class TemplateBinding<TBinds, TPart extends Part>
 {
   private readonly _template: Template<TBinds, TPart>;
 
-  private _pendingBinds: TBinds;
-
-  private _memoizedBinds: TBinds | null = null;
+  private _binds: TBinds;
 
   private readonly _part: TPart;
 
@@ -22,11 +20,11 @@ export class TemplateBinding<TBinds, TPart extends Part>
 
   private _memoizedBlock: TemplateBlock<TBinds, TPart> | null = null;
 
-  private _dirty = false;
+  private _dirty = true;
 
   constructor(template: Template<TBinds, TPart>, binds: TBinds, part: TPart) {
     this._template = template;
-    this._pendingBinds = binds;
+    this._binds = binds;
     this._part = part;
   }
 
@@ -34,47 +32,33 @@ export class TemplateBinding<TBinds, TPart extends Part>
     return this._template;
   }
 
+  get value(): TBinds {
+    return this._binds;
+  }
+
   get part(): TPart {
     return this._part;
   }
 
-  get value(): TBinds {
-    return this._pendingBinds;
+  bind(binds: TBinds, _context: UpdateContext): void {
+    this._dirty ||= binds !== this._binds;
+    this._binds = binds;
   }
 
   connect(context: UpdateContext): void {
-    if (this._pendingBlock !== null) {
-      this._pendingBlock.connect(context);
-    } else {
-      this._pendingBlock = context.renderTemplate(
-        this._template,
-        this._pendingBinds,
-      );
-      this._pendingBlock.connect(context);
+    if (!this._dirty) {
+      return;
     }
-    this._dirty = true;
-  }
-
-  bind(binds: TBinds, context: UpdateContext): void {
     if (this._pendingBlock !== null) {
-      const dirty = binds !== this._memoizedBinds;
-      if (dirty) {
-        this._pendingBlock.bind(binds, context);
-      }
-      this._dirty ||= dirty;
+      this._pendingBlock.bind(this._binds, context);
     } else {
-      this._pendingBlock = context.renderTemplate(
-        this._template,
-        this._pendingBinds,
-      );
-      this._pendingBlock.connect(context);
-      this._dirty = true;
+      this._pendingBlock = context.renderTemplate(this._template, this._binds);
     }
-    this._pendingBinds = binds;
+    this._pendingBlock.connect(context);
   }
 
   disconnect(context: UpdateContext): void {
-    this._memoizedBlock?.disconnect(context);
+    this._pendingBlock?.disconnect(context);
     this._dirty = true;
   }
 
@@ -89,7 +73,6 @@ export class TemplateBinding<TBinds, TPart extends Part>
       this._pendingBlock.commit();
     }
     this._memoizedBlock = this._pendingBlock;
-    this._memoizedBinds = this._pendingBinds;
     this._dirty = false;
   }
 
@@ -102,7 +85,6 @@ export class TemplateBinding<TBinds, TPart extends Part>
       this._memoizedBlock.rollback();
     }
     this._memoizedBlock = null;
-    this._memoizedBinds = null;
     this._dirty = false;
   }
 }

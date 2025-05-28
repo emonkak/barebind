@@ -10,7 +10,6 @@ import {
 } from '../directive.js';
 import { type EffectHook, type Hook, HookType } from '../hook.js';
 import type { Part } from '../part.js';
-import { SuspenseBinding } from '../suspense.js';
 
 const componentDirectiveTag = Symbol('Component.directive');
 
@@ -20,6 +19,13 @@ export function component<TProps, TResult>(
 ): DirectiveElement<TProps> {
   const directive = defineComponentDirective(component);
   return createDirectiveElement(directive, props);
+}
+
+const enum ComponentStatus {
+  Idle,
+  Skip,
+  Suspend,
+  Dirty,
 }
 
 class ComponentDirective<TProps, TResult> implements Directive<TProps> {
@@ -41,17 +47,15 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
     props: TProps,
     part: Part,
     _context: DirectiveContext,
-  ): SuspenseBinding<TProps> {
-    return new SuspenseBinding(new ComponentBinding(this, props, part));
+  ): ComponentBinding<TProps, TResult> {
+    return new ComponentBinding(this, props, part);
   }
 }
 
 class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   private readonly _directive: ComponentDirective<TProps, TResult>;
 
-  private _pendingProps: TProps;
-
-  private _memoizedProps: TProps | null = null;
+  private _props: TProps;
 
   private _pendingBinding: Binding<TResult> | null = null;
 
@@ -61,7 +65,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
 
   private _hooks: Hook[] = [];
 
-  private _dirty = false;
+  private _status = ComponentStatus.Idle;
 
   constructor(
     directive: ComponentDirective<TProps, TResult>,
@@ -69,7 +73,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     part: Part,
   ) {
     this._directive = directive;
-    this._pendingProps = props;
+    this._props = props;
     this._part = part;
   }
 
@@ -78,25 +82,48 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   get value(): TProps {
-    return this._pendingProps;
+    return this._props;
   }
 
   get part(): Part {
     return this._part;
   }
 
-  connect(context: UpdateContext): void {
-    this._performRender(this._pendingProps, context);
-    this._dirty = true;
+  bind(props: TProps, _context: UpdateContext): void {
+    if (this._status === ComponentStatus.Idle && this._props === props) {
+      this._status = ComponentStatus.Skip;
+    }
+    this._props = props;
   }
 
-  bind(props: TProps, context: UpdateContext): void {
-    const dirty = props !== this._memoizedProps;
-    if (dirty) {
-      this._performRender(props, context);
+  connect(context: UpdateContext): void {
+    switch (this._status) {
+      case ComponentStatus.Idle:
+        context.enqueueBinding(this);
+        this._status = ComponentStatus.Suspend;
+        break;
+      case ComponentStatus.Skip:
+        this._status = ComponentStatus.Idle;
+        break;
+      case ComponentStatus.Suspend:
+        const result = context.renderComponent(
+          this._directive.component,
+          this._props,
+          this._hooks,
+          this,
+        );
+        if (this._pendingBinding !== null) {
+          this._pendingBinding = context.reconcileBinding(
+            this._pendingBinding,
+            result,
+          );
+        } else {
+          this._pendingBinding = context.resolveBinding(result, this._part);
+        }
+        this._pendingBinding.connect(context);
+        this._status = ComponentStatus.Dirty;
+        break;
     }
-    this._pendingProps = props;
-    this._dirty ||= dirty;
   }
 
   disconnect(context: UpdateContext): void {
@@ -116,50 +143,30 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
       }
     }
 
-    this._memoizedBinding?.disconnect(context);
+    this._pendingBinding?.disconnect(context);
     this._hooks = [];
-    this._dirty = true;
+    this._status = ComponentStatus.Dirty;
   }
 
   commit(): void {
-    if (!this._dirty) {
+    if (this._status !== ComponentStatus.Dirty) {
       return;
     }
     if (this._memoizedBinding !== this._pendingBinding) {
       this._memoizedBinding?.rollback();
     }
     this._pendingBinding?.commit();
-    this._memoizedProps = this._pendingProps;
     this._memoizedBinding = this._pendingBinding;
-    this._dirty = false;
+    this._status = ComponentStatus.Idle;
   }
 
   rollback(): void {
-    if (!this._dirty) {
+    if (this._status !== ComponentStatus.Dirty) {
       return;
     }
-    this._memoizedBinding?.commit();
-    this._memoizedProps = null;
+    this._memoizedBinding?.rollback();
     this._memoizedBinding = null;
-    this._dirty = false;
-  }
-
-  private _performRender(props: TProps, context: UpdateContext): void {
-    const result = context.renderComponent(
-      this._directive.component,
-      props,
-      this._hooks,
-      this,
-    );
-    if (this._pendingBinding !== null) {
-      this._pendingBinding = context.reconcileBinding(
-        this._pendingBinding,
-        result,
-      );
-    } else {
-      this._pendingBinding = context.resolveBinding(result, this._part);
-      this._pendingBinding.connect(context);
-    }
+    this._status = ComponentStatus.Idle;
   }
 }
 

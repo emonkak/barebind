@@ -32,8 +32,8 @@ export interface Binding<T> {
   get directive(): Directive<T>;
   get value(): T;
   get part(): Part;
-  connect(context: UpdateContext): void;
   bind(value: T, context: UpdateContext): void;
+  connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
   commit(): void;
   rollback(): void;
@@ -48,8 +48,8 @@ export interface Template<TBinds, TPart extends Part = Part>
 }
 
 export interface TemplateBlock<TBinds, TPart extends Part> {
-  connect(context: UpdateContext): void;
   bind(binds: TBinds, context: UpdateContext): void;
+  connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
   commit(): void;
   rollback(): void;
@@ -118,12 +118,12 @@ export interface UpdateContext extends DirectiveContext {
 }
 
 export interface DirectiveContext {
+  reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T>;
+  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T>;
   resolveDirectiveElement<T>(
     value: Bindable<T>,
     part: Part,
   ): DirectiveElement<T>;
-  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T>;
-  reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T>;
 }
 
 export function createDirectiveElement<T>(
