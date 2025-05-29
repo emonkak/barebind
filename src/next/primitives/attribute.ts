@@ -1,12 +1,10 @@
+import type { DirectiveContext } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import type { DirectiveContext } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
-export const AttributePrimitive: Primitive<unknown> = {
-  get name(): string {
-    return 'AttributePrimitive';
-  },
+export const AttributePrimitive: Primitive<any> = {
+  name: 'AttributePrimitive',
   ensureValue(_value: unknown, _part: Part): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
@@ -15,7 +13,7 @@ export const AttributePrimitive: Primitive<unknown> = {
   ): AttributeBinding<unknown> {
     if (part.type !== PartType.Attribute) {
       throw new Error(
-        'Attribute primitive must be used in an attribute part, but it is used here:\n' +
+        'AttributePrimitive must be used in an attribute part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -24,16 +22,20 @@ export const AttributePrimitive: Primitive<unknown> = {
 };
 
 class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
+  private _memoizedValue: T | null = null;
+
   get directive(): Primitive<T> {
-    return AttributePrimitive as Primitive<T>;
+    return AttributePrimitive;
   }
 
-  shouldMount(newValue: T, oldValue: unknown): boolean {
-    return !Object.is(newValue, oldValue);
+  shouldBind(value: T): boolean {
+    return !Object.is(value, this._memoizedValue);
   }
 
-  mount(value: T, _oldValue: T | null, part: AttributePart): void {
-    const { node, name } = part;
+  commit(): void {
+    const { node, name } = this._part;
+    const value = this._pendingValue;
+
     switch (typeof value) {
       case 'string':
         node.setAttribute(name, value);
@@ -48,10 +50,16 @@ class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
           node.setAttribute(name, value.toString());
         }
     }
+
+    this._memoizedValue = this._pendingValue;
   }
 
-  unmount(_value: T, part: AttributePart): void {
-    const { node, name } = part;
-    node.removeAttribute(name);
+  rollback(): void {
+    if (this._memoizedValue !== null) {
+      const { node, name } = this._part;
+      node.removeAttribute(name);
+    }
+
+    this._memoizedValue = null;
   }
 }

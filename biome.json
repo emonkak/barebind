@@ -22,14 +22,12 @@
       "style": {
         "noNonNullAssertion": "off",
         "noUselessElse": "off",
-        "useEnumInitializers": "off",
         "useTemplate": "off"
       },
       "suspicious": {
         "noAssignInExpressions": "off",
         "noConfusingLabels": "off",
         "noConfusingVoidType": "off",
-        "noConstEnum": "off",
         "noEmptyInterface": "off",
         "noExplicitAny": "off"
       }

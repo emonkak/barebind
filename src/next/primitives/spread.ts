@@ -1,18 +1,21 @@
+import type {
+  Binding,
+  DirectiveContext,
+  Slot,
+  UpdateContext,
+} from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type { Binding, DirectiveContext, UpdateContext } from '../directive.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import type { Primitive } from './primitive.js';
 
 export type SpreadValue = { [key: string]: unknown };
 
 export const SpreadPrimitive: Primitive<SpreadValue> = {
-  get name(): string {
-    return 'SpreadPrimitive';
-  },
+  name: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
     if (!isSpreadProps(value)) {
       throw new Error(
-        `The value of spread primitive must be Object, but got ${inspectValue(value)}.\n` +
+        `The value of SpreadPrimitive must be Object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }
@@ -24,7 +27,7 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
-        'Spread primitive must be used in an element part, but it is used here:\n' +
+        'SpreadPrimitive must be used in an element part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -32,14 +35,14 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
   },
 };
 
-export class SpreadBinding implements Binding<SpreadValue> {
+class SpreadBinding implements Binding<SpreadValue> {
   private _props: SpreadValue;
 
   private readonly _part: ElementPart;
 
-  private readonly _pendingBindings: Map<string, Binding<unknown>> = new Map();
+  private readonly _pendingSlots: Map<string, Slot<unknown>> = new Map();
 
-  private _memoizedBindings: Map<string, Binding<unknown>> = new Map();
+  private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
   constructor(props: SpreadValue, part: ElementPart) {
     this._props = props;
@@ -59,18 +62,18 @@ export class SpreadBinding implements Binding<SpreadValue> {
   }
 
   shouldBind(props: SpreadValue): boolean {
-    return props !== this._props;
+    return this._memoizedSlots === null || props !== this._props;
   }
 
-  bind(props: SpreadValue, _context: UpdateContext): void {
+  bind(props: SpreadValue): void {
     this._props = props;
   }
 
   connect(context: UpdateContext): void {
-    for (const [key, binding] of this._pendingBindings.entries()) {
+    for (const [key, slot] of this._pendingSlots.entries()) {
       if (!Object.hasOwn(this._props, key) || this._props[key] == null) {
-        binding.disconnect(context);
-        this._pendingBindings.delete(key);
+        slot.disconnect(context);
+        this._pendingSlots.delete(key);
       }
     }
 
@@ -79,43 +82,49 @@ export class SpreadBinding implements Binding<SpreadValue> {
       if (value == null) {
         continue;
       }
-      let binding = this._pendingBindings.get(key);
-      if (binding !== undefined) {
-        binding.bind(this._props[key]!, context);
+      let slot = this._pendingSlots.get(key);
+      if (slot !== undefined) {
+        slot.reconcile(this._props[key]!, context);
       } else {
         const part = resolveNamedPart(key, this._part.node);
-        binding = context.resolveBinding(value, part);
-        binding.connect(context);
+        slot = context.resolveSlot(value, part);
+        slot.connect(context);
       }
     }
   }
 
   disconnect(context: UpdateContext): void {
-    for (const binding of this._memoizedBindings.values()) {
-      binding.disconnect(context);
+    if (this._memoizedSlots !== null) {
+      for (const slot of this._memoizedSlots.values()) {
+        slot.disconnect(context);
+      }
     }
   }
 
   commit(): void {
-    for (const [name, binding] of this._memoizedBindings.entries()) {
-      if (!this._pendingBindings.has(name)) {
+    if (this._memoizedSlots !== null) {
+      for (const [name, slot] of this._memoizedSlots.entries()) {
+        if (!this._pendingSlots.has(name)) {
+          slot.rollback();
+        }
+      }
+    }
+
+    for (const binding of this._pendingSlots.values()) {
+      binding.commit();
+    }
+
+    this._memoizedSlots = new Map(this._pendingSlots);
+  }
+
+  rollback(): void {
+    if (this._memoizedSlots !== null) {
+      for (const binding of this._memoizedSlots.values()) {
         binding.rollback();
       }
     }
 
-    for (const binding of this._pendingBindings.values()) {
-      binding.commit();
-    }
-
-    this._memoizedBindings = new Map(this._pendingBindings);
-  }
-
-  rollback(): void {
-    for (const binding of this._memoizedBindings.values()) {
-      binding.rollback();
-    }
-
-    this._memoizedBindings = new Map();
+    this._memoizedSlots = null;
   }
 }
 

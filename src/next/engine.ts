@@ -1,45 +1,48 @@
 import { dependenciesAreChanged } from './compare.js';
 import {
   type Bindable,
-  type Binding,
+  type BindableElement,
+  BindableType,
   type Component,
   type DirectiveElement,
   type Effect,
   type RenderContext,
   type ResumableBinding,
+  type Slot,
   type Template,
   type TemplateBlock,
   type TemplateMode,
   type UpdateContext,
+  bindableTag,
   createDirectiveElement,
-  isDirectiveElement,
-  isDirectiveObject,
-} from './directive.js';
-import type { Primitive } from './directives/primitive.js';
-import { SlotBinding } from './directives/slot.js';
+} from './core.js';
+import { ensureHookType } from './debug.js';
 import {
   type ContextualKey,
+  type InitialState,
+  type NewState,
+  type RefObject,
+  type UpdateOptions,
+  type UseUserHooks,
+  type UserHook,
+  userHookTag,
+} from './hook.js';
+import {
   type EffectHook,
   type FinalizerHook,
   type Hook,
   HookType,
   type IdentifierHook,
-  type InitialState,
   type MemoHook,
-  type NewState,
   type ReducerHook,
-  type RefObject,
-  type UpdateOptions,
-  type UserHook,
-  ensureHookType,
-  userHookTag,
 } from './hook.js';
 import type { Part } from './part.js';
+import type { Primitive } from './primitives/primitive.js';
 import type { RenderHost } from './renderHost.js';
 import { TemplateLiteralPreprocessor } from './templateLiteral.js';
 
 interface RenderFrame {
-  pendingBindings: ResumableBinding<unknown>[];
+  suspendedBindings: ResumableBinding<unknown>[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
@@ -48,23 +51,24 @@ interface RenderFrame {
 interface ContextualScope {
   parent: ContextualScope | null;
   context: UpdateContext;
-  registry: Map<WeakKey, unknown>;
+  entries: ContextualEntry[];
+}
+
+interface ContextualEntry {
+  key: WeakKey;
+  value: unknown;
 }
 
 interface GlobalState {
-  cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
+  cachedTemplates: WeakMap<
+    readonly string[],
+    Template<readonly Bindable<unknown>[]>
+  >;
   dirtyBindings: Set<ResumableBinding<unknown>>;
   identifierCount: number;
   templatePlaceholder: string;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
 }
-
-type UseUserHooks<TArray> = TArray extends [
-  UserHook<infer THead>,
-  ...infer TTail,
-]
-  ? [THead, ...UseUserHooks<TTail>]
-  : [];
 
 export class UpdateEngine implements UpdateContext {
   private readonly _renderHost: RenderHost;
@@ -105,7 +109,7 @@ export class UpdateEngine implements UpdateContext {
   }
 
   enqueueBinding(binding: ResumableBinding<unknown>): void {
-    this._renderFrame.pendingBindings.push(binding);
+    this._renderFrame.suspendedBindings.push(binding);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
@@ -124,13 +128,13 @@ export class UpdateEngine implements UpdateContext {
     const { dirtyBindings } = this._globalState;
 
     while (true) {
-      const pendingBindings = consumePendingBindings(this._renderFrame);
-      for (let i = 0, l = pendingBindings.length; i < l; i++) {
-        const pendingBinding = pendingBindings[i]!;
-        pendingBinding.resume(this);
-        dirtyBindings.delete(pendingBinding);
+      const suspendedBindings = consumeSuspendedBindings(this._renderFrame);
+      for (let i = 0, l = suspendedBindings.length; i < l; i++) {
+        const suspendedBinding = suspendedBindings[i]!;
+        suspendedBinding.resume(this);
+        dirtyBindings.delete(suspendedBinding);
       }
-      if (this._renderFrame.pendingBindings.length === 0) {
+      if (this._renderFrame.suspendedBindings.length === 0) {
         break;
       }
       await this._renderHost.yieldToMain();
@@ -165,9 +169,11 @@ export class UpdateEngine implements UpdateContext {
   getContextualValue<T>(key: ContextualKey<T>): T {
     let contextualScope = this._contextualScope;
     while (contextualScope !== null) {
-      const value = contextualScope.registry.get(key);
-      if (value !== undefined) {
-        return value as T;
+      const entry = contextualScope.entries.findLast(
+        (pair) => pair.key === key,
+      );
+      if (entry !== undefined) {
+        return entry.value as T;
       }
       contextualScope = contextualScope.parent;
     }
@@ -176,9 +182,9 @@ export class UpdateEngine implements UpdateContext {
 
   getTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
-  ): Template<readonly unknown[]> {
+  ): Template<readonly Bindable<unknown>[]> {
     let template = this._globalState.cachedTemplates.get(strings);
 
     if (template === undefined) {
@@ -203,11 +209,11 @@ export class UpdateEngine implements UpdateContext {
     props: TProps,
     hooks: Hook[],
     binding: ResumableBinding<TProps>,
-  ): TResult {
+  ): Bindable<TResult> {
     const updateEngine = new UpdateEngine(
       this._renderHost,
       createRenderFrame(),
-      this._contextualScope,
+      this._contextualScope?.parent,
       this._globalState,
     );
     const renderEngine = new RenderEngine(hooks, binding, updateEngine);
@@ -216,45 +222,54 @@ export class UpdateEngine implements UpdateContext {
     return element;
   }
 
-  renderTemplate<TBinds, TPart extends Part>(
-    template: Template<TBinds, TPart>,
+  renderTemplate<TBinds>(
+    template: Template<TBinds>,
     binds: TBinds,
-  ): TemplateBlock<TBinds, TPart> {
+  ): TemplateBlock<TBinds> {
     return template.render(binds, this);
   }
 
-  resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
-    const element = this.resolveDirectiveElement(value, part);
-    return new SlotBinding(
-      element.directive.resolveBinding(element.value, part, this),
-    );
+  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T> {
+    const element = this.resolveDirective(value, part);
+    const binding = element.directive.resolveBinding(element.value, part, this);
+    const slotType = element.slotType ?? this._renderHost.resolveSlotType(part);
+    return new slotType(binding);
   }
 
-  resolveDirectiveElement<T>(
-    value: Bindable<T>,
-    part: Part,
-  ): DirectiveElement<T> {
-    if (isDirectiveElement(value)) {
-      return value;
-    } else if (isDirectiveObject(value)) {
-      return createDirectiveElement(value.directive, value as T);
-    } else {
-      type EnsureValue = (value: unknown, part: Part) => void;
-      const directive = this._renderHost.resolvePrimitive(part) as Primitive<T>;
-      (directive.ensureValue as EnsureValue)(value, part);
-      return createDirectiveElement(directive, value);
+  resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T> {
+    switch (value?.[bindableTag]) {
+      case BindableType.DirectiveElement:
+        return value;
+      case BindableType.DirectiveValue:
+        return { directive: value.directive, value };
+      case BindableType.SlotElement:
+        const element = this.resolveDirective(value.value, part);
+        return {
+          directive: element.directive,
+          value: element.value,
+          slotType: value.slotType,
+        };
+      default: {
+        type EnsureValue = (value: unknown, part: Part) => void;
+        const directive = this._renderHost.resolvePrimitive(
+          part,
+        ) as Primitive<T>;
+        (directive.ensureValue as EnsureValue)(value, part);
+        return { directive, value };
+      }
     }
   }
 
   setContextualValue(key: WeakKey, value: unknown): void {
     if (this._contextualScope?.context !== this) {
-      this._contextualScope ??= {
+      this._contextualScope = {
         parent: this._contextualScope,
         context: this,
-        registry: new Map(),
+        entries: [{ key, value }],
       };
+    } else {
+      this._contextualScope.entries.push({ key, value });
     }
-    this._contextualScope.registry.set(key, value);
   }
 
   scheduleUpdate(
@@ -271,7 +286,7 @@ export class UpdateEngine implements UpdateContext {
         if (!dirtyBindings.has(binding)) {
           return;
         }
-        this._renderFrame.pendingBindings.push(binding);
+        this._renderFrame.suspendedBindings.push(binding);
         this._renderFrame.mutationEffects.push(binding);
         await this.flushFrame(options);
       },
@@ -303,22 +318,22 @@ export class RenderEngine implements RenderContext {
 
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveElement<readonly unknown[]> {
+    ...binds: readonly Bindable<unknown>[]
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._dynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveElement<readonly unknown[]> {
+    ...binds: readonly Bindable<unknown>[]
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._dynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveElement<readonly unknown[]> {
+    ...binds: readonly Bindable<unknown>[]
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
 
@@ -349,20 +364,20 @@ export class RenderEngine implements RenderContext {
         this._pendingUpdateOptions = null;
       });
     }
-    this._pendingUpdateOptions = options;
+    this._pendingUpdateOptions = { ...this._pendingUpdateOptions, ...options };
   }
 
   html(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveElement<readonly unknown[]> {
+    ...binds: readonly Bindable<unknown>[]
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._template(strings, binds, 'html');
   }
 
   math(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveElement<readonly unknown[]> {
+    ...binds: readonly Bindable<unknown>[]
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._template(strings, binds, 'math');
   }
 
@@ -372,13 +387,13 @@ export class RenderEngine implements RenderContext {
 
   svg(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
-  ): DirectiveElement<readonly unknown[]> {
+    ...binds: readonly Bindable<unknown>[]
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._template(strings, binds, 'svg');
   }
 
   use<T>(hook: UserHook<T>): T;
-  use<T extends UserHook<any>[]>(hooks: T): UseUserHooks<T>;
+  use<T extends UserHook<unknown>[]>(hooks: T): UseUserHooks<T>;
   use<T>(hook: UserHook<T> | UserHook<T>[]): T | T[] {
     if (Array.isArray(hook)) {
       return hook.map((hook) => hook[userHookTag](this));
@@ -553,9 +568,9 @@ export class RenderEngine implements RenderContext {
 
   private _dynamicTemplate(
     strings: TemplateStringsArray,
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
-  ): DirectiveElement<readonly unknown[]> {
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     const { strings: expandedStrings, values: expandedBinds } =
       this._updateEngine.templateLiteralPreprocessor.expandLiterals(
         strings,
@@ -563,7 +578,7 @@ export class RenderEngine implements RenderContext {
       );
     const template = this._updateEngine.getTemplate(
       expandedStrings,
-      expandedBinds,
+      expandedBinds as Bindable<unknown>[],
       mode,
     );
     return createDirectiveElement(template, binds);
@@ -571,9 +586,9 @@ export class RenderEngine implements RenderContext {
 
   private _template(
     strings: TemplateStringsArray,
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
-  ): DirectiveElement<readonly unknown[]> {
+  ): DirectiveElement<readonly Bindable<unknown>[]> {
     const template = this._updateEngine.getTemplate(strings, binds, mode);
     return createDirectiveElement(template, binds);
   }
@@ -613,12 +628,12 @@ function consumeEffects(
   };
 }
 
-function consumePendingBindings(
+function consumeSuspendedBindings(
   renderFrame: RenderFrame,
 ): ResumableBinding<unknown>[] {
-  const { pendingBindings } = renderFrame;
-  renderFrame.pendingBindings = [];
-  return pendingBindings;
+  const { suspendedBindings } = renderFrame;
+  renderFrame.suspendedBindings = [];
+  return suspendedBindings;
 }
 
 function createGlobalState(): GlobalState {
@@ -633,7 +648,7 @@ function createGlobalState(): GlobalState {
 
 function createRenderFrame(): RenderFrame {
   return {
-    pendingBindings: [],
+    suspendedBindings: [],
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],

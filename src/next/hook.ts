@@ -2,16 +2,92 @@
 
 export const userHookTag: unique symbol = Symbol('UserHook');
 
+export type Hook =
+  | EffectHook
+  | IdentifierHook
+  | MemoHook<any>
+  | ReducerHook<any, any>
+  | FinalizerHook;
+
+export const HookType = {
+  InsertionEffect: 0,
+  LayoutEffect: 1,
+  PassiveEffect: 2,
+  Identifier: 3,
+  Memo: 4,
+  Reducer: 5,
+  Finalizer: 6,
+} as const;
+
+export type HookType = (typeof HookType)[keyof typeof HookType];
+
+export interface EffectHook {
+  type:
+    | typeof HookType.InsertionEffect
+    | typeof HookType.LayoutEffect
+    | typeof HookType.PassiveEffect;
+  callback: () => VoidFunction | void;
+  cleanup: VoidFunction | void;
+  dependencies: unknown[] | null;
+}
+
+export interface IdentifierHook {
+  type: typeof HookType.Identifier;
+  id: number;
+}
+
+export interface MemoHook<TResult> {
+  type: typeof HookType.Memo;
+  value: TResult;
+  dependencies: unknown[] | null;
+}
+
+export interface ReducerHook<TState, TAction> {
+  type: typeof HookType.Reducer;
+  dispatch: (action: TAction) => void;
+  state: TState;
+}
+
+export interface FinalizerHook {
+  type: typeof HookType.Finalizer;
+}
+
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
 export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
   : ((prevState: T) => T) | T;
 
+export interface ContextualKey<T> {
+  defaultValue: T;
+}
+
+export interface RefObject<T> {
+  current: T;
+}
+
+export interface UpdateOptions {
+  priority?: TaskPriority;
+  viewTransition?: boolean;
+}
+
+export type UseUserHooks<THooks> = THooks extends [
+  UserHook<infer THead>,
+  ...infer TTail,
+]
+  ? [THead, ...UseUserHooks<TTail>]
+  : [];
+
+export interface UserHook<T> {
+  [userHookTag](context: HookContext): T;
+}
+
 export interface HookContext {
   forceUpdate(options?: UpdateOptions): void;
   getContextualValue<T>(key: ContextualKey<T>): T;
   setContextualValue<T>(key: ContextualKey<T>, value: T): void;
+  use<T>(hook: UserHook<T>): T;
+  use<T extends UserHook<unknown>[]>(hooks: T): UseUserHooks<T>;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
@@ -43,86 +119,10 @@ export interface HookContext {
   ): T;
 }
 
-export type Hook =
-  | EffectHook
-  | IdentifierHook
-  | MemoHook<unknown>
-  | ReducerHook<unknown, any>
-  | FinalizerHook;
-
-export enum HookType {
-  InsertionEffect,
-  LayoutEffect,
-  PassiveEffect,
-  Identifier,
-  Memo,
-  Reducer,
-  Finalizer,
-}
-
-export interface UserHook<T> {
-  [userHookTag](context: HookContext): T;
-}
-
-export interface EffectHook {
-  type:
-    | HookType.InsertionEffect
-    | HookType.LayoutEffect
-    | HookType.PassiveEffect;
-  callback: () => VoidFunction | void;
-  cleanup: VoidFunction | void;
-  dependencies: unknown[] | null;
-}
-
-export interface IdentifierHook {
-  type: HookType.Identifier;
-  id: number;
-}
-
-export interface MemoHook<TResult> {
-  type: HookType.Memo;
-  value: TResult;
-  dependencies: unknown[] | null;
-}
-
-export interface ReducerHook<TState, TAction> {
-  type: HookType.Reducer;
-  dispatch: (action: TAction) => void;
-  state: TState;
-}
-
-export interface FinalizerHook {
-  type: HookType.Finalizer;
-}
-
-export interface ContextualKey<T> {
-  defaultValue: T;
-}
-
-export interface RefObject<T> {
-  current: T;
-}
-
-export interface UpdateOptions {
-  priority?: TaskPriority;
-  viewTransition?: boolean;
-}
-
 export function createContext<T>(): ContextualKey<T | undefined>;
 export function createContext<T>(defaultValue: T): ContextualKey<T>;
 export function createContext<T>(
   defaultValue?: T,
 ): ContextualKey<T | undefined> {
   return { defaultValue };
-}
-
-export function ensureHookType<TExpectedHook extends Hook>(
-  expectedType: TExpectedHook['type'],
-  hook: Hook,
-): asserts hook is TExpectedHook {
-  if (hook.type !== expectedType) {
-    throw new Error(
-      `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
-    );
-  }
 }

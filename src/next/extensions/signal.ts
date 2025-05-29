@@ -1,13 +1,14 @@
 import {
+  type Bindable,
   BindableType,
-  type Binding,
   type Directive,
   type DirectiveContext,
-  type DirectiveObject,
+  type DirectiveValue,
   type ResumableBinding,
+  type Slot,
   type UpdateContext,
   bindableTag,
-} from '../directive.js';
+} from '../core.js';
 import { type HookContext, type UserHook, userHookTag } from '../hook.js';
 import { LinkedList } from '../linkedList.js';
 import type { Part } from '../part.js';
@@ -16,80 +17,84 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-export const SignalDirective: Directive<Signal<unknown>> = {
-  get name(): string {
-    return 'SignalDirective';
-  },
+export const SignalDirective: Directive<Signal<any>> = {
+  name: 'SignalDirective',
   resolveBinding(
-    value: Signal<unknown>,
+    value: Signal<Bindable<unknown>>,
     part: Part,
     context: DirectiveContext,
   ): SignalBinding<unknown> {
-    const binding = context.resolveBinding(value, part);
-    return new SignalBinding(value, binding);
+    const slot = context.resolveSlot(value, part);
+    return new SignalBinding(value, slot);
   },
 };
 
-export class SignalBinding<T> implements ResumableBinding<Signal<T>> {
-  private _signal: Signal<T>;
+class SignalBinding<T> implements ResumableBinding<Signal<Bindable<T>>> {
+  private _signal: Signal<Bindable<T>>;
 
-  private _binding: Binding<T>;
+  private _version: number;
+
+  private _slot: Slot<T>;
 
   private _subscription: Subscription | null = null;
 
-  constructor(signal: Signal<T>, binding: Binding<T>) {
+  constructor(signal: Signal<Bindable<T>>, slot: Slot<T>) {
     this._signal = signal;
-    this._binding = binding;
+    this._version = signal.version;
+    this._slot = slot;
   }
 
-  get directive(): Directive<Signal<T>> {
-    return SignalDirective as Directive<Signal<T>>;
+  get directive(): Directive<Signal<Bindable<T>>> {
+    return SignalDirective;
   }
 
-  get value(): Signal<T> {
+  get value(): Signal<Bindable<T>> {
     return this._signal;
   }
 
   get part(): Part {
-    return this._binding.part;
+    return this._slot.part;
   }
 
-  resume(context: UpdateContext): void {
-    this._binding.bind(this._signal.value, context);
+  shouldBind(signal: Signal<Bindable<T>>): boolean {
+    return signal !== this._signal || this._subscription === null;
   }
 
-  shouldBind(signal: Signal<T>): boolean {
-    return (
-      signal !== this._signal || this._binding.shouldBind(this._signal.value)
-    );
-  }
-
-  bind(signal: Signal<T>, context: UpdateContext): void {
-    if (signal !== this._signal) {
-      this._subscription?.();
-      this._subscription = null;
-    }
-    this._binding.bind(signal.value, context);
+  bind(signal: Signal<Bindable<T>>): void {
+    this._subscription?.();
+    this._subscription = null;
     this._signal = signal;
+    this._version = -1;
   }
 
   connect(context: UpdateContext): void {
-    this._binding.connect(context);
+    const version = this._signal.version;
+    if (this._version < this._signal.version) {
+      this._slot.reconcile(this._signal.value, context);
+      this._version = version;
+    } else {
+      this._slot.connect(context);
+    }
     this._subscription ??= this._subscribeSignal(context.clone());
+  }
+
+  resume(context: UpdateContext): void {
+    this._slot.reconcile(this._signal.value, context);
+    this._version = this._signal.version;
   }
 
   disconnect(context: UpdateContext): void {
     this._subscription?.();
-    this._binding.disconnect(context);
+    this._slot.disconnect(context);
     this._subscription = null;
   }
 
   commit(): void {
-    this._binding.commit();
+    this._slot.commit();
   }
 
   rollback(): void {
-    this._binding.rollback();
+    this._slot.rollback();
   }
 
   private _subscribeSignal(context: UpdateContext): Subscription {
@@ -100,18 +105,18 @@ export class SignalBinding<T> implements ResumableBinding<Signal<T>> {
 }
 
 export abstract class Signal<T>
-  implements DirectiveObject<Signal<T>>, UserHook<T>
+  implements DirectiveValue<Signal<T>>, UserHook<T>
 {
   abstract get value(): T;
 
   abstract get version(): number;
 
   get directive(): Directive<Signal<T>> {
-    return SignalDirective as Directive<Signal<T>>;
+    return SignalDirective;
   }
 
-  get [bindableTag](): BindableType.Object {
-    return BindableType.Object;
+  get [bindableTag](): typeof BindableType.DirectiveValue {
+    return BindableType.DirectiveValue;
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
@@ -191,7 +196,7 @@ export class Atom<T> extends Signal<T> {
 
 export class Computed<
   TResult,
-  const TDependencies extends Signal<any>[],
+  const TDependencies extends Signal<unknown>[],
 > extends Signal<TResult> {
   private readonly _producer: (...signals: TDependencies) => TResult;
 

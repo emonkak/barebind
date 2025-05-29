@@ -1,17 +1,15 @@
-import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
   Template,
   TemplateBlock,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { TemplateBinding } from '../template.js';
+import { TemplateBinding } from './template.js';
 
-export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
-  get name(): string {
-    return 'EmptyTemplate';
-  },
+export const EmptyTemplate: Template<readonly []> = {
+  name: 'EmptyTemplate',
   render(
     _binds: readonly [],
     _context: DirectiveContext,
@@ -22,10 +20,10 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
     binds: readonly [],
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [], ChildNodePart> {
+  ): TemplateBinding<readonly []> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'Empty template must be used in a child node, but it is used here in:\n' +
+        'EmptyTemplate must be used in a child node, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -33,8 +31,8 @@ export const EmptyTemplate: Template<readonly [], ChildNodePart> = {
   },
 };
 
-export const EmptyTemplateBlock: TemplateBlock<readonly [], ChildNodePart> = {
-  bind(_binds: readonly [], _context: UpdateContext): void {},
+export const EmptyTemplateBlock: TemplateBlock<readonly []> = {
+  reconcile(_binds: readonly [], _context: UpdateContext): void {},
   connect(_context: UpdateContext): void {},
   disconnect(_context: UpdateContext): void {},
   commit(): void {},

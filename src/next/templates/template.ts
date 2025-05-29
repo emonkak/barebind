@@ -4,29 +4,27 @@ import type {
   Template,
   TemplateBlock,
   UpdateContext,
-} from './directive.js';
-import type { Part } from './part.js';
+} from '../core.js';
+import type { ChildNodePart } from '../part.js';
 
-export class TemplateBinding<TBinds, TPart extends Part>
-  implements Binding<TBinds>, Effect
-{
-  private readonly _template: Template<TBinds, TPart>;
+export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
+  private readonly _template: Template<TBinds>;
 
   private _binds: TBinds;
 
-  private readonly _part: TPart;
+  private readonly _part: ChildNodePart;
 
-  private _pendingBlock: TemplateBlock<TBinds, TPart> | null = null;
+  private _pendingBlock: TemplateBlock<TBinds> | null = null;
 
-  private _memoizedBlock: TemplateBlock<TBinds, TPart> | null = null;
+  private _memoizedBlock: TemplateBlock<TBinds> | null = null;
 
-  constructor(template: Template<TBinds, TPart>, binds: TBinds, part: TPart) {
+  constructor(template: Template<TBinds>, binds: TBinds, part: ChildNodePart) {
     this._template = template;
     this._binds = binds;
     this._part = part;
   }
 
-  get directive(): Template<TBinds, TPart> {
+  get directive(): Template<TBinds> {
     return this._template;
   }
 
@@ -34,21 +32,21 @@ export class TemplateBinding<TBinds, TPart extends Part>
     return this._binds;
   }
 
-  get part(): TPart {
+  get part(): ChildNodePart {
     return this._part;
   }
 
   shouldBind(binds: TBinds): boolean {
-    return binds !== this._binds;
+    return this._memoizedBlock === null || binds !== this._binds;
   }
 
-  bind(binds: TBinds, _context: UpdateContext): void {
+  bind(binds: TBinds): void {
     this._binds = binds;
   }
 
   connect(context: UpdateContext): void {
     if (this._pendingBlock !== null) {
-      this._pendingBlock.bind(this._binds, context);
+      this._pendingBlock.reconcile(this._binds, context);
     } else {
       this._pendingBlock = context.renderTemplate(this._template, this._binds);
     }

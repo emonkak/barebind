@@ -1,5 +1,10 @@
-import type { ContextualKey, HookContext } from '../hook.js';
-import { type UserHook, createContext, userHookTag } from '../hook.js';
+import {
+  type ContextualKey,
+  type HookContext,
+  type UserHook,
+  createContext,
+  userHookTag,
+} from '../hook.js';
 import type { RelativeURL } from './relativeURL.js';
 
 export interface LocationState {

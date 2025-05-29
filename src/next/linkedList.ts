@@ -1,22 +1,16 @@
-export namespace LinkedList {
-  export interface Node<T> {
-    readonly value: T;
-    readonly prev: Node<T> | null;
-    readonly next: Node<T> | null;
-    readonly owner: LinkedList<T> | null;
-  }
-
-  export interface MutableNode<T> {
-    value: T;
-    prev: MutableNode<T> | null;
-    next: MutableNode<T> | null;
-    owner: LinkedList<T> | null;
-  }
+export interface Node<T> {
+  readonly value: T;
+  readonly prev: Node<T> | null;
+  readonly next: Node<T> | null;
+  readonly owner: LinkedList<T> | null;
 }
 
-type Node<T> = LinkedList.Node<T>;
-
-type MutableNode<T> = LinkedList.MutableNode<T>;
+export interface MutableNode<T> {
+  value: T;
+  prev: MutableNode<T> | null;
+  next: MutableNode<T> | null;
+  owner: LinkedList<T> | null;
+}
 
 export class LinkedList<T> implements Iterable<T> {
   private _head: MutableNode<T> | null = null;

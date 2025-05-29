@@ -1,12 +1,12 @@
+import type { DirectiveContext } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import type { DirectiveContext } from '../directive.js';
 import { type Part, PartType, type PropertyPart } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
-export const PropertyPrimitive: Primitive<unknown> = {
-  get name(): string {
-    return 'PropertyPrimitive';
-  },
+const noValue = Symbol('noValue');
+
+export const PropertyPrimitive: Primitive<any> = {
+  name: 'PropertyPrimitive',
   ensureValue(
     _value: unknown,
     _part: PropertyPart,
@@ -18,7 +18,7 @@ export const PropertyPrimitive: Primitive<unknown> = {
   ): PrimitiveBinding<unknown, PropertyPart> {
     if (part.type !== PartType.Property) {
       throw new Error(
-        'Property primitive must be used in a property part, but it is used here:\n' +
+        'PropertyPrimitive must be used in a property part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -27,18 +27,23 @@ export const PropertyPrimitive: Primitive<unknown> = {
 };
 
 class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
+  private _memoizedValue: T | typeof noValue = noValue;
+
   get directive(): Primitive<T> {
-    return PropertyPrimitive as Primitive<T>;
+    return PropertyPrimitive;
   }
 
-  shouldMount(newValue: T, oldValue: T): boolean {
-    return !Object.is(newValue, oldValue);
+  shouldBind(value: T): boolean {
+    return !Object.is(value, this._memoizedValue);
   }
 
-  mount(newValue: T, _oldValue: T | null, part: PropertyPart): void {
-    const { node, name } = part;
-    (node as any)[name] = newValue;
+  commit(): void {
+    const { node, name } = this._part;
+    (node as any)[name] = this._pendingValue;
+    this._memoizedValue = this._pendingValue;
   }
 
-  unmount(_value: T): void {}
+  rollback(): void {
+    this._memoizedValue = noValue;
+  }
 }

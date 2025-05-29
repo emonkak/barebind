@@ -1,14 +1,14 @@
 import {
-  type Binding,
   type Component,
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
   type ResumableBinding,
+  type Slot,
   type UpdateContext,
   createDirectiveElement,
-} from '../directive.js';
+} from '../core.js';
 import { type EffectHook, type Hook, HookType } from '../hook.js';
 import type { Part } from '../part.js';
 
@@ -22,7 +22,7 @@ export function component<TProps, TResult>(
   return createDirectiveElement(directive, props);
 }
 
-class ComponentDirective<TProps, TResult> implements Directive<TProps> {
+export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   private readonly _component: Component<TProps, TResult>;
 
   constructor(component: Component<TProps, TResult>) {
@@ -46,14 +46,12 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   }
 }
 
-export class ComponentBinding<TProps, TResult>
-  implements ResumableBinding<TProps>
-{
+class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
   private readonly _directive: ComponentDirective<TProps, TResult>;
 
   private _props: TProps;
 
-  private _binding: Binding<TResult> | null = null;
+  private _slot: Slot<TResult> | null = null;
 
   private readonly _part: Part;
 
@@ -81,6 +79,18 @@ export class ComponentBinding<TProps, TResult>
     return this._part;
   }
 
+  shouldBind(props: TProps): boolean {
+    return this._hooks.length === 0 || props !== this._props;
+  }
+
+  bind(props: TProps): void {
+    this._props = props;
+  }
+
+  connect(context: UpdateContext): void {
+    context.enqueueBinding(this);
+  }
+
   resume(context: UpdateContext): void {
     const result = context.renderComponent(
       this._directive.component,
@@ -88,24 +98,12 @@ export class ComponentBinding<TProps, TResult>
       this._hooks,
       this,
     );
-    if (this._binding !== null) {
-      this._binding.bind(result, context);
+    if (this._slot !== null) {
+      this._slot.reconcile(result, context);
     } else {
-      this._binding = context.resolveBinding(result, this._part);
+      this._slot = context.resolveSlot(result, this._part);
+      this._slot.connect(context);
     }
-    this._binding.connect(context);
-  }
-
-  shouldBind(props: TProps): boolean {
-    return this._props === props;
-  }
-
-  bind(props: TProps, _context: UpdateContext): void {
-    this._props = props;
-  }
-
-  connect(context: UpdateContext): void {
-    context.enqueueBinding(this);
   }
 
   disconnect(context: UpdateContext): void {
@@ -125,16 +123,16 @@ export class ComponentBinding<TProps, TResult>
       }
     }
 
-    this._binding?.disconnect(context);
+    this._slot?.disconnect(context);
     this._hooks = [];
   }
 
   commit(): void {
-    this._binding?.commit();
+    this._slot?.commit();
   }
 
   rollback(): void {
-    this._binding?.rollback();
+    this._slot?.rollback();
   }
 }
 

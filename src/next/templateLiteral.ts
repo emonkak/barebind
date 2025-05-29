@@ -1,92 +1,66 @@
 import { sequentialEqual } from './compare.js';
-import { Literal } from './literal.js';
+import { Literal, expandLiterals } from './literal.js';
 
-export interface TemplateLiteral<TValues extends readonly any[]> {
+export interface TemplateLiteral {
   strings: readonly string[];
-  values: TValues;
+  values: unknown[];
 }
 
-export type NonLiteralValues<TValues extends readonly any[]> =
-  TValues extends readonly [infer THead, ...infer TTail]
-    ? THead extends Literal
-      ? NonLiteralValues<TTail>
-      : [THead, ...NonLiteralValues<TTail>]
-    : [];
-
-interface TemplateInformation {
+interface TemplateDescriptor {
   strings: readonly string[];
-  literalStrings: readonly string[];
+  literalValues: readonly string[];
   literalPositions: readonly number[];
 }
 
 export class TemplateLiteralPreprocessor {
-  private readonly _templateInformations: WeakMap<
+  private readonly _templateDescriptors: WeakMap<
     TemplateStringsArray,
-    TemplateInformation
+    TemplateDescriptor
   > = new WeakMap();
 
-  expandLiterals<TValues extends readonly any[]>(
+  expandLiterals(
     strings: TemplateStringsArray,
-    values: TValues,
-  ): TemplateLiteral<NonLiteralValues<TValues>> {
-    const literalStrings: string[] = [];
+    values: readonly unknown[],
+  ): TemplateLiteral {
+    const literalValues: string[] = [];
     const literalPositions: number[] = [];
     const nonLiteralValues: unknown[] = [];
 
     for (let i = 0, l = values.length; i < l; i++) {
       const value = values[i];
       if (value instanceof Literal) {
-        literalStrings.push(value.toString());
+        literalValues.push(value.valueOf());
         literalPositions.push(i);
       } else {
         nonLiteralValues.push(value);
       }
     }
 
-    const templateInformaion = this._templateInformations.get(strings);
+    const descriptor = this._templateDescriptors.get(strings);
 
     if (
-      templateInformaion !== undefined &&
-      sequentialEqual(templateInformaion.literalStrings, literalStrings) &&
-      sequentialEqual(templateInformaion.literalPositions, literalPositions)
+      descriptor !== undefined &&
+      sequentialEqual(descriptor.literalValues, literalValues) &&
+      sequentialEqual(descriptor.literalPositions, literalPositions)
     ) {
       return {
-        strings: templateInformaion.strings,
-        values: nonLiteralValues as NonLiteralValues<TValues>,
+        strings: descriptor.strings,
+        values: nonLiteralValues,
       };
     }
 
     const expandedStrings =
-      literalStrings.length > 0 ? expandLiterals(strings, values) : strings;
+      literalValues.length > 0 ? expandLiterals(strings, values) : strings;
 
-    this._templateInformations.set(strings, {
+    this._templateDescriptors.set(strings, {
       strings: expandedStrings,
-      literalStrings,
+      literalValues,
       literalPositions,
     });
 
     return {
       strings: expandedStrings,
-      values: nonLiteralValues as NonLiteralValues<TValues>,
+      values: nonLiteralValues,
     };
   }
-}
-
-function expandLiterals(
-  strings: readonly string[],
-  values: readonly unknown[],
-): readonly string[] {
-  const expandedStrings = [strings[0]!];
-
-  for (let i = 0, j = 0, l = values.length; i < l; i++) {
-    const value = values[i];
-    if (value instanceof Literal) {
-      expandedStrings[j] += value + strings[i + 1]!;
-    } else {
-      expandedStrings.push(strings[i + 1]!);
-      j++;
-    }
-  }
-
-  return expandedStrings;
 }

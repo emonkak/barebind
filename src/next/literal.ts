@@ -1,15 +1,20 @@
-export class Literal {
-  private readonly _value: string;
+export class Literal extends String {}
 
-  constructor(value: string) {
-    this._value = value;
+export function expandLiterals(
+  strings: readonly string[],
+  values: readonly unknown[],
+): readonly string[] {
+  const expandedStrings = [strings[0]!];
+
+  for (let i = 0, j = 0, l = values.length; i < l; i++) {
+    const value = values[i];
+    if (value instanceof Literal) {
+      expandedStrings[j] += value + strings[i + 1]!;
+    } else {
+      expandedStrings.push(strings[i + 1]!);
+      j++;
+    }
   }
 
-  valueOf(): string {
-    return this._value;
-  }
-
-  toString(): string {
-    return this._value;
-  }
+  return expandedStrings;
 }

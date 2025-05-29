@@ -1,17 +1,21 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import type { Template, TemplateMode } from './directive.js';
-import { AttributePrimitive } from './directives/attribute.js';
-import { ClassPrimitive } from './directives/class.js';
-import { EventPrimitive } from './directives/event.js';
-import { LivePrimitive } from './directives/live.js';
-import { NodePrimitive } from './directives/node.js';
-import type { Primitive } from './directives/primitive.js';
-import { PropertyPrimitive } from './directives/property.js';
-import { RefPrimitive } from './directives/ref.js';
-import { SpreadPrimitive } from './directives/spread.js';
-import { StylePrimitive } from './directives/style.js';
+import type { Bindable, SlotType, Template, TemplateMode } from './core.js';
 import { type Part, PartType } from './part.js';
+import { AttributePrimitive } from './primitives/attribute.js';
+import { ChildNodePrimitive } from './primitives/childNode.js';
+import { ClassListPrimitive } from './primitives/classList.js';
+import { ClassMapPrimitive } from './primitives/classMap.js';
+import { EventPrimitive } from './primitives/event.js';
+import { LivePrimitive } from './primitives/live.js';
+import type { Primitive } from './primitives/primitive.js';
+import { PropertyPrimitive } from './primitives/property.js';
+import { RefPrimitive } from './primitives/ref.js';
+import { SpreadPrimitive } from './primitives/spread.js';
+import { StylePrimitive } from './primitives/style.js';
+import { TextPrimitive } from './primitives/text.js';
+import { FlexibleSlot } from './slots/flexible.js';
+import { StrictSlot } from './slots/strict.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
 import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
 import { TaggedTemplate } from './templates/taggedTemplate.js';
@@ -20,15 +24,16 @@ export interface RenderHost {
   getTaskPriority(): TaskPriority;
   createTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     placeholder: string,
     mode: TemplateMode,
-  ): Template<readonly unknown[]>;
+  ): Template<readonly Bindable<unknown>[]>;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void>;
   resolvePrimitive(part: Part): Primitive<unknown>;
+  resolveSlotType(part: Part): SlotType;
   startViewTransition(callback: () => void | Promise<void>): Promise<void>;
   yieldToMain(): Promise<void>;
 }
@@ -37,13 +42,13 @@ export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
 
-export class BrowserHost implements RenderHost {
+export class BrowserRenderHost implements RenderHost {
   createTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     placeholder: string,
     mode: TemplateMode,
-  ): Template<readonly unknown[]> {
+  ): Template<readonly Bindable<unknown>[]> {
     if (binds.length === 0 && strings[0]!.trim() === '') {
       // Assumption: strings.length === 1
       return EmptyTemplate;
@@ -112,8 +117,10 @@ export class BrowserHost implements RenderHost {
     switch (part.type) {
       case PartType.Attribute:
         switch (part.name) {
-          case ':class':
-            return ClassPrimitive;
+          case ':classList':
+            return ClassListPrimitive;
+          case ':classMap':
+            return ClassMapPrimitive;
           case ':ref':
             return RefPrimitive;
           case ':style':
@@ -122,8 +129,7 @@ export class BrowserHost implements RenderHost {
             return AttributePrimitive;
         }
       case PartType.ChildNode:
-      case PartType.Node:
-        return NodePrimitive;
+        return ChildNodePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:
@@ -132,6 +138,17 @@ export class BrowserHost implements RenderHost {
         return LivePrimitive;
       case PartType.Property:
         return PropertyPrimitive;
+      case PartType.Text:
+        return TextPrimitive;
+    }
+  }
+
+  resolveSlotType(part: Part): SlotType {
+    switch (part.type) {
+      case PartType.ChildNode:
+        return FlexibleSlot;
+      default:
+        return StrictSlot;
     }
   }
 

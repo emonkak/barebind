@@ -1,40 +1,24 @@
 import {
+  type Bindable,
   type Binding,
   type Directive,
-  type DirectiveContext,
-  type DirectiveElement,
+  type Slot,
+  type SlotElement,
   type UpdateContext,
-  createDirectiveElement,
-} from '../directive.js';
+  createSlotElement,
+} from '../core.js';
 import type { Part } from '../part.js';
 
-export function memo<T>(value: T): DirectiveElement<T> {
-  return createDirectiveElement(SlotDirective as Directive<T>, value);
+export function memo<T>(value: Bindable<T>): SlotElement<T> {
+  return createSlotElement(value, MemoSlot);
 }
 
-const SlotDirective: Directive<unknown> = {
-  get name(): string {
-    return 'SlotDirective';
-  },
-  resolveBinding(
-    value: unknown,
-    part: Part,
-    context: DirectiveContext,
-  ): SlotBinding<unknown> {
-    const element = context.resolveDirectiveElement(value, part);
-    const binding = element.directive.resolveBinding(
-      element.value,
-      part,
-      context,
-    );
-    return new SlotBinding(binding);
-  },
-};
-
-export class SlotBinding<T> implements Binding<T> {
+export class MemoSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<T>;
 
   private _memoizedBinding: Binding<T> | null = null;
+
+  private readonly _cachedBindings: Map<Directive<T>, Binding<T>> = new Map();
 
   private _dirty = false;
 
@@ -43,7 +27,7 @@ export class SlotBinding<T> implements Binding<T> {
   }
 
   get directive(): Directive<T> {
-    return SlotDirective as Directive<T>;
+    return this._pendingBinding.directive;
   }
 
   get value(): T {
@@ -54,30 +38,37 @@ export class SlotBinding<T> implements Binding<T> {
     return this._pendingBinding.part;
   }
 
-  shouldBind(_value: T): boolean {
-    return true;
-  }
-
-  bind(value: T, context: UpdateContext): void {
-    const element = context.resolveDirectiveElement(
-      value,
-      this._pendingBinding.part,
-    );
+  reconcile(value: Bindable<T>, context: UpdateContext): void {
+    const element = context.resolveDirective(value, this._pendingBinding.part);
     if (this._pendingBinding.directive === element.directive) {
-      if (this._pendingBinding.shouldBind(value)) {
-        this._pendingBinding.bind(element.value, context);
+      if (this._pendingBinding.shouldBind(element.value)) {
+        this._pendingBinding.bind(element.value);
         this._pendingBinding.connect(context);
         this._dirty = true;
       }
     } else {
       this._pendingBinding.disconnect(context);
-      this._pendingBinding = element.directive.resolveBinding(
-        element.value,
-        this._pendingBinding.part,
-        context,
+      this._cachedBindings.set(
+        this._pendingBinding.directive,
+        this._pendingBinding,
       );
-      this._pendingBinding.connect(context);
-      this._dirty = true;
+      const cachedBinding = this._cachedBindings.get(element.directive);
+      if (cachedBinding !== undefined) {
+        if (cachedBinding.shouldBind(element.value)) {
+          cachedBinding.bind(element.value);
+          cachedBinding.connect(context);
+          this._dirty = true;
+        }
+        this._pendingBinding = cachedBinding;
+      } else {
+        this._pendingBinding = element.directive.resolveBinding(
+          element.value,
+          this._pendingBinding.part,
+          context,
+        );
+        this._pendingBinding.connect(context);
+        this._dirty = true;
+      }
     }
   }
 

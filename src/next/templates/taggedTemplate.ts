@@ -1,14 +1,15 @@
-import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  Binding,
+  Bindable,
   DirectiveContext,
+  Slot,
   Template,
   TemplateBlock,
   TemplateMode,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { TemplateBinding } from '../template.js';
+import { TemplateBinding } from './template.js';
 
 export type Hole =
   | AttributeHole
@@ -16,46 +17,46 @@ export type Hole =
   | ElementHole
   | EventHole
   | LiveHole
-  | NodeHole
-  | PropertyHole;
+  | PropertyHole
+  | TextHole;
 
 export interface AttributeHole {
-  type: PartType.Attribute;
+  type: typeof PartType.Attribute;
   index: number;
   name: string;
 }
 
 export interface ChildNodeHole {
-  type: PartType.ChildNode;
+  type: typeof PartType.ChildNode;
   index: number;
 }
 
 export interface ElementHole {
-  type: PartType.Element;
+  type: typeof PartType.Element;
   index: number;
 }
 
 export interface EventHole {
-  type: PartType.Event;
+  type: typeof PartType.Event;
   index: number;
   name: string;
 }
 
 export interface LiveHole {
-  type: PartType.Live;
+  type: typeof PartType.Live;
   index: number;
   name: string;
-}
-
-export interface NodeHole {
-  type: PartType.Node;
-  index: number;
 }
 
 export interface PropertyHole {
-  type: PartType.Property;
+  type: typeof PartType.Property;
   index: number;
   name: string;
+}
+
+export interface TextHole {
+  type: typeof PartType.Text;
+  index: number;
 }
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
@@ -72,10 +73,10 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
 
 const ERROR_MAKER = '[[ERROR IN HERE!]]';
 
-export class TaggedTemplate<TBinds extends readonly any[]>
-  implements Template<TBinds, ChildNodePart>
+export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
+  implements Template<TBinds>
 {
-  static parse<TBinds extends readonly any[]>(
+  static parse<TBinds extends readonly Bindable<unknown>[]>(
     strings: readonly string[],
     binds: TBinds,
     placeholder: string,
@@ -130,7 +131,7 @@ export class TaggedTemplate<TBinds extends readonly any[]>
       assertNumberOfBinds(holes.length, binds.length);
     }
 
-    const bindings = new Array(holes.length);
+    const slots = new Array(holes.length);
     const fragment = document.importNode(this._element.content, true);
 
     if (holes.length > 0) {
@@ -184,12 +185,6 @@ export class TaggedTemplate<TBinds extends readonly any[]>
                 name: currentHole.name,
               };
               break;
-            case PartType.Node:
-              part = {
-                type: PartType.Node,
-                node: currentNode as ChildNode,
-              };
-              break;
             case PartType.Property:
               part = {
                 type: PartType.Property,
@@ -197,9 +192,15 @@ export class TaggedTemplate<TBinds extends readonly any[]>
                 name: currentHole.name,
               };
               break;
+            case PartType.Text:
+              part = {
+                type: PartType.Text,
+                node: currentNode as Text,
+              };
+              break;
           }
 
-          bindings[holeIndex] = context.resolveBinding(binds[holeIndex], part);
+          slots[holeIndex] = context.resolveSlot(binds[holeIndex], part);
           holeIndex++;
 
           if (holeIndex >= holes.length) {
@@ -218,17 +219,17 @@ export class TaggedTemplate<TBinds extends readonly any[]>
     // Detach child nodes from the DocumentFragment.
     fragment.replaceChildren();
 
-    return new TaggedTemplateBlock(bindings, childNodes);
+    return new TaggedTemplateBlock(slots, childNodes);
   }
 
   resolveBinding(
     binds: TBinds,
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<TBinds, ChildNodePart> {
+  ): TemplateBinding<TBinds> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'Tagged template must be used in a child node, but it is used here in:\n' +
+        'TaggedTemplate must be used in a child node, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -236,79 +237,79 @@ export class TaggedTemplate<TBinds extends readonly any[]>
   }
 }
 
-export class TaggedTemplateBlock<TBinds extends readonly any[]>
-  implements TemplateBlock<TBinds, ChildNodePart>
+export class TaggedTemplateBlock<TBinds extends readonly Bindable<unknown>[]>
+  implements TemplateBlock<TBinds>
 {
-  private _bindings: Binding<unknown>[];
+  private _slots: Slot<unknown>[];
 
   private readonly _childNodes: ChildNode[];
 
-  constructor(bindings: Binding<unknown>[], childNodes: ChildNode[]) {
-    this._bindings = bindings;
+  constructor(slots: Slot<unknown>[], childNodes: ChildNode[]) {
+    this._slots = slots;
     this._childNodes = childNodes;
   }
 
-  get bindings(): Binding<unknown>[] {
-    return this._bindings;
+  get slots(): Slot<unknown>[] {
+    return this._slots;
   }
 
   get childNodes(): ChildNode[] {
     return this._childNodes;
   }
 
-  bind(binds: TBinds, context: UpdateContext): void {
+  reconcile(binds: TBinds, context: UpdateContext): void {
     DEBUG: {
-      assertNumberOfBinds(this._bindings.length, binds.length);
+      assertNumberOfBinds(this._slots.length, binds.length);
     }
 
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.bind(binds[i], context);
+    for (let i = 0, l = this._slots.length; i < l; i++) {
+      this._slots[i]!.reconcile(binds[i], context);
     }
   }
 
   connect(context: UpdateContext): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      this._bindings[i]!.connect(context);
+    for (let i = 0, l = this._slots.length; i < l; i++) {
+      this._slots[i]!.connect(context);
     }
   }
 
   disconnect(context: UpdateContext): void {
     // Unbind in reverse order.
-    for (let i = this._bindings.length - 1; i >= 0; i--) {
-      this._bindings[i]!.disconnect(context);
+    for (let i = this._slots.length - 1; i >= 0; i--) {
+      this._slots[i]!.disconnect(context);
     }
   }
 
   commit(): void {
-    for (let i = 0, l = this._bindings.length; i < l; i++) {
-      const binding = this._bindings[i]!;
+    for (let i = 0, l = this._slots.length; i < l; i++) {
+      const slot = this._slots[i]!;
 
       DEBUG: {
-        if (binding.part.type === PartType.ChildNode) {
-          binding.part.node.data = binding.directive.name;
+        if (slot.part.type === PartType.ChildNode) {
+          slot.part.node.nodeValue = slot.directive.name;
         }
       }
 
-      binding.commit();
+      slot.commit();
     }
   }
 
   rollback(): void {
-    for (let i = this._bindings.length - 1; i >= 0; i--) {
-      const binding = this._bindings[i]!;
-      const part = binding.part;
+    for (let i = this._slots.length - 1; i >= 0; i--) {
+      const slot = this._slots[i]!;
+      const part = slot.part;
 
       if (
-        (part.type === PartType.ChildNode || part.type === PartType.Node) &&
+        (part.type === PartType.ChildNode || part.type === PartType.Text) &&
         this._childNodes.includes(part.node)
       ) {
         // This binding is mounted as a child of the root, so we must rollback it.
-        binding.rollback();
+        slot.rollback();
       }
 
       DEBUG: {
         if (part.type === PartType.ChildNode) {
-          part.node.data = '';
+          part.node.nodeValue = '';
         }
       }
     }
@@ -515,7 +516,7 @@ function parseChildren(
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
                   inspectPart(
-                    { type: PartType.Node, node: currentNode },
+                    { type: PartType.ChildNode, node: currentNode as Comment },
                     ERROR_MAKER,
                   ),
               );
@@ -542,7 +543,7 @@ function parseChildren(
             currentNode.before(document.createTextNode(''));
 
             holes.push({
-              type: PartType.Node,
+              type: PartType.Text,
               index,
             });
             index++;

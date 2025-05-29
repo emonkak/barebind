@@ -1,40 +1,39 @@
-import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  Binding,
+  Bindable,
   DirectiveContext,
+  Slot,
   Template,
   TemplateBlock,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { TemplateBinding } from '../template.js';
+import { TemplateBinding } from './template.js';
 
-export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
-  get name(): string {
-    return 'ChildNodeTemplate';
-  },
+export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
+  name: 'ChildNodeTemplate',
   render(
-    binds: readonly [unknown],
+    binds: readonly [Bindable<unknown>],
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
     } as const;
-    const binding = context.resolveBinding(binds[0], part);
+    const slot = context.resolveSlot(binds[0], part);
     DEBUG: {
-      part.node.data = binding.directive.name;
+      part.node.data = slot.directive.name;
     }
-    return new SingleTemplateBlock(binding);
+    return new SingleTemplateBlock(slot);
   },
   resolveBinding(
-    binds: readonly [unknown],
+    binds: readonly [Bindable<unknown>],
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [unknown], ChildNodePart> {
+  ): TemplateBinding<readonly [unknown]> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'Single template must be used in a child node, but it is used here in:\n' +
+        'ChildNodeTemplate must be used in a child node, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -42,70 +41,74 @@ export const ChildNodeTemplate: Template<readonly [unknown], ChildNodePart> = {
   },
 };
 
-export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
-  get name(): string {
-    return 'TextTemplate';
-  },
+export const TextTemplate: Template<readonly [Bindable<any>]> = {
+  name: 'TextTemplate',
   render(
-    binds: readonly [unknown],
+    binds: readonly [Bindable<unknown>],
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
     const part = {
-      type: PartType.Node,
+      type: PartType.Text,
       node: document.createTextNode(''),
     } as const;
     const value = binds[0];
-    const binding = context.resolveBinding(value, part);
-    return new SingleTemplateBlock(binding);
+    const slot = context.resolveSlot(value, part);
+    return new SingleTemplateBlock(slot);
   },
   resolveBinding(
-    binds: readonly [unknown],
-    part: ChildNodePart,
+    binds: readonly [Bindable<unknown>],
+    part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [unknown], ChildNodePart> {
+  ): TemplateBinding<readonly [unknown]> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error(
+        'TextTemplate must be used in a child node, but it is used here in:\n' +
+          inspectPart(part, markUsedValue(this)),
+      );
+    }
     return new TemplateBinding(this, binds, part);
   },
 };
 
 export class SingleTemplateBlock<T>
-  implements TemplateBlock<readonly [T], ChildNodePart>
+  implements TemplateBlock<readonly [Bindable<T>]>
 {
-  private _binding: Binding<T>;
+  private _slot: Slot<T>;
 
-  constructor(binding: Binding<T>) {
-    this._binding = binding;
+  constructor(slot: Slot<T>) {
+    this._slot = slot;
   }
 
-  bind(binds: readonly [T], context: UpdateContext): void {
-    this._binding.bind(binds[0], context);
+  reconcile(binds: readonly [Bindable<T>], context: UpdateContext): void {
+    this._slot.reconcile(binds[0], context);
   }
 
   connect(context: UpdateContext): void {
-    this._binding.connect(context);
+    this._slot.connect(context);
   }
 
   disconnect(context: UpdateContext): void {
-    this._binding.disconnect(context);
+    this._slot.disconnect(context);
   }
 
   commit(): void {
     DEBUG: {
-      if (this._binding.part.type === PartType.ChildNode) {
-        this._binding.part.node.data = this._binding.directive.name;
+      if (this._slot.part.type === PartType.ChildNode) {
+        this._slot.part.node.nodeValue = this._slot.directive.name;
       }
     }
-    this._binding.commit();
+    this._slot.commit();
   }
 
   rollback(): void {
-    this._binding.rollback();
+    this._slot.rollback();
   }
 
   mount(part: ChildNodePart): void {
-    part.node.before(this._binding.part.node);
+    part.node.before(this._slot.part.node);
   }
 
   unmount(_part: ChildNodePart): void {
-    this._binding.part.node.remove();
+    this._slot.part.node.remove();
   }
 }

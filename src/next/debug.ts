@@ -1,4 +1,16 @@
+import type { Hook } from './hook.js';
 import { type Part, PartType } from './part.js';
+
+export function ensureHookType<TExpectedHook extends Hook>(
+  expectedType: TExpectedHook['type'],
+  hook: Hook,
+): asserts hook is TExpectedHook {
+  if (hook.type !== expectedType) {
+    throw new Error(
+      `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
+    );
+  }
+}
 
 export function inspectPart(part: Part, marker: string): string {
   let currentNode: Node | null = part.node;
@@ -122,22 +134,22 @@ function markPart(part: Part, marker: string): string {
       return marker + toHTML(part.node);
     case PartType.Element:
       return appendInsideTag(part.node, marker);
-    case PartType.Property:
+    case PartType.Event:
       return appendInsideTag(
         part.node,
-        unquotedAttribute('.' + part.name, marker),
+        unquotedAttribute('@' + part.name, marker),
       );
     case PartType.Live:
       return appendInsideTag(
         part.node,
         unquotedAttribute('$' + part.name, marker),
       );
-    case PartType.Event:
+    case PartType.Property:
       return appendInsideTag(
         part.node,
-        unquotedAttribute('@' + part.name, marker),
+        unquotedAttribute('.' + part.name, marker),
       );
-    case PartType.Node:
+    case PartType.Text:
       return marker;
   }
 }

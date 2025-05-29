@@ -1,6 +1,6 @@
 import { shallowEqual } from '../compare.js';
+import type { DirectiveContext } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type { DirectiveContext } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
@@ -18,13 +18,11 @@ const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export const StylePrimitive: Primitive<StyleValue> = {
-  get name(): string {
-    return 'StylePrimitive';
-  },
+  name: 'StylePrimitive',
   ensureValue(value: unknown, part: Part): asserts value is StyleValue {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of style primitive must be Object, but got ${inspectValue(value)}.\n` +
+        `The value of StylePrimitive must be Object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }
@@ -36,7 +34,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
   ): StyleBinding {
     if (part.type !== PartType.Attribute || part.name !== ':style') {
       throw new Error(
-        'Style primitive must be used in a ":style" attribute part, but it is used here in:\n' +
+        'StylePrimitive must be used in a ":style" attribute part, but it is used here in:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
@@ -44,42 +42,54 @@ export const StylePrimitive: Primitive<StyleValue> = {
   },
 };
 
-export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
+class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
+  private _memoizedValue: StyleValue = {};
+
   get directive(): Primitive<StyleValue> {
     return StylePrimitive;
   }
 
-  shouldMount(newProps: StyleValue, oldProps: StyleValue): boolean {
-    return shallowEqual(newProps, oldProps);
+  shouldBind(props: StyleValue): boolean {
+    return !shallowEqual(props, this._memoizedValue);
   }
 
-  mount(
-    newProps: StyleValue,
-    oldProps: StyleValue | null,
-    part: AttributePart,
-  ): void {
-    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
+  commit(): void {
+    const newProps = this._pendingValue;
+    const oldProps = this._memoizedValue;
+    const { style } = this._part.node as
+      | HTMLElement
+      | MathMLElement
+      | SVGElement;
+
+    for (const key in oldProps) {
+      if (!Object.hasOwn(newProps, key)) {
+        const cssProperty = toCSSProperty(key);
+        style.removeProperty(cssProperty);
+      }
+    }
+
     for (const key in newProps) {
       const cssProperty = toCSSProperty(key);
       const cssValue = newProps[cssProperty as StyleProperties]!;
       style.setProperty(cssProperty, cssValue);
     }
-    if (oldProps !== null) {
-      for (const key in oldProps) {
-        if (!Object.hasOwn(newProps, key)) {
-          const cssProperty = toCSSProperty(key);
-          style.removeProperty(cssProperty);
-        }
-      }
-    }
+
+    this._memoizedValue = this._pendingValue;
   }
 
-  unmount(props: StyleValue, part: AttributePart): void {
-    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
-    for (const property in props) {
-      const cssProperty = toCSSProperty(property);
+  rollback(): void {
+    const props = this._memoizedValue;
+    const { style } = this._part.node as
+      | HTMLElement
+      | MathMLElement
+      | SVGElement;
+
+    for (const key in props) {
+      const cssProperty = toCSSProperty(key);
       style.removeProperty(cssProperty);
     }
+
+    this._memoizedValue = {};
   }
 }
 
