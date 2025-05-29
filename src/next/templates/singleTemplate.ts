@@ -70,64 +70,42 @@ export const TextTemplate: Template<readonly [unknown], ChildNodePart> = {
 export class SingleTemplateBlock<T>
   implements TemplateBlock<readonly [T], ChildNodePart>
 {
-  private _pendingBinding: Binding<T>;
-
-  private _memoizedBinding: Binding<T> | null = null;
+  private _binding: Binding<T>;
 
   constructor(binding: Binding<T>) {
-    this._pendingBinding = binding;
+    this._binding = binding;
   }
 
   bind(binds: readonly [T], context: UpdateContext): void {
-    this._pendingBinding = context.reconcileBinding(
-      this._pendingBinding,
-      binds[0],
-    );
+    this._binding.bind(binds[0], context);
   }
 
   connect(context: UpdateContext): void {
-    this._pendingBinding.connect(context);
+    this._binding.connect(context);
   }
 
   disconnect(context: UpdateContext): void {
-    this._pendingBinding.disconnect(context);
+    this._binding.disconnect(context);
   }
 
   commit(): void {
-    if (this._pendingBinding !== this._memoizedBinding) {
-      this._memoizedBinding?.rollback();
-    }
-
     DEBUG: {
-      if (this._pendingBinding.part.type === PartType.ChildNode) {
-        this._pendingBinding.part.node.data =
-          this._pendingBinding.directive.name;
+      if (this._binding.part.type === PartType.ChildNode) {
+        this._binding.part.node.data = this._binding.directive.name;
       }
     }
-
-    this._pendingBinding.commit();
-    this._memoizedBinding = this._pendingBinding;
+    this._binding.commit();
   }
 
   rollback(): void {
-    if (this._memoizedBinding !== null) {
-      this._memoizedBinding?.rollback();
-
-      DEBUG: {
-        if (this._memoizedBinding.part.type === PartType.ChildNode) {
-          this._memoizedBinding.part.node.data = '';
-        }
-      }
-
-      this._memoizedBinding = null;
-    }
+    this._binding.rollback();
   }
 
   mount(part: ChildNodePart): void {
-    part.node.before(this._pendingBinding.part.node);
+    part.node.before(this._binding.part.node);
   }
 
   unmount(_part: ChildNodePart): void {
-    this._pendingBinding.part.node.remove();
+    this._binding.part.node.remove();
   }
 }

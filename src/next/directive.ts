@@ -39,6 +39,10 @@ export interface Binding<T> {
   rollback(): void;
 }
 
+export interface ResumableBinding<T> extends Binding<T> {
+  resume(context: UpdateContext): void;
+}
+
 export interface Template<TBinds, TPart extends Part = Part>
   extends Directive<TBinds> {
   render(
@@ -97,7 +101,7 @@ export interface RenderContext extends HookContext {
 
 export interface UpdateContext extends DirectiveContext {
   clone(): UpdateContext;
-  enqueueBinding(binding: Binding<unknown>): void;
+  enqueueBinding(binding: ResumableBinding<unknown>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
@@ -106,20 +110,19 @@ export interface UpdateContext extends DirectiveContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    binding: Binding<TProps>,
+    binding: ResumableBinding<TProps>,
   ): TResult;
   renderTemplate<TBinds, TPart extends Part>(
     template: Template<TBinds, TPart>,
     binds: TBinds,
   ): TemplateBlock<TBinds, TPart>;
   scheduleUpdate(
-    binding: Binding<unknown>,
+    binding: ResumableBinding<unknown>,
     options?: UpdateOptions,
   ): Promise<void>;
 }
 
 export interface DirectiveContext {
-  reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T>;
   resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T>;
   resolveDirectiveElement<T>(
     value: Bindable<T>,

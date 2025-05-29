@@ -6,6 +6,7 @@ import {
   type DirectiveElement,
   type Effect,
   type RenderContext,
+  type ResumableBinding,
   type Template,
   type TemplateBlock,
   type TemplateMode,
@@ -15,6 +16,7 @@ import {
   isDirectiveObject,
 } from './directive.js';
 import type { Primitive } from './directives/primitive.js';
+import { SlotBinding } from './directives/slot.js';
 import {
   type ContextualKey,
   type EffectHook,
@@ -37,7 +39,7 @@ import type { RenderHost } from './renderHost.js';
 import { TemplateLiteralPreprocessor } from './templateLiteral.js';
 
 interface RenderFrame {
-  pendingBindings: Binding<unknown>[];
+  pendingBindings: ResumableBinding<unknown>[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
@@ -51,7 +53,7 @@ interface ContextualScope {
 
 interface GlobalState {
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
-  dirtyBindings: Set<Binding<unknown>>;
+  dirtyBindings: Set<ResumableBinding<unknown>>;
   identifierCount: number;
   templatePlaceholder: string;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
@@ -102,7 +104,7 @@ export class UpdateEngine implements UpdateContext {
     );
   }
 
-  enqueueBinding(binding: Binding<unknown>): void {
+  enqueueBinding(binding: ResumableBinding<unknown>): void {
     this._renderFrame.pendingBindings.push(binding);
   }
 
@@ -125,7 +127,7 @@ export class UpdateEngine implements UpdateContext {
       const pendingBindings = consumePendingBindings(this._renderFrame);
       for (let i = 0, l = pendingBindings.length; i < l; i++) {
         const pendingBinding = pendingBindings[i]!;
-        pendingBinding.connect(this);
+        pendingBinding.resume(this);
         dirtyBindings.delete(pendingBinding);
       }
       if (this._renderFrame.pendingBindings.length === 0) {
@@ -196,27 +198,11 @@ export class UpdateEngine implements UpdateContext {
     return ++this._globalState.identifierCount;
   }
 
-  reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T> {
-    const element = this.resolveDirectiveElement(value, binding.part);
-    if (binding.directive === element.directive) {
-      binding.bind(element.value, this);
-    } else {
-      binding.disconnect(this);
-      binding = element.directive.resolveBinding(
-        element.value,
-        binding.part,
-        this,
-      );
-      binding.connect(this);
-    }
-    return binding;
-  }
-
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    binding: Binding<TProps>,
+    binding: ResumableBinding<TProps>,
   ): TResult {
     const updateEngine = new UpdateEngine(
       this._renderHost,
@@ -239,7 +225,9 @@ export class UpdateEngine implements UpdateContext {
 
   resolveBinding<T>(value: Bindable<T>, part: Part): Binding<T> {
     const element = this.resolveDirectiveElement(value, part);
-    return element.directive.resolveBinding(element.value, part, this);
+    return new SlotBinding(
+      element.directive.resolveBinding(element.value, part, this),
+    );
   }
 
   resolveDirectiveElement<T>(
@@ -270,7 +258,7 @@ export class UpdateEngine implements UpdateContext {
   }
 
   scheduleUpdate(
-    binding: Binding<unknown>,
+    binding: ResumableBinding<unknown>,
     options?: UpdateOptions,
   ): Promise<void> {
     const { dirtyBindings } = this._globalState;
@@ -295,7 +283,7 @@ export class UpdateEngine implements UpdateContext {
 export class RenderEngine implements RenderContext {
   private readonly _hooks: Hook[];
 
-  private readonly _binding: Binding<unknown>;
+  private readonly _binding: ResumableBinding<unknown>;
 
   private readonly _updateEngine: UpdateEngine;
 
@@ -305,7 +293,7 @@ export class RenderEngine implements RenderContext {
 
   constructor(
     hooks: Hook[],
-    binding: Binding<unknown>,
+    binding: ResumableBinding<unknown>,
     updateEngine: UpdateEngine,
   ) {
     this._binding = binding;
@@ -625,7 +613,9 @@ function consumeEffects(
   };
 }
 
-function consumePendingBindings(renderFrame: RenderFrame): Binding<unknown>[] {
+function consumePendingBindings(
+  renderFrame: RenderFrame,
+): ResumableBinding<unknown>[] {
   const { pendingBindings } = renderFrame;
   renderFrame.pendingBindings = [];
   return pendingBindings;

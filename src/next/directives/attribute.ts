@@ -23,7 +23,7 @@ export const AttributePrimitive: Primitive<unknown> = {
   },
 };
 
-class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
+export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
   get directive(): Primitive<T> {
     return AttributePrimitive as Primitive<T>;
   }

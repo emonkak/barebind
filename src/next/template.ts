@@ -20,8 +20,6 @@ export class TemplateBinding<TBinds, TPart extends Part>
 
   private _memoizedBlock: TemplateBlock<TBinds, TPart> | null = null;
 
-  private _dirty = false;
-
   constructor(template: Template<TBinds, TPart>, binds: TBinds, part: TPart) {
     this._template = template;
     this._binds = binds;
@@ -56,18 +54,13 @@ export class TemplateBinding<TBinds, TPart extends Part>
       this._pendingBlock = context.renderTemplate(this._template, this._binds);
     }
     this._pendingBlock.connect(context);
-    this._dirty = true;
   }
 
   disconnect(context: UpdateContext): void {
     this._pendingBlock?.disconnect(context);
-    this._dirty = true;
   }
 
   commit(): void {
-    if (!this._dirty) {
-      return;
-    }
     if (this._pendingBlock !== null) {
       if (this._memoizedBlock === null) {
         this._pendingBlock.mount(this._part);
@@ -75,18 +68,13 @@ export class TemplateBinding<TBinds, TPart extends Part>
       this._pendingBlock.commit();
     }
     this._memoizedBlock = this._pendingBlock;
-    this._dirty = false;
   }
 
   rollback(): void {
-    if (!this._dirty) {
-      return;
-    }
     if (this._memoizedBlock !== null) {
       this._memoizedBlock.unmount(this._part);
       this._memoizedBlock.rollback();
     }
     this._memoizedBlock = null;
-    this._dirty = false;
   }
 }

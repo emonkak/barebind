@@ -21,12 +21,17 @@ const SlotDirective: Directive<unknown> = {
     part: Part,
     context: DirectiveContext,
   ): SlotBinding<unknown> {
-    const binding = context.resolveBinding(value, part);
+    const element = context.resolveDirectiveElement(value, part);
+    const binding = element.directive.resolveBinding(
+      element.value,
+      part,
+      context,
+    );
     return new SlotBinding(binding);
   },
 };
 
-class SlotBinding<T> implements Binding<T> {
+export class SlotBinding<T> implements Binding<T> {
   private _pendingBinding: Binding<T>;
 
   private _memoizedBinding: Binding<T> | null = null;

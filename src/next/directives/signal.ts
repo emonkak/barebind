@@ -4,6 +4,7 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveObject,
+  type ResumableBinding,
   type UpdateContext,
   bindableTag,
 } from '../directive.js';
@@ -29,18 +30,16 @@ export const SignalDirective: Directive<Signal<unknown>> = {
   },
 };
 
-class SignalBinding<T> implements Binding<Signal<T>> {
+export class SignalBinding<T> implements ResumableBinding<Signal<T>> {
   private _signal: Signal<T>;
 
-  private _pendingBinding: Binding<T>;
-
-  private _memoizedBinding: Binding<T> | null = null;
+  private _binding: Binding<T>;
 
   private _subscription: Subscription | null = null;
 
   constructor(signal: Signal<T>, binding: Binding<T>) {
     this._signal = signal;
-    this._pendingBinding = binding;
+    this._binding = binding;
   }
 
   get directive(): Directive<Signal<T>> {
@@ -52,55 +51,46 @@ class SignalBinding<T> implements Binding<Signal<T>> {
   }
 
   get part(): Part {
-    return this._pendingBinding.part;
+    return this._binding.part;
+  }
+
+  resume(context: UpdateContext): void {
+    this._binding.bind(this._signal.value, context);
   }
 
   bind(signal: Signal<T>, context: UpdateContext): boolean {
     if (signal !== this._signal) {
       this._subscription?.();
       this._subscription = null;
-      this._signal = signal;
     }
-    this.connect(context);
-    return true;
+    const dirty = this._binding.bind(signal.value, context);
+    this._signal = signal;
+    this._subscription ??= this._subscribeSignal(context.clone());
+    return dirty;
   }
 
   connect(context: UpdateContext): void {
-    if (this._subscription !== null) {
-      this._pendingBinding = context.reconcileBinding(
-        this._pendingBinding,
-        this._signal.value,
-      );
-    } else {
-      this._pendingBinding.connect(context);
-      this._subscription ??= this._subscribeSignal(context.clone());
-    }
+    this._binding.connect(context);
+    this._subscription ??= this._subscribeSignal(context.clone());
   }
 
   disconnect(context: UpdateContext): void {
     this._subscription?.();
-    this._pendingBinding.disconnect(context);
+    this._binding.disconnect(context);
     this._subscription = null;
   }
 
   commit(): void {
-    if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback();
-    }
-    this._pendingBinding.commit();
-    this._memoizedBinding = this._pendingBinding;
+    this._binding.commit();
   }
 
   rollback(): void {
-    this._memoizedBinding?.rollback();
-    this._memoizedBinding = null;
+    this._binding.rollback();
   }
 
   private _subscribeSignal(context: UpdateContext): Subscription {
     return this._signal.subscribe(() => {
-      if (this._memoizedBinding !== null) {
-        context.scheduleUpdate(this, { priority: 'background' });
-      }
+      context.scheduleUpdate(this, { priority: 'background' });
     });
   }
 }

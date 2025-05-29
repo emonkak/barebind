@@ -5,6 +5,7 @@ import {
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
+  type ResumableBinding,
   type UpdateContext,
   createDirectiveElement,
 } from '../directive.js';
@@ -45,20 +46,18 @@ class ComponentDirective<TProps, TResult> implements Directive<TProps> {
   }
 }
 
-class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
+export class ComponentBinding<TProps, TResult>
+  implements ResumableBinding<TProps>
+{
   private readonly _directive: ComponentDirective<TProps, TResult>;
 
   private _props: TProps;
 
-  private _pendingBinding: Binding<TResult> | null = null;
-
-  private _memoizedBinding: Binding<TResult> | null = null;
+  private _binding: Binding<TResult> | null = null;
 
   private readonly _part: Part;
 
   private _hooks: Hook[] = [];
-
-  private _dirty = false;
 
   constructor(
     directive: ComponentDirective<TProps, TResult>,
@@ -82,6 +81,21 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     return this._part;
   }
 
+  resume(context: UpdateContext): void {
+    const result = context.renderComponent(
+      this._directive.component,
+      this._props,
+      this._hooks,
+      this,
+    );
+    if (this._binding !== null) {
+      this._binding.bind(result, context);
+    } else {
+      this._binding = context.resolveBinding(result, this._part);
+      this._binding.connect(context);
+    }
+  }
+
   bind(props: TProps, context: UpdateContext): boolean {
     const dirty = this._props !== props;
     if (dirty) {
@@ -92,26 +106,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
   }
 
   connect(context: UpdateContext): void {
-    if (this._dirty) {
-      const result = context.renderComponent(
-        this._directive.component,
-        this._props,
-        this._hooks,
-        this,
-      );
-      if (this._pendingBinding !== null) {
-        this._pendingBinding = context.reconcileBinding(
-          this._pendingBinding,
-          result,
-        );
-      } else {
-        this._pendingBinding = context.resolveBinding(result, this._part);
-        this._pendingBinding.connect(context);
-      }
-    } else {
-      context.enqueueBinding(this);
-      this._dirty = true;
-    }
+    context.enqueueBinding(this);
   }
 
   disconnect(context: UpdateContext): void {
@@ -131,30 +126,16 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
       }
     }
 
-    this._pendingBinding?.disconnect(context);
+    this._binding?.disconnect(context);
     this._hooks = [];
-    this._dirty = true;
   }
 
   commit(): void {
-    if (!this._dirty) {
-      return;
-    }
-    if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback();
-    }
-    this._pendingBinding?.commit();
-    this._memoizedBinding = this._pendingBinding;
-    this._dirty = false;
+    this._binding?.commit();
   }
 
   rollback(): void {
-    if (!this._dirty) {
-      return;
-    }
-    this._memoizedBinding?.rollback();
-    this._memoizedBinding = null;
-    this._dirty = false;
+    this._binding?.rollback();
   }
 }
 

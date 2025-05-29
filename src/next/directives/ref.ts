@@ -41,7 +41,7 @@ export const RefPrimitive: Primitive<RefValue> = {
   },
 };
 
-class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
+export class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
   private _memoizedCleanup: VoidFunction | void = void 0;
 
   get directive(): Primitive<RefValue> {

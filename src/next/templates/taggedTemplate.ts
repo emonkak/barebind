@@ -239,19 +239,17 @@ export class TaggedTemplate<TBinds extends readonly any[]>
 export class TaggedTemplateBlock<TBinds extends readonly any[]>
   implements TemplateBlock<TBinds, ChildNodePart>
 {
-  private _pendingBindings: Binding<unknown>[];
-
-  private _memoizedBindings: Binding<unknown>[] = [];
+  private _bindings: Binding<unknown>[];
 
   private readonly _childNodes: ChildNode[];
 
   constructor(bindings: Binding<unknown>[], childNodes: ChildNode[]) {
-    this._pendingBindings = bindings;
+    this._bindings = bindings;
     this._childNodes = childNodes;
   }
 
   get bindings(): Binding<unknown>[] {
-    return this._pendingBindings;
+    return this._bindings;
   }
 
   get childNodes(): ChildNode[] {
@@ -260,55 +258,44 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
 
   bind(binds: TBinds, context: UpdateContext): void {
     DEBUG: {
-      assertNumberOfBinds(this._pendingBindings.length, binds.length);
+      assertNumberOfBinds(this._bindings.length, binds.length);
     }
 
-    const newBindings = new Array(this._pendingBindings.length);
-
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      const oldBinding = this._pendingBindings[i]!;
-      newBindings[i] = context.reconcileBinding(oldBinding, binds[i]!);
+    for (let i = 0, l = this._bindings.length; i < l; i++) {
+      this._bindings[i]!.bind(binds[i], context);
     }
-
-    this._pendingBindings = newBindings;
   }
 
   connect(context: UpdateContext): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      this._pendingBindings[i]!.connect(context);
+    for (let i = 0, l = this._bindings.length; i < l; i++) {
+      this._bindings[i]!.connect(context);
     }
   }
 
   disconnect(context: UpdateContext): void {
     // Unbind in reverse order.
-    for (let i = this._pendingBindings.length - 1; i >= 0; i--) {
-      this._pendingBindings[i]!.disconnect(context);
+    for (let i = this._bindings.length - 1; i >= 0; i--) {
+      this._bindings[i]!.disconnect(context);
     }
   }
 
   commit(): void {
-    for (let i = 0, l = this._pendingBindings.length; i < l; i++) {
-      const newBinding = this._pendingBindings[i]!;
-      const oldBinding = this._memoizedBindings[i];
-
-      if (newBinding !== oldBinding) {
-        oldBinding?.rollback();
-      }
+    for (let i = 0, l = this._bindings.length; i < l; i++) {
+      const binding = this._bindings[i]!;
 
       DEBUG: {
-        if (newBinding.part.type === PartType.ChildNode) {
-          newBinding.part.node.data = newBinding.directive.name;
+        if (binding.part.type === PartType.ChildNode) {
+          binding.part.node.data = binding.directive.name;
         }
       }
 
-      newBinding.commit();
+      binding.commit();
     }
-    this._memoizedBindings = this._pendingBindings;
   }
 
   rollback(): void {
-    for (let i = this._memoizedBindings.length - 1; i >= 0; i--) {
-      const binding = this._memoizedBindings[i]!;
+    for (let i = this._bindings.length - 1; i >= 0; i--) {
+      const binding = this._bindings[i]!;
       const part = binding.part;
 
       if (
@@ -325,7 +312,6 @@ export class TaggedTemplateBlock<TBinds extends readonly any[]>
         }
       }
     }
-    this._memoizedBindings = [];
   }
 
   mount(part: ChildNodePart): void {

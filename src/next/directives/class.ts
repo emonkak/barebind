@@ -41,7 +41,7 @@ export const ClassPrimitive: Primitive<ClassValue> = {
   },
 };
 
-class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
+export class ClassBinding extends PrimitiveBinding<ClassValue, AttributePart> {
   get directive(): Primitive<ClassValue> {
     return ClassPrimitive;
   }

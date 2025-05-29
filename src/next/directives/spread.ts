@@ -32,20 +32,19 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
   },
 };
 
-class SpreadBinding implements Binding<SpreadProps> {
+export class SpreadBinding implements Binding<SpreadProps> {
   private _props: SpreadProps;
 
   private readonly _part: ElementPart;
 
-  private readonly _pendingBindings: Map<string, Binding<unknown>> = new Map();
+  private _pendingBindings: Map<string, Binding<unknown>>;
 
-  private _memoizedBindings: Map<string, Binding<unknown>> = new Map();
-
-  private _dirty = true;
+  private _memoizedBindings: Map<string, Binding<unknown>>;
 
   constructor(props: SpreadProps, part: ElementPart) {
     this._props = props;
     this._part = part;
+    this._pendingBindings = this._memoizedBindings = new Map();
   }
 
   get directive(): Primitive<SpreadProps> {
@@ -70,76 +69,60 @@ class SpreadBinding implements Binding<SpreadProps> {
   }
 
   connect(context: UpdateContext): void {
-    for (const [name, binding] of this._pendingBindings.entries()) {
-      if (!Object.hasOwn(this._props, name) || this._props[name] == null) {
+    const nextBindings = new Map(this._pendingBindings);
+
+    for (const [key, binding] of nextBindings.entries()) {
+      if (!Object.hasOwn(this._props, key) || this._props[key] == null) {
         binding.disconnect(context);
-        this._pendingBindings.delete(name);
+        nextBindings.delete(key);
       }
     }
 
-    for (const name in this._props) {
-      const value = this._props[name];
+    for (const key in this._props) {
+      const value = this._props[key];
       if (value == null) {
         continue;
       }
-      const oldBinding = this._pendingBindings.get(name);
-      if (oldBinding !== undefined) {
-        const newBinding = context.reconcileBinding(oldBinding, value);
-        if (newBinding !== oldBinding) {
-          this._pendingBindings.set(name, newBinding);
-        }
-        newBinding.connect(context);
+      const binding = nextBindings.get(key);
+      if (binding !== undefined) {
+        binding.bind(this._props[key]!, context);
       } else {
-        const part = resolveNamedPart(name, this._part.node);
+        const part = resolveNamedPart(key, this._part.node);
         const newBinding = context.resolveBinding(value, part);
-        this._pendingBindings.set(name, newBinding);
         newBinding.connect(context);
+        this._pendingBindings.set(key, newBinding);
       }
     }
 
-    this._dirty = true;
+    this._pendingBindings = nextBindings;
   }
 
   disconnect(context: UpdateContext): void {
     for (const binding of this._memoizedBindings.values()) {
       binding.disconnect(context);
     }
-    this._dirty = true;
   }
 
   commit(): void {
-    if (!this._dirty) {
-      return;
-    }
-
     for (const [name, binding] of this._memoizedBindings.entries()) {
-      if (binding !== this._pendingBindings.get(name)) {
+      if (!this._pendingBindings.has(name)) {
         binding.rollback();
       }
     }
+
     for (const binding of this._pendingBindings.values()) {
       binding.commit();
     }
 
-    this._memoizedBindings = new Map(this._pendingBindings);
-    this._dirty = false;
+    this._memoizedBindings = this._pendingBindings;
   }
 
   rollback(): void {
-    if (!this._dirty) {
-      return;
-    }
-
-    if (this._memoizedBindings !== null) {
-      for (const [name, binding] of this._memoizedBindings.entries()) {
-        if (binding !== this._pendingBindings.get(name)) {
-          binding.rollback();
-        }
-      }
+    for (const binding of this._memoizedBindings.values()) {
+      binding.rollback();
     }
 
     this._memoizedBindings = new Map();
-    this._dirty = false;
   }
 }
 
@@ -147,31 +130,31 @@ function isSpreadProps(value: unknown): value is SpreadProps {
   return value !== null && typeof value === 'object';
 }
 
-function resolveNamedPart(name: string, node: Element): Part {
-  switch (name[0]) {
+function resolveNamedPart(key: string, node: Element): Part {
+  switch (key[0]) {
     case '$':
       return {
         type: PartType.Live,
         node,
-        name: name.slice(1),
+        name: key.slice(1),
       };
     case '.':
       return {
         type: PartType.Property,
         node,
-        name: name.slice(1),
+        name: key.slice(1),
       };
     case '@':
       return {
         type: PartType.Event,
         node,
-        name: name.slice(1),
+        name: key.slice(1),
       };
     default:
       return {
         type: PartType.Attribute,
         node,
-        name,
+        name: key,
       };
   }
 }

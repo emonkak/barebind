@@ -38,7 +38,7 @@ export const EventPrimitive: Primitive<EventValue> = {
   },
 };
 
-class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
+export class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
   get directive(): Primitive<EventValue> {
     return EventPrimitive;
   }
