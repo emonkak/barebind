@@ -21,20 +21,18 @@ export function createRoot<T>(value: T, container: Element): Root<T> {
 
   return {
     mount(options) {
-      context.enqueueMutationEffect(new MountBinding(binding, container));
       binding.connect(context);
+      context.enqueueMutationEffect(new MountBinding(binding, container));
       return context.flushFrame(options);
     },
     update(value, options) {
-      if (binding.bind(value, context)) {
-        binding.connect(context);
-        context.enqueueMutationEffect(binding);
-      }
+      binding.bind(value, context);
+      context.enqueueMutationEffect(binding);
       return context.flushFrame(options);
     },
     unmount(options) {
-      context.enqueueMutationEffect(new UnmountBinding(binding, container));
       binding.disconnect(context);
+      context.enqueueMutationEffect(new UnmountBinding(binding, container));
       return context.flushFrame(options);
     },
   };

@@ -96,6 +96,7 @@ export interface RenderContext extends HookContext {
 }
 
 export interface UpdateContext extends DirectiveContext {
+  clone(): UpdateContext;
   enqueueBinding(binding: Binding<unknown>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;

@@ -150,12 +150,12 @@ class ListBinding<TItem, TKey, TValue>
     return this._part;
   }
 
-  bind(
-    value: ListValue<TItem, TKey, TValue>,
-    _context: UpdateContext,
-  ): boolean {
+  bind(value: ListValue<TItem, TKey, TValue>, context: UpdateContext): boolean {
     const dirty = value !== this._value;
-    this._value = value;
+    if (dirty) {
+      this._value = value;
+      this.connect(context);
+    }
     return dirty;
   }
 

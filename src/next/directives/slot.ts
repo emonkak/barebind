@@ -9,29 +9,27 @@ import {
 import type { Part } from '../part.js';
 
 export function memo<T>(value: T): DirectiveElement<T> {
-  return createDirectiveElement(MemoDirective as Directive<T>, value);
+  return createDirectiveElement(SlotDirective as Directive<T>, value);
 }
 
-const MemoDirective: Directive<unknown> = {
+const SlotDirective: Directive<unknown> = {
   get name(): string {
-    return 'MemoDirective';
+    return 'SlotDirective';
   },
   resolveBinding(
     value: unknown,
     part: Part,
     context: DirectiveContext,
-  ): MemoBinding<unknown> {
+  ): SlotBinding<unknown> {
     const binding = context.resolveBinding(value, part);
-    return new MemoBinding(binding);
+    return new SlotBinding(binding);
   },
 };
 
-class MemoBinding<T> implements Binding<T> {
+class SlotBinding<T> implements Binding<T> {
   private _pendingBinding: Binding<T>;
 
   private _memoizedBinding: Binding<T> | null = null;
-
-  private readonly _cachedBindings: Map<Directive<T>, Binding<T>> = new Map();
 
   private _dirty = false;
 
@@ -40,7 +38,7 @@ class MemoBinding<T> implements Binding<T> {
   }
 
   get directive(): Directive<T> {
-    return MemoDirective as Directive<T>;
+    return SlotDirective as Directive<T>;
   }
 
   get value(): T {
@@ -60,23 +58,13 @@ class MemoBinding<T> implements Binding<T> {
       this._dirty ||= this._pendingBinding.bind(element.value, context);
     } else {
       this._pendingBinding.disconnect(context);
-      this._cachedBindings.set(
-        this._pendingBinding.directive,
-        this._pendingBinding,
+      this._pendingBinding = element.directive.resolveBinding(
+        element.value,
+        this._pendingBinding.part,
+        context,
       );
-      const cachedBinding = this._cachedBindings.get(element.directive);
-      if (cachedBinding !== undefined) {
-        this._pendingBinding = cachedBinding;
-        this._dirty = cachedBinding.bind(element.value, context);
-      } else {
-        this._pendingBinding = element.directive.resolveBinding(
-          element.value,
-          this._pendingBinding.part,
-          context,
-        );
-        this._pendingBinding.connect(context);
-        this._dirty = true;
-      }
+      this._pendingBinding.connect(context);
+      this._dirty = true;
     }
     return this._dirty;
   }

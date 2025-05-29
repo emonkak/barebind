@@ -36,11 +36,14 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   abstract shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
 
   bind(value: TValue, _context: UpdateContext): boolean {
-    this._pendingValue = value;
-    return (
+    const dirty =
       this._memoizedValue === noValue ||
-      this.shouldUpdate(value, this._memoizedValue)
-    );
+      this.shouldUpdate(value, this._memoizedValue);
+    if (dirty) {
+      this._dirty = true;
+    }
+    this._pendingValue = value;
+    return dirty;
   }
 
   connect(_context: UpdateContext): void {

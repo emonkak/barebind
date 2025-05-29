@@ -56,26 +56,25 @@ class SignalBinding<T> implements Binding<Signal<T>> {
   }
 
   bind(signal: Signal<T>, context: UpdateContext): boolean {
-    const dirty = signal !== this._signal;
-    if (dirty) {
+    if (signal !== this._signal) {
       this._subscription?.();
       this._subscription = null;
+      this._signal = signal;
     }
-    this._pendingBinding = context.reconcileBinding(
-      this._pendingBinding,
-      signal.value,
-    );
-    this._signal = signal;
-    return dirty;
+    this.connect(context);
+    return true;
   }
 
   connect(context: UpdateContext): void {
-    this._pendingBinding.connect(context);
-    this._subscription ??= this._signal.subscribe(() => {
-      if (this._memoizedBinding !== null) {
-        context.scheduleUpdate(this, { priority: 'background' });
-      }
-    });
+    if (this._subscription !== null) {
+      this._pendingBinding = context.reconcileBinding(
+        this._pendingBinding,
+        this._signal.value,
+      );
+    } else {
+      this._pendingBinding.connect(context);
+      this._subscription ??= this._subscribeSignal(context.clone());
+    }
   }
 
   disconnect(context: UpdateContext): void {
@@ -95,6 +94,14 @@ class SignalBinding<T> implements Binding<Signal<T>> {
   rollback(): void {
     this._memoizedBinding?.rollback();
     this._memoizedBinding = null;
+  }
+
+  private _subscribeSignal(context: UpdateContext): Subscription {
+    return this._signal.subscribe(() => {
+      if (this._memoizedBinding !== null) {
+        context.scheduleUpdate(this, { priority: 'background' });
+      }
+    });
   }
 }
 

@@ -82,9 +82,12 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Effect {
     return this._part;
   }
 
-  bind(props: TProps, _context: UpdateContext): boolean {
+  bind(props: TProps, context: UpdateContext): boolean {
     const dirty = this._props !== props;
-    this._props = props;
+    if (dirty) {
+      context.enqueueBinding(this);
+      this._props = props;
+    }
     return dirty;
   }
 

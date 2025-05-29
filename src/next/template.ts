@@ -40,9 +40,12 @@ export class TemplateBinding<TBinds, TPart extends Part>
     return this._part;
   }
 
-  bind(binds: TBinds, _context: UpdateContext): boolean {
+  bind(binds: TBinds, context: UpdateContext): boolean {
     const dirty = binds !== this._binds;
-    this._binds = binds;
+    if (dirty) {
+      this._binds = binds;
+      this.connect(context);
+    }
     return dirty;
   }
 

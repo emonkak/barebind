@@ -110,15 +110,17 @@ export class SingleTemplateBlock<T>
   }
 
   rollback(): void {
-    this._memoizedBinding?.rollback();
+    if (this._memoizedBinding !== null) {
+      this._memoizedBinding?.rollback();
 
-    DEBUG: {
-      if (this._pendingBinding.part.type === PartType.ChildNode) {
-        this._pendingBinding.part.node.data = '';
+      DEBUG: {
+        if (this._memoizedBinding.part.type === PartType.ChildNode) {
+          this._memoizedBinding.part.node.data = '';
+        }
       }
-    }
 
-    this._memoizedBinding = null;
+      this._memoizedBinding = null;
+    }
   }
 
   mount(part: ChildNodePart): void {

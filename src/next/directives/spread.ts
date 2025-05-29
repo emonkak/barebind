@@ -60,9 +60,12 @@ class SpreadBinding implements Binding<SpreadProps> {
     return this._part;
   }
 
-  bind(props: SpreadProps, _context: UpdateContext): boolean {
+  bind(props: SpreadProps, context: UpdateContext): boolean {
     const dirty = props !== this._props;
-    this._props = props;
+    if (dirty) {
+      this._props = props;
+      this.connect(context);
+    }
     return dirty;
   }
 

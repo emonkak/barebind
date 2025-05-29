@@ -93,6 +93,15 @@ export class UpdateEngine implements UpdateContext {
     return ':' + this._globalState.templatePlaceholder + '-' + count + ':';
   }
 
+  clone(): UpdateEngine {
+    return new UpdateEngine(
+      this._renderHost,
+      createRenderFrame(),
+      this._contextualScope,
+      this._globalState,
+    );
+  }
+
   enqueueBinding(binding: Binding<unknown>): void {
     this._renderFrame.pendingBindings.push(binding);
   }
@@ -190,9 +199,7 @@ export class UpdateEngine implements UpdateContext {
   reconcileBinding<T>(binding: Binding<T>, value: Bindable<T>): Binding<T> {
     const element = this.resolveDirectiveElement(value, binding.part);
     if (binding.directive === element.directive) {
-      if (binding.bind(element.value, this)) {
-        binding.connect(this);
-      }
+      binding.bind(element.value, this);
     } else {
       binding.disconnect(this);
       binding = element.directive.resolveBinding(
