@@ -56,13 +56,20 @@ export class MemoBinding<T> implements Binding<T> {
     return this._pendingBinding.part;
   }
 
-  bind(value: T, context: UpdateContext): boolean {
+  shouldBind(_value: T): boolean {
+    return true;
+  }
+
+  bind(value: T, context: UpdateContext): void {
     const element = context.resolveDirectiveElement(
       value,
       this._pendingBinding.part,
     );
     if (this._pendingBinding.directive === element.directive) {
-      this._dirty ||= this._pendingBinding.bind(element.value, context);
+      if (this._pendingBinding.shouldBind(element.value)) {
+        this._pendingBinding.bind(element.value, context);
+        this._dirty = true;
+      }
     } else {
       this._pendingBinding.disconnect(context);
       this._cachedBindings.set(
@@ -71,8 +78,12 @@ export class MemoBinding<T> implements Binding<T> {
       );
       const cachedBinding = this._cachedBindings.get(element.directive);
       if (cachedBinding !== undefined) {
+        if (cachedBinding.shouldBind(element.value)) {
+          cachedBinding.bind(element.value, context);
+          cachedBinding.connect(context);
+          this._dirty = true;
+        }
         this._pendingBinding = cachedBinding;
-        this._dirty = cachedBinding.bind(element.value, context);
       } else {
         this._pendingBinding = element.directive.resolveBinding(
           element.value,
@@ -83,7 +94,6 @@ export class MemoBinding<T> implements Binding<T> {
         this._dirty = true;
       }
     }
-    return this._dirty;
   }
 
   connect(context: UpdateContext): void {

@@ -48,37 +48,32 @@ export class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
     return RefPrimitive;
   }
 
-  shouldUpdate(_newValue: RefValue, _oldValue: RefValue): boolean {
+  shouldMount(_newRef: RefValue, _oldRef: RefValue): boolean {
     return true;
   }
 
-  mount(): void {
-    const oldRef = this._memoizedValue;
-    const newRef = this._pendingValue;
+  mount(newRef: RefValue, oldRef: RefValue | null, part: AttributePart): void {
     if (oldRef !== null) {
-      if (typeof oldRef === 'object') {
-        oldRef.current = null;
-      } else {
+      if (typeof oldRef === 'function') {
         this._memoizedCleanup?.();
         this._memoizedCleanup = void 0;
+      } else {
+        oldRef.current = null;
       }
     }
-    if (typeof newRef === 'object') {
-      newRef.current = this._part.node;
+    if (typeof newRef === 'function') {
+      this._memoizedCleanup = newRef(part.node);
     } else {
-      this._memoizedCleanup = newRef(this._part.node);
+      newRef.current = part.node;
     }
   }
 
-  unmount(): void {
-    const ref = this._memoizedValue;
-    if (ref != null) {
-      if (typeof ref === 'object') {
-        ref.current = null;
-      } else {
-        this._memoizedCleanup?.();
-        this._memoizedCleanup = void 0;
-      }
+  unmount(ref: RefValue, _part: AttributePart): void {
+    if (typeof ref === 'function') {
+      this._memoizedCleanup?.();
+      this._memoizedCleanup = void 0;
+    } else {
+      ref.current = null;
     }
   }
 }

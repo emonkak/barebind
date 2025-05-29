@@ -5,16 +5,14 @@ export interface Primitive<T> extends Directive<T> {
   ensureValue(value: unknown, part: Part): asserts value is T;
 }
 
-export const noValue = Symbol('noValue');
-
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>
 {
-  protected _pendingValue: TValue;
+  private _pendingValue: TValue;
 
-  protected _memoizedValue: TValue | typeof noValue = noValue;
+  protected _memoizedValue: TValue | null = null;
 
-  protected readonly _part: TPart;
+  private readonly _part: TPart;
 
   constructor(value: TValue, part: TPart) {
     this._pendingValue = value;
@@ -31,14 +29,15 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     return this._part;
   }
 
-  abstract shouldUpdate(newValue: TValue, oldValue: TValue): boolean;
+  shouldBind(value: TValue): boolean {
+    return (
+      this._memoizedValue === null ||
+      !this.shouldMount(value, this._memoizedValue)
+    );
+  }
 
-  bind(value: TValue, _context: UpdateContext): boolean {
-    const dirty =
-      this._memoizedValue === noValue ||
-      this.shouldUpdate(value, this._memoizedValue);
+  bind(value: TValue, _context: UpdateContext): void {
     this._pendingValue = value;
-    return dirty;
   }
 
   connect(_context: UpdateContext): void {}
@@ -46,16 +45,24 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   disconnect(_context: UpdateContext): void {}
 
   commit(): void {
-    this.mount();
+    this.mount(this._pendingValue, this._memoizedValue, this._part);
     this._memoizedValue = this._pendingValue;
   }
 
   rollback(): void {
-    this.unmount();
-    this._memoizedValue = noValue;
+    if (this._memoizedValue !== null) {
+      this.unmount(this._memoizedValue, this._part);
+    }
+    this._memoizedValue = null;
   }
 
-  protected abstract mount(): void;
+  protected abstract shouldMount(newValue: TValue, oldValue: TValue): boolean;
 
-  protected abstract unmount(): void;
+  protected abstract mount(
+    value: TValue,
+    oldValue: TValue | null,
+    part: TPart,
+  ): void;
+
+  protected abstract unmount(value: TValue, part: TPart): void;
 }

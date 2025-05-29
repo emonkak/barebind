@@ -23,18 +23,17 @@ export const AttributePrimitive: Primitive<unknown> = {
   },
 };
 
-export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
+class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
   get directive(): Primitive<T> {
     return AttributePrimitive as Primitive<T>;
   }
 
-  shouldUpdate(newValue: T, oldValue: unknown): boolean {
+  shouldMount(newValue: T, oldValue: unknown): boolean {
     return !Object.is(newValue, oldValue);
   }
 
-  mount(): void {
-    const value = this._pendingValue;
-    const { node, name } = this._part;
+  mount(value: T, _oldValue: T | null, part: AttributePart): void {
+    const { node, name } = part;
     switch (typeof value) {
       case 'string':
         node.setAttribute(name, value);
@@ -51,8 +50,8 @@ export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
     }
   }
 
-  unmount(): void {
-    const { node, name } = this._part;
+  unmount(_value: T, part: AttributePart): void {
+    const { node, name } = part;
     node.removeAttribute(name);
   }
 }

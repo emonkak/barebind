@@ -28,18 +28,16 @@ export class NodeBinding<T> extends PrimitiveBinding<T, NodePart> {
     return NodePrimitive as Primitive<T>;
   }
 
-  shouldUpdate(newValue: T, oldValue: T): boolean {
+  shouldMount(newValue: T, oldValue: T): boolean {
     return !Object.is(newValue, oldValue);
   }
 
-  mount(): void {
-    this._part.node.nodeValue =
-      typeof this._pendingValue === 'string'
-        ? this._pendingValue
-        : (this._pendingValue?.toString() ?? null);
+  mount(newValue: T, _oldValue: T | null, part: NodePart): void {
+    part.node.nodeValue =
+      typeof newValue === 'string' ? newValue : (newValue?.toString() ?? null);
   }
 
-  unmount(): void {
-    this._part.node.nodeValue = null;
+  unmount(_value: T | null, part: NodePart): void {
+    part.node.nodeValue = null;
   }
 }

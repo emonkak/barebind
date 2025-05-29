@@ -2,7 +2,7 @@ import { shallowEqual } from '../compare.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { DirectiveContext } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
-import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
+import { type Primitive, PrimitiveBinding } from './primitive.js';
 
 export type StyleValue = {
   [P in StyleProperties]?: string;
@@ -49,25 +49,24 @@ export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
     return StylePrimitive;
   }
 
-  shouldUpdate(newValue: StyleValue, oldValue: StyleValue): boolean {
-    return shallowEqual(newValue, oldValue);
+  shouldMount(newProps: StyleValue, oldProps: StyleValue): boolean {
+    return shallowEqual(newProps, oldProps);
   }
 
-  mount(): void {
-    const newValue = this._pendingValue;
-    const oldValue = this._memoizedValue;
-    const { style } = this._part.node as
-      | HTMLElement
-      | MathMLElement
-      | SVGElement;
-    for (const key in newValue) {
+  mount(
+    newProps: StyleValue,
+    oldProps: StyleValue | null,
+    part: AttributePart,
+  ): void {
+    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
+    for (const key in newProps) {
       const cssProperty = toCSSProperty(key);
-      const cssValue = newValue[cssProperty as StyleProperties]!;
+      const cssValue = newProps[cssProperty as StyleProperties]!;
       style.setProperty(cssProperty, cssValue);
     }
-    if (oldValue !== noValue) {
-      for (const key in oldValue) {
-        if (!Object.hasOwn(newValue, key)) {
+    if (oldProps !== null) {
+      for (const key in oldProps) {
+        if (!Object.hasOwn(newProps, key)) {
           const cssProperty = toCSSProperty(key);
           style.removeProperty(cssProperty);
         }
@@ -75,16 +74,11 @@ export class StyleBinding extends PrimitiveBinding<StyleValue, AttributePart> {
     }
   }
 
-  unmount(): void {
-    if (this._memoizedValue !== noValue) {
-      const { style } = this._part.node as
-        | HTMLElement
-        | MathMLElement
-        | SVGElement;
-      for (const property in this._memoizedValue) {
-        const cssProperty = toCSSProperty(property);
-        style.removeProperty(cssProperty);
-      }
+  unmount(props: StyleValue, part: AttributePart): void {
+    const { style } = part.node as HTMLElement | MathMLElement | SVGElement;
+    for (const property in props) {
+      const cssProperty = toCSSProperty(property);
+      style.removeProperty(cssProperty);
     }
   }
 }

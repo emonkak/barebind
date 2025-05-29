@@ -31,14 +31,14 @@ class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
     return PropertyPrimitive as Primitive<T>;
   }
 
-  shouldUpdate(newValue: T, oldValue: T): boolean {
+  shouldMount(newValue: T, oldValue: T): boolean {
     return !Object.is(newValue, oldValue);
   }
 
-  mount(): void {
-    const { node, name } = this._part;
-    (node as any)[name] = this._pendingValue;
+  mount(newValue: T, _oldValue: T | null, part: PropertyPart): void {
+    const { node, name } = part;
+    (node as any)[name] = newValue;
   }
 
-  unmount(): void {}
+  unmount(_value: T): void {}
 }

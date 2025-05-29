@@ -79,7 +79,7 @@ const ListDirective: Directive<ListValue<unknown, unknown, unknown>> = {
   resolveBinding(
     value: ListValue<unknown, unknown, unknown>,
     part: Part,
-    context: DirectiveContext,
+    _context: DirectiveContext,
   ): ListBinding<unknown, unknown, unknown> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -87,7 +87,7 @@ const ListDirective: Directive<ListValue<unknown, unknown, unknown>> = {
           inspectPart(part, markUsedValue(this)),
       );
     }
-    return new ListBinding(value, part, context);
+    return new ListBinding(value, part);
   },
 };
 
@@ -98,38 +98,13 @@ export class ListBinding<TItem, TKey, TValue>
 
   private readonly _part: ChildNodePart;
 
-  private _pendingSlots: Slot<TKey, TValue>[];
+  private _pendingSlots: Slot<TKey, TValue>[] = [];
 
   private _memoizedSlots: Slot<TKey, TValue>[] = [];
 
   private _pendingOperations: Operation<TKey, TValue>[] = [];
 
-  constructor(
-    value: ListValue<TItem, TKey, TValue>,
-    part: ChildNodePart,
-    context: DirectiveContext,
-  ) {
-    const { items, keySelector, valueSelector } = value;
-    const slots: Slot<TKey, TValue>[] = new Array(items.length);
-
-    for (let i = 0, l = items.length; i < l; i++) {
-      const key = keySelector(items[i]!, i);
-      const value = valueSelector(items[i]!, i);
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-      } as const;
-      const binding = context.resolveBinding(value, part);
-      const slot: Slot<TKey, TValue> = {
-        key,
-        sentinelNode: document.createComment(''),
-        binding,
-      };
-      slots.push(slot);
-      i++;
-    }
-
-    this._pendingSlots = slots;
+  constructor(value: ListValue<TItem, TKey, TValue>, part: ChildNodePart) {
     this._value = value;
     this._part = part;
   }
@@ -146,13 +121,12 @@ export class ListBinding<TItem, TKey, TValue>
     return this._part;
   }
 
-  bind(value: ListValue<TItem, TKey, TValue>, context: UpdateContext): boolean {
-    const dirty = value !== this._value;
-    if (dirty) {
-      this._value = value;
-      this.connect(context);
-    }
-    return dirty;
+  shouldBind(value: ListValue<TItem, TKey, TValue>): boolean {
+    return value !== this._value;
+  }
+
+  bind(value: ListValue<TItem, TKey, TValue>, _context: UpdateContext): void {
+    this._value = value;
   }
 
   connect(context: UpdateContext): void {

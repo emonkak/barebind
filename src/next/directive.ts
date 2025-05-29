@@ -32,7 +32,8 @@ export interface Binding<T> {
   get directive(): Directive<T>;
   get value(): T;
   get part(): Part;
-  bind(value: T, context: UpdateContext): boolean;
+  shouldBind(value: T): boolean;
+  bind(value: T, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
   commit(): void;

@@ -92,17 +92,16 @@ export class ComponentBinding<TProps, TResult>
       this._binding.bind(result, context);
     } else {
       this._binding = context.resolveBinding(result, this._part);
-      this._binding.connect(context);
     }
+    this._binding.connect(context);
   }
 
-  bind(props: TProps, context: UpdateContext): boolean {
-    const dirty = this._props !== props;
-    if (dirty) {
-      context.enqueueBinding(this);
-      this._props = props;
-    }
-    return dirty;
+  shouldBind(props: TProps): boolean {
+    return this._props === props;
+  }
+
+  bind(props: TProps, _context: UpdateContext): void {
+    this._props = props;
   }
 
   connect(context: UpdateContext): void {

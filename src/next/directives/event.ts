@@ -1,7 +1,7 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { DirectiveContext } from '../directive.js';
 import { type EventPart, type Part, PartType } from '../part.js';
-import { type Primitive, PrimitiveBinding, noValue } from './primitive.js';
+import { type Primitive, PrimitiveBinding } from './primitive.js';
 
 export type EventValue = EventListenerOrEventListenerObject | null | undefined;
 
@@ -43,29 +43,40 @@ export class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
     return EventPrimitive;
   }
 
-  shouldUpdate(newValue: EventValue, oldValue: EventValue): boolean {
+  shouldMount(newValue: EventValue, oldValue: EventValue): boolean {
     return newValue !== oldValue;
   }
 
-  mount(): void {
-    if (this._memoizedValue != null && this._memoizedValue !== noValue) {
-      detachEventListener(this._part, this, this._memoizedValue);
-    }
-    if (this._pendingValue != null) {
-      attachEventListener(this._part, this, this._pendingValue);
+  mount(
+    newListener: EventValue,
+    oldListener: EventValue | null,
+    part: EventPart,
+  ): void {
+    if (
+      typeof oldListener === 'object' ||
+      typeof newListener === 'object' ||
+      oldListener == null ||
+      newListener == null
+    ) {
+      if (oldListener != null) {
+        detachEventListener(part, this, oldListener);
+      }
+      if (newListener != null) {
+        attachEventListener(part, this, newListener);
+      }
     }
   }
 
-  unmount(): void {
-    if (this._memoizedValue != null && this._memoizedValue !== noValue) {
-      detachEventListener(this._part, this, this._memoizedValue);
+  unmount(oldValue: EventValue, part: EventPart): void {
+    if (oldValue != null) {
+      detachEventListener(part, this, oldValue);
     }
   }
 
   handleEvent(event: Event): void {
     if (typeof this._memoizedValue === 'function') {
       this._memoizedValue(event);
-    } else if (typeof this._memoizedValue === 'object') {
+    } else {
       this._memoizedValue?.handleEvent(event);
     }
   }

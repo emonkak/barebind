@@ -58,15 +58,19 @@ export class SignalBinding<T> implements ResumableBinding<Signal<T>> {
     this._binding.bind(this._signal.value, context);
   }
 
-  bind(signal: Signal<T>, context: UpdateContext): boolean {
+  shouldBind(signal: Signal<T>): boolean {
+    return (
+      signal !== this._signal || this._binding.shouldBind(this._signal.value)
+    );
+  }
+
+  bind(signal: Signal<T>, context: UpdateContext): void {
     if (signal !== this._signal) {
       this._subscription?.();
       this._subscription = null;
     }
-    const dirty = this._binding.bind(signal.value, context);
+    this._binding.bind(signal.value, context);
     this._signal = signal;
-    this._subscription ??= this._subscribeSignal(context.clone());
-    return dirty;
   }
 
   connect(context: UpdateContext): void {

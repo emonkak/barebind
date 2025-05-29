@@ -28,17 +28,17 @@ export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
     return LivePrimitive as Primitive<T>;
   }
 
-  shouldUpdate(): boolean {
+  shouldMount(): boolean {
     return true;
   }
 
-  mount(): void {
-    const { node, name } = this._part;
+  mount(newValue: T, _oldValue: T | null, part: LivePart): void {
+    const { node, name } = part;
     const currentValue = (node as any)[name];
-    if (!Object.is(currentValue, this._pendingValue)) {
-      (node as any)[name] = this._pendingValue;
+    if (!Object.is(currentValue, newValue)) {
+      (node as any)[name] = newValue;
     }
   }
 
-  unmount(): void {}
+  unmount(_value: T): void {}
 }

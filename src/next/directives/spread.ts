@@ -3,13 +3,13 @@ import type { Binding, DirectiveContext, UpdateContext } from '../directive.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import type { Primitive } from './primitive.js';
 
-export type SpreadProps = { [key: string]: unknown };
+export type SpreadValue = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadProps> = {
+export const SpreadPrimitive: Primitive<SpreadValue> = {
   get name(): string {
     return 'SpreadPrimitive';
   },
-  ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
+  ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
     if (!isSpreadProps(value)) {
       throw new Error(
         `The value of spread primitive must be Object, but got ${inspectValue(value)}.\n` +
@@ -18,7 +18,7 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
     }
   },
   resolveBinding(
-    value: SpreadProps,
+    value: SpreadValue,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
@@ -32,26 +32,25 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
   },
 };
 
-export class SpreadBinding implements Binding<SpreadProps> {
-  private _props: SpreadProps;
+export class SpreadBinding implements Binding<SpreadValue> {
+  private _props: SpreadValue;
 
   private readonly _part: ElementPart;
 
-  private _pendingBindings: Map<string, Binding<unknown>>;
+  private readonly _pendingBindings: Map<string, Binding<unknown>> = new Map();
 
-  private _memoizedBindings: Map<string, Binding<unknown>>;
+  private _memoizedBindings: Map<string, Binding<unknown>> = new Map();
 
-  constructor(props: SpreadProps, part: ElementPart) {
+  constructor(props: SpreadValue, part: ElementPart) {
     this._props = props;
     this._part = part;
-    this._pendingBindings = this._memoizedBindings = new Map();
   }
 
-  get directive(): Primitive<SpreadProps> {
+  get directive(): Primitive<SpreadValue> {
     return SpreadPrimitive;
   }
 
-  get value(): SpreadProps {
+  get value(): SpreadValue {
     return this._props;
   }
 
@@ -59,22 +58,19 @@ export class SpreadBinding implements Binding<SpreadProps> {
     return this._part;
   }
 
-  bind(props: SpreadProps, context: UpdateContext): boolean {
-    const dirty = props !== this._props;
-    if (dirty) {
-      this._props = props;
-      this.connect(context);
-    }
-    return dirty;
+  shouldBind(props: SpreadValue): boolean {
+    return props !== this._props;
+  }
+
+  bind(props: SpreadValue, _context: UpdateContext): void {
+    this._props = props;
   }
 
   connect(context: UpdateContext): void {
-    const nextBindings = new Map(this._pendingBindings);
-
-    for (const [key, binding] of nextBindings.entries()) {
+    for (const [key, binding] of this._pendingBindings.entries()) {
       if (!Object.hasOwn(this._props, key) || this._props[key] == null) {
         binding.disconnect(context);
-        nextBindings.delete(key);
+        this._pendingBindings.delete(key);
       }
     }
 
@@ -83,18 +79,15 @@ export class SpreadBinding implements Binding<SpreadProps> {
       if (value == null) {
         continue;
       }
-      const binding = nextBindings.get(key);
+      let binding = this._pendingBindings.get(key);
       if (binding !== undefined) {
         binding.bind(this._props[key]!, context);
       } else {
         const part = resolveNamedPart(key, this._part.node);
-        const newBinding = context.resolveBinding(value, part);
-        newBinding.connect(context);
-        this._pendingBindings.set(key, newBinding);
+        binding = context.resolveBinding(value, part);
+        binding.connect(context);
       }
     }
-
-    this._pendingBindings = nextBindings;
   }
 
   disconnect(context: UpdateContext): void {
@@ -114,7 +107,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
       binding.commit();
     }
 
-    this._memoizedBindings = this._pendingBindings;
+    this._memoizedBindings = new Map(this._pendingBindings);
   }
 
   rollback(): void {
@@ -126,7 +119,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
   }
 }
 
-function isSpreadProps(value: unknown): value is SpreadProps {
+function isSpreadProps(value: unknown): value is SpreadValue {
   return value !== null && typeof value === 'object';
 }
 
