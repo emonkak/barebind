@@ -1,8 +1,8 @@
 import type { UpdateOptions } from '../renderContext.js';
 import type { Bindable, Effect, Slot } from './core.js';
-import { UpdateEngine } from './engine.js';
 import { PartType } from './part.js';
 import { BrowserRenderHost } from './renderHost.js';
+import { UpdateEngine } from './updateEngine.js';
 
 export interface Root<T> {
   mount(options?: UpdateOptions): Promise<void>;

@@ -33,7 +33,7 @@ export interface EffectHook {
 
 export interface IdentifierHook {
   type: typeof HookType.Identifier;
-  id: number;
+  id: string;
 }
 
 export interface MemoHook<TResult> {
