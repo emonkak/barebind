@@ -17,7 +17,7 @@ import type { Hook } from './hook.js';
 import type { Part } from './part.js';
 import type { Primitive } from './primitives/primitive.js';
 import { RenderEngine } from './renderEngine.js';
-import type { RenderHost } from './renderHost.js';
+import { CommitPhase, type RenderHost } from './renderHost.js';
 import {
   type TemplateLiteral,
   TemplateLiteralPreprocessor,
@@ -127,8 +127,8 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
     const callback = () => {
-      commitEffects(mutationEffects);
-      commitEffects(layoutEffects);
+      this._renderHost.commitEffects(mutationEffects, CommitPhase.Mutation);
+      this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout);
     };
 
     if (options?.viewTransition) {
@@ -142,7 +142,7 @@ export class UpdateEngine implements UpdateContext {
     if (passiveEffects.length > 0) {
       await this._renderHost.requestCallback(
         () => {
-          commitEffects(passiveEffects);
+          this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive);
         },
         { priority: 'background' },
       );
@@ -276,12 +276,6 @@ export class UpdateEngine implements UpdateContext {
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
-  }
-}
-
-function commitEffects(effects: Effect[]): void {
-  for (let i = 0, l = effects.length; i < l; i++) {
-    effects[i]!.commit();
   }
 }
 

@@ -1,6 +1,12 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import type { Bindable, SlotType, Template, TemplateMode } from './core.js';
+import type {
+  Bindable,
+  Effect,
+  SlotType,
+  Template,
+  TemplateMode,
+} from './core.js';
 import { type Part, PartType } from './part.js';
 import { AttributePrimitive } from './primitives/attribute.js';
 import { ChildNodePrimitive } from './primitives/childNode.js';
@@ -21,6 +27,7 @@ import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
 import { TaggedTemplate } from './templates/taggedTemplate.js';
 
 export interface RenderHost {
+  commitEffects(effects: Effect[], phase: CommitPhase): void;
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
@@ -38,6 +45,14 @@ export interface RenderHost {
   yieldToMain(): Promise<void>;
 }
 
+export const CommitPhase = {
+  Mutation: 0,
+  Layout: 1,
+  Passive: 2,
+} as const;
+
+export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
+
 export interface BrowserRenderHostOptions {
   templatePlaceholder?: string;
 }
@@ -53,6 +68,12 @@ export class BrowserRenderHost implements RenderHost {
     templatePlaceholder = getRandomString(8),
   }: BrowserRenderHostOptions = {}) {
     this._templatePlaceholder = templatePlaceholder;
+  }
+
+  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+    for (let i = 0, l = effects.length; i < l; i++) {
+      effects[i]!.commit();
+    }
   }
 
   createTemplate(
