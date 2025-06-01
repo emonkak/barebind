@@ -48,7 +48,6 @@ interface GlobalState {
   >;
   dirtyBindings: Set<ResumableBinding<unknown>>;
   identifierCount: number;
-  templatePlaceholder: string;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
 }
 
@@ -172,12 +171,7 @@ export class UpdateEngine implements UpdateContext {
     let template = this._globalState.cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._renderHost.createTemplate(
-        strings,
-        binds,
-        this._globalState.templatePlaceholder,
-        mode,
-      );
+      template = this._renderHost.createTemplate(strings, binds, mode);
       this._globalState.cachedTemplates.set(strings, template);
     }
 
@@ -187,7 +181,7 @@ export class UpdateEngine implements UpdateContext {
   nextIdentifier(): string {
     return (
       ':' +
-      this._globalState.templatePlaceholder +
+      this._renderHost.getTemplatePlaceholder() +
       '-' +
       ++this._globalState.identifierCount +
       ':'
@@ -319,7 +313,6 @@ function createGlobalState(): GlobalState {
     dirtyBindings: new Set(),
     identifierCount: 0,
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
-    templatePlaceholder: getRandomString(8),
   };
 }
 
@@ -330,10 +323,4 @@ function createRenderFrame(): RenderFrame {
     layoutEffects: [],
     passiveEffects: [],
   };
-}
-
-function getRandomString(length: number): string {
-  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
-    (byte % 36).toString(36),
-  ).join('');
 }

@@ -21,13 +21,13 @@ import { ChildNodeTemplate, TextTemplate } from './templates/singleTemplate.js';
 import { TaggedTemplate } from './templates/taggedTemplate.js';
 
 export interface RenderHost {
-  getTaskPriority(): TaskPriority;
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
-    placeholder: string,
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]>;
+  getTaskPriority(): TaskPriority;
+  getTemplatePlaceholder(): string;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
@@ -38,15 +38,26 @@ export interface RenderHost {
   yieldToMain(): Promise<void>;
 }
 
+export interface BrowserRenderHostOptions {
+  templatePlaceholder?: string;
+}
+
 export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
 
 export class BrowserRenderHost implements RenderHost {
+  private readonly _templatePlaceholder: string;
+
+  constructor({
+    templatePlaceholder = getRandomString(8),
+  }: BrowserRenderHostOptions = {}) {
+    this._templatePlaceholder = templatePlaceholder;
+  }
+
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
-    placeholder: string,
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]> {
     if (binds.length === 0 && strings[0]!.trim() === '') {
@@ -73,7 +84,12 @@ export class BrowserRenderHost implements RenderHost {
       }
     }
 
-    return TaggedTemplate.parse(strings, binds, placeholder, mode);
+    return TaggedTemplate.parse(
+      strings,
+      binds,
+      this._templatePlaceholder,
+      mode,
+    );
   }
 
   getTaskPriority(): TaskPriority {
@@ -83,6 +99,10 @@ export class BrowserRenderHost implements RenderHost {
     } else {
       return 'user-visible';
     }
+  }
+
+  getTemplatePlaceholder(): string {
+    return this._templatePlaceholder;
   }
 
   requestCallback(
@@ -167,6 +187,12 @@ export class BrowserRenderHost implements RenderHost {
       return new Promise((resolve) => setTimeout(resolve));
     }
   }
+}
+
+function getRandomString(length: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
+    (byte % 36).toString(36),
+  ).join('');
 }
 
 function isContinuousEvent(event: Event): boolean {

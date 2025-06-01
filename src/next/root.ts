@@ -1,7 +1,10 @@
 import type { UpdateOptions } from '../renderContext.js';
 import type { Bindable, Effect, Slot } from './core.js';
 import { PartType } from './part.js';
-import { BrowserRenderHost } from './renderHost.js';
+import {
+  BrowserRenderHost,
+  type BrowserRenderHostOptions,
+} from './renderHost.js';
 import { UpdateEngine } from './updateEngine.js';
 
 export interface Root<T> {
@@ -10,8 +13,14 @@ export interface Root<T> {
   unmount(options?: UpdateOptions): Promise<void>;
 }
 
-export function createRoot<T>(value: Bindable<T>, container: Element): Root<T> {
-  const renderHost = new BrowserRenderHost();
+export type RootOptions = BrowserRenderHostOptions;
+
+export function createRoot<T>(
+  value: Bindable<T>,
+  container: Element,
+  options?: RootOptions,
+): Root<T> {
+  const renderHost = new BrowserRenderHost(options);
   const context = new UpdateEngine(renderHost);
   const part = {
     type: PartType.ChildNode,
