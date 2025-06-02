@@ -114,6 +114,7 @@ export interface TemplateBlock<TBinds> extends ReversibleEffect {
 
 export interface UpdateContext extends DirectiveContext {
   clone(): UpdateContext;
+  createMarkerNode(): ChildNode;
   enqueueBinding(binding: ResumableBinding<unknown>): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;

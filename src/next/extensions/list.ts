@@ -42,7 +42,7 @@ type OperationType = (typeof OperationType)[keyof typeof OperationType];
 
 interface Item<TKey, TValue> {
   slot: Slot<TValue>;
-  sentinelNode: Comment;
+  sentinelNode: ChildNode;
   key: TKey;
 }
 
@@ -146,12 +146,12 @@ class ListBinding<TSource, TKey, TValue>
     ) => {
       const part = {
         type: PartType.ChildNode,
-        node: document.createComment(''),
+        node: context.createMarkerNode(),
       } as const;
       const slot = context.resolveSlot(newValues[index]!, part);
       const item: Item<TKey, TValue> = {
         key: newKeys[index]!,
-        sentinelNode: document.createComment(''),
+        sentinelNode: context.createMarkerNode(),
         slot,
       };
       newItems[index] = item;

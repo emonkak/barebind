@@ -28,6 +28,7 @@ import { TaggedTemplate } from './templates/taggedTemplate.js';
 
 export interface RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
+  createMarkerNode(): ChildNode;
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
@@ -74,6 +75,10 @@ export class BrowserRenderHost implements RenderHost {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit();
     }
+  }
+
+  createMarkerNode(): ChildNode {
+    return document.createComment('');
   }
 
   createTemplate(

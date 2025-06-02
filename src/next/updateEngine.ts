@@ -81,6 +81,10 @@ export class UpdateEngine implements UpdateContext {
     );
   }
 
+  createMarkerNode(): ChildNode {
+    return this._renderHost.createMarkerNode();
+  }
+
   enqueueBinding(binding: ResumableBinding<unknown>): void {
     this._renderFrame.suspendedBindings.push(binding);
   }

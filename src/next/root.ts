@@ -24,7 +24,7 @@ export function createRoot<T>(
   const context = new UpdateEngine(renderHost);
   const part = {
     type: PartType.ChildNode,
-    node: document.createComment(''),
+    node: context.createMarkerNode(),
   } as const;
   const slot = context.resolveSlot(value, part);
 
