@@ -1,31 +1,36 @@
 import type { DirectiveContext } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import { type Part, PartType, type TextPart } from '../part.js';
+import {
+  type ChildNodePart,
+  type Part,
+  PartType,
+  type TextPart,
+} from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
-export const TextPrimitive: Primitive<any> = {
-  name: 'TextPrimitive',
+export const NodePrimitive: Primitive<any> = {
+  name: 'NodePrimitive',
   ensureValue(_value: unknown, _part: Part): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): TextBinding<unknown> {
-    if (part.type !== PartType.Text) {
+  ): NodeBinding<unknown> {
+    if (part.type !== PartType.ChildNode && part.type !== PartType.Text) {
       throw new Error(
-        'TextPrimitive must be used in a node part, but it is used here:\n' +
+        'NodePrimitive must be used in a child node or a text part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
       );
     }
-    return new TextBinding(value, part);
+    return new NodeBinding(value, part);
   },
 };
 
-class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
+class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart | TextPart> {
   private _memoizedValue: T | null = null;
 
   get directive(): Primitive<T> {
-    return TextPrimitive;
+    return NodePrimitive;
   }
 
   shouldBind(value: T): boolean {
@@ -34,14 +39,14 @@ class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
 
   commit(): void {
     const value = this._pendingValue;
-    const { node } = this._part;
-    node.data = typeof value === 'string' ? value : (value?.toString() ?? '');
+    this._part.node.nodeValue =
+      typeof value === 'string' ? value : (value?.toString() ?? null);
     this._memoizedValue = this._pendingValue;
   }
 
   rollback(): void {
     if (this._memoizedValue !== null) {
-      this._part.node.data = '';
+      this._part.node.nodeValue = null;
       this._memoizedValue = null;
     }
   }

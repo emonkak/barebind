@@ -9,17 +9,16 @@ import type {
 } from './core.js';
 import { type Part, PartType } from './part.js';
 import { AttributePrimitive } from './primitives/attribute.js';
-import { ChildNodePrimitive } from './primitives/childNode.js';
 import { ClassListPrimitive } from './primitives/classList.js';
 import { ClassMapPrimitive } from './primitives/classMap.js';
 import { EventPrimitive } from './primitives/event.js';
 import { LivePrimitive } from './primitives/live.js';
+import { NodePrimitive } from './primitives/node.js';
 import type { Primitive } from './primitives/primitive.js';
 import { PropertyPrimitive } from './primitives/property.js';
 import { RefPrimitive } from './primitives/ref.js';
 import { SpreadPrimitive } from './primitives/spread.js';
 import { StylePrimitive } from './primitives/style.js';
-import { TextPrimitive } from './primitives/text.js';
 import { FlexibleSlot } from './slots/flexible.js';
 import { StrictSlot } from './slots/strict.js';
 import { EmptyTemplate } from './templates/emptyTemplate.js';
@@ -175,7 +174,8 @@ export class BrowserRenderHost implements RenderHost {
             return AttributePrimitive;
         }
       case PartType.ChildNode:
-        return ChildNodePrimitive;
+      case PartType.Text:
+        return NodePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:
@@ -184,8 +184,6 @@ export class BrowserRenderHost implements RenderHost {
         return LivePrimitive;
       case PartType.Property:
         return PropertyPrimitive;
-      case PartType.Text:
-        return TextPrimitive;
     }
   }
 
