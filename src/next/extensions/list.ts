@@ -259,7 +259,7 @@ class ListBinding<TSource, TKey, TValue>
   }
 
   commit(): void {
-    if (this._memoizedItems === null) {
+    if (this._memoizedItems.length === 0) {
       for (let i = 0, l = this._pendingItems.length; i < l; i++) {
         const item = this._pendingItems[i]!;
         commitInsert(item, this._part.node);
