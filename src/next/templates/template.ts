@@ -49,8 +49,8 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
       this._pendingBlock.reconcile(this._binds, context);
     } else {
       this._pendingBlock = context.renderTemplate(this._template, this._binds);
+      this._pendingBlock.connect(context);
     }
-    this._pendingBlock.connect(context);
   }
 
   disconnect(context: UpdateContext): void {
