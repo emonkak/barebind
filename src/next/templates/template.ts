@@ -69,8 +69,8 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
 
   rollback(): void {
     if (this._memoizedBlock !== null) {
-      this._memoizedBlock.unmount(this._part);
       this._memoizedBlock.rollback();
+      this._memoizedBlock.unmount(this._part);
     }
     this._memoizedBlock = null;
   }
