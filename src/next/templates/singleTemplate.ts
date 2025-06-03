@@ -48,7 +48,7 @@ export const TextTemplate: Template<readonly [Bindable<any>]> = {
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
     const part = {
-      type: PartType.Text,
+      type: PartType.Node,
       node: document.createTextNode(''),
     } as const;
     const value = binds[0];

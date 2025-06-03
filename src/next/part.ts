@@ -4,8 +4,8 @@ export type Part =
   | ElementPart
   | EventPart
   | LivePart
-  | PropertyPart
-  | TextPart;
+  | NodePart
+  | PropertyPart;
 
 export const PartType = {
   Attribute: 0,
@@ -13,8 +13,8 @@ export const PartType = {
   Element: 2,
   Event: 3,
   Live: 4,
-  Property: 5,
-  Text: 6,
+  Node: 5,
+  Property: 6,
 } as const;
 
 export type PartType = (typeof PartType)[keyof typeof PartType];
@@ -47,13 +47,13 @@ export interface LivePart {
   name: string;
 }
 
+export interface NodePart {
+  type: typeof PartType.Node;
+  node: ChildNode;
+}
+
 export interface PropertyPart {
   type: typeof PartType.Property;
   node: Element;
   name: string;
-}
-
-export interface TextPart {
-  type: typeof PartType.Text;
-  node: Text;
 }

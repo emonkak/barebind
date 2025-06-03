@@ -4,7 +4,7 @@ import { PartType } from './part.js';
 import {
   BrowserRenderHost,
   type BrowserRenderHostOptions,
-} from './renderHost.js';
+} from './renderHost/browser.js';
 import { UpdateEngine } from './updateEngine.js';
 
 export interface Root<T> {

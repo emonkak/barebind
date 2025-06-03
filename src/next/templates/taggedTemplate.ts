@@ -18,7 +18,7 @@ export type Hole =
   | EventHole
   | LiveHole
   | PropertyHole
-  | TextHole;
+  | NodeHole;
 
 export interface AttributeHole {
   type: typeof PartType.Attribute;
@@ -48,15 +48,15 @@ export interface LiveHole {
   name: string;
 }
 
+export interface NodeHole {
+  type: typeof PartType.Node;
+  index: number;
+}
+
 export interface PropertyHole {
   type: typeof PartType.Property;
   index: number;
   name: string;
-}
-
-export interface TextHole {
-  type: typeof PartType.Text;
-  index: number;
 }
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
@@ -162,7 +162,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
             case PartType.ChildNode:
               part = {
                 type: PartType.ChildNode,
-                node: currentNode as Comment,
+                node: currentNode as ChildNode,
               };
               break;
             case PartType.Element:
@@ -185,17 +185,17 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
                 name: currentHole.name,
               };
               break;
+            case PartType.Node:
+              part = {
+                type: PartType.Node,
+                node: currentNode as ChildNode,
+              };
+              break;
             case PartType.Property:
               part = {
                 type: PartType.Property,
                 node: currentNode as Element,
                 name: currentHole.name,
-              };
-              break;
-            case PartType.Text:
-              part = {
-                type: PartType.Text,
-                node: currentNode as Text,
               };
               break;
           }
@@ -300,7 +300,7 @@ export class TaggedTemplateBlock<TBinds extends readonly Bindable<unknown>[]>
       const part = slot.part;
 
       if (
-        (part.type === PartType.ChildNode || part.type === PartType.Text) &&
+        (part.type === PartType.ChildNode || part.type === PartType.Node) &&
         this._childNodes.includes(part.node)
       ) {
         // This binding is mounted as a child of the root, so we must rollback it.
@@ -543,7 +543,7 @@ function parseChildren(
             currentNode.before(document.createTextNode(''));
 
             holes.push({
-              type: PartType.Text,
+              type: PartType.Node,
               index,
             });
             index++;

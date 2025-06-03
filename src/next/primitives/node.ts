@@ -2,9 +2,9 @@ import type { DirectiveContext } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type ChildNodePart,
+  type NodePart,
   type Part,
   PartType,
-  type TextPart,
 } from '../part.js';
 import { type Primitive, PrimitiveBinding } from './primitive.js';
 
@@ -16,7 +16,7 @@ export const NodePrimitive: Primitive<any> = {
     part: Part,
     _context: DirectiveContext,
   ): NodeBinding<unknown> {
-    if (part.type !== PartType.ChildNode && part.type !== PartType.Text) {
+    if (part.type !== PartType.ChildNode && part.type !== PartType.Node) {
       throw new Error(
         'NodePrimitive must be used in a child node or a text part, but it is used here:\n' +
           inspectPart(part, markUsedValue(this)),
@@ -26,7 +26,7 @@ export const NodePrimitive: Primitive<any> = {
   },
 };
 
-class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart | TextPart> {
+class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart | NodePart> {
   private _memoizedValue: T | null = null;
 
   get directive(): Primitive<T> {
