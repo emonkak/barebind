@@ -155,11 +155,13 @@ class ListBinding<TSource, TKey, TValue>
         slot,
       };
       newItems[index] = item;
-      this._pendingOperations.push({
-        type: OperationType.Insert,
-        item,
-        forwardItem,
-      });
+      if (this._memoizedItems.length > 0) {
+        this._pendingOperations.push({
+          type: OperationType.Insert,
+          item,
+          forwardItem,
+        });
+      }
     };
     const updateItem = (item: Item<TKey, TValue>, index: number) => {
       item.slot.reconcile(newValues[index]!, context);
@@ -172,18 +174,22 @@ class ListBinding<TSource, TKey, TValue>
     ) => {
       item.slot.reconcile(newValues[index]!, context);
       newItems[index] = item;
-      this._pendingOperations.push({
-        type: OperationType.Move,
-        item,
-        forwardItem,
-      });
+      if (this._memoizedItems.length > 0) {
+        this._pendingOperations.push({
+          type: OperationType.Move,
+          item,
+          forwardItem,
+        });
+      }
     };
     const removeItem = (item: Item<TKey, TValue>) => {
       item.slot.disconnect(context);
-      this._pendingOperations.push({
-        type: OperationType.Remove,
-        item,
-      });
+      if (this._memoizedItems.length > 0) {
+        this._pendingOperations.push({
+          type: OperationType.Remove,
+          item,
+        });
+      }
     };
 
     let oldHead = 0;
