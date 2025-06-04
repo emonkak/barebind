@@ -154,10 +154,9 @@ export class Computed<
   }
 
   get version(): number {
-    const dependencies = this._dependencies;
     let version = 0;
-    for (let i = 0, l = dependencies.length; i < l; i++) {
-      version += dependencies[i]!.version;
+    for (let i = 0, l = this._dependencies.length; i < l; i++) {
+      version += this._dependencies[i]!.version;
     }
     return version;
   }

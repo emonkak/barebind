@@ -196,7 +196,7 @@ export class Atom<T> extends Signal<T> {
 
 export class Computed<
   TResult,
-  const TDependencies extends Signal<unknown>[],
+  const TDependencies extends Signal<unknown>[] = Signal<unknown>[],
 > extends Signal<TResult> {
   private readonly _producer: (...signals: TDependencies) => TResult;
 
