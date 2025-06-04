@@ -1,4 +1,6 @@
 export * from './core.js';
+export * from './extensions/async.js';
+export * from './extensions/asyncComponent.js';
 export * from './extensions/component.js';
 export * from './extensions/list.js';
 export * from './extensions/signal.js';

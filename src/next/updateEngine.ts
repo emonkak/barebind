@@ -113,17 +113,29 @@ export class UpdateEngine implements UpdateContext {
 
   async flushFrame(options?: UpdateOptions): Promise<void> {
     const { dirtyBindings } = this._globalState;
+    const promises = [];
 
     while (true) {
       const suspendedBindings = consumeSuspendedBindings(this._renderFrame);
+
       for (let i = 0, l = suspendedBindings.length; i < l; i++) {
         const suspendedBinding = suspendedBindings[i]!;
-        suspendedBinding.resume(this);
+        const promise = suspendedBinding.resume(this);
+        if (promise !== undefined) {
+          promises.push(promise);
+        }
         dirtyBindings.delete(suspendedBinding);
       }
+
+      if (promises.length > 0) {
+        await Promise.allSettled(promises);
+        promises.length = 0;
+      }
+
       if (this._renderFrame.suspendedBindings.length === 0) {
         break;
       }
+
       await this._renderHost.yieldToMain();
     }
 
@@ -139,7 +151,7 @@ export class UpdateEngine implements UpdateContext {
       await this._renderHost.startViewTransition(callback);
     } else {
       await this._renderHost.requestCallback(callback, {
-        priority: 'user-blocking',
+        priority: options?.priority ?? 'user-blocking',
       });
     }
 

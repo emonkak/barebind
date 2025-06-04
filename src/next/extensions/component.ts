@@ -87,10 +87,6 @@ class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
     this._props = props;
   }
 
-  connect(context: UpdateContext): void {
-    context.enqueueBinding(this);
-  }
-
   resume(context: UpdateContext): void {
     const result = context.renderComponent(
       this._directive.component,
@@ -104,6 +100,10 @@ class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
       this._slot = context.resolveSlot(result, this._part);
       this._slot.connect(context);
     }
+  }
+
+  connect(context: UpdateContext): void {
+    context.enqueueBinding(this);
   }
 
   disconnect(context: UpdateContext): void {
