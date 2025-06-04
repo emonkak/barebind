@@ -1,6 +1,6 @@
 import { type HookContext, type UserHook, userHookTag } from '../hook.js';
 import {
-  CurrentLocationContext,
+  CurrentLocation,
   type LocationNavigator,
   type LocationState,
   type NavigateOptions,
@@ -72,7 +72,7 @@ export const HashLocation: UserHook<
       };
     }, []);
 
-    context.setContextualValue(CurrentLocationContext, [
+    context.setContextualValue(CurrentLocation, [
       locationState,
       locationNavigator,
     ]);

@@ -17,7 +17,7 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-export const SignalDirective: Directive<Signal<any>> = {
+export const SignalDirective: Directive<Signal<Bindable<any>>> = {
   name: 'SignalDirective',
   resolveBinding(
     value: Signal<Bindable<unknown>>,
@@ -202,17 +202,35 @@ export class Computed<
 
   private readonly _dependencies: TDependencies;
 
-  private _memoizedValue: TResult | null = null;
+  private _memoizedValue: TResult | null;
 
-  private _memoizedVersion = -1; // -1 is indicated an uninitialized signal.
+  private _memoizedVersion;
 
   constructor(
     producer: (...dependencies: TDependencies) => TResult,
     dependencies: TDependencies,
+  );
+  /**
+   * @internal
+   */
+  constructor(
+    producer: (...dependencies: TDependencies) => TResult,
+    dependencies: TDependencies,
+    initialValue: TResult,
+    initialVersion: number,
+  );
+  constructor(
+    producer: (...dependencies: TDependencies) => TResult,
+    dependencies: TDependencies,
+    initialValue: TResult | null = null,
+    initialVersion = -1, // -1 is indicated an uninitialized signal.
   ) {
     super();
+
     this._producer = producer;
     this._dependencies = dependencies;
+    this._memoizedValue = initialValue;
+    this._memoizedVersion = initialVersion;
   }
 
   get value(): TResult {

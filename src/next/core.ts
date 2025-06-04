@@ -1,9 +1,4 @@
-import type {
-  ContextualKey,
-  Hook,
-  HookContext,
-  UpdateOptions,
-} from './hook.js';
+import type { Hook, HookContext, UpdateOptions } from './hook.js';
 import type { ChildNodePart, Part } from './part.js';
 import type { TemplateLiteral } from './templateLiteral.js';
 
@@ -124,7 +119,7 @@ export interface UpdateContext extends DirectiveContext {
     values: readonly unknown[],
   ): TemplateLiteral;
   flushFrame(options?: UpdateOptions): Promise<void>;
-  getContextualValue<T>(key: ContextualKey<T>): T;
+  getContextualValue<T>(key: unknown): T | undefined;
   getTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
@@ -145,7 +140,7 @@ export interface UpdateContext extends DirectiveContext {
     binding: ResumableBinding<unknown>,
     options?: UpdateOptions,
   ): Promise<void>;
-  setContextualValue<T>(key: ContextualKey<T>, value: T): void;
+  setContextualValue<T>(key: unknown, value: T): void;
 }
 
 export type Component<TProps, TResult> = (

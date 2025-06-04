@@ -11,7 +11,6 @@ import {
 } from './core.js';
 import { ensureHookType } from './debug.js';
 import {
-  type ContextualKey,
   type EffectHook,
   type FinalizerHook,
   type Hook,
@@ -70,7 +69,7 @@ export class RenderEngine implements RenderContext {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
 
-  getContextualValue<T>(key: ContextualKey<T>): T {
+  getContextualValue<T>(key: unknown): T | undefined {
     return this._updateContext.getContextualValue(key);
   }
 
@@ -114,7 +113,7 @@ export class RenderEngine implements RenderContext {
     return this._template(strings, binds, 'math');
   }
 
-  setContextualValue<T>(key: ContextualKey<T>, value: T): void {
+  setContextualValue<T>(key: unknown, value: T): void {
     return this._updateContext.setContextualValue(key, value);
   }
 

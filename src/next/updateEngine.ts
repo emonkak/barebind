@@ -12,7 +12,7 @@ import {
   type UpdateContext,
   bindableTag,
 } from './core.js';
-import type { ContextualKey, UpdateOptions } from './hook.js';
+import type { UpdateOptions } from './hook.js';
 import type { Hook } from './hook.js';
 import type { Part } from './part.js';
 import type { Primitive } from './primitives/primitive.js';
@@ -37,7 +37,7 @@ interface ContextualScope {
 }
 
 interface ContextualEntry<T> {
-  key: ContextualKey<T>;
+  key: unknown;
   value: T;
 }
 
@@ -165,7 +165,7 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  getContextualValue<T>(key: ContextualKey<T>): T {
+  getContextualValue<T>(key: unknown): T | undefined {
     let contextualScope = this._contextualScope;
     while (contextualScope !== null) {
       const entry = contextualScope.entries.findLast(
@@ -176,7 +176,7 @@ export class UpdateEngine implements UpdateContext {
       }
       contextualScope = contextualScope.parent;
     }
-    return key.defaultValue;
+    return undefined;
   }
 
   getTemplate(
@@ -260,7 +260,7 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  setContextualValue<T>(key: ContextualKey<T>, value: T): void {
+  setContextualValue<T>(key: unknown, value: T): void {
     if (this._contextualScope?.context !== this) {
       this._contextualScope = {
         parent: this._contextualScope,

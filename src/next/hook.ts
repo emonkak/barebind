@@ -58,10 +58,6 @@ export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
   : ((prevState: T) => T) | T;
 
-export interface ContextualKey<T> {
-  defaultValue: T;
-}
-
 export interface RefObject<T> {
   current: T;
 }
@@ -84,8 +80,8 @@ export interface UserHook<T> {
 
 export interface HookContext {
   forceUpdate(options?: UpdateOptions): void;
-  getContextualValue<T>(key: ContextualKey<T>): T;
-  setContextualValue<T>(key: ContextualKey<T>, value: T): void;
+  getContextualValue<T>(key: object): T | undefined;
+  setContextualValue<T>(key: object, value: T): void;
   use<T>(hook: UserHook<T>): T;
   use<T extends UserHook<unknown>[]>(hooks: T): UseUserHooks<T>;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
@@ -117,12 +113,4 @@ export interface HookContext {
     getSnapshot: () => T,
     options?: UpdateOptions,
   ): T;
-}
-
-export function createContext<T>(): ContextualKey<T | undefined>;
-export function createContext<T>(defaultValue: T): ContextualKey<T>;
-export function createContext<T>(
-  defaultValue?: T,
-): ContextualKey<T | undefined> {
-  return { defaultValue };
 }

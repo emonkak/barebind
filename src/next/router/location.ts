@@ -1,10 +1,4 @@
-import {
-  type ContextualKey,
-  type HookContext,
-  type UserHook,
-  createContext,
-  userHookTag,
-} from '../hook.js';
+import { type HookContext, type UserHook, userHookTag } from '../hook.js';
 import type { RelativeURL } from './relativeURL.js';
 
 export interface LocationState {
@@ -30,17 +24,13 @@ export interface NavigateOptions {
   state?: unknown;
 }
 
-export const CurrentLocationContext: ContextualKey<
-  [LocationState, LocationNavigator] | undefined
-> = createContext();
-
 export const CurrentLocation: UserHook<
   readonly [LocationState, LocationNavigator]
 > = {
   [userHookTag](
     context: HookContext,
   ): readonly [LocationState, LocationNavigator] {
-    const value = context.getContextualValue(CurrentLocationContext);
+    const value = context.getContextualValue(CurrentLocation);
 
     if (value == undefined) {
       throw new Error(
