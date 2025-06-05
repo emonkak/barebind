@@ -93,6 +93,10 @@ export interface SlotElement<T> {
   readonly slotType: SlotType;
 }
 
+export interface Primitive<T> extends Directive<T> {
+  ensureValue(value: unknown, part: Part): asserts value is T;
+}
+
 export interface Template<TBinds> extends Directive<TBinds> {
   render(binds: TBinds, context: DirectiveContext): TemplateBlock<TBinds>;
 }

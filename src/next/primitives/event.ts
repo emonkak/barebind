@@ -1,7 +1,7 @@
-import type { DirectiveContext } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type EventPart, type Part, PartType } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding } from './primitive.js';
 
 export type EventValue =
   | EventListener

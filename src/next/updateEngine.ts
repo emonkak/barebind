@@ -4,6 +4,7 @@ import {
   BindableType,
   type Component,
   type Effect,
+  type Primitive,
   type ResumableBinding,
   type Slot,
   type Template,
@@ -15,7 +16,6 @@ import {
 import type { UpdateOptions } from './hook.js';
 import type { Hook } from './hook.js';
 import type { Part } from './part.js';
-import type { Primitive } from './primitives/primitive.js';
 import { RenderEngine } from './renderEngine.js';
 import { CommitPhase, type RenderHost } from './renderHost.js';
 import {

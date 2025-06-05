@@ -1,9 +1,5 @@
-import type { Binding, Directive, UpdateContext } from '../core.js';
+import type { Binding, Primitive, UpdateContext } from '../core.js';
 import type { Part } from '../part.js';
-
-export interface Primitive<T> extends Directive<T> {
-  ensureValue(value: unknown, part: Part): asserts value is T;
-}
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>

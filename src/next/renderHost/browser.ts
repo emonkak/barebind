@@ -3,6 +3,7 @@
 import type {
   Bindable,
   Effect,
+  Primitive,
   SlotType,
   Template,
   TemplateMode,
@@ -14,7 +15,6 @@ import { ClassMapPrimitive } from '../primitives/classMap.js';
 import { EventPrimitive } from '../primitives/event.js';
 import { LivePrimitive } from '../primitives/live.js';
 import { NodePrimitive } from '../primitives/node.js';
-import type { Primitive } from '../primitives/primitive.js';
 import { PropertyPrimitive } from '../primitives/property.js';
 import { RefPrimitive } from '../primitives/ref.js';
 import { SpreadPrimitive } from '../primitives/spread.js';

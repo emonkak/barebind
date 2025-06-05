@@ -1,4 +1,4 @@
-import type { DirectiveContext } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type ChildNodePart,
@@ -6,7 +6,7 @@ import {
   PartType,
   type TextPart,
 } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding } from './primitive.js';
 
 export const NodePrimitive: Primitive<any> = {
   name: 'NodePrimitive',

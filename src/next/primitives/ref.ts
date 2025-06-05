@@ -1,8 +1,8 @@
-import type { DirectiveContext } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding } from './primitive.js';
 
 export type RefValue =
   | RefCallback<Element>

@@ -1,7 +1,7 @@
-import type { DirectiveContext } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { type Part, PartType, type PropertyPart } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding } from './primitive.js';
 
 const noValue = Symbol('noValue');
 

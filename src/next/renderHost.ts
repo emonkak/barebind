@@ -1,12 +1,12 @@
 import type {
   Bindable,
   Effect,
+  Primitive,
   SlotType,
   Template,
   TemplateMode,
 } from './core.js';
 import type { Part } from './part.js';
-import type { Primitive } from './primitives/primitive.js';
 
 export interface RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void;

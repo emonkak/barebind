@@ -1,9 +1,9 @@
 import { shallowEqual } from '../compare.js';
-import type { DirectiveContext } from '../core.js';
+import type { DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
-import { type Primitive, PrimitiveBinding } from './primitive.js';
+import { PrimitiveBinding } from './primitive.js';
 
 export type ClassMapValue = { [key: string]: boolean };
 

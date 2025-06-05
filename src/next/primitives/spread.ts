@@ -1,12 +1,12 @@
 import type {
   Binding,
   DirectiveContext,
+  Primitive,
   Slot,
   UpdateContext,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
-import type { Primitive } from './primitive.js';
 
 export type SpreadValue = { [key: string]: unknown };
 
