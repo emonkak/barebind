@@ -9,11 +9,6 @@ export interface Directive<T> {
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
-export interface DirectiveContext {
-  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T>;
-  resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T>;
-}
-
 export interface Effect {
   commit(): void;
 }
@@ -111,6 +106,20 @@ export interface TemplateBlock<TBinds> extends ReversibleEffect {
   unmount(part: ChildNodePart): void;
 }
 
+export interface Component<TProps, TResult> extends Directive<TProps> {
+  render: ComponentFunction<TProps, TResult>;
+}
+
+export type ComponentFunction<TProps, TResult> = (
+  props: TProps,
+  context: RenderContext,
+) => Bindable<TResult>;
+
+export interface DirectiveContext {
+  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T>;
+  resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T>;
+}
+
 export interface UpdateContext extends DirectiveContext {
   clone(): UpdateContext;
   createMarkerNode(): Comment;
@@ -146,11 +155,6 @@ export interface UpdateContext extends DirectiveContext {
   ): Promise<void>;
   setContextualValue<T>(key: unknown, value: T): void;
 }
-
-export type Component<TProps, TResult> = (
-  props: TProps,
-  context: RenderContext,
-) => Bindable<TResult>;
 
 export interface RenderContext extends HookContext {
   dynamicHTML(

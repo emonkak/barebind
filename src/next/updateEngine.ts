@@ -208,7 +208,7 @@ export class UpdateEngine implements UpdateContext {
       this._globalState,
     );
     const renderContext = new RenderEngine(hooks, binding, updateContext);
-    const element = component(props, renderContext);
+    const element = component.render(props, renderContext);
     renderContext.finalize();
     return element;
   }

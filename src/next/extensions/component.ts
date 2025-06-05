@@ -1,9 +1,12 @@
 import {
+  type Bindable,
   type Component,
+  type ComponentFunction,
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
+  type RenderContext,
   type ResumableBinding,
   type Slot,
   type UpdateContext,
@@ -15,17 +18,19 @@ import type { Part } from '../part.js';
 const componentDirectiveTag = Symbol('Component.directive');
 
 export function component<TProps, TResult>(
-  component: Component<TProps, TResult>,
+  component: ComponentFunction<TProps, TResult>,
   props: TProps,
 ): DirectiveElement<TProps> {
   const directive = defineComponentDirective(component);
   return createDirectiveElement(directive, props);
 }
 
-export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
-  private readonly _component: Component<TProps, TResult>;
+export class ComponentDirective<TProps, TResult>
+  implements Component<TProps, TResult>
+{
+  private readonly _component: ComponentFunction<TProps, TResult>;
 
-  constructor(component: Component<TProps, TResult>) {
+  constructor(component: ComponentFunction<TProps, TResult>) {
     this._component = component;
   }
 
@@ -33,8 +38,9 @@ export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
     return this._component.name;
   }
 
-  get component(): Component<TProps, TResult> {
-    return this._component;
+  render(props: TProps, context: RenderContext): Bindable<TResult> {
+    const component = this._component;
+    return component(props, context);
   }
 
   resolveBinding(
@@ -47,7 +53,7 @@ export class ComponentDirective<TProps, TResult> implements Directive<TProps> {
 }
 
 class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
-  private readonly _directive: ComponentDirective<TProps, TResult>;
+  private readonly _component: Component<TProps, TResult>;
 
   private _props: TProps;
 
@@ -58,17 +64,17 @@ class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
   private _hooks: Hook[] = [];
 
   constructor(
-    directive: ComponentDirective<TProps, TResult>,
+    component: Component<TProps, TResult>,
     props: TProps,
     part: Part,
   ) {
-    this._directive = directive;
+    this._component = component;
     this._props = props;
     this._part = part;
   }
 
-  get directive(): ComponentDirective<TProps, TResult> {
-    return this._directive;
+  get directive(): Component<TProps, TResult> {
+    return this._component;
   }
 
   get value(): TProps {
@@ -89,7 +95,7 @@ class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
 
   resume(context: UpdateContext): void {
     const result = context.renderComponent(
-      this._directive.component,
+      this._component,
       this._props,
       this._hooks,
       this,
@@ -150,7 +156,7 @@ class CleanEffectHook implements Effect {
 }
 
 function defineComponentDirective<TProps, TResult>(
-  component: Component<TProps, TResult>,
+  component: ComponentFunction<TProps, TResult>,
 ): Directive<TProps> {
   return ((component as any)[componentDirectiveTag] ??= new ComponentDirective(
     component,
