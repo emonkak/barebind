@@ -6,6 +6,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 
 export type SpreadValue = { [key: string]: unknown };
@@ -68,6 +69,8 @@ class SpreadBinding implements Binding<SpreadValue> {
   bind(props: SpreadValue): void {
     this._props = props;
   }
+
+  hydrate(_hydrationTree: HydrationTree, _context: UpdateContext): void {}
 
   connect(context: UpdateContext): void {
     for (const [key, slot] of this._pendingSlots.entries()) {

@@ -1,4 +1,5 @@
 import type { Hook, HookContext, UpdateOptions } from './hook.js';
+import type { HydrationTree } from './hydration.js';
 import type { ChildNodePart, Part } from './part.js';
 import type { TemplateLiteral } from './templateLiteral.js';
 
@@ -23,6 +24,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
+  hydrate(hydrationTree: HydrationTree, context: DirectiveContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -36,6 +38,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: T;
   readonly part: Part;
   reconcile(value: Bindable<T>, context: UpdateContext): void;
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -94,6 +97,11 @@ export interface Primitive<T> extends Directive<T> {
 
 export interface Template<TBinds> extends Directive<TBinds> {
   render(binds: TBinds, context: DirectiveContext): TemplateBlock<TBinds>;
+  hydrate(
+    binds: TBinds,
+    hydrationTree: HydrationTree,
+    context: DirectiveContext,
+  ): TemplateBlock<TBinds>;
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg';
@@ -138,6 +146,11 @@ export interface UpdateContext extends DirectiveContext {
     binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]>;
+  hydrateTemplate<TBinds>(
+    template: Template<TBinds>,
+    binds: TBinds,
+    hydrationTree: HydrationTree,
+  ): TemplateBlock<TBinds>;
   nextIdentifier(): string;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,

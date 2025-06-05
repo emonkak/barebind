@@ -1,4 +1,5 @@
 import type { Binding, Primitive, UpdateContext } from '../core.js';
+import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
@@ -28,6 +29,8 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   bind(value: TValue): void {
     this._pendingValue = value;
   }
+
+  hydrate(_hydrationTree: HydrationTree, _context: UpdateContext): void {}
 
   connect(_context: UpdateContext): void {}
 

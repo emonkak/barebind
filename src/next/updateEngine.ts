@@ -15,6 +15,7 @@ import {
 } from './core.js';
 import type { UpdateOptions } from './hook.js';
 import type { Hook } from './hook.js';
+import type { HydrationTree } from './hydration.js';
 import type { Part } from './part.js';
 import { RenderEngine } from './renderEngine.js';
 import { CommitPhase, type RenderHost } from './renderHost.js';
@@ -183,6 +184,14 @@ export class UpdateEngine implements UpdateContext {
     }
 
     return template;
+  }
+
+  hydrateTemplate<TBinds>(
+    template: Template<TBinds>,
+    binds: TBinds,
+    hydrationTree: HydrationTree,
+  ): TemplateBlock<TBinds> {
+    return template.hydrate(binds, hydrationTree, this);
   }
 
   nextIdentifier(): string {

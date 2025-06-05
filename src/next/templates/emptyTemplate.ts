@@ -5,6 +5,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
@@ -12,6 +13,13 @@ export const EmptyTemplate: Template<readonly []> = {
   name: 'EmptyTemplate',
   render(
     _binds: readonly [],
+    _context: DirectiveContext,
+  ): typeof EmptyTemplateBlock {
+    return EmptyTemplateBlock;
+  },
+  hydrate(
+    _binds: readonly [],
+    _hydrationTree: HydrationTree,
     _context: DirectiveContext,
   ): typeof EmptyTemplateBlock {
     return EmptyTemplateBlock;

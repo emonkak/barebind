@@ -13,6 +13,7 @@ import {
   createDirectiveElement,
 } from '../core.js';
 import { type EffectHook, type Hook, HookType } from '../hook.js';
+import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 const componentDirectiveTag = Symbol('Component.directive');
@@ -105,6 +106,21 @@ class ComponentBinding<TProps, TResult> implements Coroutine {
     } else {
       this._slot = context.resolveSlot(result, this._part);
       this._slot.connect(context);
+    }
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    const result = context.renderComponent(
+      this._component,
+      this._props,
+      this._hooks,
+      this,
+    );
+    if (this._slot !== null) {
+      this._slot.reconcile(result, context);
+    } else {
+      this._slot = context.resolveSlot(result, this._part);
+      this._slot.hydrate(hydrationTree, context);
     }
   }
 

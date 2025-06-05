@@ -12,6 +12,7 @@ import {
   createDirectiveElement,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 
 export type ListValue<TSource, TKey, TValue> = {
@@ -147,6 +148,31 @@ class ListBinding<TSource, TKey, TValue>
 
   bind(value: ListValue<TSource, TKey, TValue>): void {
     this._value = value;
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    const { sources, keySelector, valueSelector } = this._value;
+    const newItems = new Array(sources.length);
+
+    for (let i = 0, l = newItems.length; i < l; i++) {
+      const key = keySelector(sources[i]!, i);
+      const value = valueSelector(sources[i]!, i);
+      const sentinelNode = hydrationTree.popComment();
+      const part = {
+        type: PartType.ChildNode,
+        node: context.createMarkerNode(),
+      } as const;
+      const slot = context.resolveSlot(value, part);
+      slot.hydrate(hydrationTree, context);
+      hydrationTree.popComment().replaceWith(part.node);
+      newItems[i] = {
+        key,
+        sentinelNode,
+        slot,
+      };
+    }
+
+    this._pendingItems = newItems;
   }
 
   connect(context: UpdateContext): void {
@@ -287,7 +313,7 @@ function commitMove<TKey, TValue>(
   referenceNode: ChildNode,
 ): void {
   const { slot, sentinelNode } = item;
-  const parentNode = sentinelNode.parentNode;
+  const { parentNode } = sentinelNode;
   if (parentNode !== null) {
     const insertOrMoveBefore =
       Element.prototype.moveBefore ?? Element.prototype.insertBefore;

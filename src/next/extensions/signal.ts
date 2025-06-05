@@ -10,6 +10,7 @@ import {
   bindableTag,
 } from '../core.js';
 import { type HookContext, type UserHook, userHookTag } from '../hook.js';
+import type { HydrationTree } from '../hydration.js';
 import { LinkedList } from '../linkedList.js';
 import type { Part } from '../part.js';
 
@@ -65,6 +66,11 @@ class SignalBinding<T> implements Coroutine {
     this._subscription = null;
     this._signal = signal;
     this._version = -1;
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    this._slot.hydrate(hydrationTree, context);
+    this._subscription ??= this._subscribeSignal(context.clone());
   }
 
   connect(context: UpdateContext): void {

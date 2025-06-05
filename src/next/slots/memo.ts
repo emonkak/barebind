@@ -7,6 +7,7 @@ import {
   type UpdateContext,
   createSlotElement,
 } from '../core.js';
+import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function memo<T>(value: Bindable<T>): SlotElement<T> {
@@ -70,6 +71,11 @@ export class MemoSlot<T> implements Slot<T> {
         this._dirty = true;
       }
     }
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    this._pendingBinding.hydrate(hydrationTree, context);
+    this._dirty = true;
   }
 
   connect(context: UpdateContext): void {

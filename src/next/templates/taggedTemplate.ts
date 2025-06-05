@@ -222,6 +222,117 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     return new TaggedTemplateBlock(slots, childNodes);
   }
 
+  hydrate(
+    binds: TBinds,
+    hydrationTree: HydrationTree,
+    context: UpdateContext,
+  ): TaggedTemplateBlock<TBinds> {
+    const holes = this._holes;
+
+    DEBUG: {
+      assertNumberOfBinds(holes.length, binds.length);
+    }
+
+    const treeWalker = document.createTreeWalker(
+      this._element.content,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+    );
+    const slots = new Array(holes.length);
+    const childNodes = [];
+    let expectedNode: Node | null;
+    let nodeIndex = 0;
+    let holeIndex = 0;
+
+    OUTER: while ((expectedNode = treeWalker.nextNode()) !== null) {
+      let part: Part | null = null;
+
+      while (holeIndex < holes.length) {
+        const hole = holes[holeIndex]!;
+        if (hole.index !== nodeIndex) {
+          break;
+        }
+
+        switch (hole.type) {
+          case PartType.Attribute:
+            part = {
+              type: PartType.Attribute,
+              node: hydrationTree.peekElement(
+                (expectedNode as Element).tagName,
+              ),
+              name: hole.name,
+            };
+            break;
+          case PartType.ChildNode:
+            part = {
+              type: PartType.ChildNode,
+              node: expectedNode.cloneNode(true) as Comment,
+            };
+            break;
+          case PartType.Element:
+            part = {
+              type: PartType.Element,
+              node: hydrationTree.peekElement(
+                (expectedNode as Element).tagName,
+              ),
+            };
+            break;
+          case PartType.Event:
+            part = {
+              type: PartType.Event,
+              node: hydrationTree.peekElement(
+                (expectedNode as Element).tagName,
+              ),
+              name: hole.name,
+            };
+            break;
+          case PartType.Live:
+            part = {
+              type: PartType.Live,
+              node: hydrationTree.peekElement(
+                (expectedNode as Element).tagName,
+              ),
+              name: hole.name,
+            };
+            break;
+          case PartType.Property:
+            part = {
+              type: PartType.Property,
+              node: hydrationTree.peekElement(
+                (expectedNode as Element).tagName,
+              ),
+              name: hole.name,
+            };
+            break;
+          case PartType.Text:
+            part = {
+              type: PartType.Text,
+              node: hydrationTree.peekText(),
+            };
+            break;
+        }
+
+        const slot = context.resolveSlot(binds[holeIndex], part);
+        slots[holeIndex] = slot;
+        slot.hydrate(hydrationTree, context);
+
+        holeIndex++;
+      }
+
+      if (part?.type === PartType.ChildNode) {
+        hydrationTree.popComment().replaceWith(part.node);
+      } else {
+        const actualNode = hydrationTree.popNode();
+        if (expectedNode.parentNode === null) {
+          childNodes.push(actualNode);
+        }
+      }
+
+      nodeIndex++;
+    }
+
+    return new TaggedTemplateBlock(slots, childNodes);
+  }
+
   resolveBinding(
     binds: TBinds,
     part: Part,

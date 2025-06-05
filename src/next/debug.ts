@@ -12,37 +12,12 @@ export function ensureHookType<TExpectedHook extends Hook>(
   }
 }
 
+export function inspectNode(node: Node, marker: string): string {
+  return inspectAround(node, markNode(node, marker));
+}
+
 export function inspectPart(part: Part, marker: string): string {
-  let currentNode: Node | null = part.node;
-  let before = '';
-  let after = '';
-  let complexity = 0;
-  do {
-    for (
-      let previousNode: Node | null = currentNode.previousSibling;
-      previousNode !== null;
-      previousNode = previousNode.previousSibling
-    ) {
-      before = toHTML(previousNode) + before;
-      complexity += getComplexity(previousNode);
-    }
-    for (
-      let nextNode: Node | null = currentNode.nextSibling;
-      nextNode !== null;
-      nextNode = nextNode.nextSibling
-    ) {
-      after += toHTML(nextNode);
-      complexity += getComplexity(nextNode);
-    }
-    currentNode = currentNode.parentNode;
-    if (!(currentNode instanceof Element)) {
-      break;
-    }
-    before = openTag(currentNode) + before;
-    after += closeTag(currentNode);
-    complexity += getComplexity(currentNode);
-  } while (complexity < 10);
-  return before + markPart(part, marker) + after;
+  return inspectAround(part.node, markPart(part, marker));
 }
 
 export function inspectValue(value: unknown): string {
@@ -122,8 +97,50 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
+function inspectAround(node: Node, marker: string): string {
+  let currentNode: Node | null = node;
+  let before = '';
+  let after = '';
+  let complexity = 0;
+  do {
+    for (
+      let previousNode: Node | null = currentNode.previousSibling;
+      previousNode !== null;
+      previousNode = previousNode.previousSibling
+    ) {
+      before = toHTML(previousNode) + before;
+      complexity += getComplexity(previousNode);
+    }
+    for (
+      let nextNode: Node | null = currentNode.nextSibling;
+      nextNode !== null;
+      nextNode = nextNode.nextSibling
+    ) {
+      after += toHTML(nextNode);
+      complexity += getComplexity(nextNode);
+    }
+    currentNode = currentNode.parentNode;
+    if (!(currentNode instanceof Element)) {
+      break;
+    }
+    before = openTag(currentNode) + before;
+    after += closeTag(currentNode);
+    complexity += getComplexity(currentNode);
+  } while (complexity < 10);
+  return before + marker + after;
+}
+
 function isSelfClosingTag(element: Element): boolean {
   return !element.outerHTML.endsWith(closeTag(element));
+}
+
+function markNode(node: Node, marker: string): string {
+  switch (node.nodeType) {
+    case Node.ELEMENT_NODE:
+      return appendInsideTag(node as Element, marker);
+    default:
+      return marker + toHTML(node);
+  }
 }
 
 function markPart(part: Part, marker: string): string {

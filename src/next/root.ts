@@ -1,6 +1,8 @@
-import type { UpdateOptions } from '../renderContext.js';
 import type { Bindable, Effect, Slot } from './core.js';
+import type { UpdateOptions } from './hook.js';
+import { HydrationTree } from './hydration.js';
 import { PartType } from './part.js';
+import type { RenderHost } from './renderHost.js';
 import {
   BrowserRenderHost,
   type BrowserRenderHostOptions,
@@ -8,19 +10,17 @@ import {
 import { UpdateEngine } from './updateEngine.js';
 
 export interface Root<T> {
+  hydrate(options: UpdateOptions): Promise<void>;
   mount(options?: UpdateOptions): Promise<void>;
   update(value: Bindable<T>, options?: UpdateOptions): Promise<void>;
   unmount(options?: UpdateOptions): Promise<void>;
 }
 
-export type RootOptions = BrowserRenderHostOptions;
-
 export function createRoot<T>(
   value: Bindable<T>,
   container: Element,
-  options?: RootOptions,
+  renderHost: RenderHost,
 ): Root<T> {
-  const renderHost = new BrowserRenderHost(options);
   const context = new UpdateEngine(renderHost);
   const part = {
     type: PartType.ChildNode,
@@ -29,6 +29,12 @@ export function createRoot<T>(
   const slot = context.resolveSlot(value, part);
 
   return {
+    hydrate(options) {
+      const hydrationTree = new HydrationTree(container);
+      slot.hydrate(hydrationTree, context);
+      context.enqueueMutationEffect(new MountBinding(slot, container));
+      return context.flushFrame(options);
+    },
     mount(options) {
       slot.connect(context);
       context.enqueueMutationEffect(new MountBinding(slot, container));
@@ -45,6 +51,14 @@ export function createRoot<T>(
       return context.flushFrame(options);
     },
   };
+}
+
+export function createBrowserRoot<T>(
+  value: Bindable<T>,
+  container: Element,
+  options?: BrowserRenderHostOptions,
+): Root<T> {
+  return createRoot(value, container, new BrowserRenderHost(options));
 }
 
 class MountBinding<T> implements Effect {

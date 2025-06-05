@@ -8,6 +8,7 @@ import {
   createSlotElement,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function strict<T>(value: Bindable<T>): SlotElement<T> {
@@ -48,6 +49,11 @@ export class StrictSlot<T> implements Slot<T> {
       this._binding.connect(context);
       this._dirty = true;
     }
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    this._binding.hydrate(hydrationTree, context);
+    this._dirty = true;
   }
 
   connect(context: UpdateContext): void {

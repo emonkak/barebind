@@ -5,6 +5,7 @@ import type {
   TemplateBlock,
   UpdateContext,
 } from '../core.js';
+import type { HydrationTree } from '../hydration.js';
 import type { ChildNodePart } from '../part.js';
 
 export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
@@ -42,6 +43,18 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
 
   bind(binds: TBinds): void {
     this._binds = binds;
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    if (this._pendingBlock !== null) {
+      this._pendingBlock.reconcile(this._binds, context);
+    } else {
+      this._pendingBlock = context.hydrateTemplate(
+        this._template,
+        this._binds,
+        hydrationTree,
+      );
+    }
   }
 
   connect(context: UpdateContext): void {
