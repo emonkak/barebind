@@ -113,29 +113,17 @@ export class UpdateEngine implements UpdateContext {
 
   async flushFrame(options?: UpdateOptions): Promise<void> {
     const { dirtyBindings } = this._globalState;
-    let promiseQueue: PromiseQueue | undefined;
 
-    OUTER: while (true) {
+    while (true) {
       const suspendedBindings = consumeSuspendedBindings(this._renderFrame);
 
       for (let i = 0, l = suspendedBindings.length; i < l; i++) {
         const suspendedBinding = suspendedBindings[i]!;
-        const promise = suspendedBinding.resume(this);
-        if (promise !== undefined) {
-          promiseQueue ??= new PromiseQueue();
-          promiseQueue.enqueue(promise);
-        }
+        suspendedBinding.resume(this);
         dirtyBindings.delete(suspendedBinding);
       }
 
       if (this._renderFrame.suspendedBindings.length === 0) {
-        if (promiseQueue !== undefined) {
-          while (await promiseQueue.dequeue()) {
-            if (this._renderFrame.suspendedBindings.length > 0) {
-              continue OUTER;
-            }
-          }
-        }
         break;
       }
 
@@ -295,29 +283,6 @@ export class UpdateEngine implements UpdateContext {
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
-  }
-}
-
-class PromiseQueue {
-  private _pendingPromises: Map<number, Promise<number>> = new Map();
-
-  private _identifierCount = 0;
-
-  enqueue(promise: Promise<void>): void {
-    const id = ++this._identifierCount;
-    this._pendingPromises.set(
-      id,
-      promise.then(() => id),
-    );
-  }
-
-  async dequeue(): Promise<boolean> {
-    if (this._pendingPromises.size > 0) {
-      const id = await Promise.any(this._pendingPromises.values());
-      this._pendingPromises.delete(id);
-      return true;
-    }
-    return false;
   }
 }
 

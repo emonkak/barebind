@@ -33,7 +33,7 @@ export interface Binding<T> extends ReversibleEffect {
 }
 
 export interface ResumableBinding<T> extends Binding<T> {
-  resume(context: UpdateContext): void | Promise<void>;
+  resume(context: UpdateContext): void;
 }
 
 export interface Slot<T> extends ReversibleEffect {
