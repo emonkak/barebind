@@ -30,7 +30,6 @@ function defineAsyncComponentDirective<TProps, TResult>(
     new ComponentDirective(
       (props: TProps, context: RenderContext): AsyncValue<TResult> => ({
         promise: component(props, context),
-        options: {},
       }),
     ));
 }

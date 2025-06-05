@@ -113,26 +113,29 @@ export class UpdateEngine implements UpdateContext {
 
   async flushFrame(options?: UpdateOptions): Promise<void> {
     const { dirtyBindings } = this._globalState;
-    const promises = [];
+    let promiseQueue: PromiseQueue | undefined;
 
-    while (true) {
+    OUTER: while (true) {
       const suspendedBindings = consumeSuspendedBindings(this._renderFrame);
 
       for (let i = 0, l = suspendedBindings.length; i < l; i++) {
         const suspendedBinding = suspendedBindings[i]!;
         const promise = suspendedBinding.resume(this);
         if (promise !== undefined) {
-          promises.push(promise);
+          promiseQueue ??= new PromiseQueue();
+          promiseQueue.enqueue(promise);
         }
         dirtyBindings.delete(suspendedBinding);
       }
 
-      if (promises.length > 0) {
-        await Promise.allSettled(promises);
-        promises.length = 0;
-      }
-
       if (this._renderFrame.suspendedBindings.length === 0) {
+        if (promiseQueue !== undefined) {
+          while (await promiseQueue.dequeue()) {
+            if (this._renderFrame.suspendedBindings.length > 0) {
+              continue OUTER;
+            }
+          }
+        }
         break;
       }
 
@@ -292,6 +295,29 @@ export class UpdateEngine implements UpdateContext {
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
+  }
+}
+
+class PromiseQueue {
+  private _pendingPromises: Map<number, Promise<number>> = new Map();
+
+  private _identifierCount = 0;
+
+  enqueue(promise: Promise<void>): void {
+    const id = ++this._identifierCount;
+    this._pendingPromises.set(
+      id,
+      promise.then(() => id),
+    );
+  }
+
+  async dequeue(): Promise<boolean> {
+    if (this._pendingPromises.size > 0) {
+      const id = await Promise.any(this._pendingPromises.values());
+      this._pendingPromises.delete(id);
+      return true;
+    }
+    return false;
   }
 }
 

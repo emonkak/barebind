@@ -11,22 +11,17 @@ import {
 import type { Part } from '../part.js';
 
 export type AsyncValue<T> = {
+  controller?: AbortController;
+  fallback?: () => Bindable<T>;
   promise: Promise<Bindable<T>>;
-  options: AsyncOptions;
 };
 
-export interface AsyncOptions {
-  controller?: AbortController;
-}
+type PromiseState = 'pending' | 'fulfilled' | 'rejected';
 
 export function async<T>(
-  promise: Promise<Bindable<T>>,
-  options: AsyncOptions = {},
+  value: AsyncValue<T>,
 ): DirectiveElement<AsyncValue<T>> {
-  return createDirectiveElement(AsyncDirective, {
-    promise,
-    options,
-  });
+  return createDirectiveElement(AsyncDirective, value);
 }
 
 export const AsyncDirective: Directive<AsyncValue<any>> = {
@@ -69,12 +64,32 @@ class AsyncBinding<T> implements ResumableBinding<AsyncValue<T>> {
   }
 
   bind(value: AsyncValue<T>): void {
-    this._value.options.controller?.abort();
+    this._value.controller?.abort();
     this._value = value;
   }
 
   async resume(context: UpdateContext): Promise<void> {
-    const value = await this._value.promise;
+    const state = await getPromiseState(this._value.promise);
+    let value;
+
+    if (state === 'pending') {
+      this._value.promise.finally(() => {
+        context.scheduleUpdate(this);
+      });
+      if (this._value.fallback === undefined) {
+        return;
+      }
+      value = this._value.fallback();
+    } else {
+      try {
+        value = await this._value.promise;
+      } catch (error) {
+        if (this._value.controller?.signal.aborted) {
+          return;
+        }
+        throw error;
+      }
+    }
 
     if (this._slot !== null) {
       this._slot.reconcile(value, context);
@@ -89,7 +104,7 @@ class AsyncBinding<T> implements ResumableBinding<AsyncValue<T>> {
   }
 
   disconnect(_context: UpdateContext): void {
-    this._value.options.controller?.abort();
+    this._value.controller?.abort();
   }
 
   commit(): void {
@@ -99,4 +114,12 @@ class AsyncBinding<T> implements ResumableBinding<AsyncValue<T>> {
   rollback(): void {
     this._slot?.rollback();
   }
+}
+
+function getPromiseState(promise: Promise<unknown>): Promise<PromiseState> {
+  const tag = Symbol();
+  return Promise.race([promise, tag]).then(
+    (value) => (value === tag ? 'pending' : 'fulfilled'),
+    () => 'rejected',
+  );
 }
