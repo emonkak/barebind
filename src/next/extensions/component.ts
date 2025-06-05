@@ -2,12 +2,12 @@ import {
   type Bindable,
   type Component,
   type ComponentFunction,
+  type Coroutine,
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
   type RenderContext,
-  type ResumableBinding,
   type Slot,
   type UpdateContext,
   createDirectiveElement,
@@ -52,7 +52,7 @@ export class ComponentDirective<TProps, TResult>
   }
 }
 
-class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
+class ComponentBinding<TProps, TResult> implements Coroutine {
   private readonly _component: Component<TProps, TResult>;
 
   private _props: TProps;
@@ -109,7 +109,7 @@ class ComponentBinding<TProps, TResult> implements ResumableBinding<TProps> {
   }
 
   connect(context: UpdateContext): void {
-    context.enqueueBinding(this);
+    context.enqueueCoroutine(this);
   }
 
   disconnect(context: UpdateContext): void {

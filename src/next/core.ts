@@ -27,7 +27,7 @@ export interface Binding<T> extends ReversibleEffect {
   disconnect(context: UpdateContext): void;
 }
 
-export interface ResumableBinding<T> extends Binding<T> {
+export interface Coroutine extends Effect {
   resume(context: UpdateContext): void;
 }
 
@@ -123,7 +123,7 @@ export interface DirectiveContext {
 export interface UpdateContext extends DirectiveContext {
   clone(): UpdateContext;
   createMarkerNode(): Comment;
-  enqueueBinding(binding: ResumableBinding<unknown>): void;
+  enqueueCoroutine(coroutine: Coroutine): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
@@ -143,16 +143,13 @@ export interface UpdateContext extends DirectiveContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    binding: ResumableBinding<TProps>,
+    coroutine: Coroutine,
   ): Bindable<TResult>;
   renderTemplate<TBinds>(
     template: Template<TBinds>,
     binds: TBinds,
   ): TemplateBlock<TBinds>;
-  scheduleUpdate(
-    binding: ResumableBinding<unknown>,
-    options?: UpdateOptions,
-  ): Promise<void>;
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): Promise<void>;
   setContextualValue<T>(key: unknown, value: T): void;
 }
 

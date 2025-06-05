@@ -1,10 +1,10 @@
 import {
   type Bindable,
   BindableType,
+  type Coroutine,
   type Directive,
   type DirectiveContext,
   type DirectiveValue,
-  type ResumableBinding,
   type Slot,
   type UpdateContext,
   bindableTag,
@@ -29,7 +29,7 @@ export const SignalDirective: Directive<Signal<Bindable<any>>> = {
   },
 };
 
-class SignalBinding<T> implements ResumableBinding<Signal<Bindable<T>>> {
+class SignalBinding<T> implements Coroutine {
   private _signal: Signal<Bindable<T>>;
 
   private _version: number;

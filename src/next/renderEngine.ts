@@ -1,10 +1,10 @@
 import { dependenciesAreChanged } from './compare.js';
 import {
   type Bindable,
+  type Coroutine,
   type DirectiveElement,
   type Effect,
   type RenderContext,
-  type ResumableBinding,
   type TemplateMode,
   type UpdateContext,
   createDirectiveElement,
@@ -30,7 +30,7 @@ import {
 export class RenderEngine implements RenderContext {
   private readonly _hooks: Hook[];
 
-  private readonly _binding: ResumableBinding<unknown>;
+  private readonly _coroutine: Coroutine;
 
   private readonly _updateContext: UpdateContext;
 
@@ -40,11 +40,11 @@ export class RenderEngine implements RenderContext {
 
   constructor(
     hooks: Hook[],
-    binding: ResumableBinding<unknown>,
+    coroutine: Coroutine,
     updateContext: UpdateContext,
   ) {
-    this._binding = binding;
     this._hooks = hooks;
+    this._coroutine = coroutine;
     this._updateContext = updateContext;
   }
 
@@ -90,7 +90,7 @@ export class RenderEngine implements RenderContext {
     if (this._pendingUpdateOptions === null) {
       queueMicrotask(() => {
         this._updateContext.scheduleUpdate(
-          this._binding,
+          this._coroutine,
           this._pendingUpdateOptions!,
         );
         this._pendingUpdateOptions = null;

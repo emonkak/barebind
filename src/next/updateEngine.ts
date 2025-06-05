@@ -3,9 +3,9 @@ import {
   type BindableElement,
   BindableType,
   type Component,
+  type Coroutine,
   type Effect,
   type Primitive,
-  type ResumableBinding,
   type Slot,
   type Template,
   type TemplateBlock,
@@ -24,7 +24,7 @@ import {
 } from './templateLiteral.js';
 
 interface RenderFrame {
-  suspendedBindings: ResumableBinding<unknown>[];
+  coroutines: Coroutine[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
@@ -46,7 +46,7 @@ interface GlobalState {
     readonly string[],
     Template<readonly Bindable<unknown>[]>
   >;
-  dirtyBindings: Set<ResumableBinding<unknown>>;
+  dirtyCoroutines: Set<Coroutine>;
   identifierCount: number;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
 }
@@ -85,8 +85,8 @@ export class UpdateEngine implements UpdateContext {
     return this._renderHost.createMarkerNode();
   }
 
-  enqueueBinding(binding: ResumableBinding<unknown>): void {
-    this._renderFrame.suspendedBindings.push(binding);
+  enqueueCoroutine(coroutine: Coroutine): void {
+    this._renderFrame.coroutines.push(coroutine);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
@@ -112,18 +112,18 @@ export class UpdateEngine implements UpdateContext {
   }
 
   async flushFrame(options?: UpdateOptions): Promise<void> {
-    const { dirtyBindings } = this._globalState;
+    const { dirtyCoroutines } = this._globalState;
 
     while (true) {
-      const suspendedBindings = consumeSuspendedBindings(this._renderFrame);
+      const coroutines = consumeCoroutines(this._renderFrame);
 
-      for (let i = 0, l = suspendedBindings.length; i < l; i++) {
-        const suspendedBinding = suspendedBindings[i]!;
-        suspendedBinding.resume(this);
-        dirtyBindings.delete(suspendedBinding);
+      for (let i = 0, l = coroutines.length; i < l; i++) {
+        const coroutine = coroutines[i]!;
+        coroutine.resume(this);
+        dirtyCoroutines.delete(coroutine);
       }
 
-      if (this._renderFrame.suspendedBindings.length === 0) {
+      if (this._renderFrame.coroutines.length === 0) {
         break;
       }
 
@@ -199,7 +199,7 @@ export class UpdateEngine implements UpdateContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    binding: ResumableBinding<TProps>,
+    coroutine: Coroutine,
   ): Bindable<TResult> {
     const updateContext = new UpdateEngine(
       this._renderHost,
@@ -207,7 +207,7 @@ export class UpdateEngine implements UpdateContext {
       this._contextualScope?.parent,
       this._globalState,
     );
-    const renderContext = new RenderEngine(hooks, binding, updateContext);
+    const renderContext = new RenderEngine(hooks, coroutine, updateContext);
     const element = component.render(props, renderContext);
     renderContext.finalize();
     return element;
@@ -263,22 +263,19 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  scheduleUpdate(
-    binding: ResumableBinding<unknown>,
-    options?: UpdateOptions,
-  ): Promise<void> {
-    const { dirtyBindings } = this._globalState;
-    if (dirtyBindings.has(binding)) {
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): Promise<void> {
+    const { dirtyCoroutines } = this._globalState;
+    if (dirtyCoroutines.has(coroutine)) {
       return Promise.resolve();
     }
-    dirtyBindings.add(binding);
+    dirtyCoroutines.add(coroutine);
     return this._renderHost.requestCallback(
       async () => {
-        if (!dirtyBindings.has(binding)) {
+        if (!dirtyCoroutines.has(coroutine)) {
           return;
         }
-        this._renderFrame.suspendedBindings.push(binding);
-        this._renderFrame.mutationEffects.push(binding);
+        this._renderFrame.coroutines.push(coroutine);
+        this._renderFrame.mutationEffects.push(coroutine);
         await this.flushFrame(options);
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
@@ -300,18 +297,16 @@ function consumeEffects(
   };
 }
 
-function consumeSuspendedBindings(
-  renderFrame: RenderFrame,
-): ResumableBinding<unknown>[] {
-  const { suspendedBindings } = renderFrame;
-  renderFrame.suspendedBindings = [];
-  return suspendedBindings;
+function consumeCoroutines(renderFrame: RenderFrame): Coroutine[] {
+  const { coroutines } = renderFrame;
+  renderFrame.coroutines = [];
+  return coroutines;
 }
 
 function createGlobalState(): GlobalState {
   return {
     cachedTemplates: new WeakMap(),
-    dirtyBindings: new Set(),
+    dirtyCoroutines: new Set(),
     identifierCount: 0,
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
   };
@@ -319,7 +314,7 @@ function createGlobalState(): GlobalState {
 
 function createRenderFrame(): RenderFrame {
   return {
-    suspendedBindings: [],
+    coroutines: [],
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],
