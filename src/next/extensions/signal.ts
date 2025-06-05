@@ -20,12 +20,12 @@ export type Subscription = () => void;
 export const SignalDirective: Directive<Signal<Bindable<any>>> = {
   name: 'SignalDirective',
   resolveBinding(
-    value: Signal<Bindable<unknown>>,
+    signal: Signal<Bindable<unknown>>,
     part: Part,
     context: DirectiveContext,
   ): SignalBinding<unknown> {
-    const slot = context.resolveSlot(value, part);
-    return new SignalBinding(value, slot);
+    const slot = context.resolveSlot(signal.value, part);
+    return new SignalBinding(signal, slot);
   },
 };
 
