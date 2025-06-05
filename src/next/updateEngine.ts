@@ -81,7 +81,7 @@ export class UpdateEngine implements UpdateContext {
     );
   }
 
-  createMarkerNode(): ChildNode {
+  createMarkerNode(): Comment {
     return this._renderHost.createMarkerNode();
   }
 

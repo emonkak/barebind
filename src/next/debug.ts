@@ -144,13 +144,13 @@ function markPart(part: Part, marker: string): string {
         part.node,
         unquotedAttribute('$' + part.name, marker),
       );
-    case PartType.Node:
-      return marker;
     case PartType.Property:
       return appendInsideTag(
         part.node,
         unquotedAttribute('.' + part.name, marker),
       );
+    case PartType.Text:
+      return marker;
   }
 }
 

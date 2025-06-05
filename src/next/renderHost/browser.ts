@@ -52,7 +52,7 @@ export class BrowserRenderHost implements RenderHost {
     }
   }
 
-  createMarkerNode(): ChildNode {
+  createMarkerNode(): Comment {
     return document.createComment('');
   }
 
@@ -150,7 +150,7 @@ export class BrowserRenderHost implements RenderHost {
             return AttributePrimitive;
         }
       case PartType.ChildNode:
-      case PartType.Node:
+      case PartType.Text:
         return NodePrimitive;
       case PartType.Element:
         return SpreadPrimitive;

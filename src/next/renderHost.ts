@@ -10,7 +10,7 @@ import type { Primitive } from './primitives/primitive.js';
 
 export interface RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
-  createMarkerNode(): ChildNode;
+  createMarkerNode(): Comment;
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
