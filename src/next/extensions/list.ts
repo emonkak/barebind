@@ -1,6 +1,7 @@
 /// <reference path="../../../typings/moveBefore.d.ts" />
 
 import {
+  type Bindable,
   type Binding,
   type Directive,
   type DirectiveContext,
@@ -13,22 +14,37 @@ import {
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 
-export type ListValue<TSource, TKey, TResult> = {
+export type ListValue<TSource, TKey, TValue> = {
   sources: readonly TSource[];
   keySelector: (source: TSource, index: number) => TKey;
-  valueSelector: (source: TSource, index: number) => TResult;
+  valueSelector: (source: TSource, index: number) => Bindable<TValue>;
 };
+
+interface ReconciliationHandler<TKey, TValue> {
+  insert(
+    key: TKey,
+    value: Bindable<TValue>,
+    referenceItem: Item<TKey, TValue> | undefined,
+  ): Item<TKey, TValue>;
+  update(item: Item<TKey, TValue>, value: Bindable<TValue>): Item<TKey, TValue>;
+  move(
+    item: Item<TKey, TValue>,
+    value: Bindable<TValue>,
+    referenceItem: Item<TKey, TValue> | undefined,
+  ): Item<TKey, TValue>;
+  remove(item: Item<TKey, TValue>): void;
+}
 
 type Operation<TKey, TValue> =
   | {
       type: typeof OperationType.Insert;
       item: Item<TKey, TValue>;
-      forwardItem: Item<TKey, TValue> | undefined;
+      referenceItem: Item<TKey, TValue> | undefined;
     }
   | {
       type: typeof OperationType.Move;
       item: Item<TKey, TValue>;
-      forwardItem: Item<TKey, TValue> | undefined;
+      referenceItem: Item<TKey, TValue> | undefined;
     }
   | { type: typeof OperationType.Remove; item: Item<TKey, TValue> };
 
@@ -136,125 +152,65 @@ class ListBinding<TSource, TKey, TValue>
   connect(context: UpdateContext): void {
     const { sources, keySelector, valueSelector } = this._value;
     const oldItems = this._pendingItems;
-    const newItems = new Array(sources.length);
     const newKeys = sources.map(keySelector);
     const newValues = sources.map(valueSelector);
 
-    const insertItem = (
-      index: number,
-      forwardItem: Item<TKey, TValue> | undefined,
-    ) => {
-      const part = {
-        type: PartType.ChildNode,
-        node: context.createMarkerNode(),
-      } as const;
-      const slot = context.resolveSlot(newValues[index]!, part);
-      const item: Item<TKey, TValue> = {
-        key: newKeys[index]!,
-        sentinelNode: context.createMarkerNode(),
-        slot,
-      };
-      newItems[index] = item;
-      if (this._memoizedItems.length > 0) {
-        this._pendingOperations.push({
-          type: OperationType.Insert,
-          item,
-          forwardItem,
-        });
-      }
-    };
-    const updateItem = (item: Item<TKey, TValue>, index: number) => {
-      item.slot.reconcile(newValues[index]!, context);
-      newItems[index] = item;
-    };
-    const moveItem = (
-      item: Item<TKey, TValue>,
-      index: number,
-      forwardItem: Item<TKey, TValue> | undefined,
-    ) => {
-      item.slot.reconcile(newValues[index]!, context);
-      newItems[index] = item;
-      if (this._memoizedItems.length > 0) {
-        this._pendingOperations.push({
-          type: OperationType.Move,
-          item,
-          forwardItem,
-        });
-      }
-    };
-    const removeItem = (item: Item<TKey, TValue>) => {
-      item.slot.disconnect(context);
-      if (this._memoizedItems.length > 0) {
-        this._pendingOperations.push({
-          type: OperationType.Remove,
-          item,
-        });
-      }
-    };
-
-    let oldHead = 0;
-    let oldTail = oldItems.length - 1;
-    let newHead = 0;
-    let newTail = newItems.length - 1;
-
-    loop: while (true) {
-      switch (true) {
-        case newHead > newTail:
-          while (oldHead <= oldTail) {
-            removeItem(oldItems[oldHead]!);
-            oldHead++;
-          }
-          break loop;
-        case oldHead > oldTail:
-          while (newHead <= newTail) {
-            insertItem(newHead, newItems[newTail + 1]);
-            newHead++;
-          }
-          break loop;
-        case oldItems[oldHead]!.key === newKeys[newHead]:
-          updateItem(oldItems[oldHead]!, newHead);
-          newHead++;
-          oldHead++;
-          break;
-        case oldItems[oldTail]!.key === newKeys[newTail]:
-          updateItem(oldItems[oldTail]!, newTail);
-          newTail--;
-          oldTail--;
-          break;
-        case oldItems[oldHead]!.key === newKeys[newTail]:
-          moveItem(oldItems[oldHead]!, newTail, newItems[newTail + 1]);
-          newTail--;
-          oldHead++;
-          break;
-        case oldItems[oldTail]!.key === newKeys[newHead]:
-          moveItem(oldItems[oldTail]!, newHead, oldItems[oldHead]);
-          newHead++;
-          oldTail--;
-          break;
-        default:
-          const oldIndexMap = new Map();
-          for (let i = oldHead; i <= oldTail; i++) {
-            oldIndexMap.set(oldItems[i]!.key, i);
-          }
-          while (newHead <= newTail) {
-            const key = newKeys[newTail];
-            const oldIndex = oldIndexMap.get(key);
-            if (oldIndex !== undefined) {
-              moveItem(oldItems[oldIndex]!, newTail, newItems[newTail + 1]);
-              oldIndexMap.delete(key);
-            } else {
-              insertItem(newTail, newItems[newTail + 1]);
-            }
-            newTail--;
-          }
-          for (const oldIndex of oldIndexMap.values()) {
-            removeItem(oldItems[oldIndex]!);
-          }
-          break loop;
-      }
-    }
-
-    this._pendingItems = newItems;
+    this._pendingItems = reconcileItems(oldItems, newKeys, newValues, {
+      insert: (
+        key: TKey,
+        value: Bindable<TValue>,
+        referenceItem: Item<TKey, TValue> | undefined,
+      ) => {
+        const sentinelNode = context.createMarkerNode();
+        const part = {
+          type: PartType.ChildNode,
+          node: context.createMarkerNode(),
+        } as const;
+        const slot = context.resolveSlot(value, part);
+        slot.connect(context);
+        const item: Item<TKey, TValue> = {
+          key,
+          sentinelNode,
+          slot,
+        };
+        if (this._memoizedItems.length > 0) {
+          this._pendingOperations.push({
+            type: OperationType.Insert,
+            item,
+            referenceItem,
+          });
+        }
+        return item;
+      },
+      update: (item: Item<TKey, TValue>, value: Bindable<TValue>) => {
+        item.slot.reconcile(value, context);
+        return item;
+      },
+      move: (
+        item: Item<TKey, TValue>,
+        value: Bindable<TValue>,
+        referenceItem: Item<TKey, TValue> | undefined,
+      ) => {
+        item.slot.reconcile(value, context);
+        if (this._memoizedItems.length > 0) {
+          this._pendingOperations.push({
+            type: OperationType.Move,
+            item,
+            referenceItem,
+          });
+        }
+        return item;
+      },
+      remove: (item: Item<TKey, TValue>) => {
+        item.slot.disconnect(context);
+        if (this._memoizedItems.length > 0) {
+          this._pendingOperations.push({
+            type: OperationType.Remove,
+            item,
+          });
+        }
+      },
+    });
   }
 
   disconnect(context: UpdateContext): void {
@@ -276,13 +232,13 @@ class ListBinding<TSource, TKey, TValue>
         switch (action.type) {
           case OperationType.Insert: {
             const referenceNode =
-              action.forwardItem?.sentinelNode ?? this._part.node;
+              action.referenceItem?.sentinelNode ?? this._part.node;
             commitInsert(action.item, referenceNode);
             break;
           }
           case OperationType.Move: {
             const referenceNode =
-              action.forwardItem?.sentinelNode ?? this._part.node;
+              action.referenceItem?.sentinelNode ?? this._part.node;
             commitMove(action.item, referenceNode);
             break;
           }
@@ -360,6 +316,105 @@ function defaultKeySelector(_value: unknown, index: number): any {
 
 function defaultValueSelector(_value: unknown, index: number): any {
   return index;
+}
+
+function reconcileItems<TKey, TValue>(
+  oldItems: Item<TKey, TValue>[],
+  newKeys: TKey[],
+  newValues: Bindable<TValue>[],
+  handler: ReconciliationHandler<TKey, TValue>,
+): Item<TKey, TValue>[] {
+  const newItems = new Array(newKeys.length);
+
+  let oldHead = 0;
+  let oldTail = oldItems.length - 1;
+  let newHead = 0;
+  let newTail = newItems.length - 1;
+
+  LOOP: while (true) {
+    switch (true) {
+      case newHead > newTail:
+        while (oldHead <= oldTail) {
+          handler.remove(oldItems[oldHead]!);
+          oldHead++;
+        }
+        break LOOP;
+      case oldHead > oldTail:
+        while (newHead <= newTail) {
+          newItems[newHead] = handler.insert(
+            newKeys[newHead]!,
+            newValues[newHead]!,
+            newItems[newTail + 1],
+          );
+          newHead++;
+        }
+        break LOOP;
+      case oldItems[oldHead]!.key === newKeys[newHead]:
+        newItems[newHead] = handler.update(
+          oldItems[oldHead]!,
+          newValues[newHead]!,
+        );
+        newHead++;
+        oldHead++;
+        break;
+      case oldItems[oldTail]!.key === newKeys[newTail]:
+        newItems[newTail] = handler.update(
+          oldItems[oldTail]!,
+          newValues[newTail]!,
+        );
+        newTail--;
+        oldTail--;
+        break;
+      case oldItems[oldHead]!.key === newKeys[newTail]:
+        newItems[newTail] = handler.move(
+          oldItems[oldHead]!,
+          newValues[newTail]!,
+          newItems[newTail + 1]!,
+        );
+        newTail--;
+        oldHead++;
+        break;
+      case oldItems[oldTail]!.key === newKeys[newHead]:
+        newItems[newHead] = handler.move(
+          oldItems[oldTail]!,
+          newValues[newHead]!,
+          oldItems[oldHead]!,
+        );
+        newHead++;
+        oldTail--;
+        break;
+      default:
+        const oldIndexMap = new Map();
+        for (let i = oldHead; i <= oldTail; i++) {
+          oldIndexMap.set(oldItems[i]!.key, i);
+        }
+        while (newHead <= newTail) {
+          const key = newKeys[newTail];
+          const oldIndex = oldIndexMap.get(key);
+          if (oldIndex !== undefined) {
+            newItems[newTail] = handler.move(
+              oldItems[oldIndex]!,
+              newValues[newTail]!,
+              newItems[newTail + 1],
+            );
+            oldIndexMap.delete(key);
+          } else {
+            newItems[newTail] = handler.insert(
+              newKeys[newTail]!,
+              newValues[newTail]!,
+              newItems[newTail + 1],
+            );
+          }
+          newTail--;
+        }
+        for (const oldIndex of oldIndexMap.values()) {
+          handler.remove(oldItems[oldIndex]!);
+        }
+        break LOOP;
+    }
+  }
+
+  return newItems;
 }
 
 function selectChildNodes(
