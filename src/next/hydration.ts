@@ -6,7 +6,7 @@ export class HydrationTree {
   private readonly _treeWalker: TreeWalker;
 
   constructor(root: Node) {
-    this._treeWalker = document.createTreeWalker(
+    this._treeWalker = root.ownerDocument!.createTreeWalker(
       root,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );

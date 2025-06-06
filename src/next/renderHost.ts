@@ -10,7 +10,6 @@ import type { Part } from './part.js';
 
 export interface RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
-  createMarkerNode(): Comment;
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],

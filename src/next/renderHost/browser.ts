@@ -52,10 +52,6 @@ export class BrowserRenderHost implements RenderHost {
     }
   }
 
-  createMarkerNode(): Comment {
-    return document.createComment('');
-  }
-
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
@@ -90,6 +86,7 @@ export class BrowserRenderHost implements RenderHost {
       binds,
       this._templatePlaceholder,
       mode,
+      document,
     );
   }
 
@@ -110,7 +107,7 @@ export class BrowserRenderHost implements RenderHost {
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void> {
-    if (typeof globalThis.scheduler?.postTask === 'function') {
+    if (typeof scheduler?.postTask === 'function') {
       return scheduler.postTask(callback, options);
     } else {
       return new Promise((resolve) => {
@@ -181,7 +178,7 @@ export class BrowserRenderHost implements RenderHost {
   }
 
   yieldToMain(): Promise<void> {
-    if (typeof globalThis.scheduler?.yield === 'function') {
+    if (typeof scheduler?.yield === 'function') {
       return scheduler.yield();
     } else {
       return new Promise((resolve) => setTimeout(resolve));

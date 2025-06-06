@@ -96,9 +96,14 @@ export interface Primitive<T> extends Directive<T> {
 }
 
 export interface Template<TBinds> extends Directive<TBinds> {
-  render(binds: TBinds, context: DirectiveContext): TemplateBlock<TBinds>;
+  render(
+    binds: TBinds,
+    part: ChildNodePart,
+    context: DirectiveContext,
+  ): TemplateBlock<TBinds>;
   hydrate(
     binds: TBinds,
+    part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: DirectiveContext,
   ): TemplateBlock<TBinds>;
@@ -124,13 +129,23 @@ export type ComponentFunction<TProps, TResult> = (
 ) => Bindable<TResult>;
 
 export interface DirectiveContext {
+  renderComponent<TProps, TResult>(
+    component: Component<TProps, TResult>,
+    props: TProps,
+    hooks: Hook[],
+    coroutine: Coroutine,
+  ): Bindable<TResult>;
+  renderTemplate<TBinds>(
+    template: Template<TBinds>,
+    binds: TBinds,
+    part: ChildNodePart,
+  ): TemplateBlock<TBinds>;
   resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T>;
   resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T>;
 }
 
 export interface UpdateContext extends DirectiveContext {
   clone(): UpdateContext;
-  createMarkerNode(): Comment;
   enqueueCoroutine(coroutine: Coroutine): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
@@ -149,19 +164,10 @@ export interface UpdateContext extends DirectiveContext {
   hydrateTemplate<TBinds>(
     template: Template<TBinds>,
     binds: TBinds,
+    part: ChildNodePart,
     hydrationTree: HydrationTree,
   ): TemplateBlock<TBinds>;
   nextIdentifier(): string;
-  renderComponent<TProps, TResult>(
-    component: Component<TProps, TResult>,
-    props: TProps,
-    hooks: Hook[],
-    coroutine: Coroutine,
-  ): Bindable<TResult>;
-  renderTemplate<TBinds>(
-    template: Template<TBinds>,
-    binds: TBinds,
-  ): TemplateBlock<TBinds>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): Promise<void>;
   setContextualValue<T>(key: unknown, value: T): void;
 }

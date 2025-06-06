@@ -15,32 +15,34 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
   name: 'ChildNodeTemplate',
   render(
     binds: readonly [Bindable<unknown>],
+    part: ChildNodePart,
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
-    const part = {
+    const childPart = {
       type: PartType.ChildNode,
-      node: document.createComment(''),
+      node: part.node.ownerDocument.createComment(''),
     } as const;
-    const slot = context.resolveSlot(binds[0], part);
+    const slot = context.resolveSlot(binds[0], childPart);
     DEBUG: {
-      part.node.data = slot.directive.name;
+      childPart.node.data = slot.directive.name;
     }
     return new SingleTemplateBlock(slot);
   },
   hydrate(
     binds: readonly [Bindable<unknown>],
+    part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
-    const part = {
+    const childPart = {
       type: PartType.ChildNode,
-      node: document.createComment(''),
+      node: part.node.ownerDocument.createComment(''),
     } as const;
-    const slot = context.resolveSlot(binds[0], part);
+    const slot = context.resolveSlot(binds[0], childPart);
     DEBUG: {
-      part.node.data = slot.directive.name;
+      childPart.node.data = slot.directive.name;
     }
-    hydrationTree.popComment().replaceWith(part.node);
+    hydrationTree.popComment().replaceWith(childPart.node);
     return new SingleTemplateBlock(slot);
   },
   resolveBinding(
@@ -62,27 +64,29 @@ export const TextTemplate: Template<readonly [Bindable<any>]> = {
   name: 'TextTemplate',
   render(
     binds: readonly [Bindable<unknown>],
+    part: ChildNodePart,
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
-    const part = {
+    const childPart = {
       type: PartType.Text,
-      node: document.createTextNode(''),
+      node: part.node.ownerDocument.createTextNode(''),
     } as const;
     const value = binds[0];
-    const slot = context.resolveSlot(value, part);
+    const slot = context.resolveSlot(value, childPart);
     return new SingleTemplateBlock(slot);
   },
   hydrate(
     binds: readonly [Bindable<unknown>],
+    _part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: DirectiveContext,
   ): SingleTemplateBlock<unknown> {
-    const part = {
+    const childPart = {
       type: PartType.Text,
       node: hydrationTree.peekText(),
     } as const;
     const value = binds[0];
-    const slot = context.resolveSlot(value, part);
+    const slot = context.resolveSlot(value, childPart);
     hydrationTree.popNode();
     return new SingleTemplateBlock(slot);
   },

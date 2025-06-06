@@ -13,12 +13,14 @@ export const EmptyTemplate: Template<readonly []> = {
   name: 'EmptyTemplate',
   render(
     _binds: readonly [],
+    _part: ChildNodePart,
     _context: DirectiveContext,
   ): typeof EmptyTemplateBlock {
     return EmptyTemplateBlock;
   },
   hydrate(
     _binds: readonly [],
+    _part: ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: DirectiveContext,
   ): typeof EmptyTemplateBlock {

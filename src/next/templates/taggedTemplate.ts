@@ -82,9 +82,11 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     binds: TBinds,
     placeholder: string,
     mode: TemplateMode,
+    document: Document,
   ): TaggedTemplate<TBinds> {
-    const marker = createMarker(placeholder);
     const template = document.createElement('template');
+    const marker = createMarker(placeholder);
+
     if (mode === 'html') {
       template.innerHTML = strings.join(marker).trim();
     } else {
@@ -94,10 +96,12 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
         ...template.content.firstChild!.childNodes,
       );
     }
+
     const holes =
       binds.length > 0
         ? parseChildren(strings, binds, marker, template.content)
         : [];
+
     return new TaggedTemplate(template, holes);
   }
 
@@ -124,9 +128,11 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
 
   render(
     binds: TBinds,
+    part: ChildNodePart,
     context: DirectiveContext,
   ): TaggedTemplateBlock<TBinds> {
     const holes = this._holes;
+    const document = part.node.ownerDocument;
 
     DEBUG: {
       assertNumberOfBinds(holes.length, binds.length);
@@ -224,10 +230,12 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
 
   hydrate(
     binds: TBinds,
+    part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TaggedTemplateBlock<TBinds> {
     const holes = this._holes;
+    const document = part.node.ownerDocument;
 
     DEBUG: {
       assertNumberOfBinds(holes.length, binds.length);
@@ -586,16 +594,15 @@ function parseChildren(
   marker: string,
   rootNode: Node,
 ): Hole[] {
-  const walker = document.createTreeWalker(
+  const treeWalker = rootNode.ownerDocument!.createTreeWalker(
     rootNode,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
   );
   const holes: Hole[] = [];
-
   let currentNode: ChildNode | null;
   let index = 0;
 
-  while ((currentNode = walker.nextNode() as ChildNode | null) !== null) {
+  while ((currentNode = treeWalker.nextNode() as ChildNode | null) !== null) {
     switch (currentNode.nodeType) {
       case Node.ELEMENT_NODE: {
         DEBUG: {
@@ -666,7 +673,7 @@ function parseChildren(
             // Reuse the current node.
             (currentNode as Text).data = tailComponent;
           } else {
-            walker.currentNode = currentNode.previousSibling!;
+            treeWalker.currentNode = currentNode.previousSibling!;
             (currentNode as Text).remove();
             index--;
           }

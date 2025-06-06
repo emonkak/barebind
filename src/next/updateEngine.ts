@@ -16,7 +16,7 @@ import {
 import type { UpdateOptions } from './hook.js';
 import type { Hook } from './hook.js';
 import type { HydrationTree } from './hydration.js';
-import type { Part } from './part.js';
+import type { ChildNodePart, Part } from './part.js';
 import { RenderEngine } from './renderEngine.js';
 import { CommitPhase, type RenderHost } from './renderHost.js';
 import {
@@ -80,10 +80,6 @@ export class UpdateEngine implements UpdateContext {
       this._contextualScope,
       this._globalState,
     );
-  }
-
-  createMarkerNode(): Comment {
-    return this._renderHost.createMarkerNode();
   }
 
   enqueueCoroutine(coroutine: Coroutine): void {
@@ -189,9 +185,10 @@ export class UpdateEngine implements UpdateContext {
   hydrateTemplate<TBinds>(
     template: Template<TBinds>,
     binds: TBinds,
+    part: ChildNodePart,
     hydrationTree: HydrationTree,
   ): TemplateBlock<TBinds> {
-    return template.hydrate(binds, hydrationTree, this);
+    return template.hydrate(binds, part, hydrationTree, this);
   }
 
   nextIdentifier(): string {
@@ -225,8 +222,9 @@ export class UpdateEngine implements UpdateContext {
   renderTemplate<TBinds>(
     template: Template<TBinds>,
     binds: TBinds,
+    part: ChildNodePart,
   ): TemplateBlock<TBinds> {
-    return template.render(binds, this);
+    return template.render(binds, part, this);
   }
 
   resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T> {

@@ -153,6 +153,7 @@ class ListBinding<TSource, TKey, TValue>
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
     const { sources, keySelector, valueSelector } = this._value;
     const newItems = new Array(sources.length);
+    const document = this._part.node.ownerDocument;
 
     for (let i = 0, l = newItems.length; i < l; i++) {
       const key = keySelector(sources[i]!, i);
@@ -160,7 +161,7 @@ class ListBinding<TSource, TKey, TValue>
       const sentinelNode = hydrationTree.popComment();
       const part = {
         type: PartType.ChildNode,
-        node: context.createMarkerNode(),
+        node: document.createComment(''),
       } as const;
       const slot = context.resolveSlot(value, part);
       slot.hydrate(hydrationTree, context);
@@ -180,6 +181,7 @@ class ListBinding<TSource, TKey, TValue>
     const oldItems = this._pendingItems;
     const newKeys = sources.map(keySelector);
     const newValues = sources.map(valueSelector);
+    const document = this._part.node.ownerDocument;
 
     this._pendingItems = reconcileItems(oldItems, newKeys, newValues, {
       insert: (
@@ -187,10 +189,10 @@ class ListBinding<TSource, TKey, TValue>
         value: Bindable<TValue>,
         referenceItem: Item<TKey, TValue> | undefined,
       ) => {
-        const sentinelNode = context.createMarkerNode();
+        const sentinelNode = document.createComment('');
         const part = {
           type: PartType.ChildNode,
-          node: context.createMarkerNode(),
+          node: document.createComment(''),
         } as const;
         const slot = context.resolveSlot(value, part);
         slot.connect(context);
