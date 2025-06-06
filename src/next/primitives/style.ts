@@ -28,7 +28,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
     }
   },
   resolveBinding(
-    value: StyleValue,
+    props: StyleValue,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
@@ -38,7 +38,7 @@ export const StylePrimitive: Primitive<StyleValue> = {
           inspectPart(part, markUsedValue(this)),
       );
     }
-    return new StyleBinding(value, part);
+    return new StyleBinding(props, part);
   },
 };
 
