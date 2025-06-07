@@ -200,6 +200,8 @@ export interface RenderContext extends HookContext {
   ): DirectiveElement<readonly Bindable<unknown>[]>;
 }
 
+export class Literal extends String {}
+
 export function createDirectiveElement<T>(
   directive: Directive<T>,
   value: T,
