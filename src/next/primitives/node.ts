@@ -19,7 +19,7 @@ export const NodePrimitive: Primitive<any> = {
     if (part.type !== PartType.ChildNode && part.type !== PartType.Text) {
       throw new Error(
         'NodePrimitive must be used in a child node or a text part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(value)),
       );
     }
     return new NodeBinding(value, part);

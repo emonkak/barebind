@@ -15,7 +15,7 @@ import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 
-export type ListValue<TSource, TKey, TValue> = {
+export type List<TSource, TKey, TValue> = {
   sources: readonly TSource[];
   keySelector: (source: TSource, index: number) => TKey;
   valueSelector: (source: TSource, index: number) => Bindable<TValue>;
@@ -69,7 +69,7 @@ export function list<TSource, TKey, TValue>(
     source: TSource,
     key: number,
   ) => TValue = defaultValueSelector,
-): DirectiveElement<ListValue<TSource, TKey, TValue>> {
+): DirectiveElement<List<TSource, TKey, TValue>> {
   return createDirectiveElement(ListDirective, {
     sources,
     keySelector: defaultKeySelector,
@@ -84,7 +84,7 @@ export function sortableList<TSource, TKey, TValue>(
     source: TSource,
     key: number,
   ) => TValue = defaultValueSelector,
-): DirectiveElement<ListValue<TSource, TKey, TValue>> {
+): DirectiveElement<List<TSource, TKey, TValue>> {
   return createDirectiveElement(ListDirective, {
     sources,
     keySelector,
@@ -92,27 +92,27 @@ export function sortableList<TSource, TKey, TValue>(
   });
 }
 
-export const ListDirective: Directive<ListValue<any, any, any>> = {
+export const ListDirective: Directive<List<any, any, any>> = {
   name: 'ListDirective',
   resolveBinding(
-    value: ListValue<unknown, unknown, unknown>,
+    list: List<unknown, unknown, unknown>,
     part: Part,
     _context: DirectiveContext,
   ): ListBinding<unknown, unknown, unknown> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'List directive must be used in a child node, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(list)),
       );
     }
-    return new ListBinding(value, part);
+    return new ListBinding(list, part);
   },
 };
 
 class ListBinding<TSource, TKey, TValue>
-  implements Binding<ListValue<TSource, TKey, TValue>>, Effect
+  implements Binding<List<TSource, TKey, TValue>>, Effect
 {
-  private _value: ListValue<TSource, TKey, TValue>;
+  private _list: List<TSource, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -122,36 +122,36 @@ class ListBinding<TSource, TKey, TValue>
 
   private _pendingOperations: Operation<TKey, TValue>[] = [];
 
-  constructor(value: ListValue<TSource, TKey, TValue>, part: ChildNodePart) {
-    this._value = value;
+  constructor(list: List<TSource, TKey, TValue>, part: ChildNodePart) {
+    this._list = list;
     this._part = part;
   }
 
-  get directive(): Directive<ListValue<TSource, TKey, TValue>> {
-    return ListDirective as Directive<ListValue<TSource, TKey, TValue>>;
+  get directive(): Directive<List<TSource, TKey, TValue>> {
+    return ListDirective as Directive<List<TSource, TKey, TValue>>;
   }
 
-  get value(): ListValue<TSource, TKey, TValue> {
-    return this._value;
+  get value(): List<TSource, TKey, TValue> {
+    return this._list;
   }
 
   get part(): ChildNodePart {
     return this._part;
   }
 
-  shouldBind(value: ListValue<TSource, TKey, TValue>): boolean {
+  shouldBind(list: List<TSource, TKey, TValue>): boolean {
     return (
-      this._memoizedItems.length !== this._value.sources.length ||
-      value !== this._value
+      this._memoizedItems.length !== this._list.sources.length ||
+      list !== this._list
     );
   }
 
-  bind(value: ListValue<TSource, TKey, TValue>): void {
-    this._value = value;
+  bind(list: List<TSource, TKey, TValue>): void {
+    this._list = list;
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    const { sources, keySelector, valueSelector } = this._value;
+    const { sources, keySelector, valueSelector } = this._list;
     const newItems = new Array(sources.length);
     const document = this._part.node.ownerDocument;
 
@@ -177,18 +177,14 @@ class ListBinding<TSource, TKey, TValue>
   }
 
   connect(context: UpdateContext): void {
-    const { sources, keySelector, valueSelector } = this._value;
+    const { sources, keySelector, valueSelector } = this._list;
     const oldItems = this._pendingItems;
     const newKeys = sources.map(keySelector);
     const newValues = sources.map(valueSelector);
     const document = this._part.node.ownerDocument;
 
     this._pendingItems = reconcileItems(oldItems, newKeys, newValues, {
-      insert: (
-        key: TKey,
-        value: Bindable<TValue>,
-        referenceItem: Item<TKey, TValue> | undefined,
-      ) => {
+      insert: (key, value, referenceItem) => {
         const sentinelNode = document.createComment('');
         const part = {
           type: PartType.ChildNode,
@@ -210,15 +206,11 @@ class ListBinding<TSource, TKey, TValue>
         }
         return item;
       },
-      update: (item: Item<TKey, TValue>, value: Bindable<TValue>) => {
+      update: (item, value) => {
         item.slot.reconcile(value, context);
         return item;
       },
-      move: (
-        item: Item<TKey, TValue>,
-        value: Bindable<TValue>,
-        referenceItem: Item<TKey, TValue> | undefined,
-      ) => {
+      move: (item, value, referenceItem) => {
         item.slot.reconcile(value, context);
         if (this._memoizedItems.length > 0) {
           this._pendingOperations.push({
@@ -229,7 +221,7 @@ class ListBinding<TSource, TKey, TValue>
         }
         return item;
       },
-      remove: (item: Item<TKey, TValue>) => {
+      remove: (item) => {
         item.slot.disconnect(context);
         if (this._memoizedItems.length > 0) {
           this._pendingOperations.push({

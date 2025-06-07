@@ -14,7 +14,7 @@ export const LivePrimitive: Primitive<any> = {
     if (part.type !== PartType.Live) {
       throw new Error(
         'LivePrimitive must be used in a live part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(value)),
       );
     }
     return new LiveBinding(value, part);

@@ -5,11 +5,11 @@ import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ClassListValue = (string | null | undefined)[];
+export type ClassList = (string | null | undefined)[];
 
-export const ClassListPrimitive: Primitive<ClassListValue> = {
+export const ClassListPrimitive: Primitive<ClassList> = {
   name: 'ClassListPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ClassListValue {
+  ensureValue(value: unknown, part: Part): asserts value is ClassList {
     if (!Array.isArray(value)) {
       throw new Error(
         `The value of ClassListPrimitive must be an Array, but got ${inspectValue(value)}.\n` +
@@ -18,28 +18,28 @@ export const ClassListPrimitive: Primitive<ClassListValue> = {
     }
   },
   resolveBinding(
-    value: ClassListValue,
+    classes: ClassList,
     part: Part,
     _context: DirectiveContext,
   ): ClassListBinding {
     if (part.type !== PartType.Attribute || part.name !== ':classList') {
       throw new Error(
         'ClassListPrimitive must be used in a ":classList" attribute part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(classes)),
       );
     }
-    return new ClassListBinding(value, part);
+    return new ClassListBinding(classes, part);
   },
 };
 
-class ClassListBinding extends PrimitiveBinding<ClassListValue, AttributePart> {
-  private _memoizedValue: ClassListValue = [];
+class ClassListBinding extends PrimitiveBinding<ClassList, AttributePart> {
+  private _memoizedValue: ClassList = [];
 
-  get directive(): Primitive<ClassListValue> {
+  get directive(): Primitive<ClassList> {
     return ClassListPrimitive;
   }
 
-  shouldBind(classes: ClassListValue): boolean {
+  shouldBind(classes: ClassList): boolean {
     return !sequentialEqual(classes, this._memoizedValue);
   }
 
@@ -48,7 +48,37 @@ class ClassListBinding extends PrimitiveBinding<ClassListValue, AttributePart> {
     const oldClasses = this._memoizedValue;
     const { classList } = this._part.node;
 
-    reconcileList(classList, newClasses, oldClasses);
+    const newTail = newClasses.length - 1;
+    const oldTail = oldClasses.length - 1;
+    let i = 0;
+
+    while (i <= newTail && i <= oldTail) {
+      const newClass = newClasses[i];
+      const oldClass = oldClasses[i];
+      if (oldClass != null && oldClass !== newClass) {
+        classList.remove(oldClass);
+      }
+      if (newClass != null) {
+        classList.add(newClass);
+      }
+      i++;
+    }
+
+    while (i <= oldTail) {
+      const className = oldClasses[i];
+      if (className != null) {
+        classList.remove(className);
+      }
+      i++;
+    }
+
+    while (i <= newTail) {
+      const className = newClasses[i];
+      if (className != null) {
+        classList.add(className);
+      }
+      i++;
+    }
 
     this._memoizedValue = this._pendingValue;
   }
@@ -57,46 +87,13 @@ class ClassListBinding extends PrimitiveBinding<ClassListValue, AttributePart> {
     const classes = this._memoizedValue;
     const { classList } = this._part.node;
 
-    reconcileList(classList, [], classes);
+    for (let i = 0, l = classes.length; i < l; i++) {
+      const className = classes[i];
+      if (className != null) {
+        classList.remove(className);
+      }
+    }
 
     this._memoizedValue = [];
-  }
-}
-
-function reconcileList(
-  classList: DOMTokenList,
-  newClasses: ClassListValue,
-  oldClasses: ClassListValue,
-): void {
-  let i = 0;
-  const newTail = newClasses.length - 1;
-  const oldTail = oldClasses.length - 1;
-
-  while (i <= newTail && i <= oldTail) {
-    const newClass = newClasses[i];
-    const oldClass = oldClasses[i];
-    if (oldClass != null && newClass !== oldClass) {
-      classList.remove(oldClass);
-    }
-    if (newClass != null) {
-      classList.add(newClass);
-    }
-    i++;
-  }
-
-  while (i <= oldTail) {
-    const className = oldClasses[i];
-    if (className != null) {
-      classList.remove(className);
-    }
-    i++;
-  }
-
-  while (i <= newTail) {
-    const className = newClasses[i];
-    if (className != null) {
-      classList.add(className);
-    }
-    i++;
   }
 }

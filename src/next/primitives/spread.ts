@@ -9,11 +9,11 @@ import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 
-export type SpreadValue = { [key: string]: unknown };
+export type SpreadProps = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadValue> = {
+export const SpreadPrimitive: Primitive<SpreadProps> = {
   name: 'SpreadPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is SpreadValue {
+  ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new Error(
         `The value of SpreadPrimitive must be Object, but got ${inspectValue(value)}.\n` +
@@ -22,22 +22,22 @@ export const SpreadPrimitive: Primitive<SpreadValue> = {
     }
   },
   resolveBinding(
-    value: SpreadValue,
+    props: SpreadProps,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
         'SpreadPrimitive must be used in an element part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(props)),
       );
     }
-    return new SpreadBinding(value, part);
+    return new SpreadBinding(props, part);
   },
 };
 
-class SpreadBinding implements Binding<SpreadValue> {
-  private _props: SpreadValue;
+class SpreadBinding implements Binding<SpreadProps> {
+  private _props: SpreadProps;
 
   private readonly _part: ElementPart;
 
@@ -45,16 +45,16 @@ class SpreadBinding implements Binding<SpreadValue> {
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
-  constructor(props: SpreadValue, part: ElementPart) {
+  constructor(props: SpreadProps, part: ElementPart) {
     this._props = props;
     this._part = part;
   }
 
-  get directive(): Primitive<SpreadValue> {
+  get directive(): Primitive<SpreadProps> {
     return SpreadPrimitive;
   }
 
-  get value(): SpreadValue {
+  get value(): SpreadProps {
     return this._props;
   }
 
@@ -62,11 +62,11 @@ class SpreadBinding implements Binding<SpreadValue> {
     return this._part;
   }
 
-  shouldBind(props: SpreadValue): boolean {
+  shouldBind(props: SpreadProps): boolean {
     return this._memoizedSlots === null || props !== this._props;
   }
 
-  bind(props: SpreadValue): void {
+  bind(props: SpreadProps): void {
     this._props = props;
   }
 
@@ -74,7 +74,7 @@ class SpreadBinding implements Binding<SpreadValue> {
 
   connect(context: UpdateContext): void {
     for (const [key, slot] of this._pendingSlots.entries()) {
-      if (!Object.hasOwn(this._props, key) || this._props[key] == null) {
+      if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
         slot.disconnect(context);
         this._pendingSlots.delete(key);
       }
@@ -82,7 +82,7 @@ class SpreadBinding implements Binding<SpreadValue> {
 
     for (const key in this._props) {
       const value = this._props[key];
-      if (value == null) {
+      if (value === undefined) {
         continue;
       }
       let slot = this._pendingSlots.get(key);
@@ -125,13 +125,12 @@ class SpreadBinding implements Binding<SpreadValue> {
       for (const binding of this._memoizedSlots.values()) {
         binding.rollback();
       }
+      this._memoizedSlots = null;
     }
-
-    this._memoizedSlots = null;
   }
 }
 
-function isSpreadProps(value: unknown): value is SpreadValue {
+function isSpreadProps(value: unknown): value is SpreadProps {
   return value !== null && typeof value === 'object';
 }
 

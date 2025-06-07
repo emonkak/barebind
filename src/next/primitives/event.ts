@@ -3,15 +3,15 @@ import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type EventPart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type EventValue =
+export type EventListenerValue =
   | EventListener
   | (EventListenerObject & AddEventListenerOptions)
   | null
   | undefined;
 
-export const EventPrimitive: Primitive<EventValue> = {
+export const EventPrimitive: Primitive<EventListenerValue> = {
   name: 'EventPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is EventValue {
+  ensureValue(value: unknown, part: Part): asserts value is EventListenerValue {
     if (
       !(
         value == null ||
@@ -26,29 +26,29 @@ export const EventPrimitive: Primitive<EventValue> = {
     }
   },
   resolveBinding(
-    value: EventValue,
+    listener: EventListenerValue,
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
     if (part.type !== PartType.Event) {
       throw new Error(
         'EventPrimitive must be used in an event part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(listener)),
       );
     }
-    return new EventBinding(value, part);
+    return new EventBinding(listener, part);
   },
 };
 
-class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
-  private _memoizedValue: EventValue = null;
+class EventBinding extends PrimitiveBinding<EventListenerValue, EventPart> {
+  private _memoizedValue: EventListenerValue = null;
 
-  get directive(): Primitive<EventValue> {
+  get directive(): Primitive<EventListenerValue> {
     return EventPrimitive;
   }
 
-  shouldBind(value: EventValue): boolean {
-    return value !== this._memoizedValue;
+  shouldBind(listener: EventListenerValue): boolean {
+    return listener !== this._memoizedValue;
   }
 
   commit(): void {
@@ -94,25 +94,25 @@ class EventBinding extends PrimitiveBinding<EventValue, EventPart> {
 function attachEventListener(
   part: EventPart,
   listener: EventListenerObject,
-  value: NonNullable<EventValue>,
+  options: NonNullable<EventListenerValue>,
 ): void {
   const { node, name } = part;
-  if (typeof value === 'function') {
+  if (typeof options === 'function') {
     node.addEventListener(name, listener);
   } else {
-    node.addEventListener(name, listener, value);
+    node.addEventListener(name, listener, options);
   }
 }
 
 function detachEventListener(
   part: EventPart,
   listener: EventListenerObject,
-  value: NonNullable<EventValue>,
+  options: NonNullable<EventListenerValue>,
 ): void {
   const { node, name } = part;
-  if (typeof value === 'function') {
+  if (typeof options === 'function') {
     node.removeEventListener(name, listener);
   } else {
-    node.removeEventListener(name, listener, value);
+    node.removeEventListener(name, listener, options);
   }
 }

@@ -14,7 +14,7 @@ export const AttributePrimitive: Primitive<any> = {
     if (part.type !== PartType.Attribute) {
       throw new Error(
         'AttributePrimitive must be used in an attribute part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(value)),
       );
     }
     return new AttributeBinding(value, part);
@@ -58,8 +58,7 @@ class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
     if (this._memoizedValue !== null) {
       const { node, name } = this._part;
       node.removeAttribute(name);
+      this._memoizedValue = null;
     }
-
-    this._memoizedValue = null;
   }
 }

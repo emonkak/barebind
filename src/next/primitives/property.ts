@@ -19,7 +19,7 @@ export const PropertyPrimitive: Primitive<any> = {
     if (part.type !== PartType.Property) {
       throw new Error(
         'PropertyPrimitive must be used in a property part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(value)),
       );
     }
     return new PropertyBinding(value, part);

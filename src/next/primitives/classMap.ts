@@ -5,11 +5,11 @@ import { PartType } from '../part.js';
 import type { AttributePart, Part } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ClassMapValue = { [key: string]: boolean };
+export type ClassMap = { [key: string]: boolean };
 
-export const ClassMapPrimitive: Primitive<ClassMapValue> = {
+export const ClassMapPrimitive: Primitive<ClassMap> = {
   name: 'ClassMapPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ClassMapValue {
+  ensureValue(value: unknown, part: Part): asserts value is ClassMap {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
         `The value of ClassMapPrimitive must be an Object, but got ${inspectValue(value)}.\n` +
@@ -18,63 +18,59 @@ export const ClassMapPrimitive: Primitive<ClassMapValue> = {
     }
   },
   resolveBinding(
-    value: ClassMapValue,
+    classes: ClassMap,
     part: Part,
     _context: DirectiveContext,
   ): ClassMapBinding {
     if (part.type !== PartType.Attribute || part.name !== ':classMap') {
       throw new Error(
         'ClassMapPrimitive must be used in a ":classMap" attribute part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(classes)),
       );
     }
-    return new ClassMapBinding(value, part);
+    return new ClassMapBinding(classes, part);
   },
 };
 
-class ClassMapBinding extends PrimitiveBinding<ClassMapValue, AttributePart> {
-  private _memoizedValue: ClassMapValue = {};
+class ClassMapBinding extends PrimitiveBinding<ClassMap, AttributePart> {
+  private _memoizedValue: ClassMap = {};
 
-  get directive(): Primitive<ClassMapValue> {
+  get directive(): Primitive<ClassMap> {
     return ClassMapPrimitive;
   }
 
-  shouldBind(classes: ClassMapValue): boolean {
+  shouldBind(classes: ClassMap): boolean {
     return !shallowEqual(classes, this._memoizedValue);
   }
 
   commit(): void {
-    const newClassMap = this._pendingValue;
-    const oldClassMap = this._memoizedValue;
+    const newClasses = this._pendingValue;
+    const oldClasses = this._memoizedValue;
     const { classList } = this._part.node;
 
-    reconcileMap(classList, newClassMap, oldClassMap);
+    for (const className in oldClasses) {
+      if (oldClasses[className] && !Object.hasOwn(newClasses, className)) {
+        classList.remove(className);
+      }
+    }
+
+    for (const className in newClasses) {
+      classList.toggle(className, newClasses[className]);
+    }
 
     this._memoizedValue = this._pendingValue;
   }
 
   rollback(): void {
-    const classMap = this._memoizedValue;
+    const classes = this._memoizedValue;
     const { classList } = this._part.node;
 
-    reconcileMap(classList, {}, classMap);
+    for (const className in classes) {
+      if (classes[className]) {
+        classList.remove(className);
+      }
+    }
 
     this._memoizedValue = {};
-  }
-}
-
-function reconcileMap(
-  classList: DOMTokenList,
-  newClassMap: ClassMapValue,
-  oldClassMap: ClassMapValue,
-): void {
-  for (const className in oldClassMap) {
-    if (oldClassMap[className] && !Object.hasOwn(newClassMap, className)) {
-      classList.remove(className);
-    }
-  }
-
-  for (const className in newClassMap) {
-    classList.toggle(className, newClassMap[className]);
   }
 }

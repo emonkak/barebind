@@ -350,7 +350,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'TaggedTemplate must be used in a child node, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(binds)),
       );
     }
     return new TemplateBinding(this, binds, part);

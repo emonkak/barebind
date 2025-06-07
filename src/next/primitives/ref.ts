@@ -4,7 +4,7 @@ import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type RefValue =
+export type Ref =
   | RefCallback<Element>
   | RefObject<Element | null>
   | null
@@ -12,9 +12,9 @@ export type RefValue =
 
 export type RefCallback<T> = (value: T) => VoidFunction | void;
 
-export const RefPrimitive: Primitive<RefValue> = {
+export const RefPrimitive: Primitive<Ref> = {
   name: 'RefPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is RefValue {
+  ensureValue(value: unknown, part: Part): asserts value is Ref {
     if (
       !(
         typeof value === 'function' ||
@@ -28,31 +28,27 @@ export const RefPrimitive: Primitive<RefValue> = {
       );
     }
   },
-  resolveBinding(
-    value: RefValue,
-    part: Part,
-    _context: DirectiveContext,
-  ): RefBinding {
+  resolveBinding(ref: Ref, part: Part, _context: DirectiveContext): RefBinding {
     if (part.type !== PartType.Attribute || part.name !== ':ref') {
       throw new Error(
         'RefPrimitive must be used in a ":ref" attribute part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(this)),
+          inspectPart(part, markUsedValue(ref)),
       );
     }
-    return new RefBinding(value, part);
+    return new RefBinding(ref, part);
   },
 };
 
-class RefBinding extends PrimitiveBinding<RefValue, AttributePart> {
-  private _memoizedValue: RefValue = null;
+class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
+  private _memoizedValue: Ref = null;
 
   private _memoizedCleanup: VoidFunction | void = void 0;
 
-  get directive(): Primitive<RefValue> {
+  get directive(): Primitive<Ref> {
     return RefPrimitive;
   }
 
-  shouldBind(ref: RefValue): boolean {
+  shouldBind(ref: Ref): boolean {
     return ref !== this._memoizedValue;
   }
 
