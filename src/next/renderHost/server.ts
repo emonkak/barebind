@@ -33,7 +33,7 @@ import { TaggedTemplate } from '../templates/taggedTemplate.js';
 
 export class ServerRenderHost implements RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void {
-    if (phase !== CommitPhase.Passive) {
+    if (phase !== CommitPhase.Mutation) {
       return;
     }
     for (let i = 0, l = effects.length; i < l; i++) {
