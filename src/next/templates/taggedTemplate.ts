@@ -235,6 +235,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     context: UpdateContext,
   ): TaggedTemplateBlock<TBinds> {
     const holes = this._holes;
+    const rootNode = this._element.content;
     const document = part.node.ownerDocument;
 
     DEBUG: {
@@ -242,7 +243,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     }
 
     const treeWalker = document.createTreeWalker(
-      this._element.content,
+      rootNode,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );
     const slots = new Array(holes.length);
@@ -330,7 +331,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
         hydrationTree.popComment().replaceWith(part.node);
       } else {
         const actualNode = hydrationTree.popNode();
-        if (expectedNode.parentNode === null) {
+        if (expectedNode.parentNode === rootNode) {
           childNodes.push(actualNode);
         }
       }
