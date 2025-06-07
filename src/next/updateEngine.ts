@@ -50,6 +50,7 @@ interface GlobalState {
   dirtyCoroutines: Set<Coroutine>;
   identifierCount: number;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
+  uniqueIdentifier: string;
 }
 
 export class UpdateEngine implements UpdateContext {
@@ -108,7 +109,7 @@ export class UpdateEngine implements UpdateContext {
     );
   }
 
-  async flushFrame(options?: UpdateOptions): Promise<void> {
+  async flushAsync(options?: UpdateOptions): Promise<void> {
     const { dirtyCoroutines } = this._globalState;
 
     while (true) {
@@ -153,6 +154,28 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
+  flushSync(): void {
+    const { dirtyCoroutines } = this._globalState;
+
+    do {
+      const coroutines = consumeCoroutines(this._renderFrame);
+
+      for (let i = 0, l = coroutines.length; i < l; i++) {
+        const coroutine = coroutines[i]!;
+        coroutine.resume(this);
+        dirtyCoroutines.delete(coroutine);
+      }
+    } while (this._renderFrame.coroutines.length > 0);
+
+    const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
+      this._renderFrame,
+    );
+
+    this._renderHost.commitEffects(mutationEffects, CommitPhase.Mutation);
+    this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout);
+    this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive);
+  }
+
   getContextualValue<T>(key: unknown): T | undefined {
     let contextualScope = this._contextualScope;
     while (contextualScope !== null) {
@@ -175,7 +198,12 @@ export class UpdateEngine implements UpdateContext {
     let template = this._globalState.cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._renderHost.createTemplate(strings, binds, mode);
+      template = this._renderHost.createTemplate(
+        strings,
+        binds,
+        this._globalState.uniqueIdentifier,
+        mode,
+      );
       this._globalState.cachedTemplates.set(strings, template);
     }
 
@@ -192,13 +220,9 @@ export class UpdateEngine implements UpdateContext {
   }
 
   nextIdentifier(): string {
-    return (
-      ':' +
-      this._renderHost.getTemplatePlaceholder() +
-      '-' +
-      ++this._globalState.identifierCount +
-      ':'
-    );
+    const prefix = this._globalState.uniqueIdentifier;
+    const count = ++this._globalState.identifierCount;
+    return prefix + '-' + count;
   }
 
   renderComponent<TProps, TResult>(
@@ -277,17 +301,23 @@ export class UpdateEngine implements UpdateContext {
     }
     dirtyCoroutines.add(coroutine);
     return this._renderHost.requestCallback(
-      async () => {
+      () => {
         if (!dirtyCoroutines.has(coroutine)) {
           return;
         }
         this._renderFrame.coroutines.push(coroutine);
         this._renderFrame.mutationEffects.push(coroutine);
-        await this.flushFrame(options);
+        return this.flushAsync(options);
       },
       { priority: options?.priority ?? this._renderHost.getTaskPriority() },
     );
   }
+}
+
+function consumeCoroutines(renderFrame: RenderFrame): Coroutine[] {
+  const { coroutines } = renderFrame;
+  renderFrame.coroutines = [];
+  return coroutines;
 }
 
 function consumeEffects(
@@ -304,18 +334,13 @@ function consumeEffects(
   };
 }
 
-function consumeCoroutines(renderFrame: RenderFrame): Coroutine[] {
-  const { coroutines } = renderFrame;
-  renderFrame.coroutines = [];
-  return coroutines;
-}
-
 function createGlobalState(): GlobalState {
   return {
     cachedTemplates: new WeakMap(),
     dirtyCoroutines: new Set(),
     identifierCount: 0,
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
+    uniqueIdentifier: generateUniqueIdentifier(8),
   };
 }
 
@@ -326,4 +351,10 @@ function createRenderFrame(): RenderFrame {
     layoutEffects: [],
     passiveEffects: [],
   };
+}
+
+function generateUniqueIdentifier(length: number): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
+    (byte % 36).toString(36),
+  ).join('');
 }

@@ -2,25 +2,29 @@ import type { Bindable, Effect, Slot } from './core.js';
 import type { UpdateOptions } from './hook.js';
 import { HydrationTree } from './hydration.js';
 import { PartType } from './part.js';
-import type { RenderHost } from './renderHost.js';
-import {
-  BrowserRenderHost,
-  type BrowserRenderHostOptions,
-} from './renderHost/browser.js';
+import { BrowserRenderHost } from './renderHost/browser.js';
+import { ServerRenderHost } from './renderHost/server.js';
 import { UpdateEngine } from './updateEngine.js';
 
-export interface Root<T> {
+export interface BrowserRoot<T> {
   hydrate(options: UpdateOptions): Promise<void>;
   mount(options?: UpdateOptions): Promise<void>;
   update(value: Bindable<T>, options?: UpdateOptions): Promise<void>;
   unmount(options?: UpdateOptions): Promise<void>;
 }
 
-export function createRoot<T>(
+export interface ServerRoot<T> {
+  hydrate(): void;
+  mount(): void;
+  update(value: Bindable<T>): void;
+  unmount(): void;
+}
+
+export function createBrowserRoot<T>(
   value: Bindable<T>,
   container: Element,
-  renderHost: RenderHost,
-): Root<T> {
+): BrowserRoot<T> {
+  const renderHost = new BrowserRenderHost();
   const context = new UpdateEngine(renderHost);
   const part = {
     type: PartType.ChildNode,
@@ -32,36 +36,65 @@ export function createRoot<T>(
     hydrate(options) {
       const hydrationTree = new HydrationTree(container);
       slot.hydrate(hydrationTree, context);
-      context.enqueueMutationEffect(new MountBinding(slot, container));
-      return context.flushFrame(options);
+      context.enqueueMutationEffect(new MountSlot(slot, container));
+      return context.flushAsync(options);
     },
     mount(options) {
       slot.connect(context);
-      context.enqueueMutationEffect(new MountBinding(slot, container));
-      return context.flushFrame(options);
+      context.enqueueMutationEffect(new MountSlot(slot, container));
+      return context.flushAsync(options);
     },
     update(value, options) {
       slot.reconcile(value, context);
       context.enqueueMutationEffect(slot);
-      return context.flushFrame(options);
+      return context.flushAsync(options);
     },
     unmount(options) {
       slot.disconnect(context);
-      context.enqueueMutationEffect(new UnmountBinding(slot, container));
-      return context.flushFrame(options);
+      context.enqueueMutationEffect(new UnmountSlot(slot, container));
+      return context.flushAsync(options);
     },
   };
 }
 
-export function createBrowserRoot<T>(
+export function createServerRoot<T>(
   value: Bindable<T>,
   container: Element,
-  options?: BrowserRenderHostOptions,
-): Root<T> {
-  return createRoot(value, container, new BrowserRenderHost(options));
+): ServerRoot<T> {
+  const renderHost = new ServerRenderHost();
+  const context = new UpdateEngine(renderHost);
+  const part = {
+    type: PartType.ChildNode,
+    node: container.ownerDocument.createComment(''),
+  } as const;
+  const slot = context.resolveSlot(value, part);
+
+  return {
+    hydrate() {
+      const hydrationTree = new HydrationTree(container);
+      slot.hydrate(hydrationTree, context);
+      context.enqueueMutationEffect(new MountSlot(slot, container));
+      return context.flushSync();
+    },
+    mount() {
+      slot.connect(context);
+      context.enqueueMutationEffect(new MountSlot(slot, container));
+      return context.flushSync();
+    },
+    update(value) {
+      slot.reconcile(value, context);
+      context.enqueueMutationEffect(slot);
+      return context.flushSync();
+    },
+    unmount() {
+      slot.disconnect(context);
+      context.enqueueMutationEffect(new UnmountSlot(slot, container));
+      return context.flushSync();
+    },
+  };
 }
 
-class MountBinding<T> implements Effect {
+class MountSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
   private readonly _container: Element;
@@ -77,7 +110,7 @@ class MountBinding<T> implements Effect {
   }
 }
 
-class UnmountBinding<T> implements Effect {
+class UnmountSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
   private readonly _container: Element;

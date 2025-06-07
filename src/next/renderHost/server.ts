@@ -1,5 +1,3 @@
-/// <reference path="../../../typings/scheduler.d.ts" />
-
 import type {
   Bindable,
   Effect,
@@ -19,10 +17,10 @@ import { PropertyPrimitive } from '../primitives/property.js';
 import { RefPrimitive } from '../primitives/ref.js';
 import { SpreadPrimitive } from '../primitives/spread.js';
 import { StylePrimitive } from '../primitives/style.js';
-import type {
+import {
   CommitPhase,
-  RenderHost,
-  RequestCallbackOptions,
+  type RenderHost,
+  type RequestCallbackOptions,
 } from '../renderHost.js';
 import { FlexibleSlot } from '../slots/flexible.js';
 import { StrictSlot } from '../slots/strict.js';
@@ -33,8 +31,11 @@ import {
 } from '../templates/singleTemplate.js';
 import { TaggedTemplate } from '../templates/taggedTemplate.js';
 
-export class BrowserRenderHost implements RenderHost {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+export class ServerRenderHost implements RenderHost {
+  commitEffects(effects: Effect[], phase: CommitPhase): void {
+    if (phase !== CommitPhase.Passive) {
+      return;
+    }
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit();
     }
@@ -74,40 +75,16 @@ export class BrowserRenderHost implements RenderHost {
   }
 
   getTaskPriority(): TaskPriority {
-    const currentEvent = window.event;
-    if (currentEvent !== undefined) {
-      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
-    } else {
-      return 'user-visible';
-    }
+    return 'user-blocking';
   }
 
   requestCallback(
     callback: () => Promise<void> | void,
-    options?: RequestCallbackOptions,
+    _options?: RequestCallbackOptions,
   ): Promise<void> {
-    if (typeof scheduler?.postTask === 'function') {
-      return scheduler.postTask(callback, options);
-    } else {
-      return new Promise((resolve) => {
-        switch (options?.priority) {
-          case 'user-blocking':
-            const channel = new MessageChannel();
-            channel.port1.onmessage = resolve;
-            channel.port2.postMessage(null);
-            break;
-          case 'background':
-            if (typeof requestIdleCallback === 'function') {
-              requestIdleCallback(resolve);
-            } else {
-              setTimeout(resolve);
-            }
-            break;
-          default:
-            setTimeout(resolve);
-        }
-      }).then(() => callback());
-    }
+    return new Promise((resolve) => {
+      setTimeout(resolve);
+    }).then(callback);
   }
 
   resolvePrimitive(part: Part): Primitive<unknown> {
@@ -149,41 +126,12 @@ export class BrowserRenderHost implements RenderHost {
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
-    if (typeof document.startViewTransition === 'function') {
-      return document.startViewTransition(callback).finished;
-    } else {
-      return Promise.resolve().then(callback);
-    }
+    return Promise.resolve().then(callback);
   }
 
   yieldToMain(): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(resolve);
     });
-  }
-}
-
-function isContinuousEvent(event: Event): boolean {
-  switch (event.type as keyof DocumentEventMap) {
-    case 'drag':
-    case 'dragenter':
-    case 'dragleave':
-    case 'dragover':
-    case 'mouseenter':
-    case 'mouseleave':
-    case 'mousemove':
-    case 'mouseout':
-    case 'mouseover':
-    case 'pointerenter':
-    case 'pointerleave':
-    case 'pointermove':
-    case 'pointerout':
-    case 'pointerover':
-    case 'scroll':
-    case 'touchmove':
-    case 'wheel':
-      return true;
-    default:
-      return false;
   }
 }

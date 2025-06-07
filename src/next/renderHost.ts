@@ -13,10 +13,10 @@ export interface RenderHost {
   createTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
+    placeholder: string,
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]>;
   getTaskPriority(): TaskPriority;
-  getTemplatePlaceholder(): string;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,

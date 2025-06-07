@@ -154,7 +154,8 @@ export interface UpdateContext extends DirectiveContext {
     strings: TemplateStringsArray,
     values: readonly unknown[],
   ): TemplateLiteral;
-  flushFrame(options?: UpdateOptions): Promise<void>;
+  flushAsync(options?: UpdateOptions): Promise<void>;
+  flushSync(options?: UpdateOptions): void;
   getContextualValue<T>(key: unknown): T | undefined;
   getTemplate(
     strings: readonly string[],
