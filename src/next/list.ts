@@ -1,4 +1,4 @@
-/// <reference path="../../../typings/moveBefore.d.ts" />
+/// <reference path="../../typings/moveBefore.d.ts" />
 
 import {
   type Bindable,
@@ -10,10 +10,10 @@ import {
   type Slot,
   type UpdateContext,
   createDirectiveElement,
-} from '../core.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type { HydrationTree } from '../hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../part.js';
+} from './core.js';
+import { inspectPart, inspectValue, markUsedValue } from './debug.js';
+import type { HydrationTree } from './hydration.js';
+import { type ChildNodePart, type Part, PartType } from './part.js';
 
 export type List<TSource, TKey, TValue> = {
   sources: readonly TSource[];
