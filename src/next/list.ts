@@ -63,27 +63,21 @@ interface Item<TKey, TValue> {
   key: TKey;
 }
 
-export function list<TSource, TKey, TValue>(
+export function indexedList<TSource, TValue>(
   sources: readonly TSource[],
-  valueSelector: (
-    source: TSource,
-    key: number,
-  ) => TValue = defaultValueSelector,
-): DirectiveElement<List<TSource, TKey, TValue>> {
+  valueSelector: (source: TSource, key: number) => TValue,
+): DirectiveElement<List<TSource, number, TValue>> {
   return createDirectiveElement(ListDirective, {
     sources,
-    keySelector: defaultKeySelector,
+    keySelector: indexSelector,
     valueSelector,
   });
 }
 
-export function sortableList<TSource, TKey, TValue>(
+export function keyedList<TSource, TKey, TValue>(
   sources: readonly TSource[],
   keySelector: (source: TSource, key: number) => TKey,
-  valueSelector: (
-    source: TSource,
-    key: number,
-  ) => TValue = defaultValueSelector,
+  valueSelector: (source: TSource, key: number) => TValue,
 ): DirectiveElement<List<TSource, TKey, TValue>> {
   return createDirectiveElement(ListDirective, {
     sources,
@@ -330,11 +324,7 @@ function commitRemove<TKey, TValue>(item: Item<TKey, TValue>): void {
   sentinelNode.remove();
 }
 
-function defaultKeySelector(_value: unknown, index: number): any {
-  return index;
-}
-
-function defaultValueSelector(_value: unknown, index: number): any {
+function indexSelector<T>(_value: T, index: number): number {
   return index;
 }
 
