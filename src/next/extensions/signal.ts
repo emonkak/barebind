@@ -4,10 +4,10 @@ import {
   type Coroutine,
   type Directive,
   type DirectiveContext,
-  type DirectiveValue,
+  type DirectiveObject,
   type Slot,
   type UpdateContext,
-  bindableTag,
+  bindableTypeTag,
 } from '../core.js';
 import { type HookContext, type UserHook, userHookTag } from '../hook.js';
 import type { HydrationTree } from '../hydration.js';
@@ -73,6 +73,11 @@ class SignalBinding<T> implements Coroutine {
     this._subscription ??= this._subscribeSignal(context.clone());
   }
 
+  resume(context: UpdateContext): void {
+    this._slot.reconcile(this._signal.value, context);
+    this._version = this._signal.version;
+  }
+
   connect(context: UpdateContext): void {
     const version = this._signal.version;
     if (this._version < this._signal.version) {
@@ -82,11 +87,6 @@ class SignalBinding<T> implements Coroutine {
       this._slot.connect(context);
     }
     this._subscription ??= this._subscribeSignal(context.clone());
-  }
-
-  resume(context: UpdateContext): void {
-    this._slot.reconcile(this._signal.value, context);
-    this._version = this._signal.version;
   }
 
   disconnect(context: UpdateContext): void {
@@ -111,7 +111,7 @@ class SignalBinding<T> implements Coroutine {
 }
 
 export abstract class Signal<T>
-  implements DirectiveValue<Signal<T>>, UserHook<T>
+  implements DirectiveObject<Signal<T>>, UserHook<T>
 {
   abstract get value(): T;
 
@@ -121,8 +121,8 @@ export abstract class Signal<T>
     return SignalDirective;
   }
 
-  get [bindableTag](): typeof BindableType.DirectiveValue {
-    return BindableType.DirectiveValue;
+  get [bindableTypeTag](): typeof BindableType.DirectiveObject {
+    return BindableType.DirectiveObject;
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;

@@ -3,7 +3,7 @@ import type { HydrationTree } from './hydration.js';
 import type { ChildNodePart, Part } from './part.js';
 import type { TemplateLiteral } from './templateLiteral.js';
 
-export const bindableTag: unique symbol = Symbol('Bindable');
+export const bindableTypeTag: unique symbol = Symbol('Bindable.type');
 
 export interface Directive<T> {
   readonly name: string;
@@ -49,7 +49,7 @@ export interface SlotType {
 
 export type Bindable<T> =
   | PrimitiveValue<T>
-  | DirectiveValue<T>
+  | DirectiveObject<T>
   | DirectiveElement<T>
   | SlotElement<T>
   | (T & null)
@@ -63,7 +63,7 @@ export interface BindableElement<T> {
 
 export const BindableType = {
   PrimitiveValue: 0,
-  DirectiveValue: 1,
+  DirectiveObject: 1,
   DirectiveElement: 2,
   SlotElement: 3,
 } as const;
@@ -71,22 +71,22 @@ export const BindableType = {
 export type BindableType = (typeof BindableType)[keyof typeof BindableType];
 
 export type PrimitiveValue<T> = T & {
-  readonly [bindableTag]?: typeof BindableType.PrimitiveValue;
+  readonly [bindableTypeTag]?: typeof BindableType.PrimitiveValue;
 };
 
-export type DirectiveValue<T> = T & {
-  readonly [bindableTag]: typeof BindableType.DirectiveValue;
+export type DirectiveObject<T> = T & {
+  readonly [bindableTypeTag]: typeof BindableType.DirectiveObject;
   readonly directive: Directive<T>;
 };
 
 export interface DirectiveElement<T> {
-  readonly [bindableTag]: typeof BindableType.DirectiveElement;
+  readonly [bindableTypeTag]: typeof BindableType.DirectiveElement;
   readonly directive: Directive<T>;
   readonly value: T;
 }
 
 export interface SlotElement<T> {
-  readonly [bindableTag]: typeof BindableType.SlotElement;
+  readonly [bindableTypeTag]: typeof BindableType.SlotElement;
   readonly value: Bindable<T>;
   readonly slotType: SlotType;
 }
@@ -207,7 +207,7 @@ export function createDirectiveElement<T>(
   value: T,
 ): DirectiveElement<T> {
   return {
-    [bindableTag]: BindableType.DirectiveElement,
+    [bindableTypeTag]: BindableType.DirectiveElement,
     directive,
     value,
   };
@@ -218,7 +218,7 @@ export function createSlotElement<T>(
   slotType: SlotType,
 ): SlotElement<T> {
   return {
-    [bindableTag]: BindableType.SlotElement,
+    [bindableTypeTag]: BindableType.SlotElement,
     value,
     slotType,
   };

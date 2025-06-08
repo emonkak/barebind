@@ -11,7 +11,7 @@ import {
   type TemplateBlock,
   type TemplateMode,
   type UpdateContext,
-  bindableTag,
+  bindableTypeTag,
 } from './core.js';
 import type { UpdateOptions } from './hook.js';
 import type { Hook } from './hook.js';
@@ -259,10 +259,10 @@ export class UpdateEngine implements UpdateContext {
   }
 
   resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T> {
-    switch (value?.[bindableTag]) {
+    switch (value?.[bindableTypeTag]) {
       case BindableType.DirectiveElement:
         return value;
-      case BindableType.DirectiveValue:
+      case BindableType.DirectiveObject:
         return { directive: value.directive, value };
       case BindableType.SlotElement:
         const element = this.resolveDirective(value.value, part);
