@@ -406,7 +406,7 @@ export class TaggedTemplateBlock<TBinds extends readonly Bindable<unknown>[]>
 
       DEBUG: {
         if (slot.part.type === PartType.ChildNode) {
-          slot.part.node.nodeValue = slot.directive.name;
+          slot.part.node.nodeValue = '/' + slot.directive.name;
         }
       }
 

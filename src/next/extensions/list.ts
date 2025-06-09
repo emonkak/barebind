@@ -38,7 +38,7 @@ interface ReconciliationHandler<TKey, TValue> {
 
 interface Item<TKey, TValue> {
   key: TKey;
-  sentinelNode: ChildNode;
+  sentinelNode: Comment;
   slot: Slot<TValue>;
 }
 
@@ -251,8 +251,8 @@ class ListBinding<TSource, TKey, TValue>
       const item = this._pendingItems[i]!;
       const { slot, sentinelNode, key } = item;
       DEBUG: {
-        sentinelNode.nodeValue = inspectValue(key);
-        slot.part.node.nodeValue = `${inspectValue(key)}: ${slot.directive.name}`;
+        sentinelNode.nodeValue = `${slot.directive.name}@${inspectValue(key)}`;
+        slot.part.node.nodeValue = `/${slot.directive.name}@${inspectValue(key)}`;
       }
       slot.commit();
     }

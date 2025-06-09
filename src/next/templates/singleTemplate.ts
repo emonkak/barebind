@@ -24,7 +24,7 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
     } as const;
     const slot = context.resolveSlot(binds[0], childPart);
     DEBUG: {
-      childPart.node.data = slot.directive.name;
+      childPart.node.nodeValue = '/' + slot.directive.name;
     }
     return new SingleTemplateBlock(slot);
   },
@@ -40,7 +40,7 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
     } as const;
     const slot = context.resolveSlot(binds[0], childPart);
     DEBUG: {
-      childPart.node.data = slot.directive.name;
+      childPart.node.nodeValue = '/' + slot.directive.name;
     }
     hydrationTree.popComment().replaceWith(childPart.node);
     return new SingleTemplateBlock(slot);
@@ -129,14 +129,21 @@ export class SingleTemplateBlock<T>
   commit(): void {
     DEBUG: {
       if (this._slot.part.type === PartType.ChildNode) {
-        this._slot.part.node.nodeValue = this._slot.directive.name;
+        this._slot.part.node.nodeValue = '/' + this._slot.directive.name;
       }
     }
+
     this._slot.commit();
   }
 
   rollback(): void {
     this._slot.rollback();
+
+    DEBUG: {
+      if (this._slot.part.type === PartType.ChildNode) {
+        this._slot.part.node.nodeValue = '';
+      }
+    }
   }
 
   mount(part: ChildNodePart): void {
