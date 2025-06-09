@@ -16,9 +16,9 @@ import type { HydrationTree } from './hydration.js';
 import { type ChildNodePart, type Part, PartType } from './part.js';
 
 export type List<TSource, TKey, TValue> = {
-  sources: readonly TSource[];
-  keySelector: (source: TSource, index: number) => TKey;
-  valueSelector: (source: TSource, index: number) => Bindable<TValue>;
+  source: Iterable<TSource>;
+  keySelector: (value: TSource, index: number) => TKey;
+  valueSelector: (value: TSource, index: number) => Bindable<TValue>;
 };
 
 interface ReconciliationHandler<TKey, TValue> {
@@ -34,6 +34,17 @@ interface ReconciliationHandler<TKey, TValue> {
     referenceItem: Item<TKey, TValue> | undefined,
   ): Item<TKey, TValue>;
   remove(item: Item<TKey, TValue>): void;
+}
+
+interface Item<TKey, TValue> {
+  key: TKey;
+  sentinelNode: ChildNode;
+  slot: Slot<TValue>;
+}
+
+interface KeyValuePair<TKey, TValue> {
+  key: TKey;
+  value: Bindable<TValue>;
 }
 
 type Operation<TKey, TValue> =
@@ -57,30 +68,24 @@ const OperationType = {
 
 type OperationType = (typeof OperationType)[keyof typeof OperationType];
 
-interface Item<TKey, TValue> {
-  slot: Slot<TValue>;
-  sentinelNode: ChildNode;
-  key: TKey;
-}
-
 export function indexedList<TSource, TValue>(
-  sources: readonly TSource[],
-  valueSelector: (source: TSource, key: number) => TValue,
+  source: Iterable<TSource>,
+  valueSelector: (value: TSource, key: number) => TValue,
 ): DirectiveElement<List<TSource, number, TValue>> {
   return createDirectiveElement(ListDirective, {
-    sources,
+    source,
     keySelector: indexSelector,
     valueSelector,
   });
 }
 
 export function keyedList<TSource, TKey, TValue>(
-  sources: readonly TSource[],
-  keySelector: (source: TSource, key: number) => TKey,
-  valueSelector: (source: TSource, key: number) => TValue,
+  source: Iterable<TSource>,
+  keySelector: (value: TSource, key: number) => TKey,
+  valueSelector: (value: TSource, key: number) => TValue,
 ): DirectiveElement<List<TSource, TKey, TValue>> {
   return createDirectiveElement(ListDirective, {
-    sources,
+    source,
     keySelector,
     valueSelector,
   });
@@ -112,7 +117,7 @@ class ListBinding<TSource, TKey, TValue>
 
   private _pendingItems: Item<TKey, TValue>[] = [];
 
-  private _memoizedItems: Item<TKey, TValue>[] = [];
+  private _memoizedItems: Item<TKey, TValue>[] | null = null;
 
   private _pendingOperations: Operation<TKey, TValue>[] = [];
 
@@ -134,10 +139,7 @@ class ListBinding<TSource, TKey, TValue>
   }
 
   shouldBind(list: List<TSource, TKey, TValue>): boolean {
-    return (
-      this._memoizedItems.length !== this._list.sources.length ||
-      list !== this._list
-    );
+    return this._memoizedItems === null || list !== this._list;
   }
 
   bind(list: List<TSource, TKey, TValue>): void {
@@ -145,13 +147,12 @@ class ListBinding<TSource, TKey, TValue>
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    const { sources, keySelector, valueSelector } = this._list;
-    const newItems = new Array(sources.length);
+    const newPairs = generateKeyValuePairs(this._list);
+    const newItems = new Array(newPairs.length);
     const document = this._part.node.ownerDocument;
 
-    for (let i = 0, l = newItems.length; i < l; i++) {
-      const key = keySelector(sources[i]!, i);
-      const value = valueSelector(sources[i]!, i);
+    for (let i = 0, l = newPairs.length; i < l; i++) {
+      const { key, value } = newPairs[i]!;
       const sentinelNode = hydrationTree.popComment();
       const part = {
         type: PartType.ChildNode,
@@ -171,13 +172,13 @@ class ListBinding<TSource, TKey, TValue>
   }
 
   connect(context: UpdateContext): void {
-    const { sources, keySelector, valueSelector } = this._list;
     const oldItems = this._pendingItems;
-    const newKeys = sources.map(keySelector);
-    const newValues = sources.map(valueSelector);
+    const newPairs = generateKeyValuePairs(this._list);
     const document = this._part.node.ownerDocument;
+    const isEmpty =
+      this._memoizedItems === null || this._memoizedItems.length === 0;
 
-    this._pendingItems = reconcileItems(oldItems, newKeys, newValues, {
+    this._pendingItems = reconcileItems(oldItems, newPairs, {
       insert: (key, value, referenceItem) => {
         const sentinelNode = document.createComment('');
         const part = {
@@ -191,7 +192,7 @@ class ListBinding<TSource, TKey, TValue>
           sentinelNode,
           slot,
         };
-        if (this._memoizedItems.length > 0) {
+        if (!isEmpty) {
           this._pendingOperations.push({
             type: OperationType.Insert,
             item,
@@ -206,7 +207,7 @@ class ListBinding<TSource, TKey, TValue>
       },
       move: (item, value, referenceItem) => {
         item.slot.reconcile(value, context);
-        if (this._memoizedItems.length > 0) {
+        if (!isEmpty) {
           this._pendingOperations.push({
             type: OperationType.Move,
             item,
@@ -217,7 +218,7 @@ class ListBinding<TSource, TKey, TValue>
       },
       remove: (item) => {
         item.slot.disconnect(context);
-        if (this._memoizedItems.length > 0) {
+        if (!isEmpty) {
           this._pendingOperations.push({
             type: OperationType.Remove,
             item,
@@ -235,7 +236,7 @@ class ListBinding<TSource, TKey, TValue>
   }
 
   commit(): void {
-    if (this._memoizedItems.length === 0) {
+    if (this._memoizedItems === null || this._memoizedItems.length === 0) {
       for (let i = 0, l = this._pendingItems.length; i < l; i++) {
         const item = this._pendingItems[i]!;
         commitInsert(item, this._part.node);
@@ -273,19 +274,32 @@ class ListBinding<TSource, TKey, TValue>
       slot.commit();
     }
 
-    this._pendingOperations = [];
     this._memoizedItems = this._pendingItems;
+    this._pendingOperations = [];
   }
 
   rollback(): void {
-    for (let i = this._memoizedItems.length - 1; i >= 0; i--) {
-      const item = this._memoizedItems[i]!;
-      commitRemove(item);
+    if (this._memoizedItems !== null) {
+      for (let i = this._memoizedItems.length - 1; i >= 0; i--) {
+        const item = this._memoizedItems[i]!;
+        commitRemove(item);
+      }
     }
 
     this._pendingOperations = [];
-    this._memoizedItems = [];
+    this._memoizedItems = null;
   }
+}
+
+function generateKeyValuePairs<TSource, TKey, TValue>({
+  source,
+  keySelector,
+  valueSelector,
+}: List<TSource, TKey, TValue>): KeyValuePair<TKey, TValue>[] {
+  return Array.from(source, (value, i) => ({
+    key: keySelector(value, i),
+    value: valueSelector(value, i),
+  }));
 }
 
 function commitInsert<TKey, TValue>(
@@ -330,97 +344,84 @@ function indexSelector<T>(_value: T, index: number): number {
 
 function reconcileItems<TKey, TValue>(
   oldItems: Item<TKey, TValue>[],
-  newKeys: TKey[],
-  newValues: Bindable<TValue>[],
+  newPairs: KeyValuePair<TKey, TValue>[],
   handler: ReconciliationHandler<TKey, TValue>,
 ): Item<TKey, TValue>[] {
-  const newItems = new Array(newKeys.length);
+  const newItems = new Array(newPairs.length);
 
   let oldHead = 0;
   let oldTail = oldItems.length - 1;
   let newHead = 0;
   let newTail = newItems.length - 1;
 
-  LOOP: while (true) {
-    switch (true) {
-      case newHead > newTail:
-        while (oldHead <= oldTail) {
-          handler.remove(oldItems[oldHead]!);
-          oldHead++;
-        }
-        break LOOP;
-      case oldHead > oldTail:
-        while (newHead <= newTail) {
-          newItems[newHead] = handler.insert(
-            newKeys[newHead]!,
-            newValues[newHead]!,
+  while (true) {
+    if (newHead > newTail) {
+      while (oldHead <= oldTail) {
+        handler.remove(oldItems[oldHead]!);
+        oldHead++;
+      }
+      break;
+    } else if (oldHead > oldTail) {
+      while (newHead <= newTail) {
+        const { key, value } = newPairs[newHead]!;
+        newItems[newHead] = handler.insert(key, value, newItems[newTail + 1]);
+        newHead++;
+      }
+      break;
+    } else if (oldItems[oldHead]!.key === newPairs[newHead]!.key) {
+      newItems[newHead] = handler.update(
+        oldItems[oldHead]!,
+        newPairs[newHead]!.value,
+      );
+      newHead++;
+      oldHead++;
+    } else if (oldItems[oldTail]!.key === newPairs[newTail]!.key) {
+      newItems[newTail] = handler.update(
+        oldItems[oldTail]!,
+        newPairs[newTail]!.value,
+      );
+      newTail--;
+      oldTail--;
+    } else if (oldItems[oldHead]!.key === newPairs[newTail]!.key) {
+      newItems[newTail] = handler.move(
+        oldItems[oldHead]!,
+        newPairs[newTail]!.value,
+        oldItems[oldHead]!,
+      );
+      newTail--;
+      oldHead++;
+    } else if (oldItems[oldTail]!.key === newPairs[newHead]!.key) {
+      newItems[newHead] = handler.move(
+        oldItems[oldTail]!,
+        newPairs[newHead]!.value,
+        oldItems[oldHead]!,
+      );
+      newHead++;
+      oldTail--;
+    } else {
+      const oldIndexMap = new Map();
+      for (let i = oldHead; i <= oldTail; i++) {
+        oldIndexMap.set(oldItems[i]!.key, i);
+      }
+      while (newHead <= newTail) {
+        const { key, value } = newPairs[newTail]!;
+        const oldIndex = oldIndexMap.get(key);
+        if (oldIndex !== undefined) {
+          newItems[newTail] = handler.move(
+            oldItems[oldIndex]!,
+            value,
             newItems[newTail + 1],
           );
-          newHead++;
+          oldIndexMap.delete(key);
+        } else {
+          newItems[newTail] = handler.insert(key, value, newItems[newTail + 1]);
         }
-        break LOOP;
-      case oldItems[oldHead]!.key === newKeys[newHead]:
-        newItems[newHead] = handler.update(
-          oldItems[oldHead]!,
-          newValues[newHead]!,
-        );
-        newHead++;
-        oldHead++;
-        break;
-      case oldItems[oldTail]!.key === newKeys[newTail]:
-        newItems[newTail] = handler.update(
-          oldItems[oldTail]!,
-          newValues[newTail]!,
-        );
         newTail--;
-        oldTail--;
-        break;
-      case oldItems[oldHead]!.key === newKeys[newTail]:
-        newItems[newTail] = handler.move(
-          oldItems[oldHead]!,
-          newValues[newTail]!,
-          newItems[newTail + 1]!,
-        );
-        newTail--;
-        oldHead++;
-        break;
-      case oldItems[oldTail]!.key === newKeys[newHead]:
-        newItems[newHead] = handler.move(
-          oldItems[oldTail]!,
-          newValues[newHead]!,
-          oldItems[oldHead]!,
-        );
-        newHead++;
-        oldTail--;
-        break;
-      default:
-        const oldIndexMap = new Map();
-        for (let i = oldHead; i <= oldTail; i++) {
-          oldIndexMap.set(oldItems[i]!.key, i);
-        }
-        while (newHead <= newTail) {
-          const key = newKeys[newTail];
-          const oldIndex = oldIndexMap.get(key);
-          if (oldIndex !== undefined) {
-            newItems[newTail] = handler.move(
-              oldItems[oldIndex]!,
-              newValues[newTail]!,
-              newItems[newTail + 1],
-            );
-            oldIndexMap.delete(key);
-          } else {
-            newItems[newTail] = handler.insert(
-              newKeys[newTail]!,
-              newValues[newTail]!,
-              newItems[newTail + 1],
-            );
-          }
-          newTail--;
-        }
-        for (const oldIndex of oldIndexMap.values()) {
-          handler.remove(oldItems[oldIndex]!);
-        }
-        break LOOP;
+      }
+      for (const oldIndex of oldIndexMap.values()) {
+        handler.remove(oldItems[oldIndex]!);
+      }
+      break;
     }
   }
 
