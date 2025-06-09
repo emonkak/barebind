@@ -10,6 +10,7 @@ import type {
 } from '../core.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitives/attribute.js';
+import { BlackholePrimitive } from '../primitives/blackhole.js';
 import { ClassListPrimitive } from '../primitives/classList.js';
 import { ClassMapPrimitive } from '../primitives/classMap.js';
 import { EventPrimitive } from '../primitives/event.js';
@@ -113,18 +114,21 @@ export class BrowserRenderHost implements RenderHost {
   resolvePrimitive(part: Part): Primitive<unknown> {
     switch (part.type) {
       case PartType.Attribute:
-        switch (part.name) {
-          case ':classList':
-            return ClassListPrimitive;
-          case ':classMap':
-            return ClassMapPrimitive;
-          case ':ref':
-            return RefPrimitive;
-          case ':style':
-            return StylePrimitive;
-          default:
-            return AttributePrimitive;
+        if (part.name[0] === ':') {
+          switch (part.name.slice(1).toLowerCase()) {
+            case 'classlist':
+              return ClassListPrimitive;
+            case 'classmap':
+              return ClassMapPrimitive;
+            case 'ref':
+              return RefPrimitive;
+            case 'style':
+              return StylePrimitive;
+            default:
+              return BlackholePrimitive;
+          }
         }
+        return AttributePrimitive;
       case PartType.ChildNode:
       case PartType.Text:
         return NodePrimitive;

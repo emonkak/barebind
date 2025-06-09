@@ -22,7 +22,10 @@ export const ClassMapPrimitive: Primitive<ClassMap> = {
     part: Part,
     _context: DirectiveContext,
   ): ClassMapBinding {
-    if (part.type !== PartType.Attribute || part.name !== ':classMap') {
+    if (
+      part.type !== PartType.Attribute ||
+      part.name.toLowerCase() !== ':classmap'
+    ) {
       throw new Error(
         'ClassMapPrimitive must be used in a ":classMap" attribute part, but it is used here:\n' +
           inspectPart(part, markUsedValue(classes)),

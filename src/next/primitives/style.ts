@@ -32,7 +32,10 @@ export const StylePrimitive: Primitive<StyleProps> = {
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
-    if (part.type !== PartType.Attribute || part.name !== ':style') {
+    if (
+      part.type !== PartType.Attribute ||
+      part.name.toLowerCase() !== ':style'
+    ) {
       throw new Error(
         'StylePrimitive must be used in a ":style" attribute part, but it is used here in:\n' +
           inspectPart(part, markUsedValue(props)),

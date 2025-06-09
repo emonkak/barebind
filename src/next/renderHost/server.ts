@@ -8,13 +8,12 @@ import type {
 } from '../core.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitives/attribute.js';
+import { BlackholePrimitive } from '../primitives/blackhole.js';
 import { ClassListPrimitive } from '../primitives/classList.js';
 import { ClassMapPrimitive } from '../primitives/classMap.js';
-import { EventPrimitive } from '../primitives/event.js';
 import { LivePrimitive } from '../primitives/live.js';
 import { NodePrimitive } from '../primitives/node.js';
 import { PropertyPrimitive } from '../primitives/property.js';
-import { RefPrimitive } from '../primitives/ref.js';
 import { SpreadPrimitive } from '../primitives/spread.js';
 import { StylePrimitive } from '../primitives/style.js';
 import {
@@ -90,25 +89,26 @@ export class ServerRenderHost implements RenderHost {
   resolvePrimitive(part: Part): Primitive<unknown> {
     switch (part.type) {
       case PartType.Attribute:
-        switch (part.name) {
-          case ':classList':
-            return ClassListPrimitive;
-          case ':classMap':
-            return ClassMapPrimitive;
-          case ':ref':
-            return RefPrimitive;
-          case ':style':
-            return StylePrimitive;
-          default:
-            return AttributePrimitive;
+        if (part.name[0] === ':') {
+          switch (part.name.slice(1).toLowerCase()) {
+            case 'classlist':
+              return ClassListPrimitive;
+            case 'classmap':
+              return ClassMapPrimitive;
+            case 'style':
+              return StylePrimitive;
+            default:
+              return BlackholePrimitive;
+          }
         }
+        return AttributePrimitive;
       case PartType.ChildNode:
       case PartType.Text:
         return NodePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:
-        return EventPrimitive;
+        return BlackholePrimitive;
       case PartType.Live:
         return LivePrimitive;
       case PartType.Property:

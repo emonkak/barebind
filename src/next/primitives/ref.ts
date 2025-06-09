@@ -29,7 +29,10 @@ export const RefPrimitive: Primitive<Ref> = {
     }
   },
   resolveBinding(ref: Ref, part: Part, _context: DirectiveContext): RefBinding {
-    if (part.type !== PartType.Attribute || part.name !== ':ref') {
+    if (
+      part.type !== PartType.Attribute ||
+      part.name.toLowerCase() !== ':ref'
+    ) {
       throw new Error(
         'RefPrimitive must be used in a ":ref" attribute part, but it is used here in:\n' +
           inspectPart(part, markUsedValue(ref)),

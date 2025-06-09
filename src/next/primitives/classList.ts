@@ -22,7 +22,10 @@ export const ClassListPrimitive: Primitive<ClassList> = {
     part: Part,
     _context: DirectiveContext,
   ): ClassListBinding {
-    if (part.type !== PartType.Attribute || part.name !== ':classList') {
+    if (
+      part.type !== PartType.Attribute ||
+      part.name.toLowerCase() !== ':classlist'
+    ) {
       throw new Error(
         'ClassListPrimitive must be used in a ":classList" attribute part, but it is used here:\n' +
           inspectPart(part, markUsedValue(classes)),
