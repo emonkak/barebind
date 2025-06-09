@@ -46,16 +46,12 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    if (this._pendingBlock !== null) {
-      this._pendingBlock.reconcile(this._binds, context);
-    } else {
-      this._pendingBlock = context.hydrateTemplate(
-        this._template,
-        this._binds,
-        this._part,
-        hydrationTree,
-      );
-    }
+    this._pendingBlock ??= context.hydrateTemplate(
+      this._template,
+      this._binds,
+      this._part,
+      hydrationTree,
+    );
   }
 
   connect(context: UpdateContext): void {

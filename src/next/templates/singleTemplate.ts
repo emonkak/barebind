@@ -32,7 +32,7 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
     binds: readonly [Bindable<unknown>],
     part: ChildNodePart,
     hydrationTree: HydrationTree,
-    context: DirectiveContext,
+    context: UpdateContext,
   ): SingleTemplateBlock<unknown> {
     const childPart = {
       type: PartType.ChildNode,
@@ -42,6 +42,7 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
     DEBUG: {
       childPart.node.nodeValue = '/' + slot.directive.name;
     }
+    slot.hydrate(hydrationTree, context);
     hydrationTree.popComment().replaceWith(childPart.node);
     return new SingleTemplateBlock(slot);
   },
@@ -79,7 +80,7 @@ export const TextTemplate: Template<readonly [Bindable<any>]> = {
     binds: readonly [Bindable<unknown>],
     _part: ChildNodePart,
     hydrationTree: HydrationTree,
-    context: DirectiveContext,
+    context: UpdateContext,
   ): SingleTemplateBlock<unknown> {
     const childPart = {
       type: PartType.Text,
@@ -87,7 +88,10 @@ export const TextTemplate: Template<readonly [Bindable<any>]> = {
     } as const;
     const value = binds[0];
     const slot = context.resolveSlot(value, childPart);
+
+    slot.hydrate(hydrationTree, context);
     hydrationTree.popNode();
+
     return new SingleTemplateBlock(slot);
   },
   resolveBinding(

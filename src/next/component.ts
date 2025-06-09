@@ -116,12 +116,8 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
       this._hooks,
       this,
     );
-    if (this._slot !== null) {
-      this._slot.reconcile(result, context);
-    } else {
-      this._slot = context.resolveSlot(result, this._part);
-      this._slot.hydrate(hydrationTree, context);
-    }
+    this._slot ??= context.resolveSlot(result, this._part);
+    this._slot.hydrate(hydrationTree, context);
   }
 
   connect(context: UpdateContext): void {

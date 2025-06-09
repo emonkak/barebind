@@ -22,7 +22,7 @@ export const EmptyTemplate: Template<readonly []> = {
     _binds: readonly [],
     _part: ChildNodePart,
     _hydrationTree: HydrationTree,
-    _context: DirectiveContext,
+    _context: UpdateContext,
   ): typeof EmptyTemplateBlock {
     return EmptyTemplateBlock;
   },

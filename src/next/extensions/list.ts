@@ -142,8 +142,10 @@ class ListBinding<TSource, TKey, TValue>
         node: document.createComment(''),
       } as const;
       const slot = context.resolveSlot(value, part);
+
       slot.hydrate(hydrationTree, context);
       hydrationTree.popComment().replaceWith(part.node);
+
       newItems[i] = {
         key,
         sentinelNode,

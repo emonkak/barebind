@@ -330,9 +330,9 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
       if (part?.type === PartType.ChildNode) {
         hydrationTree.popComment().replaceWith(part.node);
       } else {
-        const actualNode = hydrationTree.popNode();
+        const hydrationNode = hydrationTree.popNode();
         if (expectedNode.parentNode === rootNode) {
-          childNodes.push(actualNode);
+          childNodes.push(hydrationNode);
         }
       }
 

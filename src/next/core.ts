@@ -24,7 +24,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
-  hydrate(hydrationTree: HydrationTree, context: DirectiveContext): void;
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -102,7 +102,7 @@ export interface Template<TBinds> extends Directive<TBinds> {
     binds: TBinds,
     part: ChildNodePart,
     hydrationTree: HydrationTree,
-    context: DirectiveContext,
+    context: UpdateContext,
   ): TemplateBlock<TBinds>;
 }
 
@@ -126,19 +126,8 @@ export type ComponentFunction<TProps, TResult = unknown> = (
 ) => Bindable<TResult>;
 
 export interface DirectiveContext {
-  renderComponent<TProps, TResult>(
-    component: Component<TProps, TResult>,
-    props: TProps,
-    hooks: Hook[],
-    coroutine: Coroutine,
-  ): Bindable<TResult>;
-  renderTemplate<TBinds>(
-    template: Template<TBinds>,
-    binds: TBinds,
-    part: ChildNodePart,
-  ): TemplateBlock<TBinds>;
-  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T>;
   resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T>;
+  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T>;
 }
 
 export interface UpdateContext extends DirectiveContext {
@@ -166,6 +155,17 @@ export interface UpdateContext extends DirectiveContext {
     hydrationTree: HydrationTree,
   ): TemplateBlock<TBinds>;
   nextIdentifier(): string;
+  renderComponent<TProps, TResult>(
+    component: Component<TProps, TResult>,
+    props: TProps,
+    hooks: Hook[],
+    coroutine: Coroutine,
+  ): Bindable<TResult>;
+  renderTemplate<TBinds>(
+    template: Template<TBinds>,
+    binds: TBinds,
+    part: ChildNodePart,
+  ): TemplateBlock<TBinds>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): Promise<void>;
   setContextualValue<T>(key: unknown, value: T): void;
 }
