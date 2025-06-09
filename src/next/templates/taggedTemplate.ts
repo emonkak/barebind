@@ -504,12 +504,13 @@ function parseAttribtues(
     const attribute = attributes[i]!;
     const name = attribute.name;
     const value = attribute.value;
+    let hole: Hole;
 
     if (name === marker && value === '') {
-      holes.push({
+      hole = {
         type: PartType.Element,
         index,
-      });
+      };
     } else if (value === marker) {
       const caseSensitiveName = extractCaseSensitiveAttributeName(
         strings[holes.length]!,
@@ -528,29 +529,31 @@ function parseAttribtues(
       }
 
       if (caseSensitiveName[0] === '@' && caseSensitiveName.length > 1) {
-        holes.push({
+        hole = {
           type: PartType.Event,
           index,
           name: caseSensitiveName.slice(1),
-        });
+        };
       } else if (caseSensitiveName[0] === '$' && caseSensitiveName.length > 1) {
-        holes.push({
+        hole = {
           type: PartType.Live,
           index,
           name: caseSensitiveName.slice(1),
-        });
+        };
+        break;
       } else if (caseSensitiveName[0] === '.' && caseSensitiveName.length > 1) {
-        holes.push({
+        hole = {
           type: PartType.Property,
           index,
           name: caseSensitiveName.slice(1),
-        });
+        };
+        break;
       } else {
-        holes.push({
+        hole = {
           type: PartType.Attribute,
           index,
           name: caseSensitiveName,
-        });
+        };
       }
     } else {
       DEBUG: {
@@ -585,6 +588,7 @@ function parseAttribtues(
       continue;
     }
 
+    holes.push(hole);
     element.removeAttribute(name);
   }
 }
