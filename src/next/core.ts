@@ -92,11 +92,12 @@ export interface Primitive<T> extends Directive<T> {
   ensureValue(value: unknown, part: Part): asserts value is T;
 }
 
-export interface Template<TBinds> extends Directive<TBinds> {
+export interface Template<TBinds extends readonly Bindable<unknown>[]>
+  extends Directive<TBinds> {
   render(
     binds: TBinds,
     part: ChildNodePart,
-    context: DirectiveContext,
+    context: UpdateContext,
   ): TemplateBlock<TBinds>;
   hydrate(
     binds: TBinds,
@@ -108,16 +109,17 @@ export interface Template<TBinds> extends Directive<TBinds> {
 
 export type TemplateMode = 'html' | 'math' | 'svg';
 
-export interface TemplateBlock<TBinds> extends ReversibleEffect {
-  reconcile(binds: TBinds, context: UpdateContext): void;
-  connect(context: UpdateContext): void;
-  disconnect(context: UpdateContext): void;
-  mount(part: ChildNodePart): void;
-  unmount(part: ChildNodePart): void;
+export interface TemplateBlock<TBinds extends readonly Bindable<unknown>[]> {
+  readonly childNodes: ChildNode[];
+  readonly slots: TemplateSlots<TBinds>;
 }
 
+export type TemplateSlots<TBinds extends readonly Bindable<unknown>[]> = {
+  [K in keyof TBinds]: TBinds[K] extends Bindable<infer T> ? Slot<T> : never;
+};
+
 export interface Component<TProps, TResult> extends Directive<TProps> {
-  render: ComponentFunction<TProps, TResult>;
+  readonly render: ComponentFunction<TProps, TResult>;
 }
 
 export type ComponentFunction<TProps, TResult = unknown> = (
@@ -148,7 +150,7 @@ export interface UpdateContext extends DirectiveContext {
     binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]>;
-  hydrateTemplate<TBinds>(
+  hydrateTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -161,7 +163,7 @@ export interface UpdateContext extends DirectiveContext {
     hooks: Hook[],
     coroutine: Coroutine,
   ): Bindable<TResult>;
-  renderTemplate<TBinds>(
+  renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,

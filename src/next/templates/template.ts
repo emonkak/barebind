@@ -1,4 +1,5 @@
 import type {
+  Bindable,
   Binding,
   Effect,
   Template,
@@ -6,9 +7,11 @@ import type {
   UpdateContext,
 } from '../core.js';
 import type { HydrationTree } from '../hydration.js';
-import type { ChildNodePart } from '../part.js';
+import { type ChildNodePart, PartType } from '../part.js';
 
-export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
+export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
+  implements Binding<TBinds>, Effect
+{
   private readonly _template: Template<TBinds>;
 
   private _binds: TBinds;
@@ -46,7 +49,13 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    this._pendingBlock ??= context.hydrateTemplate(
+    if (this._pendingBlock !== null) {
+      throw new Error(
+        'Hydration is failed because the template has already been rendered.',
+      );
+    }
+
+    this._pendingBlock = context.hydrateTemplate(
       this._template,
       this._binds,
       this._part,
@@ -56,36 +65,82 @@ export class TemplateBinding<TBinds> implements Binding<TBinds>, Effect {
 
   connect(context: UpdateContext): void {
     if (this._pendingBlock !== null) {
-      this._pendingBlock.reconcile(this._binds, context);
+      const { slots } = this._pendingBlock;
+
+      for (let i = 0, l = slots.length; i < l; i++) {
+        slots[i]!.reconcile(this._binds[i]!, context);
+      }
     } else {
       this._pendingBlock = context.renderTemplate(
         this._template,
         this._binds,
         this._part,
       );
-      this._pendingBlock.connect(context);
     }
   }
 
   disconnect(context: UpdateContext): void {
-    this._pendingBlock?.disconnect(context);
+    if (this._pendingBlock !== null) {
+      const { slots } = this._pendingBlock;
+
+      for (let i = slots.length - 1; i >= 0; i--) {
+        slots[i]!.disconnect(context);
+      }
+    }
   }
 
   commit(): void {
     if (this._pendingBlock !== null) {
+      const { childNodes, slots } = this._pendingBlock;
+
       if (this._memoizedBlock === null) {
-        this._pendingBlock.mount(this._part);
+        this._part.node.before(...childNodes);
       }
-      this._pendingBlock.commit();
+
+      for (let i = 0, l = slots.length; i < l; i++) {
+        const slot = slots[i]!;
+
+        DEBUG: {
+          if (slot.part.type === PartType.ChildNode) {
+            slot.part.node.nodeValue = '/' + slot.directive.name;
+          }
+        }
+
+        slot.commit();
+      }
     }
+
     this._memoizedBlock = this._pendingBlock;
   }
 
   rollback(): void {
     if (this._memoizedBlock !== null) {
-      this._memoizedBlock.rollback();
-      this._memoizedBlock.unmount(this._part);
+      const { childNodes, slots } = this._memoizedBlock;
+
+      for (let i = slots.length - 1; i >= 0; i--) {
+        const slot = slots[i]!;
+
+        if (
+          (slot.part.type === PartType.ChildNode ||
+            slot.part.type === PartType.Text) &&
+          childNodes.includes(slot.part.node)
+        ) {
+          // This binding is mounted as a child of the root, so we must rollback it.
+          slot.rollback();
+        }
+
+        DEBUG: {
+          if (slot.part.type === PartType.ChildNode) {
+            slot.part.node.nodeValue = '';
+          }
+        }
+      }
+
+      for (let i = childNodes.length - 1; i >= 0; i--) {
+        childNodes[i]!.remove();
+      }
+
+      this._memoizedBlock = null;
     }
-    this._memoizedBlock = null;
   }
 }

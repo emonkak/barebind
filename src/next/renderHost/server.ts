@@ -23,12 +23,10 @@ import {
 } from '../renderHost.js';
 import { FlexibleSlot } from '../slots/flexible.js';
 import { StrictSlot } from '../slots/strict.js';
+import { ChildNodeTemplate } from '../templates/childNodeTemplate.js';
 import { EmptyTemplate } from '../templates/emptyTemplate.js';
-import {
-  ChildNodeTemplate,
-  TextTemplate,
-} from '../templates/singleTemplate.js';
 import { TaggedTemplate } from '../templates/taggedTemplate.js';
+import { TextTemplate } from '../templates/textTemplate.js';
 
 export class ServerRenderHost implements RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void {

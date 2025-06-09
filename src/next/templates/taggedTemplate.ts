@@ -5,6 +5,7 @@ import type {
   Template,
   TemplateBlock,
   TemplateMode,
+  TemplateSlots,
   UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
@@ -126,114 +127,12 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     return this._holes;
   }
 
-  render(
-    binds: TBinds,
-    part: ChildNodePart,
-    context: DirectiveContext,
-  ): TaggedTemplateBlock<TBinds> {
-    const holes = this._holes;
-    const document = part.node.ownerDocument;
-
-    DEBUG: {
-      assertNumberOfBinds(holes.length, binds.length);
-    }
-
-    const slots = new Array(holes.length);
-    const fragment = document.importNode(this._element.content, true);
-
-    if (holes.length > 0) {
-      const treeWalker = document.createTreeWalker(
-        fragment,
-        NodeFilter.SHOW_ELEMENT |
-          NodeFilter.SHOW_TEXT |
-          NodeFilter.SHOW_COMMENT,
-      );
-      let currentNode: Node | null;
-      let currentHole: Hole = holes[0]!;
-      let holeIndex = 0;
-      let nodeIndex = 0;
-
-      OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
-        while (currentHole.index === nodeIndex) {
-          let part: Part;
-
-          switch (currentHole.type) {
-            case PartType.Attribute:
-              part = {
-                type: PartType.Attribute,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.ChildNode:
-              part = {
-                type: PartType.ChildNode,
-                node: currentNode as Comment,
-              };
-              break;
-            case PartType.Element:
-              part = {
-                type: PartType.Element,
-                node: currentNode as Element,
-              };
-              break;
-            case PartType.Event:
-              part = {
-                type: PartType.Event,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.Live:
-              part = {
-                type: PartType.Live,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.Property:
-              part = {
-                type: PartType.Property,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.Text:
-              part = {
-                type: PartType.Text,
-                node: currentNode as Text,
-              };
-              break;
-          }
-
-          slots[holeIndex] = context.resolveSlot(binds[holeIndex], part);
-          holeIndex++;
-
-          if (holeIndex >= holes.length) {
-            break OUTER;
-          }
-
-          currentHole = holes[holeIndex]!;
-        }
-
-        nodeIndex++;
-      }
-    }
-
-    const childNodes = Array.from(fragment.childNodes);
-
-    // Detach child nodes from the fragment.
-    fragment.replaceChildren();
-
-    return new TaggedTemplateBlock(slots, childNodes);
-  }
-
   hydrate(
     binds: TBinds,
     part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
-  ): TaggedTemplateBlock<TBinds> {
+  ): TemplateBlock<TBinds> {
     const holes = this._holes;
     const rootNode = this._element.content;
     const document = part.node.ownerDocument;
@@ -246,7 +145,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
       rootNode,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );
-    const slots = new Array(holes.length);
+    const slots: Slot<unknown>[] = new Array(holes.length);
     const childNodes = [];
     let expectedNode: Node | null;
     let nodeIndex = 0;
@@ -339,7 +238,112 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
       nodeIndex++;
     }
 
-    return new TaggedTemplateBlock(slots, childNodes);
+    return { childNodes, slots: slots as TemplateSlots<TBinds> };
+  }
+
+  render(
+    binds: TBinds,
+    part: ChildNodePart,
+    context: UpdateContext,
+  ): TemplateBlock<TBinds> {
+    const holes = this._holes;
+    const document = part.node.ownerDocument;
+
+    DEBUG: {
+      assertNumberOfBinds(holes.length, binds.length);
+    }
+
+    const slots: Slot<unknown>[] = new Array(holes.length);
+    const fragment = document.importNode(this._element.content, true);
+
+    if (holes.length > 0) {
+      const treeWalker = document.createTreeWalker(
+        fragment,
+        NodeFilter.SHOW_ELEMENT |
+          NodeFilter.SHOW_TEXT |
+          NodeFilter.SHOW_COMMENT,
+      );
+      let currentNode: Node | null;
+      let currentHole: Hole = holes[0]!;
+      let holeIndex = 0;
+      let nodeIndex = 0;
+
+      OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
+        while (currentHole.index === nodeIndex) {
+          let part: Part;
+
+          switch (currentHole.type) {
+            case PartType.Attribute:
+              part = {
+                type: PartType.Attribute,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.ChildNode:
+              part = {
+                type: PartType.ChildNode,
+                node: currentNode as Comment,
+              };
+              break;
+            case PartType.Element:
+              part = {
+                type: PartType.Element,
+                node: currentNode as Element,
+              };
+              break;
+            case PartType.Event:
+              part = {
+                type: PartType.Event,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.Live:
+              part = {
+                type: PartType.Live,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.Property:
+              part = {
+                type: PartType.Property,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.Text:
+              part = {
+                type: PartType.Text,
+                node: currentNode as Text,
+              };
+              break;
+          }
+
+          const slot = context.resolveSlot(binds[holeIndex], part);
+          slot.connect(context);
+
+          slots[holeIndex] = slot;
+          holeIndex++;
+
+          if (holeIndex >= holes.length) {
+            break OUTER;
+          }
+
+          currentHole = holes[holeIndex]!;
+        }
+
+        nodeIndex++;
+      }
+    }
+
+    const childNodes = Array.from(fragment.childNodes);
+
+    // Detach child nodes from the fragment.
+    fragment.replaceChildren();
+
+    return { childNodes, slots: slots as TemplateSlots<TBinds> };
   }
 
   resolveBinding(
@@ -354,95 +358,6 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
       );
     }
     return new TemplateBinding(this, binds, part);
-  }
-}
-
-export class TaggedTemplateBlock<TBinds extends readonly Bindable<unknown>[]>
-  implements TemplateBlock<TBinds>
-{
-  private _slots: Slot<unknown>[];
-
-  private readonly _childNodes: ChildNode[];
-
-  constructor(slots: Slot<unknown>[], childNodes: ChildNode[]) {
-    this._slots = slots;
-    this._childNodes = childNodes;
-  }
-
-  get slots(): Slot<unknown>[] {
-    return this._slots;
-  }
-
-  get childNodes(): ChildNode[] {
-    return this._childNodes;
-  }
-
-  reconcile(binds: TBinds, context: UpdateContext): void {
-    DEBUG: {
-      assertNumberOfBinds(this._slots.length, binds.length);
-    }
-
-    for (let i = 0, l = this._slots.length; i < l; i++) {
-      this._slots[i]!.reconcile(binds[i], context);
-    }
-  }
-
-  connect(context: UpdateContext): void {
-    for (let i = 0, l = this._slots.length; i < l; i++) {
-      this._slots[i]!.connect(context);
-    }
-  }
-
-  disconnect(context: UpdateContext): void {
-    // Unbind in reverse order.
-    for (let i = this._slots.length - 1; i >= 0; i--) {
-      this._slots[i]!.disconnect(context);
-    }
-  }
-
-  commit(): void {
-    for (let i = 0, l = this._slots.length; i < l; i++) {
-      const slot = this._slots[i]!;
-
-      DEBUG: {
-        if (slot.part.type === PartType.ChildNode) {
-          slot.part.node.nodeValue = '/' + slot.directive.name;
-        }
-      }
-
-      slot.commit();
-    }
-  }
-
-  rollback(): void {
-    for (let i = this._slots.length - 1; i >= 0; i--) {
-      const slot = this._slots[i]!;
-      const part = slot.part;
-
-      if (
-        (part.type === PartType.ChildNode || part.type === PartType.Text) &&
-        this._childNodes.includes(part.node)
-      ) {
-        // This binding is mounted as a child of the root, so we must rollback it.
-        slot.rollback();
-      }
-
-      DEBUG: {
-        if (part.type === PartType.ChildNode) {
-          part.node.nodeValue = '';
-        }
-      }
-    }
-  }
-
-  mount(part: ChildNodePart): void {
-    part.node.before(...this._childNodes);
-  }
-
-  unmount(_part: ChildNodePart): void {
-    for (let i = this._childNodes.length; i >= 0; i--) {
-      this._childNodes[i]!.remove();
-    }
   }
 }
 

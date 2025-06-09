@@ -210,7 +210,7 @@ export class UpdateEngine implements UpdateContext {
     return template;
   }
 
-  hydrateTemplate<TBinds>(
+  hydrateTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -243,7 +243,7 @@ export class UpdateEngine implements UpdateContext {
     return element;
   }
 
-  renderTemplate<TBinds>(
+  renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,

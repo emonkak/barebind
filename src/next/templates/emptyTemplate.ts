@@ -11,20 +11,20 @@ import { TemplateBinding } from './template.js';
 
 export const EmptyTemplate: Template<readonly []> = {
   name: 'EmptyTemplate',
-  render(
-    _binds: readonly [],
-    _part: ChildNodePart,
-    _context: DirectiveContext,
-  ): typeof EmptyTemplateBlock {
-    return EmptyTemplateBlock;
-  },
   hydrate(
     _binds: readonly [],
     _part: ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
-  ): typeof EmptyTemplateBlock {
-    return EmptyTemplateBlock;
+  ): TemplateBlock<readonly []> {
+    return { childNodes: [], slots: [] };
+  },
+  render(
+    _binds: readonly [],
+    _part: ChildNodePart,
+    _context: UpdateContext,
+  ): TemplateBlock<readonly []> {
+    return { childNodes: [], slots: [] };
   },
   resolveBinding(
     binds: readonly [],
@@ -39,14 +39,4 @@ export const EmptyTemplate: Template<readonly []> = {
     }
     return new TemplateBinding(this, binds, part);
   },
-};
-
-export const EmptyTemplateBlock: TemplateBlock<readonly []> = {
-  reconcile(_binds: readonly [], _context: UpdateContext): void {},
-  connect(_context: UpdateContext): void {},
-  disconnect(_context: UpdateContext): void {},
-  commit(): void {},
-  rollback(): void {},
-  mount(_part: ChildNodePart): void {},
-  unmount(_part: ChildNodePart): void {},
 };
