@@ -1,9 +1,9 @@
 import {
   type Bindable,
+  type Binding,
   type Component,
   type ComponentFunction,
   type Coroutine,
-  type Directive,
   type DirectiveContext,
   type DirectiveElement,
   type Effect,
@@ -22,26 +22,26 @@ export function component<TProps, TResult>(
   component: ComponentFunction<TProps, TResult>,
   props: TProps,
 ): DirectiveElement<TProps> {
-  const directive = defineComponentDirective(component);
+  const directive = defineComponent(component);
   return createDirectiveElement(directive, props);
 }
 
 export class ComponentDirective<TProps, TResult>
   implements Component<TProps, TResult>
 {
-  private readonly _component: ComponentFunction<TProps, TResult>;
+  private readonly _componentFn: ComponentFunction<TProps, TResult>;
 
-  constructor(component: ComponentFunction<TProps, TResult>) {
-    this._component = component;
+  constructor(componentFn: ComponentFunction<TProps, TResult>) {
+    this._componentFn = componentFn;
   }
 
   get name(): string {
-    return this._component.name;
+    return this._componentFn.name;
   }
 
   render(props: TProps, context: RenderContext): Bindable<TResult> {
-    const component = this._component;
-    return component(props, context);
+    const componentFn = this._componentFn;
+    return componentFn(props, context);
   }
 
   resolveBinding(
@@ -53,7 +53,7 @@ export class ComponentDirective<TProps, TResult>
   }
 }
 
-class ComponentBinding<TProps, TResult> implements Coroutine {
+class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
   private readonly _component: Component<TProps, TResult>;
 
   private _props: TProps;
@@ -171,10 +171,9 @@ class CleanEffectHook implements Effect {
   }
 }
 
-function defineComponentDirective<TProps, TResult>(
-  component: ComponentFunction<TProps, TResult>,
-): Directive<TProps> {
-  return ((component as any)[componentDirectiveTag] ??= new ComponentDirective(
-    component,
-  ));
+function defineComponent<TProps, TResult>(
+  componentFn: ComponentFunction<TProps, TResult>,
+): Component<TProps, TResult> {
+  return ((componentFn as any)[componentDirectiveTag] ??=
+    new ComponentDirective(componentFn));
 }

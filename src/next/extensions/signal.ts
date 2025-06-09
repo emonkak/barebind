@@ -1,6 +1,7 @@
 import {
   type Bindable,
   BindableType,
+  type Binding,
   type Coroutine,
   type Directive,
   type DirectiveContext,
@@ -30,7 +31,7 @@ export const SignalDirective: Directive<Signal<Bindable<any>>> = {
   },
 };
 
-class SignalBinding<T> implements Coroutine {
+class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
   private _signal: Signal<Bindable<T>>;
 
   private _version: number;
@@ -111,13 +112,13 @@ class SignalBinding<T> implements Coroutine {
 }
 
 export abstract class Signal<T>
-  implements DirectiveObject<Signal<T>>, UserHook<T>
+  implements DirectiveObject<Signal<Bindable<T>>>, UserHook<T>
 {
   abstract get value(): T;
 
   abstract get version(): number;
 
-  get directive(): Directive<Signal<T>> {
+  get directive(): Directive<Signal<Bindable<T>>> {
     return SignalDirective;
   }
 

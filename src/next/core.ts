@@ -48,18 +48,9 @@ export interface SlotType {
 }
 
 export type Bindable<T> =
-  | PrimitiveValue<T>
-  | DirectiveObject<T>
+  | (T & (PrimitiveValue | DirectiveObject<T> | null | undefined))
   | DirectiveElement<T>
-  | SlotElement<T>
-  | (T & null)
-  | (T & undefined);
-
-export interface BindableElement<T> {
-  readonly directive: Directive<T>;
-  readonly value: T;
-  readonly slotType?: SlotType;
-}
+  | SlotElement<T>;
 
 export const BindableType = {
   PrimitiveValue: 0,
@@ -70,14 +61,14 @@ export const BindableType = {
 
 export type BindableType = (typeof BindableType)[keyof typeof BindableType];
 
-export type PrimitiveValue<T> = T & {
+export interface PrimitiveValue {
   readonly [bindableTypeTag]?: typeof BindableType.PrimitiveValue;
-};
+}
 
-export type DirectiveObject<T> = T & {
+export interface DirectiveObject<T> {
   readonly [bindableTypeTag]: typeof BindableType.DirectiveObject;
   readonly directive: Directive<T>;
-};
+}
 
 export interface DirectiveElement<T> {
   readonly [bindableTypeTag]: typeof BindableType.DirectiveElement;
@@ -89,6 +80,12 @@ export interface SlotElement<T> {
   readonly [bindableTypeTag]: typeof BindableType.SlotElement;
   readonly value: Bindable<T>;
   readonly slotType: SlotType;
+}
+
+export interface BindableElement<T> {
+  readonly directive: Directive<T>;
+  readonly value: T;
+  readonly slotType?: SlotType;
 }
 
 export interface Primitive<T> extends Directive<T> {
@@ -123,7 +120,7 @@ export interface Component<TProps, TResult> extends Directive<TProps> {
   render: ComponentFunction<TProps, TResult>;
 }
 
-export type ComponentFunction<TProps, TResult> = (
+export type ComponentFunction<TProps, TResult = unknown> = (
   props: TProps,
   context: RenderContext,
 ) => Bindable<TResult>;
