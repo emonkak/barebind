@@ -1,4 +1,4 @@
-/// <reference path="../../typings/moveBefore.d.ts" />
+/// <reference path="../../../typings/moveBefore.d.ts" />
 
 import {
   type Bindable,
@@ -10,15 +10,15 @@ import {
   type Slot,
   type UpdateContext,
   createDirectiveElement,
-} from './core.js';
-import { inspectPart, inspectValue, markUsedValue } from './debug.js';
-import type { HydrationTree } from './hydration.js';
-import { type ChildNodePart, type Part, PartType } from './part.js';
+} from '../core.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import type { HydrationTree } from '../hydration.js';
+import { type ChildNodePart, type Part, PartType } from '../part.js';
 
-export type List<TSource, TKey, TValue> = {
+export type ListProps<TSource, TKey, TValue> = {
   source: Iterable<TSource>;
-  keySelector: (value: TSource, index: number) => TKey;
-  valueSelector: (value: TSource, index: number) => Bindable<TValue>;
+  keySelector?: (value: TSource, index: number) => TKey;
+  valueSelector?: (value: TSource, index: number) => Bindable<TValue>;
 };
 
 interface ReconciliationHandler<TKey, TValue> {
@@ -68,33 +68,16 @@ const OperationType = {
 
 type OperationType = (typeof OperationType)[keyof typeof OperationType];
 
-export function indexedList<TSource, TValue>(
-  source: Iterable<TSource>,
-  valueSelector: (value: TSource, key: number) => TValue,
-): DirectiveElement<List<TSource, number, TValue>> {
-  return createDirectiveElement(ListDirective, {
-    source,
-    keySelector: indexSelector,
-    valueSelector,
-  });
+export function list<TSource, TKey, TValue>(
+  props: ListProps<TSource, TKey, TValue>,
+): DirectiveElement<ListProps<TSource, TKey, TValue>> {
+  return createDirectiveElement(ListDirective, props);
 }
 
-export function keyedList<TSource, TKey, TValue>(
-  source: Iterable<TSource>,
-  keySelector: (value: TSource, key: number) => TKey,
-  valueSelector: (value: TSource, key: number) => TValue,
-): DirectiveElement<List<TSource, TKey, TValue>> {
-  return createDirectiveElement(ListDirective, {
-    source,
-    keySelector,
-    valueSelector,
-  });
-}
-
-export const ListDirective: Directive<List<any, any, any>> = {
+export const ListDirective: Directive<ListProps<any, any, any>> = {
   name: 'ListDirective',
   resolveBinding(
-    list: List<unknown, unknown, unknown>,
+    props: ListProps<unknown, unknown, unknown>,
     part: Part,
     _context: DirectiveContext,
   ): ListBinding<unknown, unknown, unknown> {
@@ -104,14 +87,14 @@ export const ListDirective: Directive<List<any, any, any>> = {
           inspectPart(part, markUsedValue(list)),
       );
     }
-    return new ListBinding(list, part);
+    return new ListBinding(props, part);
   },
 };
 
 class ListBinding<TSource, TKey, TValue>
-  implements Binding<List<TSource, TKey, TValue>>, Effect
+  implements Binding<ListProps<TSource, TKey, TValue>>, Effect
 {
-  private _list: List<TSource, TKey, TValue>;
+  private _props: ListProps<TSource, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -121,33 +104,33 @@ class ListBinding<TSource, TKey, TValue>
 
   private _pendingOperations: Operation<TKey, TValue>[] = [];
 
-  constructor(list: List<TSource, TKey, TValue>, part: ChildNodePart) {
-    this._list = list;
+  constructor(props: ListProps<TSource, TKey, TValue>, part: ChildNodePart) {
+    this._props = props;
     this._part = part;
   }
 
-  get directive(): Directive<List<TSource, TKey, TValue>> {
-    return ListDirective as Directive<List<TSource, TKey, TValue>>;
+  get directive(): Directive<ListProps<TSource, TKey, TValue>> {
+    return ListDirective as Directive<ListProps<TSource, TKey, TValue>>;
   }
 
-  get value(): List<TSource, TKey, TValue> {
-    return this._list;
+  get value(): ListProps<TSource, TKey, TValue> {
+    return this._props;
   }
 
   get part(): ChildNodePart {
     return this._part;
   }
 
-  shouldBind(list: List<TSource, TKey, TValue>): boolean {
-    return this._memoizedItems === null || list !== this._list;
+  shouldBind(list: ListProps<TSource, TKey, TValue>): boolean {
+    return this._memoizedItems === null || list !== this._props;
   }
 
-  bind(list: List<TSource, TKey, TValue>): void {
-    this._list = list;
+  bind(props: ListProps<TSource, TKey, TValue>): void {
+    this._props = props;
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    const newPairs = generateKeyValuePairs(this._list);
+    const newPairs = generateKeyValuePairs(this._props);
     const newItems = new Array(newPairs.length);
     const document = this._part.node.ownerDocument;
 
@@ -173,7 +156,7 @@ class ListBinding<TSource, TKey, TValue>
 
   connect(context: UpdateContext): void {
     const oldItems = this._pendingItems;
-    const newPairs = generateKeyValuePairs(this._list);
+    const newPairs = generateKeyValuePairs(this._props);
     const document = this._part.node.ownerDocument;
     const isEmpty =
       this._memoizedItems === null || this._memoizedItems.length === 0;
@@ -291,17 +274,6 @@ class ListBinding<TSource, TKey, TValue>
   }
 }
 
-function generateKeyValuePairs<TSource, TKey, TValue>({
-  source,
-  keySelector,
-  valueSelector,
-}: List<TSource, TKey, TValue>): KeyValuePair<TKey, TValue>[] {
-  return Array.from(source, (value, i) => ({
-    key: keySelector(value, i),
-    value: valueSelector(value, i),
-  }));
-}
-
 function commitInsert<TKey, TValue>(
   item: Item<TKey, TValue>,
   referenceNode: ChildNode,
@@ -338,8 +310,23 @@ function commitRemove<TKey, TValue>(item: Item<TKey, TValue>): void {
   sentinelNode.remove();
 }
 
-function indexSelector<T>(_value: T, index: number): number {
+function defaultKeySelector(_value: unknown, index: number): any {
   return index;
+}
+
+function defaultValueSelector(value: unknown, _index: number): any {
+  return value;
+}
+
+function generateKeyValuePairs<TSource, TKey, TValue>({
+  source,
+  keySelector = defaultKeySelector,
+  valueSelector = defaultValueSelector,
+}: ListProps<TSource, TKey, TValue>): KeyValuePair<TKey, TValue>[] {
+  return Array.from(source, (value, i) => ({
+    key: keySelector(value, i),
+    value: valueSelector(value, i),
+  }));
 }
 
 function reconcileItems<TKey, TValue>(
