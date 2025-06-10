@@ -2,6 +2,7 @@ import type {
   Hook,
   HookContext,
   Lane,
+  Lanes,
   UpdateOptions,
   UpdateTask,
 } from './hook.js';
@@ -36,7 +37,7 @@ export interface Binding<T> extends ReversibleEffect {
 }
 
 export interface Coroutine extends Effect {
-  resume(lane: Lane, context: UpdateContext): void;
+  resume(lane: Lane, context: UpdateContext): Lanes;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -169,7 +170,7 @@ export interface UpdateContext extends DirectiveContext {
     hooks: Hook[],
     lane: Lane,
     coroutine: Coroutine,
-  ): Bindable<TResult>;
+  ): RenderResult<TResult>;
   renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
@@ -204,6 +205,11 @@ export interface RenderContext extends HookContext {
     strings: TemplateStringsArray,
     ...binds: readonly Bindable<unknown>[]
   ): DirectiveElement<readonly Bindable<unknown>[]>;
+}
+
+export interface RenderResult<T> {
+  result: Bindable<T>;
+  lanes: Lanes;
 }
 
 export function createDirectiveElement<T>(

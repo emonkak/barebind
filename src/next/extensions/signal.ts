@@ -13,6 +13,8 @@ import {
 import {
   type HookContext,
   type Lane,
+  type Lanes,
+  NO_LANES,
   type UserHook,
   userHookTag,
 } from '../hook.js';
@@ -79,9 +81,10 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
     this._subscription ??= this._subscribeSignal(context.clone());
   }
 
-  resume(_lane: Lane, context: UpdateContext): void {
+  resume(_lane: Lane, context: UpdateContext): Lanes {
     this._slot.reconcile(this._signal.value, context);
     this._version = this._signal.version;
+    return NO_LANES;
   }
 
   connect(context: UpdateContext): void {

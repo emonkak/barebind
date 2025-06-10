@@ -17,6 +17,7 @@ import {
   type IdentifierHook,
   type InitialState,
   Lane,
+  type Lanes,
   type MemoHook,
   NO_LANES,
   type NewState,
@@ -41,6 +42,8 @@ export class RenderEngine implements RenderContext {
   private readonly _updateContext: UpdateContext;
 
   private _hookIndex = 0;
+
+  private _nextLanes = NO_LANES;
 
   constructor(
     hooks: Hook[],
@@ -79,7 +82,7 @@ export class RenderEngine implements RenderContext {
     return this._updateContext.getContextualValue(key);
   }
 
-  finalize(): void {
+  finalize(): Lanes {
     const currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -90,6 +93,8 @@ export class RenderEngine implements RenderContext {
       // Refuse to use new hooks after finalization.
       Object.freeze(this._hooks);
     }
+
+    return this._nextLanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateTask {
@@ -251,6 +256,8 @@ export class RenderEngine implements RenderContext {
       if ((currentHook.lanes & this._lane) !== NO_LANES) {
         currentHook.memoizedState = currentHook.pendingState;
         currentHook.lanes = NO_LANES;
+      } else {
+        this._nextLanes |= currentHook.lanes;
       }
     } else {
       const state =

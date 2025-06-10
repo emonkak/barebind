@@ -6,6 +6,7 @@ import {
   type Coroutine,
   type Effect,
   type Primitive,
+  type RenderResult,
   type Slot,
   type Template,
   type TemplateBlock,
@@ -46,7 +47,7 @@ interface GlobalState {
 
 interface UpdateState {
   lanes: Lanes;
-  inProgressTasks: LinkedList<UpdateTask>;
+  pendingTasks: LinkedList<UpdateTask>;
 }
 
 interface ContextualEntry<T> {
@@ -126,12 +127,11 @@ export class UpdateEngine implements UpdateContext {
       for (let i = 0, l = coroutines.length; i < l; i++) {
         const coroutine = coroutines[i]!;
         const updateState = updateStates.get(coroutine);
+        const nextLanes = coroutine.resume(lane, this);
 
         if (updateState !== undefined) {
-          updateState.lanes &= ~lane;
+          updateState.lanes = nextLanes;
         }
-
-        coroutine.resume(lane, this);
       }
 
       if (this._renderFrame.coroutines.length === 0) {
@@ -153,7 +153,7 @@ export class UpdateEngine implements UpdateContext {
       await this._renderHost.startViewTransition(callback);
     } else {
       await this._renderHost.requestCallback(callback, {
-        priority: options?.priority ?? 'user-blocking',
+        priority: 'user-blocking',
       });
     }
 
@@ -241,7 +241,7 @@ export class UpdateEngine implements UpdateContext {
     hooks: Hook[],
     lane: Lane,
     coroutine: Coroutine,
-  ): Bindable<TResult> {
+  ): RenderResult<TResult> {
     const updateContext = new UpdateEngine(
       this._renderHost,
       createRenderFrame(),
@@ -255,8 +255,8 @@ export class UpdateEngine implements UpdateContext {
       updateContext,
     );
     const result = component.render(props, renderContext);
-    renderContext.finalize();
-    return result;
+    const lanes = renderContext.finalize();
+    return { result, lanes };
   }
 
   renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
@@ -316,34 +316,35 @@ export class UpdateEngine implements UpdateContext {
     let updateState = updateStates.get(coroutine);
 
     if (updateState === undefined) {
-      updateState = { lanes: NO_LANES, inProgressTasks: new LinkedList() };
+      updateState = { lanes: NO_LANES, pendingTasks: new LinkedList() };
       updateStates.set(coroutine, updateState);
-    }
-
-    if ((updateState.lanes & lane) !== NO_LANES) {
-      for (const update of updateState.inProgressTasks) {
-        if (update.priority === priority) {
-          return update;
-        }
-      }
     }
 
     updateState.lanes |= lane;
 
-    const updateTaskNode = updateState.inProgressTasks.pushBack({
+    for (const updateTask of updateState.pendingTasks) {
+      if (updateTask.priority === priority) {
+        return updateTask;
+      }
+    }
+
+    const updateTaskNode = updateState.pendingTasks.pushBack({
       priority,
       promise: this._renderHost.requestCallback(
-        async () => {
-          try {
-            if (updateState.lanes === NO_LANES) {
-              return;
-            }
-            this._renderFrame.coroutines.push(coroutine);
-            this._renderFrame.mutationEffects.push(coroutine);
-            await this.flushAsync(options);
-          } finally {
-            updateState.inProgressTasks.remove(updateTaskNode);
+        () => {
+          updateState.pendingTasks.remove(updateTaskNode);
+
+          if (updateState.lanes === NO_LANES) {
+            return;
           }
+
+          this._renderFrame.coroutines.push(coroutine);
+          this._renderFrame.mutationEffects.push(coroutine);
+
+          return this.flushAsync({
+            priority,
+            viewTransition: options?.viewTransition ?? false,
+          });
         },
         { priority },
       ),
