@@ -139,3 +139,14 @@ export type NewState<T> = [T] extends [Function]
 export interface RefObject<T> {
   current: T;
 }
+
+export function ensureHookType<TExpectedHook extends Hook>(
+  expectedType: TExpectedHook['type'],
+  hook: Hook,
+): asserts hook is TExpectedHook {
+  if (hook.type !== expectedType) {
+    throw new Error(
+      `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
+    );
+  }
+}

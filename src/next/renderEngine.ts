@@ -9,7 +9,6 @@ import {
   type UpdateContext,
   createDirectiveElement,
 } from './core.js';
-import { ensureHookType } from './debug.js';
 import {
   type EffectHook,
   type FinalizerHook,
@@ -27,6 +26,7 @@ import {
   type UpdateTask,
   type UseUserHooks,
   type UserHook,
+  ensureHookType,
   userHookTag,
 } from './hook.js';
 
