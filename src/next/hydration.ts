@@ -12,7 +12,7 @@ export class HydrationTree {
     );
   }
 
-  peekNode(): ChildNode {
+  peekNode(): Node {
     const currentNode = this._treeWalker.currentNode;
     const nextNode = this._treeWalker.nextNode();
     this._treeWalker.currentNode = currentNode;
@@ -22,45 +22,12 @@ export class HydrationTree {
     return nextNode as ChildNode;
   }
 
-  peekElement(expectedType: string): Element {
-    const node = this.peekNode();
-    if (!isElement(node) || node.tagName !== expectedType) {
-      throw new Error(
-        `Hydration is failed because the node is mismatched. <${expectedType}> is expected here:\n` +
-          inspectNode(node, ERROR_MAKER),
-      );
-    }
-    return node;
-  }
-
-  peekText(): Text {
-    const node = this.peekNode();
-    if (!isText(node)) {
-      throw new Error(
-        'Hydration is failed because the node is mismatched. A text node is expected here:\n' +
-          inspectNode(node, ERROR_MAKER),
-      );
-    }
-    return node;
-  }
-
   popNode(): ChildNode {
     const node = this._treeWalker.nextNode();
     if (node === null) {
       throw new Error('Hydration is failed because there is no node.');
     }
     return node as ChildNode;
-  }
-
-  popComment(): Comment {
-    const node = this.popNode();
-    if (!isComment(node)) {
-      throw new Error(
-        'Hydration is failed because the node is mismatched. A comment node is expected here:\n' +
-          inspectNode(node, ERROR_MAKER),
-      );
-    }
-    return node;
   }
 }
 
@@ -74,4 +41,34 @@ function isElement(node: Node): node is Element {
 
 function isText(node: Node): node is Text {
   return node.nodeType === Node.TEXT_NODE;
+}
+
+export function ensureComment(node: Node): Comment {
+  if (!isComment(node)) {
+    throw new Error(
+      'Hydration is failed because the node is mismatched. A comment node is expected here:\n' +
+        inspectNode(node, ERROR_MAKER),
+    );
+  }
+  return node;
+}
+
+export function ensureElement(node: Node, expectedType: string): Element {
+  if (!isElement(node) || node.tagName !== expectedType) {
+    throw new Error(
+      `Hydration is failed because the node is mismatched. <${expectedType}> is expected here:\n` +
+        inspectNode(node, ERROR_MAKER),
+    );
+  }
+  return node;
+}
+
+export function ensureText(node: Node): Text {
+  if (!isText(node)) {
+    throw new Error(
+      'Hydration is failed because the node is mismatched. A text node is expected here:\n' +
+        inspectNode(node, ERROR_MAKER),
+    );
+  }
+  return node;
 }

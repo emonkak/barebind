@@ -9,7 +9,12 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import type { HydrationTree } from '../hydration.js';
+import {
+  type HydrationTree,
+  ensureComment,
+  ensureElement,
+  ensureText,
+} from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
@@ -147,12 +152,13 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
     );
     const slots: Slot<unknown>[] = new Array(holes.length);
     const childNodes = [];
-    let expectedNode: Node | null;
+    let currentNode: Node | null;
     let nodeIndex = 0;
     let holeIndex = 0;
 
-    OUTER: while ((expectedNode = treeWalker.nextNode()) !== null) {
+    OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
       let part: Part | null = null;
+      const lookaheadNode = hydrationTree.peekNode();
 
       while (holeIndex < holes.length) {
         const hole = holes[holeIndex]!;
@@ -164,14 +170,15 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
           case PartType.Attribute:
             part = {
               type: PartType.Attribute,
-              node: hydrationTree.peekElement(
-                (expectedNode as Element).tagName,
+              node: ensureElement(
+                lookaheadNode,
+                (currentNode as Element).tagName,
               ),
               name: hole.name,
             };
             break;
           case PartType.ChildNode: {
-            const sentinelNode = expectedNode.cloneNode(true) as Comment;
+            const sentinelNode = document.createComment('');
             part = {
               type: PartType.ChildNode,
               node: sentinelNode,
@@ -182,16 +189,18 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
           case PartType.Element:
             part = {
               type: PartType.Element,
-              node: hydrationTree.peekElement(
-                (expectedNode as Element).tagName,
+              node: ensureElement(
+                lookaheadNode,
+                (currentNode as Element).tagName,
               ),
             };
             break;
           case PartType.Event:
             part = {
               type: PartType.Event,
-              node: hydrationTree.peekElement(
-                (expectedNode as Element).tagName,
+              node: ensureElement(
+                lookaheadNode,
+                (currentNode as Element).tagName,
               ),
               name: hole.name,
             };
@@ -199,8 +208,9 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
           case PartType.Live:
             part = {
               type: PartType.Live,
-              node: hydrationTree.peekElement(
-                (expectedNode as Element).tagName,
+              node: ensureElement(
+                lookaheadNode,
+                (currentNode as Element).tagName,
               ),
               name: hole.name,
             };
@@ -208,8 +218,9 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
           case PartType.Property:
             part = {
               type: PartType.Property,
-              node: hydrationTree.peekElement(
-                (expectedNode as Element).tagName,
+              node: ensureElement(
+                lookaheadNode,
+                (currentNode as Element).tagName,
               ),
               name: hole.name,
             };
@@ -217,7 +228,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
           case PartType.Text:
             part = {
               type: PartType.Text,
-              node: hydrationTree.peekText(),
+              node: ensureText(lookaheadNode),
             };
             break;
         }
@@ -229,12 +240,13 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
         holeIndex++;
       }
 
+      const consumedNode = hydrationTree.popNode();
+
       if (part?.type === PartType.ChildNode) {
-        hydrationTree.popComment().replaceWith(part.node);
+        ensureComment(consumedNode).replaceWith(part.node);
       } else {
-        const hydrationNode = hydrationTree.popNode();
-        if (expectedNode.parentNode === rootNode) {
-          childNodes.push(hydrationNode);
+        if (currentNode.parentNode === rootNode) {
+          childNodes.push(consumedNode);
         }
       }
 

@@ -12,7 +12,7 @@ import {
   createDirectiveElement,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type { HydrationTree } from '../hydration.js';
+import { type HydrationTree, ensureComment } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 
 export type ListProps<TSource, TKey, TValue> = {
@@ -144,7 +144,7 @@ class ListBinding<TSource, TKey, TValue>
       const slot = context.resolveSlot(value, part);
 
       slot.hydrate(hydrationTree, context);
-      hydrationTree.popComment().replaceWith(part.node);
+      ensureComment(hydrationTree.popNode()).replaceWith(part.node);
 
       newItems[i] = {
         key,

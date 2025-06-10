@@ -6,7 +6,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import type { HydrationTree } from '../hydration.js';
+import { type HydrationTree, ensureText } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
@@ -20,12 +20,11 @@ export const TextTemplate: Template<readonly [Bindable<any>]> = {
   ): TemplateBlock<readonly [Bindable<unknown>]> {
     const slotPart = {
       type: PartType.Text,
-      node: hydrationTree.peekText(),
+      node: ensureText(hydrationTree.popNode()),
     } as const;
     const slot = context.resolveSlot(binds[0], slotPart);
 
     slot.hydrate(hydrationTree, context);
-    hydrationTree.popNode();
 
     return { childNodes: [slotPart.node], slots: [slot] };
   },
