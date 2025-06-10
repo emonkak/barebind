@@ -44,12 +44,12 @@ export class ServerRenderHost implements RenderHost {
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]> {
-    if (binds.length === 0 && strings[0]!.trim() === '') {
+    if (binds.length === 0) {
       // Assumption: strings.length === 1
-      return EmptyTemplate;
-    }
-
-    if (binds.length === 1) {
+      if (strings[0]!.trim() === '') {
+        return EmptyTemplate;
+      }
+    } else if (binds.length === 1) {
       // Assumption: strings.length === 2
       const beforeString = strings[0]!.trim();
       const afterString = strings[1]!.trim();
