@@ -21,6 +21,7 @@ import type { ChildNodePart, Part } from './part.js';
 import { RenderEngine } from './renderEngine.js';
 import { CommitPhase, type RenderHost } from './renderHost.js';
 import {
+  type Literal,
   type TemplateLiteral,
   TemplateLiteralPreprocessor,
 } from './templateLiteral.js';
@@ -105,10 +106,10 @@ export class UpdateEngine implements UpdateContext {
     this._renderFrame.passiveEffects.push(effect);
   }
 
-  expandLiterals(
+  expandLiterals<T>(
     strings: TemplateStringsArray,
-    values: readonly unknown[],
-  ): TemplateLiteral {
+    values: readonly (T | Literal)[],
+  ): TemplateLiteral<T> {
     return this._globalState.templateLiteralPreprocessor.expandLiterals(
       strings,
       values,

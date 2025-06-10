@@ -1,9 +1,11 @@
 import { sequentialEqual } from './compare.js';
-import { Literal } from './core.js';
 
-export interface TemplateLiteral {
+/**
+ * @internal
+ */
+export interface TemplateLiteral<T> {
   strings: readonly string[];
-  values: readonly unknown[];
+  values: T[];
 }
 
 interface TemplateDescriptor {
@@ -12,22 +14,25 @@ interface TemplateDescriptor {
   literalPositions: readonly number[];
 }
 
+/**
+ * @internal
+ */
 export class TemplateLiteralPreprocessor {
   private readonly _templateDescriptors: WeakMap<
     TemplateStringsArray,
     TemplateDescriptor
   > = new WeakMap();
 
-  expandLiterals(
+  expandLiterals<T>(
     strings: TemplateStringsArray,
-    values: readonly unknown[],
-  ): TemplateLiteral {
+    values: readonly (T | Literal)[],
+  ): TemplateLiteral<T> {
     const literalValues: string[] = [];
     const literalPositions: number[] = [];
-    const nonLiteralValues: unknown[] = [];
+    const nonLiteralValues: T[] = [];
 
     for (let i = 0, l = values.length; i < l; i++) {
-      const value = values[i];
+      const value = values[i]!;
       if (value instanceof Literal) {
         literalValues.push(value.valueOf());
         literalPositions.push(i);
@@ -64,6 +69,8 @@ export class TemplateLiteralPreprocessor {
     };
   }
 }
+
+export class Literal extends String {}
 
 function expandLiterals(
   strings: readonly string[],

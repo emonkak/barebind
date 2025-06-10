@@ -29,6 +29,7 @@ import {
   ensureHookType,
   userHookTag,
 } from './hook.js';
+import type { Literal } from './templateLiteral.js';
 
 export class RenderEngine implements RenderContext {
   private readonly _hooks: Hook[];
@@ -55,21 +56,21 @@ export class RenderEngine implements RenderContext {
 
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
+    ...binds: readonly (Bindable<unknown> | Literal)[]
   ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._dynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
+    ...binds: readonly (Bindable<unknown> | Literal)[]
   ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._dynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
+    ...binds: readonly (Bindable<unknown> | Literal)[]
   ): DirectiveElement<readonly Bindable<unknown>[]> {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
@@ -311,7 +312,7 @@ export class RenderEngine implements RenderContext {
 
   private _dynamicTemplate(
     strings: TemplateStringsArray,
-    binds: readonly Bindable<unknown>[],
+    binds: readonly (Bindable<unknown> | Literal)[],
     mode: TemplateMode,
   ): DirectiveElement<readonly Bindable<unknown>[]> {
     const { strings: expandedStrings, values: expandedBinds } =
@@ -321,7 +322,7 @@ export class RenderEngine implements RenderContext {
       expandedBinds as Bindable<unknown>[],
       mode,
     );
-    return createDirectiveElement(template, binds);
+    return createDirectiveElement(template, expandedBinds);
   }
 
   private _template(

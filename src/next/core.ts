@@ -7,7 +7,7 @@ import type {
 } from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import type { ChildNodePart, Part } from './part.js';
-import type { TemplateLiteral } from './templateLiteral.js';
+import type { Literal, TemplateLiteral } from './templateLiteral.js';
 
 export const bindableTypeTag: unique symbol = Symbol('Bindable.type');
 
@@ -144,10 +144,10 @@ export interface UpdateContext extends DirectiveContext {
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
-  expandLiterals(
+  expandLiterals<T>(
     strings: TemplateStringsArray,
-    values: readonly unknown[],
-  ): TemplateLiteral;
+    values: readonly (T | Literal)[],
+  ): TemplateLiteral<T>;
   flushAsync(options?: UpdateOptions): Promise<void>;
   flushSync(options?: UpdateOptions): void;
   getContextualValue<T>(key: unknown): T | undefined;
@@ -182,15 +182,15 @@ export interface UpdateContext extends DirectiveContext {
 export interface RenderContext extends HookContext {
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
+    ...binds: readonly (Bindable<unknown> | Literal)[]
   ): DirectiveElement<readonly Bindable<unknown>[]>;
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
+    ...binds: readonly (Bindable<unknown> | Literal)[]
   ): DirectiveElement<readonly Bindable<unknown>[]>;
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
+    ...binds: readonly (Bindable<unknown> | Literal)[]
   ): DirectiveElement<readonly Bindable<unknown>[]>;
   html(
     strings: TemplateStringsArray,
@@ -205,8 +205,6 @@ export interface RenderContext extends HookContext {
     ...binds: readonly Bindable<unknown>[]
   ): DirectiveElement<readonly Bindable<unknown>[]>;
 }
-
-export class Literal extends String {}
 
 export function createDirectiveElement<T>(
   directive: Directive<T>,

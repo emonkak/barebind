@@ -140,6 +140,9 @@ export interface RefObject<T> {
   current: T;
 }
 
+/**
+ * @internal
+ */
 export function ensureHookType<TExpectedHook extends Hook>(
   expectedType: TExpectedHook['type'],
   hook: Hook,
