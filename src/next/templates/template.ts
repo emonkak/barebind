@@ -6,7 +6,7 @@ import type {
   TemplateBlock,
   UpdateContext,
 } from '../core.js';
-import type { HydrationTree } from '../hydration.js';
+import { HydrationError, type HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 
 export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
@@ -50,7 +50,7 @@ export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
     if (this._pendingBlock !== null) {
-      throw new Error(
+      throw new HydrationError(
         'Hydration is failed because the template has already been rendered.',
       );
     }
