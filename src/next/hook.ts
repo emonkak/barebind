@@ -89,11 +89,17 @@ export interface HookContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): [TState, (action: TAction, options?: UpdateOptions) => void];
+  ): [
+    state: TState,
+    dispatch: (action: TAction, options?: UpdateOptions) => void,
+  ];
   useRef<T>(initialValue: T): RefObject<T>;
   useState<TState>(
     initialState: InitialState<TState>,
-  ): [TState, (newState: NewState<TState>, options?: UpdateOptions) => void];
+  ): [
+    state: TState,
+    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+  ];
   useSyncEnternalStore<T>(
     subscribe: (subscruber: () => void) => VoidFunction | void,
     getSnapshot: () => T,

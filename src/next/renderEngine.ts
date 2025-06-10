@@ -238,7 +238,10 @@ export class RenderEngine implements RenderContext {
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,
-  ): [TState, (action: TAction, options?: UpdateOptions) => void] {
+  ): [
+    state: TState,
+    dispatch: (action: TAction, options?: UpdateOptions) => void,
+  ] {
     let currentHook = this._hooks[this._hookIndex++];
 
     if (currentHook !== undefined) {
@@ -282,7 +285,10 @@ export class RenderEngine implements RenderContext {
 
   useState<TState>(
     initialState: InitialState<TState>,
-  ): [TState, (newState: NewState<TState>, options?: UpdateOptions) => void] {
+  ): [
+    state: TState,
+    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+  ] {
     return this.useReducer(
       (state, action) =>
         typeof action === 'function' ? action(state) : action,
