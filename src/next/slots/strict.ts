@@ -40,7 +40,7 @@ export class StrictSlot<T> implements Slot<T> {
     const element = context.resolveDirective(value, this._binding.part);
     if (this._binding.directive !== element.directive) {
       throw new Error(
-        `The value must have ${this._binding.directive.name}, but got ${element.directive.name}.\n` +
+        `The value must have ${this._binding.directive.name} in this slot, but got ${element.directive.name}.\n` +
           inspectPart(this._binding.part, markUsedValue(element.value)),
       );
     }
