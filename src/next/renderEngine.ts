@@ -17,11 +17,14 @@ import {
   HookType,
   type IdentifierHook,
   type InitialState,
+  Lane,
   type MemoHook,
+  NO_LANES,
   type NewState,
   type ReducerHook,
   type RefObject,
   type UpdateOptions,
+  type UpdateTask,
   type UseUserHooks,
   type UserHook,
   userHookTag,
@@ -30,20 +33,22 @@ import {
 export class RenderEngine implements RenderContext {
   private readonly _hooks: Hook[];
 
+  private readonly _lane: Lane;
+
   private readonly _coroutine: Coroutine;
 
   private readonly _updateContext: UpdateContext;
-
-  private _pendingUpdateOptions: UpdateOptions | null = null;
 
   private _hookIndex = 0;
 
   constructor(
     hooks: Hook[],
+    lane: Lane,
     coroutine: Coroutine,
     updateContext: UpdateContext,
   ) {
     this._hooks = hooks;
+    this._lane = lane;
     this._coroutine = coroutine;
     this._updateContext = updateContext;
   }
@@ -86,17 +91,8 @@ export class RenderEngine implements RenderContext {
     }
   }
 
-  forceUpdate(options: UpdateOptions = {}): void {
-    if (this._pendingUpdateOptions === null) {
-      queueMicrotask(() => {
-        this._updateContext.scheduleUpdate(
-          this._coroutine,
-          this._pendingUpdateOptions!,
-        );
-        this._pendingUpdateOptions = null;
-      });
-    }
-    this._pendingUpdateOptions = { ...this._pendingUpdateOptions, ...options };
+  forceUpdate(options?: UpdateOptions): UpdateTask {
+    return this._updateContext.scheduleUpdate(this._coroutine, options);
   }
 
   html(
@@ -125,7 +121,9 @@ export class RenderEngine implements RenderContext {
   }
 
   use<T>(hook: UserHook<T>): T;
-  use<T extends UserHook<unknown>[]>(hooks: T): UseUserHooks<T>;
+  use<THooks extends readonly UserHook<unknown>[]>(
+    hooks: THooks,
+  ): UseUserHooks<THooks>;
   use<T>(hook: UserHook<T> | UserHook<T>[]): T | T[] {
     if (Array.isArray(hook)) {
       return hook.map((hook) => hook[userHookTag](this));
@@ -248,17 +246,26 @@ export class RenderEngine implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
+      if ((currentHook.lanes & this._lane) !== NO_LANES) {
+        currentHook.memoizedState = currentHook.pendingState;
+        currentHook.lanes = NO_LANES;
+      }
     } else {
+      const state =
+        typeof initialState === 'function' ? initialState() : initialState;
       const hook: ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
-        state:
-          typeof initialState === 'function' ? initialState() : initialState,
+        lanes: NO_LANES,
+        pendingState: state,
+        memoizedState: state,
         dispatch: (action: TAction, options?: UpdateOptions) => {
-          const oldState = hook.state;
+          const oldState = hook.memoizedState;
           const newState = reducer(oldState, action);
+
           if (!Object.is(oldState, newState)) {
-            hook.state = newState;
-            this.forceUpdate(options);
+            const { priority } = this.forceUpdate(options);
+            hook.pendingState = newState;
+            hook.lanes |= Lane[priority];
           }
         },
       };
@@ -266,7 +273,7 @@ export class RenderEngine implements RenderContext {
       this._hooks.push(hook);
     }
 
-    return [currentHook.state as TState, currentHook.dispatch];
+    return [currentHook.memoizedState, currentHook.dispatch];
   }
 
   useRef<T>(initialValue: T): RefObject<T> {

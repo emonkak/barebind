@@ -44,46 +44,32 @@ export interface MemoHook<TResult> {
 
 export interface ReducerHook<TState, TAction> {
   type: typeof HookType.Reducer;
+  lanes: Lanes;
+  pendingState: TState;
+  memoizedState: TState;
   dispatch: (action: TAction) => void;
-  state: TState;
 }
 
 export interface FinalizerHook {
   type: typeof HookType.Finalizer;
 }
 
-export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
-
-export type NewState<T> = [T] extends [Function]
-  ? (prevState: T) => T
-  : ((prevState: T) => T) | T;
-
-export interface RefObject<T> {
-  current: T;
-}
-
-export interface UpdateOptions {
-  priority?: TaskPriority;
-  viewTransition?: boolean;
-}
-
-export type UseUserHooks<THooks> = THooks extends [
-  UserHook<infer THead>,
-  ...infer TTail,
-]
-  ? [THead, ...UseUserHooks<TTail>]
-  : [];
-
 export interface UserHook<T> {
   [userHookTag](context: HookContext): T;
 }
 
+export type UseUserHooks<THooks extends readonly UserHook<unknown>[]> = {
+  [K in keyof THooks]: THooks[K] extends UserHook<infer T> ? T : never;
+};
+
 export interface HookContext {
-  forceUpdate(options?: UpdateOptions): void;
+  forceUpdate(options?: UpdateOptions): UpdateTask;
   getContextualValue<T>(key: object): T | undefined;
   setContextualValue<T>(key: object, value: T): void;
   use<T>(hook: UserHook<T>): T;
-  use<T extends UserHook<unknown>[]>(hooks: T): UseUserHooks<T>;
+  use<THooks extends readonly UserHook<unknown>[]>(
+    hooks: THooks,
+  ): UseUserHooks<THooks>;
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
@@ -113,4 +99,37 @@ export interface HookContext {
     getSnapshot: () => T,
     options?: UpdateOptions,
   ): T;
+}
+
+export const NO_LANES: Lanes = 0;
+
+export type Lanes = number;
+
+export const Lane = {
+  default: 1,
+  'user-blocking': 2,
+  'user-visible': 3,
+  background: 4,
+} as const satisfies Record<'default' | TaskPriority, number>;
+
+export type Lane = (typeof Lane)[keyof typeof Lane];
+
+export interface UpdateOptions {
+  priority?: TaskPriority;
+  viewTransition?: boolean;
+}
+
+export interface UpdateTask {
+  priority: TaskPriority;
+  promise: Promise<void>;
+}
+
+export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
+
+export type NewState<T> = [T] extends [Function]
+  ? (prevState: T) => T
+  : ((prevState: T) => T) | T;
+
+export interface RefObject<T> {
+  current: T;
 }

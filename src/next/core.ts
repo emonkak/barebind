@@ -1,4 +1,10 @@
-import type { Hook, HookContext, UpdateOptions } from './hook.js';
+import type {
+  Hook,
+  HookContext,
+  Lane,
+  UpdateOptions,
+  UpdateTask,
+} from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import type { ChildNodePart, Part } from './part.js';
 import type { TemplateLiteral } from './templateLiteral.js';
@@ -30,7 +36,7 @@ export interface Binding<T> extends ReversibleEffect {
 }
 
 export interface Coroutine extends Effect {
-  resume(context: UpdateContext): void;
+  resume(lane: Lane, context: UpdateContext): void;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -161,6 +167,7 @@ export interface UpdateContext extends DirectiveContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
+    lane: Lane,
     coroutine: Coroutine,
   ): Bindable<TResult>;
   renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
@@ -168,7 +175,7 @@ export interface UpdateContext extends DirectiveContext {
     binds: TBinds,
     part: ChildNodePart,
   ): TemplateBlock<TBinds>;
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): Promise<void>;
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
   setContextualValue<T>(key: unknown, value: T): void;
 }
 

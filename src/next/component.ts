@@ -12,7 +12,7 @@ import {
   type UpdateContext,
   createDirectiveElement,
 } from './core.js';
-import { type EffectHook, type Hook, HookType } from './hook.js';
+import { type EffectHook, type Hook, HookType, Lane } from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import type { Part } from './part.js';
 
@@ -94,11 +94,12 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
     this._props = props;
   }
 
-  resume(context: UpdateContext): void {
+  resume(lane: Lane, context: UpdateContext): void {
     const result = context.renderComponent(
       this._component,
       this._props,
       this._hooks,
+      lane,
       this,
     );
     if (this._slot !== null) {
@@ -114,6 +115,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
       this._component,
       this._props,
       this._hooks,
+      Lane.default,
       this,
     );
     this._slot ??= context.resolveSlot(result, this._part);

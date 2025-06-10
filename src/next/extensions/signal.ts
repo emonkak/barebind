@@ -10,7 +10,12 @@ import {
   type UpdateContext,
   bindableTypeTag,
 } from '../core.js';
-import { type HookContext, type UserHook, userHookTag } from '../hook.js';
+import {
+  type HookContext,
+  type Lane,
+  type UserHook,
+  userHookTag,
+} from '../hook.js';
 import type { HydrationTree } from '../hydration.js';
 import { LinkedList } from '../linkedList.js';
 import type { Part } from '../part.js';
@@ -74,7 +79,7 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
     this._subscription ??= this._subscribeSignal(context.clone());
   }
 
-  resume(context: UpdateContext): void {
+  resume(_lane: Lane, context: UpdateContext): void {
     this._slot.reconcile(this._signal.value, context);
     this._version = this._signal.version;
   }

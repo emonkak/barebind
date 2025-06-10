@@ -13,9 +13,10 @@ import {
   type UpdateContext,
   bindableTypeTag,
 } from './core.js';
-import type { UpdateOptions } from './hook.js';
-import type { Hook } from './hook.js';
+import { Lane, NO_LANES, type UpdateOptions } from './hook.js';
+import type { Hook, Lanes, UpdateTask } from './hook.js';
 import type { HydrationTree } from './hydration.js';
+import { LinkedList } from './linkedList.js';
 import type { ChildNodePart, Part } from './part.js';
 import { RenderEngine } from './renderEngine.js';
 import { CommitPhase, type RenderHost } from './renderHost.js';
@@ -31,10 +32,20 @@ interface RenderFrame {
   passiveEffects: Effect[];
 }
 
-interface ContextualScope {
-  parent: ContextualScope | null;
-  context: UpdateContext;
-  entries: ContextualEntry<unknown>[];
+interface GlobalState {
+  cachedTemplates: WeakMap<
+    readonly string[],
+    Template<readonly Bindable<unknown>[]>
+  >;
+  identifierCount: number;
+  updateStates: WeakMap<Coroutine, UpdateState>;
+  templateLiteralPreprocessor: TemplateLiteralPreprocessor;
+  uniqueIdentifier: string;
+}
+
+interface UpdateState {
+  lanes: Lanes;
+  inProgressTasks: LinkedList<UpdateTask>;
 }
 
 interface ContextualEntry<T> {
@@ -42,15 +53,10 @@ interface ContextualEntry<T> {
   value: T;
 }
 
-interface GlobalState {
-  cachedTemplates: WeakMap<
-    readonly string[],
-    Template<readonly Bindable<unknown>[]>
-  >;
-  dirtyCoroutines: Set<Coroutine>;
-  identifierCount: number;
-  templateLiteralPreprocessor: TemplateLiteralPreprocessor;
-  uniqueIdentifier: string;
+interface ContextualScope {
+  parent: ContextualScope | null;
+  context: UpdateContext;
+  entries: ContextualEntry<unknown>[];
 }
 
 export class UpdateEngine implements UpdateContext {
@@ -110,15 +116,21 @@ export class UpdateEngine implements UpdateContext {
   }
 
   async flushAsync(options?: UpdateOptions): Promise<void> {
-    const { dirtyCoroutines } = this._globalState;
+    const { updateStates } = this._globalState;
+    const lane = Lane[options?.priority ?? 'default'];
 
     while (true) {
       const coroutines = consumeCoroutines(this._renderFrame);
 
       for (let i = 0, l = coroutines.length; i < l; i++) {
         const coroutine = coroutines[i]!;
-        coroutine.resume(this);
-        dirtyCoroutines.delete(coroutine);
+        const updateState = updateStates.get(coroutine);
+
+        if (updateState !== undefined) {
+          updateState.lanes &= ~lane;
+        }
+
+        coroutine.resume(lane, this);
       }
 
       if (this._renderFrame.coroutines.length === 0) {
@@ -155,15 +167,12 @@ export class UpdateEngine implements UpdateContext {
   }
 
   flushSync(): void {
-    const { dirtyCoroutines } = this._globalState;
-
     do {
       const coroutines = consumeCoroutines(this._renderFrame);
 
       for (let i = 0, l = coroutines.length; i < l; i++) {
         const coroutine = coroutines[i]!;
-        coroutine.resume(this);
-        dirtyCoroutines.delete(coroutine);
+        coroutine.resume(Lane.default, this);
       }
     } while (this._renderFrame.coroutines.length > 0);
 
@@ -229,6 +238,7 @@ export class UpdateEngine implements UpdateContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
+    lane: Lane,
     coroutine: Coroutine,
   ): Bindable<TResult> {
     const updateContext = new UpdateEngine(
@@ -237,10 +247,15 @@ export class UpdateEngine implements UpdateContext {
       this._contextualScope?.parent,
       this._globalState,
     );
-    const renderContext = new RenderEngine(hooks, coroutine, updateContext);
-    const element = component.render(props, renderContext);
+    const renderContext = new RenderEngine(
+      hooks,
+      lane,
+      coroutine,
+      updateContext,
+    );
+    const result = component.render(props, renderContext);
     renderContext.finalize();
-    return element;
+    return result;
   }
 
   renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
@@ -293,23 +308,47 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): Promise<void> {
-    const { dirtyCoroutines } = this._globalState;
-    if (dirtyCoroutines.has(coroutine)) {
-      return Promise.resolve();
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
+    const { updateStates } = this._globalState;
+    const priority = options?.priority ?? this._renderHost.getTaskPriority();
+    const lane = Lane[priority];
+    let updateState = updateStates.get(coroutine);
+
+    if (updateState === undefined) {
+      updateState = { lanes: NO_LANES, inProgressTasks: new LinkedList() };
+      updateStates.set(coroutine, updateState);
     }
-    dirtyCoroutines.add(coroutine);
-    return this._renderHost.requestCallback(
-      () => {
-        if (!dirtyCoroutines.has(coroutine)) {
-          return;
+
+    if ((updateState.lanes & lane) !== NO_LANES) {
+      for (const update of updateState.inProgressTasks) {
+        if (update.priority === priority) {
+          return update;
         }
-        this._renderFrame.coroutines.push(coroutine);
-        this._renderFrame.mutationEffects.push(coroutine);
-        return this.flushAsync(options);
-      },
-      { priority: options?.priority ?? this._renderHost.getTaskPriority() },
-    );
+      }
+    }
+
+    updateState.lanes |= lane;
+
+    const updateTaskNode = updateState.inProgressTasks.pushBack({
+      priority,
+      promise: this._renderHost.requestCallback(
+        async () => {
+          try {
+            if (updateState.lanes === NO_LANES) {
+              return;
+            }
+            this._renderFrame.coroutines.push(coroutine);
+            this._renderFrame.mutationEffects.push(coroutine);
+            await this.flushAsync(options);
+          } finally {
+            updateState.inProgressTasks.remove(updateTaskNode);
+          }
+        },
+        { priority },
+      ),
+    });
+
+    return updateTaskNode.value;
   }
 }
 
@@ -336,8 +375,8 @@ function consumeEffects(
 function createGlobalState(): GlobalState {
   return {
     cachedTemplates: new WeakMap(),
-    dirtyCoroutines: new Set(),
     identifierCount: 0,
+    updateStates: new WeakMap(),
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
     uniqueIdentifier: generateUniqueIdentifier(8),
   };
