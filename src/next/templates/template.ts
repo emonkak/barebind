@@ -7,7 +7,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import type { HydrationTree } from '../hydration.js';
-import { type ChildNodePart, PartType } from '../part.js';
+import { type ChildNodePart, type Part, PartType } from '../part.js';
 
 export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
   implements Binding<TBinds>, Effect
@@ -108,6 +108,13 @@ export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
 
         slot.commit();
       }
+
+      if (childNodes.length > 0) {
+        this._part.childNode =
+          childNodes[0]! === slots[0]?.part.node
+            ? getChildNode(slots[0].part)
+            : childNodes[0]!;
+      }
     }
 
     this._memoizedBlock = this._pendingBlock;
@@ -139,8 +146,13 @@ export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
       for (let i = childNodes.length - 1; i >= 0; i--) {
         childNodes[i]!.remove();
       }
-
-      this._memoizedBlock = null;
     }
+
+    this._part.childNode = this._part.node;
+    this._memoizedBlock = null;
   }
+}
+
+function getChildNode(part: Part): ChildNode {
+  return part.type === PartType.ChildNode ? part.childNode : part.node;
 }

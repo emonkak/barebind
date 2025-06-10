@@ -170,12 +170,15 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
               name: hole.name,
             };
             break;
-          case PartType.ChildNode:
+          case PartType.ChildNode: {
+            const sentinelNode = expectedNode.cloneNode(true) as Comment;
             part = {
               type: PartType.ChildNode,
-              node: expectedNode.cloneNode(true) as Comment,
+              node: sentinelNode,
+              childNode: sentinelNode,
             };
             break;
+          }
           case PartType.Element:
             part = {
               type: PartType.Element,
@@ -284,6 +287,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
               part = {
                 type: PartType.ChildNode,
                 node: currentNode as Comment,
+                childNode: currentNode as Comment,
               };
               break;
             case PartType.Element:
@@ -554,7 +558,11 @@ function parseChildren(
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
                   inspectPart(
-                    { type: PartType.ChildNode, node: currentNode as Comment },
+                    {
+                      type: PartType.ChildNode,
+                      node: currentNode as Comment,
+                      childNode: currentNode as Comment,
+                    },
                     ERROR_MAKER,
                   ),
               );

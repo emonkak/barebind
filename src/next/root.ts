@@ -26,9 +26,11 @@ export function createBrowserRoot<T>(
 ): BrowserRoot<T> {
   const renderHost = new BrowserRenderHost();
   const context = new UpdateEngine(renderHost);
+  const sentinelNode = container.ownerDocument.createComment('');
   const part = {
     type: PartType.ChildNode,
-    node: container.ownerDocument.createComment(''),
+    node: sentinelNode,
+    childNode: sentinelNode,
   } as const;
   const slot = context.resolveSlot(value, part);
 
@@ -63,9 +65,11 @@ export function createServerRoot<T>(
 ): ServerRoot<T> {
   const renderHost = new ServerRenderHost();
   const context = new UpdateEngine(renderHost);
+  const sentinelNode = container.ownerDocument.createComment('');
   const part = {
     type: PartType.ChildNode,
-    node: container.ownerDocument.createComment(''),
+    node: sentinelNode,
+    childNode: sentinelNode,
   } as const;
   const slot = context.resolveSlot(value, part);
 

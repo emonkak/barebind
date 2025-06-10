@@ -38,7 +38,6 @@ interface ReconciliationHandler<TKey, TValue> {
 
 interface Item<TKey, TValue> {
   key: TKey;
-  sentinelNode: Comment;
   slot: Slot<TValue>;
 }
 
@@ -136,10 +135,11 @@ class ListBinding<TSource, TKey, TValue>
 
     for (let i = 0, l = newPairs.length; i < l; i++) {
       const { key, value } = newPairs[i]!;
-      const sentinelNode = hydrationTree.popComment();
+      const sentinelNode = document.createComment('');
       const part = {
         type: PartType.ChildNode,
-        node: document.createComment(''),
+        node: sentinelNode,
+        childNode: sentinelNode,
       } as const;
       const slot = context.resolveSlot(value, part);
 
@@ -148,7 +148,6 @@ class ListBinding<TSource, TKey, TValue>
 
       newItems[i] = {
         key,
-        sentinelNode,
         slot,
       };
     }
@@ -168,13 +167,13 @@ class ListBinding<TSource, TKey, TValue>
         const sentinelNode = document.createComment('');
         const part = {
           type: PartType.ChildNode,
-          node: document.createComment(''),
+          node: sentinelNode,
+          childNode: sentinelNode,
         } as const;
         const slot = context.resolveSlot(value, part);
         slot.connect(context);
         const item: Item<TKey, TValue> = {
           key,
-          sentinelNode,
           slot,
         };
         if (!isEmpty) {
@@ -232,13 +231,13 @@ class ListBinding<TSource, TKey, TValue>
         switch (action.type) {
           case OperationType.Insert: {
             const referenceNode =
-              action.referenceItem?.sentinelNode ?? this._part.node;
+              action.referenceItem?.slot.part.node ?? this._part.node;
             commitInsert(action.item, referenceNode);
             break;
           }
           case OperationType.Move: {
             const referenceNode =
-              action.referenceItem?.sentinelNode ?? this._part.node;
+              action.referenceItem?.slot.part.node ?? this._part.node;
             commitMove(action.item, referenceNode);
             break;
           }
@@ -250,13 +249,14 @@ class ListBinding<TSource, TKey, TValue>
     }
 
     for (let i = 0, l = this._pendingItems.length; i < l; i++) {
-      const item = this._pendingItems[i]!;
-      const { slot, sentinelNode, key } = item;
-      DEBUG: {
-        sentinelNode.nodeValue = `${slot.directive.name}@${inspectValue(key)}`;
-        slot.part.node.nodeValue = `/${slot.directive.name}@${inspectValue(key)}`;
-      }
+      const { slot } = this._pendingItems[i]!;
       slot.commit();
+    }
+
+    if (this._pendingItems.length > 0) {
+      this._part.childNode = (
+        this._pendingItems[0]!.slot.part as ChildNodePart
+      ).childNode;
     }
 
     this._memoizedItems = this._pendingItems;
@@ -271,8 +271,9 @@ class ListBinding<TSource, TKey, TValue>
       }
     }
 
-    this._pendingOperations = [];
+    this._part.childNode = this._part.node;
     this._memoizedItems = null;
+    this._pendingOperations = [];
   }
 }
 
@@ -280,36 +281,42 @@ function commitInsert<TKey, TValue>(
   item: Item<TKey, TValue>,
   referenceNode: ChildNode,
 ): void {
-  const { slot, sentinelNode } = item;
-  referenceNode.before(sentinelNode, slot.part.node);
+  const { slot, key } = item;
+
+  DEBUG: {
+    slot.part.node.nodeValue =
+      '/' + slot.directive.name + '@' + inspectValue(key);
+  }
+
+  referenceNode.before(slot.part.node);
 }
 
 function commitMove<TKey, TValue>(
   item: Item<TKey, TValue>,
   referenceNode: ChildNode,
 ): void {
-  const { slot, sentinelNode } = item;
-  const { parentNode } = sentinelNode;
+  const { slot } = item;
+  const { parentNode } = slot.part.node;
   if (parentNode !== null) {
     const insertOrMoveBefore =
       Element.prototype.moveBefore ?? Element.prototype.insertBefore;
-    const childNodes = selectChildNodes(sentinelNode, slot.part.node);
+    const childNodes = selectChildNodes(slot.part as ChildNodePart);
     for (let i = 0, l = childNodes.length; i < l; i++) {
       insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
     }
   } else {
-    referenceNode.before(sentinelNode, slot.part.node);
+    referenceNode.before(slot.part.node);
   }
 }
 
 function commitRemove<TKey, TValue>(item: Item<TKey, TValue>): void {
-  const { slot, sentinelNode } = item;
+  const { slot } = item;
+
   slot.rollback();
+
   DEBUG: {
-    sentinelNode.nodeValue = '';
     slot.part.node.nodeValue = '';
   }
-  sentinelNode.remove();
 }
 
 function defaultKeySelector(_value: unknown, index: number): any {
@@ -417,17 +424,18 @@ function reconcileItems<TKey, TValue>(
   return newItems;
 }
 
-function selectChildNodes(
-  startNode: ChildNode,
-  endNode: ChildNode,
-): ChildNode[] {
-  const selectedNodes = [startNode];
+function selectChildNodes(part: ChildNodePart): ChildNode[] {
+  const startNode = part.childNode;
+  const endNode = part.node;
+  const childNodes = [startNode];
   let currentNode: ChildNode | null = startNode;
+
   while (
     currentNode !== endNode &&
     (currentNode = currentNode.nextSibling) !== null
   ) {
-    selectedNodes.push(currentNode);
+    childNodes.push(currentNode);
   }
-  return selectedNodes;
+
+  return childNodes;
 }

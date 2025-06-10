@@ -18,9 +18,11 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateBlock<readonly [Bindable<unknown>]> {
+    const sentinelNode = part.node.ownerDocument.createComment('');
     const slotPart = {
       type: PartType.ChildNode,
-      node: part.node.ownerDocument.createComment(''),
+      node: sentinelNode,
+      childNode: sentinelNode,
     } as const;
     const slot = context.resolveSlot(binds[0], slotPart);
 
@@ -34,9 +36,11 @@ export const ChildNodeTemplate: Template<readonly [Bindable<any>]> = {
     part: ChildNodePart,
     context: UpdateContext,
   ): TemplateBlock<readonly [Bindable<unknown>]> {
+    const sentinelNode = part.node.ownerDocument.createComment('');
     const slotPart = {
       type: PartType.ChildNode,
-      node: part.node.ownerDocument.createComment(''),
+      node: sentinelNode,
+      childNode: sentinelNode,
     } as const;
     const slot = context.resolveSlot(binds[0], slotPart);
 
