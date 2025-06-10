@@ -125,11 +125,9 @@ export class RenderEngine implements RenderContext {
     hooks: THooks,
   ): UseUserHooks<THooks>;
   use<T>(hook: UserHook<T> | UserHook<T>[]): T | T[] {
-    if (Array.isArray(hook)) {
-      return hook.map((hook) => hook[userHookTag](this));
-    } else {
-      return hook[userHookTag](this);
-    }
+    return Array.isArray(hook)
+      ? hook.map((hook) => hook[userHookTag](this))
+      : hook[userHookTag](this);
   }
 
   useCallback<TCallback extends Function>(
