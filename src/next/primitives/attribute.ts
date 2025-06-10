@@ -5,7 +5,6 @@ import { PrimitiveBinding } from './primitive.js';
 
 export const AttributePrimitive: Primitive<any> = {
   name: 'AttributePrimitive',
-  ensureValue(_value: unknown, _part: Part): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
     part: Part,

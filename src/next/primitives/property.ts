@@ -7,10 +7,6 @@ const noValue = Symbol('noValue');
 
 export const PropertyPrimitive: Primitive<any> = {
   name: 'PropertyPrimitive',
-  ensureValue(
-    _value: unknown,
-    _part: PropertyPart,
-  ): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
     part: Part,

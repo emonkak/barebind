@@ -89,7 +89,7 @@ export interface BindableElement<T> {
 }
 
 export interface Primitive<T> extends Directive<T> {
-  ensureValue(value: unknown, part: Part): asserts value is T;
+  ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
 export interface Template<TBinds extends readonly Bindable<unknown>[]>

@@ -272,11 +272,10 @@ export class UpdateEngine implements UpdateContext {
           slotType: value.slotType,
         };
       default: {
-        type EnsureValue = (value: unknown, part: Part) => void;
         const directive = this._renderHost.resolvePrimitive(
           part,
         ) as Primitive<T>;
-        (directive.ensureValue as EnsureValue)(value, part);
+        directive.ensureValue?.(value, part);
         return { directive, value };
       }
     }

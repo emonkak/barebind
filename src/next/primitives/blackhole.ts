@@ -4,7 +4,6 @@ import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<never> = {
   name: 'BlackholePrimitive',
-  ensureValue(_value: never, _part: Part): asserts _value is never {},
   resolveBinding(
     value: never,
     part: Part,
