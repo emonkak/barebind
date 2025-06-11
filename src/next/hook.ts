@@ -93,6 +93,7 @@ export interface HookContext {
   ): [
     state: TState,
     dispatch: (action: TAction, options?: UpdateOptions) => void,
+    isPending: boolean,
   ];
   useRef<T>(initialValue: T): RefObject<T>;
   useState<TState>(
@@ -100,6 +101,7 @@ export interface HookContext {
   ): [
     state: TState,
     setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+    isPending: boolean,
   ];
   useSyncEnternalStore<T>(
     subscribe: (subscruber: () => void) => VoidFunction | void,

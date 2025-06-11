@@ -230,6 +230,7 @@ export class RenderEngine implements RenderContext {
   ): [
     state: TState,
     dispatch: (action: TAction, options?: UpdateOptions) => void,
+    isPending: boolean,
   ] {
     let currentHook = this._hooks[this._hookIndex];
 
@@ -271,7 +272,11 @@ export class RenderEngine implements RenderContext {
 
     this._hookIndex++;
 
-    return [currentHook.memoizedState, currentHook.dispatch];
+    return [
+      currentHook.memoizedState,
+      currentHook.dispatch,
+      currentHook.lanes !== NO_LANES,
+    ];
   }
 
   useRef<T>(initialValue: T): RefObject<T> {
@@ -283,6 +288,7 @@ export class RenderEngine implements RenderContext {
   ): [
     state: TState,
     setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+    isPending: boolean,
   ] {
     return this.useReducer(
       (state, action) =>
