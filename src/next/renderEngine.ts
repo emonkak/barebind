@@ -233,8 +233,9 @@ export class RenderEngine implements RenderContext {
         currentHook,
       );
       if ((currentHook.lanes & this._lane) !== NO_LANES) {
-        currentHook.memoizedState = currentHook.pendingState;
         currentHook.lanes = NO_LANES;
+        currentHook.reducer = reducer;
+        currentHook.memoizedState = currentHook.pendingState;
       } else {
         this._nextLanes |= currentHook.lanes;
       }
@@ -244,11 +245,12 @@ export class RenderEngine implements RenderContext {
       const hook: ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         lanes: NO_LANES,
+        reducer,
         pendingState: state,
         memoizedState: state,
         dispatch: (action: TAction, options?: UpdateOptions) => {
           const oldState = hook.memoizedState;
-          const newState = reducer(oldState, action);
+          const newState = hook.reducer(oldState, action);
 
           if (!Object.is(oldState, newState)) {
             const { priority } = this.forceUpdate(options);

@@ -45,6 +45,7 @@ export interface MemoHook<TResult> {
 export interface ReducerHook<TState, TAction> {
   type: typeof HookType.Reducer;
   lanes: Lanes;
+  reducer: (state: TState, action: TAction) => TState;
   pendingState: TState;
   memoizedState: TState;
   dispatch: (action: TAction) => void;
