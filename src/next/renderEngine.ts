@@ -162,29 +162,8 @@ export class RenderEngine implements RenderContext {
   useEffect(
     callback: () => VoidFunction | void,
     dependencies: unknown[] | null = null,
-    type: EffectHook['type'] = HookType.PassiveEffect,
   ): void {
-    const currentHook = this._hooks[this._hookIndex++];
-
-    if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(type, currentHook);
-      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._updateContext.enqueuePassiveEffect(
-          new InvokeEffectHook(currentHook),
-        );
-      }
-      currentHook.callback = callback;
-      currentHook.dependencies = dependencies;
-    } else {
-      const hook: EffectHook = {
-        type,
-        callback,
-        dependencies,
-        cleanup: undefined,
-      };
-      this._hooks.push(hook);
-      this._updateContext.enqueuePassiveEffect(new InvokeEffectHook(hook));
-    }
+    return this._useEffect(callback, dependencies, HookType.PassiveEffect);
   }
 
   useId(): string {
@@ -207,14 +186,14 @@ export class RenderEngine implements RenderContext {
     callback: () => VoidFunction | void,
     dependencies: unknown[] | null = null,
   ): void {
-    return this.useEffect(callback, dependencies, HookType.InsertionEffect);
+    return this._useEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => VoidFunction | void,
     dependencies: unknown[] | null = null,
   ): void {
-    return this.useEffect(callback, dependencies, HookType.LayoutEffect);
+    return this._useEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
@@ -339,6 +318,34 @@ export class RenderEngine implements RenderContext {
   ): DirectiveElement<readonly Bindable<unknown>[]> {
     const template = this._updateContext.getTemplate(strings, binds, mode);
     return createDirectiveElement(template, binds);
+  }
+
+  private _useEffect(
+    callback: () => VoidFunction | void,
+    dependencies: unknown[] | null,
+    type: EffectHook['type'],
+  ): void {
+    const currentHook = this._hooks[this._hookIndex++];
+
+    if (currentHook !== undefined) {
+      ensureHookType<EffectHook>(type, currentHook);
+      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
+        this._updateContext.enqueuePassiveEffect(
+          new InvokeEffectHook(currentHook),
+        );
+      }
+      currentHook.callback = callback;
+      currentHook.dependencies = dependencies;
+    } else {
+      const hook: EffectHook = {
+        type,
+        callback,
+        dependencies,
+        cleanup: undefined,
+      };
+      this._hooks.push(hook);
+      this._updateContext.enqueuePassiveEffect(new InvokeEffectHook(hook));
+    }
   }
 }
 
