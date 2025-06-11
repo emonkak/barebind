@@ -83,7 +83,7 @@ export class RenderEngine implements RenderContext {
   }
 
   finalize(): Lanes {
-    const currentHook = this._hooks[this._hookIndex++];
+    const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<FinalizerHook>(HookType.Finalizer, currentHook);
@@ -93,6 +93,8 @@ export class RenderEngine implements RenderContext {
       // Refuse to use new hooks after finalization.
       Object.freeze(this._hooks);
     }
+
+    this._hookIndex++;
 
     return this._nextLanes;
   }
@@ -167,7 +169,7 @@ export class RenderEngine implements RenderContext {
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<IdentifierHook>(HookType.Identifier, currentHook);
@@ -178,6 +180,8 @@ export class RenderEngine implements RenderContext {
       };
       this._hooks.push(currentHook);
     }
+
+    this._hookIndex++;
 
     return currentHook.id;
   }
@@ -197,7 +201,7 @@ export class RenderEngine implements RenderContext {
   }
 
   useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<MemoHook<TResult>>(HookType.Memo, currentHook);
@@ -215,6 +219,8 @@ export class RenderEngine implements RenderContext {
       this._hooks.push(currentHook);
     }
 
+    this._hookIndex++;
+
     return currentHook.value as TResult;
   }
 
@@ -225,7 +231,7 @@ export class RenderEngine implements RenderContext {
     state: TState,
     dispatch: (action: TAction, options?: UpdateOptions) => void,
   ] {
-    let currentHook = this._hooks[this._hookIndex++];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<ReducerHook<TState, TAction>>(
@@ -262,6 +268,8 @@ export class RenderEngine implements RenderContext {
       currentHook = hook;
       this._hooks.push(hook);
     }
+
+    this._hookIndex++;
 
     return [currentHook.memoizedState, currentHook.dispatch];
   }
@@ -327,7 +335,7 @@ export class RenderEngine implements RenderContext {
     dependencies: unknown[] | null,
     type: EffectHook['type'],
   ): void {
-    const currentHook = this._hooks[this._hookIndex++];
+    const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(type, currentHook);
@@ -348,6 +356,8 @@ export class RenderEngine implements RenderContext {
       this._hooks.push(hook);
       this._updateContext.enqueuePassiveEffect(new InvokeEffectHook(hook));
     }
+
+    this._hookIndex++;
   }
 }
 
