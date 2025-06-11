@@ -103,11 +103,11 @@ export interface HookContext {
     setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
     isPending: boolean,
   ];
-  useSyncEnternalStore<T>(
+  useSyncEnternalStore<TSnapshot>(
     subscribe: (subscruber: () => void) => VoidFunction | void,
-    getSnapshot: () => T,
+    getSnapshot: () => TSnapshot,
     options?: UpdateOptions,
-  ): T;
+  ): TSnapshot;
 }
 
 export const NO_LANES: Lanes = 0;

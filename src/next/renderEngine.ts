@@ -138,18 +138,12 @@ export class RenderEngine implements RenderContext {
       : hook[userHookTag](this);
   }
 
-  useCallback<TCallback extends Function>(
-    callback: TCallback,
-    dependencies: unknown[],
-  ): TCallback {
+  useCallback<T extends Function>(callback: T, dependencies: unknown[]): T {
     return this.useMemo(() => callback, dependencies);
   }
 
-  useDeferredValue<TValue>(
-    value: TValue,
-    initialValue?: InitialState<TValue>,
-  ): TValue {
-    const [deferredValue, setDeferredValue] = this.useReducer<TValue, TValue>(
+  useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T {
+    const [deferredValue, setDeferredValue] = this.useReducer<T, T>(
       (_state, action) => action,
       initialValue ?? (() => value),
     );
@@ -200,11 +194,11 @@ export class RenderEngine implements RenderContext {
     return this._useEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
-  useMemo<TResult>(factory: () => TResult, dependencies: unknown[]): TResult {
+  useMemo<T>(factory: () => T, dependencies: unknown[]): T {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<MemoHook<TResult>>(HookType.Memo, currentHook);
+      ensureHookType<MemoHook<T>>(HookType.Memo, currentHook);
 
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
         currentHook.value = factory();
@@ -221,7 +215,7 @@ export class RenderEngine implements RenderContext {
 
     this._hookIndex++;
 
-    return currentHook.value as TResult;
+    return currentHook.value as T;
   }
 
   useReducer<TState, TAction>(
@@ -297,11 +291,11 @@ export class RenderEngine implements RenderContext {
     );
   }
 
-  useSyncEnternalStore<T>(
+  useSyncEnternalStore<TSnapshot>(
     subscribe: (subscruber: () => void) => VoidFunction | void,
-    getSnapshot: () => T,
+    getSnapshot: () => TSnapshot,
     options?: UpdateOptions,
-  ): T {
+  ): TSnapshot {
     this.useEffect(
       () =>
         subscribe(() => {
