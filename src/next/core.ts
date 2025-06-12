@@ -125,13 +125,14 @@ export type TemplateSlots<TBinds extends readonly Bindable<unknown>[]> = {
 };
 
 export interface Component<TProps, TResult> extends Directive<TProps> {
-  readonly render: ComponentFunction<TProps, TResult>;
+  render(props: TProps, context: RenderContext): Bindable<TResult>;
+  shouldUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
 
-export type ComponentFunction<TProps, TResult = unknown> = (
-  props: TProps,
-  context: RenderContext,
-) => Bindable<TResult>;
+export interface ComponentFunction<TProps, TResult = unknown> {
+  (props: TProps, context: RenderContext): Bindable<TResult>;
+  shouldUpdate?(nextProps: TProps, prevProps: TProps): boolean;
+}
 
 export interface DirectiveContext {
   resolveDirective<T>(value: Bindable<T>, part: Part): BindableElement<T>;

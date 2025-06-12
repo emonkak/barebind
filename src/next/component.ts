@@ -50,6 +50,13 @@ export class ComponentDirective<TProps, TResult>
     return componentFn(props, context);
   }
 
+  shouldUpdate(nextProps: TProps, prevProps: TProps): boolean {
+    return (
+      this._componentFn.shouldUpdate?.(nextProps, prevProps) ??
+      nextProps !== prevProps
+    );
+  }
+
   resolveBinding(
     props: TProps,
     part: Part,
@@ -93,7 +100,10 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
   }
 
   shouldBind(props: TProps): boolean {
-    return this._hooks.length === 0 || props !== this._props;
+    return (
+      this._hooks.length === 0 ||
+      this._component.shouldUpdate(props, this._props)
+    );
   }
 
   bind(props: TProps): void {
