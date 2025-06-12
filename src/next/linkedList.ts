@@ -2,14 +2,14 @@ export interface LinkedListNode<T> {
   readonly value: T;
   readonly prev: LinkedListNode<T> | null;
   readonly next: LinkedListNode<T> | null;
-  readonly owner: LinkedList<T> | null;
+  readonly root: LinkedList<T> | null;
 }
 
 interface Node<T> {
   value: T;
   prev: Node<T> | null;
   next: Node<T> | null;
-  owner: LinkedList<T> | null;
+  root: LinkedList<T> | null;
 }
 
 export class LinkedList<T> implements Iterable<T> {
@@ -48,7 +48,7 @@ export class LinkedList<T> implements Iterable<T> {
       this._head = null;
       this._tail = null;
     }
-    tail.owner = null;
+    tail.root = null;
     return tail;
   }
 
@@ -65,7 +65,7 @@ export class LinkedList<T> implements Iterable<T> {
       this._head = null;
       this._tail = null;
     }
-    head.owner = null;
+    head.root = null;
     return head;
   }
 
@@ -74,7 +74,7 @@ export class LinkedList<T> implements Iterable<T> {
       value,
       prev: this._tail,
       next: null,
-      owner: this,
+      root: this,
     };
 
     if (this._tail !== null) {
@@ -93,7 +93,7 @@ export class LinkedList<T> implements Iterable<T> {
       value,
       prev: null,
       next: this._head,
-      owner: this,
+      root: this,
     };
 
     if (this._head !== null) {
@@ -108,8 +108,8 @@ export class LinkedList<T> implements Iterable<T> {
   }
 
   remove(node: LinkedListNode<T>): boolean {
-    const { prev, next, owner } = node as Node<T>;
-    if (owner !== this) {
+    const { prev, next, root } = node as Node<T>;
+    if (root !== this) {
       return false;
     }
     if (prev !== null) {
@@ -124,7 +124,7 @@ export class LinkedList<T> implements Iterable<T> {
     }
     (node as Node<T>).prev = null;
     (node as Node<T>).next = null;
-    (node as Node<T>).owner = null;
+    (node as Node<T>).root = null;
     return true;
   }
 }
