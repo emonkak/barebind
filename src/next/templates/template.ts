@@ -114,6 +114,8 @@ export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
           childNodes[0]! === slots[0]?.part.node
             ? getChildNode(slots[0].part)
             : childNodes[0]!;
+      } else {
+        this._part.childNode = this._part.node;
       }
     }
 

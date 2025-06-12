@@ -257,6 +257,8 @@ class ListBinding<TSource, TKey, TValue>
       this._part.childNode = (
         this._pendingItems[0]!.slot.part as ChildNodePart
       ).childNode;
+    } else {
+      this._part.childNode = this._part.node;
     }
 
     this._memoizedItems = this._pendingItems;
