@@ -26,8 +26,8 @@ export interface EffectHook {
     | typeof HookType.InsertionEffect
     | typeof HookType.LayoutEffect
     | typeof HookType.PassiveEffect;
-  callback: () => VoidFunction | void;
-  cleanup: VoidFunction | void;
+  callback: () => (() => void) | void;
+  cleanup: (() => void) | void;
   dependencies: unknown[] | null;
 }
 
@@ -74,16 +74,16 @@ export interface HookContext {
   useCallback<T extends () => {}>(callback: T, dependencies: unknown[]): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null,
   ): void;
   useId(): string;
   useInsertionEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null,
   ): void;
   useLayoutEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null,
   ): void;
   useMemo<T>(factory: () => T, dependencies: unknown[]): T;
@@ -104,7 +104,7 @@ export interface HookContext {
     isPending: boolean,
   ];
   useSyncEnternalStore<TSnapshot>(
-    subscribe: (subscruber: () => void) => VoidFunction | void,
+    subscribe: (subscruber: () => void) => (() => void) | void,
     getSnapshot: () => TSnapshot,
     options?: UpdateOptions,
   ): TSnapshot;

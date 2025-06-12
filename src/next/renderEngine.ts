@@ -156,7 +156,7 @@ export class RenderEngine implements RenderContext {
   }
 
   useEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null = null,
   ): void {
     return this._useEffect(callback, dependencies, HookType.PassiveEffect);
@@ -181,14 +181,14 @@ export class RenderEngine implements RenderContext {
   }
 
   useInsertionEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null = null,
   ): void {
     return this._useEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null = null,
   ): void {
     return this._useEffect(callback, dependencies, HookType.LayoutEffect);
@@ -292,7 +292,7 @@ export class RenderEngine implements RenderContext {
   }
 
   useSyncEnternalStore<TSnapshot>(
-    subscribe: (subscruber: () => void) => VoidFunction | void,
+    subscribe: (subscruber: () => void) => (() => void) | void,
     getSnapshot: () => TSnapshot,
     options?: UpdateOptions,
   ): TSnapshot {
@@ -331,7 +331,7 @@ export class RenderEngine implements RenderContext {
   }
 
   private _useEffect(
-    callback: () => VoidFunction | void,
+    callback: () => (() => void) | void,
     dependencies: unknown[] | null,
     type: EffectHook['type'],
   ): void {
