@@ -1,7 +1,6 @@
 import type {
   Hook,
   HookContext,
-  Lane,
   Lanes,
   UpdateOptions,
   UpdateTask,
@@ -37,7 +36,7 @@ export interface Binding<T> extends ReversibleEffect {
 }
 
 export interface Coroutine extends Effect {
-  resume(lane: Lane, context: UpdateContext): Lanes;
+  resume(lanes: Lanes, context: UpdateContext): Lanes;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -168,7 +167,7 @@ export interface UpdateContext extends DirectiveContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    lane: Lane,
+    lanes: Lanes,
     coroutine: Coroutine,
   ): RenderResult<TResult>;
   renderTemplate<TBinds extends readonly Bindable<unknown>[]>(

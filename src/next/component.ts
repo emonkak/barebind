@@ -13,10 +13,10 @@ import {
   createDirectiveElement,
 } from './core.js';
 import {
+  ALL_LANES,
   type EffectHook,
   type Hook,
   HookType,
-  Lane,
   type Lanes,
 } from './hook.js';
 import type { HydrationTree } from './hydration.js';
@@ -100,12 +100,12 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
     this._props = props;
   }
 
-  resume(lane: Lane, context: UpdateContext): Lanes {
-    const { result, lanes } = context.renderComponent(
+  resume(lanes: Lanes, context: UpdateContext): Lanes {
+    const { result, lanes: nextLanes } = context.renderComponent(
       this._component,
       this._props,
       this._hooks,
-      lane,
+      lanes,
       this,
     );
     if (this._slot !== null) {
@@ -114,7 +114,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
       this._slot = context.resolveSlot(result, this._part);
       this._slot.connect(context);
     }
-    return lanes;
+    return nextLanes;
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
@@ -122,7 +122,7 @@ class ComponentBinding<TProps, TResult> implements Binding<TProps>, Coroutine {
       this._component,
       this._props,
       this._hooks,
-      Lane.default,
+      ALL_LANES,
       this,
     );
     this._slot ??= context.resolveSlot(result, this._part);

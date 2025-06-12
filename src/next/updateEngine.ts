@@ -14,7 +14,12 @@ import {
   type UpdateContext,
   bindableTypeTag,
 } from './core.js';
-import { Lane, NO_LANES, type UpdateOptions } from './hook.js';
+import {
+  ALL_LANES,
+  NO_LANES,
+  type UpdateOptions,
+  getLanesFromPriority,
+} from './hook.js';
 import type { Hook, Lanes, UpdateTask } from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import { LinkedList } from './linkedList.js';
@@ -119,7 +124,10 @@ export class UpdateEngine implements UpdateContext {
 
   async flushAsync(options?: UpdateOptions): Promise<void> {
     const { updateStates } = this._globalState;
-    const lane = Lane[options?.priority ?? 'default'];
+    const lanes =
+      options?.priority !== undefined
+        ? getLanesFromPriority(options.priority)
+        : ALL_LANES;
 
     while (true) {
       const coroutines = consumeCoroutines(this._renderFrame);
@@ -127,7 +135,7 @@ export class UpdateEngine implements UpdateContext {
       for (let i = 0, l = coroutines.length; i < l; i++) {
         const coroutine = coroutines[i]!;
         const updateState = updateStates.get(coroutine);
-        const nextLanes = coroutine.resume(lane, this);
+        const nextLanes = coroutine.resume(lanes, this);
 
         if (updateState !== undefined) {
           updateState.lanes = nextLanes;
@@ -173,7 +181,7 @@ export class UpdateEngine implements UpdateContext {
 
       for (let i = 0, l = coroutines.length; i < l; i++) {
         const coroutine = coroutines[i]!;
-        coroutine.resume(Lane.default, this);
+        coroutine.resume(ALL_LANES, this);
       }
     } while (this._renderFrame.coroutines.length > 0);
 
@@ -239,7 +247,7 @@ export class UpdateEngine implements UpdateContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    lane: Lane,
+    lanes: Lanes,
     coroutine: Coroutine,
   ): RenderResult<TResult> {
     const updateContext = new UpdateEngine(
@@ -250,13 +258,13 @@ export class UpdateEngine implements UpdateContext {
     );
     const renderContext = new RenderEngine(
       hooks,
-      lane,
+      lanes,
       coroutine,
       updateContext,
     );
     const result = component.render(props, renderContext);
-    const lanes = renderContext.finalize();
-    return { result, lanes };
+    const nextLanes = renderContext.finalize();
+    return { result, lanes: nextLanes };
   }
 
   renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
@@ -311,8 +319,8 @@ export class UpdateEngine implements UpdateContext {
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
     const { updateStates } = this._globalState;
-    const priority = options?.priority ?? this._renderHost.getTaskPriority();
-    const lane = Lane[priority];
+    const priority =
+      options?.priority ?? this._renderHost.getCurrentTaskPriority();
     let updateState = updateStates.get(coroutine);
 
     if (updateState === undefined) {
@@ -320,7 +328,7 @@ export class UpdateEngine implements UpdateContext {
       updateStates.set(coroutine, updateState);
     }
 
-    updateState.lanes |= lane;
+    updateState.lanes |= getLanesFromPriority(priority);
 
     for (const updateTask of updateState.pendingTasks) {
       if (updateTask.priority === priority) {

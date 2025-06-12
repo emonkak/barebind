@@ -72,12 +72,12 @@ export class BrowserRenderHost implements RenderHost {
     return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
   }
 
-  getTaskPriority(): TaskPriority {
+  getCurrentTaskPriority(): TaskPriority {
     const currentEvent = window.event;
     if (currentEvent !== undefined) {
       return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
     } else {
-      return 'user-visible';
+      return 'background';
     }
   }
 

@@ -110,18 +110,18 @@ export interface HookContext {
   ): TSnapshot;
 }
 
-export const NO_LANES: Lanes = 0;
-
-export type Lanes = number;
-
 export const Lane = {
-  default: 1,
-  'user-blocking': 2,
-  'user-visible': 3,
-  background: 4,
-} as const satisfies Record<'default' | TaskPriority, number>;
+  UserInput: 1,
+  ContinuousInput: 2,
+  Idle: 3,
+} as const;
 
 export type Lane = (typeof Lane)[keyof typeof Lane];
+
+export const NO_LANES: Lanes = 0;
+export const ALL_LANES: Lanes = -1;
+
+export type Lanes = number;
 
 export interface UpdateOptions {
   priority?: TaskPriority;
@@ -154,5 +154,19 @@ export function ensureHookType<TExpectedHook extends Hook>(
     throw new Error(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
+  }
+}
+
+/**
+ * @internal
+ */
+export function getLanesFromPriority(priority: TaskPriority): Lanes {
+  switch (priority) {
+    case 'user-blocking':
+      return Lane.UserInput;
+    case 'user-visible':
+      return Lane.UserInput | Lane.ContinuousInput;
+    case 'background':
+      return Lane.UserInput | Lane.ContinuousInput | Lane.Idle;
   }
 }

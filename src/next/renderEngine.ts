@@ -16,7 +16,6 @@ import {
   HookType,
   type IdentifierHook,
   type InitialState,
-  Lane,
   type Lanes,
   type MemoHook,
   NO_LANES,
@@ -28,6 +27,7 @@ import {
   type UseUserHooks,
   type UserHook,
   ensureHookType,
+  getLanesFromPriority,
   userHookTag,
 } from './hook.js';
 import type { Literal } from './templateLiteral.js';
@@ -35,7 +35,7 @@ import type { Literal } from './templateLiteral.js';
 export class RenderEngine implements RenderContext {
   private readonly _hooks: Hook[];
 
-  private readonly _lane: Lane;
+  private readonly _lanes: Lanes;
 
   private readonly _coroutine: Coroutine;
 
@@ -47,12 +47,12 @@ export class RenderEngine implements RenderContext {
 
   constructor(
     hooks: Hook[],
-    lane: Lane,
+    lanes: Lanes,
     coroutine: Coroutine,
     updateContext: UpdateContext,
   ) {
     this._hooks = hooks;
-    this._lane = lane;
+    this._lanes = lanes;
     this._coroutine = coroutine;
     this._updateContext = updateContext;
   }
@@ -233,7 +233,7 @@ export class RenderEngine implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._lane) !== NO_LANES) {
+      if ((currentHook.lanes & this._lanes) !== NO_LANES) {
         currentHook.lanes = NO_LANES;
         currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;
@@ -256,7 +256,7 @@ export class RenderEngine implements RenderContext {
           if (!Object.is(oldState, newState)) {
             const { priority } = this.forceUpdate(options);
             hook.pendingState = newState;
-            hook.lanes |= Lane[priority];
+            hook.lanes |= getLanesFromPriority(priority);
           }
         },
       };

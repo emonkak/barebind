@@ -16,7 +16,7 @@ export interface RenderHost {
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]>;
-  getTaskPriority(): TaskPriority;
+  getCurrentTaskPriority(): TaskPriority;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
