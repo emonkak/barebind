@@ -2,23 +2,23 @@ import type { DirectiveContext, Primitive } from '../core.js';
 import type { Part } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const BlackholePrimitive: Primitive<never> = {
+export const BlackholePrimitive: Primitive<any> = {
   name: 'BlackholePrimitive',
   resolveBinding(
-    value: never,
+    value: unknown,
     part: Part,
     _context: DirectiveContext,
-  ): BlackholeBinding {
+  ): BlackholeBinding<unknown> {
     return new BlackholeBinding(value, part);
   },
 };
 
-class BlackholeBinding extends PrimitiveBinding<never, Part> {
-  get directive(): Primitive<never> {
+class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
+  get directive(): Primitive<T> {
     return BlackholePrimitive;
   }
 
-  shouldBind(_value: never): boolean {
+  shouldBind(_value: T): boolean {
     return false;
   }
 
