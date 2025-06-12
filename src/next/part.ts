@@ -28,7 +28,7 @@ export interface AttributePart {
 export interface ChildNodePart {
   type: typeof PartType.ChildNode;
   node: Comment;
-  childNode: ChildNode;
+  childNode: ChildNode | null;
 }
 
 export interface ElementPart {
@@ -57,4 +57,13 @@ export interface PropertyPart {
 export interface TextPart {
   type: typeof PartType.Text;
   node: Text;
+}
+
+/**
+ * @internal
+ */
+export function getChildNode(part: Part): ChildNode {
+  return part.type === PartType.ChildNode
+    ? (part.childNode ?? part.node)
+    : part.node;
 }

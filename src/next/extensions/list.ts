@@ -13,7 +13,12 @@ import {
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type HydrationTree, ensureComment } from '../hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../part.js';
+import {
+  type ChildNodePart,
+  type Part,
+  PartType,
+  getChildNode,
+} from '../part.js';
 
 export type ListProps<TSource, TKey, TValue> = {
   source: Iterable<TSource>;
@@ -135,11 +140,10 @@ class ListBinding<TSource, TKey, TValue>
 
     for (let i = 0, l = newPairs.length; i < l; i++) {
       const { key, value } = newPairs[i]!;
-      const sentinelNode = document.createComment('');
       const part = {
         type: PartType.ChildNode,
-        node: sentinelNode,
-        childNode: sentinelNode,
+        node: document.createComment(''),
+        childNode: null,
       } as const;
       const slot = context.resolveSlot(value, part);
 
@@ -164,11 +168,10 @@ class ListBinding<TSource, TKey, TValue>
 
     this._pendingItems = reconcileItems(oldItems, newPairs, {
       insert: (key, value, referenceItem) => {
-        const sentinelNode = document.createComment('');
         const part = {
           type: PartType.ChildNode,
-          node: sentinelNode,
-          childNode: sentinelNode,
+          node: document.createComment(''),
+          childNode: null,
         } as const;
         const slot = context.resolveSlot(value, part);
         slot.connect(context);
@@ -254,11 +257,9 @@ class ListBinding<TSource, TKey, TValue>
     }
 
     if (this._pendingItems.length > 0) {
-      this._part.childNode = (
-        this._pendingItems[0]!.slot.part as ChildNodePart
-      ).childNode;
+      this._part.childNode = getChildNode(this._pendingItems[0]!.slot.part);
     } else {
-      this._part.childNode = this._part.node;
+      this._part.childNode = null;
     }
 
     this._memoizedItems = this._pendingItems;
@@ -273,7 +274,7 @@ class ListBinding<TSource, TKey, TValue>
       }
     }
 
-    this._part.childNode = this._part.node;
+    this._part.childNode = null;
     this._memoizedItems = null;
     this._pendingOperations = [];
   }
@@ -427,7 +428,7 @@ function reconcileItems<TKey, TValue>(
 }
 
 function selectChildNodes(part: ChildNodePart): ChildNode[] {
-  const startNode = part.childNode;
+  const startNode = part.childNode ?? part.node;
   const endNode = part.node;
   const childNodes = [startNode];
   let currentNode: ChildNode | null = startNode;

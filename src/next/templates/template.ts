@@ -7,7 +7,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../part.js';
+import { type ChildNodePart, PartType, getChildNode } from '../part.js';
 
 export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
   implements Binding<TBinds>, Effect
@@ -115,7 +115,7 @@ export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
             ? getChildNode(slots[0].part)
             : childNodes[0]!;
       } else {
-        this._part.childNode = this._part.node;
+        this._part.childNode = null;
       }
     }
 
@@ -150,11 +150,7 @@ export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
       }
     }
 
-    this._part.childNode = this._part.node;
+    this._part.childNode = null;
     this._memoizedBlock = null;
   }
-}
-
-function getChildNode(part: Part): ChildNode {
-  return part.type === PartType.ChildNode ? part.childNode : part.node;
 }

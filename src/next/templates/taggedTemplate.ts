@@ -177,15 +177,13 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
               name: hole.name,
             };
             break;
-          case PartType.ChildNode: {
-            const sentinelNode = document.createComment('');
+          case PartType.ChildNode:
             part = {
               type: PartType.ChildNode,
-              node: sentinelNode,
-              childNode: sentinelNode,
+              node: document.createComment(''),
+              childNode: null,
             };
             break;
-          }
           case PartType.Element:
             part = {
               type: PartType.Element,
@@ -299,7 +297,7 @@ export class TaggedTemplate<TBinds extends readonly Bindable<unknown>[]>
               part = {
                 type: PartType.ChildNode,
                 node: currentNode as Comment,
-                childNode: currentNode as Comment,
+                childNode: null,
               };
               break;
             case PartType.Element:
@@ -573,7 +571,7 @@ function parseChildren(
                     {
                       type: PartType.ChildNode,
                       node: currentNode as Comment,
-                      childNode: currentNode as Comment,
+                      childNode: null,
                     },
                     ERROR_MAKER,
                   ),
