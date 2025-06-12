@@ -12,7 +12,6 @@ import {
 } from '../core.js';
 import {
   type HookContext,
-  type Lane,
   type Lanes,
   NO_LANES,
   type UserHook,
@@ -41,7 +40,7 @@ export const SignalDirective: Directive<Signal<Bindable<any>>> = {
 class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
   private _signal: Signal<Bindable<T>>;
 
-  private _version: number;
+  private _memoizedVersion: number;
 
   private _slot: Slot<T>;
 
@@ -49,7 +48,7 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
 
   constructor(signal: Signal<Bindable<T>>, slot: Slot<T>) {
     this._signal = signal;
-    this._version = signal.version;
+    this._memoizedVersion = signal.version;
     this._slot = slot;
   }
 
@@ -73,7 +72,13 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
     this._subscription?.();
     this._subscription = null;
     this._signal = signal;
-    this._version = -1;
+    this._memoizedVersion = -1;
+  }
+
+  resume(_lanes: Lanes, context: UpdateContext): Lanes {
+    this._slot.reconcile(this._signal.value, context);
+    this._memoizedVersion = this._signal.version;
+    return NO_LANES;
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
@@ -81,17 +86,11 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
     this._subscription ??= this._subscribeSignal(context.clone());
   }
 
-  resume(_lane: Lane, context: UpdateContext): Lanes {
-    this._slot.reconcile(this._signal.value, context);
-    this._version = this._signal.version;
-    return NO_LANES;
-  }
-
   connect(context: UpdateContext): void {
-    const version = this._signal.version;
-    if (this._version < this._signal.version) {
+    const currentVersion = this._signal.version;
+    if (this._memoizedVersion < currentVersion) {
       this._slot.reconcile(this._signal.value, context);
-      this._version = version;
+      this._memoizedVersion = currentVersion;
     } else {
       this._slot.connect(context);
     }
@@ -217,7 +216,7 @@ export class Computed<
 
   private readonly _dependencies: TDependencies;
 
-  private _memoizedValue: TResult | null;
+  private _memoizedResult: TResult | null;
 
   private _memoizedVersion;
 
@@ -231,20 +230,20 @@ export class Computed<
   constructor(
     producer: (...dependencies: TDependencies) => TResult,
     dependencies: TDependencies,
-    initialValue: TResult,
+    initialResult: TResult,
     initialVersion: number,
   );
   constructor(
     producer: (...dependencies: TDependencies) => TResult,
     dependencies: TDependencies,
-    initialValue: TResult | null = null,
+    initialResult: TResult | null = null,
     initialVersion = -1, // -1 is indicated an uninitialized signal.
   ) {
     super();
 
     this._producer = producer;
     this._dependencies = dependencies;
-    this._memoizedValue = initialValue;
+    this._memoizedResult = initialResult;
     this._memoizedVersion = initialVersion;
   }
 
@@ -253,9 +252,9 @@ export class Computed<
     if (this._memoizedVersion < version) {
       const producer = this._producer;
       this._memoizedVersion = version;
-      this._memoizedValue = producer(...this._dependencies);
+      this._memoizedResult = producer(...this._dependencies);
     }
-    return this._memoizedValue!;
+    return this._memoizedResult!;
   }
 
   get version(): number {
