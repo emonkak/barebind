@@ -148,7 +148,7 @@ export class RenderEngine implements RenderContext {
       initialValue ?? (() => value),
     );
 
-    this.useEffect(() => {
+    this.useLayoutEffect(() => {
       setDeferredValue(value, { priority: 'background' });
     }, [value]);
 
