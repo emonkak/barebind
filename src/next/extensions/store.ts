@@ -65,8 +65,7 @@ export abstract class Store {
     const signalAccessors = getSignalAccessors(this.constructor);
     const state: Partial<this> = {};
     for (const key in signalAccessors) {
-      state[key as keyof this] = signalAccessors[key]!.get.call(this)
-        .value as this[keyof this];
+      state[key as keyof this] = signalAccessors[key]!.get.call(this).value;
     }
     return state as Pick<this, SignalKeys<this>>;
   }
