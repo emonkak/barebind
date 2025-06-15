@@ -7,3 +7,4 @@ export * from './root/server.js';
 export * from './slots/flexible.js';
 export * from './slots/memo.js';
 export * from './slots/strict.js';
+export * from './templateLiteral.js';
