@@ -65,8 +65,8 @@ export type UseUserHooks<THooks extends readonly UserHook<unknown>[]> = {
 
 export interface HookContext {
   forceUpdate(options?: UpdateOptions): UpdateTask;
-  getContextualValue<T>(key: object): T | undefined;
-  setContextualValue<T>(key: object, value: T): void;
+  getContextualValue<T>(key: unknown): T | undefined;
+  setContextualValue<T>(key: unknown, value: T): void;
   use<T>(hook: UserHook<T>): T;
   use<THooks extends readonly UserHook<unknown>[]>(
     hooks: THooks,
