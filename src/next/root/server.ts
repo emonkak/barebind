@@ -30,22 +30,22 @@ export function createServerRoot<T>(
       const hydrationTree = new HydrationTree(container);
       slot.hydrate(hydrationTree, context);
       context.enqueueMutationEffect(new MountSlot(slot, container));
-      return context.flushSync();
+      context.flushSync();
     },
     mount() {
       slot.connect(context);
       context.enqueueMutationEffect(new MountSlot(slot, container));
-      return context.flushSync();
+      context.flushSync();
     },
     update(value) {
       slot.reconcile(value, context);
       context.enqueueMutationEffect(slot);
-      return context.flushSync();
+      context.flushSync();
     },
     unmount() {
       slot.disconnect(context);
       context.enqueueMutationEffect(new UnmountSlot(slot, container));
-      return context.flushSync();
+      context.flushSync();
     },
   };
 }
