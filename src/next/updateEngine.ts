@@ -33,26 +33,16 @@ import {
 } from './templateLiteral.js';
 
 interface RenderFrame {
-  coroutines: Coroutine[];
+  pendingCoroutines: Coroutine[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
 }
 
-interface GlobalState {
-  cachedTemplates: WeakMap<
-    readonly string[],
-    Template<readonly Bindable<unknown>[]>
-  >;
-  identifierCount: number;
-  updateStates: WeakMap<Coroutine, UpdateState>;
-  templateLiteralPreprocessor: TemplateLiteralPreprocessor;
-  uniqueIdentifier: string;
-}
-
-interface UpdateState {
-  lanes: Lanes;
-  pendingTasks: LinkedList<UpdateTask>;
+interface ContextualScope {
+  parent: ContextualScope | null;
+  context: UpdateContext;
+  entries: ContextualEntry<unknown>[];
 }
 
 interface ContextualEntry<T> {
@@ -60,10 +50,20 @@ interface ContextualEntry<T> {
   value: T;
 }
 
-interface ContextualScope {
-  parent: ContextualScope | null;
-  context: UpdateContext;
-  entries: ContextualEntry<unknown>[];
+interface SharedState {
+  cachedTemplates: WeakMap<
+    readonly string[],
+    Template<readonly Bindable<unknown>[]>
+  >;
+  coroutineStates: WeakMap<Coroutine, CoroutineState>;
+  identifierCount: number;
+  templateLiteralPreprocessor: TemplateLiteralPreprocessor;
+  uniqueIdentifier: string;
+}
+
+interface CoroutineState {
+  lanes: Lanes;
+  pendingTasks: LinkedList<UpdateTask>;
 }
 
 export class UpdateEngine implements UpdateContext {
@@ -73,18 +73,18 @@ export class UpdateEngine implements UpdateContext {
 
   private _contextualScope: ContextualScope | null;
 
-  private readonly _globalState: GlobalState;
+  private readonly _sharedState: SharedState;
 
   constructor(
     renderHost: RenderHost,
     renderFrame: RenderFrame = createRenderFrame(),
     contextualScope: ContextualScope | null = null,
-    globalState = createGlobalState(),
+    sharedState = createSharedState(),
   ) {
     this._renderHost = renderHost;
     this._renderFrame = renderFrame;
     this._contextualScope = contextualScope;
-    this._globalState = globalState;
+    this._sharedState = sharedState;
   }
 
   clone(): UpdateContext {
@@ -92,12 +92,12 @@ export class UpdateEngine implements UpdateContext {
       this._renderHost,
       createRenderFrame(),
       this._contextualScope,
-      this._globalState,
+      this._sharedState,
     );
   }
 
   enqueueCoroutine(coroutine: Coroutine): void {
-    this._renderFrame.coroutines.push(coroutine);
+    this._renderFrame.pendingCoroutines.push(coroutine);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
@@ -116,14 +116,14 @@ export class UpdateEngine implements UpdateContext {
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T> {
-    return this._globalState.templateLiteralPreprocessor.expandLiterals(
+    return this._sharedState.templateLiteralPreprocessor.expandLiterals(
       strings,
       values,
     );
   }
 
   async flushAsync(options?: UpdateOptions): Promise<void> {
-    const { updateStates } = this._globalState;
+    const { coroutineStates } = this._sharedState;
     const lanes =
       options?.priority !== undefined
         ? getLanesFromPriority(options.priority)
@@ -134,15 +134,15 @@ export class UpdateEngine implements UpdateContext {
 
       for (let i = 0, l = coroutines.length; i < l; i++) {
         const coroutine = coroutines[i]!;
-        const updateState = updateStates.get(coroutine);
+        const coroutineState = coroutineStates.get(coroutine);
         const nextLanes = coroutine.resume(lanes, this);
 
-        if (updateState !== undefined) {
-          updateState.lanes = nextLanes;
+        if (coroutineState !== undefined) {
+          coroutineState.lanes = nextLanes;
         }
       }
 
-      if (this._renderFrame.coroutines.length === 0) {
+      if (this._renderFrame.pendingCoroutines.length === 0) {
         break;
       }
 
@@ -183,7 +183,7 @@ export class UpdateEngine implements UpdateContext {
         const coroutine = coroutines[i]!;
         coroutine.resume(ALL_LANES, this);
       }
-    } while (this._renderFrame.coroutines.length > 0);
+    } while (this._renderFrame.pendingCoroutines.length > 0);
 
     const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
       this._renderFrame,
@@ -213,16 +213,16 @@ export class UpdateEngine implements UpdateContext {
     binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
   ): Template<readonly Bindable<unknown>[]> {
-    let template = this._globalState.cachedTemplates.get(strings);
+    let template = this._sharedState.cachedTemplates.get(strings);
 
     if (template === undefined) {
       template = this._renderHost.createTemplate(
         strings,
         binds,
-        this._globalState.uniqueIdentifier,
+        this._sharedState.uniqueIdentifier,
         mode,
       );
-      this._globalState.cachedTemplates.set(strings, template);
+      this._sharedState.cachedTemplates.set(strings, template);
     }
 
     return template;
@@ -238,8 +238,8 @@ export class UpdateEngine implements UpdateContext {
   }
 
   nextIdentifier(): string {
-    const prefix = this._globalState.uniqueIdentifier;
-    const count = ++this._globalState.identifierCount;
+    const prefix = this._sharedState.uniqueIdentifier;
+    const count = ++this._sharedState.identifierCount;
     return prefix + '-' + count;
   }
 
@@ -254,7 +254,7 @@ export class UpdateEngine implements UpdateContext {
       this._renderHost,
       createRenderFrame(),
       this._contextualScope?.parent,
-      this._globalState,
+      this._sharedState,
     );
     const renderContext = new RenderEngine(
       hooks,
@@ -318,35 +318,35 @@ export class UpdateEngine implements UpdateContext {
   }
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
-    const { updateStates } = this._globalState;
+    const { coroutineStates } = this._sharedState;
     const priority =
       options?.priority ?? this._renderHost.getCurrentTaskPriority();
-    let updateState = updateStates.get(coroutine);
+    let coroutineState = coroutineStates.get(coroutine);
 
-    if (updateState === undefined) {
-      updateState = { lanes: NO_LANES, pendingTasks: new LinkedList() };
-      updateStates.set(coroutine, updateState);
+    if (coroutineState === undefined) {
+      coroutineState = { lanes: NO_LANES, pendingTasks: new LinkedList() };
+      coroutineStates.set(coroutine, coroutineState);
     }
 
-    updateState.lanes |= getLanesFromPriority(priority);
+    coroutineState.lanes |= getLanesFromPriority(priority);
 
-    for (const updateTask of updateState.pendingTasks) {
+    for (const updateTask of coroutineState.pendingTasks) {
       if (updateTask.priority === priority) {
         return updateTask;
       }
     }
 
-    const updateTaskNode = updateState.pendingTasks.pushBack({
+    const updateTaskNode = coroutineState.pendingTasks.pushBack({
       priority,
       promise: this._renderHost.requestCallback(
         () => {
-          updateState.pendingTasks.remove(updateTaskNode);
+          coroutineState.pendingTasks.remove(updateTaskNode);
 
-          if (updateState.lanes === NO_LANES) {
+          if (coroutineState.lanes === NO_LANES) {
             return;
           }
 
-          this._renderFrame.coroutines.push(coroutine);
+          this._renderFrame.pendingCoroutines.push(coroutine);
           this._renderFrame.mutationEffects.push(coroutine);
 
           return this.flushAsync({
@@ -363,9 +363,9 @@ export class UpdateEngine implements UpdateContext {
 }
 
 function consumeCoroutines(renderFrame: RenderFrame): Coroutine[] {
-  const { coroutines } = renderFrame;
-  renderFrame.coroutines = [];
-  return coroutines;
+  const { pendingCoroutines } = renderFrame;
+  renderFrame.pendingCoroutines = [];
+  return pendingCoroutines;
 }
 
 function consumeEffects(
@@ -382,11 +382,11 @@ function consumeEffects(
   };
 }
 
-function createGlobalState(): GlobalState {
+function createSharedState(): SharedState {
   return {
     cachedTemplates: new WeakMap(),
+    coroutineStates: new WeakMap(),
     identifierCount: 0,
-    updateStates: new WeakMap(),
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
     uniqueIdentifier: generateUniqueIdentifier(8),
   };
@@ -394,7 +394,7 @@ function createGlobalState(): GlobalState {
 
 function createRenderFrame(): RenderFrame {
   return {
-    coroutines: [],
+    pendingCoroutines: [],
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],
