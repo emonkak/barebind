@@ -1,21 +1,25 @@
-export interface LinkedListNode<T> {
-  readonly value: T;
-  readonly prev: LinkedListNode<T> | null;
-  readonly next: LinkedListNode<T> | null;
-  readonly root: LinkedList<T> | null;
-}
+export namespace LinkedList {
+  export interface Node<T> {
+    readonly value: T;
+    readonly prev: Node<T> | null;
+    readonly next: Node<T> | null;
+    readonly ownership: Symbol | null;
+  }
 
-interface Node<T> {
-  value: T;
-  prev: Node<T> | null;
-  next: Node<T> | null;
-  root: LinkedList<T> | null;
+  export interface MutableNode<T> {
+    value: T;
+    prev: MutableNode<T> | null;
+    next: MutableNode<T> | null;
+    ownership: Symbol | null;
+  }
 }
 
 export class LinkedList<T> implements Iterable<T> {
-  private _head: Node<T> | null = null;
+  private _head: LinkedList.MutableNode<T> | null = null;
 
-  private _tail: Node<T> | null = null;
+  private _tail: LinkedList.MutableNode<T> | null = null;
+
+  private readonly _ownership = Symbol('LinkedList.ownership');
 
   *[Symbol.iterator](): Iterator<T> {
     for (let node = this._head; node !== null; node = node.next) {
@@ -23,11 +27,11 @@ export class LinkedList<T> implements Iterable<T> {
     }
   }
 
-  back(): LinkedListNode<T> | null {
+  back(): LinkedList.Node<T> | null {
     return this._tail;
   }
 
-  front(): LinkedListNode<T> | null {
+  front(): LinkedList.Node<T> | null {
     return this._head;
   }
 
@@ -35,7 +39,7 @@ export class LinkedList<T> implements Iterable<T> {
     return this._head === null;
   }
 
-  popBack(): LinkedListNode<T> | null {
+  popBack(): LinkedList.Node<T> | null {
     const tail = this._tail;
     if (tail === null) {
       return null;
@@ -48,11 +52,11 @@ export class LinkedList<T> implements Iterable<T> {
       this._head = null;
       this._tail = null;
     }
-    tail.root = null;
+    tail.ownership = null;
     return tail;
   }
 
-  popFront(): LinkedListNode<T> | null {
+  popFront(): LinkedList.Node<T> | null {
     const head = this._head;
     if (head === null) {
       return null;
@@ -65,16 +69,16 @@ export class LinkedList<T> implements Iterable<T> {
       this._head = null;
       this._tail = null;
     }
-    head.root = null;
+    head.ownership = null;
     return head;
   }
 
-  pushBack(value: T): LinkedListNode<T> {
+  pushBack(value: T): LinkedList.Node<T> {
     const node = {
       value,
       prev: this._tail,
       next: null,
-      root: this,
+      ownership: this._ownership,
     };
 
     if (this._tail !== null) {
@@ -88,12 +92,12 @@ export class LinkedList<T> implements Iterable<T> {
     return node;
   }
 
-  pushFront(value: T): LinkedListNode<T> {
+  pushFront(value: T): LinkedList.Node<T> {
     const node = {
       value,
       prev: null,
       next: this._head,
-      root: this,
+      ownership: this._ownership,
     };
 
     if (this._head !== null) {
@@ -107,11 +111,11 @@ export class LinkedList<T> implements Iterable<T> {
     return node;
   }
 
-  remove(node: LinkedListNode<T>): boolean {
-    const { prev, next, root } = node as Node<T>;
-    if (root !== this) {
+  remove(node: LinkedList.Node<T>): boolean {
+    if (!isOwnedNode(node, this._ownership)) {
       return false;
     }
+    const { prev, next } = node;
     if (prev !== null) {
       prev.next = next;
     } else {
@@ -122,9 +126,16 @@ export class LinkedList<T> implements Iterable<T> {
     } else {
       this._tail = prev;
     }
-    (node as Node<T>).prev = null;
-    (node as Node<T>).next = null;
-    (node as Node<T>).root = null;
+    node.prev = null;
+    node.next = null;
+    node.ownership = null;
     return true;
   }
+}
+
+function isOwnedNode<T>(
+  node: LinkedList.Node<T>,
+  ownership: Symbol,
+): node is LinkedList.MutableNode<T> {
+  return node.ownership === ownership;
 }
