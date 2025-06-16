@@ -32,6 +32,13 @@ export function component<TProps, TResult>(
   return createDirectiveElement(directive, props);
 }
 
+export function defineComponent<TProps, TResult>(
+  componentFn: ComponentFunction<TProps, TResult>,
+): Component<TProps, TResult> {
+  return ((componentFn as any)[componentDirectiveTag] ??=
+    new ComponentDirective(componentFn));
+}
+
 export class ComponentDirective<TProps, TResult>
   implements Component<TProps, TResult>
 {
@@ -184,11 +191,4 @@ class CleanEffectHook implements Effect {
     this._hook.cleanup?.();
     this._hook.cleanup = undefined;
   }
-}
-
-function defineComponent<TProps, TResult>(
-  componentFn: ComponentFunction<TProps, TResult>,
-): Component<TProps, TResult> {
-  return ((componentFn as any)[componentDirectiveTag] ??=
-    new ComponentDirective(componentFn));
 }
