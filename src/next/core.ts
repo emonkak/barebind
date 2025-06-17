@@ -140,7 +140,7 @@ export interface DirectiveContext {
 }
 
 export interface UpdateContext extends DirectiveContext {
-  clone(): UpdateContext;
+  createIsolatedContext(): UpdateContext;
   enqueueCoroutine(coroutine: Coroutine): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
@@ -151,7 +151,7 @@ export interface UpdateContext extends DirectiveContext {
   ): TemplateLiteral<T>;
   flushAsync(options?: UpdateOptions): Promise<void>;
   flushSync(options?: UpdateOptions): void;
-  getContextualValue<T>(key: unknown): T | undefined;
+  getContextValue(key: unknown): unknown;
   getTemplate(
     strings: readonly string[],
     binds: readonly Bindable<unknown>[],
@@ -177,7 +177,7 @@ export interface UpdateContext extends DirectiveContext {
     part: ChildNodePart,
   ): TemplateBlock<TBinds>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  setContextualValue<T>(key: unknown, value: T): void;
+  setContextValue(key: unknown, value: unknown): void;
 }
 
 export interface RenderContext extends HookContext {

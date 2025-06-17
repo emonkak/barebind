@@ -30,7 +30,7 @@ export const CurrentLocation: UserHook<
   [userHookTag](
     context: HookContext,
   ): readonly [LocationState, LocationNavigator] {
-    const value = context.getContextualValue(CurrentLocation);
+    const value = context.getContextValue(CurrentLocation);
 
     if (value == undefined) {
       throw new Error(

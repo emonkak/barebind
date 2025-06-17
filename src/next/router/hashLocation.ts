@@ -72,7 +72,7 @@ export const HashLocation: UserHook<
       };
     }, []);
 
-    context.setContextualValue(CurrentLocation, [
+    context.setContextValue(CurrentLocation, [
       locationState,
       locationNavigator,
     ]);

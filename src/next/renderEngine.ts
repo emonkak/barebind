@@ -78,8 +78,8 @@ export class RenderEngine implements RenderContext {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
 
-  getContextualValue<T>(key: unknown): T | undefined {
-    return this._updateContext.getContextualValue(key);
+  getContextValue(key: unknown): unknown {
+    return this._updateContext.getContextValue(key);
   }
 
   finalize(): Lanes {
@@ -100,7 +100,9 @@ export class RenderEngine implements RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateTask {
-    return this._updateContext.scheduleUpdate(this._coroutine, options);
+    return this._updateContext
+      .createIsolatedContext()
+      .scheduleUpdate(this._coroutine, options);
   }
 
   html(
@@ -117,8 +119,8 @@ export class RenderEngine implements RenderContext {
     return this._template(strings, binds, 'math');
   }
 
-  setContextualValue<T>(key: unknown, value: T): void {
-    return this._updateContext.setContextualValue(key, value);
+  setContextValue(key: unknown, value: unknown): void {
+    return this._updateContext.setContextValue(key, value);
   }
 
   svg(

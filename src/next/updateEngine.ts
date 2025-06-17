@@ -39,13 +39,12 @@ interface RenderFrame {
   passiveEffects: Effect[];
 }
 
-interface ContextualScope {
-  parent: ContextualScope | null;
-  context: UpdateContext;
-  entries: ContextualEntry<unknown>[];
+interface ContextScope {
+  parent: ContextScope | null;
+  entries: ContextEntry<unknown>[];
 }
 
-interface ContextualEntry<T> {
+interface ContextEntry<T> {
   key: unknown;
   value: T;
 }
@@ -71,27 +70,27 @@ export class UpdateEngine implements UpdateContext {
 
   private readonly _renderFrame: RenderFrame;
 
-  private _contextualScope: ContextualScope | null;
+  private readonly _contextScope: ContextScope;
 
   private readonly _sharedState: SharedState;
 
   constructor(
     renderHost: RenderHost,
     renderFrame: RenderFrame = createRenderFrame(),
-    contextualScope: ContextualScope | null = null,
+    contextScope: ContextScope = createContextScope(null),
     sharedState = createSharedState(),
   ) {
     this._renderHost = renderHost;
     this._renderFrame = renderFrame;
-    this._contextualScope = contextualScope;
+    this._contextScope = contextScope;
     this._sharedState = sharedState;
   }
 
-  clone(): UpdateContext {
+  createIsolatedContext(): UpdateContext {
     return new UpdateEngine(
       this._renderHost,
       createRenderFrame(),
-      this._contextualScope,
+      createContextScope(this._contextScope.parent),
       this._sharedState,
     );
   }
@@ -194,17 +193,15 @@ export class UpdateEngine implements UpdateContext {
     this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive);
   }
 
-  getContextualValue<T>(key: unknown): T | undefined {
-    let contextualScope = this._contextualScope;
-    while (contextualScope !== null) {
-      const entry = contextualScope.entries.findLast(
-        (entry) => entry.key === key,
-      );
+  getContextValue(key: unknown): unknown {
+    let contextScope: ContextScope | null = this._contextScope;
+    do {
+      const entry = contextScope.entries.findLast((entry) => entry.key === key);
       if (entry !== undefined) {
-        return entry.value as T;
+        return entry.value;
       }
-      contextualScope = contextualScope.parent;
-    }
+      contextScope = contextScope.parent;
+    } while (contextScope !== null);
     return undefined;
   }
 
@@ -253,7 +250,7 @@ export class UpdateEngine implements UpdateContext {
     const updateContext = new UpdateEngine(
       this._renderHost,
       createRenderFrame(),
-      this._contextualScope?.parent,
+      createContextScope(this._contextScope),
       this._sharedState,
     );
     const renderContext = new RenderEngine(
@@ -305,16 +302,8 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  setContextualValue<T>(key: unknown, value: T): void {
-    if (this._contextualScope?.context !== this) {
-      this._contextualScope = {
-        parent: this._contextualScope,
-        context: this,
-        entries: [{ key, value }],
-      };
-    } else {
-      this._contextualScope.entries.push({ key, value });
-    }
+  setContextValue(key: unknown, value: unknown): void {
+    this._contextScope.entries.push({ key, value });
   }
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
@@ -398,6 +387,13 @@ function createRenderFrame(): RenderFrame {
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],
+  };
+}
+
+function createContextScope(parent: ContextScope | null): ContextScope {
+  return {
+    parent,
+    entries: [],
   };
 }
 

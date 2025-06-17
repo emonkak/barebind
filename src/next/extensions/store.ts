@@ -44,17 +44,17 @@ export abstract class Store {
     this: { new (...args: unknown[]): T },
     context: RenderContext,
   ): T {
-    const store = context.getContextualValue(this);
+    const store = context.getContextValue(this);
     if (!(store instanceof this)) {
       throw new Error(
-        `The contextual value for ${this.name} does not exist, please ensure it is registered by context.use(${this.name}).`,
+        `The context value for ${this.name} does not exist, please ensure it is registered by context.use(${this.name}).`,
       );
     }
     return store;
   }
 
   [userHookTag](context: RenderContext): void {
-    context.setContextualValue(this.constructor, this);
+    context.setContextValue(this.constructor, this);
   }
 
   asSignal(): StoreSignal<this> {

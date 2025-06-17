@@ -83,7 +83,9 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
     this._slot.hydrate(hydrationTree, context);
-    this._subscription ??= this._subscribeSignal(context.clone());
+    this._subscription ??= this._subscribeSignal(
+      context.createIsolatedContext(),
+    );
   }
 
   connect(context: UpdateContext): void {
@@ -94,7 +96,9 @@ class SignalBinding<T> implements Binding<Signal<Bindable<T>>>, Coroutine {
     } else {
       this._slot.connect(context);
     }
-    this._subscription ??= this._subscribeSignal(context.clone());
+    this._subscription ??= this._subscribeSignal(
+      context.createIsolatedContext(),
+    );
   }
 
   disconnect(context: UpdateContext): void {
