@@ -1,48 +1,60 @@
-import {
-  type Binding,
-  type Block,
-  type ChildNodePart,
-  type CommitPhase,
-  CommitStatus,
-  type ComponentType,
-  type Directive,
-  type DirectiveContext,
-  type Effect,
-  type Hook,
-  type Part,
-  PartType,
-  type RenderFrame,
-  type RenderHost,
-  type TaskPriority,
-  type Template,
-  type TemplateMode,
-  type TemplateResult,
-  type TemplateView,
-  type UpdateContext,
-  type Updater,
-  directiveTag,
-} from '../src/baseTypes.js';
-import { AttributeBinding } from '../src/bindings/attribute.js';
-import { ElementBinding } from '../src/bindings/element.js';
-import { EventBinding } from '../src/bindings/event.js';
-import { NodeBinding } from '../src/bindings/node.js';
-import { PropertyBinding } from '../src/bindings/property.js';
-import { LiteralProcessor } from '../src/literal.js';
-import {
-  RenderContext,
-  type UsableObject,
-  usableTag,
-} from '../src/renderContext.js';
-import type { RequestCallbackOptions, Scheduler } from '../src/scheduler.js';
+/// <reference path="../typings/scheduler.d.ts" />
+
+import type {
+  Bindable,
+  Binding,
+  Coroutine,
+  Directive,
+  DirectiveContext,
+  Effect,
+  Primitive,
+  Slot,
+  SlotType,
+  Template,
+  TemplateBlock,
+  TemplateMode,
+  UpdateContext,
+} from '../src/directive.js';
+import { type CommitPhase, type Lanes, NO_LANES } from '../src/hook.js';
+import type { HydrationTree } from '../src/hydration.js';
+import { type ChildNodePart, type Part, PartType } from '../src/part.js';
+import type { RenderHost, RequestCallbackOptions } from '../src/renderHost.js';
+import { TaggedTemplate } from '../src/template/taggedTemplate.js';
+import { TemplateBinding } from '../src/template/template.js';
+
+export class MockDirective<T> {
+  readonly name: string;
+
+  constructor(name: string = this.constructor.name) {
+    this.name = name;
+  }
+
+  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
+    return new MockBinding(this, value, part);
+  }
+}
+
+export const MockPrimitive = new MockDirective<unknown>('MockPrimitive');
 
 export class MockBinding<T> implements Binding<T> {
+  private readonly _directive: Directive<T>;
+
   private _value: T;
 
   private readonly _part: Part;
 
-  constructor(value: T, part: Part) {
+  private _isConnected: boolean = false;
+
+  private _isCommitted: boolean = false;
+
+  constructor(directive: Directive<T>, value: T, part: Part) {
+    this._directive = directive;
     this._value = value;
     this._part = part;
+  }
+
+  get directive(): Directive<T> {
+    return this._directive;
   }
 
   get value(): T {
@@ -53,82 +65,144 @@ export class MockBinding<T> implements Binding<T> {
     return this._part;
   }
 
-  get startNode(): ChildNode {
-    return this._part.node;
+  get isConnected(): boolean {
+    return this._isConnected;
   }
 
-  get endNode(): ChildNode {
-    return this._part.node;
+  get isCommitted(): boolean {
+    return this._isCommitted;
   }
 
-  connect(_context: UpdateContext): void {}
-
-  bind(newValue: T, _context: UpdateContext): void {
-    this._value = newValue;
-  }
-
-  unbind(_context: UpdateContext): void {}
-
-  disconnect(_context: UpdateContext): void {}
-}
-
-export class MockBlock<TContext> implements Block<TContext> {
-  private readonly _binding: Binding<unknown, TContext>;
-
-  private readonly _parent: Block<TContext> | null;
-
-  constructor(value: unknown = null, parent: Block<TContext> | null = null) {
-    this._binding = new MockBinding(value, {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-    });
-    this._parent = parent;
-  }
-
-  get binding(): Binding<unknown, TContext> {
-    return this._binding;
-  }
-
-  get isUpdating(): boolean {
-    return false;
-  }
-
-  get parent(): Block<TContext> | null {
-    return this._parent;
-  }
-
-  get priority(): TaskPriority {
-    return 'user-blocking';
-  }
-
-  cancelUpdate(): void {}
-
-  shouldUpdate(): boolean {
+  shouldBind(_value: T): boolean {
     return true;
   }
 
-  requestUpdate(
-    _priority: TaskPriority,
-    _context: UpdateContext<TContext>,
-  ): void {}
+  bind(value: T): void {
+    this._value = value;
+  }
 
-  update(_context: UpdateContext<TContext>): void {}
+  hydrate(_hydrationTree: HydrationTree, _context: UpdateContext): void {
+    this._isConnected = true;
+  }
+
+  connect(_context: UpdateContext): void {
+    this._isConnected = true;
+  }
+
+  disconnect(_context: UpdateContext): void {
+    this._isConnected = false;
+  }
+
+  commit(): void {
+    switch (this._part.type) {
+      case PartType.Attribute:
+        this._part.node.setAttribute(
+          this._part.name,
+          this._value?.toString() ?? '',
+        );
+        break;
+      case PartType.Element:
+        for (const name in this._value) {
+          this._part.node.setAttribute(
+            name,
+            this._value[name]?.toString() ?? '',
+          );
+        }
+        break;
+      case PartType.Live:
+      case PartType.Property:
+        (this._part.node as any)[this._part.name] = this._value;
+        break;
+      case PartType.Event:
+        this._part.node.addEventListener(
+          this._part.name,
+          this._value as EventListenerOrEventListenerObject,
+        );
+        break;
+      case PartType.ChildNode:
+      case PartType.Text:
+        this._part.node.nodeValue = this._value?.toString() ?? null;
+        break;
+    }
+
+    this._isCommitted = true;
+  }
+
+  rollback(): void {
+    switch (this._part.type) {
+      case PartType.Attribute:
+        this._part.node.removeAttribute(this._part.name);
+        break;
+      case PartType.Element:
+        for (const name in this._value) {
+          this._part.node.removeAttribute(name);
+        }
+        break;
+      case PartType.Live:
+      case PartType.Property:
+        (this._part.node as any)[this._part.name] = this._part.defaultValue;
+        break;
+      case PartType.Event:
+        this._part.node.removeEventListener(
+          this._part.name,
+          this._value as EventListenerOrEventListenerObject,
+        );
+        break;
+      case PartType.ChildNode:
+      case PartType.Text:
+        this._part.node.nodeValue = null;
+        break;
+    }
+
+    this._isCommitted = false;
+  }
 }
 
-export class MockScheduler implements Scheduler {
-  getCurrentTime(): number {
-    return Date.now();
+export class MockCoroutine implements Coroutine {
+  resume(_lanes: Lanes, _context: UpdateContext): Lanes {
+    return NO_LANES;
+  }
+
+  commit(): void {}
+}
+
+export class MockRenderHost implements RenderHost {
+  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+    for (let i = 0, l = effects.length; i < l; i++) {
+      effects[i]!.commit();
+    }
+  }
+
+  createTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    placeholder: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]> {
+    return TaggedTemplate.parse(strings, binds, placeholder, mode);
+  }
+
+  getCurrentTaskPriority(): TaskPriority {
+    return 'user-blocking';
   }
 
   requestCallback(
-    callback: () => void,
+    callback: () => Promise<void> | void,
     _options?: RequestCallbackOptions,
-  ): void {
-    queueMicrotask(callback);
+  ): Promise<void> {
+    return Promise.resolve().then(callback);
   }
 
-  shouldYieldToMain(_elapsedTime: number): boolean {
-    return false;
+  resolvePrimitive(_part: Part): Primitive<unknown> {
+    return MockPrimitive;
+  }
+
+  resolveSlotType(_part: Part): SlotType {
+    return MockSlot;
+  }
+
+  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
+    return Promise.resolve().then(callback);
   }
 
   yieldToMain(): Promise<void> {
@@ -136,262 +210,137 @@ export class MockScheduler implements Scheduler {
   }
 }
 
-export class MockTemplate<TValues, TContext>
-  implements Template<TValues, TContext>
-{
-  render(
-    values: TValues,
-    _context: UpdateContext<TContext>,
-  ): MockTemplateView<TValues, TContext> {
-    return new MockTemplateView(values);
+export class MockSlot<T> implements Slot<T> {
+  private readonly _binding: Binding<T>;
+
+  private _isConnected = false;
+
+  private _isCommitted = false;
+
+  constructor(binding: Binding<T>) {
+    this._binding = binding;
   }
 
-  isSameTemplate(other: Template<unknown>): boolean {
-    return other === this;
+  get directive(): Directive<T> {
+    return this._binding.directive;
   }
 
-  wrapInResult(values: TValues): TemplateResult<TValues, TContext> {
-    return {
-      template: this,
-      values,
-    };
-  }
-}
-
-export class MockTemplateView<TValues, TContext>
-  implements TemplateView<TValues, TContext>
-{
-  private _values: TValues;
-
-  private readonly _childNodes: ChildNode[];
-
-  constructor(values: TValues, childNodes: ChildNode[] = []) {
-    this._values = values;
-    this._childNodes = childNodes;
-  }
-
-  get startNode(): ChildNode | null {
-    return this._childNodes[0] ?? null;
-  }
-
-  get endNode(): ChildNode | null {
-    return this._childNodes.at(-1) ?? null;
-  }
-
-  get values(): TValues {
-    return this._values;
-  }
-
-  connect(_context: UpdateContext<TContext>): void {}
-
-  bind(values: TValues, _context: UpdateContext<TContext>): void {
-    this._values = values;
-  }
-
-  unbind(_context: UpdateContext<TContext>): void {}
-
-  mount(_part: ChildNodePart): void {}
-
-  unmount(_part: ChildNodePart): void {}
-
-  disconnect(_context: UpdateContext): void {}
-}
-
-export class MockRenderHost implements RenderHost<RenderContext> {
-  private _idCounter = 0;
-
-  private _literalProcessor = new LiteralProcessor();
-
-  flushComponent<TProps, TValues>(
-    type: ComponentType<TProps, TValues, RenderContext>,
-    props: TProps,
-    hooks: Hook[],
-    updater: Updater<RenderContext>,
-    block: Block<RenderContext>,
-    frame: RenderFrame<RenderContext>,
-  ): TemplateResult<TValues, RenderContext> {
-    const context = new RenderContext(
-      this,
-      updater,
-      block,
-      frame,
-      hooks,
-      this._literalProcessor,
-    );
-    const result = type(props, context);
-    context.finalize();
-    return result;
-  }
-
-  flushEffects(effects: Effect[], phase: CommitPhase): void {
-    for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(phase);
-    }
-  }
-
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
-  }
-
-  getHostName(): string {
-    return '__test__';
-  }
-
-  getTemplate<TValues extends readonly any[]>(
-    _strings: readonly string[],
-    _values: TValues,
-    _mode: TemplateMode,
-  ): Template<TValues, RenderContext> {
-    return new MockTemplate();
-  }
-
-  getScopedValue(_key: unknown, _block: Block<RenderContext>): unknown {
-    return undefined;
-  }
-
-  getUnsafeTemplate(
-    _content: string,
-    _mode: TemplateMode,
-  ): Template<[], RenderContext> {
-    return new MockTemplate();
-  }
-
-  nextIdentifier(): number {
-    return ++this._idCounter;
-  }
-
-  resolveBinding<TValue>(value: TValue, part: Part): Binding<TValue> {
-    switch (part.type) {
-      case PartType.Attribute:
-        return new AttributeBinding(value, part);
-      case PartType.ChildNode:
-        return new NodeBinding(value, part);
-      case PartType.Element:
-        return new ElementBinding(value, part) as Binding<any, RenderContext>;
-      case PartType.Event:
-        return new EventBinding(value, part) as Binding<any, RenderContext>;
-      case PartType.Node:
-        return new NodeBinding(value, part);
-      case PartType.Property:
-        return new PropertyBinding(value, part);
-    }
-  }
-
-  setScopedValue(
-    _key: unknown,
-    _value: unknown,
-    _block: Block<RenderContext>,
-  ): void {}
-
-  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
-    return Promise.resolve().then(callback);
-  }
-}
-
-export class MockUsableObject<T> implements UsableObject<T> {
-  private _returnValue: T;
-
-  constructor(returnValue: T) {
-    this._returnValue = returnValue;
-  }
-
-  [usableTag](): T {
-    return this._returnValue;
-  }
-}
-
-export class TextBinding implements Binding<TextDirective>, Effect {
-  private _value: TextDirective;
-
-  private readonly _part: Part;
-
-  private _status = CommitStatus.Committed;
-
-  private _textNode: Text = document.createTextNode('');
-
-  constructor(value: TextDirective, part: Part) {
-    this._value = value;
-    this._part = part;
-  }
-
-  get value(): TextDirective {
-    return this._value;
+  get value(): T {
+    return this._binding.value;
   }
 
   get part(): Part {
-    return this._part;
+    return this._binding.part;
   }
 
-  get startNode(): ChildNode {
-    return this._textNode.parentNode !== null
-      ? this._textNode
-      : this._part.node;
+  get binding(): Binding<T> {
+    return this._binding;
   }
 
-  get endNode(): ChildNode {
-    return this._part.node;
+  get isConnected(): boolean {
+    return this._isConnected;
+  }
+
+  get isCommitted(): boolean {
+    return this._isCommitted;
+  }
+
+  reconcile(value: Bindable<T>, context: UpdateContext): void {
+    const element = context.resolveDirective(value, this._binding.part);
+    if (element.directive !== this._binding.directive) {
+      throw new Error(
+        `The directive must be ${this._binding.directive.name} in this slot, but got ${element.directive.name}.`,
+      );
+    }
+    if (this._binding.shouldBind(element.value)) {
+      this._binding.bind(element.value);
+      this._binding.connect(context);
+      this._isConnected = true;
+    }
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    this._binding.hydrate(hydrationTree, context);
+    this._isConnected = true;
   }
 
   connect(context: UpdateContext): void {
-    if (this._status === CommitStatus.Committed) {
-      context.enqueueMutationEffect(this);
-    }
-    this._status = CommitStatus.Mounting;
+    this._binding.connect(context);
+    this._isConnected = true;
   }
 
-  bind(newValue: TextDirective, context: UpdateContext): void {
-    if (this._status === CommitStatus.Committed) {
-      context.enqueueMutationEffect(this);
-    }
-    this._value = newValue;
-    this._status = CommitStatus.Mounting;
-  }
-
-  unbind(context: UpdateContext): void {
-    if (this._status === CommitStatus.Committed) {
-      context.enqueueMutationEffect(this);
-    }
-    this._status = CommitStatus.Unmounting;
-  }
-
-  disconnect(_context: UpdateContext): void {
-    this._status = CommitStatus.Committed;
+  disconnect(context: UpdateContext): void {
+    this._binding.disconnect(context);
+    this._isConnected = false;
   }
 
   commit(): void {
-    switch (this._status) {
-      case CommitStatus.Mounting: {
-        const { content } = this._value;
-        this._textNode.data = content;
-        if (this._textNode.parentNode === null) {
-          this._part.node.before(this._textNode);
-        }
-        break;
-      }
-      case CommitStatus.Unmounting:
-        this._textNode.remove();
-        break;
-    }
+    this._binding.commit();
+    this._isCommitted = true;
+  }
 
-    this._status = CommitStatus.Committed;
+  rollback(): void {
+    this._binding.rollback();
+    this._isCommitted = false;
   }
 }
 
-export class TextDirective implements Directive<TextDirective> {
-  private _content: string;
+export class MockTemplate implements Template<readonly unknown[]> {
+  readonly strings: readonly string[];
 
-  constructor(content = '') {
-    this._content = content;
+  readonly binds: readonly unknown[];
+
+  readonly placeholder: string;
+
+  readonly mode: TemplateMode;
+
+  constructor(
+    strings: readonly string[] = [],
+    binds: readonly unknown[] = [],
+    placeholder = '',
+    mode: TemplateMode = 'html',
+  ) {
+    this.strings = strings;
+    this.binds = binds;
+    this.placeholder = placeholder;
+    this.mode = mode;
   }
 
-  get content(): string {
-    return this._content;
+  get name(): string {
+    return this.constructor.name;
   }
 
-  [directiveTag](
+  render(
+    _binds: readonly unknown[],
+    _part: ChildNodePart,
+    _context: UpdateContext,
+  ): TemplateBlock {
+    return {
+      childNodes: [],
+      slots: [],
+    };
+  }
+
+  hydrate(
+    _binds: readonly unknown[],
+    _part: ChildNodePart,
+    _hydrationTree: HydrationTree,
+    _context: UpdateContext,
+  ): TemplateBlock {
+    return {
+      childNodes: [],
+      slots: [],
+    };
+  }
+
+  resolveBinding(
+    binds: readonly unknown[],
     part: Part,
     _context: DirectiveContext,
-  ): Binding<TextDirective> {
-    return new TextBinding(this, part);
+  ): Binding<readonly unknown[]> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error('MockTemplate must be used in a child node.');
+    }
+    return new TemplateBinding(this, binds, part);
   }
 }

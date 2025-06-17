@@ -1,0 +1,257 @@
+import { $customHook, type HookContext } from '../hook.js';
+import {
+  Atom,
+  Computed,
+  Lazy,
+  Signal,
+  type Subscriber,
+  type Subscription,
+} from './signal.js';
+
+export type SignalKeys<T> = Exclude<keyof T, FunctionKeys<T>> & string;
+
+export type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
+
+type Constructable<T = object> = new (...args: any[]) => T;
+
+type Mixin<TClass extends Constructable, TExtensions> = Constructable<
+  InstanceType<TClass> & TExtensions
+>;
+
+type FunctionKeys<T> = {
+  [K in keyof T]: T[K] extends Function ? K : never;
+}[keyof T];
+
+type WritableKeys<T> = {
+  [K in keyof T]: StrictEqual<
+    { -readonly [P in K]-?: T[P] },
+    Pick<T, K>
+  > extends true
+    ? K
+    : never;
+}[keyof T];
+
+type StrictEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
+  T,
+>() => T extends Y ? 1 : 2
+  ? true
+  : false;
+
+export interface StoreClass {
+  new (...args: unknown[]): unknown;
+  [$customHook](context: HookContext): InstanceType<this>;
+}
+
+export interface StoreExtensions {
+  [$customHook](context: HookContext): void;
+  asSignal(): Signal<this>;
+  getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
+  getSignal<TKey extends keyof this>(key: TKey): Signal<this[TKey]> | undefined;
+  getVersion(): number;
+  restoreSnapshot(state: Pick<this, AtomKeys<this>>): void;
+  subscribe(subscriber: Subscriber): Subscription;
+  toSnapshot(): Pick<this, AtomKeys<this>>;
+}
+
+export function createStore<TClass extends Constructable>(
+  superclass: TClass,
+): StoreClass & Mixin<TClass, StoreExtensions> {
+  return class Store extends superclass implements StoreExtensions {
+    #signalMap: Record<PropertyKey, Signal<unknown>> = {};
+
+    static [$customHook](
+      this: Constructable<Store>,
+      context: HookContext,
+    ): Store {
+      const store = context.getContextValue(this);
+      if (!(store instanceof this)) {
+        throw new Error(
+          `The context value for the store of ${superclass.name} is not registered, please ensure it is registered by context.use(...).`,
+        );
+      }
+      return store;
+    }
+
+    constructor(...args: any[]) {
+      super(...args);
+      defineInstanceDescriptors(this, this.#signalMap);
+      definePrototypeDescriptors(this, this.#signalMap);
+    }
+
+    [$customHook](context: HookContext): void {
+      context.setContextValue(this.constructor, this);
+    }
+
+    asSignal(): Signal<this> {
+      return new StoreSignal(this);
+    }
+
+    getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
+    getSignal<TKey extends keyof this>(
+      key: TKey,
+    ): Signal<this[TKey]> | undefined {
+      const signalMap = this.#signalMap;
+      return Object.hasOwn(signalMap, key)
+        ? (signalMap[key] as Signal<this[TKey]>)
+        : undefined;
+    }
+
+    getVersion(): number {
+      const signalMap = this.#signalMap;
+      let version = 0;
+      for (const key in signalMap) {
+        const signal = signalMap[key]!;
+        if (signal instanceof Atom) {
+          version += signal.version;
+        }
+      }
+      return version;
+    }
+
+    restoreSnapshot(state: Pick<this, AtomKeys<this>>): void {
+      for (const key in state) {
+        this[key as AtomKeys<this>] = state[key as AtomKeys<this>]!;
+      }
+    }
+
+    subscribe(subscriber: Subscriber): Subscription {
+      const signalMap = this.#signalMap;
+      const subscriptions: Subscription[] = [];
+      for (const key in signalMap) {
+        const signal = signalMap[key]!;
+        if (signal instanceof Atom) {
+          const subscription = signal.subscribe(subscriber);
+          subscriptions.push(subscription);
+        }
+      }
+      return () => {
+        for (let i = 0, l = subscriptions.length; i < l; i++) {
+          subscriptions[i]!();
+        }
+      };
+    }
+
+    toSnapshot(): Pick<this, AtomKeys<this>> {
+      const signalMap = this.#signalMap;
+      const state: Partial<this> = {};
+      for (const key in signalMap) {
+        const signal = signalMap[key]!;
+        if (signal instanceof Atom) {
+          state[key as AtomKeys<this>] = signal.value as this[AtomKeys<this>];
+        }
+      }
+      return state as Pick<this, AtomKeys<this>>;
+    }
+  } as unknown as ReturnType<typeof createStore<TClass>>;
+}
+
+class StoreSignal<TClass extends StoreExtensions> extends Signal<TClass> {
+  private readonly _store: TClass;
+
+  constructor(store: TClass) {
+    super();
+    this._store = store;
+  }
+
+  get value(): TClass {
+    return this._store;
+  }
+
+  get version(): number {
+    return this._store.getVersion();
+  }
+
+  subscribe(subscriber: Subscriber): Subscription {
+    return this._store.subscribe(subscriber);
+  }
+}
+
+function defineInstanceDescriptors<T extends Object>(
+  instance: T,
+  signalMap: Record<PropertyKey, Signal<unknown>>,
+): void {
+  const instanceDescriptors = Object.getOwnPropertyDescriptors(instance);
+
+  for (const key in instanceDescriptors) {
+    const { writable, enumerable, configurable, value } =
+      instanceDescriptors[key]!;
+
+    if (writable && configurable) {
+      const signal = new Atom(value);
+      signalMap[key] = signal;
+      Object.defineProperty(instance, key, {
+        configurable,
+        enumerable,
+        get(): unknown {
+          return signal.value;
+        },
+        set(value: unknown): void {
+          signal.value = value;
+        },
+      } as PropertyDescriptor);
+    }
+  }
+}
+
+function definePrototypeDescriptors<T extends Object>(
+  instance: T,
+  signalMap: Record<PropertyKey, Signal<unknown>>,
+): void {
+  for (
+    let prototype = Object.getPrototypeOf(instance);
+    prototype !== null && prototype !== Object.prototype;
+    prototype = Object.getPrototypeOf(prototype)
+  ) {
+    const prototypeDescriptors = Object.getOwnPropertyDescriptors(prototype);
+
+    for (const key in prototypeDescriptors) {
+      const { configurable, enumerable, get, set } = prototypeDescriptors[key]!;
+
+      if (get !== undefined && configurable) {
+        const signal = new Lazy(() => {
+          const dependencies: Signal<unknown>[] = [];
+          const initialResult = get.call(
+            trackSignals(instance, signalMap, dependencies),
+          );
+          const initialVersion = dependencies.reduce(
+            (version, dependency) => version + dependency.version,
+            0,
+          );
+          return new Computed<unknown>(
+            () => get.call(instance),
+            dependencies,
+            initialResult,
+            initialVersion,
+          );
+        });
+        signalMap[key] = signal;
+        Object.defineProperty(instance, key, {
+          configurable,
+          enumerable,
+          get() {
+            return signal.value;
+          },
+          set,
+        } as PropertyDescriptor);
+      }
+    }
+  }
+}
+
+function trackSignals<T extends object>(
+  instance: T,
+  signalMap: Record<PropertyKey, Signal<unknown>>,
+  trackedSignals: Signal<unknown>[],
+): T {
+  return new Proxy(instance, {
+    get: (target, key, receiver) => {
+      if (Object.hasOwn(signalMap, key)) {
+        const signal = signalMap[key]!;
+        trackedSignals.push(signal);
+        return signal.value;
+      } else {
+        return Reflect.get(target, key, receiver);
+      }
+    },
+  });
+}

@@ -24,7 +24,7 @@ export type Pattern = string | Matcher<unknown>;
 
 export type Matcher<T> = (component: string, url: RelativeURL) => T | null;
 
-export type Handler<TArgs extends any[], TResult, TState = unknown> = (
+export type Handler<TArgs extends unknown[], TResult, TState = unknown> = (
   args: TArgs,
   url: RelativeURL,
   state: TState,

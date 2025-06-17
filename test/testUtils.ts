@@ -1,19 +1,25 @@
-export function combination(n: number, r: number): number {
-  return factorial(n) / (factorial(r) * factorial(n - r));
-}
-
-export function factorial(n: number): number {
-  let result = 1;
-  for (let i = n; i > 1; i--) {
-    result *= i;
-  }
-  return result;
-}
+import { HookType } from '../src/hook.js';
+import type { RenderEngine } from '../src/renderEngine.js';
 
 export function* allCombinations<T>(source: T[]): Generator<T[]> {
   for (let i = 1; i <= source.length; i++) {
     yield* combinations(source, i);
   }
+}
+
+export function cleanupRender(renderEngine: RenderEngine): void {
+  const hooks = renderEngine['_hooks'];
+  for (let i = hooks.length - 1; i >= 0; i--) {
+    const hook = hooks[i]!;
+    if (hook.type === HookType.Effect) {
+      hook.cleanup?.();
+      hook.cleanup = undefined;
+    }
+  }
+}
+
+export function combination(n: number, r: number): number {
+  return factorial(n) / (factorial(r) * factorial(n - r));
 }
 
 export function* combinations<T>(source: T[], r: number): Generator<T[]> {
@@ -30,6 +36,40 @@ export function* combinations<T>(source: T[], r: number): Generator<T[]> {
       }
     }
   }
+}
+
+export function createElement<const T extends keyof HTMLElementTagNameMap>(
+  tagName: T,
+  attributes: { [key: string]: string } = {},
+  ...children: (Node | string)[]
+): HTMLElementTagNameMap[T] {
+  const element = document.createElement(tagName);
+  for (const key in attributes) {
+    element.setAttribute(key, attributes[key]!);
+  }
+  for (const child of children) {
+    element.appendChild(
+      child instanceof Node ? child : document.createTextNode(child),
+    );
+  }
+  return element;
+}
+
+export function factorial(n: number): number {
+  let result = 1;
+  for (let i = n; i > 1; i--) {
+    result *= i;
+  }
+  return result;
+}
+
+export function flushRender(renderEngine: RenderEngine): void {
+  const updateContext = renderEngine['_updateContext'];
+  renderEngine.finalize();
+  updateContext.enqueueCoroutine(renderEngine['_coroutine']);
+  updateContext.enqueueMutationEffect(renderEngine['_coroutine']);
+  updateContext.flushSync();
+  renderEngine['_hookIndex'] = 0;
 }
 
 export function* permutations<T>(

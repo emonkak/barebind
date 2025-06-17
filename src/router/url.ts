@@ -61,7 +61,7 @@ export class RelativeURL {
 
   get search(): string {
     return this._searchParams.size > 0
-      ? '?' + this._searchParams.toString()
+      ? '?' + decodeURIComponent(this._searchParams.toString())
       : '';
   }
 

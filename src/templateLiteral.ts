@@ -1,0 +1,92 @@
+import { sequentialEqual } from './compare.js';
+
+/**
+ * @internal
+ */
+export interface TemplateLiteral<T> {
+  strings: readonly string[];
+  values: T[];
+}
+
+interface TemplateDescriptor {
+  strings: readonly string[];
+  literalValues: readonly string[];
+  literalPositions: readonly number[];
+}
+
+/**
+ * @internal
+ */
+export class TemplateLiteralPreprocessor {
+  private readonly _templateDescriptors: WeakMap<
+    TemplateStringsArray,
+    TemplateDescriptor
+  > = new WeakMap();
+
+  process<T>(
+    strings: TemplateStringsArray,
+    values: readonly (T | Literal)[],
+  ): TemplateLiteral<T> {
+    const literalValues: string[] = [];
+    const literalPositions: number[] = [];
+    const nonLiteralValues: T[] = [];
+
+    for (let i = 0, l = values.length; i < l; i++) {
+      const value = values[i]!;
+      if (value instanceof Literal) {
+        literalValues.push(value.valueOf());
+        literalPositions.push(i);
+      } else {
+        nonLiteralValues.push(value);
+      }
+    }
+
+    const descriptor = this._templateDescriptors.get(strings);
+
+    if (
+      descriptor !== undefined &&
+      sequentialEqual(descriptor.literalValues, literalValues) &&
+      sequentialEqual(descriptor.literalPositions, literalPositions)
+    ) {
+      return {
+        strings: descriptor.strings,
+        values: nonLiteralValues,
+      };
+    }
+
+    const expandedStrings =
+      literalValues.length > 0 ? expandLiterals(strings, values) : strings;
+
+    this._templateDescriptors.set(strings, {
+      strings: expandedStrings,
+      literalValues,
+      literalPositions,
+    });
+
+    return {
+      strings: expandedStrings,
+      values: nonLiteralValues,
+    };
+  }
+}
+
+export class Literal extends String {}
+
+function expandLiterals(
+  strings: readonly string[],
+  values: readonly unknown[],
+): readonly string[] {
+  const expandedStrings = [strings[0]!];
+
+  for (let i = 0, j = 0, l = values.length; i < l; i++) {
+    const value = values[i];
+    if (value instanceof Literal) {
+      expandedStrings[j] += value + strings[i + 1]!;
+    } else {
+      expandedStrings.push(strings[i + 1]!);
+      j++;
+    }
+  }
+
+  return expandedStrings;
+}

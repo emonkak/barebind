@@ -1,0 +1,49 @@
+import { inspectPart, markUsedValue } from '../debug.js';
+import type { DirectiveContext, Primitive } from '../directive.js';
+import { type Part, PartType, type PropertyPart } from '../part.js';
+import { PrimitiveBinding } from './primitive.js';
+
+const noValue = Symbol('noValue');
+
+export const PropertyPrimitive = {
+  name: 'PropertyPrimitive',
+  resolveBinding<T>(
+    value: T,
+    part: Part,
+    _context: DirectiveContext,
+  ): PrimitiveBinding<T, PropertyPart> {
+    if (part.type !== PartType.Property) {
+      throw new Error(
+        'PropertyPrimitive must be used in a property part, but it is used here:\n' +
+          inspectPart(part, markUsedValue(value)),
+      );
+    }
+    return new PropertyBinding(value, part);
+  },
+} as const satisfies Primitive<unknown>;
+
+export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
+  private _memoizedValue: T | typeof noValue = noValue;
+
+  get directive(): Primitive<T> {
+    return PropertyPrimitive as Primitive<T>;
+  }
+
+  shouldBind(value: T): boolean {
+    return !Object.is(value, this._memoizedValue);
+  }
+
+  commit(): void {
+    const { node, name } = this._part;
+    (node as any)[name] = this._pendingValue;
+    this._memoizedValue = this._pendingValue;
+  }
+
+  rollback(): void {
+    if (this._memoizedValue !== noValue) {
+      const { node, name, defaultValue } = this._part;
+      (node as any)[name] = defaultValue;
+      this._memoizedValue = noValue;
+    }
+  }
+}

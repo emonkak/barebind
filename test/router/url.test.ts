@@ -5,41 +5,40 @@ import { RelativeURL } from '../../src/router/url.js';
 describe('RelativeURL', () => {
   describe('.from()', () => {
     it.each([
-      [new RelativeURL('/foo', '?bar=123', '#baz')],
-      [new URL('/foo?bar=123#baz', 'file:')],
+      [new RelativeURL('/foo', '?bar=/123/', '#baz')],
+      [new URL('/foo?bar=/123/#baz', 'file:')],
       [
         {
           pathname: '/foo',
-          search: '?bar=123',
+          search: '?bar=/123/',
           hash: '#baz',
         },
       ],
-      ['/foo?bar=123#baz'],
-    ])(
-      'should construct a new RelativeURL from the url like value',
-      (value) => {
-        const url = RelativeURL.from(value);
-        expect(url.pathname).toBe('/foo');
-        expect(url.search).toBe('?bar=123');
-        expect(url.searchParams.toString()).toBe('bar=123');
-        expect(url.hash).toBe('#baz');
-        expect(url.toString()).toBe('/foo?bar=123#baz');
-        expect(url.toJSON()).toBe('/foo?bar=123#baz');
-        expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
-      },
-    );
+      ['/foo?bar=/123/#baz'],
+    ])('constructs a new relative URL from the url like value', (value) => {
+      const url = RelativeURL.from(value);
+
+      expect(url.pathname).toBe('/foo');
+      expect(url.search).toBe('?bar=/123/');
+      expect(url.searchParams.toString()).toBe('bar=%2F123%2F');
+      expect(url.hash).toBe('#baz');
+      expect(url.toString()).toBe('/foo?bar=/123/#baz');
+      expect(url.toJSON()).toBe('/foo?bar=/123/#baz');
+      expect(url.toURL('file:').toString()).toBe('file:///foo?bar=/123/#baz');
+    });
   });
 
   describe('.fromString()', () => {
-    it('should construct a new RelativeURL from the String', () => {
-      const url = RelativeURL.fromString('/foo?bar=123#baz');
+    it('constructs a new relative URL from the String', () => {
+      const url = RelativeURL.fromString('/foo?bar=/123/#baz');
+
       expect(url.pathname).toBe('/foo');
-      expect(url.search).toBe('?bar=123');
-      expect(url.searchParams.toString()).toBe('bar=123');
+      expect(url.search).toBe('?bar=/123/');
+      expect(url.searchParams.toString()).toBe('bar=%2F123%2F');
       expect(url.hash).toBe('#baz');
-      expect(url.toString()).toBe('/foo?bar=123#baz');
-      expect(url.toJSON()).toBe('/foo?bar=123#baz');
-      expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
+      expect(url.toString()).toBe('/foo?bar=/123/#baz');
+      expect(url.toJSON()).toBe('/foo?bar=/123/#baz');
+      expect(url.toURL('file:').toString()).toBe('file:///foo?bar=/123/#baz');
     });
 
     it.each([
@@ -47,46 +46,58 @@ describe('RelativeURL', () => {
       [new RelativeURL('/foo')],
       [new URL('/foo', 'file://')],
     ])(
-      'should construct a new RelativeURL from the String with base URL',
+      'constructs a new relative URL from the String with base URL',
       (base) => {
-        const url = RelativeURL.fromString('?bar=123#baz', base);
+        const url = RelativeURL.fromString('?bar=/123/#baz', base);
+
         expect(url.pathname).toBe('/foo');
-        expect(url.search).toBe('?bar=123');
-        expect(url.searchParams.toString()).toBe('bar=123');
+        expect(url.search).toBe('?bar=/123/');
+        expect(url.searchParams.toString()).toBe('bar=%2F123%2F');
         expect(url.hash).toBe('#baz');
-        expect(url.toString()).toBe('/foo?bar=123#baz');
-        expect(url.toJSON()).toBe('/foo?bar=123#baz');
-        expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
+        expect(url.toString()).toBe('/foo?bar=/123/#baz');
+        expect(url.toJSON()).toBe('/foo?bar=/123/#baz');
+        expect(url.toURL('file:').toString()).toBe('file:///foo?bar=/123/#baz');
       },
     );
   });
 
   describe('.fromURL()', () => {
-    it('should construct a new RelativeURL from the URL', () => {
-      const url = RelativeURL.fromURL(new URL('/foo?bar=123#baz', 'file:'));
-      expect(url.pathname).toBe('/foo');
-      expect(url.search).toBe('?bar=123');
-      expect(url.searchParams.toString()).toBe('bar=123');
-      expect(url.hash).toBe('#baz');
-      expect(url.toString()).toBe('/foo?bar=123#baz');
-      expect(url.toJSON()).toBe('/foo?bar=123#baz');
-      expect(url.toURL('file:').toString()).toBe('file:///foo?bar=123#baz');
-    });
+    it.each([[new URL('/', 'file:'), new URL('/foo?bar=/123/#baz', 'file:')]])(
+      'constructs a new RelativeURL from the URL',
+      (inputUrl) => {
+        const url = RelativeURL.fromURL(inputUrl);
+
+        expect(url.pathname).toBe(inputUrl.pathname);
+        expect(url.search).toBe(inputUrl.search);
+        expect(url.searchParams.toString()).toBe(
+          inputUrl.searchParams.toString(),
+        );
+        expect(url.hash).toBe(inputUrl.hash);
+        expect(url.toString()).toBe(
+          inputUrl.toString().slice(inputUrl.protocol.length + 2),
+        );
+        expect(url.toJSON()).toBe(
+          inputUrl.toString().slice(inputUrl.protocol.length + 2),
+        );
+        expect(url.toURL('file:').toString()).toBe(inputUrl.toString());
+      },
+    );
   });
 
   describe('.fromLocation()', () => {
-    it('should construct a new RelativeURL from the LocationLike', () => {
+    it('constructs a new RelativeURL from the object like Location', () => {
       const url = RelativeURL.fromLocation({
         pathname: '/foo',
-        search: '?bar=123',
+        search: '?bar=/123/',
         hash: '#baz',
       });
+
       expect(url.pathname).toBe('/foo');
-      expect(url.search).toBe('?bar=123');
-      expect(url.searchParams.toString()).toBe('bar=123');
+      expect(url.search).toBe('?bar=/123/');
+      expect(url.searchParams.toString()).toBe('bar=%2F123%2F');
       expect(url.hash).toBe('#baz');
-      expect(url.toString()).toBe('/foo?bar=123#baz');
-      expect(url.toJSON()).toBe('/foo?bar=123#baz');
+      expect(url.toString()).toBe('/foo?bar=/123/#baz');
+      expect(url.toJSON()).toBe('/foo?bar=/123/#baz');
     });
   });
 });

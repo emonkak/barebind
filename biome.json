@@ -1,6 +1,6 @@
 {
   "files": {
-    "ignore": ["coverage", "lib", "node_modules"]
+    "includes": ["**", "!coverage", "!examples/*/lib", "!lib"]
   },
   "javascript": {
     "formatter": {
@@ -14,7 +14,8 @@
     "rules": {
       "complexity": {
         "noBannedTypes": "off",
-        "noThisInStatic": "off"
+        "noThisInStatic": "off",
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "noUnusedLabels": "off"
@@ -29,17 +30,26 @@
         "noConfusingLabels": "off",
         "noConfusingVoidType": "off",
         "noEmptyInterface": "off",
-        "noExplicitAny": "off"
+        "noExplicitAny": "off",
+        "noTemplateCurlyInString": "off"
       }
     }
   },
   "overrides": [
     {
-      "include": ["**/*.d.ts"],
+      "includes": ["src/**", "!src/renderHost/browser.ts", "!src/router/*.ts"],
       "linter": {
         "rules": {
           "style": {
-            "noVar": "off"
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "document": "document is not allowed.",
+                  "window": "window is not allowed."
+                }
+              }
+            }
           }
         }
       }

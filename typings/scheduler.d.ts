@@ -36,15 +36,15 @@ declare var TaskController: {
 
 interface TaskSignal extends AbortSignal {
   readonly priority: TaskPriority;
-  onprioritychange: ((this: TaskSignal, ev: Event) => any) | null;
+  onprioritychange: ((this: TaskSignal, ev: Event) => void) | null;
   addEventListener<K extends keyof TaskSignalEventMap>(
     type: K,
-    listener: (this: TaskSignal, ev: TaskSignalEventMap[K]) => any,
+    listener: (this: TaskSignal, ev: TaskSignalEventMap[K]) => void,
     options?: boolean | AddEventListenerOptions,
   ): void;
   removeEventListener<K extends keyof TaskSignalEventMap>(
     type: K,
-    listener: (this: TaskSignal, ev: TaskSignalEventMap[K]) => any,
+    listener: (this: TaskSignal, ev: TaskSignalEventMap[K]) => void,
     options?: boolean | EventListenerOptions,
   ): void;
 }

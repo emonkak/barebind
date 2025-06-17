@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  Router,
   integer,
+  Router,
   regexp,
   route,
   wildcard,
@@ -27,7 +27,7 @@ describe('Router', () => {
   const state = {};
 
   describe('.handle()', () => {
-    it('should return the handler that matches the URL', () => {
+    it('returns the handler that matches the URL', () => {
       expect(basicRouter.handle(new RelativeURL(''), state)).toBe('index');
       expect(basicRouter.handle(new RelativeURL('/'), state)).toBe('index');
       expect(basicRouter.handle(new RelativeURL('/articles/123'), state)).toBe(
@@ -59,7 +59,7 @@ describe('Router', () => {
       ).toBe('showCategory(123)');
     });
 
-    it('should return null if the route restricts a trailing slash', () => {
+    it('returns null if the route restricts a trailing slash', () => {
       expect(basicRouter.handle(new RelativeURL('/articles/123/'), state)).toBe(
         null,
       );
@@ -71,7 +71,7 @@ describe('Router', () => {
       ).toBe(null);
     });
 
-    it('should return null if there is no route matches the URL', () => {
+    it('returns null if there is no route matches the URL', () => {
       expect(basicRouter.handle(new RelativeURL('/articles'), state)).toBe(
         null,
       );
@@ -86,7 +86,7 @@ describe('Router', () => {
       );
     });
 
-    it('should dispatch a handler with args, url and state', () => {
+    it('dispatches the handler with args, url and state', () => {
       const handler = vi.fn(
         ([articleId, commentId]) =>
           `showArticleComment(${articleId}, ${commentId})`,

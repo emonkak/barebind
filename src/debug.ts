@@ -1,102 +1,72 @@
-import { type Block, type Part, PartType, isDirective } from './baseTypes.js';
+import { type Part, PartType } from './part.js';
 
-export function ensureDirective<
-  TExpectedClass extends Function,
-  TExpectedValue,
->(
-  expectedClass: TExpectedClass,
-  actualValue: unknown,
-  part: Part,
-): asserts actualValue is TExpectedValue {
-  if (!(actualValue instanceof expectedClass)) {
-    throw new Error(
-      'The value must be a instance of ' +
-        expectedClass.name +
-        ' directive, but got "' +
-        nameOf(actualValue) +
-        '". Consider using Either, Cached, or Keyed directive instead.\n' +
-        inspectPart(part, markUsedValue(actualValue)),
-    );
-  }
-}
-
-export function ensureNonDirective(value: unknown, part: Part): void {
-  if (isDirective(value)) {
-    throw new Error(
-      'The value must not be a directive, but got "' +
-        nameOf(value) +
-        '". Consider using Either, Cached, or Keyed directive instead.\n' +
-        inspectPart(part, markUsedValue(value)),
-    );
-  }
-}
-
-export function inspectBlock(block: Block<unknown> | null): string {
-  const stack = [];
-  for (
-    let currentBlock = block;
-    currentBlock !== null;
-    currentBlock = currentBlock.parent
-  ) {
-    stack.push(nameOf(currentBlock.binding.value));
-  }
-  return '/' + stack.reverse().join('/');
+export function inspectNode(node: Node, marker: string): string {
+  return inspectAround(node, annotateNode(node, marker));
 }
 
 export function inspectPart(part: Part, marker: string): string {
-  let currentNode: Node | null = part.node;
-  let before = '';
-  let after = '';
-  let complexity = 0;
-  do {
-    for (
-      let previousNode: Node | null = currentNode.previousSibling;
-      previousNode !== null;
-      previousNode = previousNode.previousSibling
-    ) {
-      before = toHTML(previousNode) + before;
-      complexity += getComplexity(previousNode);
-    }
-    for (
-      let nextNode: Node | null = currentNode.nextSibling;
-      nextNode !== null;
-      nextNode = nextNode.nextSibling
-    ) {
-      after += toHTML(nextNode);
-      complexity += getComplexity(nextNode);
-    }
-    currentNode = currentNode.parentNode;
-    if (!(currentNode instanceof Element)) {
-      break;
-    }
-    before = openTag(currentNode) + before;
-    after += closeTag(currentNode);
-    complexity += getComplexity(currentNode);
-  } while (complexity < 10);
-  return before + markPart(part, marker) + after;
+  return inspectAround(part.node, annotatePart(part, marker));
+}
+
+export function inspectValue(value: unknown): string {
+  switch (typeof value) {
+    case 'string':
+      return JSON.stringify(value);
+    case 'undefined':
+      return typeof undefined;
+    case 'function':
+      return value.name !== '' ? value.name : value.constructor.name;
+    case 'object':
+      if (
+        value === null ||
+        value.constructor === Object ||
+        value.constructor === Array
+      ) {
+        return JSON.stringify(value, null, 2);
+      } else {
+        return (
+          (value as { [Symbol.toStringTag]?: string })[Symbol.toStringTag] ??
+          value.constructor.name
+        );
+      }
+    default:
+      return value!.toString();
+  }
 }
 
 export function markUsedValue(value: unknown): string {
-  return `[[${nameOf(value)} IS USED IN HERE!]]`;
+  return `[[${inspectValue(value)} IS USED IN HERE!]]`;
 }
 
-export function nameOf(value: unknown): string {
-  if (
-    typeof value === 'string' ||
-    typeof value === 'boolean' ||
-    typeof value === 'number' ||
-    (typeof value === 'object' &&
-      (value === null ||
-        value.constructor === Object ||
-        value.constructor === Array))
-  ) {
-    return JSON.stringify(value);
-  } else if (typeof value === 'undefined') {
-    return 'undefined';
-  } else if (typeof value === 'function') {
-    return value.name !== '' ? value.name : value.constructor.name;
-  } else {
-    return (value as any)[Symbol.toStringTag] ?? value.constructor.name;
+function annotateNode(node: Node, marker: string): string {
+  return marker + toHTML(node);
+}
+
+function annotatePart(part: Part, marker: string): string {
+  switch (part.type) {
+    case PartType.Attribute:
+      return appendInsideTag(part.node, unquotedAttribute(part.name, marker));
+    case PartType.ChildNode:
+      return marker + toHTML(part.node);
+    case PartType.Element:
+      return appendInsideTag(part.node, marker);
+    case PartType.Event:
+      return appendInsideTag(
+        part.node,
+        unquotedAttribute('@' + part.name, marker),
+      );
+    case PartType.Live:
+      return appendInsideTag(
+        part.node,
+        unquotedAttribute('$' + part.name, marker),
+      );
+    case PartType.Property:
+      return appendInsideTag(
+        part.node,
+        unquotedAttribute('.' + part.name, marker),
+      );
+    case PartType.Text:
+      return marker;
   }
 }
 
@@ -150,31 +120,41 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
-function isSelfClosingTag(element: Element): boolean {
-  return !element.outerHTML.endsWith(closeTag(element));
+function inspectAround(node: Node, marker: string): string {
+  let currentNode: Node | null = node;
+  let before = '';
+  let after = '';
+  let complexity = 0;
+  do {
+    for (
+      let previousNode: Node | null = currentNode.previousSibling;
+      previousNode !== null;
+      previousNode = previousNode.previousSibling
+    ) {
+      before = toHTML(previousNode) + before;
+      complexity += getComplexity(previousNode);
+    }
+    for (
+      let nextNode: Node | null = currentNode.nextSibling;
+      nextNode !== null;
+      nextNode = nextNode.nextSibling
+    ) {
+      after += toHTML(nextNode);
+      complexity += getComplexity(nextNode);
+    }
+    currentNode = currentNode.parentNode;
+    if (!(currentNode instanceof Element)) {
+      break;
+    }
+    before = openTag(currentNode) + before;
+    after += closeTag(currentNode);
+    complexity += getComplexity(currentNode);
+  } while (complexity < 10);
+  return before + marker + after;
 }
 
-function markPart(part: Part, marker: string): string {
-  switch (part.type) {
-    case PartType.Attribute:
-      return appendInsideTag(part.node, unquotedAttribute(part.name, marker));
-    case PartType.ChildNode:
-      return marker + toHTML(part.node);
-    case PartType.Element:
-      return appendInsideTag(part.node, marker);
-    case PartType.Property:
-      return appendInsideTag(
-        part.node,
-        unquotedAttribute('.' + part.name, marker),
-      );
-    case PartType.Event:
-      return appendInsideTag(
-        part.node,
-        unquotedAttribute('@' + part.name, marker),
-      );
-    case PartType.Node:
-      return marker;
-  }
+function isSelfClosingTag(element: Element): boolean {
+  return !element.outerHTML.endsWith(closeTag(element));
 }
 
 function openTag(element: Element): string {

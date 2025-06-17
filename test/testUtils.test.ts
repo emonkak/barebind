@@ -8,7 +8,7 @@ import {
 } from './testUtils.js';
 
 describe('factorial()', () => {
-  it('should calculate n! result', () => {
+  it('calculates n! result', () => {
     expect(factorial(5)).toBe(120);
     expect(factorial(4)).toBe(24);
     expect(factorial(3)).toBe(6);
@@ -19,7 +19,7 @@ describe('factorial()', () => {
 });
 
 describe('combination()', () => {
-  it('should calculate nCr result', () => {
+  it('calculates nCr result', () => {
     expect(combination(5, 5)).toBe(1);
     expect(combination(5, 4)).toBe(5);
     expect(combination(5, 3)).toBe(10);
@@ -30,7 +30,7 @@ describe('combination()', () => {
 
 describe('allCombinations()', () => {
   it.each([[[1]], [[1, 2]], [[1, 2, 3]], [[1, 2, 3, 4]], [[1, 2, 3, 4, 5]]])(
-    'should return subsequences of elements with length between 0 to the length of the array',
+    'returns subsequences of elements with length between 0 to the length of the array',
     (source) => {
       const results = Array.from(allCombinations(source));
 
@@ -55,7 +55,7 @@ describe('allCombinations()', () => {
 
 describe('permutations()', () => {
   it.each([[[1]], [[1, 2]], [[1, 2, 3]], [[1, 2, 3, 4]], [[1, 2, 3, 4, 5]]])(
-    'should return successive permutations of elements',
+    'returns successive permutations of elements',
     (source) => {
       const results = Array.from(permutations(source));
 
