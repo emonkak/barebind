@@ -16,10 +16,10 @@ import { createElement } from './testUtils.js';
 
 describe('component()', () => {
   it('returns a directive element with the component', () => {
-    const props = { name: 'foo' };
-    const element = component(TestComponent, props);
+    const props: ParentProps = { name: 'foo', greet: 'Hello' };
+    const element = component(Parent, props);
 
-    expect(element.directive).toBe(component(TestComponent, props).directive);
+    expect(element.directive).toBe(component(Parent, props).directive);
     expect(element.directive).toBeInstanceOf(ComponentDirective);
     expect(element.value).toBe(props);
   });
@@ -27,27 +27,28 @@ describe('component()', () => {
 
 describe('defineComponent()', () => {
   it('memoizes the component by the component function', () => {
-    const component = defineComponent(TestComponent);
+    const component = defineComponent(Parent);
 
-    expect(defineComponent(TestComponent)).toBe(component);
+    expect(defineComponent(Parent)).toBe(component);
   });
 });
 
 describe('ComponentDirective', () => {
   describe('name', () => {
     it('returns the component function name', () => {
-      const component = new ComponentDirective(TestComponent);
+      const component = new ComponentDirective(Parent);
 
-      expect(component.name).toBe(TestComponent.name);
+      expect(component.name).toBe(Parent.name);
     });
   });
 
   describe('render()', () => {
     it('invokes the component function with props', () => {
-      const componentFn = vi.fn(TestComponent);
+      const componentFn = vi.fn(Parent);
       const component = new ComponentDirective(componentFn);
-      const props = {
+      const props: ParentProps = {
         name: 'foo',
+        greet: 'Hello',
       };
       const context = new RenderEngine(
         [],
@@ -65,9 +66,9 @@ describe('ComponentDirective', () => {
 
   describe('shouldUpdate()', () => {
     it('returns whether the props is not same', () => {
-      const component = new ComponentDirective(TestComponent);
-      const props1 = { name: 'foo' };
-      const props2 = { name: 'foo' };
+      const component = new ComponentDirective(Parent);
+      const props1: ParentProps = { name: 'foo', greet: 'Hello' };
+      const props2: ParentProps = { name: 'foo', greet: 'Hello' };
 
       expect(component.shouldUpdate(props1, props1)).toBe(false);
       expect(component.shouldUpdate(props1, props2)).toBe(true);
@@ -81,7 +82,7 @@ describe('ComponentDirective', () => {
     ])(
       'returns the result of shouldUpdate() if it is definied in the function',
       (props1, props2, expandedResult) => {
-        const component = new ComponentDirective(MemoComponent);
+        const component = new ComponentDirective(Memo);
 
         expect(component.shouldUpdate(props1, props1)).toBe(false);
         expect(component.shouldUpdate(props1, props2)).toBe(expandedResult);
@@ -93,8 +94,8 @@ describe('ComponentDirective', () => {
 
   describe('resolveBinding()', () => {
     it('constructs a new ComponentBinding', () => {
-      const component = new ComponentDirective(TestComponent);
-      const props = { name: 'foo' };
+      const component = new ComponentDirective(Parent);
+      const props: ParentProps = { name: 'foo', greet: 'Hello' };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -113,8 +114,8 @@ describe('ComponentDirective', () => {
 describe('ComponentBinding', () => {
   describe('shouldBind()', () => {
     it('returns true if the committed value does not exist', () => {
-      const component = new ComponentDirective(TestComponent);
-      const props = { name: 'foo' };
+      const component = new ComponentDirective(Parent);
+      const props: ParentProps = { name: 'foo', greet: 'Hello' };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -126,9 +127,9 @@ describe('ComponentBinding', () => {
     });
 
     it('returns true if the committed value is different from the new one', () => {
-      const component = new ComponentDirective(TestComponent);
-      const props1 = { name: 'foo' };
-      const props2 = { name: 'bar' };
+      const component = new ComponentDirective(Parent);
+      const props1 = { name: 'foo', greet: 'Hello' };
+      const props2 = { name: 'bar', greet: 'Hello' };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -148,9 +149,10 @@ describe('ComponentBinding', () => {
 
   describe('hydrate()', () => {
     it('hydrates the tree by the value rendered by the component', () => {
-      const component = new ComponentDirective(TestComponent);
-      const props = {
+      const component = new ComponentDirective(Parent);
+      const props: ParentProps = {
         name: 'foo',
+        greet: 'Hello',
       };
       const part = {
         type: PartType.ChildNode,
@@ -163,9 +165,11 @@ describe('ComponentBinding', () => {
         createElement(
           'div',
           {},
-          'Hello, ',
+          '',
+          ', ',
           createElement('strong', {}, ''),
           '!',
+          document.createComment(''),
         ),
         document.createComment(''),
       );
@@ -184,7 +188,7 @@ describe('ComponentBinding', () => {
         }),
       );
       expect(container.innerHTML).toBe(
-        '<div>Hello, <strong>foo</strong>!</div><!---->',
+        '<div>Hello, <strong>foo</strong>!<!--/Child--></div><!---->',
       );
 
       binding.disconnect(context);
@@ -203,18 +207,20 @@ describe('ComponentBinding', () => {
 
   describe('connect()', () => {
     it('renders the component', () => {
-      const component = new ComponentDirective(TestComponent);
+      const component = new ComponentDirective(Parent);
       const passiveEffect = createReversibleEffect();
       const layoutEffect = createReversibleEffect();
       const mutationEffect = createReversibleEffect();
       const props1 = {
         name: 'foo',
+        greet: 'Hello',
         passiveEffect,
         layoutEffect,
         mutationEffect,
       };
       const props2 = {
         name: 'bar',
+        greet: 'Chao',
         passiveEffect,
         layoutEffect,
         mutationEffect,
@@ -245,7 +251,7 @@ describe('ComponentBinding', () => {
       expect(layoutEffect.rollback).not.toHaveBeenCalled();
       expect(mutationEffect.rollback).not.toHaveBeenCalled();
       expect(container.innerHTML).toBe(
-        '<div>Hello, <strong>foo</strong>!</div><!---->',
+        '<div>Hello, <strong>foo</strong>!<!--/Child--></div><!---->',
       );
 
       binding.bind(props2);
@@ -266,7 +272,7 @@ describe('ComponentBinding', () => {
       expect(layoutEffect.rollback).not.toHaveBeenCalled();
       expect(mutationEffect.rollback).not.toHaveBeenCalled();
       expect(container.innerHTML).toBe(
-        '<div>Hello, <strong>bar</strong>!</div><!---->',
+        '<div>Chao, <strong>bar</strong>!<!--/Child--></div><!---->',
       );
 
       binding.disconnect(context);
@@ -290,15 +296,16 @@ describe('ComponentBinding', () => {
   });
 });
 
-interface TestComponentProps {
+interface ParentProps {
   name: string;
+  greet: string;
   passiveEffect?: ReversibleEffect;
   layoutEffect?: ReversibleEffect;
   mutationEffect?: ReversibleEffect;
 }
 
-function TestComponent(
-  { name, passiveEffect, layoutEffect, mutationEffect }: TestComponentProps,
+function Parent(
+  { name, greet, passiveEffect, layoutEffect, mutationEffect }: ParentProps,
   context: RenderContext,
 ): unknown {
   context.useEffect(() => {
@@ -322,25 +329,32 @@ function TestComponent(
     };
   }, [mutationEffect]);
 
-  return context.html`<div>Hello, <strong>${name}</strong>!</div>`;
+  context.setContextValue('greet', greet);
+
+  return context.html`<div><${component(Child, { name })}></div>`;
 }
 
-interface MemoComponentProps {
+interface ChildProps {
+  name: string;
+}
+
+function Child({ name }: ChildProps, context: RenderContext): unknown {
+  const greet = context.getContextValue('greet');
+
+  return context.html`${greet}, <strong>${name}</strong>!`;
+}
+
+interface MemoProps {
   key: unknown;
   value: unknown;
 }
 
-function MemoComponent(
-  { value }: MemoComponentProps,
-  _context: RenderContext,
-): unknown {
+function Memo({ value }: MemoProps, _context: RenderContext): unknown {
   return value;
 }
 
-MemoComponent.shouldUpdate = (
-  nextProps: MemoComponentProps,
-  prevProps: MemoComponentProps,
-): boolean => nextProps.key !== prevProps.key;
+Memo.shouldUpdate = (nextProps: MemoProps, prevProps: MemoProps): boolean =>
+  nextProps.key !== prevProps.key;
 
 function createReversibleEffect(): ReversibleEffect {
   return {

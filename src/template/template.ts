@@ -6,7 +6,7 @@ import type {
   UpdateContext,
 } from '../directive.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
-import { type ChildNodePart, getPartChild, PartType } from '../part.js';
+import { type ChildNodePart, getStartNode, PartType } from '../part.js';
 
 export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect
@@ -111,7 +111,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       if (childNodes.length > 0) {
         this._part.childNode =
           childNodes[0]! === slots[0]?.part.node
-            ? getPartChild(slots[0].part)
+            ? getStartNode(slots[0].part)
             : childNodes[0]!;
       } else {
         this._part.childNode = null;

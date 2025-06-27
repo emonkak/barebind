@@ -29,7 +29,7 @@ export function createServerRoot<T>(
       const hydrationTree = new HydrationTree(container);
       slot.hydrate(hydrationTree, context);
       hydrationTree.popNode(part.node.nodeName);
-      hydrationTree.replaceWith(part.node);
+      hydrationTree.replaceNode(part.node);
       context.enqueueMutationEffect(new MountSlot(slot, container));
       context.flushSync();
     },

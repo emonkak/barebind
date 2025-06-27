@@ -13,12 +13,12 @@ import {
 import type { HydrationTree } from '../hydration.js';
 import {
   type ChildNodePart,
-  getPartChild,
+  getStartNode,
   type Part,
   PartType,
 } from '../part.js';
 
-export type ListProps<TSource, TKey, TValue> = {
+export type RepeatProps<TSource, TKey, TValue> = {
   source: Iterable<TSource>;
   keySelector?: (value: TSource, index: number) => TKey;
   valueSelector?: (value: TSource, index: number) => TValue;
@@ -68,36 +68,36 @@ const OperationType = {
   Remove: 2,
 } as const;
 
-export function list<TSource, TKey, TValue>(
-  props: ListProps<TSource, TKey, TValue>,
-): DirectiveObject<ListProps<TSource, TKey, TValue>> {
+export function repeat<TSource, TKey, TValue>(
+  props: RepeatProps<TSource, TKey, TValue>,
+): DirectiveObject<RepeatProps<TSource, TKey, TValue>> {
   return new DirectiveObject(
-    ListDirective as Directive<ListProps<TSource, TKey, TValue>>,
+    RepeatDirective as Directive<RepeatProps<TSource, TKey, TValue>>,
     props,
   );
 }
 
-export const ListDirective = {
-  name: 'ListDirective',
+export const RepeatDirective = {
+  name: 'RepeatDirective',
   resolveBinding<TSource, TKey, TValue>(
-    props: ListProps<TSource, TKey, TValue>,
+    props: RepeatProps<TSource, TKey, TValue>,
     part: Part,
     _context: DirectiveContext,
-  ): ListBinding<TSource, TKey, TValue> {
+  ): RepeatBinding<TSource, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'ListDirective must be used in a child part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(list)),
+        'RepeatDirective must be used in a child part, but it is used here in:\n' +
+          inspectPart(part, markUsedValue(props)),
       );
     }
-    return new ListBinding(props, part);
+    return new RepeatBinding(props, part);
   },
-} as const satisfies Directive<ListProps<unknown, unknown, unknown>>;
+} as const satisfies Directive<RepeatProps<unknown, unknown, unknown>>;
 
-export class ListBinding<TSource, TKey, TValue>
-  implements Binding<ListProps<TSource, TKey, TValue>>, Effect
+export class RepeatBinding<TSource, TKey, TValue>
+  implements Binding<RepeatProps<TSource, TKey, TValue>>, Effect
 {
-  private _props: ListProps<TSource, TKey, TValue>;
+  private _props: RepeatProps<TSource, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
@@ -107,16 +107,16 @@ export class ListBinding<TSource, TKey, TValue>
 
   private _pendingOperations: Operation<TKey, TValue>[] = [];
 
-  constructor(props: ListProps<TSource, TKey, TValue>, part: ChildNodePart) {
+  constructor(props: RepeatProps<TSource, TKey, TValue>, part: ChildNodePart) {
     this._props = props;
     this._part = part;
   }
 
-  get directive(): Directive<ListProps<TSource, TKey, TValue>> {
-    return ListDirective as Directive<ListProps<TSource, TKey, TValue>>;
+  get directive(): Directive<RepeatProps<TSource, TKey, TValue>> {
+    return RepeatDirective as Directive<RepeatProps<TSource, TKey, TValue>>;
   }
 
-  get value(): ListProps<TSource, TKey, TValue> {
+  get value(): RepeatProps<TSource, TKey, TValue> {
     return this._props;
   }
 
@@ -124,11 +124,11 @@ export class ListBinding<TSource, TKey, TValue>
     return this._part;
   }
 
-  shouldBind(list: ListProps<TSource, TKey, TValue>): boolean {
-    return this._memoizedItems === null || list !== this._props;
+  shouldBind(props: RepeatProps<TSource, TKey, TValue>): boolean {
+    return this._memoizedItems === null || props !== this._props;
   }
 
-  bind(props: ListProps<TSource, TKey, TValue>): void {
+  bind(props: RepeatProps<TSource, TKey, TValue>): void {
     this._props = props;
   }
 
@@ -148,7 +148,7 @@ export class ListBinding<TSource, TKey, TValue>
 
       slot.hydrate(hydrationTree, context);
       hydrationTree.popNode(part.node.nodeName);
-      hydrationTree.replaceWith(part.node);
+      hydrationTree.replaceNode(part.node);
 
       newItems[i] = {
         key,
@@ -234,13 +234,17 @@ export class ListBinding<TSource, TKey, TValue>
         switch (operation.type) {
           case OperationType.Insert: {
             const referenceNode =
-              operation.referenceItem?.slot.part.node ?? this._part.node;
+              operation.referenceItem !== undefined
+                ? getStartNode(operation.referenceItem.slot.part)
+                : this._part.node;
             commitInsert(operation.item, referenceNode);
             break;
           }
           case OperationType.Move: {
             const referenceNode =
-              operation.referenceItem?.slot.part.node ?? this._part.node;
+              operation.referenceItem !== undefined
+                ? getStartNode(operation.referenceItem.slot.part)
+                : this._part.node;
             commitMove(operation.item, referenceNode);
             break;
           }
@@ -257,7 +261,7 @@ export class ListBinding<TSource, TKey, TValue>
     }
 
     if (this._pendingItems.length > 0) {
-      this._part.childNode = getPartChild(this._pendingItems[0]!.slot.part);
+      this._part.childNode = getStartNode(this._pendingItems[0]!.slot.part);
     } else {
       this._part.childNode = null;
     }
@@ -316,6 +320,7 @@ function commitRemove<TKey, TValue>(item: Item<TKey, TValue>): void {
   const { slot } = item;
 
   slot.rollback();
+  slot.part.node.remove();
 
   DEBUG: {
     slot.part.node.nodeValue = '';
@@ -334,7 +339,7 @@ function generateKeyValuePairs<TSource, TKey, TValue>({
   source,
   keySelector = defaultKeySelector,
   valueSelector = defaultValueSelector,
-}: ListProps<TSource, TKey, TValue>): KeyValuePair<TKey, TValue>[] {
+}: RepeatProps<TSource, TKey, TValue>): KeyValuePair<TKey, TValue>[] {
   return Array.from(source, (value, i) => ({
     key: keySelector(value, i),
     value: valueSelector(value, i),
@@ -385,7 +390,7 @@ function reconcileItems<TKey, TValue>(
       newItems[newTail] = handler.move(
         oldItems[oldHead]!,
         newPairs[newTail]!.value,
-        oldItems[oldHead]!,
+        newItems[newTail + 1]!,
       );
       newTail--;
       oldHead++;

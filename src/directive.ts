@@ -7,6 +7,7 @@ import type {
 } from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import type { ChildNodePart, Part } from './part.js';
+import type { Scope } from './scope.js';
 import type { Literal, TemplateLiteral } from './templateLiteral.js';
 
 export const $toDirectiveElement: unique symbol = Symbol('$toDirectiveElement');
@@ -114,23 +115,19 @@ export interface DirectiveContext {
 }
 
 export interface UpdateContext extends DirectiveContext {
-  createSubcontext(): UpdateContext;
   enqueueCoroutine(coroutine: Coroutine): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
+  enterRenderFrame(): UpdateContext;
+  enterScope(scope: Scope): UpdateContext;
   expandLiterals<T>(
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
   flushAsync(options?: UpdateOptions): Promise<void>;
   flushSync(): void;
-  getContextValue(key: unknown): unknown;
-  getTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
+  getCurrentScope(): Scope;
   hydrateTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
@@ -151,8 +148,12 @@ export interface UpdateContext extends DirectiveContext {
     binds: TBinds,
     part: ChildNodePart,
   ): TemplateBlock;
+  resolveTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  setContextValue(key: unknown, value: unknown): void;
   waitForUpdate(coroutine: Coroutine): Promise<void>;
 }
 

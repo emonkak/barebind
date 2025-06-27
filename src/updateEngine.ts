@@ -27,6 +27,7 @@ import { LinkedList } from './linkedList.js';
 import type { ChildNodePart, Part } from './part.js';
 import { RenderEngine } from './renderEngine.js';
 import type { RenderHost } from './renderHost.js';
+import { Scope } from './scope.js';
 import {
   type Literal,
   type TemplateLiteral,
@@ -38,17 +39,6 @@ interface RenderFrame {
   mutationEffects: Effect[];
   layoutEffects: Effect[];
   passiveEffects: Effect[];
-}
-
-interface ContextScope {
-  id: number;
-  parent: ContextScope | null;
-  entries: ContextEntry<unknown>[];
-}
-
-interface ContextEntry<T> {
-  key: unknown;
-  value: T;
 }
 
 interface SharedState {
@@ -69,29 +59,20 @@ export class UpdateEngine implements UpdateContext {
 
   private readonly _renderFrame: RenderFrame;
 
-  private readonly _contextScope: ContextScope;
+  private readonly _currentScope: Scope;
 
   private readonly _sharedState: SharedState;
 
   constructor(
     renderHost: RenderHost,
     renderFrame: RenderFrame = createRenderFrame(),
-    contextScope: ContextScope = createContextScope(null),
+    currentScope: Scope = new Scope(null),
     sharedState: SharedState = createSharedState(),
   ) {
     this._renderHost = renderHost;
     this._renderFrame = renderFrame;
-    this._contextScope = contextScope;
+    this._currentScope = currentScope;
     this._sharedState = sharedState;
-  }
-
-  createSubcontext(): UpdateContext {
-    return new UpdateEngine(
-      this._renderHost,
-      createRenderFrame(),
-      createContextScope(this._contextScope),
-      this._sharedState,
-    );
   }
 
   enqueueCoroutine(coroutine: Coroutine): void {
@@ -108,6 +89,24 @@ export class UpdateEngine implements UpdateContext {
 
   enqueuePassiveEffect(effect: Effect): void {
     this._renderFrame.passiveEffects.push(effect);
+  }
+
+  enterRenderFrame(): UpdateEngine {
+    return new UpdateEngine(
+      this._renderHost,
+      createRenderFrame(),
+      this._currentScope,
+      this._sharedState,
+    );
+  }
+
+  enterScope(scope: Scope): UpdateEngine {
+    return new UpdateEngine(
+      this._renderHost,
+      this._renderFrame,
+      scope,
+      this._sharedState,
+    );
   }
 
   expandLiterals<T>(
@@ -192,37 +191,8 @@ export class UpdateEngine implements UpdateContext {
     this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive);
   }
 
-  getContextValue(key: unknown): unknown {
-    let contextScope: ContextScope | null = this._contextScope;
-    console.log('getContextValue', contextScope);
-    do {
-      const entry = contextScope.entries.findLast((entry) => entry.key === key);
-      if (entry !== undefined) {
-        return entry.value;
-      }
-      contextScope = contextScope.parent;
-    } while (contextScope !== null);
-    return undefined;
-  }
-
-  getTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    mode: TemplateMode,
-  ): Template<readonly unknown[]> {
-    let template = this._sharedState.cachedTemplates.get(strings);
-
-    if (template === undefined) {
-      template = this._renderHost.createTemplate(
-        strings,
-        binds,
-        this._sharedState.uniqueIdentifier,
-        mode,
-      );
-      this._sharedState.cachedTemplates.set(strings, template);
-    }
-
-    return template;
+  getCurrentScope(): Scope {
+    return this._currentScope;
   }
 
   hydrateTemplate<TBinds extends readonly unknown[]>(
@@ -262,16 +232,9 @@ export class UpdateEngine implements UpdateContext {
     lanes: Lanes,
     coroutine: Coroutine,
   ): RenderResult<TResult> {
-    const updateContext = new UpdateEngine(
-      this._renderHost,
-      this._renderFrame,
-      createContextScope(this._contextScope),
-      this._sharedState,
-    );
-    console.log('renderComponent', component.name, updateContext._contextScope);
-    const renderContext = new RenderEngine(hooks, lanes, coroutine, this);
-    const result = component.render(props, renderContext);
-    const nextLanes = renderContext.finalize();
+    const context = new RenderEngine(hooks, lanes, coroutine, this);
+    const result = component.render(props, context);
+    const nextLanes = context.finalize();
     return { result, lanes: nextLanes };
   }
 
@@ -300,9 +263,24 @@ export class UpdateEngine implements UpdateContext {
     }
   }
 
-  setContextValue(key: unknown, value: unknown): void {
-    this._contextScope.entries.push({ key, value });
-    console.log('setContextValue', this._contextScope);
+  resolveTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    mode: TemplateMode,
+  ): Template<readonly unknown[]> {
+    let template = this._sharedState.cachedTemplates.get(strings);
+
+    if (template === undefined) {
+      template = this._renderHost.createTemplate(
+        strings,
+        binds,
+        this._sharedState.uniqueIdentifier,
+        mode,
+      );
+      this._sharedState.cachedTemplates.set(strings, template);
+    }
+
+    return template;
   }
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
@@ -334,17 +312,12 @@ export class UpdateEngine implements UpdateContext {
 
           coroutineState.pendingTasks.remove(updateTaskNode);
 
-          const freshContext = new UpdateEngine(
-            this._renderHost,
-            createRenderFrame(),
-            this._contextScope.parent ?? this._contextScope,
-            this._sharedState,
-          );
+          const subcontext = this.enterRenderFrame();
 
-          freshContext._renderFrame.pendingCoroutines.push(coroutine);
-          freshContext._renderFrame.mutationEffects.push(coroutine);
+          subcontext._renderFrame.pendingCoroutines.push(coroutine);
+          subcontext._renderFrame.mutationEffects.push(coroutine);
 
-          return freshContext.flushAsync({
+          return subcontext.flushAsync({
             priority,
             viewTransition: options?.viewTransition ?? false,
           });
@@ -403,16 +376,6 @@ function createRenderFrame(): RenderFrame {
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],
-  };
-}
-
-let coutextScopeId = 0;
-
-function createContextScope(parent: ContextScope | null): ContextScope {
-  return {
-    id: ++coutextScopeId,
-    parent,
-    entries: [],
   };
 }
 

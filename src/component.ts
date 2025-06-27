@@ -20,6 +20,7 @@ import {
 } from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import type { Part } from './part.js';
+import { Scope } from './scope.js';
 
 const directiveTag = Symbol('ComponentFunction.directive');
 
@@ -95,6 +96,8 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _part: Part;
 
+  private _parentScope: Scope | null = null;
+
   private _hooks: Hook[] = [];
 
   constructor(
@@ -131,7 +134,9 @@ export class ComponentBinding<TProps, TResult>
   }
 
   resume(lanes: Lanes, context: UpdateContext): Lanes {
-    const { result, lanes: nextLanes } = context.renderComponent(
+    const scope = new Scope(this._parentScope);
+    const subcontext = context.enterScope(scope);
+    const { result, lanes: nextLanes } = subcontext.renderComponent(
       this._component,
       this._props,
       this._hooks,
@@ -139,28 +144,33 @@ export class ComponentBinding<TProps, TResult>
       this,
     );
     if (this._slot !== null) {
-      this._slot.reconcile(result, context);
+      this._slot.reconcile(result, subcontext);
     } else {
-      this._slot = context.resolveSlot(result, this._part);
-      this._slot.connect(context);
+      this._slot = subcontext.resolveSlot(result, this._part);
+      this._slot.connect(subcontext);
     }
     return nextLanes;
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    const { result } = context.renderComponent(
+    const parentScope = context.getCurrentScope();
+    const scope = new Scope(parentScope);
+    const subcontext = context.enterScope(scope);
+    const { result } = subcontext.renderComponent(
       this._component,
       this._props,
       this._hooks,
       ALL_LANES,
       this,
     );
-    this._slot ??= context.resolveSlot(result, this._part);
-    this._slot.hydrate(hydrationTree, context);
+    this._parentScope = parentScope;
+    this._slot ??= subcontext.resolveSlot(result, this._part);
+    this._slot.hydrate(hydrationTree, subcontext);
   }
 
   connect(context: UpdateContext): void {
     context.enqueueCoroutine(this);
+    this._parentScope = context.getCurrentScope();
   }
 
   disconnect(context: UpdateContext): void {

@@ -1,38 +1,38 @@
 import { describe, expect, it } from 'vitest';
 import { DirectiveObject } from '../../src/directive.js';
 import {
-  ListBinding,
-  ListDirective,
-  type ListProps,
-  list,
-} from '../../src/extensions/list.js';
+  RepeatBinding,
+  RepeatDirective,
+  type RepeatProps,
+  repeat,
+} from '../../src/extensions/repeat.js';
 import { PartType } from '../../src/part.js';
 import { TextTemplate } from '../../src/template/textTemplate.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 import { allCombinations, createElement } from '../testUtils.js';
 
-describe('list()', () => {
-  it('returns a DirectiveObject with ListDirective', () => {
+describe('repeat()', () => {
+  it('returns a DirectiveObject with RepeatDirective', () => {
     const props = {
       source: ['foo', 'bar', 'baz'],
     };
-    const element = list(props);
+    const element = repeat(props);
 
-    expect(element.directive).toBe(ListDirective);
+    expect(element.directive).toBe(RepeatDirective);
     expect(element.value).toBe(props);
   });
 });
 
-describe('ListDirective', () => {
+describe('RepeatDirective', () => {
   describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(ListDirective.name, 'ListDirective');
+      expect(RepeatDirective.name, 'RepeatDirective');
     });
   });
 
   describe('resolveBinding()', () => {
-    it('constructs a new ListBinding', () => {
+    it('constructs a new RepeatBinding', () => {
       const props = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.ChildNode,
@@ -40,9 +40,9 @@ describe('ListDirective', () => {
         childNode: null,
       } as const;
       const context = new UpdateEngine(new MockRenderHost());
-      const binding = ListDirective.resolveBinding(props, part, context);
+      const binding = RepeatDirective.resolveBinding(props, part, context);
 
-      expect(binding.directive).toBe(ListDirective);
+      expect(binding.directive).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });
@@ -55,21 +55,21 @@ describe('ListDirective', () => {
       } as const;
       const context = new UpdateEngine(new MockRenderHost());
 
-      expect(() => ListDirective.resolveBinding(props, part, context)).toThrow(
-        'ListDirective must be used in a child part,',
-      );
+      expect(() =>
+        RepeatDirective.resolveBinding(props, part, context),
+      ).toThrow('RepeatDirective must be used in a child part,');
     });
   });
 });
 
-describe('ListBinding', () => {
+describe('RepeatBinding', () => {
   describe('connect()', () => {
     it('should update items according to keys', () => {
       const source = ['foo', 'bar', 'baz', 'qux'];
 
       for (const source1 of allCombinations(source)) {
         for (const source2 of allCombinations(source)) {
-          const props1: ListProps<
+          const props1: RepeatProps<
             string,
             string,
             DirectiveObject<readonly [unknown]>
@@ -78,7 +78,7 @@ describe('ListBinding', () => {
             keySelector: (item) => item,
             valueSelector: text,
           };
-          const props2: ListProps<
+          const props2: RepeatProps<
             string,
             string,
             DirectiveObject<readonly [unknown]>
@@ -93,7 +93,7 @@ describe('ListBinding', () => {
             childNode: null,
           } as const;
           const container = createElement('div', {}, part.node);
-          const binding = new ListBinding(props1, part);
+          const binding = new RepeatBinding(props1, part);
           const context = new UpdateEngine(new MockRenderHost());
 
           binding.connect(context);
@@ -102,8 +102,6 @@ describe('ListBinding', () => {
           binding.bind(props2);
           binding.connect(context);
           binding.commit();
-
-          console.log({ source1, source2, container });
 
           expect(container.innerHTML).toBe(
             source2

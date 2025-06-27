@@ -31,7 +31,7 @@ export function createBrowserRoot<T>(
       const hydrationTree = new HydrationTree(container);
       slot.hydrate(hydrationTree, context);
       hydrationTree.popNode(part.node.nodeName);
-      hydrationTree.replaceWith(part.node);
+      hydrationTree.replaceNode(part.node);
       return renderHost.requestCallback(() => {
         context.enqueueMutationEffect(new MountSlot(slot, container));
         return context.flushAsync(options);

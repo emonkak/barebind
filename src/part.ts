@@ -64,7 +64,7 @@ export interface TextPart {
 /**
  * @internal
  */
-export function getPartChild(part: Part): ChildNode {
+export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.childNode ?? part.node)
     : part.node;

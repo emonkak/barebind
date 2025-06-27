@@ -78,7 +78,8 @@ export class RenderEngine implements RenderContext {
   }
 
   getContextValue(key: unknown): unknown {
-    return this._updateContext.getContextValue(key);
+    const scope = this._updateContext.getCurrentScope();
+    return scope.get(key);
   }
 
   finalize(): Lanes {
@@ -99,9 +100,7 @@ export class RenderEngine implements RenderContext {
   }
 
   forceUpdate(options?: UpdateOptions): UpdateTask {
-    return this._updateContext
-      .createSubcontext()
-      .scheduleUpdate(this._coroutine, options);
+    return this._updateContext.scheduleUpdate(this._coroutine, options);
   }
 
   html(
@@ -119,7 +118,8 @@ export class RenderEngine implements RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    this._updateContext.setContextValue(key, value);
+    const scope = this._updateContext.getCurrentScope();
+    scope.set(key, value);
   }
 
   svg(
@@ -314,7 +314,7 @@ export class RenderEngine implements RenderContext {
   ): DirectiveObject<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
       this._updateContext.expandLiterals(strings, binds);
-    const template = this._updateContext.getTemplate(
+    const template = this._updateContext.resolveTemplate(
       expandedStrings,
       expandedBinds as unknown[],
       mode,
@@ -327,7 +327,7 @@ export class RenderEngine implements RenderContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveObject<readonly unknown[]> {
-    const template = this._updateContext.getTemplate(strings, binds, mode);
+    const template = this._updateContext.resolveTemplate(strings, binds, mode);
     return new DirectiveObject(template, binds);
   }
 

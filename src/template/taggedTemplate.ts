@@ -7,7 +7,7 @@ import type {
   TemplateMode,
   UpdateContext,
 } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
+import { ensureNode, type HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
@@ -143,7 +143,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
 
     OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
       let part: Part | null = null;
-      const lookaheadNode = hydrationTree.peekNode(currentNode.nodeName);
+      const lookaheadNode = hydrationTree.peekNode();
 
       while (holeIndex < holes.length) {
         const hole = holes[holeIndex]!;
@@ -153,6 +153,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
 
         switch (hole.type) {
           case PartType.Attribute:
+            ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Attribute,
               node: lookaheadNode as Element,
@@ -167,12 +168,14 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           case PartType.Element:
+            ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Element,
               node: lookaheadNode as Element,
             };
             break;
           case PartType.Event:
+            ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Event,
               node: lookaheadNode as Element,
@@ -180,6 +183,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           case PartType.Live:
+            ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Live,
               node: lookaheadNode as Element,
@@ -188,6 +192,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           case PartType.Property:
+            ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Property,
               node: lookaheadNode as Element,
@@ -196,6 +201,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           case PartType.Text:
+            ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Text,
               node: lookaheadNode as Text,
@@ -213,7 +219,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
       const consumedNode = hydrationTree.popNode(currentNode.nodeName);
 
       if (part?.type === PartType.ChildNode) {
-        hydrationTree.replaceWith(part.node);
+        hydrationTree.replaceNode(part.node);
       } else {
         if (currentNode.parentNode === rootNode) {
           childNodes.push(consumedNode);

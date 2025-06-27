@@ -21,17 +21,14 @@ export class HydrationTree {
     );
   }
 
-  peekNode<T extends string>(expectedName: T): InferNode<T> {
+  peekNode(): ChildNode {
     const previousNode = this._treeWalker.currentNode;
     const nextNode = this._treeWalker.nextNode();
     if (nextNode === null) {
-      throw new HydrationError(
-        `Hydration is failed because there is no node. ${expectedName} node is expected here.`,
-      );
+      throw new HydrationError(`Hydration is failed because there is no node.`);
     }
-    assertNode(nextNode, expectedName);
     this._treeWalker.currentNode = previousNode;
-    return nextNode;
+    return nextNode as ChildNode;
   }
 
   popNode<T extends string>(expectedName: T): InferNode<T> {
@@ -41,11 +38,11 @@ export class HydrationTree {
         `Hydration is failed because there is no node. ${expectedName} node is expected here.`,
       );
     }
-    assertNode(currentNode, expectedName);
+    ensureNode(currentNode, expectedName);
     return currentNode;
   }
 
-  replaceWith(node: Node): void {
+  replaceNode(node: Node): void {
     (this._treeWalker.currentNode as ChildNode).replaceWith(node);
     this._treeWalker.currentNode = node;
   }
@@ -53,7 +50,10 @@ export class HydrationTree {
 
 export class HydrationError extends Error {}
 
-function assertNode<T extends string>(
+/**
+ * @internal
+ */
+export function ensureNode<T extends string>(
   actualNode: Node,
   expectedName: T,
 ): asserts actualNode is InferNode<T> {

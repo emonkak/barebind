@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { getPartChild, PartType } from '../src/part.js';
+import { getStartNode, PartType } from '../src/part.js';
 
-describe('getPartChild()', () => {
+describe('getStartNode()', () => {
   it.each([
     [
       {
@@ -52,17 +52,17 @@ describe('getPartChild()', () => {
         defaultValue: '',
       },
     ],
-  ])('returns a part node', (part) => {
-    expect(getPartChild(part)).toBe(part.node);
+  ])('returns the node of the part', (part) => {
+    expect(getStartNode(part)).toBe(part.node);
   });
 
-  it('returns a child node if the part is ChildNodePart having a child node', () => {
+  it('returns the child node if the part is having a child node', () => {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: document.createElement('div'),
     } as const;
 
-    expect(getPartChild(part)).toBe(part.childNode);
+    expect(getStartNode(part)).toBe(part.childNode);
   });
 });
