@@ -47,6 +47,7 @@ export interface StoreExtensions {
   asSignal(): Signal<this>;
   getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
   getSignal<TKey extends keyof this>(key: TKey): Signal<this[TKey]> | undefined;
+  getSignal(key: string): Signal<unknown> | undefined;
   getVersion(): number;
   restoreSnapshot(state: Pick<this, AtomKeys<this>>): void;
   subscribe(subscriber: Subscriber): Subscription;
@@ -89,11 +90,10 @@ export function createStore<TClass extends Constructable>(
     getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
     getSignal<TKey extends keyof this>(
       key: TKey,
-    ): Signal<this[TKey]> | undefined {
+    ): Signal<this[TKey]> | undefined;
+    getSignal(key: string): Signal<unknown> | undefined {
       const signalMap = this.#signalMap;
-      return Object.hasOwn(signalMap, key)
-        ? (signalMap[key] as Signal<this[TKey]>)
-        : undefined;
+      return Object.hasOwn(signalMap, key) ? signalMap[key] : undefined;
     }
 
     getVersion(): number {
