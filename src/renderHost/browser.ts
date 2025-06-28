@@ -84,7 +84,7 @@ export class BrowserRenderHost implements RenderHost {
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void> {
-    if (typeof scheduler?.postTask === 'function') {
+    if (typeof globalThis.scheduler?.postTask === 'function') {
       return scheduler.postTask(callback, options);
     } else {
       return new Promise((resolve) => {
@@ -96,7 +96,7 @@ export class BrowserRenderHost implements RenderHost {
             break;
           }
           case 'background': {
-            if (typeof requestIdleCallback === 'function') {
+            if (typeof globalThis.requestIdleCallback === 'function') {
               requestIdleCallback(resolve);
             } else {
               setTimeout(resolve);
@@ -161,7 +161,7 @@ export class BrowserRenderHost implements RenderHost {
   }
 
   yieldToMain(): Promise<void> {
-    if (typeof scheduler?.yield === 'function') {
+    if (typeof globalThis.scheduler?.yield === 'function') {
       return scheduler.yield();
     } else {
       return new Promise((resolve) => {
