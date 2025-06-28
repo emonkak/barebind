@@ -29,17 +29,17 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateBlock {
-    const slotPart = {
+    const childPart = {
       type: PartType.Text,
       node: hydrationTree.popNode(Node.TEXT_NODE, '#text'),
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;
-    const slot = context.resolveSlot(binds[0], slotPart);
+    const slot = context.resolveSlot(binds[0], childPart);
 
     slot.hydrate(hydrationTree, context);
 
-    return { childNodes: [slotPart.node], slots: [slot] };
+    return { childNodes: [childPart.node], slots: [slot] };
   }
 
   render(

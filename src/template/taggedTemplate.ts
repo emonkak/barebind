@@ -166,35 +166,35 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           break;
         }
 
-        let part: Part;
+        let childPart: Part;
 
         switch (hole.type) {
           case HoleType.Attribute:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
-            part = {
+            childPart = {
               type: PartType.Attribute,
               node: lookaheadNode,
               name: hole.name,
             };
             break;
           case HoleType.ChildNode:
-            part = {
+            childPart = {
               type: PartType.ChildNode,
               node: document.createComment(''),
               childNode: null,
             };
-            alternateNode = part.node;
+            alternateNode = childPart.node;
             break;
           case HoleType.Element:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
-            part = {
+            childPart = {
               type: PartType.Element,
               node: lookaheadNode,
             };
             break;
           case HoleType.Event:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
-            part = {
+            childPart = {
               type: PartType.Event,
               node: lookaheadNode,
               name: hole.name,
@@ -202,7 +202,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             break;
           case HoleType.Live:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
-            part = {
+            childPart = {
               type: PartType.Live,
               node: lookaheadNode,
               name: hole.name,
@@ -211,7 +211,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             break;
           case HoleType.Property:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
-            part = {
+            childPart = {
               type: PartType.Property,
               node: lookaheadNode,
               name: hole.name,
@@ -228,7 +228,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               skip = true;
               lookaheadNode.before(node);
             }
-            part = {
+            childPart = {
               type: PartType.Text,
               node,
               precedingText: hole.precedingText,
@@ -238,7 +238,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           }
         }
 
-        const slot = context.resolveSlot(binds[holeIndex]!, part);
+        const slot = context.resolveSlot(binds[holeIndex]!, childPart);
         slots[holeIndex] = slot;
         slot.hydrate(hydrationTree, context);
       }
@@ -301,38 +301,38 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           nodeIndex++;
         }
 
-        let part: Part;
+        let childPart: Part;
 
         switch (currentHole.type) {
           case HoleType.Attribute:
-            part = {
+            childPart = {
               type: PartType.Attribute,
               node: currentNode as Element,
               name: currentHole.name,
             };
             break;
           case HoleType.ChildNode:
-            part = {
+            childPart = {
               type: PartType.ChildNode,
               node: currentNode as Comment,
               childNode: null,
             };
             break;
           case HoleType.Element:
-            part = {
+            childPart = {
               type: PartType.Element,
               node: currentNode as Element,
             };
             break;
           case HoleType.Event:
-            part = {
+            childPart = {
               type: PartType.Event,
               node: currentNode as Element,
               name: currentHole.name,
             };
             break;
           case HoleType.Live:
-            part = {
+            childPart = {
               type: PartType.Live,
               node: currentNode as Element,
               name: currentHole.name,
@@ -340,7 +340,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           case HoleType.Property:
-            part = {
+            childPart = {
               type: PartType.Property,
               node: currentNode as Element,
               name: currentHole.name,
@@ -348,7 +348,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           case HoleType.Text:
-            part = {
+            childPart = {
               type: PartType.Text,
               node: currentNode as Text,
               precedingText: currentHole.precedingText,
@@ -357,7 +357,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             break;
         }
 
-        const slot = context.resolveSlot(binds[holeIndex]!, part);
+        const slot = context.resolveSlot(binds[holeIndex]!, childPart);
         slots[holeIndex] = slot;
         slot.connect(context);
       }

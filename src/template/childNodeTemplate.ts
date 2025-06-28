@@ -18,18 +18,18 @@ export const ChildNodeTemplate = {
     context: UpdateContext,
   ): TemplateBlock {
     const document = part.node.ownerDocument;
-    const slotPart = {
+    const childPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
     } as const;
-    const slot = context.resolveSlot(binds[0], slotPart);
+    const slot = context.resolveSlot(binds[0], childPart);
 
     slot.hydrate(hydrationTree, context);
-    hydrationTree.popNode(slotPart.node.nodeType, slotPart.node.nodeName);
-    hydrationTree.replaceNode(slotPart.node);
+    hydrationTree.popNode(childPart.node.nodeType, childPart.node.nodeName);
+    hydrationTree.replaceNode(childPart.node);
 
-    return { childNodes: [slotPart.node], slots: [slot] };
+    return { childNodes: [childPart.node], slots: [slot] };
   },
   render(
     binds: readonly [unknown],
