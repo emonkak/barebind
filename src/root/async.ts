@@ -1,23 +1,22 @@
 import type { UpdateOptions } from '../hook.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
-import { BrowserRenderHost } from '../renderHost/browser.js';
-import type { RequestCallbackOptions } from '../renderHost.js';
+import type { RenderHost, RequestCallbackOptions } from '../renderHost.js';
 import { UpdateEngine } from '../updateEngine.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
-export interface BrowserRoot<T> {
+export interface AsyncRoot<T> {
   hydrate(options?: UpdateOptions): Promise<void>;
   mount(options?: UpdateOptions): Promise<void>;
   update(value: T, options?: UpdateOptions): Promise<void>;
   unmount(options?: UpdateOptions): Promise<void>;
 }
 
-export function createBrowserRoot<T>(
+export function createAsyncRoot<T>(
   value: T,
   container: Element,
-  renderHost: BrowserRenderHost = new BrowserRenderHost(),
-): BrowserRoot<T> {
+  renderHost: RenderHost,
+): AsyncRoot<T> {
   const context = new UpdateEngine(renderHost);
   const part = {
     type: PartType.ChildNode,

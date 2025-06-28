@@ -1,15 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { BrowserRenderHost } from '../../src/renderHost/browser.js';
-import { createBrowserRoot } from '../../src/root/browser.js';
+import { createAsyncRoot } from '../../src/root/async.js';
+import { MockRenderHost } from '../mocks.js';
 import { createElement } from '../testUtils.js';
 
-describe('BrowserRoot', () => {
+describe('AsyncRoot', () => {
   it('mounts the value', async () => {
     const value1: string = 'foo';
     const value2: string = 'bar';
     const container = document.createElement('div');
-    const renderHost = new BrowserRenderHost();
-    const root = createBrowserRoot(value1, container, renderHost);
+    const renderHost = new MockRenderHost();
+    const root = createAsyncRoot(value1, container, renderHost);
 
     const requestCallbackSpy = vi.spyOn(renderHost, 'requestCallback');
 
@@ -58,7 +58,8 @@ describe('BrowserRoot', () => {
     const value1: string = 'foo';
     const value2: string = 'bar';
     const container = createElement('div', {}, document.createComment(''));
-    const root = createBrowserRoot(value1, container);
+    const renderHost = new MockRenderHost();
+    const root = createAsyncRoot(value1, container, renderHost);
 
     await root.hydrate();
 

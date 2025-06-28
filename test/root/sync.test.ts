@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { createServerRoot } from '../../src/root/server.js';
+import { createSyncRoot } from '../../src/root/sync.js';
+import { MockRenderHost } from '../mocks.js';
 import { createElement } from '../testUtils.js';
 
-describe('ServerRoot', () => {
+describe('SyncRoot', () => {
   it('mounts the value', () => {
     const value1: string = 'foo';
     const value2: string = 'bar';
     const container = document.createElement('div');
-    const root = createServerRoot(value1, container);
+    const renderHost = new MockRenderHost();
+    const root = createSyncRoot(value1, container, renderHost);
 
     root.mount();
 
@@ -26,7 +28,8 @@ describe('ServerRoot', () => {
     const value1: string = 'foo';
     const value2: string = 'bar';
     const container = createElement('div', {}, document.createComment(''));
-    const root = createServerRoot(value1, container);
+    const renderHost = new MockRenderHost();
+    const root = createSyncRoot(value1, container, renderHost);
 
     root.hydrate();
 

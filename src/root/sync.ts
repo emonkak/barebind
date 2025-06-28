@@ -1,21 +1,21 @@
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
-import { ServerRenderHost } from '../renderHost/server.js';
+import type { RenderHost } from '../renderHost.js';
 import { UpdateEngine } from '../updateEngine.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
-export interface ServerRoot<T> {
+export interface SyncRoot<T> {
   hydrate(): void;
   mount(): void;
   update(value: T): void;
   unmount(): void;
 }
 
-export function createServerRoot<T>(
+export function createSyncRoot<T>(
   value: T,
   container: Element,
-  renderHost: ServerRenderHost = new ServerRenderHost(container.ownerDocument),
-): ServerRoot<T> {
+  renderHost: RenderHost,
+): SyncRoot<T> {
   const context = new UpdateEngine(renderHost);
   const part = {
     type: PartType.ChildNode,

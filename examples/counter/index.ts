@@ -1,6 +1,7 @@
 import {
+  BrowserRenderHost,
   component,
-  createBrowserRoot,
+  createAsyncRoot,
   Literal,
   type RenderContext,
 } from '@emonkak/ebit';
@@ -254,6 +255,10 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const root = createBrowserRoot(component(App, {}), document.body);
+const root = createAsyncRoot(
+  component(App, {}),
+  document.body,
+  new BrowserRenderHost(),
+);
 
 root.mount();
