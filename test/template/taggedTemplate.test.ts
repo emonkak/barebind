@@ -762,6 +762,28 @@ describe('TaggedTemplate', () => {
         template.render([] as any, part, context);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
+
+    it('should throw the error if the template is invalid', () => {
+      const template: TaggedTemplate = new TaggedTemplate(
+        document.createElement('template'),
+        [
+          {
+            type: PartType.Text,
+            index: 0,
+          },
+        ],
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+      const context = new UpdateEngine(new MockRenderHost());
+
+      expect(() => {
+        template.render(['foo'], part, context);
+      }).toThrow('There is no node that the hole points.');
+    });
   });
 
   describe('resolveBinding()', () => {

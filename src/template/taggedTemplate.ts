@@ -20,42 +20,54 @@ export type Hole =
   | PropertyHole
   | TextHole;
 
+export const HoleType = {
+  Attribute: 0,
+  ChildNode: 1,
+  Element: 2,
+  Event: 3,
+  Live: 4,
+  Property: 5,
+  Text: 6,
+} as const;
+
+export type HoleType = (typeof HoleType)[keyof typeof HoleType];
+
 export interface AttributeHole {
-  type: typeof PartType.Attribute;
+  type: typeof HoleType.Attribute;
   index: number;
   name: string;
 }
 
 export interface ChildNodeHole {
-  type: typeof PartType.ChildNode;
+  type: typeof HoleType.ChildNode;
   index: number;
 }
 
 export interface ElementHole {
-  type: typeof PartType.Element;
+  type: typeof HoleType.Element;
   index: number;
 }
 
 export interface EventHole {
-  type: typeof PartType.Event;
+  type: typeof HoleType.Event;
   index: number;
   name: string;
 }
 
 export interface LiveHole {
-  type: typeof PartType.Live;
+  type: typeof HoleType.Live;
   index: number;
   name: string;
 }
 
 export interface PropertyHole {
-  type: typeof PartType.Property;
+  type: typeof HoleType.Property;
   index: number;
   name: string;
 }
 
 export interface TextHole {
-  type: typeof PartType.Text;
+  type: typeof HoleType.Text;
   index: number;
 }
 
@@ -108,7 +120,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
 
   private readonly _holes: Hole[];
 
-  private constructor(element: HTMLTemplateElement, holes: Hole[]) {
+  constructor(element: HTMLTemplateElement, holes: Hole[]) {
     this._element = element;
     this._holes = holes;
   }
@@ -125,9 +137,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
   ): TemplateBlock {
     const holes = this._holes;
 
-    DEBUG: {
-      assertNumberOfBinds(holes.length, binds.length);
-    }
+    assertNumberOfBinds(holes.length, binds.length);
 
     const document = part.node.ownerDocument;
     const rootNode = this._element.content;
@@ -137,22 +147,23 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     );
     const slots: Slot<unknown>[] = new Array(holes.length);
     const childNodes: ChildNode[] = [];
-    let currentNode: Node | null;
-    let nodeIndex = 0;
-    let holeIndex = 0;
 
-    OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
-      let part: Part | null = null;
+    OUTER: for (
+      let currentNode, nodeIndex = 0, holeIndex = 0, holesLength = holes.length;
+      (currentNode = treeWalker.nextNode()) !== null;
+      nodeIndex++
+    ) {
       const lookaheadNode = hydrationTree.peekNode();
+      let part: Part | null = null;
 
-      while (holeIndex < holes.length) {
+      for (; holeIndex < holesLength; holeIndex++) {
         const hole = holes[holeIndex]!;
         if (hole.index !== nodeIndex) {
           break;
         }
 
         switch (hole.type) {
-          case PartType.Attribute:
+          case HoleType.Attribute:
             ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Attribute,
@@ -160,21 +171,21 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               name: hole.name,
             };
             break;
-          case PartType.ChildNode:
+          case HoleType.ChildNode:
             part = {
               type: PartType.ChildNode,
               node: document.createComment(''),
               childNode: null,
             };
             break;
-          case PartType.Element:
+          case HoleType.Element:
             ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Element,
               node: lookaheadNode as Element,
             };
             break;
-          case PartType.Event:
+          case HoleType.Event:
             ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Event,
@@ -182,7 +193,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               name: hole.name,
             };
             break;
-          case PartType.Live:
+          case HoleType.Live:
             ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Live,
@@ -191,7 +202,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               defaultValue: lookaheadNode[hole.name as keyof Node],
             };
             break;
-          case PartType.Property:
+          case HoleType.Property:
             ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Property,
@@ -200,7 +211,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               defaultValue: lookaheadNode[hole.name as keyof Node],
             };
             break;
-          case PartType.Text:
+          case HoleType.Text:
             ensureNode(lookaheadNode, currentNode.nodeName);
             part = {
               type: PartType.Text,
@@ -212,8 +223,6 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         const slot = context.resolveSlot(binds[holeIndex]!, part);
         slots[holeIndex] = slot;
         slot.hydrate(hydrationTree, context);
-
-        holeIndex++;
       }
 
       const consumedNode = hydrationTree.popNode(currentNode.nodeName);
@@ -225,8 +234,6 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           childNodes.push(consumedNode);
         }
       }
-
-      nodeIndex++;
     }
 
     return { childNodes, slots };
@@ -239,13 +246,11 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
   ): TemplateBlock {
     const holes = this._holes;
 
-    DEBUG: {
-      assertNumberOfBinds(holes.length, binds.length);
-    }
+    assertNumberOfBinds(holes.length, binds.length);
 
     const document = part.node.ownerDocument;
-    const slots: Slot<unknown>[] = new Array(holes.length);
     const fragment = document.importNode(this._element.content, true);
+    const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
       const treeWalker = document.createTreeWalker(
@@ -254,81 +259,82 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           NodeFilter.SHOW_TEXT |
           NodeFilter.SHOW_COMMENT,
       );
-      let currentNode: Node | null;
-      let currentHole: Hole = holes[0]!;
-      let holeIndex = 0;
-      let nodeIndex = 0;
 
-      OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
-        while (currentHole.index === nodeIndex) {
-          let part: Part;
+      OUTER: for (
+        let holeIndex = 0, holesLength = holes.length, nodeIndex = -1;
+        holeIndex < holesLength;
+        holeIndex++
+      ) {
+        const currentHole = holes[holeIndex]!;
+        let currentNode: Node | null = treeWalker.currentNode;
 
-          switch (currentHole.type) {
-            case PartType.Attribute:
-              part = {
-                type: PartType.Attribute,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.ChildNode:
-              part = {
-                type: PartType.ChildNode,
-                node: currentNode as Comment,
-                childNode: null,
-              };
-              break;
-            case PartType.Element:
-              part = {
-                type: PartType.Element,
-                node: currentNode as Element,
-              };
-              break;
-            case PartType.Event:
-              part = {
-                type: PartType.Event,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.Live:
-              part = {
-                type: PartType.Live,
-                node: currentNode as Element,
-                name: currentHole.name,
-                defaultValue: currentNode[currentHole.name as keyof Node],
-              };
-              break;
-            case PartType.Property:
-              part = {
-                type: PartType.Property,
-                node: currentNode as Element,
-                name: currentHole.name,
-                defaultValue: currentNode[currentHole.name as keyof Node],
-              };
-              break;
-            case PartType.Text:
-              part = {
-                type: PartType.Text,
-                node: currentNode as Text,
-              };
-              break;
+        while (currentHole.index !== nodeIndex) {
+          currentNode = treeWalker.nextNode();
+          if (currentNode === null) {
+            throw new Error(
+              'There is no node that the hole points. This might be a bug.',
+            );
           }
-
-          const slot = context.resolveSlot(binds[holeIndex]!, part);
-          slot.connect(context);
-
-          slots[holeIndex] = slot;
-          holeIndex++;
-
-          if (holeIndex >= holes.length) {
-            break OUTER;
-          }
-
-          currentHole = holes[holeIndex]!;
+          nodeIndex++;
         }
 
-        nodeIndex++;
+        let part: Part;
+
+        switch (currentHole.type) {
+          case HoleType.Attribute:
+            part = {
+              type: PartType.Attribute,
+              node: currentNode as Element,
+              name: currentHole.name,
+            };
+            break;
+          case HoleType.ChildNode:
+            part = {
+              type: PartType.ChildNode,
+              node: currentNode as Comment,
+              childNode: null,
+            };
+            break;
+          case HoleType.Element:
+            part = {
+              type: PartType.Element,
+              node: currentNode as Element,
+            };
+            break;
+          case HoleType.Event:
+            part = {
+              type: PartType.Event,
+              node: currentNode as Element,
+              name: currentHole.name,
+            };
+            break;
+          case HoleType.Live:
+            part = {
+              type: PartType.Live,
+              node: currentNode as Element,
+              name: currentHole.name,
+              defaultValue: currentNode[currentHole.name as keyof Node],
+            };
+            break;
+          case HoleType.Property:
+            part = {
+              type: PartType.Property,
+              node: currentNode as Element,
+              name: currentHole.name,
+              defaultValue: currentNode[currentHole.name as keyof Node],
+            };
+            break;
+          case HoleType.Text:
+            part = {
+              type: PartType.Text,
+              node: currentNode as Text,
+            };
+            break;
+        }
+
+        const slot = context.resolveSlot(binds[holeIndex]!, part);
+        slots[holeIndex] = slot;
+        slot.connect(context);
       }
     }
 
@@ -385,12 +391,10 @@ function createMarker(placeholder: string): string {
   //   case, the tag is treated as a comment.
   //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
   // - A marker is lowercase to match attribute names.
-  DEBUG: {
-    if (!PLACEHOLDER_REGEXP.test(placeholder)) {
-      throw new Error(
-        `The placeholder is in an invalid format. It must match pattern ${PLACEHOLDER_REGEXP.toString()}, but got ${JSON.stringify(placeholder)}.`,
-      );
-    }
+  if (!PLACEHOLDER_REGEXP.test(placeholder)) {
+    throw new Error(
+      `The placeholder is in an invalid format. It must match pattern ${PLACEHOLDER_REGEXP.toString()}, but got ${JSON.stringify(placeholder)}.`,
+    );
   }
   return '??' + placeholder + '??';
 }
@@ -417,7 +421,7 @@ function parseAttribtues(
 
     if (name === marker && value === '') {
       hole = {
-        type: PartType.Element,
+        type: HoleType.Element,
         index,
       };
     } else if (value === marker) {
@@ -439,25 +443,25 @@ function parseAttribtues(
 
       if (caseSensitiveName[0] === '@' && caseSensitiveName.length > 1) {
         hole = {
-          type: PartType.Event,
+          type: HoleType.Event,
           index,
           name: caseSensitiveName.slice(1),
         };
       } else if (caseSensitiveName[0] === '$' && caseSensitiveName.length > 1) {
         hole = {
-          type: PartType.Live,
+          type: HoleType.Live,
           index,
           name: caseSensitiveName.slice(1),
         };
       } else if (caseSensitiveName[0] === '.' && caseSensitiveName.length > 1) {
         hole = {
-          type: PartType.Property,
+          type: HoleType.Property,
           index,
           name: caseSensitiveName.slice(1),
         };
       } else {
         hole = {
-          type: PartType.Attribute,
+          type: HoleType.Attribute,
           index,
           name: caseSensitiveName,
         };
@@ -513,7 +517,7 @@ function parseChildren(
   );
   const holes: Hole[] = [];
   let currentNode: ChildNode | null;
-  let nodeIndex = 0;
+  let index = 0;
 
   while ((currentNode = treeWalker.nextNode() as ChildNode | null) !== null) {
     switch (currentNode.nodeType) {
@@ -529,13 +533,7 @@ function parseChildren(
             );
           }
         }
-        parseAttribtues(
-          currentNode as Element,
-          strings,
-          marker,
-          holes,
-          nodeIndex,
-        );
+        parseAttribtues(currentNode as Element, strings, marker, holes, index);
         break;
       }
       case Node.COMMENT_NODE: {
@@ -543,8 +541,8 @@ function parseChildren(
           trimTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
-            type: PartType.ChildNode,
-            index: nodeIndex,
+            type: HoleType.ChildNode,
+            index,
           });
           (currentNode as Comment).data = '';
         } else {
@@ -570,47 +568,44 @@ function parseChildren(
         const components = (currentNode as Text).data.split(marker);
 
         if (components.length > 1) {
-          const tailCompoent = components.length - 1;
+          const tail = components.length - 1;
 
-          for (let i = 0; i < tailCompoent; i++) {
+          for (let i = 0; i < tail; i++) {
             const component = components[i]!;
 
             if (component !== '') {
-              const text = document.createTextNode(component);
-              currentNode.before(text);
-              nodeIndex++;
+              currentNode.before(document.createTextNode(component));
+              index++;
             }
 
             currentNode.before(document.createTextNode(''));
-
             holes.push({
-              type: PartType.Text,
-              index: nodeIndex,
+              type: HoleType.Text,
+              index,
             });
-            nodeIndex++;
+            index++;
           }
 
-          const tailComponent = components[tailCompoent]!;
+          const tailComponent = components[tail]!;
 
           if (tailComponent !== '') {
-            // Reuse the current node.
+            // Reuse the current text node.
             (currentNode as Text).data = tailComponent;
           } else {
-            treeWalker.currentNode = currentNode.previousSibling!;
+            // Discard the empty text node.
+            treeWalker.previousNode();
             (currentNode as Text).remove();
-            nodeIndex--;
+            index--;
           }
         }
 
         break;
       }
     }
-    nodeIndex++;
+    index++;
   }
 
-  DEBUG: {
-    assertNumberOfHoles(binds.length, holes.length, strings);
-  }
+  assertNumberOfHoles(binds.length, holes.length, strings);
 
   return holes;
 }
