@@ -288,7 +288,7 @@ function commitInsert<TKey, TValue>(
   item: Item<TKey, TValue>,
   referenceNode: ChildNode,
 ): void {
-  const { slot, key } = item;
+  const { slot } = item;
   referenceNode.before(slot.part.node);
 }
 

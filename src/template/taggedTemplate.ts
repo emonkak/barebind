@@ -152,7 +152,10 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     const childNodes: ChildNode[] = [];
 
     OUTER: for (
-      let currentNode, nodeIndex = 0, holeIndex = 0, holesLength = holes.length;
+      let currentNode: Node | null,
+        nodeIndex = 0,
+        holeIndex = 0,
+        holesLength = holes.length;
       (currentNode = treeWalker.nextNode()) !== null;
       nodeIndex++
     ) {

@@ -153,8 +153,8 @@ function List(
         valueSelector: (item, index) =>
           component(Item, {
             index,
-            isFirst: index == 0,
-            isLast: index + 1 == items.length,
+            isFirst: index === 0,
+            isLast: index + 1 === items.length,
             label: item,
             onUp,
             onDown,
