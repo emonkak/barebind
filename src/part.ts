@@ -59,6 +59,8 @@ export interface PropertyPart {
 export interface TextPart {
   type: typeof PartType.Text;
   node: Text;
+  precedingText: string;
+  followingText: string;
 }
 
 /**

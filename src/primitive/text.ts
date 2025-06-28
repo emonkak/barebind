@@ -1,30 +1,30 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type { DirectiveContext, Primitive } from '../directive.js';
-import { type ChildNodePart, type Part, PartType } from '../part.js';
+import { type Part, PartType, type TextPart } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const NodePrimitive = {
-  name: 'NodePrimitive',
+export const TextPrimitive = {
+  name: 'TextPrimitive',
   resolveBinding<T>(
     value: T,
     part: Part,
     _context: DirectiveContext,
-  ): NodeBinding<T> {
-    if (part.type !== PartType.ChildNode) {
+  ): TextBinding<T> {
+    if (part.type !== PartType.Text) {
       throw new Error(
-        'NodePrimitive must be used in a child node, but it is used here:\n' +
+        'TextPrimitive must be used in a text part, but it is used here:\n' +
           inspectPart(part, markUsedValue(value)),
       );
     }
-    return new NodeBinding(value, part);
+    return new TextBinding(value, part);
   },
 } as const satisfies Primitive<unknown>;
 
-export class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart> {
+export class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
   private _memoizedValue: T | null = null;
 
   get directive(): Primitive<T> {
-    return NodePrimitive as Primitive<T>;
+    return TextPrimitive as Primitive<T>;
   }
 
   shouldBind(value: T): boolean {
@@ -32,8 +32,9 @@ export class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart> {
   }
 
   commit(): void {
+    const { node, precedingText, followingText } = this._part;
     const value = this._pendingValue;
-    this._part.node.nodeValue = value?.toString() ?? null;
+    node.data = precedingText + (value?.toString() ?? '') + followingText;
     this._memoizedValue = this._pendingValue;
   }
 

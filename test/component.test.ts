@@ -165,7 +165,6 @@ describe('ComponentBinding', () => {
         createElement(
           'div',
           {},
-          '',
           ', ',
           createElement('strong', {}, ''),
           '!',

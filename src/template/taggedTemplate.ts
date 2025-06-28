@@ -69,6 +69,9 @@ export interface PropertyHole {
 export interface TextHole {
   type: typeof HoleType.Text;
   index: number;
+  precedingText: string;
+  followingText: string;
+  tail: boolean;
 }
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
@@ -154,7 +157,8 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
       nodeIndex++
     ) {
       const lookaheadNode = hydrationTree.peekNode();
-      let part: Part | null = null;
+      let alternateNode: ChildNode | null = null;
+      let skip = false;
 
       for (; holeIndex < holesLength; holeIndex++) {
         const hole = holes[holeIndex]!;
@@ -162,12 +166,14 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           break;
         }
 
+        let part: Part;
+
         switch (hole.type) {
           case HoleType.Attribute:
-            ensureNode(lookaheadNode, currentNode.nodeName);
+            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             part = {
               type: PartType.Attribute,
-              node: lookaheadNode as Element,
+              node: lookaheadNode,
               name: hole.name,
             };
             break;
@@ -177,47 +183,59 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               node: document.createComment(''),
               childNode: null,
             };
+            alternateNode = part.node;
             break;
           case HoleType.Element:
-            ensureNode(lookaheadNode, currentNode.nodeName);
+            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             part = {
               type: PartType.Element,
-              node: lookaheadNode as Element,
+              node: lookaheadNode,
             };
             break;
           case HoleType.Event:
-            ensureNode(lookaheadNode, currentNode.nodeName);
+            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             part = {
               type: PartType.Event,
-              node: lookaheadNode as Element,
+              node: lookaheadNode,
               name: hole.name,
             };
             break;
           case HoleType.Live:
-            ensureNode(lookaheadNode, currentNode.nodeName);
+            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             part = {
               type: PartType.Live,
-              node: lookaheadNode as Element,
+              node: lookaheadNode,
               name: hole.name,
               defaultValue: lookaheadNode[hole.name as keyof Node],
             };
             break;
           case HoleType.Property:
-            ensureNode(lookaheadNode, currentNode.nodeName);
+            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             part = {
               type: PartType.Property,
-              node: lookaheadNode as Element,
+              node: lookaheadNode,
               name: hole.name,
               defaultValue: lookaheadNode[hole.name as keyof Node],
             };
             break;
-          case HoleType.Text:
-            ensureNode(lookaheadNode, currentNode.nodeName);
+          case HoleType.Text: {
+            ensureNode(lookaheadNode, Node.TEXT_NODE, currentNode.nodeName);
+            let node: Text;
+            if (hole.tail) {
+              node = lookaheadNode;
+            } else {
+              node = document.createTextNode('');
+              skip = true;
+              lookaheadNode.before(node);
+            }
             part = {
               type: PartType.Text,
-              node: lookaheadNode as Text,
+              node,
+              precedingText: hole.precedingText,
+              followingText: hole.followingText,
             };
             break;
+          }
         }
 
         const slot = context.resolveSlot(binds[holeIndex]!, part);
@@ -225,11 +243,16 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         slot.hydrate(hydrationTree, context);
       }
 
-      const consumedNode = hydrationTree.popNode(currentNode.nodeName);
+      if (!skip) {
+        const consumedNode = hydrationTree.popNode(
+          currentNode.nodeType,
+          currentNode.nodeName,
+        );
 
-      if (part?.type === PartType.ChildNode) {
-        hydrationTree.replaceNode(part.node);
-      } else {
+        if (alternateNode !== null) {
+          hydrationTree.replaceNode(alternateNode);
+        }
+
         if (currentNode.parentNode === rootNode) {
           childNodes.push(consumedNode);
         }
@@ -328,6 +351,8 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             part = {
               type: PartType.Text,
               node: currentNode as Text,
+              precedingText: currentHole.precedingText,
+              followingText: currentHole.followingText,
             };
             break;
         }
@@ -569,34 +594,29 @@ function parseChildren(
 
         if (components.length > 1) {
           const tail = components.length - 1;
+          let lastComponent = components[0]!;
 
-          for (let i = 0; i < tail; i++) {
-            const component = components[i]!;
-
-            if (component !== '') {
-              currentNode.before(document.createTextNode(component));
-              index++;
-            }
-
-            currentNode.before(document.createTextNode(''));
+          for (let i = 1; i < tail; i++) {
             holes.push({
               type: HoleType.Text,
               index,
+              precedingText: lastComponent,
+              followingText: '',
+              tail: false,
             });
+            currentNode.before(document.createTextNode(''));
+            lastComponent = components[i]!;
             index++;
           }
 
-          const tailComponent = components[tail]!;
-
-          if (tailComponent !== '') {
-            // Reuse the current text node.
-            (currentNode as Text).data = tailComponent;
-          } else {
-            // Discard the empty text node.
-            treeWalker.previousNode();
-            (currentNode as Text).remove();
-            index--;
-          }
+          holes.push({
+            type: HoleType.Text,
+            index,
+            precedingText: lastComponent,
+            followingText: components[tail]!,
+            tail: true,
+          });
+          (currentNode as Text).data = '';
         }
 
         break;

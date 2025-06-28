@@ -2,13 +2,14 @@ import { inspectNode } from './debug.js';
 
 const ACTUAL_NODE_MAKER = '[[ACTUAL NODE IN HERE!]]';
 
-interface NodeNameMap extends HTMLElementTagNameMap {
-  '#comment': Comment;
-  '#text': Text;
+interface NodeTypeMap {
+  [Node.ELEMENT_NODE]: Element;
+  [Node.TEXT_NODE]: Text;
+  [Node.COMMENT_NODE]: Comment;
 }
 
-type InferNode<T extends string> = T extends keyof NodeNameMap
-  ? NodeNameMap[T]
+type InferNode<T extends number> = T extends keyof NodeTypeMap
+  ? NodeTypeMap[T]
   : ChildNode;
 
 export class HydrationTree {
@@ -31,14 +32,17 @@ export class HydrationTree {
     return nextNode as ChildNode;
   }
 
-  popNode<T extends string>(expectedName: T): InferNode<T> {
+  popNode<T extends number>(
+    expectedType: T,
+    expectedName: string,
+  ): InferNode<T> {
     const currentNode = this._treeWalker.nextNode();
     if (currentNode === null) {
       throw new HydrationError(
         `Hydration is failed because there is no node. ${expectedName} node is expected here.`,
       );
     }
-    ensureNode(currentNode, expectedName);
+    ensureNode(currentNode, expectedType, expectedName);
     return currentNode;
   }
 
@@ -53,13 +57,17 @@ export class HydrationError extends Error {}
 /**
  * @internal
  */
-export function ensureNode<T extends string>(
+export function ensureNode<T extends number>(
   actualNode: Node,
-  expectedName: T,
+  expectedType: T,
+  expectedName: string,
 ): asserts actualNode is InferNode<T> {
-  if (actualNode.nodeName !== expectedName) {
+  if (
+    actualNode.nodeType !== expectedType ||
+    actualNode.nodeName !== expectedName
+  ) {
     throw new HydrationError(
-      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here:\n` +
+      `Hydration is failed because the node is mismatched. ${expectedName.toLowerCase()} node is expected here:\n` +
         inspectNode(actualNode, ACTUAL_NODE_MAKER),
     );
   }

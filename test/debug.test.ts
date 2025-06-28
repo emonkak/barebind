@@ -265,6 +265,8 @@ describe('inspectPart()', () => {
       type: PartType.Text,
       name: 'click',
       node: document.createTextNode('foo'),
+      precedingText: '',
+      followingText: '',
     } as const;
     const value = 'my value';
 

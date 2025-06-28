@@ -12,6 +12,8 @@ import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 import { allCombinations, createElement } from '../testUtils.js';
 
+const TEMPLATE = new TextTemplate('', '');
+
 describe('repeat()', () => {
   it('returns a DirectiveObject with RepeatDirective', () => {
     const props = {
@@ -115,5 +117,5 @@ describe('RepeatBinding', () => {
 });
 
 function text(content: string): DirectiveObject<readonly [unknown]> {
-  return new DirectiveObject(TextTemplate, [content]);
+  return new DirectiveObject(TEMPLATE, [content]);
 }

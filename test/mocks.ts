@@ -101,6 +101,9 @@ export class MockBinding<T> implements Binding<T> {
           this._value?.toString() ?? '',
         );
         break;
+      case PartType.ChildNode:
+        this._part.node.nodeValue = this._value?.toString() ?? null;
+        break;
       case PartType.Element:
         for (const name in this._value) {
           this._part.node.setAttribute(
@@ -119,9 +122,11 @@ export class MockBinding<T> implements Binding<T> {
           this._value as EventListenerOrEventListenerObject,
         );
         break;
-      case PartType.ChildNode:
       case PartType.Text:
-        this._part.node.nodeValue = this._value?.toString() ?? null;
+        this._part.node.data =
+          (this._part.precedingText ?? '') +
+          (this._value?.toString() ?? '') +
+          (this._part.followingText ?? '');
         break;
     }
 

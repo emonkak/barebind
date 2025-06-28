@@ -135,8 +135,20 @@ describe('TaggedTemplate', () => {
       `;
 
       expect(template['_holes']).toStrictEqual([
-        { type: PartType.Text, index: 3 },
-        { type: PartType.Text, index: 6 },
+        {
+          type: PartType.Text,
+          index: 3,
+          precedingText: '',
+          followingText: '',
+          tail: true,
+        },
+        {
+          type: PartType.Text,
+          index: 6,
+          precedingText: '',
+          followingText: '',
+          tail: true,
+        },
       ]);
       expect(template['_element'].innerHTML).toBe(
         `
@@ -155,15 +167,39 @@ describe('TaggedTemplate', () => {
       `;
 
       expect(template['_holes']).toStrictEqual([
-        { type: PartType.Text, index: 2 },
-        { type: PartType.Text, index: 4 },
-        { type: PartType.Text, index: 8 },
-        { type: PartType.Text, index: 10 },
+        {
+          type: PartType.Text,
+          index: 1,
+          precedingText: '[',
+          followingText: '',
+          tail: false,
+        },
+        {
+          type: PartType.Text,
+          index: 2,
+          precedingText: ', ',
+          followingText: ']',
+          tail: true,
+        },
+        {
+          type: PartType.Text,
+          index: 5,
+          precedingText: '',
+          followingText: '',
+          tail: false,
+        },
+        {
+          type: PartType.Text,
+          index: 6,
+          precedingText: ', ',
+          followingText: '',
+          tail: true,
+        },
       ]);
       expect(template['_element'].innerHTML).toBe(
         `
-        <div>[, ]</div>
-        <div>, </div>
+        <div></div>
+        <div></div>
       `.trim(),
       );
     });
@@ -196,19 +232,25 @@ describe('TaggedTemplate', () => {
 
     it('should parse holes inside a tag with leading spaces as TextHole', () => {
       const { template } = html`
-        < ${0}>
-        < ${0}/>
+        < ${0}>< ${0}/>
       `;
       expect(template['_holes']).toStrictEqual([
-        { type: PartType.Text, index: 1 },
-        { type: PartType.Text, index: 3 },
+        {
+          type: PartType.Text,
+          index: 0,
+          precedingText: '< ',
+          followingText: '',
+          tail: false,
+        },
+        {
+          type: PartType.Text,
+          index: 1,
+          precedingText: '>< ',
+          followingText: '/>',
+          tail: true,
+        },
       ]);
-      expect(template['_element'].innerHTML).toBe(
-        `
-        &lt; &gt;
-        &lt; /&gt;
-      `.trim(),
-      );
+      expect(template['_element'].innerHTML).toBe('');
     });
 
     it('should parse holes inside attributes as SVG fragment', () => {
@@ -233,8 +275,20 @@ describe('TaggedTemplate', () => {
       const { template } = math`<msup><mi>${0}</mi><mn>${1}</mn></msup>`;
 
       expect(template['_holes']).toStrictEqual([
-        { type: PartType.Text, index: 2 },
-        { type: PartType.Text, index: 4 },
+        {
+          type: PartType.Text,
+          index: 2,
+          precedingText: '',
+          followingText: '',
+          tail: true,
+        },
+        {
+          type: PartType.Text,
+          index: 4,
+          precedingText: '',
+          followingText: '',
+          tail: true,
+        },
       ]);
       expect(template['_element'].innerHTML).toBe(
         '<msup><mi></mi><mn></mn></msup>',
@@ -467,6 +521,8 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.Text,
             node: expect.exact(hydrationRoot.querySelector('span')?.firstChild),
+            followingText: '',
+            precedingText: '',
           },
           value: binds[6],
           isConnected: true,
@@ -500,14 +556,18 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([]);
     });
 
-    it('hydrates a text template', () => {
-      const { template, binds } = html`${'foo'}`;
+    it('hydrates a split text template', () => {
+      const { template, binds } = html`<div>${'Hello'}, ${'World'}!</div>`;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
       };
-      const hydrationRoot = createElement('div', {}, 'foo');
+      const hydrationRoot = createElement(
+        'div',
+        {},
+        createElement('div', {}, 'Hello, World!'),
+      );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const context = new UpdateEngine(new MockRenderHost());
       const { childNodes, slots } = template.hydrate(
@@ -517,21 +577,41 @@ describe('TaggedTemplate', () => {
         context,
       );
 
-      expect(childNodes.map(toHTML)).toStrictEqual(['foo']);
+      expect(childNodes.map(toHTML)).toStrictEqual([
+        '<div>Hello, World!</div>',
+      ]);
+      expect(
+        childNodes.flatMap((childNode) =>
+          Array.from(childNode.childNodes, toHTML),
+        ),
+      ).toStrictEqual(['', 'Hello, World!']);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.exact(hydrationRoot.firstChild),
+            node: expect.any(Text),
+            precedingText: '',
+            followingText: '',
           },
           value: binds[0],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.exact(hydrationRoot.firstChild?.firstChild),
+            precedingText: ', ',
+            followingText: '!',
+          },
+          value: binds[1],
           isConnected: true,
           isCommitted: false,
         }),
       ]);
     });
 
-    it('renders an empty template', () => {
+    it('hydrates an empty template', () => {
       const { template, binds } = html``;
       const part = {
         type: PartType.ChildNode,
@@ -689,6 +769,8 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.Text,
             node: expect.any(Text),
+            precedingText: '',
+            followingText: '',
           },
           value: binds[6],
           isConnected: true,
@@ -711,7 +793,7 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([]);
     });
 
-    it('renders a text template', () => {
+    it('renders a split text template', () => {
       const { template, binds } = html`${'foo'}`;
       const part = {
         type: PartType.ChildNode,
@@ -727,6 +809,8 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.Text,
             node: expect.any(Text),
+            precedingText: '',
+            followingText: '',
           },
           value: binds[0],
           isConnected: true,
@@ -768,7 +852,7 @@ describe('TaggedTemplate', () => {
         document.createElement('template'),
         [
           {
-            type: PartType.Text,
+            type: PartType.Element,
             index: 0,
           },
         ],

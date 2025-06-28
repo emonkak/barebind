@@ -68,6 +68,8 @@ describe('SpreadPrimitive', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const context = new UpdateEngine(new MockRenderHost());
 

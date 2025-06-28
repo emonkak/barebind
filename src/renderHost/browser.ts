@@ -20,6 +20,7 @@ import { PropertyPrimitive } from '../primitive/property.js';
 import { RefPrimitive } from '../primitive/ref.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
+import { TextPrimitive } from '../primitive/text.js';
 import type { RenderHost, RequestCallbackOptions } from '../renderHost.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
@@ -48,20 +49,22 @@ export class BrowserRenderHost implements RenderHost {
       }
     } else if (binds.length === 1) {
       // Assumption: strings.length === 2
-      const beforeString = strings[0]!.trim();
-      const afterString = strings[1]!.trim();
-
-      if (beforeString === '' && afterString === '') {
-        // Tags are nowhere, so it's plain text.
-        return TextTemplate;
-      }
+      const precedingString = strings[0]!.trim();
+      const followingString = strings[1]!.trim();
 
       if (
-        (beforeString === '<' || beforeString === '<!--') &&
-        (afterString === '>' || afterString === '/>' || afterString === '-->')
+        (precedingString === '<' || precedingString === '<!--') &&
+        (followingString === '>' ||
+          followingString === '/>' ||
+          followingString === '-->')
       ) {
         // There is only one tag.
         return ChildNodeTemplate;
+      }
+
+      if (!precedingString.includes('<') && !followingString.includes('<')) {
+        // Tags are nowhere, so it's plain text.
+        return new TextTemplate(precedingString, followingString);
       }
     }
 
@@ -126,7 +129,6 @@ export class BrowserRenderHost implements RenderHost {
         }
         return AttributePrimitive;
       case PartType.ChildNode:
-      case PartType.Text:
         return NodePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
@@ -136,6 +138,8 @@ export class BrowserRenderHost implements RenderHost {
         return LivePrimitive;
       case PartType.Property:
         return PropertyPrimitive;
+      case PartType.Text:
+        return TextPrimitive;
     }
   }
 

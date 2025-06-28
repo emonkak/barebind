@@ -22,6 +22,8 @@ describe('Signal', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       };
       const context = new UpdateEngine(new MockRenderHost());
       const binding = Signal.resolveBinding(signal, part, context);
@@ -388,6 +390,8 @@ describe('SiganlBinding', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const binding = new SignalBinding(signal, part);
 
@@ -400,6 +404,8 @@ describe('SiganlBinding', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const binding = new SignalBinding(signal1, part);
       const context = new UpdateEngine(new MockRenderHost());
@@ -418,6 +424,8 @@ describe('SiganlBinding', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const binding = new SignalBinding(signal, part);
       const hydrationRoot = createElement('div', {}, part.node);
@@ -442,6 +450,8 @@ describe('SiganlBinding', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const binding = new SignalBinding(signal, part);
       const context = new UpdateEngine(new MockRenderHost());
@@ -463,6 +473,8 @@ describe('SiganlBinding', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const binding = new SignalBinding(signal1, part);
       const context = new UpdateEngine(new MockRenderHost());
@@ -490,6 +502,8 @@ describe('SiganlBinding', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const binding = new SignalBinding(signal, part);
       const context = new UpdateEngine(new MockRenderHost());

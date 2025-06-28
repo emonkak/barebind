@@ -21,6 +21,8 @@ describe('getStartNode()', () => {
       {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       },
     ],
     [

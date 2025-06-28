@@ -1,34 +1,35 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '../../src/part.js';
-import { NodeBinding, NodePrimitive } from '../../src/primitive/node.js';
+import { TextBinding, TextPrimitive } from '../../src/primitive/text.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 
-describe('NodePrimitive', () => {
+describe('TextPrimitive', () => {
   describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(NodePrimitive.name, 'NodePrimitive');
+      expect(TextPrimitive.name, 'TextPrimitive');
     });
   });
 
   describe('resolveBinding()', () => {
-    it('constructs a new NodeBinding', () => {
+    it('constructs a new TextBinding', () => {
       const value = 'foo';
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
       const context = new UpdateEngine(new MockRenderHost());
-      const binding = NodePrimitive.resolveBinding(value, part, context);
+      const binding = TextPrimitive.resolveBinding(value, part, context);
 
-      expect(binding.directive).toBe(NodePrimitive);
+      expect(binding.directive).toBe(TextPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
 
-    it('should throw the error if the part is not a child node part', () => {
+    it('should throw the error if the part is not a property part', () => {
       const value = '<div>foo</div>';
       const part = {
         type: PartType.Element,
@@ -36,23 +37,24 @@ describe('NodePrimitive', () => {
       } as const;
       const context = new UpdateEngine(new MockRenderHost());
 
-      expect(() => NodePrimitive.resolveBinding(value, part, context)).toThrow(
-        'NodePrimitive must be used in a child node,',
+      expect(() => TextPrimitive.resolveBinding(value, part, context)).toThrow(
+        'TextPrimitive must be used in a text part,',
       );
     });
   });
 });
 
-describe('NodeBinding', () => {
+describe('TextBinding', () => {
   describe('shouldBind()', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new TextBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
     });
@@ -61,11 +63,12 @@ describe('NodeBinding', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
-      const binding = new NodeBinding(value1, part);
+      const binding = new TextBinding(value1, part);
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
@@ -77,83 +80,87 @@ describe('NodeBinding', () => {
   });
 
   describe('commit()', () => {
-    it('sets the string as a node value', () => {
+    it('sets the string to the text node', () => {
       const value1 = 'foo';
       const value2 = null;
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '(',
+        followingText: ')',
       } as const;
-      const binding = new NodeBinding<string | null>(value1, part);
+      const binding = new TextBinding<string | null>(value1, part);
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
       binding.commit();
 
-      expect(part.node.nodeValue).toBe(value1);
+      expect(part.node.data).toBe('(' + value1 + ')');
 
       binding.bind(value2);
       binding.connect(context);
       binding.commit();
 
-      expect(part.node.nodeValue).toBe('');
+      expect(part.node.data).toBe('()');
     });
 
-    it('sets the string representation of the value as a node value', () => {
+    it('sets the string representation of the value to the text node', () => {
       const value1 = 123;
       const value2 = null;
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '(',
+        followingText: ')',
       } as const;
-      const binding = new NodeBinding<number | null>(value1, part);
+      const binding = new TextBinding<number | null>(value1, part);
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
       binding.commit();
 
-      expect(part.node.nodeValue).toBe(value1.toString());
+      expect(part.node.nodeValue).toBe('(123)');
 
       binding.bind(value2);
       binding.connect(context);
       binding.commit();
 
-      expect(part.node.nodeValue).toBe('');
+      expect(part.node.nodeValue).toBe('()');
     });
   });
 
   describe('rollback()', () => {
-    it('sets null as a node value if the committed value exists', () => {
+    it('sets an empty string if the committed value exists', () => {
       const value = 'foo';
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new TextBinding(value, part);
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
       binding.commit();
 
-      expect(part.node.nodeValue).toBe(value);
+      expect(part.node.data).toBe(value);
 
       binding.disconnect(context);
       binding.rollback();
 
-      expect(part.node.nodeValue).toBe('');
+      expect(part.node.data).toBe('');
     });
 
     it('should do nothing if the committed value does not exist', () => {
       const value = 'foo';
       const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       } as const;
-      const binding = new NodeBinding(value, part);
+      const binding = new TextBinding(value, part);
       const context = new UpdateEngine(new MockRenderHost());
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');

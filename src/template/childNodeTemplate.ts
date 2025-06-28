@@ -26,7 +26,7 @@ export const ChildNodeTemplate = {
     const slot = context.resolveSlot(binds[0], slotPart);
 
     slot.hydrate(hydrationTree, context);
-    hydrationTree.popNode(slotPart.node.nodeName);
+    hydrationTree.popNode(slotPart.node.nodeType, slotPart.node.nodeName);
     hydrationTree.replaceNode(slotPart.node);
 
     return { childNodes: [slotPart.node], slots: [slot] };

@@ -35,6 +35,8 @@ describe('SlotObject', () => {
       const part = {
         type: PartType.Text,
         node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
       };
       const context = new UpdateEngine(new MockRenderHost());
       const object = new SlotObject(value, slotType);

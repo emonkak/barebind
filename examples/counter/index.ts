@@ -232,12 +232,10 @@ function Dashboard(
         `}>
       </h1>
       <h1 .innerHTML=${`<${greetTag} style="color: red">Hello, World!</${greetTag}>`}></h1>
-      <dl>
-        <dt class="Dashboard-label">Env:</dt>
-        <dd class="Dashboard-count">${env}</dd>
-        <dt class="Dashboard-label">Count:</dt>
-        <dd class="Dashboard-count">${count}</dd>
-      </dl>
+      <ul>
+        <li>Env: ${env}</li>
+        <li>Count: ${count}</li>
+      </ul>
     </div>
   `;
 }

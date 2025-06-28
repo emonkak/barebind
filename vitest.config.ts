@@ -16,7 +16,6 @@ export default defineConfig({
     coverage: {
       include: ['src/**'],
       exclude: ['src/index.ts', 'src/router.ts'],
-      experimentalAstAwareRemapping: true,
     },
   },
 });

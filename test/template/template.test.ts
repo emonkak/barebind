@@ -132,6 +132,8 @@ describe('TemplateBinding', () => {
               new MockBinding(MockPrimitive, binds[1], {
                 type: PartType.Text,
                 node: renderRoot.firstChild!.nextSibling as Text,
+                precedingText: '',
+                followingText: '',
               }),
             ),
             new MockSlot(
@@ -273,6 +275,8 @@ describe('TemplateBinding', () => {
               new MockBinding(MockPrimitive, binds[1], {
                 type: PartType.Text,
                 node: childNodes[1],
+                precedingText: '',
+                followingText: '',
               }),
             ),
             new MockSlot(

@@ -11,6 +11,7 @@ import { NodePrimitive } from '../../src/primitive/node.js';
 import { PropertyPrimitive } from '../../src/primitive/property.js';
 import { SpreadPrimitive } from '../../src/primitive/spread.js';
 import { StylePrimitive } from '../../src/primitive/style.js';
+import { TextPrimitive } from '../../src/primitive/text.js';
 import { ServerRenderHost } from '../../src/renderHost/server.js';
 import { LooseSlot } from '../../src/slot/loose.js';
 import { StrictSlot } from '../../src/slot/strict.js';
@@ -64,11 +65,23 @@ describe('ServerRenderHost', () => {
 
       expect(template).toBeInstanceOf(TaggedTemplate);
       expect((template as TaggedTemplate)['_holes']).toStrictEqual([
-        { type: PartType.Text, index: 1 },
-        { type: PartType.Text, index: 3 },
+        {
+          type: PartType.Text,
+          index: 1,
+          precedingText: '',
+          followingText: '',
+          tail: false,
+        },
+        {
+          type: PartType.Text,
+          index: 2,
+          precedingText: ', ',
+          followingText: '!',
+          tail: true,
+        },
       ]);
       expect((template as TaggedTemplate)['_element'].innerHTML).toBe(
-        '<div>, !</div>',
+        '<div></div>',
       );
     });
 
@@ -108,7 +121,7 @@ describe('ServerRenderHost', () => {
       },
     );
 
-    it.each([[tmpl`${'foo'}`], [tmpl` ${'foo'} `]])(
+    it.each([[tmpl`${'foo'}`], [tmpl` ${'foo'} `], [tmpl`(${'foo'})`]])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
         const renderHost = new ServerRenderHost(document);
@@ -117,9 +130,11 @@ describe('ServerRenderHost', () => {
           values,
           TEMPLATE_PLACEHOLDER,
           'html',
-        );
+        ) as TextTemplate;
 
-        expect(template).toBe(TextTemplate);
+        expect(template).toBeInstanceOf(TextTemplate);
+        expect(template['_precedingText']).toBe(strings[0]?.trim());
+        expect(template['_followingText']).toBe(strings[1]?.trim());
       },
     );
   });
@@ -186,13 +201,6 @@ describe('ServerRenderHost', () => {
       ],
       [
         {
-          type: PartType.Text,
-          node: document.createTextNode(''),
-        },
-        NodePrimitive,
-      ],
-      [
-        {
           type: PartType.Element,
           node: document.createElement('div'),
         },
@@ -223,6 +231,15 @@ describe('ServerRenderHost', () => {
           defaultValue: '',
         },
         PropertyPrimitive,
+      ],
+      [
+        {
+          type: PartType.Text,
+          node: document.createTextNode(''),
+          precedingText: '',
+          followingText: '',
+        },
+        TextPrimitive,
       ],
     ] as const)(
       'resolves the Primitive from an arbitrary part',
@@ -310,13 +327,6 @@ describe('ServerRenderHost', () => {
       ],
       [
         {
-          type: PartType.Text,
-          node: document.createTextNode(''),
-        },
-        StrictSlot,
-      ],
-      [
-        {
           type: PartType.Element,
           node: document.createElement('div'),
         },
@@ -345,6 +355,15 @@ describe('ServerRenderHost', () => {
           node: document.createElement('textarea'),
           name: 'value',
           defaultValue: '',
+        },
+        StrictSlot,
+      ],
+      [
+        {
+          type: PartType.Text,
+          node: document.createTextNode(''),
+          precedingText: '',
+          followingText: '',
         },
         StrictSlot,
       ],

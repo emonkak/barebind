@@ -376,7 +376,7 @@ function mountBlock(node: BlockNode, block: Block, part: ChildNodePart): void {
     }
     case BlockType.Text: {
       const { hostNode, pendingContent } = block;
-      hostNode.data = pendingContent?.toString() ?? '';
+      hostNode.nodeValue = pendingContent?.toString() ?? null;
       if (hostNode.parentNode !== null) {
         mountHostNode(hostNode, node, part);
       }
