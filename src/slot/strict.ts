@@ -8,7 +8,7 @@ import {
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
-import type { Part } from '../part.js';
+import { type Part, PartType } from '../part.js';
 
 export function strict<T>(value: Bindable<T>): SlotObject<T> {
   return new SlotObject(value, StrictSlot);
@@ -72,7 +72,15 @@ export class StrictSlot<T> implements Slot<T> {
     if (!this._dirty) {
       return;
     }
+
+    DEBUG: {
+      if (this._binding.part.type === PartType.ChildNode) {
+        this._binding.part.node.nodeValue = '/' + this._binding.directive.name;
+      }
+    }
+
     this._binding.commit();
+
     this._dirty = false;
   }
 
@@ -80,7 +88,15 @@ export class StrictSlot<T> implements Slot<T> {
     if (!this._dirty) {
       return;
     }
+
     this._binding.rollback();
+
+    DEBUG: {
+      if (this._binding.part.type === PartType.ChildNode) {
+        this._binding.part.node.nodeValue = '';
+      }
+    }
+
     this._dirty = false;
   }
 }

@@ -106,9 +106,7 @@ describe('RepeatBinding', () => {
           binding.commit();
 
           expect(container.innerHTML).toBe(
-            source2
-              .map((item) => item + '<!--/TextTemplate@"' + item + '"-->')
-              .join('') + '<!---->',
+            source2.map((item) => item + '<!---->').join('') + '<!---->',
           );
         }
       }

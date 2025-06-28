@@ -187,7 +187,7 @@ describe('ComponentBinding', () => {
         }),
       );
       expect(container.innerHTML).toBe(
-        '<div>Hello, <strong>foo</strong>!<!--/Child--></div><!---->',
+        '<div>Hello, <strong>foo</strong>!<!----></div><!---->',
       );
 
       binding.disconnect(context);
@@ -250,7 +250,7 @@ describe('ComponentBinding', () => {
       expect(layoutEffect.rollback).not.toHaveBeenCalled();
       expect(mutationEffect.rollback).not.toHaveBeenCalled();
       expect(container.innerHTML).toBe(
-        '<div>Hello, <strong>foo</strong>!<!--/Child--></div><!---->',
+        '<div>Hello, <strong>foo</strong>!<!----></div><!---->',
       );
 
       binding.bind(props2);
@@ -271,7 +271,7 @@ describe('ComponentBinding', () => {
       expect(layoutEffect.rollback).not.toHaveBeenCalled();
       expect(mutationEffect.rollback).not.toHaveBeenCalled();
       expect(container.innerHTML).toBe(
-        '<div>Chao, <strong>bar</strong>!<!--/Child--></div><!---->',
+        '<div>Chao, <strong>bar</strong>!<!----></div><!---->',
       );
 
       binding.disconnect(context);

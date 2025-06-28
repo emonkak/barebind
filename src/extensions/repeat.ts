@@ -1,6 +1,6 @@
 /// <reference path="../../typings/moveBefore.d.ts" />
 
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
   type Directive,
@@ -289,12 +289,6 @@ function commitInsert<TKey, TValue>(
   referenceNode: ChildNode,
 ): void {
   const { slot, key } = item;
-
-  DEBUG: {
-    slot.part.node.nodeValue =
-      '/' + slot.directive.name + '@' + inspectValue(key);
-  }
-
   referenceNode.before(slot.part.node);
 }
 
@@ -321,10 +315,6 @@ function commitRemove<TKey, TValue>(item: Item<TKey, TValue>): void {
 
   slot.rollback();
   slot.part.node.remove();
-
-  DEBUG: {
-    slot.part.node.nodeValue = '';
-  }
 }
 
 function defaultKeySelector(_value: unknown, index: number): any {

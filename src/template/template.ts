@@ -97,15 +97,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        const slot = slots[i]!;
-
-        DEBUG: {
-          if (slot.part.type === PartType.ChildNode) {
-            slot.part.node.nodeValue = '/' + slot.directive.name;
-          }
-        }
-
-        slot.commit();
+        slots[i]!.commit();
       }
 
       if (childNodes.length > 0) {
@@ -135,12 +127,6 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
           slot.rollback();
-        }
-
-        DEBUG: {
-          if (slot.part.type === PartType.ChildNode) {
-            slot.part.node.nodeValue = '';
-          }
         }
       }
 

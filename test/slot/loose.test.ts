@@ -66,6 +66,7 @@ describe('LooseSlot', () => {
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value2);
     });
 
     it('updates the binding with a different directive value', () => {
@@ -108,6 +109,7 @@ describe('LooseSlot', () => {
           isCommitted: true,
         }),
       );
+      expect(part.node.data).toBe(value2);
     });
 
     it('does not updates the value of the binding if shouldUpdate() returns false', () => {
@@ -136,6 +138,7 @@ describe('LooseSlot', () => {
       expect(bindSpy).not.toHaveBeenCalled();
       expect(connectSpy).not.toHaveBeenCalled();
       expect(commitSpy).not.toHaveBeenCalled();
+      expect(part.node.data).toBe('');
     });
   });
 
@@ -165,6 +168,7 @@ describe('LooseSlot', () => {
       slot.commit();
 
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value);
     });
 
     it('commit the binding if it is connected', () => {
@@ -191,6 +195,7 @@ describe('LooseSlot', () => {
       slot.commit();
 
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value);
     });
   });
 
@@ -222,6 +227,7 @@ describe('LooseSlot', () => {
       slot.rollback();
 
       expect(rollbackSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe('');
     });
 
     it('does not rollback the binding if it is not committed', () => {
@@ -244,6 +250,7 @@ describe('LooseSlot', () => {
       expect(disconnectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledWith(context);
       expect(rollbackSpy).not.toHaveBeenCalled();
+      expect(part.node.data).toBe('');
     });
   });
 });

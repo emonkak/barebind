@@ -7,7 +7,7 @@ import {
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
-import type { Part } from '../part.js';
+import { type Part, PartType } from '../part.js';
 
 export function loose<T>(value: Bindable<T>): SlotObject<T> {
   return new SlotObject(value, LooseSlot);
@@ -78,10 +78,20 @@ export class LooseSlot<T> implements Slot<T> {
     if (!this._dirty) {
       return;
     }
+
     if (this._memoizedBinding !== this._pendingBinding) {
       this._memoizedBinding?.rollback();
     }
+
+    DEBUG: {
+      if (this._pendingBinding.part.type === PartType.ChildNode) {
+        this._pendingBinding.part.node.nodeValue =
+          '/' + this._pendingBinding.directive.name;
+      }
+    }
+
     this._pendingBinding.commit();
+
     this._memoizedBinding = this._pendingBinding;
     this._dirty = false;
   }
@@ -90,7 +100,15 @@ export class LooseSlot<T> implements Slot<T> {
     if (!this._dirty) {
       return;
     }
+
     this._memoizedBinding?.rollback();
+
+    DEBUG: {
+      if (this._pendingBinding.part.type === PartType.ChildNode) {
+        this._pendingBinding.part.node.nodeValue = '';
+      }
+    }
+
     this._memoizedBinding = null;
     this._dirty = false;
   }

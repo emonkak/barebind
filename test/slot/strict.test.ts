@@ -66,6 +66,7 @@ describe('StrictSlot', () => {
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value2);
     });
 
     it('does not updates the binding with a new value if shouldUpdate() returns false', () => {
@@ -94,6 +95,7 @@ describe('StrictSlot', () => {
       expect(bindSpy).not.toHaveBeenCalled();
       expect(connectSpy).not.toHaveBeenCalled();
       expect(commitSpy).not.toHaveBeenCalled();
+      expect(part.node.data).toBe('');
     });
 
     it('throws the error if the directive is mismatched', () => {
@@ -129,33 +131,6 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const hydrationTree = new HydrationTree(document.createElement('div'));
-      const context = new UpdateEngine(new MockRenderHost());
-
-      const hydrateSpy = vi.spyOn(binding, 'hydrate');
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      slot.hydrate(hydrationTree, context);
-      slot.commit();
-
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(hydrationTree, context);
-      expect(commitSpy).toHaveBeenCalledOnce();
-
-      slot.commit();
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-    });
-
-    it('commits the binding if it is hydrated', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      } as const;
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new StrictSlot(binding);
       const context = new UpdateEngine(new MockRenderHost());
 
       const connectSpy = vi.spyOn(binding, 'connect');
@@ -171,6 +146,35 @@ describe('StrictSlot', () => {
       slot.commit();
 
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value);
+    });
+
+    it('commits the binding if it is hydrated', () => {
+      const value = 'foo';
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new MockBinding(MockPrimitive, value, part);
+      const slot = new StrictSlot(binding);
+      const context = new UpdateEngine(new MockRenderHost());
+      const hydrationTree = new HydrationTree(document.createElement('div'));
+
+      const hydrateSpy = vi.spyOn(binding, 'hydrate');
+      const commitSpy = vi.spyOn(binding, 'commit');
+
+      slot.hydrate(hydrationTree, context);
+      slot.commit();
+
+      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(hydrateSpy).toHaveBeenCalledWith(hydrationTree, context);
+      expect(commitSpy).toHaveBeenCalledOnce();
+
+      slot.commit();
+
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value);
     });
   });
 
@@ -199,6 +203,7 @@ describe('StrictSlot', () => {
       slot.rollback();
 
       expect(rollbackSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe('');
     });
   });
 });
