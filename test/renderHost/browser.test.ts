@@ -89,14 +89,14 @@ describe('BrowserRenderHost', () => {
           index: 1,
           precedingText: '',
           followingText: '',
-          tail: false,
+          split: true,
         },
         {
           type: PartType.Text,
           index: 2,
           precedingText: ', ',
           followingText: '!',
-          tail: true,
+          split: false,
         },
       ]);
       expect((template as TaggedTemplate)['_element'].innerHTML).toBe(

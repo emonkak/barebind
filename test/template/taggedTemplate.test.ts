@@ -140,14 +140,14 @@ describe('TaggedTemplate', () => {
           index: 3,
           precedingText: '',
           followingText: '',
-          tail: true,
+          split: false,
         },
         {
           type: PartType.Text,
           index: 6,
           precedingText: '',
           followingText: '',
-          tail: true,
+          split: false,
         },
       ]);
       expect(template['_element'].innerHTML).toBe(
@@ -172,28 +172,28 @@ describe('TaggedTemplate', () => {
           index: 1,
           precedingText: '[',
           followingText: '',
-          tail: false,
+          split: true,
         },
         {
           type: PartType.Text,
           index: 2,
           precedingText: ', ',
           followingText: ']',
-          tail: true,
+          split: false,
         },
         {
           type: PartType.Text,
           index: 5,
           precedingText: '',
           followingText: '',
-          tail: false,
+          split: true,
         },
         {
           type: PartType.Text,
           index: 6,
           precedingText: ', ',
           followingText: '',
-          tail: true,
+          split: false,
         },
       ]);
       expect(template['_element'].innerHTML).toBe(
@@ -240,14 +240,14 @@ describe('TaggedTemplate', () => {
           index: 0,
           precedingText: '< ',
           followingText: '',
-          tail: false,
+          split: true,
         },
         {
           type: PartType.Text,
           index: 1,
           precedingText: '>< ',
           followingText: '/>',
-          tail: true,
+          split: false,
         },
       ]);
       expect(template['_element'].innerHTML).toBe('');
@@ -280,14 +280,14 @@ describe('TaggedTemplate', () => {
           index: 2,
           precedingText: '',
           followingText: '',
-          tail: true,
+          split: false,
         },
         {
           type: PartType.Text,
           index: 4,
           precedingText: '',
           followingText: '',
-          tail: true,
+          split: false,
         },
       ]);
       expect(template['_element'].innerHTML).toBe(

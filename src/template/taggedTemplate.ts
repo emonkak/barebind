@@ -71,7 +71,7 @@ export interface TextHole {
   index: number;
   precedingText: string;
   followingText: string;
-  tail: boolean;
+  split: boolean;
 }
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
@@ -224,12 +224,12 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           case HoleType.Text: {
             ensureNode(lookaheadNode, Node.TEXT_NODE, currentNode.nodeName);
             let node: Text;
-            if (hole.tail) {
-              node = lookaheadNode;
-            } else {
+            if (hole.split) {
               node = document.createTextNode('');
               skip = true;
               lookaheadNode.before(node);
+            } else {
+              node = lookaheadNode;
             }
             childPart = {
               type: PartType.Text,
@@ -605,7 +605,7 @@ function parseChildren(
               index,
               precedingText: lastComponent,
               followingText: '',
-              tail: false,
+              split: true,
             });
             currentNode.before(document.createTextNode(''));
             lastComponent = components[i]!;
@@ -617,7 +617,7 @@ function parseChildren(
             index,
             precedingText: lastComponent,
             followingText: components[tail]!,
-            tail: true,
+            split: false,
           });
           (currentNode as Text).data = '';
         }
