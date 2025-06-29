@@ -28,9 +28,11 @@ export function createAsyncRoot<T>(
   return {
     hydrate(options) {
       const hydrationTree = new HydrationTree(container);
+
       slot.hydrate(hydrationTree, context);
       hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
       hydrationTree.replaceNode(part.node);
+
       return renderHost.requestCallback(() => {
         context.enqueueMutationEffect(new MountSlot(slot, container));
         return context.flushAsync(options);
@@ -38,6 +40,7 @@ export function createAsyncRoot<T>(
     },
     mount(options) {
       slot.connect(context);
+
       return renderHost.requestCallback(() => {
         context.enqueueMutationEffect(new MountSlot(slot, container));
         return context.flushAsync(options);
@@ -45,6 +48,7 @@ export function createAsyncRoot<T>(
     },
     update(value, options) {
       slot.reconcile(value, context);
+
       return renderHost.requestCallback(() => {
         context.enqueueMutationEffect(slot);
         return context.flushAsync(options);
@@ -52,6 +56,7 @@ export function createAsyncRoot<T>(
     },
     unmount(options) {
       slot.disconnect(context);
+
       return renderHost.requestCallback(() => {
         context.enqueueMutationEffect(new UnmountSlot(slot, container));
         return context.flushAsync(options);
