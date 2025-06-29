@@ -77,7 +77,11 @@ export class UpdateEngine implements EffectContext, UpdateContext {
   }
 
   debugValue(directive: Directive<unknown>, value: unknown, part: Part): void {
-    if (part.type === PartType.ChildNode) {
+    if (
+      part.type === PartType.ChildNode &&
+      (part.node.data === '' ||
+        part.node.data.startsWith('/' + directive.name + '('))
+    ) {
       part.node.nodeValue = `/${directive.name}(${inspectValue(value)})`;
     }
   }
@@ -345,11 +349,14 @@ export class UpdateEngine implements EffectContext, UpdateContext {
   }
 
   undebugValue(
-    _directive: Directive<unknown>,
+    directive: Directive<unknown>,
     _value: unknown,
     part: Part,
   ): void {
-    if (part.type === PartType.ChildNode) {
+    if (
+      part.type === PartType.ChildNode &&
+      part.node.data.startsWith('/' + directive.name + '(')
+    ) {
       part.node.nodeValue = '';
     }
   }
