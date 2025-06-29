@@ -10,9 +10,9 @@ import { PartType } from '../../src/part.js';
 import { TextTemplate } from '../../src/template/textTemplate.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
-import { allCombinations, createElement } from '../testUtils.js';
+import { allCombinations, createElement, permutations } from '../testUtils.js';
 
-const TEMPLATE = new TextTemplate('', '');
+const TEXT_TEMPLATE = new TextTemplate('', '');
 
 describe('repeat()', () => {
   it('returns a DirectiveObject with RepeatDirective', () => {
@@ -66,26 +66,18 @@ describe('RepeatDirective', () => {
 
 describe('RepeatBinding', () => {
   describe('connect()', () => {
-    it('should update items according to keys', () => {
+    it('updates items according to keys', () => {
       const source = ['foo', 'bar', 'baz', 'qux'];
 
-      for (const source1 of allCombinations(source)) {
-        for (const source2 of allCombinations(source)) {
-          const props1: RepeatProps<
-            string,
-            string,
-            DirectiveObject<readonly [unknown]>
-          > = {
-            source: source1,
+      for (const combinations1 of allCombinations(source)) {
+        for (const combinations2 of allCombinations(source)) {
+          const props1: RepeatProps<string> = {
+            source: combinations1,
             keySelector: (item) => item,
             valueSelector: text,
           };
-          const props2: RepeatProps<
-            string,
-            string,
-            DirectiveObject<readonly [unknown]>
-          > = {
-            source: source2,
+          const props2: RepeatProps<string> = {
+            source: combinations2,
             keySelector: (item) => item,
             valueSelector: text,
           };
@@ -106,14 +98,154 @@ describe('RepeatBinding', () => {
           binding.commit();
 
           expect(container.innerHTML).toBe(
-            source2.map((item) => item + '<!---->').join('') + '<!---->',
+            combinations2.map((item) => item + '<!---->').join('') + '<!---->',
           );
         }
       }
+    });
+
+    it('updates items containing duplicate keys', () => {
+      const source1 = ['foo', 'bar', 'baz', 'baz', 'baz'];
+      const source2 = ['foo', 'bar', 'baz'];
+
+      for (const permutation1 of permutations(source1)) {
+        for (const permutation2 of permutations(source2)) {
+          const props1: RepeatProps<string> = {
+            source: permutation1,
+            keySelector: (item) => item,
+            valueSelector: text,
+          };
+          const props2: RepeatProps<string> = {
+            source: permutation2,
+            keySelector: (item) => item,
+            valueSelector: text,
+          };
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+            childNode: null,
+          } as const;
+          const container = createElement('div', {}, part.node);
+          const binding = new RepeatBinding(props1, part);
+          const context = new UpdateEngine(new MockRenderHost());
+
+          binding.connect(context);
+          binding.commit();
+
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+
+          expect(container.innerHTML).toBe(
+            permutation2.map((item) => item + '<!---->').join('') + '<!---->',
+          );
+
+          binding.bind(props1);
+          binding.connect(context);
+          binding.commit();
+
+          expect(container.innerHTML).toBe(
+            permutation1.map((item) => item + '<!---->').join('') + '<!---->',
+          );
+        }
+      }
+    });
+
+    it('swaps items according to keys', () => {
+      const source = ['foo', 'bar', 'baz'];
+
+      for (const permutation1 of permutations(source)) {
+        for (const permutation2 of permutations(source)) {
+          const props1: RepeatProps<string> = {
+            source: permutation1,
+            keySelector: (item) => item,
+            valueSelector: text,
+          };
+          const props2: RepeatProps<string> = {
+            source: permutation2,
+            keySelector: (item) => item,
+            valueSelector: text,
+          };
+          const part = {
+            type: PartType.ChildNode,
+            node: document.createComment(''),
+            childNode: null,
+          } as const;
+          const container = createElement('div', {}, part.node);
+          const binding = new RepeatBinding(props1, part);
+          const context = new UpdateEngine(new MockRenderHost());
+
+          binding.connect(context);
+          binding.commit();
+
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+
+          expect(container.innerHTML).toBe(
+            permutation2.map((item) => item + '<!---->').join('') + '<!---->',
+          );
+        }
+      }
+    });
+
+    it.each([
+      [
+        ['foo', 'bar', 'baz'],
+        ['qux', 'baz', 'bar', 'foo'],
+      ],
+      [
+        ['foo', 'bar', 'baz'],
+        ['bar', 'foo'],
+      ],
+    ])('updates with a different size list', (source1, source2) => {
+      const props1: RepeatProps<string> = {
+        source: source1,
+        valueSelector: text,
+      };
+      const props2: RepeatProps<string> = {
+        source: source2,
+        valueSelector: text,
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const container = createElement('div', {}, part.node);
+      const binding = new RepeatBinding(props1, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.connect(context);
+      binding.commit();
+
+      binding.bind(props2);
+      binding.connect(context);
+      binding.commit();
+
+      expect(container.innerHTML).toBe(
+        source2.map((item) => item + '<!---->').join('') + '<!---->',
+      );
+      expect(Array.from(container.childNodes)).toStrictEqual(
+        binding['_memoizedItems']
+          ?.flatMap((item) => [
+            document.createTextNode(item.slot.value[0]),
+            expect.exact(item.slot.part.node),
+          ])
+          .concat([expect.exact(part.node)]),
+      );
+
+      binding.bind(props1);
+      binding.connect(context);
+      binding.commit();
+
+      expect(container.innerHTML).toBe(
+        source1.map((item) => item + '<!---->').join('') + '<!---->',
+      );
     });
   });
 });
 
 function text(content: string): DirectiveObject<readonly [unknown]> {
-  return new DirectiveObject(TEMPLATE, [content]);
+  return new DirectiveObject(TEXT_TEMPLATE, [content]);
 }

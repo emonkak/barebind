@@ -3,11 +3,7 @@ interface Entry {
   value: unknown;
 }
 
-let idCounter = 0;
-
 export class Scope {
-  id = ++idCounter;
-
   private readonly _parent: Scope | null;
 
   private readonly _entries: Entry[] = [];
