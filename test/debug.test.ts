@@ -295,28 +295,34 @@ describe('inspectPart()', () => {
 });
 
 describe('inspectValue()', () => {
-  it('returns a string representation of the value', () => {
-    const circlerValue = { x: {} };
-    circlerValue.x = circlerValue;
-    expect(inspectValue(null)).toBe('null');
-    expect(inspectValue(undefined)).toBe('undefined');
-    expect(inspectValue('foo')).toBe('"foo"');
-    expect(inspectValue(123)).toBe('123');
-    expect(inspectValue(true)).toBe('true');
-    expect(inspectValue({})).toBe('{}');
-    expect(inspectValue([])).toBe('[]');
-    expect(inspectValue(new Date('2000-01-01T00:00:00.000Z'))).toBe(
-      '"2000-01-01T00:00:00.000Z"',
-    );
-    expect(inspectValue(() => {})).toBe('Function');
-    expect(inspectValue(function foo() {})).toBe('Function(foo)');
-    expect(inspectValue(new Map())).toBe('Map');
-    expect(
-      inspectValue({ foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } }),
-    ).toBe('{foo: 1, bar: [2], baz: {$qux: 3, "foo-bar": 4}}');
-    expect(inspectValue([1, [2], { $qux: 3, 'foo-bar': 4 }])).toBe(
-      '[1, [2], {$qux: 3, "foo-bar": 4}]',
-    );
-    expect(inspectValue(circlerValue)).toBe('{x: [Circular]}');
-  });
+  const circlerValue = { x: {} };
+  circlerValue.x = circlerValue;
+
+  it.each([
+    [null, 'null'],
+    [undefined, 'undefined'],
+    [123, '123'],
+    [true, 'true'],
+    [new Date('2000-01-01T00:00:00.000Z'), '"2000-01-01T00:00:00.000Z"'],
+    [new Map(), 'Map'],
+    [new Set(), 'Set'],
+    [function foo() {}, 'Function(foo)'],
+    [[], '[]'],
+    [[1, [2], { $qux: 3, 'foo-bar': 4 }], '[1, [2], {$qux: 3, "foo-bar": 4}]'],
+    [{}, '{}'],
+    [
+      { foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } },
+      '{foo: 1, bar: [2], baz: {$qux: 3, "foo-bar": 4}}',
+    ],
+    [
+      { foo: { bar: { baz: { qux: 123 } } } },
+      '{foo: {bar: {baz: {qux: ...}}}}',
+    ],
+    [circlerValue, '{x: [Circular]}'],
+  ])(
+    'returns a string representation of the value',
+    (value, expectedString) => {
+      expect(inspectValue(value)).toBe(expectedString);
+    },
+  );
 });

@@ -16,8 +16,12 @@ export function inspectPart(part: Part, marker: string): string {
 
 export function inspectValue(
   value: unknown,
+  maxDepth: number = 3,
   seenObjects: WeakSet<object> = new WeakSet(),
 ): string {
+  if (maxDepth < 0) {
+    return '...';
+  }
   switch (typeof value) {
     case 'string':
       return JSON.stringify(value);
@@ -40,7 +44,7 @@ export function inspectValue(
           return (
             '[' +
             (value as unknown[])
-              .map((v) => inspectValue(v, seenObjects))
+              .map((v) => inspectValue(v, maxDepth - 1, seenObjects))
               .join(', ') +
             ']'
           );
@@ -52,14 +56,14 @@ export function inspectValue(
                 ([k, v]) =>
                   (UNQUOTED_PROPERTY_PATTERN.test(k) ? k : JSON.stringify(k)) +
                   ': ' +
-                  inspectValue(v, seenObjects),
+                  inspectValue(v, maxDepth - 1, seenObjects),
               )
               .join(', ') +
             '}'
           );
         default:
           if (isJSONSerializable(value)) {
-            return inspectValue(value.toJSON(), seenObjects);
+            return inspectValue(value.toJSON(), maxDepth - 1, seenObjects);
           }
           if (Symbol.toStringTag in value) {
             return value[Symbol.toStringTag] as string;
