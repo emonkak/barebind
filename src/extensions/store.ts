@@ -164,7 +164,7 @@ class StoreSignal<TClass extends StoreExtensions> extends Signal<TClass> {
   }
 }
 
-function defineInstanceDescriptors<T extends Object>(
+function defineInstanceDescriptors<T extends object>(
   instance: T,
   signalMap: Record<PropertyKey, Signal<unknown>>,
 ): void {
@@ -191,7 +191,7 @@ function defineInstanceDescriptors<T extends Object>(
   }
 }
 
-function definePrototypeDescriptors<T extends Object>(
+function definePrototypeDescriptors<T extends object>(
   instance: T,
   signalMap: Record<PropertyKey, Signal<unknown>>,
 ): void {
