@@ -1,5 +1,6 @@
 import { dependenciesAreChanged } from './compare.js';
 import {
+  type Bindable,
   type BindableObject,
   type Coroutine,
   DirectiveObject,
@@ -58,21 +59,21 @@ export class RenderEngine implements RenderContext {
 
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
@@ -105,14 +106,14 @@ export class RenderEngine implements RenderContext {
 
   html(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]> {
     return this._template(strings, binds, 'html');
   }
 
   math(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]> {
     return this._template(strings, binds, 'math');
   }
@@ -124,7 +125,7 @@ export class RenderEngine implements RenderContext {
 
   svg(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]> {
     return this._template(strings, binds, 'svg');
   }
@@ -309,7 +310,7 @@ export class RenderEngine implements RenderContext {
 
   private _dynamicTemplate(
     strings: TemplateStringsArray,
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
   ): DirectiveObject<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
@@ -324,7 +325,7 @@ export class RenderEngine implements RenderContext {
 
   private _template(
     strings: TemplateStringsArray,
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
   ): DirectiveObject<readonly unknown[]> {
     const template = this._updateContext.resolveTemplate(strings, binds, mode);

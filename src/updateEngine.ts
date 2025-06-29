@@ -42,7 +42,10 @@ interface RenderFrame {
 }
 
 interface SharedState {
-  cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
+  cachedTemplates: WeakMap<
+    readonly string[],
+    Template<readonly Bindable<unknown>[]>
+  >;
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
@@ -195,7 +198,7 @@ export class UpdateEngine implements UpdateContext {
     return this._currentScope;
   }
 
-  hydrateTemplate<TBinds extends readonly unknown[]>(
+  hydrateTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -238,7 +241,7 @@ export class UpdateEngine implements UpdateContext {
     return { result, lanes: nextLanes };
   }
 
-  renderTemplate<TBinds extends readonly unknown[]>(
+  renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -265,9 +268,9 @@ export class UpdateEngine implements UpdateContext {
 
   resolveTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     mode: TemplateMode,
-  ): Template<readonly unknown[]> {
+  ): Template<readonly Bindable<unknown>[]> {
     let template = this._sharedState.cachedTemplates.get(strings);
 
     if (template === undefined) {

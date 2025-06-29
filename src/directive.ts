@@ -27,7 +27,7 @@ export interface DirectiveElement<T> {
   readonly slotType?: SlotType;
 }
 
-export type Bindable<T> = T | BindableObject<T>;
+export type Bindable<T> = BindableObject<T> | T;
 
 export interface BindableObject<T> {
   [$toDirectiveElement](
@@ -73,7 +73,7 @@ export interface Primitive<T> extends Directive<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
-export interface Template<TBinds extends readonly unknown[]>
+export interface Template<TBinds extends readonly Bindable<unknown>[]>
   extends Directive<TBinds> {
   render(
     binds: TBinds,
@@ -96,12 +96,12 @@ export interface TemplateBlock {
 }
 
 export interface Component<TProps, TResult> extends Directive<TProps> {
-  render(props: TProps, context: RenderContext): TResult;
+  render(props: TProps, context: RenderContext): Bindable<TResult>;
   shouldUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
 
 export interface ComponentFunction<TProps, TResult = unknown> {
-  (props: TProps, context: RenderContext): TResult;
+  (props: TProps, context: RenderContext): Bindable<TResult>;
   shouldUpdate?(nextProps: TProps, prevProps: TProps): boolean;
 }
 
@@ -128,7 +128,7 @@ export interface UpdateContext extends DirectiveContext {
   flushAsync(options?: UpdateOptions): Promise<void>;
   flushSync(): void;
   getCurrentScope(): Scope;
-  hydrateTemplate<TBinds extends readonly unknown[]>(
+  hydrateTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -143,7 +143,7 @@ export interface UpdateContext extends DirectiveContext {
     lanes: Lanes,
     coroutine: Coroutine,
   ): RenderResult<TResult>;
-  renderTemplate<TBinds extends readonly unknown[]>(
+  renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -152,7 +152,7 @@ export interface UpdateContext extends DirectiveContext {
     strings: readonly string[],
     binds: readonly unknown[],
     mode: TemplateMode,
-  ): Template<readonly unknown[]>;
+  ): Template<readonly Bindable<unknown>[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
   waitForUpdate(coroutine: Coroutine): Promise<void>;
 }
@@ -160,35 +160,38 @@ export interface UpdateContext extends DirectiveContext {
 export interface RenderContext extends HookContext {
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]>;
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]>;
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]>;
   html(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]>;
   math(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]>;
   svg(
     strings: TemplateStringsArray,
-    ...binds: readonly unknown[]
+    ...binds: readonly Bindable<unknown>[]
   ): BindableObject<readonly unknown[]>;
 }
 
 export interface RenderResult<T> {
-  result: T;
+  result: Bindable<T>;
   lanes: Lanes;
 }
 
+/**
+ * @internal
+ */
 export class DirectiveObject<T> implements BindableObject<T> {
   readonly directive: Directive<T>;
 
@@ -204,6 +207,9 @@ export class DirectiveObject<T> implements BindableObject<T> {
   }
 }
 
+/**
+ * @internal
+ */
 export class SlotObject<T> implements BindableObject<T> {
   readonly value: Bindable<T>;
 
@@ -227,6 +233,9 @@ export class SlotObject<T> implements BindableObject<T> {
   }
 }
 
+/**
+ * @internal
+ */
 export function isBindableObject<T>(
   value: Bindable<T>,
 ): value is BindableObject<T> {

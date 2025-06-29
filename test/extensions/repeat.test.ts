@@ -12,7 +12,7 @@ import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 import { allCombinations, createElement, permutations } from '../testUtils.js';
 
-const TEXT_TEMPLATE = new TextTemplate('', '');
+const TEXT_TEMPLATE = new TextTemplate<string>('', '');
 
 describe('repeat()', () => {
   it('returns a DirectiveObject with RepeatDirective', () => {
@@ -199,11 +199,11 @@ describe('RepeatBinding', () => {
         ['bar', 'foo'],
       ],
     ])('updates with a different size list', (source1, source2) => {
-      const props1: RepeatProps<string> = {
+      const props1: RepeatProps<string, number, readonly [string]> = {
         source: source1,
         valueSelector: text,
       };
-      const props2: RepeatProps<string> = {
+      const props2: RepeatProps<string, number, readonly [string]> = {
         source: source2,
         valueSelector: text,
       };
@@ -229,7 +229,7 @@ describe('RepeatBinding', () => {
       expect(Array.from(container.childNodes)).toStrictEqual(
         binding['_memoizedItems']
           ?.flatMap((item) => [
-            document.createTextNode(item.slot.value[0]),
+            expect.objectContaining({ nodeValue: item.slot.value[0] }),
             expect.exact(item.slot.part.node),
           ])
           .concat([expect.exact(part.node)]),
@@ -246,6 +246,6 @@ describe('RepeatBinding', () => {
   });
 });
 
-function text(content: string): DirectiveObject<readonly [unknown]> {
+function text(content: string): DirectiveObject<readonly [string]> {
   return new DirectiveObject(TEXT_TEMPLATE, [content]);
 }

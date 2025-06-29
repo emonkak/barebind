@@ -1,3 +1,4 @@
+import type { Bindable } from '../directive.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
 import type { RenderHost } from '../renderHost.js';
@@ -7,12 +8,12 @@ import { MountSlot, UnmountSlot } from './root.js';
 export interface SyncRoot<T> {
   hydrate(): void;
   mount(): void;
-  update(value: T): void;
+  update(value: Bindable<T>): void;
   unmount(): void;
 }
 
 export function createSyncRoot<T>(
-  value: T,
+  value: Bindable<T>,
   container: Element,
   renderHost: RenderHost,
 ): SyncRoot<T> {

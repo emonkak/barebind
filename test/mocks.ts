@@ -180,10 +180,10 @@ export class MockRenderHost implements RenderHost {
 
   createTemplate(
     strings: readonly string[],
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     placeholder: string,
     mode: TemplateMode,
-  ): Template<readonly unknown[]> {
+  ): Template<readonly Bindable<unknown>[]> {
     return TaggedTemplate.parse(strings, binds, placeholder, mode);
   }
 
@@ -290,10 +290,10 @@ export class MockSlot<T> implements Slot<T> {
   }
 }
 
-export class MockTemplate implements Template<readonly unknown[]> {
+export class MockTemplate implements Template<readonly Bindable<unknown>[]> {
   readonly strings: readonly string[];
 
-  readonly binds: readonly unknown[];
+  readonly binds: readonly Bindable<unknown>[];
 
   readonly placeholder: string;
 
@@ -301,7 +301,7 @@ export class MockTemplate implements Template<readonly unknown[]> {
 
   constructor(
     strings: readonly string[] = [],
-    binds: readonly unknown[] = [],
+    binds: readonly Bindable<unknown>[] = [],
     placeholder = '',
     mode: TemplateMode = 'html',
   ) {
@@ -316,7 +316,7 @@ export class MockTemplate implements Template<readonly unknown[]> {
   }
 
   render(
-    _binds: readonly unknown[],
+    _binds: readonly Bindable<unknown>[],
     _part: ChildNodePart,
     _context: UpdateContext,
   ): TemplateBlock {
@@ -327,7 +327,7 @@ export class MockTemplate implements Template<readonly unknown[]> {
   }
 
   hydrate(
-    _binds: readonly unknown[],
+    _binds: readonly Bindable<unknown>[],
     _part: ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
@@ -339,10 +339,10 @@ export class MockTemplate implements Template<readonly unknown[]> {
   }
 
   resolveBinding(
-    binds: readonly unknown[],
+    binds: readonly Bindable<unknown>[],
     part: Part,
     _context: DirectiveContext,
-  ): Binding<readonly unknown[]> {
+  ): Binding<readonly Bindable<unknown>[]> {
     if (part.type !== PartType.ChildNode) {
       throw new Error('MockTemplate must be used in a child node.');
     }

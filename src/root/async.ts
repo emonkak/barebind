@@ -1,3 +1,4 @@
+import type { Bindable } from '../directive.js';
 import type { UpdateOptions } from '../hook.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
@@ -8,12 +9,12 @@ import { MountSlot, UnmountSlot } from './root.js';
 export interface AsyncRoot<T> {
   hydrate(options?: UpdateOptions): Promise<void>;
   mount(options?: UpdateOptions): Promise<void>;
-  update(value: T, options?: UpdateOptions): Promise<void>;
+  update(value: Bindable<T>, options?: UpdateOptions): Promise<void>;
   unmount(options?: UpdateOptions): Promise<void>;
 }
 
 export function createAsyncRoot<T>(
-  value: T,
+  value: Bindable<T>,
   container: Element,
   renderHost: RenderHost,
 ): AsyncRoot<T> {

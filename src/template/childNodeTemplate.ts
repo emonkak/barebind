@@ -1,5 +1,6 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
+  Bindable,
   DirectiveContext,
   Template,
   TemplateBlock,
@@ -12,7 +13,7 @@ import { TemplateBinding } from './template.js';
 export const ChildNodeTemplate = {
   name: 'ChildNodeTemplate',
   hydrate(
-    binds: readonly [unknown],
+    binds: readonly [Bindable<unknown>],
     part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
@@ -32,7 +33,7 @@ export const ChildNodeTemplate = {
     return { childNodes: [childPart.node], slots: [slot] };
   },
   render(
-    binds: readonly [unknown],
+    binds: readonly [Bindable<unknown>],
     part: ChildNodePart,
     context: UpdateContext,
   ): TemplateBlock {
@@ -49,10 +50,10 @@ export const ChildNodeTemplate = {
     return { childNodes: [slotPart.node], slots: [slot] };
   },
   resolveBinding<T>(
-    binds: readonly [T],
+    binds: readonly [Bindable<T>],
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [T]> {
+  ): TemplateBinding<readonly [Bindable<T>]> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'ChildNodeTemplate must be used in a child node part, but it is used here in:\n' +
@@ -60,6 +61,10 @@ export const ChildNodeTemplate = {
       );
     }
 
-    return new TemplateBinding(this as Template<readonly [T]>, binds, part);
+    return new TemplateBinding(
+      this as Template<readonly [Bindable<T>]>,
+      binds,
+      part,
+    );
   },
-} as const satisfies Template<readonly [unknown]>;
+} as const satisfies Template<readonly [Bindable<unknown>]>;

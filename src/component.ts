@@ -1,4 +1,5 @@
 import {
+  type Bindable,
   type Binding,
   type Component,
   type ComponentFunction,
@@ -61,7 +62,7 @@ export class ComponentDirective<TProps, TResult>
     return this._componentFn.name;
   }
 
-  render(props: TProps, context: RenderContext): TResult {
+  render(props: TProps, context: RenderContext): Bindable<TResult> {
     const componentFn = this._componentFn;
     return componentFn(props, context);
   }

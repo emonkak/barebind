@@ -1,5 +1,6 @@
 import {
   $toDirectiveElement,
+  type Bindable,
   type BindableObject,
   type Binding,
   type Coroutine,
@@ -25,13 +26,13 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 export abstract class Signal<T>
-  implements CustomHook<T>, BindableObject<Signal<T>>
+  implements CustomHook<T>, BindableObject<Signal<Bindable<T>>>
 {
   /**
    * @internal
    */
   static resolveBinding<T>(
-    signal: Signal<T>,
+    signal: Signal<Bindable<T>>,
     part: Part,
     _context: DirectiveContext,
   ): SignalBinding<T> {
@@ -53,13 +54,13 @@ export abstract class Signal<T>
     return this.value;
   }
 
-  [$toDirectiveElement](): DirectiveElement<Signal<T>> {
-    return { directive: Signal, value: this };
+  [$toDirectiveElement](): DirectiveElement<Signal<Bindable<T>>> {
+    return { directive: Signal, value: this as Signal<Bindable<T>> };
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
 
-  map<TResult>(selector: (value: T) => TResult): Projected<T, TResult> {
+  map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
     return new Projected(this, selector);
   }
 
@@ -240,8 +241,10 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 /**
  * @internal
  */
-export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
-  private _signal: Signal<T>;
+export class SignalBinding<T>
+  implements Binding<Signal<Bindable<T>>>, Coroutine
+{
+  private _signal: Signal<Bindable<T>>;
 
   private _part: Part;
 
@@ -249,16 +252,16 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscription: Subscription | null = null;
 
-  constructor(signal: Signal<T>, part: Part) {
+  constructor(signal: Signal<Bindable<T>>, part: Part) {
     this._signal = signal;
     this._part = part;
   }
 
-  get directive(): Directive<Signal<T>> {
-    return Signal as Directive<Signal<T>>;
+  get directive(): Directive<Signal<Bindable<T>>> {
+    return Signal as Directive<Signal<Bindable<T>>>;
   }
 
-  get value(): Signal<T> {
+  get value(): Signal<Bindable<T>> {
     return this._signal;
   }
 
@@ -266,11 +269,11 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._part;
   }
 
-  shouldBind(signal: Signal<T>): boolean {
+  shouldBind(signal: Signal<Bindable<T>>): boolean {
     return this._subscription === null || signal !== this._signal;
   }
 
-  bind(signal: Signal<T>): void {
+  bind(signal: Signal<Bindable<T>>): void {
     this._subscription?.();
     this._subscription = null;
     this._signal = signal;
