@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Primitive } from '../../src/directive.js';
 import { PartType } from '../../src/part.js';
-import {
-  StyleBinding,
-  StylePrimitive,
-  type StyleProps,
-} from '../../src/primitive/style.js';
+import { StyleBinding, StylePrimitive } from '../../src/primitive/style.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 import { createElement } from '../testUtils.js';
@@ -25,7 +20,7 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: ':style',
       } as const;
-      const ensureValue: NonNullable<Primitive<StyleProps>['ensureValue']> =
+      const ensureValue: (typeof StylePrimitive)['ensureValue'] =
         StylePrimitive.ensureValue;
 
       expect(() => {
@@ -41,7 +36,7 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: ':style',
         } as const;
-        const ensureValue: NonNullable<Primitive<StyleProps>['ensureValue']> =
+        const ensureValue: (typeof StylePrimitive)['ensureValue'] =
           StylePrimitive.ensureValue;
 
         expect(() => {
@@ -114,7 +109,7 @@ describe('StyleBinding', () => {
       binding.connect(context);
       binding.commit();
 
-      expect(binding.shouldBind(style1)).toBe(false);
+      expect(binding.shouldBind({ ...style1 })).toBe(false);
       expect(binding.shouldBind(style2)).toBe(true);
     });
   });

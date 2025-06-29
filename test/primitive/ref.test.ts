@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Primitive } from '../../src/directive.js';
 import { PartType } from '../../src/part.js';
-import { type Ref, RefBinding, RefPrimitive } from '../../src/primitive/ref.js';
+import { RefBinding, RefPrimitive } from '../../src/primitive/ref.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 
@@ -20,7 +19,7 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: ':ref',
       } as const;
-      const ensureValue: NonNullable<Primitive<Ref>['ensureValue']> =
+      const ensureValue: (typeof RefPrimitive)['ensureValue'] =
         RefPrimitive.ensureValue;
 
       expect(() => {
@@ -37,7 +36,7 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: ':ref',
       } as const;
-      const ensureValue: NonNullable<Primitive<Ref>['ensureValue']> =
+      const ensureValue: (typeof RefPrimitive)['ensureValue'] =
         RefPrimitive.ensureValue;
 
       expect(() => {

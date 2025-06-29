@@ -5,7 +5,6 @@ import { PartType } from '../../src/part.js';
 import { AttributePrimitive } from '../../src/primitive/attribute.js';
 import { BlackholePrimitive } from '../../src/primitive/blackhole.js';
 import { ClassListPrimitive } from '../../src/primitive/classList.js';
-import { ClassMapPrimitive } from '../../src/primitive/classMap.js';
 import { LivePrimitive } from '../../src/primitive/live.js';
 import { NodePrimitive } from '../../src/primitive/node.js';
 import { PropertyPrimitive } from '../../src/primitive/property.js';
@@ -258,14 +257,6 @@ describe('ServerRenderHost', () => {
           name: ':classlist',
         },
         ClassListPrimitive,
-      ],
-      [
-        {
-          type: PartType.Attribute,
-          node: document.createElement('div'),
-          name: ':classmap',
-        },
-        ClassMapPrimitive,
       ],
       [
         {

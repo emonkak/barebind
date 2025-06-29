@@ -5,8 +5,7 @@ import {
   Literal,
   type RenderContext,
 } from '@emonkak/ebit';
-import { repeat } from '@emonkak/ebit/extensions/repeat.js';
-import { Atom, type Signal } from '@emonkak/ebit/extensions/signal.js';
+import { Atom, repeat, type Signal } from '@emonkak/ebit/extensions.js';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
 
@@ -165,7 +164,7 @@ function List(
   );
 
   return context.html`
-    <ul><${itemsList}></ul>
+    <ol><${itemsList}></ol>
   `;
 }
 
@@ -219,12 +218,14 @@ function Dashboard(
 
   return context.html`
     <div
-      class="Dashboard"
       data-count=${count}
-      :classmap=${{
-        'is-odd': count % 2 !== 0,
-        'is-even': count % 2 === 0,
-      }}
+      :classlist=${[
+        'Dashboard',
+        {
+          'is-odd': count % 2 !== 0,
+          'is-even': count % 2 === 0,
+        },
+      ]}
       :ref=${countElementRef}
     >
       <h1>

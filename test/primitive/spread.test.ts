@@ -1,12 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Primitive } from '../../src/directive.js';
 import { PartType } from '../../src/part.js';
-import {
-  SpreadBinding,
-  SpreadPrimitive,
-  type SpreadProps,
-} from '../../src/primitive/spread.js';
+import { SpreadBinding, SpreadPrimitive } from '../../src/primitive/spread.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 
@@ -23,7 +18,7 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const ensureValue: NonNullable<Primitive<SpreadProps>['ensureValue']> =
+      const ensureValue: (typeof SpreadPrimitive)['ensureValue'] =
         SpreadPrimitive.ensureValue;
 
       expect(() => {
@@ -38,7 +33,7 @@ describe('SpreadPrimitive', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         } as const;
-        const ensureValue: NonNullable<Primitive<SpreadProps>['ensureValue']> =
+        const ensureValue: (typeof SpreadPrimitive)['ensureValue'] =
           SpreadPrimitive.ensureValue;
 
         expect(() => {

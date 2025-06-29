@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { Primitive } from '../../src/directive.js';
 import { PartType } from '../../src/part.js';
-import {
-  EventBinding,
-  type EventListenerValue,
-  EventPrimitive,
-} from '../../src/primitive/event.js';
+import { EventBinding, EventPrimitive } from '../../src/primitive/event.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
 
@@ -24,9 +19,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       } as const;
-      const ensureValue: NonNullable<
-        Primitive<EventListenerValue>['ensureValue']
-      > = EventPrimitive.ensureValue;
+      const ensureValue: (typeof EventPrimitive)['ensureValue'] =
+        EventPrimitive.ensureValue;
 
       expect(() => {
         ensureValue(null, part);
@@ -42,9 +36,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       } as const;
-      const ensureValue: NonNullable<
-        Primitive<EventListenerValue>['ensureValue']
-      > = EventPrimitive.ensureValue;
+      const ensureValue: (typeof EventPrimitive)['ensureValue'] =
+        EventPrimitive.ensureValue;
 
       expect(() => {
         ensureValue({}, part);

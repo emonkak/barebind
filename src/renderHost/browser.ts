@@ -12,7 +12,6 @@ import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { ClassListPrimitive } from '../primitive/classList.js';
-import { ClassMapPrimitive } from '../primitive/classMap.js';
 import { EventPrimitive } from '../primitive/event.js';
 import { LivePrimitive } from '../primitive/live.js';
 import { NodePrimitive } from '../primitive/node.js';
@@ -117,8 +116,6 @@ export class BrowserRenderHost implements RenderHost {
           switch (part.name.slice(1).toLowerCase()) {
             case 'classlist':
               return ClassListPrimitive;
-            case 'classmap':
-              return ClassMapPrimitive;
             case 'ref':
               return RefPrimitive;
             case 'style':
