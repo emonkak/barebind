@@ -61,6 +61,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       this._part,
       hydrationTree,
     );
+    this._memoizedBlock = this._pendingBlock;
   }
 
   connect(context: UpdateContext): void {

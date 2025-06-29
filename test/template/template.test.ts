@@ -57,11 +57,14 @@ describe('TemplateBinding', () => {
         childNode: null,
       } as const;
       const binding = new TemplateBinding(template, binds, part);
-      const hydrationRoot = createElement('div', {}, '');
+      const hydrationRoot = createElement('div', {}, 'foo', part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
       const context = new UpdateEngine(new MockRenderHost());
 
-      const hydrateSpy = vi.spyOn(template, 'hydrate');
+      const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
+        childNodes: [hydrationRoot.firstChild!],
+        slots: [],
+      });
 
       binding.hydrate(hydrationTree, context);
 
@@ -72,6 +75,12 @@ describe('TemplateBinding', () => {
         hydrationTree,
         context,
       );
+      expect(hydrationRoot.innerHTML).toBe('foo<!---->');
+
+      binding.disconnect(context);
+      binding.rollback(context);
+
+      expect(hydrationRoot.innerHTML).toBe('<!---->');
     });
 
     it('should throw the error if the template has already been rendered', () => {
