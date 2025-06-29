@@ -303,7 +303,9 @@ describe('inspectValue()', () => {
     expect(inspectValue(true)).toBe('true');
     expect(inspectValue({})).toBe('{}');
     expect(inspectValue([])).toBe('[]');
-    expect(inspectValue(new Date())).toBe('Date');
+    expect(inspectValue(new Date('2000-01-01T00:00:00.000Z'))).toBe(
+      '"2000-01-01T00:00:00.000Z"',
+    );
     expect(inspectValue(() => {})).toBe('Function');
     expect(inspectValue(function foo() {})).toBe('Function(foo)');
     expect(inspectValue(new Map())).toBe('Map');
