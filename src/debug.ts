@@ -14,25 +14,34 @@ export function inspectPart(part: Part, marker: string): string {
   return inspectAround(part.node, annotatePart(part, marker));
 }
 
-export function inspectValue(value: unknown): string {
+export function inspectValue(
+  value: unknown,
+  seenObjects: WeakSet<object> = new WeakSet(),
+): string {
   switch (typeof value) {
     case 'string':
       return JSON.stringify(value);
     case 'undefined':
-      return typeof undefined;
+      return 'undefined';
     case 'function':
       return value.name !== ''
         ? `Function(${value.name})`
         : value.constructor.name;
     case 'object':
       if (value === null) {
-        return String(null);
+        return 'null';
       }
+      if (seenObjects.has(value)) {
+        return '[Circular]';
+      }
+      seenObjects.add(value);
       switch (value.constructor) {
         case Array:
           return (
             '[' +
-            (value as unknown[]).map((v) => inspectValue(v)).join(', ') +
+            (value as unknown[])
+              .map((v) => inspectValue(v, seenObjects))
+              .join(', ') +
             ']'
           );
         case Object:
@@ -43,14 +52,14 @@ export function inspectValue(value: unknown): string {
                 ([k, v]) =>
                   (UNQUOTED_PROPERTY_PATTERN.test(k) ? k : JSON.stringify(k)) +
                   ': ' +
-                  inspectValue(v),
+                  inspectValue(v, seenObjects),
               )
               .join(', ') +
             '}'
           );
         default:
           if (isJSONSerializable(value)) {
-            return inspectValue(value.toJSON());
+            return inspectValue(value.toJSON(), seenObjects);
           }
           if (Symbol.toStringTag in value) {
             return value[Symbol.toStringTag] as string;

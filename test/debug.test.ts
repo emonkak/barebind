@@ -296,6 +296,8 @@ describe('inspectPart()', () => {
 
 describe('inspectValue()', () => {
   it('returns a string representation of the value', () => {
+    const circlerValue = { x: {} };
+    circlerValue.x = circlerValue;
     expect(inspectValue(null)).toBe('null');
     expect(inspectValue(undefined)).toBe('undefined');
     expect(inspectValue('foo')).toBe('"foo"');
@@ -315,5 +317,6 @@ describe('inspectValue()', () => {
     expect(inspectValue([1, [2], { $qux: 3, 'foo-bar': 4 }])).toBe(
       '[1, [2], {$qux: 3, "foo-bar": 4}]',
     );
+    expect(inspectValue(circlerValue)).toBe('{x: [Circular]}');
   });
 });
