@@ -80,11 +80,20 @@ describe('Signal', () => {
   });
 
   describe('valueOf()', () => {
-    it('return the signal value', () => {
+    it('returns the signal value', () => {
       const value = 'foo';
       const signal = new Atom(value);
 
       expect(signal.valueOf()).toBe(value);
+    });
+  });
+
+  describe('toJSON()', () => {
+    it('returns the signal value', () => {
+      const value = 'foo';
+      const signal = new Atom(value);
+
+      expect(signal.toJSON()).toBe(value);
     });
   });
 });

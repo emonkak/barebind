@@ -65,6 +65,10 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   valueOf(): T {
     return this.value;
   }
+
+  toJSON(): T {
+    return this.value;
+  }
 }
 
 export class Atom<T> extends Signal<T> {
