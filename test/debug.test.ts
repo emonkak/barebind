@@ -309,6 +309,7 @@ describe('inspectValue()', () => {
     [new Date('2000-01-01T00:00:00.000Z'), '"2000-01-01T00:00:00.000Z"'],
     [new Map(), 'Map'],
     [new Set(), 'Set'],
+    [new (class Foo {}), 'Foo'],
     [function foo() {}, 'Function(foo)'],
     [() => {}, 'Function'],
     [[], '[]'],
