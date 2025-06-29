@@ -123,9 +123,9 @@ export class MockBinding<T> implements Binding<T> {
         break;
       case PartType.Text:
         this._part.node.data =
-          (this._part.precedingText ?? '') +
+          this._part.precedingText +
           (this._value?.toString() ?? '') +
-          (this._part.followingText ?? '');
+          this._part.followingText;
         break;
     }
 

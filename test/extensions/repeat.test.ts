@@ -6,7 +6,8 @@ import {
   type RepeatProps,
   repeat,
 } from '../../src/extensions/repeat.js';
-import { PartType } from '../../src/part.js';
+import { HydrationTree } from '../../src/hydration.js';
+import { type ChildNodePart, PartType } from '../../src/part.js';
 import { TextTemplate } from '../../src/template/textTemplate.js';
 import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockRenderHost } from '../mocks.js';
@@ -16,7 +17,7 @@ const TEXT_TEMPLATE = new TextTemplate<string>('', '');
 
 describe('repeat()', () => {
   it('returns a DirectiveObject with RepeatDirective', () => {
-    const props = {
+    const props: RepeatProps<string> = {
       source: ['foo', 'bar', 'baz'],
     };
     const element = repeat(props);
@@ -35,7 +36,7 @@ describe('RepeatDirective', () => {
 
   describe('resolveBinding()', () => {
     it('constructs a new RepeatBinding', () => {
-      const props = { source: ['foo', 'bar', 'baz'] };
+      const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -50,7 +51,7 @@ describe('RepeatDirective', () => {
     });
 
     it('should throw the error if the part is not an attribute part', () => {
-      const props = { source: ['foo', 'bar', 'baz'] };
+      const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
@@ -65,6 +66,74 @@ describe('RepeatDirective', () => {
 });
 
 describe('RepeatBinding', () => {
+  describe('shouldBind()', () => {
+    it('returns true if committed items does not exist', () => {
+      const props: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new RepeatBinding(props, part);
+
+      expect(binding.shouldBind(props)).toBe(true);
+    });
+
+    it('returns true if the props is different from the new one', () => {
+      const props1: RepeatProps<string> = { source: ['foo', 'bar', 'baz'] };
+      const props2: RepeatProps<string> = { source: ['baz', 'bar', 'foo'] };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new RepeatBinding(props1, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.connect(context);
+      binding.commit();
+
+      expect(binding.shouldBind(props1)).toBe(false);
+      expect(binding.shouldBind(props2)).toBe(true);
+    });
+  });
+
+  describe('hydrate()', () => {
+    it('hydrates items', () => {
+      const source = ['foo', 'bar', 'baz'];
+      const props: RepeatProps<string> = {
+        source,
+        valueSelector: textTemplateObject,
+      };
+      const part: ChildNodePart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+      const hydrationRoot = createElement(
+        'div',
+        {},
+        'foo',
+        document.createComment(''),
+        'bar',
+        document.createComment(''),
+        'baz',
+        document.createComment(''),
+        document.createComment(''),
+      );
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const binding = new RepeatBinding(props, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.hydrate(hydrationTree, context);
+      binding.commit();
+
+      expect(hydrationRoot.innerHTML).toBe(
+        source.map((item) => item + createComment()).join('') + createComment(),
+      );
+    });
+  });
+
   describe('connect()', () => {
     it('updates items according to keys', () => {
       const source = ['foo', 'bar', 'baz', 'qux'];
@@ -74,18 +143,18 @@ describe('RepeatBinding', () => {
           const props1: RepeatProps<string> = {
             source: combinations1,
             keySelector: (item) => item,
-            valueSelector: text,
+            valueSelector: textTemplateObject,
           };
           const props2: RepeatProps<string> = {
             source: combinations2,
             keySelector: (item) => item,
-            valueSelector: text,
+            valueSelector: textTemplateObject,
           };
-          const part = {
+          const part: ChildNodePart = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
-          } as const;
+          };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
           const context = new UpdateEngine(new MockRenderHost());
@@ -93,13 +162,21 @@ describe('RepeatBinding', () => {
           binding.connect(context);
           binding.commit();
 
+          expect(container.innerHTML).toBe(
+            combinations1.map((item) => item + createComment()).join('') +
+              '<!---->',
+          );
+          expect(part.childNode?.nodeValue).toBe(combinations1[0]);
+
           binding.bind(props2);
           binding.connect(context);
           binding.commit();
 
           expect(container.innerHTML).toBe(
-            combinations2.map((item) => item + '<!---->').join('') + '<!---->',
+            combinations2.map((item) => item + createComment()).join('') +
+              createComment(),
           );
+          expect(part.childNode?.nodeValue).toBe(combinations2[0]);
         }
       }
     });
@@ -113,18 +190,18 @@ describe('RepeatBinding', () => {
           const props1: RepeatProps<string> = {
             source: permutation1,
             keySelector: (item) => item,
-            valueSelector: text,
+            valueSelector: textTemplateObject,
           };
           const props2: RepeatProps<string> = {
             source: permutation2,
             keySelector: (item) => item,
-            valueSelector: text,
+            valueSelector: textTemplateObject,
           };
-          const part = {
+          const part: ChildNodePart = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
-          } as const;
+          };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
           const context = new UpdateEngine(new MockRenderHost());
@@ -132,21 +209,31 @@ describe('RepeatBinding', () => {
           binding.connect(context);
           binding.commit();
 
+          expect(container.innerHTML).toBe(
+            permutation1.map((item) => item + createComment()).join('') +
+              createComment(),
+          );
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
+
           binding.bind(props2);
           binding.connect(context);
           binding.commit();
 
           expect(container.innerHTML).toBe(
-            permutation2.map((item) => item + '<!---->').join('') + '<!---->',
+            permutation2.map((item) => item + createComment()).join('') +
+              createComment(),
           );
+          expect(part.childNode?.nodeValue).toBe(permutation2[0]);
 
           binding.bind(props1);
           binding.connect(context);
           binding.commit();
 
           expect(container.innerHTML).toBe(
-            permutation1.map((item) => item + '<!---->').join('') + '<!---->',
+            permutation1.map((item) => item + createComment()).join('') +
+              createComment(),
           );
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
         }
       }
     });
@@ -159,18 +246,18 @@ describe('RepeatBinding', () => {
           const props1: RepeatProps<string> = {
             source: permutation1,
             keySelector: (item) => item,
-            valueSelector: text,
+            valueSelector: textTemplateObject,
           };
           const props2: RepeatProps<string> = {
             source: permutation2,
             keySelector: (item) => item,
-            valueSelector: text,
+            valueSelector: textTemplateObject,
           };
-          const part = {
+          const part: ChildNodePart = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
-          } as const;
+          };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
           const context = new UpdateEngine(new MockRenderHost());
@@ -178,13 +265,31 @@ describe('RepeatBinding', () => {
           binding.connect(context);
           binding.commit();
 
+          expect(container.innerHTML).toBe(
+            permutation1.map((item) => item + createComment()).join('') +
+              createComment(),
+          );
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
+
           binding.bind(props2);
           binding.connect(context);
           binding.commit();
 
           expect(container.innerHTML).toBe(
-            permutation2.map((item) => item + '<!---->').join('') + '<!---->',
+            permutation2.map((item) => item + createComment()).join('') +
+              createComment(),
           );
+          expect(part.childNode?.nodeValue).toBe(permutation2[0]);
+
+          binding.bind(props1);
+          binding.connect(context);
+          binding.commit();
+
+          expect(container.innerHTML).toBe(
+            permutation1.map((item) => item + createComment()).join('') +
+              createComment(),
+          );
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
         }
       }
     });
@@ -198,20 +303,19 @@ describe('RepeatBinding', () => {
         ['foo', 'bar', 'baz'],
         ['bar', 'foo'],
       ],
-    ])('updates with a different size list', (source1, source2) => {
+      [['foo', 'bar', 'baz'], []],
+    ])('updates items according to indexes', (source1, source2) => {
       const props1: RepeatProps<string> = {
         source: source1,
-        valueSelector: text,
       };
       const props2: RepeatProps<string> = {
         source: source2,
-        valueSelector: text,
       };
-      const part = {
+      const part: ChildNodePart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+      };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
       const context = new UpdateEngine(new MockRenderHost());
@@ -219,35 +323,75 @@ describe('RepeatBinding', () => {
       binding.connect(context);
       binding.commit();
 
+      expect(container.innerHTML).toBe(
+        source1.map((item) => createComment(item)).join('') + createComment(),
+      );
+      expect(part.childNode?.nodeValue).toBe(source1[0]);
+
       binding.bind(props2);
       binding.connect(context);
       binding.commit();
 
       expect(container.innerHTML).toBe(
-        source2.map((item) => item + '<!---->').join('') + '<!---->',
+        source2.map((item) => createComment(item)).join('') + createComment(),
       );
-      expect(Array.from(container.childNodes)).toStrictEqual(
-        binding['_memoizedItems']
-          ?.flatMap((item) => [
-            expect.objectContaining({
-              nodeValue: (item.slot.value as [string])[0],
-            }),
-            expect.exact(item.slot.part.node),
-          ])
-          .concat([expect.exact(part.node)]),
-      );
+      expect(part.childNode?.nodeValue).toBe(source2[0]);
 
       binding.bind(props1);
       binding.connect(context);
       binding.commit();
 
       expect(container.innerHTML).toBe(
-        source1.map((item) => item + '<!---->').join('') + '<!---->',
+        source1.map((item) => createComment(item)).join('') + createComment(),
+      );
+      expect(part.childNode?.nodeValue).toBe(source1[0]);
+    });
+  });
+
+  describe('disconnect()', () => {
+    it('should restore disconnected items', () => {
+      const source = ['foo', 'bar', 'baz'];
+      const props: RepeatProps<string> = {
+        source,
+      };
+      const part: ChildNodePart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+      const container = createElement('div', {}, part.node);
+      const binding = new RepeatBinding(props, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.connect(context);
+      binding.commit();
+
+      expect(container.innerHTML).toBe(
+        source.map((item) => createComment(item)).join('') + createComment(),
+      );
+
+      binding.disconnect(context);
+      binding.rollback();
+
+      expect(container.innerHTML).toBe(createComment());
+
+      binding.connect(context);
+      binding.commit();
+
+      expect(container.innerHTML).toBe(
+        source.map((item) => createComment(item)).join('') + createComment(),
       );
     });
   });
 });
 
-function text(content: string): DirectiveObject<readonly [string]> {
+function textTemplateObject(
+  content: string,
+): DirectiveObject<readonly [string]> {
   return new DirectiveObject(TEXT_TEMPLATE, [content]);
+}
+
+function createComment(key: string = ''): string {
+  const node = document.createComment(key);
+  return new XMLSerializer().serializeToString(node);
 }

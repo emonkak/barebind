@@ -63,6 +63,22 @@ export interface TextPart {
   followingText: string;
 }
 
+export function getChildNodes(part: ChildNodePart): ChildNode[] {
+  const startNode = part.childNode ?? part.node;
+  const endNode = part.node;
+  const childNodes = [startNode];
+  let currentNode: ChildNode | null = startNode;
+
+  while (
+    currentNode !== endNode &&
+    (currentNode = currentNode.nextSibling) !== null
+  ) {
+    childNodes.push(currentNode);
+  }
+
+  return childNodes;
+}
+
 export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.childNode ?? part.node)

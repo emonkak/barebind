@@ -13,6 +13,7 @@ import {
 import type { HydrationTree } from '../hydration.js';
 import {
   type ChildNodePart,
+  getChildNodes,
   getStartNode,
   type Part,
   PartType,
@@ -157,6 +158,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
 
     this._pendingItems = newItems;
+    this._memoizedItems = newItems;
   }
 
   connect(context: UpdateContext): void {
@@ -299,14 +301,13 @@ function commitMove<TKey, TValue>(
   const { slot } = item;
   const { parentNode } = slot.part.node;
   if (parentNode !== null) {
+    /* v8 ignore next 2 @preserve */
     const insertOrMoveBefore =
       Element.prototype.moveBefore ?? Element.prototype.insertBefore;
-    const childNodes = selectChildNodes(slot.part as ChildNodePart);
+    const childNodes = getChildNodes(slot.part as ChildNodePart);
     for (let i = 0, l = childNodes.length; i < l; i++) {
       insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
     }
-  } else {
-    referenceNode.before(slot.part.node);
   }
 }
 
@@ -337,7 +338,7 @@ function generateKeyValuePairs<TSource, TKey, TValue>({
 }
 
 function reconcileItems<TKey, TValue>(
-  oldItems: Item<TKey, TValue>[],
+  oldItems: (Item<TKey, TValue> | undefined)[],
   newPairs: KeyValuePair<TKey, TValue>[],
   handler: ReconciliationHandler<TKey, TValue>,
 ): Item<TKey, TValue>[] {
@@ -400,40 +401,26 @@ function reconcileItems<TKey, TValue>(
       while (newHead <= newTail) {
         const { key, value } = newPairs[newTail]!;
         const oldIndex = oldIndexMap.get(key);
-        if (oldIndex !== undefined) {
+        if (oldIndex !== undefined && oldItems[oldIndex] !== undefined) {
           newItems[newTail] = handler.move(
             oldItems[oldIndex]!,
             value,
             newItems[newTail + 1],
           );
-          oldIndexMap.delete(key);
+          oldItems[oldIndex] = undefined;
         } else {
           newItems[newTail] = handler.insert(key, value, newItems[newTail + 1]);
         }
         newTail--;
       }
-      for (const oldIndex of oldIndexMap.values()) {
-        handler.remove(oldItems[oldIndex]!);
+      for (let i = oldHead; i <= oldTail; i++) {
+        if (oldItems[i] !== undefined) {
+          handler.remove(oldItems[i]!);
+        }
       }
       break;
     }
   }
 
   return newItems;
-}
-
-function selectChildNodes(part: ChildNodePart): ChildNode[] {
-  const startNode = part.childNode ?? part.node;
-  const endNode = part.node;
-  const childNodes = [startNode];
-  let currentNode: ChildNode | null = startNode;
-
-  while (
-    currentNode !== endNode &&
-    (currentNode = currentNode.nextSibling) !== null
-  ) {
-    childNodes.push(currentNode);
-  }
-
-  return childNodes;
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getStartNode, PartType } from '../src/part.js';
+import { getChildNodes, getStartNode, PartType } from '../src/part.js';
+import { createElement } from './testUtils.js';
 
 describe('getStartNode()', () => {
   it.each([
@@ -58,7 +59,7 @@ describe('getStartNode()', () => {
     expect(getStartNode(part)).toBe(part.node);
   });
 
-  it('returns the child node if the part is having a child node', () => {
+  it('returns the child node if the part has a child node', () => {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
@@ -66,5 +67,36 @@ describe('getStartNode()', () => {
     } as const;
 
     expect(getStartNode(part)).toBe(part.childNode);
+  });
+});
+
+describe('getChildNodes()', () => {
+  it('returns the part node as the only child node', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      childNode: null,
+    } as const;
+
+    expect(getChildNodes(part)).toStrictEqual([expect.exact(part.node)]);
+  });
+
+  it('returns child nodes from the child node to the part node if the part has a child node', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      childNode: document.createElement('div'),
+    } as const;
+    const container = createElement(
+      'div',
+      {},
+      part.childNode,
+      'foo',
+      part.node,
+    );
+
+    expect(getChildNodes(part)).toStrictEqual(
+      Array.from(container.childNodes, (node) => expect.exact(node)),
+    );
   });
 });
