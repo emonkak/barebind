@@ -191,6 +191,7 @@ describe('ComponentBinding', () => {
           isCommitted: true,
         }),
       );
+      expect(binding['_slot']?.part).toStrictEqual(part);
       expect(container.innerHTML).toBe(
         '<div>Hello, <strong>foo</strong>!<!----></div><!---->',
       );
@@ -205,6 +206,7 @@ describe('ComponentBinding', () => {
           isCommitted: false,
         }),
       );
+      expect(binding['_slot']?.part).toStrictEqual(part);
       expect(container.innerHTML).toBe('<!---->');
     });
   });
@@ -248,6 +250,7 @@ describe('ComponentBinding', () => {
           isCommitted: true,
         }),
       );
+      expect(binding['_slot']?.part).toStrictEqual(part);
       expect(passiveEffect.callback).toHaveBeenCalledOnce();
       expect(layoutEffect.callback).toHaveBeenCalledOnce();
       expect(mutationEffect.callback).toHaveBeenCalledOnce();
@@ -269,6 +272,7 @@ describe('ComponentBinding', () => {
           isCommitted: true,
         }),
       );
+      expect(binding['_slot']?.part).toStrictEqual(part);
       expect(passiveEffect.callback).toHaveBeenCalledOnce();
       expect(layoutEffect.callback).toHaveBeenCalledOnce();
       expect(mutationEffect.callback).toHaveBeenCalledOnce();
@@ -289,6 +293,7 @@ describe('ComponentBinding', () => {
           isCommitted: false,
         }),
       );
+      expect(binding['_slot']?.part).toStrictEqual(part);
       expect(passiveEffect.callback).toHaveBeenCalledOnce();
       expect(layoutEffect.callback).toHaveBeenCalledOnce();
       expect(mutationEffect.callback).toHaveBeenCalledOnce();
