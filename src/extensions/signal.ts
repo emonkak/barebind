@@ -55,7 +55,7 @@ export abstract class Signal<T>
   }
 
   [$toDirectiveElement](): DirectiveElement<Signal<Bindable<T>>> {
-    return { directive: SignalDirective, value: this as Signal<Bindable<T>> };
+    return { directive: SignalDirective, value: this };
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
@@ -255,7 +255,7 @@ export class SignalBinding<T>
   }
 
   get directive(): Directive<Signal<Bindable<T>>> {
-    return SignalDirective as Directive<Signal<Bindable<T>>>;
+    return SignalDirective;
   }
 
   get value(): Signal<Bindable<T>> {

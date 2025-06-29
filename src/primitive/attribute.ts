@@ -24,7 +24,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
   private _memoizedValue: T | null = null;
 
   get directive(): Primitive<T> {
-    return AttributePrimitive as Primitive<T>;
+    return AttributePrimitive;
   }
 
   shouldBind(value: T): boolean {

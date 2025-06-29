@@ -22,7 +22,7 @@ export const LivePrimitive = {
 
 export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
   get directive(): Primitive<T> {
-    return LivePrimitive as Primitive<T>;
+    return LivePrimitive;
   }
 
   shouldBind(_value: T): boolean {

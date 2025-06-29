@@ -24,7 +24,7 @@ export class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
   private _memoizedValue: T | null = null;
 
   get directive(): Primitive<T> {
-    return TextPrimitive as Primitive<T>;
+    return TextPrimitive;
   }
 
   shouldBind(value: T): boolean {

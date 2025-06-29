@@ -24,7 +24,7 @@ export class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart> {
   private _memoizedValue: T | null = null;
 
   get directive(): Primitive<T> {
-    return NodePrimitive as Primitive<T>;
+    return NodePrimitive;
   }
 
   shouldBind(value: T): boolean {

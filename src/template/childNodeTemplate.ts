@@ -49,11 +49,11 @@ export const ChildNodeTemplate = {
 
     return { childNodes: [slotPart.node], slots: [slot] };
   },
-  resolveBinding<T>(
-    binds: readonly [Bindable<T>],
+  resolveBinding<T extends Bindable<unknown>>(
+    binds: readonly [T],
     part: Part,
     _context: DirectiveContext,
-  ): TemplateBinding<readonly [Bindable<T>]> {
+  ): TemplateBinding<readonly [T]> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'ChildNodeTemplate must be used in a child node part, but it is used here in:\n' +
@@ -61,10 +61,6 @@ export const ChildNodeTemplate = {
       );
     }
 
-    return new TemplateBinding(
-      this as Template<readonly [Bindable<T>]>,
-      binds,
-      part,
-    );
+    return new TemplateBinding(this as Template<readonly [T]>, binds, part);
   },
 } as const satisfies Template<readonly [Bindable<unknown>]>;

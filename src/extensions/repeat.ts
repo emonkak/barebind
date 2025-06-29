@@ -114,7 +114,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   get directive(): Directive<RepeatProps<TSource, TKey, TValue>> {
-    return RepeatDirective as Directive<RepeatProps<TSource, TKey, TValue>>;
+    return RepeatDirective;
   }
 
   get value(): RepeatProps<TSource, TKey, TValue> {

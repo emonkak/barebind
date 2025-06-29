@@ -26,7 +26,7 @@ export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
   private _memoizedValue: T | typeof noValue = noValue;
 
   get directive(): Primitive<T> {
-    return PropertyPrimitive as Primitive<T>;
+    return PropertyPrimitive;
   }
 
   shouldBind(value: T): boolean {

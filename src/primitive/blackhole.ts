@@ -15,7 +15,7 @@ export const BlackholePrimitive = {
 
 export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
   get directive(): Primitive<T> {
-    return BlackholePrimitive as Primitive<T>;
+    return BlackholePrimitive;
   }
 
   shouldBind(_value: T): boolean {
