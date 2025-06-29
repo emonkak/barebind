@@ -25,6 +25,8 @@ export function inspectValue(
   switch (typeof value) {
     case 'string':
       return JSON.stringify(value);
+    case 'number':
+      return Object.is(value, -0) ? '-0' : value.toString();
     case 'undefined':
       return 'undefined';
     case 'function':
