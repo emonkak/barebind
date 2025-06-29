@@ -3,8 +3,9 @@ import {
   type Component,
   type ComponentFunction,
   type Coroutine,
+  createDirectiveObject,
   type DirectiveContext,
-  DirectiveObject,
+  type DirectiveObject,
   type Effect,
   type EffectContext,
   type RenderContext,
@@ -30,7 +31,7 @@ export function component<TProps, TResult>(
   props: TProps,
 ): DirectiveObject<TProps> {
   const directive = defineComponent(component);
-  return new DirectiveObject(directive, props);
+  return createDirectiveObject(directive, props);
 }
 
 export function defineComponent<TProps, TResult>(

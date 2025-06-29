@@ -1,17 +1,18 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
+  createSlotObject,
   type Directive,
   type EffectContext,
   type Slot,
-  SlotObject,
+  type SlotObject,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function strict<T>(value: T): SlotObject<T> {
-  return new SlotObject(value, StrictSlot);
+  return createSlotObject(value, StrictSlot);
 }
 
 export class StrictSlot<T> implements Slot<T> {

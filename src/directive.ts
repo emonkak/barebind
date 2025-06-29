@@ -114,11 +114,7 @@ export interface DirectiveContext {
 
 export interface EffectContext {
   debugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
-  undebugValue(
-    directive: Directive<unknown>,
-    value: unknown,
-    part: Part,
-  ): void;
+  undebugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
 }
 
 export interface UpdateContext extends DirectiveContext {
@@ -196,42 +192,45 @@ export interface RenderResult<T> {
   lanes: Lanes;
 }
 
-export class DirectiveObject<T> implements Bindable<T> {
-  readonly directive: Directive<T>;
+export interface DirectiveObject<T> extends Bindable<T>, DirectiveElement<T> {}
 
-  readonly value: T;
-
-  constructor(directive: Directive<T>, value: T) {
-    this.directive = directive;
-    this.value = value;
-  }
-
-  [$toDirectiveElement](): DirectiveElement<T> {
-    return this;
-  }
+export interface SlotObject<T> extends Bindable<unknown> {
+  value: T;
+  slotType: SlotType;
 }
 
-export class SlotObject<T> implements Bindable<unknown> {
-  readonly value: T;
+export function createDirectiveObject<T>(
+  directive: Directive<T>,
+  value: T,
+): DirectiveObject<T> {
+  return {
+    [$toDirectiveElement](): DirectiveElement<T> {
+      return this;
+    },
+    directive,
+    value,
+  };
+}
 
-  readonly slotType: SlotType;
-
-  constructor(value: T, slotType: SlotType) {
-    this.value = value;
-    this.slotType = slotType;
-  }
-
-  [$toDirectiveElement](
-    part: Part,
-    context: DirectiveContext,
-  ): DirectiveElement<unknown> {
-    const { directive, value } = context.resolveDirective(this.value, part);
-    return {
-      directive,
-      value,
-      slotType: this.slotType,
-    };
-  }
+export function createSlotObject<T>(
+  value: T,
+  slotType: SlotType,
+): SlotObject<T> {
+  return {
+    [$toDirectiveElement](
+      part: Part,
+      context: DirectiveContext,
+    ): DirectiveElement<unknown> {
+      const { directive, value } = context.resolveDirective(this.value, part);
+      return {
+        directive,
+        value,
+        slotType: this.slotType,
+      };
+    },
+    value,
+    slotType,
+  };
 }
 
 export function isBindableObject<T>(value: T): value is T & Bindable<T> {

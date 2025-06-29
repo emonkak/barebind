@@ -4,9 +4,10 @@ import {
   type Bindable,
   type Binding,
   type ComponentFunction,
+  createDirectiveObject,
   type Directive,
   type DirectiveContext,
-  DirectiveObject,
+  type DirectiveObject,
   type EffectContext,
   type Slot,
   type UpdateContext,
@@ -87,7 +88,7 @@ interface NullBlock {
 }
 
 export function vdom(...children: VChild[]): DirectiveObject<VChild[]> {
-  return new DirectiveObject(VDOMDirective, children);
+  return createDirectiveObject(VDOMDirective, children);
 }
 
 export function h<const TProps extends Props>(
@@ -266,7 +267,7 @@ function createBlock(
         typeof child.type === 'function'
           ? defineComponent(child.type)
           : child.type;
-      const object = new DirectiveObject(directive, child.props);
+      const object = createDirectiveObject(directive, child.props);
       const slot = context.resolveSlot(object, part);
       slot.connect(context);
       return createDirectiveBlock(slot);
@@ -562,7 +563,7 @@ function updateNode(
   switch (node.block.type) {
     case BlockType.Directive:
       if (isVElement(child) && typeof child.type === 'function') {
-        const object = new DirectiveObject(
+        const object = createDirectiveObject(
           typeof child.type === 'function'
             ? defineComponent(child.type)
             : child.type,

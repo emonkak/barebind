@@ -1,7 +1,8 @@
 import { dependenciesAreChanged } from './compare.js';
 import {
   type Coroutine,
-  DirectiveObject,
+  createDirectiveObject,
+  type DirectiveObject,
   type Effect,
   type RenderContext,
   type TemplateMode,
@@ -318,7 +319,7 @@ export class RenderEngine implements RenderContext {
       expandedBinds as unknown[],
       mode,
     );
-    return new DirectiveObject(template, expandedBinds);
+    return createDirectiveObject(template, expandedBinds);
   }
 
   private _template(
@@ -327,7 +328,7 @@ export class RenderEngine implements RenderContext {
     mode: TemplateMode,
   ): DirectiveObject<readonly unknown[]> {
     const template = this._updateContext.resolveTemplate(strings, binds, mode);
-    return new DirectiveObject(template, binds);
+    return createDirectiveObject(template, binds);
   }
 
   private _useEffect(

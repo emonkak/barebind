@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DirectiveObject } from '../../src/directive.js';
+import { createDirectiveObject } from '../../src/directive.js';
 import { HydrationTree } from '../../src/hydration.js';
 import { PartType } from '../../src/part.js';
 import { StrictSlot, strict } from '../../src/slot/strict.js';
@@ -106,7 +106,7 @@ describe('StrictSlot', () => {
 
     it('throws the error if the directive is mismatched', () => {
       const value1 = 'foo';
-      const value2 = 'bar';
+      const value2 = createDirectiveObject(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -117,10 +117,7 @@ describe('StrictSlot', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       expect(() => {
-        slot.reconcile(
-          new DirectiveObject(new MockDirective(), value2),
-          context,
-        );
+        slot.reconcile(value2, context);
       }).toThrow(
         'The directive must be MockPrimitive in this slot, but got MockDirective.',
       );

@@ -1,16 +1,17 @@
 import {
   type Binding,
+  createSlotObject,
   type Directive,
   type EffectContext,
   type Slot,
-  SlotObject,
+  type SlotObject,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function loose<T>(value: T): SlotObject<T> {
-  return new SlotObject(value, LooseSlot);
+  return createSlotObject(value, LooseSlot);
 }
 
 export class LooseSlot<T> implements Slot<T> {
@@ -77,7 +78,17 @@ export class LooseSlot<T> implements Slot<T> {
     }
 
     if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback(context);
+      if (this._memoizedBinding !== null) {
+        this._memoizedBinding.rollback(context);
+
+        DEBUG: {
+          context.undebugValue(
+            this._memoizedBinding.directive,
+            this._memoizedBinding.value,
+            this._memoizedBinding.part,
+          );
+        }
+      }
     }
 
     DEBUG: {

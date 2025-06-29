@@ -3,9 +3,10 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
+  createDirectiveObject,
   type Directive,
   type DirectiveContext,
-  DirectiveObject,
+  type DirectiveObject,
   type Effect,
   type EffectContext,
   type Slot,
@@ -73,7 +74,7 @@ const OperationType = {
 export function repeat<TSource, TKey, TValue>(
   props: RepeatProps<TSource, TKey, TValue>,
 ): DirectiveObject<RepeatProps<TSource, TKey, TValue>> {
-  return new DirectiveObject(
+  return createDirectiveObject(
     RepeatDirective as Directive<RepeatProps<TSource, TKey, TValue>>,
     props,
   );

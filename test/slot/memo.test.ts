@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { DirectiveObject } from '../../src/directive.js';
+import { createDirectiveObject } from '../../src/directive.js';
 import { HydrationTree } from '../../src/hydration.js';
 import { PartType } from '../../src/part.js';
 import { MemoSlot, memo } from '../../src/slot/memo.js';
@@ -75,7 +75,7 @@ describe('MemoSlot', () => {
 
     it('updates the binding with a different directive value', () => {
       const value1 = 'foo';
-      const value2 = new DirectiveObject(new MockDirective(), 'bar');
+      const value2 = createDirectiveObject(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -92,6 +92,7 @@ describe('MemoSlot', () => {
       const commitSpy = vi.spyOn(binding, 'commit');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
       const debugValueSpy = vi.spyOn(context, 'debugValue');
+      const undebugValueSpy = vi.spyOn(context, 'undebugValue');
 
       slot.connect(context);
       slot.commit(context);
@@ -115,6 +116,13 @@ describe('MemoSlot', () => {
       expect(debugValueSpy).toHaveBeenCalledTimes(3);
       expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value1, part);
       expect(debugValueSpy).toHaveBeenCalledWith(
+        value2.directive,
+        value2.value,
+        part,
+      );
+      expect(undebugValueSpy).toHaveBeenCalledTimes(2);
+      expect(undebugValueSpy).toHaveBeenCalledWith(MockPrimitive, value1, part);
+      expect(undebugValueSpy).toHaveBeenCalledWith(
         value2.directive,
         value2.value,
         part,
