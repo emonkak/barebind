@@ -59,7 +59,7 @@ describe('BlackholeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
     });
   });
 
@@ -74,7 +74,7 @@ describe('BlackholeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
     });
   });
 });

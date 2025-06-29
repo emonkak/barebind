@@ -1,5 +1,9 @@
 import { inspectPart, markUsedValue } from '../debug.js';
-import type { DirectiveContext, Primitive } from '../directive.js';
+import type {
+  DirectiveContext,
+  EffectContext,
+  Primitive,
+} from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -31,7 +35,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
     return !Object.is(value, this._memoizedValue);
   }
 
-  commit(): void {
+  commit(_context: EffectContext): void {
     const { node, name } = this._part;
     const value = this._pendingValue;
 
@@ -53,7 +57,7 @@ export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(): void {
+  rollback(_context: EffectContext): void {
     if (this._memoizedValue !== null) {
       const { node, name } = this._part;
       node.removeAttribute(name);

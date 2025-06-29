@@ -1,4 +1,9 @@
-import type { Binding, Primitive, UpdateContext } from '../directive.js';
+import type {
+  Binding,
+  EffectContext,
+  Primitive,
+  UpdateContext,
+} from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
@@ -36,7 +41,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   disconnect(_context: UpdateContext): void {}
 
-  abstract commit(): void;
+  abstract commit(_context: EffectContext): void;
 
-  abstract rollback(): void;
+  abstract rollback(_context: EffectContext): void;
 }

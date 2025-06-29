@@ -72,7 +72,7 @@ describe('AttributeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(value1)).toBe(false);
       expect(binding.shouldBind(value2)).toBe(true);
@@ -93,11 +93,11 @@ describe('AttributeBinding', () => {
         const context = new UpdateEngine(new MockRenderHost());
 
         binding.connect(context);
-        binding.commit();
+        binding.commit(context);
 
         binding.bind(value2);
         binding.connect(context);
-        binding.commit();
+        binding.commit(context);
 
         expect(part.node.getAttribute(part.name)).toBe(null);
       },
@@ -126,7 +126,7 @@ describe('AttributeBinding', () => {
         const context = new UpdateEngine(new MockRenderHost());
 
         binding.connect(context);
-        binding.commit();
+        binding.commit(context);
 
         expect(part.node.getAttribute(part.name)).toBe(expectedValue);
       },
@@ -147,7 +147,7 @@ describe('AttributeBinding', () => {
         const context = new UpdateEngine(new MockRenderHost());
 
         binding.connect(context);
-        binding.commit();
+        binding.commit(context);
 
         expect(part.node.getAttribute(part.name)).toBe(expectedValue);
       },
@@ -166,10 +166,10 @@ describe('AttributeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(part.node.getAttribute(part.name)).toBe(null);
     });
@@ -187,7 +187,7 @@ describe('AttributeBinding', () => {
       const removeAttributeSpy = vi.spyOn(part.node, 'removeAttribute');
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(removeAttributeSpy).not.toHaveBeenCalled();
     });

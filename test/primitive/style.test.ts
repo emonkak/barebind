@@ -107,7 +107,7 @@ describe('StyleBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind({ ...style1 })).toBe(false);
       expect(binding.shouldBind(style2)).toBe(true);
@@ -136,7 +136,7 @@ describe('StyleBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.style.cssText).toBe(
         '--my-css-variable: 1; color: red; background-color: blue; filter: grayscale(100%);',
@@ -144,7 +144,7 @@ describe('StyleBinding', () => {
 
       binding.bind(style2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.style.cssText).toBe('--my-css-variable: 2;');
     });
@@ -162,7 +162,7 @@ describe('StyleBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.style.cssText).toBe(
         'background-color: blue; color: red;',
@@ -183,13 +183,13 @@ describe('StyleBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.style.cssText).toBe('background-color: red;');
 
       binding.bind(style2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.style.cssText).toBe('');
     });
@@ -212,14 +212,14 @@ describe('StyleBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.style.cssText).toBe(
         'color: red; background-color: blue;',
       );
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(part.node.style.cssText).toBe('');
     });

@@ -56,9 +56,10 @@ describe('StrictSlot', () => {
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
+      const debugValueSpy = vi.spyOn(context, 'debugValue');
 
       slot.reconcile(value2, context);
-      slot.commit();
+      slot.commit(context);
 
       expect(shouldBindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
@@ -66,6 +67,9 @@ describe('StrictSlot', () => {
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(context);
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(commitSpy).toHaveBeenCalledWith(context);
+      expect(debugValueSpy).toHaveBeenCalledOnce();
+      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value2, part);
       expect(part.node.data).toBe(value2);
     });
 
@@ -87,14 +91,16 @@ describe('StrictSlot', () => {
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
+      const debugValueSpy = vi.spyOn(context, 'debugValue');
 
       slot.reconcile(value2, context);
-      slot.commit();
+      slot.commit(context);
 
       expect(shouldBindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).not.toHaveBeenCalled();
       expect(connectSpy).not.toHaveBeenCalled();
       expect(commitSpy).not.toHaveBeenCalled();
+      expect(debugValueSpy).not.toHaveBeenCalled();
       expect(part.node.data).toBe('');
     });
 
@@ -121,35 +127,8 @@ describe('StrictSlot', () => {
     });
   });
 
-  describe('commit()', () => {
-    it('commits the binding if it is connected', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      } as const;
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
-
-      const connectSpy = vi.spyOn(binding, 'connect');
-      const commitSpy = vi.spyOn(binding, 'commit');
-
-      slot.connect(context);
-      slot.commit();
-
-      expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(context);
-      expect(commitSpy).toHaveBeenCalledOnce();
-
-      slot.commit();
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-      expect(part.node.data).toBe(value);
-    });
-
-    it('commits the binding if it is hydrated', () => {
+  describe('hydrate()', () => {
+    it('makes the binding able to commit', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -163,23 +142,61 @@ describe('StrictSlot', () => {
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
+      const debugValueSpy = vi.spyOn(context, 'debugValue');
 
       slot.hydrate(hydrationTree, context);
-      slot.commit();
+      slot.commit(context);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(hydrationTree, context);
       expect(commitSpy).toHaveBeenCalledOnce();
+      expect(commitSpy).toHaveBeenCalledWith(context);
+      expect(debugValueSpy).toHaveBeenCalledOnce();
+      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
 
-      slot.commit();
+      slot.commit(context);
+
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(debugValueSpy).toHaveBeenCalledOnce();
+      expect(part.node.data).toBe(value);
+    });
+  });
+
+  describe('connect()', () => {
+    it('makes the binding able to commit', () => {
+      const value = 'foo';
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new MockBinding(MockPrimitive, value, part);
+      const slot = new StrictSlot(binding);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      const connectSpy = vi.spyOn(binding, 'connect');
+      const commitSpy = vi.spyOn(binding, 'commit');
+      const debugValueSpy = vi.spyOn(context, 'debugValue');
+
+      slot.connect(context);
+      slot.commit(context);
+
+      expect(connectSpy).toHaveBeenCalledOnce();
+      expect(connectSpy).toHaveBeenCalledWith(context);
+      expect(commitSpy).toHaveBeenCalledOnce();
+      expect(commitSpy).toHaveBeenCalledWith(context);
+      expect(debugValueSpy).toHaveBeenCalledOnce();
+      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
+
+      slot.commit(context);
 
       expect(commitSpy).toHaveBeenCalledOnce();
       expect(part.node.data).toBe(value);
     });
   });
 
-  describe('rollback()', () => {
-    it('rollback the binding it is disconnected', () => {
+  describe('disconnect()', () => {
+    it('makes the binding able to rollback', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -192,15 +209,19 @@ describe('StrictSlot', () => {
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
+      const undebugValueSpy = vi.spyOn(context, 'undebugValue');
 
       slot.disconnect(context);
-      slot.rollback();
+      slot.rollback(context);
 
       expect(disconnectSpy).toHaveBeenCalledOnce();
       expect(disconnectSpy).toHaveBeenCalledWith(context);
       expect(rollbackSpy).toHaveBeenCalledOnce();
+      expect(rollbackSpy).toHaveBeenCalledWith(context);
+      expect(undebugValueSpy).toHaveBeenCalledOnce();
+      expect(undebugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
 
-      slot.rollback();
+      slot.rollback(context);
 
       expect(rollbackSpy).toHaveBeenCalledOnce();
       expect(part.node.data).toBe('');

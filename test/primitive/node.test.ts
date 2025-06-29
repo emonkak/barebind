@@ -69,7 +69,7 @@ describe('NodeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(value1)).toBe(false);
       expect(binding.shouldBind(value2)).toBe(true);
@@ -89,13 +89,13 @@ describe('NodeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe(value1);
 
       binding.bind(value2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -112,13 +112,13 @@ describe('NodeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe(value1.toString());
 
       binding.bind(value2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -136,12 +136,12 @@ describe('NodeBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe(value);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -159,7 +159,7 @@ describe('NodeBinding', () => {
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(setNodeValueSpy).not.toHaveBeenCalled();
     });

@@ -75,13 +75,13 @@ describe('LiveBinding', () => {
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(setValueSpy).toHaveBeenCalledOnce();
       expect(setValueSpy).toHaveBeenCalledWith(value);
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(setValueSpy).toHaveBeenCalledOnce();
       expect(setValueSpy).toHaveBeenCalledWith(value);
@@ -101,10 +101,10 @@ describe('LiveBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(part.node.value).toBe('');
     });

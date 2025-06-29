@@ -2,6 +2,7 @@ import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
   Binding,
   DirectiveContext,
+  EffectContext,
   Primitive,
   Slot,
   UpdateContext,
@@ -108,26 +109,26 @@ export class SpreadBinding implements Binding<SpreadProps> {
     }
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     if (this._memoizedSlots !== null) {
       for (const [name, slot] of this._memoizedSlots.entries()) {
         if (!this._pendingSlots.has(name)) {
-          slot.rollback();
+          slot.rollback(context);
         }
       }
     }
 
     for (const binding of this._pendingSlots.values()) {
-      binding.commit();
+      binding.commit(context);
     }
 
     this._memoizedSlots = this._pendingSlots;
   }
 
-  rollback(): void {
+  rollback(context: EffectContext): void {
     if (this._memoizedSlots !== null) {
       for (const binding of this._memoizedSlots.values()) {
-        binding.rollback();
+        binding.rollback(context);
       }
 
       this._memoizedSlots = null;

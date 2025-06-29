@@ -72,7 +72,7 @@ describe('TextBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(value1)).toBe(false);
       expect(binding.shouldBind(value2)).toBe(true);
@@ -93,13 +93,13 @@ describe('TextBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.data).toBe('(' + value1 + ')');
 
       binding.bind(value2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.data).toBe('()');
     });
@@ -117,13 +117,13 @@ describe('TextBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe('(123)');
 
       binding.bind(value2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe('()');
     });
@@ -142,12 +142,12 @@ describe('TextBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.data).toBe(value);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(part.node.data).toBe('');
     });
@@ -166,7 +166,7 @@ describe('TextBinding', () => {
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(setNodeValueSpy).not.toHaveBeenCalled();
     });

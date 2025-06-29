@@ -1,9 +1,12 @@
+import { inspectValue } from './debug.js';
 import {
   $toDirectiveElement,
   type Component,
   type Coroutine,
+  type Directive,
   type DirectiveElement,
   type Effect,
+  type EffectContext,
   isBindableObject,
   type RenderResult,
   type Slot,
@@ -22,7 +25,7 @@ import {
 } from './hook.js';
 import type { HydrationTree } from './hydration.js';
 import { LinkedList } from './linkedList.js';
-import type { ChildNodePart, Part } from './part.js';
+import { type ChildNodePart, type Part, PartType } from './part.js';
 import { RenderEngine } from './renderEngine.js';
 import type { RenderHost } from './renderHost.js';
 import { Scope } from './scope.js';
@@ -52,7 +55,7 @@ interface CoroutineState {
   pendingTasks: LinkedList<UpdateTask>;
 }
 
-export class UpdateEngine implements UpdateContext {
+export class UpdateEngine implements EffectContext, UpdateContext {
   private readonly _renderHost: RenderHost;
 
   private readonly _renderFrame: RenderFrame;
@@ -71,6 +74,12 @@ export class UpdateEngine implements UpdateContext {
     this._renderFrame = renderFrame;
     this._currentScope = currentScope;
     this._sharedState = sharedState;
+  }
+
+  debugValue(directive: Directive<unknown>, value: unknown, part: Part): void {
+    if (part.type === PartType.ChildNode) {
+      part.node.nodeValue = `/${directive.name}(${inspectValue(value)})`;
+    }
   }
 
   enqueueCoroutine(coroutine: Coroutine): void {
@@ -148,8 +157,12 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
     const callback = () => {
-      this._renderHost.commitEffects(mutationEffects, CommitPhase.Mutation);
-      this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout);
+      this._renderHost.commitEffects(
+        mutationEffects,
+        CommitPhase.Mutation,
+        this,
+      );
+      this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout, this);
     };
 
     if (options?.viewTransition) {
@@ -163,7 +176,11 @@ export class UpdateEngine implements UpdateContext {
     if (passiveEffects.length > 0) {
       await this._renderHost.requestCallback(
         () => {
-          this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive);
+          this._renderHost.commitEffects(
+            passiveEffects,
+            CommitPhase.Passive,
+            this,
+          );
         },
         { priority: 'background' },
       );
@@ -184,9 +201,9 @@ export class UpdateEngine implements UpdateContext {
       this._renderFrame,
     );
 
-    this._renderHost.commitEffects(mutationEffects, CommitPhase.Mutation);
-    this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout);
-    this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive);
+    this._renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, this);
+    this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout, this);
+    this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive, this);
   }
 
   getCurrentScope(): Scope {
@@ -244,13 +261,6 @@ export class UpdateEngine implements UpdateContext {
     return template.render(binds, part, this);
   }
 
-  resolveSlot<T>(value: T, part: Part): Slot<T> {
-    const element = this.resolveDirective(value, part);
-    const binding = element.directive.resolveBinding(element.value, part, this);
-    const slotType = element.slotType ?? this._renderHost.resolveSlotType(part);
-    return new slotType(binding);
-  }
-
   resolveDirective<T>(value: T, part: Part): DirectiveElement<unknown> {
     if (isBindableObject(value)) {
       return value[$toDirectiveElement](part, this);
@@ -259,6 +269,13 @@ export class UpdateEngine implements UpdateContext {
       directive.ensureValue?.(value, part);
       return { directive, value: value };
     }
+  }
+
+  resolveSlot<T>(value: T, part: Part): Slot<T> {
+    const element = this.resolveDirective(value, part);
+    const binding = element.directive.resolveBinding(element.value, part, this);
+    const slotType = element.slotType ?? this._renderHost.resolveSlotType(part);
+    return new slotType(binding);
   }
 
   resolveTemplate(
@@ -325,6 +342,16 @@ export class UpdateEngine implements UpdateContext {
     });
 
     return updateTaskNode.value;
+  }
+
+  undebugValue(
+    _directive: Directive<unknown>,
+    _value: unknown,
+    part: Part,
+  ): void {
+    if (part.type === PartType.ChildNode) {
+      part.node.nodeValue = '';
+    }
   }
 
   async waitForUpdate(coroutine: Coroutine): Promise<void> {

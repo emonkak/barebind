@@ -419,7 +419,7 @@ describe('SiganlBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(signal1)).toBe(false);
       expect(binding.shouldBind(signal2)).toBe(true);
@@ -441,7 +441,7 @@ describe('SiganlBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.hydrate(hydrationTree, context);
-      binding.commit();
+      binding.commit(context);
 
       expect(hydrationRoot.innerHTML).toBe(signal.value);
 
@@ -465,7 +465,7 @@ describe('SiganlBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe(signal.value);
 
@@ -488,11 +488,11 @@ describe('SiganlBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.bind(signal2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.nodeValue).toBe(signal2.value);
 
@@ -517,10 +517,10 @@ describe('SiganlBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(context.isPending()).toBe(false);
       expect(part.node.nodeValue).toBe('');

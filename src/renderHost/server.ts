@@ -2,6 +2,7 @@
 //
 import type {
   Effect,
+  EffectContext,
   Primitive,
   SlotType,
   Template,
@@ -33,12 +34,16 @@ export class ServerRenderHost implements RenderHost {
     this._document = document;
   }
 
-  commitEffects(effects: Effect[], phase: CommitPhase): void {
+  commitEffects(
+    effects: Effect[],
+    phase: CommitPhase,
+    context: EffectContext,
+  ): void {
     if (phase !== CommitPhase.Mutation) {
       return;
     }
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit();
+      effects[i]!.commit(context);
     }
   }
 

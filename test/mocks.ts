@@ -6,6 +6,7 @@ import type {
   Directive,
   DirectiveContext,
   Effect,
+  EffectContext,
   Primitive,
   Slot,
   SlotType,
@@ -171,9 +172,13 @@ export class MockCoroutine implements Coroutine {
 }
 
 export class MockRenderHost implements RenderHost {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+  commitEffects(
+    effects: Effect[],
+    _phase: CommitPhase,
+    context: EffectContext,
+  ): void {
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit();
+      effects[i]!.commit(context);
     }
   }
 
@@ -274,13 +279,13 @@ export class MockSlot<T> implements Slot<T> {
     this._isConnected = false;
   }
 
-  commit(): void {
-    this._binding.commit();
+  commit(context: EffectContext): void {
+    this._binding.commit(context);
     this._isCommitted = true;
   }
 
-  rollback(): void {
-    this._binding.rollback();
+  rollback(context: EffectContext): void {
+    this._binding.rollback(context);
     this._isCommitted = false;
   }
 }

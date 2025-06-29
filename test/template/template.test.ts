@@ -40,7 +40,7 @@ describe('TemplateBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(binds1)).toBe(false);
       expect(binding.shouldBind(binds2)).toBe(true);
@@ -88,7 +88,7 @@ describe('TemplateBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(() => binding.hydrate(hydrationTree, context)).toThrow(
         HydrationError,
@@ -152,7 +152,7 @@ describe('TemplateBinding', () => {
         });
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(binds1, part, context);
@@ -184,7 +184,7 @@ describe('TemplateBinding', () => {
 
       binding.bind(binds2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toBe(renderRoot);
@@ -214,7 +214,7 @@ describe('TemplateBinding', () => {
       expect(binding['_memoizedBlock']).toBe(binding['_pendingBlock']);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toBe(null);
@@ -297,7 +297,7 @@ describe('TemplateBinding', () => {
         });
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(binds1, part, context);
@@ -329,7 +329,7 @@ describe('TemplateBinding', () => {
 
       binding.bind(binds2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toStrictEqual(childNodes[0]);
@@ -359,7 +359,7 @@ describe('TemplateBinding', () => {
       expect(binding['_memoizedBlock']).toBe(binding['_pendingBlock']);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toBe(null);

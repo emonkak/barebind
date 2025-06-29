@@ -2,6 +2,7 @@
 
 import type {
   Effect,
+  EffectContext,
   Primitive,
   SlotType,
   Template,
@@ -29,9 +30,13 @@ import { TaggedTemplate } from '../template/taggedTemplate.js';
 import { TextTemplate } from '../template/textTemplate.js';
 
 export class BrowserRenderHost implements RenderHost {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+  commitEffects(
+    effects: Effect[],
+    _phase: CommitPhase,
+    context: EffectContext,
+  ): void {
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit();
+      effects[i]!.commit(context);
     }
   }
 

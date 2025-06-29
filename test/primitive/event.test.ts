@@ -104,7 +104,7 @@ describe('EventBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(listener1)).toBe(false);
       expect(binding.shouldBind(listener2)).toBe(true);
@@ -128,7 +128,7 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
@@ -140,7 +140,7 @@ describe('EventBinding', () => {
 
       binding.bind(listener2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
@@ -167,7 +167,7 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
@@ -183,7 +183,7 @@ describe('EventBinding', () => {
 
       binding.bind(listener2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
@@ -222,7 +222,7 @@ describe('EventBinding', () => {
         );
 
         binding.connect(context);
-        binding.commit();
+        binding.commit(context);
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -234,7 +234,7 @@ describe('EventBinding', () => {
 
         binding.bind(listener2);
         binding.connect(context);
-        binding.commit();
+        binding.commit(context);
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).toHaveBeenCalledOnce();
@@ -262,7 +262,7 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(addEventListenerSpy).not.toHaveBeenCalled();
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
@@ -282,14 +282,14 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(removeEventListenerSpy).toHaveBeenCalledOnce();

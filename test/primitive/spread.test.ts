@@ -99,7 +99,7 @@ describe('SpreadBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -127,7 +127,7 @@ describe('SpreadBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       const initialSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -188,7 +188,7 @@ describe('SpreadBinding', () => {
 
       binding.bind(props2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(initialSlots).toStrictEqual({
         id: expect.objectContaining({
@@ -246,7 +246,7 @@ describe('SpreadBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(binding['_memoizedSlots']).toBe(null);
     });
@@ -267,7 +267,7 @@ describe('SpreadBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       const initialSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -327,7 +327,7 @@ describe('SpreadBinding', () => {
       });
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(initialSlots).toStrictEqual({
         id: expect.objectContaining({

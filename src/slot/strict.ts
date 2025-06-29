@@ -1,13 +1,14 @@
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
   type Directive,
+  type EffectContext,
   type Slot,
   SlotObject,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
-import { type Part, PartType } from '../part.js';
+import type { Part } from '../part.js';
 
 export function strict<T>(value: T): SlotObject<T> {
   return new SlotObject(value, StrictSlot);
@@ -64,33 +65,37 @@ export class StrictSlot<T> implements Slot<T> {
     this._dirty = true;
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     if (!this._dirty) {
       return;
     }
 
     DEBUG: {
-      if (this._binding.part.type === PartType.ChildNode) {
-        this._binding.part.node.nodeValue = `/${this._binding.directive.name}(${inspectValue(this._binding.value)})`;
-      }
+      context.debugValue(
+        this._binding.directive,
+        this._binding.value,
+        this._binding.part,
+      );
     }
 
-    this._binding.commit();
+    this._binding.commit(context);
 
     this._dirty = false;
   }
 
-  rollback(): void {
+  rollback(context: EffectContext): void {
     if (!this._dirty) {
       return;
     }
 
-    this._binding.rollback();
+    this._binding.rollback(context);
 
     DEBUG: {
-      if (this._binding.part.type === PartType.ChildNode) {
-        this._binding.part.node.nodeValue = '';
-      }
+      context.undebugValue(
+        this._binding.directive,
+        this._binding.value,
+        this._binding.part,
+      );
     }
 
     this._dirty = false;

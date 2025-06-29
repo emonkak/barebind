@@ -5,7 +5,7 @@ import {
   component,
   defineComponent,
 } from '../src/component.js';
-import type { RenderContext, ReversibleEffect } from '../src/directive.js';
+import type { RenderContext } from '../src/directive.js';
 import { ALL_LANES } from '../src/hook.js';
 import { HydrationTree } from '../src/hydration.js';
 import { PartType } from '../src/part.js';
@@ -13,6 +13,11 @@ import { RenderEngine } from '../src/renderEngine.js';
 import { UpdateEngine } from '../src/updateEngine.js';
 import { MockCoroutine, MockRenderHost } from './mocks.js';
 import { createElement } from './testUtils.js';
+
+interface HookEffect {
+  callback: () => void;
+  cleanup: () => void;
+}
 
 describe('component()', () => {
   it('returns a directive element with the component', () => {
@@ -191,7 +196,7 @@ describe('ComponentBinding', () => {
       );
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
       context.flushSync();
 
       expect(binding['_slot']).toStrictEqual(
@@ -207,9 +212,9 @@ describe('ComponentBinding', () => {
   describe('connect()', () => {
     it('renders the component', () => {
       const component = new ComponentDirective(Parent);
-      const passiveEffect = createReversibleEffect();
-      const layoutEffect = createReversibleEffect();
-      const mutationEffect = createReversibleEffect();
+      const passiveEffect = createHookEffect();
+      const layoutEffect = createHookEffect();
+      const mutationEffect = createHookEffect();
       const props1 = {
         name: 'foo',
         greet: 'Hello',
@@ -243,12 +248,12 @@ describe('ComponentBinding', () => {
           isCommitted: true,
         }),
       );
-      expect(passiveEffect.commit).toHaveBeenCalledOnce();
-      expect(layoutEffect.commit).toHaveBeenCalledOnce();
-      expect(mutationEffect.commit).toHaveBeenCalledOnce();
-      expect(passiveEffect.rollback).not.toHaveBeenCalled();
-      expect(layoutEffect.rollback).not.toHaveBeenCalled();
-      expect(mutationEffect.rollback).not.toHaveBeenCalled();
+      expect(passiveEffect.callback).toHaveBeenCalledOnce();
+      expect(layoutEffect.callback).toHaveBeenCalledOnce();
+      expect(mutationEffect.callback).toHaveBeenCalledOnce();
+      expect(passiveEffect.cleanup).not.toHaveBeenCalled();
+      expect(layoutEffect.cleanup).not.toHaveBeenCalled();
+      expect(mutationEffect.cleanup).not.toHaveBeenCalled();
       expect(container.innerHTML).toBe(
         '<div>Hello, <strong>foo</strong>!<!----></div><!---->',
       );
@@ -264,18 +269,18 @@ describe('ComponentBinding', () => {
           isCommitted: true,
         }),
       );
-      expect(passiveEffect.commit).toHaveBeenCalledOnce();
-      expect(layoutEffect.commit).toHaveBeenCalledOnce();
-      expect(mutationEffect.commit).toHaveBeenCalledOnce();
-      expect(passiveEffect.rollback).not.toHaveBeenCalled();
-      expect(layoutEffect.rollback).not.toHaveBeenCalled();
-      expect(mutationEffect.rollback).not.toHaveBeenCalled();
+      expect(passiveEffect.callback).toHaveBeenCalledOnce();
+      expect(layoutEffect.callback).toHaveBeenCalledOnce();
+      expect(mutationEffect.callback).toHaveBeenCalledOnce();
+      expect(passiveEffect.cleanup).not.toHaveBeenCalled();
+      expect(layoutEffect.cleanup).not.toHaveBeenCalled();
+      expect(mutationEffect.cleanup).not.toHaveBeenCalled();
       expect(container.innerHTML).toBe(
         '<div>Chao, <strong>bar</strong>!<!----></div><!---->',
       );
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
       context.flushSync();
 
       expect(binding['_slot']).toStrictEqual(
@@ -284,12 +289,12 @@ describe('ComponentBinding', () => {
           isCommitted: false,
         }),
       );
-      expect(passiveEffect.commit).toHaveBeenCalledOnce();
-      expect(layoutEffect.commit).toHaveBeenCalledOnce();
-      expect(mutationEffect.commit).toHaveBeenCalledOnce();
-      expect(passiveEffect.rollback).toHaveBeenCalledOnce();
-      expect(layoutEffect.rollback).toHaveBeenCalledOnce();
-      expect(mutationEffect.rollback).toHaveBeenCalledOnce();
+      expect(passiveEffect.callback).toHaveBeenCalledOnce();
+      expect(layoutEffect.callback).toHaveBeenCalledOnce();
+      expect(mutationEffect.callback).toHaveBeenCalledOnce();
+      expect(passiveEffect.cleanup).toHaveBeenCalledOnce();
+      expect(layoutEffect.cleanup).toHaveBeenCalledOnce();
+      expect(mutationEffect.cleanup).toHaveBeenCalledOnce();
       expect(container.innerHTML).toBe('<!---->');
     });
   });
@@ -298,9 +303,9 @@ describe('ComponentBinding', () => {
 interface ParentProps {
   name: string;
   greet: string;
-  passiveEffect?: ReversibleEffect;
-  layoutEffect?: ReversibleEffect;
-  mutationEffect?: ReversibleEffect;
+  passiveEffect?: HookEffect;
+  layoutEffect?: HookEffect;
+  mutationEffect?: HookEffect;
 }
 
 function Parent(
@@ -308,23 +313,23 @@ function Parent(
   context: RenderContext,
 ): unknown {
   context.useEffect(() => {
-    passiveEffect?.commit();
+    passiveEffect?.callback();
     return () => {
-      passiveEffect?.rollback();
+      passiveEffect?.cleanup();
     };
   }, [passiveEffect]);
 
   context.useLayoutEffect(() => {
-    layoutEffect?.commit();
+    layoutEffect?.callback();
     return () => {
-      layoutEffect?.rollback();
+      layoutEffect?.cleanup();
     };
   }, [layoutEffect]);
 
   context.useInsertionEffect(() => {
-    mutationEffect?.commit();
+    mutationEffect?.callback();
     return () => {
-      mutationEffect?.rollback();
+      mutationEffect?.cleanup();
     };
   }, [mutationEffect]);
 
@@ -355,9 +360,9 @@ function Memo({ value }: MemoProps, _context: RenderContext): unknown {
 Memo.shouldUpdate = (nextProps: MemoProps, prevProps: MemoProps): boolean =>
   nextProps.key !== prevProps.key;
 
-function createReversibleEffect(): ReversibleEffect {
+function createHookEffect(): HookEffect {
   return {
-    commit: vi.fn(),
-    rollback: vi.fn(),
+    callback: vi.fn(),
+    cleanup: vi.fn(),
   };
 }

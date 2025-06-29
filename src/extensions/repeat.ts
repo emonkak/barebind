@@ -7,6 +7,7 @@ import {
   type DirectiveContext,
   DirectiveObject,
   type Effect,
+  type EffectContext,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -224,7 +225,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     if (this._memoizedItems === null || this._memoizedItems.length === 0) {
       for (let i = 0, l = this._pendingItems.length; i < l; i++) {
         const item = this._pendingItems[i]!;
@@ -251,7 +252,7 @@ export class RepeatBinding<TSource, TKey, TValue>
             break;
           }
           case OperationType.Remove:
-            commitRemove(operation.item);
+            commitRemove(operation.item, context);
             break;
         }
       }
@@ -259,7 +260,7 @@ export class RepeatBinding<TSource, TKey, TValue>
 
     for (let i = 0, l = this._pendingItems.length; i < l; i++) {
       const { slot } = this._pendingItems[i]!;
-      slot.commit();
+      slot.commit(context);
     }
 
     if (this._pendingItems.length > 0) {
@@ -272,11 +273,11 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._pendingOperations = [];
   }
 
-  rollback(): void {
+  rollback(context: EffectContext): void {
     if (this._memoizedItems !== null) {
       for (let i = this._memoizedItems.length - 1; i >= 0; i--) {
         const item = this._memoizedItems[i]!;
-        commitRemove(item);
+        commitRemove(item, context);
       }
     }
 
@@ -311,10 +312,13 @@ function commitMove<TKey, TValue>(
   }
 }
 
-function commitRemove<TKey, TValue>(item: Item<TKey, TValue>): void {
+function commitRemove<TKey, TValue>(
+  item: Item<TKey, TValue>,
+  context: EffectContext,
+): void {
   const { slot } = item;
 
-  slot.rollback();
+  slot.rollback(context);
   slot.part.node.remove();
 }
 

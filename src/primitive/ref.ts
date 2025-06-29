@@ -1,5 +1,9 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type { DirectiveContext, Primitive } from '../directive.js';
+import type {
+  DirectiveContext,
+  EffectContext,
+  Primitive,
+} from '../directive.js';
 import type { RefObject } from '../hook.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
@@ -49,7 +53,7 @@ export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
     return ref !== this._memoizedValue;
   }
 
-  commit(): void {
+  commit(_context: EffectContext): void {
     const newRef = this._pendingValue;
     const oldRef = this._memoizedValue;
 
@@ -73,7 +77,7 @@ export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(): void {
+  rollback(_context: EffectContext): void {
     const ref = this._memoizedValue;
 
     if (ref != null) {

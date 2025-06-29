@@ -1,5 +1,9 @@
 import { inspectPart, markUsedValue } from '../debug.js';
-import type { DirectiveContext, Primitive } from '../directive.js';
+import type {
+  DirectiveContext,
+  EffectContext,
+  Primitive,
+} from '../directive.js';
 import { type Part, PartType, type TextPart } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -31,14 +35,14 @@ export class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
     return !Object.is(value, this._memoizedValue);
   }
 
-  commit(): void {
+  commit(_context: EffectContext): void {
     const { node, precedingText, followingText } = this._part;
     const value = this._pendingValue;
     node.data = precedingText + (value?.toString() ?? '') + followingText;
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(): void {
+  rollback(_context: EffectContext): void {
     if (this._memoizedValue !== null) {
       this._part.node.nodeValue = null;
       this._memoizedValue = null;

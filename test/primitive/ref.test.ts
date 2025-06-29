@@ -107,7 +107,7 @@ describe('RefBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind(ref1)).toBe(false);
       expect(binding.shouldBind(ref2)).toBe(true);
@@ -127,21 +127,21 @@ describe('RefBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(ref1.current).toBe(part.node);
       expect(ref2.current).toBe(null);
 
       binding.bind(ref2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(ref1.current).toBe(null);
       expect(ref2.current).toBe(part.node);
 
       binding.bind(null);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(ref1.current).toBe(null);
       expect(ref2.current).toBe(null);
@@ -161,15 +161,15 @@ describe('RefBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.bind(ref2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.bind(null);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(cleanup1).toHaveBeenCalledOnce();
       expect(cleanup2).toHaveBeenCalledOnce();
@@ -192,7 +192,7 @@ describe('RefBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(ref).not.toHaveBeenCalled();
     });
@@ -208,12 +208,12 @@ describe('RefBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(ref.current).toBe(part.node);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(ref.current).toBe(null);
     });
@@ -230,10 +230,10 @@ describe('RefBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(cleanup).toHaveBeenCalledOnce();
       expect(ref).toHaveBeenCalledOnce();

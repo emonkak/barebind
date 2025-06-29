@@ -6,6 +6,7 @@ import {
   type DirectiveContext,
   DirectiveObject,
   type Effect,
+  type EffectContext,
   type RenderContext,
   type Slot,
   type UpdateContext,
@@ -187,12 +188,12 @@ export class ComponentBinding<TProps, TResult>
     this._hooks = [];
   }
 
-  commit(): void {
-    this._slot?.commit();
+  commit(context: EffectContext): void {
+    this._slot?.commit(context);
   }
 
-  rollback(): void {
-    this._slot?.rollback();
+  rollback(context: EffectContext): void {
+    this._slot?.rollback(context);
   }
 }
 

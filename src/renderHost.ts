@@ -2,6 +2,7 @@
 
 import type {
   Effect,
+  EffectContext,
   Primitive,
   SlotType,
   Template,
@@ -11,7 +12,11 @@ import type { CommitPhase } from './hook.js';
 import type { Part } from './part.js';
 
 export interface RenderHost {
-  commitEffects(effects: Effect[], phase: CommitPhase): void;
+  commitEffects(
+    effects: Effect[],
+    phase: CommitPhase,
+    context: EffectContext,
+  ): void;
   createTemplate(
     strings: readonly string[],
     binds: readonly unknown[],

@@ -1,6 +1,7 @@
 import type {
   Binding,
   Effect,
+  EffectContext,
   Template,
   TemplateBlock,
   UpdateContext,
@@ -88,7 +89,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     }
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     if (this._pendingBlock !== null) {
       const { childNodes, slots } = this._pendingBlock;
 
@@ -97,7 +98,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.commit();
+        slots[i]!.commit(context);
       }
 
       if (childNodes.length > 0) {
@@ -113,7 +114,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     this._memoizedBlock = this._pendingBlock;
   }
 
-  rollback(): void {
+  rollback(context: EffectContext): void {
     if (this._memoizedBlock !== null) {
       const { childNodes, slots } = this._memoizedBlock;
 
@@ -126,7 +127,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
           childNodes.includes(slot.part.node)
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
-          slot.rollback();
+          slot.rollback(context);
         }
       }
 

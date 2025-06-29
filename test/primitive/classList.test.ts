@@ -122,7 +122,7 @@ describe('ClassListBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(binding.shouldBind([...classNames1])).toBe(false);
       expect(binding.shouldBind(classNames2)).toBe(true);
@@ -147,19 +147,19 @@ describe('ClassListBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('foo bar qux corge');
 
       binding.bind(classNames2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('baz quux');
 
       binding.bind(classNames1);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('foo bar qux corge');
     });
@@ -176,19 +176,19 @@ describe('ClassListBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('foo');
 
       binding.bind(classNames2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('bar foo');
 
       binding.bind(classNames1);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('foo');
     });
@@ -204,7 +204,7 @@ describe('ClassListBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('baz foo bar');
     });
@@ -221,13 +221,13 @@ describe('ClassListBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('foo bar baz');
 
       binding.bind(classNames2);
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('baz');
     });
@@ -245,12 +245,12 @@ describe('ClassListBinding', () => {
       const context = new UpdateEngine(new MockRenderHost());
 
       binding.connect(context);
-      binding.commit();
+      binding.commit(context);
 
       expect(part.node.getAttribute('class')).toBe('foo bar');
 
       binding.disconnect(context);
-      binding.rollback();
+      binding.rollback(context);
 
       expect(part.node.getAttribute('class')).toBe('');
     });

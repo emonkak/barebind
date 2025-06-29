@@ -19,6 +19,7 @@ import { ChildNodeTemplate } from '../../src/template/childNodeTemplate.js';
 import { EmptyTemplate } from '../../src/template/emptyTemplate.js';
 import { TaggedTemplate } from '../../src/template/taggedTemplate.js';
 import { TextTemplate } from '../../src/template/textTemplate.js';
+import { UpdateEngine } from '../../src/updateEngine.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -49,7 +50,6 @@ describe('BrowserRenderHost', () => {
       [CommitPhase.Layout],
       [CommitPhase.Passive],
     ] as const)('commits given effects', (phase) => {
-      const renderHost = new BrowserRenderHost();
       const effects = [
         {
           commit: vi.fn(),
@@ -61,11 +61,14 @@ describe('BrowserRenderHost', () => {
           commit: vi.fn(),
         },
       ];
+      const renderHost = new BrowserRenderHost();
+      const context = new UpdateEngine(renderHost);
 
-      renderHost.commitEffects(effects, phase);
+      renderHost.commitEffects(effects, phase, context);
 
       for (const effect of effects) {
         expect(effect.commit).toHaveBeenCalledOnce();
+        expect(effect.commit).toHaveBeenCalledWith(context);
       }
     });
   });

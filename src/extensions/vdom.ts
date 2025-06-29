@@ -7,6 +7,7 @@ import {
   type Directive,
   type DirectiveContext,
   DirectiveObject,
+  type EffectContext,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -182,12 +183,12 @@ class VDOMBinding implements Binding<VChild[]> {
     }
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     let currentNode: BlockNode | null = this._rootNode;
     let lastNode: BlockNode | null = null;
 
     while ((currentNode = nextNode(currentNode)) !== null) {
-      lastNode = commitNode(currentNode, lastNode, this._part);
+      lastNode = commitNode(currentNode, lastNode, this._part, context);
     }
 
     if (this._rootNode.child !== null) {
@@ -197,10 +198,10 @@ class VDOMBinding implements Binding<VChild[]> {
     }
   }
 
-  rollback(): void {
+  rollback(context: EffectContext): void {
     let currentNode: BlockNode | null = this._rootNode;
     while ((currentNode = nextNode(currentNode)) !== null) {
-      unmountBlock(currentNode.block);
+      unmountBlock(currentNode.block, context);
     }
     this._rootNode.child = null;
     this._part.childNode = null;
@@ -211,6 +212,7 @@ function commitNode(
   node: BlockNode,
   lastNode: BlockNode | null,
   part: ChildNodePart,
+  context: EffectContext,
 ): BlockNode | null {
   const newBlock = node.alternateBlock;
   const oldBlock = node.block;
@@ -221,12 +223,12 @@ function commitNode(
 
   if (newBlock !== null) {
     if (newBlock !== oldBlock) {
-      unmountBlock(oldBlock);
+      unmountBlock(oldBlock, context);
     }
-    mountBlock(node, newBlock, part);
+    mountBlock(node, newBlock, part, context);
     return node;
   } else {
-    unmountBlock(oldBlock);
+    unmountBlock(oldBlock, context);
     return lastNode;
   }
 }
@@ -341,14 +343,19 @@ function isVElement(value: unknown): value is VElement {
   return (value as VElement)?.tag === vElementTag;
 }
 
-function mountBlock(node: BlockNode, block: Block, part: ChildNodePart): void {
+function mountBlock(
+  node: BlockNode,
+  block: Block,
+  part: ChildNodePart,
+  context: EffectContext,
+): void {
   switch (block.type) {
     case BlockType.Directive: {
       const { slot } = block;
       if (slot.part.node.parentNode !== null) {
         mountHostNode(slot.part.node, node, part);
       }
-      slot.commit();
+      slot.commit(context);
       break;
     }
     case BlockType.Element: {
@@ -395,7 +402,7 @@ function mountBlock(node: BlockNode, block: Block, part: ChildNodePart): void {
         if (childNode.alternateBlock !== null) {
           newChildNodes.push(childNode);
         }
-        lastNode = commitNode(childNode, lastNode, part);
+        lastNode = commitNode(childNode, lastNode, part, context);
       }
       block.childNodes = newChildNodes;
       break;
@@ -538,9 +545,9 @@ function removeProp(element: Element, key: string, oldValue: unknown): void {
   element.removeAttribute(key);
 }
 
-function unmountBlock(block: Block): void {
+function unmountBlock(block: Block, context: EffectContext): void {
   if (block.type === BlockType.Directive) {
-    block.slot.rollback();
+    block.slot.rollback(context);
     block.slot.part.node.remove();
   } else {
     block.hostNode.remove();

@@ -18,13 +18,13 @@ import { ChildNodeTemplate } from '../../src/template/childNodeTemplate.js';
 import { EmptyTemplate } from '../../src/template/emptyTemplate.js';
 import { TaggedTemplate } from '../../src/template/taggedTemplate.js';
 import { TextTemplate } from '../../src/template/textTemplate.js';
+import { UpdateEngine } from '../../src/updateEngine.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('ServerRenderHost', () => {
   describe('commitEffects()', () => {
     it('commits only mutation effects', () => {
-      const renderHost = new ServerRenderHost(document);
       const mutationEffects: [Effect] = [
         {
           commit: vi.fn(),
@@ -40,12 +40,16 @@ describe('ServerRenderHost', () => {
           commit: vi.fn(),
         },
       ];
+      const renderHost = new ServerRenderHost(document);
+      const context = new UpdateEngine(renderHost);
 
-      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation);
-      renderHost.commitEffects(layoutEffects, CommitPhase.Layout);
-      renderHost.commitEffects(passiveEffects, CommitPhase.Layout);
+      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, context);
+      renderHost.commitEffects(layoutEffects, CommitPhase.Layout, context);
+      renderHost.commitEffects(passiveEffects, CommitPhase.Layout, context);
 
       expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
+      expect(mutationEffects[0].commit).toHaveBeenCalledWith(context);
+      expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(passiveEffects[0].commit).not.toHaveBeenCalled();
     });

@@ -1,13 +1,13 @@
-import { inspectValue } from '../debug.js';
 import {
   type Binding,
   type Directive,
+  type EffectContext,
   type Slot,
   SlotObject,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
-import { type Part, PartType } from '../part.js';
+import type { Part } from '../part.js';
 
 export function memo<T>(value: T): SlotObject<T> {
   return new SlotObject(value, MemoSlot);
@@ -88,37 +88,43 @@ export class MemoSlot<T> implements Slot<T> {
     this._dirty = true;
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     if (!this._dirty) {
       return;
     }
 
     if (this._memoizedBinding !== this._pendingBinding) {
-      this._memoizedBinding?.rollback();
+      this._memoizedBinding?.rollback(context);
     }
 
     DEBUG: {
-      if (this._pendingBinding.part.type === PartType.ChildNode) {
-        this._pendingBinding.part.node.nodeValue = `/${this._pendingBinding.directive.name}(${inspectValue(this._pendingBinding.value)})`;
-      }
+      context.debugValue(
+        this._pendingBinding.directive,
+        this._pendingBinding.value,
+        this._pendingBinding.part,
+      );
     }
 
-    this._pendingBinding.commit();
+    this._pendingBinding.commit(context);
 
     this._memoizedBinding = this._pendingBinding;
     this._dirty = false;
   }
 
-  rollback(): void {
+  rollback(context: EffectContext): void {
     if (!this._dirty) {
       return;
     }
 
-    this._memoizedBinding?.rollback();
+    if (this._memoizedBinding !== null) {
+      this._memoizedBinding.rollback(context);
 
-    DEBUG: {
-      if (this._pendingBinding.part.type === PartType.ChildNode) {
-        this._pendingBinding.part.node.nodeValue = '';
+      DEBUG: {
+        context.undebugValue(
+          this._memoizedBinding.directive,
+          this._memoizedBinding.value,
+          this._memoizedBinding.part,
+        );
       }
     }
 

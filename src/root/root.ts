@@ -1,4 +1,4 @@
-import type { Effect, Slot } from '../directive.js';
+import type { Effect, EffectContext, Slot } from '../directive.js';
 
 export class MountSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
@@ -10,9 +10,9 @@ export class MountSlot<T> implements Effect {
     this._container = container;
   }
 
-  commit(): void {
+  commit(context: EffectContext): void {
     this._container.appendChild(this._slot.part.node);
-    this._slot.commit();
+    this._slot.commit(context);
   }
 }
 
@@ -26,8 +26,8 @@ export class UnmountSlot<T> implements Effect {
     this._container = container;
   }
 
-  commit(): void {
-    this._slot.rollback();
+  commit(context: EffectContext): void {
+    this._slot.rollback(context);
     this._container.removeChild(this._slot.part.node);
   }
 }
