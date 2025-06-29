@@ -308,10 +308,10 @@ describe('inspectValue()', () => {
     expect(inspectValue(function foo() {})).toBe('Function(foo)');
     expect(inspectValue(new Map())).toBe('Map');
     expect(
-      inspectValue({ foo: 1, bar: [2], baz: { qux: 3, 'foo-bar': 4 } }),
-    ).toBe('{foo: 1, bar: [2], baz: {qux: 3, "foo-bar": 4}}');
-    expect(inspectValue([1, [2], { qux: 3, 'foo-bar': 4 }])).toBe(
-      '[1, [2], {qux: 3, "foo-bar": 4}]',
+      inspectValue({ foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } }),
+    ).toBe('{foo: 1, bar: [2], baz: {$qux: 3, "foo-bar": 4}}');
+    expect(inspectValue([1, [2], { $qux: 3, 'foo-bar': 4 }])).toBe(
+      '[1, [2], {$qux: 3, "foo-bar": 4}]',
     );
   });
 });

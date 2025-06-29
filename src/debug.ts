@@ -1,6 +1,6 @@
 import { type Part, PartType } from './part.js';
 
-const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z_][0-9A-Za-z_]*$/;
+const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
 export function inspectNode(node: Node, marker: string): string {
   return inspectAround(node, annotateNode(node, marker));
