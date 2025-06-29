@@ -189,9 +189,6 @@ export interface RenderResult<T> {
   lanes: Lanes;
 }
 
-/**
- * @internal
- */
 export class DirectiveObject<T> implements BindableObject<T> {
   readonly directive: Directive<T>;
 
@@ -207,9 +204,6 @@ export class DirectiveObject<T> implements BindableObject<T> {
   }
 }
 
-/**
- * @internal
- */
 export class SlotObject<T> implements BindableObject<T> {
   readonly value: Bindable<T>;
 
@@ -233,9 +227,6 @@ export class SlotObject<T> implements BindableObject<T> {
   }
 }
 
-/**
- * @internal
- */
 export function isBindableObject<T>(
   value: Bindable<T>,
 ): value is BindableObject<T> {

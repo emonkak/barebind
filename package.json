@@ -5,8 +5,8 @@
     ".": {
       "import": "./src/index.ts"
     },
-    "./extensions/*.js": {
-      "import": "./src/extensions/*.ts"
+    "./extensions.js": {
+      "import": "./src/extensions.ts"
     },
     "./router.js": {
       "import": "./src/router.ts"
@@ -18,9 +18,9 @@
         "import": "./lib/index.js",
         "types": "./lib/index.d.ts"
       },
-      "./extensions/*.js": {
-        "import": "./lib/extensions/*.js",
-        "types": "./lib/extensions/*.d.ts"
+      "./extensions.js": {
+        "import": "./lib/extensions.js",
+        "types": "./lib/extensions.d.ts"
       },
       "./router.js": {
         "import": "./lib/router.js",

@@ -80,9 +80,6 @@ export const HashLocation: CustomHook<
   },
 };
 
-/**
- * @internal
- */
 export function createHashClickHandler({
   getCurrentURL,
   navigate,

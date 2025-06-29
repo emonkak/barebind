@@ -42,40 +42,10 @@ export const CurrentLocation: CustomHook<
   },
 };
 
-export function resetScrollPosition(locationState: LocationState): void {
-  const { url, navigationType } = locationState;
-
-  if (
-    navigationType === 'initial' ||
-    ((navigationType === 'reload' || navigationType === 'traverse') &&
-      history.scrollRestoration === 'auto')
-  ) {
-    return;
-  }
-
-  if (url.hash !== '') {
-    const id = trimHash(url.hash);
-    const element = document.getElementById(id);
-
-    if (element !== null) {
-      element.scrollIntoView();
-      return;
-    }
-  }
-
-  scrollTo(0, 0);
-}
-
-/**
- * @internal
- */
 export function anyModifiersArePressed(event: MouseEvent): boolean {
   return event.altKey || event.ctrlKey || event.metaKey || event.shiftKey;
 }
 
-/**
- * @internal
- */
 export function isInternalLink(element: Element): element is HTMLAnchorElement {
   return (
     element.tagName === 'A' &&
@@ -86,9 +56,6 @@ export function isInternalLink(element: Element): element is HTMLAnchorElement {
   );
 }
 
-/**
- * @internal
- */
 export function trimHash(hash: string): string {
   return hash.startsWith('#') ? hash.slice(1) : hash;
 }

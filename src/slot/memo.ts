@@ -13,9 +13,6 @@ export function memo<T>(value: Bindable<T>): SlotObject<T> {
   return new SlotObject(value, MemoSlot);
 }
 
-/**
- * @internal
- */
 export class MemoSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<T>;
 

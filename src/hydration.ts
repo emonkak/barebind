@@ -54,9 +54,6 @@ export class HydrationTree {
 
 export class HydrationError extends Error {}
 
-/**
- * @internal
- */
 export function ensureNode<T extends number>(
   actualNode: Node,
   expectedType: T,

@@ -14,9 +14,6 @@ export function strict<T>(value: Bindable<T>): SlotObject<T> {
   return new SlotObject(value, StrictSlot);
 }
 
-/**
- * @internal
- */
 export class StrictSlot<T> implements Slot<T> {
   private readonly _binding: Binding<T>;
 

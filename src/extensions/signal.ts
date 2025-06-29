@@ -25,20 +25,20 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-export abstract class Signal<T>
-  implements CustomHook<T>, BindableObject<Signal<Bindable<T>>>
-{
-  /**
-   * @internal
-   */
-  static resolveBinding<T>(
+export const SignalDirective = {
+  name: 'SignalDirective',
+  resolveBinding<T>(
     signal: Signal<Bindable<T>>,
     part: Part,
     _context: DirectiveContext,
   ): SignalBinding<T> {
     return new SignalBinding(signal, part);
-  }
+  },
+} as const satisfies Directive<Signal<Bindable<unknown>>>;
 
+export abstract class Signal<T>
+  implements CustomHook<T>, BindableObject<Signal<Bindable<T>>>
+{
   abstract get value(): T;
 
   abstract get version(): number;
@@ -55,7 +55,7 @@ export abstract class Signal<T>
   }
 
   [$toDirectiveElement](): DirectiveElement<Signal<Bindable<T>>> {
-    return { directive: Signal, value: this as Signal<Bindable<T>> };
+    return { directive: SignalDirective, value: this as Signal<Bindable<T>> };
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
@@ -238,9 +238,6 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
   }
 }
 
-/**
- * @internal
- */
 export class SignalBinding<T>
   implements Binding<Signal<Bindable<T>>>, Coroutine
 {
@@ -258,7 +255,7 @@ export class SignalBinding<T>
   }
 
   get directive(): Directive<Signal<Bindable<T>>> {
-    return Signal as Directive<Signal<Bindable<T>>>;
+    return SignalDirective as Directive<Signal<Bindable<T>>>;
   }
 
   get value(): Signal<Bindable<T>> {

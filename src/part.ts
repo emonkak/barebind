@@ -63,9 +63,6 @@ export interface TextPart {
   followingText: string;
 }
 
-/**
- * @internal
- */
 export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.childNode ?? part.node)

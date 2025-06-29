@@ -1,8 +1,5 @@
 import { sequentialEqual } from './compare.js';
 
-/**
- * @internal
- */
 export interface TemplateLiteral<T> {
   strings: readonly string[];
   values: T[];
@@ -14,9 +11,6 @@ interface TemplateDescriptor {
   literalPositions: readonly number[];
 }
 
-/**
- * @internal
- */
 export class TemplateLiteralPreprocessor {
   private readonly _templateDescriptors: WeakMap<
     TemplateStringsArray,

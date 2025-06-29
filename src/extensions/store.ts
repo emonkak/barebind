@@ -14,10 +14,6 @@ export type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
 
 type Constructable<T = object> = new (...args: any[]) => T;
 
-type Mixin<TClass extends Constructable, TExtensions> = Constructable<
-  InstanceType<TClass> & TExtensions
->;
-
 type FunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? K : never;
 }[keyof T];
@@ -37,9 +33,11 @@ type StrictEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
   ? true
   : false;
 
-export interface StoreClass {
-  new (...args: unknown[]): unknown;
-  [$customHook](context: HookContext): InstanceType<this>;
+export type Store<T> = T & StoreExtensions;
+
+export interface StoreClass<TClass extends Constructable> {
+  new (...args: unknown[]): Store<InstanceType<TClass>>;
+  [$customHook](context: HookContext): Store<InstanceType<TClass>>;
 }
 
 export interface StoreExtensions {
@@ -56,7 +54,7 @@ export interface StoreExtensions {
 
 export function createStore<TClass extends Constructable>(
   superclass: TClass,
-): StoreClass & Mixin<TClass, StoreExtensions> {
+): StoreClass<TClass> {
   return class Store extends superclass implements StoreExtensions {
     #signalMap: Record<PropertyKey, Signal<unknown>> = {};
 

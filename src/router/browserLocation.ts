@@ -85,9 +85,6 @@ export const BrowserLocation: CustomHook<
   },
 };
 
-/**
- * @internal
- */
 export function createLinkClickHandler({
   navigate,
 }: LocationNavigator): (event: MouseEvent) => void {
@@ -120,9 +117,6 @@ export function createLinkClickHandler({
   };
 }
 
-/**
- * @internal
- */
 export function createFormSubmitHandler({
   navigate,
 }: LocationNavigator): (event: SubmitEvent) => void {

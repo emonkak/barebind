@@ -13,9 +13,6 @@ export function loose<T>(value: Bindable<T>): SlotObject<T> {
   return new SlotObject(value, LooseSlot);
 }
 
-/**
- * @internal
- */
 export class LooseSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<T>;
 

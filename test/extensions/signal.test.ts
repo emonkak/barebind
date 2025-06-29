@@ -4,8 +4,8 @@ import {
   Atom,
   Computed,
   Lazy,
-  Signal,
   SignalBinding,
+  SignalDirective,
 } from '../../src/extensions/signal.js';
 import { ALL_LANES } from '../../src/hook.js';
 import { HydrationTree } from '../../src/hydration.js';
@@ -15,8 +15,14 @@ import { UpdateEngine } from '../../src/updateEngine.js';
 import { MockCoroutine, MockRenderHost } from '../mocks.js';
 import { cleanupRender, createElement, flushRender } from '../testUtils.js';
 
-describe('Signal', () => {
-  describe('static resolveBinding()', () => {
+describe('SignalDirective', () => {
+  describe('name', () => {
+    it('is a string that represents the directive itself', () => {
+      expect(SignalDirective.name, 'SignalDirective');
+    });
+  });
+
+  describe('resolveBinding()', () => {
     it('constructs a new SignalBinding', () => {
       const signal = new Atom('foo');
       const part = {
@@ -26,14 +32,16 @@ describe('Signal', () => {
         followingText: '',
       };
       const context = new UpdateEngine(new MockRenderHost());
-      const binding = Signal.resolveBinding(signal, part, context);
+      const binding = SignalDirective.resolveBinding(signal, part, context);
 
-      expect(binding.directive).toBe(Signal);
+      expect(binding.directive).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
       expect(binding.part).toBe(part);
     });
   });
+});
 
+describe('Signal', () => {
   describe('[$customHook]()', () => {
     it('subscribes the signal and return its value', () => {
       const context = new RenderEngine(
@@ -65,7 +73,7 @@ describe('Signal', () => {
       const signal = new Atom('foo');
       const element = signal[$toDirectiveElement]();
 
-      expect(element.directive).toBe(Signal);
+      expect(element.directive).toBe(SignalDirective);
       expect(element.value).toBe(signal);
       expect(element.slotType).toBe(undefined);
     });

@@ -33,9 +33,6 @@ export function component<TProps, TResult>(
   return new DirectiveObject(directive, props);
 }
 
-/**
- * @internal
- */
 export function defineComponent<TProps, TResult>(
   componentFn: ComponentFunction<TProps, TResult>,
 ): ComponentDirective<TProps, TResult> {
@@ -46,9 +43,6 @@ export function defineComponent<TProps, TResult>(
   )[directiveTag] ??= new ComponentDirective(componentFn));
 }
 
-/**
- * @internal
- */
 export class ComponentDirective<TProps, TResult>
   implements Component<TProps, TResult>
 {
@@ -83,9 +77,6 @@ export class ComponentDirective<TProps, TResult>
   }
 }
 
-/**
- * @internal
- */
 export class ComponentBinding<TProps, TResult>
   implements Binding<TProps>, Coroutine
 {

@@ -147,9 +147,6 @@ export interface RefObject<T> {
   current: T;
 }
 
-/**
- * @internal
- */
 export function ensureHookType<TExpectedHook extends Hook>(
   expectedType: TExpectedHook['type'],
   hook: Hook,
@@ -161,9 +158,6 @@ export function ensureHookType<TExpectedHook extends Hook>(
   }
 }
 
-/**
- * @internal
- */
 export function getLanesFromPriority(priority: TaskPriority): Lanes {
   switch (priority) {
     case 'user-blocking':
