@@ -1,5 +1,7 @@
 import { type Part, PartType } from './part.js';
 
+const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z_][0-9A-Za-z_]*$/;
+
 export function inspectNode(node: Node, marker: string): string {
   return inspectAround(node, annotateNode(node, marker));
 }
@@ -15,19 +17,38 @@ export function inspectValue(value: unknown): string {
     case 'undefined':
       return typeof undefined;
     case 'function':
-      return value.name !== '' ? value.name : value.constructor.name;
+      return value.name !== ''
+        ? `Function(${value.name})`
+        : value.constructor.name;
     case 'object':
-      if (
-        value === null ||
-        value.constructor === Object ||
-        value.constructor === Array
-      ) {
-        return JSON.stringify(value, null, 2);
-      } else {
-        return (
-          (value as { [Symbol.toStringTag]?: string })[Symbol.toStringTag] ??
-          value.constructor.name
-        );
+      if (value === null) {
+        return String(null);
+      }
+      switch (value.constructor) {
+        case Array:
+          return (
+            '[' +
+            (value as unknown[]).map((v) => inspectValue(v)).join(', ') +
+            ']'
+          );
+        case Object:
+          return (
+            '{' +
+            Object.entries(value)
+              .map(
+                ([k, v]) =>
+                  (UNQUOTED_PROPERTY_PATTERN.test(k) ? k : JSON.stringify(k)) +
+                  ': ' +
+                  inspectValue(v),
+              )
+              .join(', ') +
+            '}'
+          );
+        default:
+          return (
+            (value as { [Symbol.toStringTag]?: string })[Symbol.toStringTag] ??
+            value.constructor.name
+          );
       }
     default:
       return value!.toString();

@@ -1,4 +1,4 @@
-import { inspectPart, markUsedValue } from '../debug.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import {
   type Binding,
   type Directive,
@@ -71,7 +71,7 @@ export class StrictSlot<T> implements Slot<T> {
 
     DEBUG: {
       if (this._binding.part.type === PartType.ChildNode) {
-        this._binding.part.node.nodeValue = '/' + this._binding.directive.name;
+        this._binding.part.node.nodeValue = `/${this._binding.directive.name}(${inspectValue(this._binding.value)})`;
       }
     }
 

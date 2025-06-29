@@ -1,3 +1,4 @@
+import { inspectValue } from '../debug.js';
 import {
   type Binding,
   type Directive,
@@ -98,8 +99,7 @@ export class MemoSlot<T> implements Slot<T> {
 
     DEBUG: {
       if (this._pendingBinding.part.type === PartType.ChildNode) {
-        this._pendingBinding.part.node.nodeValue =
-          '/' + this._pendingBinding.directive.name;
+        this._pendingBinding.part.node.nodeValue = `/${this._pendingBinding.directive.name}(${inspectValue(this._pendingBinding.value)})`;
       }
     }
 
