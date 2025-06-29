@@ -1,7 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import type {
-  Bindable,
   Effect,
   Primitive,
   SlotType,
@@ -39,10 +38,10 @@ export class BrowserRenderHost implements RenderHost {
 
   createTemplate(
     strings: readonly string[],
-    binds: readonly Bindable<unknown>[],
+    binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
-  ): Template<readonly Bindable<unknown>[]> {
+  ): Template<readonly unknown[]> {
     if (binds.length === 0) {
       // Assumption: strings.length === 1
       if (strings[0]!.trim() === '') {

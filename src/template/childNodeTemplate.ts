@@ -1,6 +1,5 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  Bindable,
   DirectiveContext,
   Template,
   TemplateBlock,
@@ -13,7 +12,7 @@ import { TemplateBinding } from './template.js';
 export const ChildNodeTemplate = {
   name: 'ChildNodeTemplate',
   hydrate(
-    binds: readonly [Bindable<unknown>],
+    binds: readonly [unknown],
     part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
@@ -33,7 +32,7 @@ export const ChildNodeTemplate = {
     return { childNodes: [childPart.node], slots: [slot] };
   },
   render(
-    binds: readonly [Bindable<unknown>],
+    binds: readonly [unknown],
     part: ChildNodePart,
     context: UpdateContext,
   ): TemplateBlock {
@@ -49,7 +48,7 @@ export const ChildNodeTemplate = {
 
     return { childNodes: [slotPart.node], slots: [slot] };
   },
-  resolveBinding<T extends Bindable<unknown>>(
+  resolveBinding<T>(
     binds: readonly [T],
     part: Part,
     _context: DirectiveContext,
@@ -63,4 +62,4 @@ export const ChildNodeTemplate = {
 
     return new TemplateBinding(this as Template<readonly [T]>, binds, part);
   },
-} as const satisfies Template<readonly [Bindable<unknown>]>;
+} as const satisfies Template<readonly [unknown]>;

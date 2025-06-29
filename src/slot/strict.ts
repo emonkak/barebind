@@ -1,6 +1,5 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
-  type Bindable,
   type Binding,
   type Directive,
   type Slot,
@@ -10,24 +9,24 @@ import {
 import type { HydrationTree } from '../hydration.js';
 import { type Part, PartType } from '../part.js';
 
-export function strict<T>(value: Bindable<T>): SlotObject<T> {
+export function strict<T>(value: T): SlotObject<T> {
   return new SlotObject(value, StrictSlot);
 }
 
 export class StrictSlot<T> implements Slot<T> {
-  private readonly _binding: Binding<T>;
+  private readonly _binding: Binding<unknown>;
 
   private _dirty = false;
 
-  constructor(binding: Binding<T>) {
+  constructor(binding: Binding<unknown>) {
     this._binding = binding;
   }
 
-  get directive(): Directive<T> {
+  get directive(): Directive<unknown> {
     return this._binding.directive;
   }
 
-  get value(): T {
+  get value(): unknown {
     return this._binding.value;
   }
 
@@ -35,7 +34,7 @@ export class StrictSlot<T> implements Slot<T> {
     return this._binding.part;
   }
 
-  reconcile(value: Bindable<T>, context: UpdateContext): void {
+  reconcile(value: T, context: UpdateContext): void {
     const element = context.resolveDirective(value, this._binding.part);
     if (this._binding.directive !== element.directive) {
       throw new Error(

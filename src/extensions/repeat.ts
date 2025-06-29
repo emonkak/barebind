@@ -2,7 +2,6 @@
 
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
-  type Bindable,
   type Binding,
   type Directive,
   type DirectiveContext,
@@ -22,19 +21,19 @@ import {
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   source: Iterable<TSource>;
   keySelector?: (value: TSource, index: number) => TKey;
-  valueSelector?: (value: TSource, index: number) => Bindable<TValue>;
+  valueSelector?: (value: TSource, index: number) => TValue;
 };
 
 interface ReconciliationHandler<TKey, TValue> {
   insert(
     key: TKey,
-    value: Bindable<TValue>,
+    value: TValue,
     referenceItem: Item<TKey, TValue> | undefined,
   ): Item<TKey, TValue>;
-  update(item: Item<TKey, TValue>, value: Bindable<TValue>): Item<TKey, TValue>;
+  update(item: Item<TKey, TValue>, value: TValue): Item<TKey, TValue>;
   move(
     item: Item<TKey, TValue>,
-    value: Bindable<TValue>,
+    value: TValue,
     referenceItem: Item<TKey, TValue> | undefined,
   ): Item<TKey, TValue>;
   remove(item: Item<TKey, TValue>): void;
@@ -47,7 +46,7 @@ interface Item<TKey, TValue> {
 
 interface KeyValuePair<TKey, TValue> {
   key: TKey;
-  value: Bindable<TValue>;
+  value: TValue;
 }
 
 type Operation<TKey, TValue> =

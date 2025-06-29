@@ -1,7 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import type {
-  Bindable,
   Binding,
   Coroutine,
   Directive,
@@ -180,10 +179,10 @@ export class MockRenderHost implements RenderHost {
 
   createTemplate(
     strings: readonly string[],
-    binds: readonly Bindable<unknown>[],
+    binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
-  ): Template<readonly Bindable<unknown>[]> {
+  ): Template<readonly unknown[]> {
     return TaggedTemplate.parse(strings, binds, placeholder, mode);
   }
 
@@ -216,30 +215,26 @@ export class MockRenderHost implements RenderHost {
 }
 
 export class MockSlot<T> implements Slot<T> {
-  private readonly _binding: Binding<T>;
+  private readonly _binding: Binding<unknown>;
 
   private _isConnected = false;
 
   private _isCommitted = false;
 
-  constructor(binding: Binding<T>) {
+  constructor(binding: Binding<unknown>) {
     this._binding = binding;
   }
 
-  get directive(): Directive<T> {
+  get directive(): Directive<unknown> {
     return this._binding.directive;
   }
 
-  get value(): T {
+  get value(): unknown {
     return this._binding.value;
   }
 
   get part(): Part {
     return this._binding.part;
-  }
-
-  get binding(): Binding<T> {
-    return this._binding;
   }
 
   get isConnected(): boolean {
@@ -250,7 +245,7 @@ export class MockSlot<T> implements Slot<T> {
     return this._isCommitted;
   }
 
-  reconcile(value: Bindable<T>, context: UpdateContext): void {
+  reconcile(value: T, context: UpdateContext): void {
     const element = context.resolveDirective(value, this._binding.part);
     if (element.directive !== this._binding.directive) {
       throw new Error(
@@ -290,10 +285,10 @@ export class MockSlot<T> implements Slot<T> {
   }
 }
 
-export class MockTemplate implements Template<readonly Bindable<unknown>[]> {
+export class MockTemplate implements Template<readonly unknown[]> {
   readonly strings: readonly string[];
 
-  readonly binds: readonly Bindable<unknown>[];
+  readonly binds: readonly unknown[];
 
   readonly placeholder: string;
 
@@ -301,7 +296,7 @@ export class MockTemplate implements Template<readonly Bindable<unknown>[]> {
 
   constructor(
     strings: readonly string[] = [],
-    binds: readonly Bindable<unknown>[] = [],
+    binds: readonly unknown[] = [],
     placeholder = '',
     mode: TemplateMode = 'html',
   ) {
@@ -316,7 +311,7 @@ export class MockTemplate implements Template<readonly Bindable<unknown>[]> {
   }
 
   render(
-    _binds: readonly Bindable<unknown>[],
+    _binds: readonly unknown[],
     _part: ChildNodePart,
     _context: UpdateContext,
   ): TemplateBlock {
@@ -327,7 +322,7 @@ export class MockTemplate implements Template<readonly Bindable<unknown>[]> {
   }
 
   hydrate(
-    _binds: readonly Bindable<unknown>[],
+    _binds: readonly unknown[],
     _part: ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
@@ -339,10 +334,10 @@ export class MockTemplate implements Template<readonly Bindable<unknown>[]> {
   }
 
   resolveBinding(
-    binds: readonly Bindable<unknown>[],
+    binds: readonly unknown[],
     part: Part,
     _context: DirectiveContext,
-  ): Binding<readonly Bindable<unknown>[]> {
+  ): Binding<readonly unknown[]> {
     if (part.type !== PartType.ChildNode) {
       throw new Error('MockTemplate must be used in a child node.');
     }

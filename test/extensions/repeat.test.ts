@@ -199,11 +199,11 @@ describe('RepeatBinding', () => {
         ['bar', 'foo'],
       ],
     ])('updates with a different size list', (source1, source2) => {
-      const props1: RepeatProps<string, number, readonly [string]> = {
+      const props1: RepeatProps<string> = {
         source: source1,
         valueSelector: text,
       };
-      const props2: RepeatProps<string, number, readonly [string]> = {
+      const props2: RepeatProps<string> = {
         source: source2,
         valueSelector: text,
       };
@@ -229,7 +229,9 @@ describe('RepeatBinding', () => {
       expect(Array.from(container.childNodes)).toStrictEqual(
         binding['_memoizedItems']
           ?.flatMap((item) => [
-            expect.objectContaining({ nodeValue: item.slot.value[0] }),
+            expect.objectContaining({
+              nodeValue: (item.slot.value as [string])[0],
+            }),
             expect.exact(item.slot.part.node),
           ])
           .concat([expect.exact(part.node)]),

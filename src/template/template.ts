@@ -1,5 +1,4 @@
 import type {
-  Bindable,
   Binding,
   Effect,
   Template,
@@ -9,7 +8,7 @@ import type {
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import { type ChildNodePart, getStartNode, PartType } from '../part.js';
 
-export class TemplateBinding<TBinds extends readonly Bindable<unknown>[]>
+export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect
 {
   private readonly _template: Template<TBinds>;

@@ -1,7 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import type {
-  Bindable,
   Effect,
   Primitive,
   SlotType,
@@ -15,10 +14,10 @@ export interface RenderHost {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
   createTemplate(
     strings: readonly string[],
-    binds: readonly Bindable<unknown>[],
+    binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
-  ): Template<readonly Bindable<unknown>[]>;
+  ): Template<readonly unknown[]>;
   getCurrentTaskPriority(): TaskPriority;
   requestCallback(
     callback: () => Promise<void> | void,

@@ -1,6 +1,7 @@
 import { defineComponent } from '../component.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
+  type Bindable,
   type Binding,
   type ComponentFunction,
   type Directive,
@@ -56,7 +57,7 @@ const BlockType = {
 interface DirectiveBlock {
   type: typeof BlockType.Directive;
   hostNode: Comment;
-  slot: Slot<Props>;
+  slot: Slot<Bindable<Props>>;
 }
 
 interface ElementBlock {
@@ -285,7 +286,7 @@ function createBlockNode(block: Block): BlockNode {
   };
 }
 
-function createDirectiveBlock(slot: Slot<Props>): DirectiveBlock {
+function createDirectiveBlock(slot: Slot<Bindable<Props>>): DirectiveBlock {
   return {
     type: BlockType.Directive,
     hostNode: slot.part.node as Comment,

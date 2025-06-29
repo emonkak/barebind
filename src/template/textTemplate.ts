@@ -1,6 +1,5 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  Bindable,
   DirectiveContext,
   Template,
   TemplateBlock,
@@ -10,9 +9,7 @@ import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
-export class TextTemplate<T extends Bindable<unknown> = unknown>
-  implements Template<readonly [T]>
-{
+export class TextTemplate<T = unknown> implements Template<readonly [T]> {
   private readonly _precedingText: string;
 
   private readonly _followingText: string;

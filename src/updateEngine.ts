@@ -1,12 +1,10 @@
 import {
   $toDirectiveElement,
-  type Bindable,
   type Component,
   type Coroutine,
   type DirectiveElement,
   type Effect,
   isBindableObject,
-  type Primitive,
   type RenderResult,
   type Slot,
   type Template,
@@ -42,10 +40,7 @@ interface RenderFrame {
 }
 
 interface SharedState {
-  cachedTemplates: WeakMap<
-    readonly string[],
-    Template<readonly Bindable<unknown>[]>
-  >;
+  cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
@@ -198,7 +193,7 @@ export class UpdateEngine implements UpdateContext {
     return this._currentScope;
   }
 
-  hydrateTemplate<TBinds extends readonly Bindable<unknown>[]>(
+  hydrateTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -241,7 +236,7 @@ export class UpdateEngine implements UpdateContext {
     return { result, lanes: nextLanes };
   }
 
-  renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
+  renderTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -249,18 +244,18 @@ export class UpdateEngine implements UpdateContext {
     return template.render(binds, part, this);
   }
 
-  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T> {
+  resolveSlot<T>(value: T, part: Part): Slot<T> {
     const element = this.resolveDirective(value, part);
     const binding = element.directive.resolveBinding(element.value, part, this);
     const slotType = element.slotType ?? this._renderHost.resolveSlotType(part);
     return new slotType(binding);
   }
 
-  resolveDirective<T>(value: Bindable<T>, part: Part): DirectiveElement<T> {
+  resolveDirective<T>(value: T, part: Part): DirectiveElement<unknown> {
     if (isBindableObject(value)) {
       return value[$toDirectiveElement](part, this);
     } else {
-      const directive = this._renderHost.resolvePrimitive(part) as Primitive<T>;
+      const directive = this._renderHost.resolvePrimitive(part);
       directive.ensureValue?.(value, part);
       return { directive, value: value };
     }
@@ -268,9 +263,9 @@ export class UpdateEngine implements UpdateContext {
 
   resolveTemplate(
     strings: readonly string[],
-    binds: readonly Bindable<unknown>[],
+    binds: readonly unknown[],
     mode: TemplateMode,
-  ): Template<readonly Bindable<unknown>[]> {
+  ): Template<readonly unknown[]> {
     let template = this._sharedState.cachedTemplates.get(strings);
 
     if (template === undefined) {

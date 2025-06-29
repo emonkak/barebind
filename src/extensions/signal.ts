@@ -1,7 +1,6 @@
 import {
   $toDirectiveElement,
   type Bindable,
-  type BindableObject,
   type Binding,
   type Coroutine,
   type Directive,
@@ -28,17 +27,15 @@ export type Subscription = () => void;
 export const SignalDirective = {
   name: 'SignalDirective',
   resolveBinding<T>(
-    signal: Signal<Bindable<T>>,
+    signal: Signal<T>,
     part: Part,
     _context: DirectiveContext,
   ): SignalBinding<T> {
     return new SignalBinding(signal, part);
   },
-} as const satisfies Directive<Signal<Bindable<unknown>>>;
+} as const satisfies Directive<Signal<unknown>>;
 
-export abstract class Signal<T>
-  implements CustomHook<T>, BindableObject<Signal<Bindable<T>>>
-{
+export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   abstract get value(): T;
 
   abstract get version(): number;
@@ -54,7 +51,7 @@ export abstract class Signal<T>
     return this.value;
   }
 
-  [$toDirectiveElement](): DirectiveElement<Signal<Bindable<T>>> {
+  [$toDirectiveElement](): DirectiveElement<Signal<T>> {
     return { directive: SignalDirective, value: this };
   }
 
@@ -238,10 +235,8 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
   }
 }
 
-export class SignalBinding<T>
-  implements Binding<Signal<Bindable<T>>>, Coroutine
-{
-  private _signal: Signal<Bindable<T>>;
+export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
+  private _signal: Signal<T>;
 
   private _part: Part;
 
@@ -249,16 +244,16 @@ export class SignalBinding<T>
 
   private _subscription: Subscription | null = null;
 
-  constructor(signal: Signal<Bindable<T>>, part: Part) {
+  constructor(signal: Signal<T>, part: Part) {
     this._signal = signal;
     this._part = part;
   }
 
-  get directive(): Directive<Signal<Bindable<T>>> {
+  get directive(): Directive<Signal<T>> {
     return SignalDirective;
   }
 
-  get value(): Signal<Bindable<T>> {
+  get value(): Signal<T> {
     return this._signal;
   }
 
@@ -266,11 +261,11 @@ export class SignalBinding<T>
     return this._part;
   }
 
-  shouldBind(signal: Signal<Bindable<T>>): boolean {
+  shouldBind(signal: Signal<T>): boolean {
     return this._subscription === null || signal !== this._signal;
   }
 
-  bind(signal: Signal<Bindable<T>>): void {
+  bind(signal: Signal<T>): void {
     this._subscription?.();
     this._subscription = null;
     this._signal = signal;

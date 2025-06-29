@@ -1,6 +1,5 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
-  Bindable,
   Binding,
   DirectiveContext,
   Primitive,
@@ -10,7 +9,7 @@ import type {
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 
-export type SpreadProps = { [key: string]: Bindable<unknown> };
+export type SpreadProps = { [key: string]: unknown };
 
 export const SpreadPrimitive = {
   name: 'SpreadPrimitive',

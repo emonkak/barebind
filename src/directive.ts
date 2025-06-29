@@ -27,9 +27,7 @@ export interface DirectiveElement<T> {
   readonly slotType?: SlotType;
 }
 
-export type Bindable<T> = BindableObject<T> | T;
-
-export interface BindableObject<T> {
+export interface Bindable<T> {
   [$toDirectiveElement](
     part: Part,
     context: DirectiveContext,
@@ -56,24 +54,24 @@ export interface Binding<T> extends ReversibleEffect {
 }
 
 export interface Slot<T> extends ReversibleEffect {
-  readonly directive: Directive<T>;
-  readonly value: T;
+  readonly directive: Directive<unknown>;
+  readonly value: unknown;
   readonly part: Part;
-  reconcile(value: Bindable<T>, context: UpdateContext): void;
+  reconcile(value: T, context: UpdateContext): void;
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
 
 export interface SlotType {
-  new <T>(binding: Binding<T>): Slot<T>;
+  new <T>(binding: Binding<unknown>): Slot<T>;
 }
 
 export interface Primitive<T> extends Directive<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
-export interface Template<TBinds extends readonly Bindable<unknown>[]>
+export interface Template<TBinds extends readonly unknown[]>
   extends Directive<TBinds> {
   render(
     binds: TBinds,
@@ -96,12 +94,12 @@ export interface TemplateBlock {
 }
 
 export interface Component<TProps, TResult> extends Directive<TProps> {
-  render(props: TProps, context: RenderContext): Bindable<TResult>;
+  render(props: TProps, context: RenderContext): TResult;
   shouldUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
 
 export interface ComponentFunction<TProps, TResult = unknown> {
-  (props: TProps, context: RenderContext): Bindable<TResult>;
+  (props: TProps, context: RenderContext): TResult;
   shouldUpdate?(nextProps: TProps, prevProps: TProps): boolean;
 }
 
@@ -110,8 +108,8 @@ export interface Coroutine extends Effect {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: Bindable<T>, part: Part): DirectiveElement<T>;
-  resolveSlot<T>(value: Bindable<T>, part: Part): Slot<T>;
+  resolveDirective<T>(value: T, part: Part): DirectiveElement<unknown>;
+  resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
 export interface UpdateContext extends DirectiveContext {
@@ -128,7 +126,7 @@ export interface UpdateContext extends DirectiveContext {
   flushAsync(options?: UpdateOptions): Promise<void>;
   flushSync(): void;
   getCurrentScope(): Scope;
-  hydrateTemplate<TBinds extends readonly Bindable<unknown>[]>(
+  hydrateTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -143,7 +141,7 @@ export interface UpdateContext extends DirectiveContext {
     lanes: Lanes,
     coroutine: Coroutine,
   ): RenderResult<TResult>;
-  renderTemplate<TBinds extends readonly Bindable<unknown>[]>(
+  renderTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
@@ -152,7 +150,7 @@ export interface UpdateContext extends DirectiveContext {
     strings: readonly string[],
     binds: readonly unknown[],
     mode: TemplateMode,
-  ): Template<readonly Bindable<unknown>[]>;
+  ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
   waitForUpdate(coroutine: Coroutine): Promise<void>;
 }
@@ -160,36 +158,36 @@ export interface UpdateContext extends DirectiveContext {
 export interface RenderContext extends HookContext {
   dynamicHTML(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
-  ): BindableObject<readonly unknown[]>;
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
   dynamicMath(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
-  ): BindableObject<readonly unknown[]>;
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
   dynamicSVG(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
-  ): BindableObject<readonly unknown[]>;
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
   html(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
-  ): BindableObject<readonly unknown[]>;
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
   math(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
-  ): BindableObject<readonly unknown[]>;
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
   svg(
     strings: TemplateStringsArray,
-    ...binds: readonly Bindable<unknown>[]
-  ): BindableObject<readonly unknown[]>;
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
 }
 
 export interface RenderResult<T> {
-  result: Bindable<T>;
+  result: T;
   lanes: Lanes;
 }
 
-export class DirectiveObject<T> implements BindableObject<T> {
+export class DirectiveObject<T> implements Bindable<T> {
   readonly directive: Directive<T>;
 
   readonly value: T;
@@ -204,12 +202,12 @@ export class DirectiveObject<T> implements BindableObject<T> {
   }
 }
 
-export class SlotObject<T> implements BindableObject<T> {
-  readonly value: Bindable<T>;
+export class SlotObject<T> implements Bindable<unknown> {
+  readonly value: T;
 
   readonly slotType: SlotType;
 
-  constructor(value: Bindable<T>, slotType: SlotType) {
+  constructor(value: T, slotType: SlotType) {
     this.value = value;
     this.slotType = slotType;
   }
@@ -217,7 +215,7 @@ export class SlotObject<T> implements BindableObject<T> {
   [$toDirectiveElement](
     part: Part,
     context: DirectiveContext,
-  ): DirectiveElement<T> {
+  ): DirectiveElement<unknown> {
     const { directive, value } = context.resolveDirective(this.value, part);
     return {
       directive,
@@ -227,10 +225,6 @@ export class SlotObject<T> implements BindableObject<T> {
   }
 }
 
-export function isBindableObject<T>(
-  value: Bindable<T>,
-): value is BindableObject<T> {
-  return (
-    typeof (value as BindableObject<T>)?.[$toDirectiveElement] === 'function'
-  );
+export function isBindableObject<T>(value: T): value is T & Bindable<T> {
+  return typeof (value as Bindable<T>)?.[$toDirectiveElement] === 'function';
 }

@@ -1,5 +1,4 @@
 import {
-  type Bindable,
   type Binding,
   type Directive,
   type Slot,
@@ -9,26 +8,26 @@ import {
 import type { HydrationTree } from '../hydration.js';
 import { type Part, PartType } from '../part.js';
 
-export function loose<T>(value: Bindable<T>): SlotObject<T> {
+export function loose<T>(value: T): SlotObject<T> {
   return new SlotObject(value, LooseSlot);
 }
 
 export class LooseSlot<T> implements Slot<T> {
-  private _pendingBinding: Binding<T>;
+  private _pendingBinding: Binding<unknown>;
 
-  private _memoizedBinding: Binding<T> | null = null;
+  private _memoizedBinding: Binding<unknown> | null = null;
 
   private _dirty = false;
 
-  constructor(binding: Binding<T>) {
+  constructor(binding: Binding<unknown>) {
     this._pendingBinding = binding;
   }
 
-  get directive(): Directive<T> {
+  get directive(): Directive<unknown> {
     return this._pendingBinding.directive;
   }
 
-  get value(): T {
+  get value(): unknown {
     return this._pendingBinding.value;
   }
 
@@ -36,7 +35,7 @@ export class LooseSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: Bindable<T>, context: UpdateContext): void {
+  reconcile(value: T, context: UpdateContext): void {
     const element = context.resolveDirective(value, this._pendingBinding.part);
     if (this._pendingBinding.directive === element.directive) {
       if (this._pendingBinding.shouldBind(element.value)) {

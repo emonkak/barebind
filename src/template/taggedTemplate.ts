@@ -1,6 +1,5 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  Bindable,
   DirectiveContext,
   Slot,
   Template,
@@ -89,11 +88,10 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
 
 const ERROR_MAKER = '[[ERROR IN HERE!]]';
 
-export class TaggedTemplate<
-  TBinds extends readonly Bindable<unknown>[] = Bindable<unknown>[],
-> implements Template<TBinds>
+export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
+  implements Template<TBinds>
 {
-  static parse<TBinds extends readonly Bindable<unknown>[]>(
+  static parse<TBinds extends readonly unknown[]>(
     strings: readonly string[],
     binds: TBinds,
     placeholder: string,
