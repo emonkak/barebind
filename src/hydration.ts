@@ -26,7 +26,7 @@ export class HydrationTree {
     const previousNode = this._treeWalker.currentNode;
     const nextNode = this._treeWalker.nextNode();
     if (nextNode === null) {
-      throw new HydrationError(`Hydration is failed because there is no node.`);
+      throw new HydrationError('Hydration is failed because there is no node.');
     }
     this._treeWalker.currentNode = previousNode;
     return nextNode as ChildNode;
@@ -39,7 +39,7 @@ export class HydrationTree {
     const currentNode = this._treeWalker.nextNode();
     if (currentNode === null) {
       throw new HydrationError(
-        `Hydration is failed because there is no node. ${expectedName} node is expected here.`,
+        `Hydration is failed because there is no node. ${expectedName.toLowerCase()} node is expected here.`,
       );
     }
     ensureNode(currentNode, expectedType, expectedName);
