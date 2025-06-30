@@ -58,7 +58,10 @@ export function createStoreClass<TClass extends Constructable>(
   superclass: TClass,
 ): StoreClass<TClass> {
   return class Store extends superclass implements StoreExtensions {
-    private [$signalMap]: Record<PropertyKey, Signal<unknown>> = {};
+    private [$signalMap]: Record<PropertyKey, Signal<unknown>> = Object.create(
+      null,
+      {},
+    );
 
     static [$customHook](
       this: Constructable<Store>,
@@ -77,6 +80,7 @@ export function createStoreClass<TClass extends Constructable>(
       super(...args);
       defineInstanceProperties(this, this[$signalMap]);
       definePrototypeProperties(superclass, this, this[$signalMap]);
+      Object.freeze(this[$signalMap]);
     }
 
     [$customHook](context: HookContext): void {
@@ -92,8 +96,7 @@ export function createStoreClass<TClass extends Constructable>(
       key: TKey,
     ): Signal<this[TKey]> | undefined;
     getSignal(key: string): Signal<unknown> | undefined {
-      const signalMap = this[$signalMap];
-      return Object.hasOwn(signalMap, key) ? signalMap[key] : undefined;
+      return this[$signalMap][key];
     }
 
     getVersion(): number {
@@ -245,7 +248,7 @@ function trackSignals<T extends object>(
 ): T {
   return new Proxy(instance, {
     get: (target, key, receiver) => {
-      if (Object.hasOwn(signalMap, key)) {
+      if (key in signalMap) {
         const signal = signalMap[key]!;
         dependencies.push(signal);
         return signal.value;
