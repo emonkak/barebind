@@ -10,7 +10,7 @@ import {
 describe('ensureHookType()', () => {
   it('throws error if the hook has a different type than expected', () => {
     expect(() =>
-      ensureHookType(HookType.Identifier, {
+      ensureHookType(HookType.Id, {
         type: HookType.Finalizer,
       }),
     ).toThrow('Unexpected hook type.');

@@ -3,18 +3,18 @@
 export const $customHook: unique symbol = Symbol('$customHook');
 
 export type Hook =
+  | FinalizerHook
   | EffectHook
-  | IdentifierHook
-  | MemoHook<unknown>
-  | ReducerHook<any, any>
-  | FinalizerHook;
+  | IdHook
+  | MemoHook<any>
+  | ReducerHook<any, any>;
 
 export const HookType = {
-  Effect: 0,
-  Identifier: 1,
-  Memo: 2,
-  Reducer: 3,
-  Finalizer: 4,
+  Finalizer: 0,
+  Effect: 1,
+  Id: 2,
+  Memo: 3,
+  Reducer: 4,
 } as const;
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
@@ -27,6 +27,23 @@ export const CommitPhase = {
 
 export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
 
+export const NO_LANES: Lanes = 0;
+export const ALL_LANES: Lanes = -1;
+
+export const Lane = {
+  UserInput: 1,
+  ContinuousInput: 2,
+  Idle: 3,
+} as const;
+
+export type Lane = (typeof Lane)[keyof typeof Lane];
+
+export type Lanes = number;
+
+export interface FinalizerHook {
+  type: typeof HookType.Finalizer;
+}
+
 export interface EffectHook {
   type: typeof HookType.Effect;
   phase: CommitPhase;
@@ -35,8 +52,8 @@ export interface EffectHook {
   dependencies: unknown[] | null;
 }
 
-export interface IdentifierHook {
-  type: typeof HookType.Identifier;
+export interface IdHook {
+  type: typeof HookType.Id;
   id: string;
 }
 
@@ -55,26 +72,35 @@ export interface ReducerHook<TState, TAction> {
   dispatch: (action: TAction) => void;
 }
 
-export interface FinalizerHook {
-  type: typeof HookType.Finalizer;
-}
-
 export interface CustomHook<T> {
   [$customHook](context: HookContext): T;
 }
 
-export type UseCustomHooks<THooks extends readonly CustomHook<unknown>[]> = {
-  [K in keyof THooks]: THooks[K] extends CustomHook<infer T> ? T : never;
-};
+export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
+
+export type NewState<T> = [T] extends [Function]
+  ? (prevState: T) => T
+  : ((prevState: T) => T) | T;
+
+export interface RefObject<T> {
+  current: T;
+}
+
+export interface UpdateOptions {
+  priority?: TaskPriority;
+  viewTransition?: boolean;
+}
+
+export interface UpdateTask {
+  priority: TaskPriority;
+  promise: Promise<void>;
+}
 
 export interface HookContext {
   forceUpdate(options?: UpdateOptions): UpdateTask;
   getContextValue(key: unknown): unknown;
   setContextValue(key: unknown, value: unknown): void;
   use<T>(hook: CustomHook<T>): T;
-  use<THooks extends readonly CustomHook<unknown>[]>(
-    hooks: THooks,
-  ): UseCustomHooks<THooks>;
   useCallback<T extends Function>(callback: T, dependencies: unknown[]): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
@@ -107,44 +133,10 @@ export interface HookContext {
     setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
     isPending: boolean,
   ];
-  useSyncEnternalStore<TSnapshot>(
-    subscribe: (subscruber: () => void) => (() => void) | void,
-    getSnapshot: () => TSnapshot,
-    options?: UpdateOptions,
-  ): TSnapshot;
-}
-
-export const Lane = {
-  UserInput: 1,
-  ContinuousInput: 2,
-  Idle: 3,
-} as const;
-
-export type Lane = (typeof Lane)[keyof typeof Lane];
-
-export const NO_LANES: Lanes = 0;
-export const ALL_LANES: Lanes = -1;
-
-export type Lanes = number;
-
-export interface UpdateOptions {
-  priority?: TaskPriority;
-  viewTransition?: boolean;
-}
-
-export interface UpdateTask {
-  priority: TaskPriority;
-  promise: Promise<void>;
-}
-
-export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
-
-export type NewState<T> = [T] extends [Function]
-  ? (prevState: T) => T
-  : ((prevState: T) => T) | T;
-
-export interface RefObject<T> {
-  current: T;
+  useSyncEnternalStore<T>(
+    subscribe: (subscriber: () => void) => (() => void) | void,
+    getSnapshot: () => T,
+  ): T;
 }
 
 export function ensureHookType<TExpectedHook extends Hook>(

@@ -47,12 +47,12 @@ export class BrowserRenderHost implements RenderHost {
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     if (binds.length === 0) {
-      // Assumption: strings.length === 1
+      // Assert: strings.length === 1
       if (strings[0]!.trim() === '') {
         return EmptyTemplate;
       }
     } else if (binds.length === 1) {
-      // Assumption: strings.length === 2
+      // Assert: strings.length === 2
       const precedingString = strings[0]!.trim();
       const followingString = strings[1]!.trim();
 
@@ -67,7 +67,7 @@ export class BrowserRenderHost implements RenderHost {
       }
 
       if (!precedingString.includes('<') && !followingString.includes('<')) {
-        // Tags are nowhere, so it's plain text.
+        // Tags are nowhere, so it is a plain text.
         return new TextTemplate(precedingString, followingString);
       }
     }
@@ -88,7 +88,7 @@ export class BrowserRenderHost implements RenderHost {
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void> {
-    if (typeof globalThis.scheduler?.postTask === 'function') {
+    if (typeof window.scheduler?.postTask === 'function') {
       return scheduler.postTask(callback, options);
     } else {
       return new Promise((resolve) => {
@@ -100,7 +100,7 @@ export class BrowserRenderHost implements RenderHost {
             break;
           }
           case 'background': {
-            if (typeof globalThis.requestIdleCallback === 'function') {
+            if (typeof window.requestIdleCallback === 'function') {
               requestIdleCallback(resolve);
             } else {
               setTimeout(resolve);
@@ -163,7 +163,7 @@ export class BrowserRenderHost implements RenderHost {
   }
 
   yieldToMain(): Promise<void> {
-    if (typeof globalThis.scheduler?.yield === 'function') {
+    if (typeof window.scheduler?.yield === 'function') {
       return scheduler.yield();
     } else {
       return new Promise((resolve) => {

@@ -12,13 +12,13 @@ import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { ServerRenderHost } from '@/renderHost/server.js';
+import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/childNodeTemplate.js';
 import { EmptyTemplate } from '@/template/emptyTemplate.js';
 import { TaggedTemplate } from '@/template/taggedTemplate.js';
 import { TextTemplate } from '@/template/textTemplate.js';
-import { UpdateEngine } from '@/updateEngine.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -41,14 +41,14 @@ describe('ServerRenderHost', () => {
         },
       ];
       const renderHost = new ServerRenderHost(document);
-      const context = new UpdateEngine(renderHost);
+      const runtime = new Runtime(renderHost);
 
-      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, context);
-      renderHost.commitEffects(layoutEffects, CommitPhase.Layout, context);
-      renderHost.commitEffects(passiveEffects, CommitPhase.Layout, context);
+      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, runtime);
+      renderHost.commitEffects(layoutEffects, CommitPhase.Layout, runtime);
+      renderHost.commitEffects(passiveEffects, CommitPhase.Layout, runtime);
 
       expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
-      expect(mutationEffects[0].commit).toHaveBeenCalledWith(context);
+      expect(mutationEffects[0].commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(passiveEffects[0].commit).not.toHaveBeenCalled();

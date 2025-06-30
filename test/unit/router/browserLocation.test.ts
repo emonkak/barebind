@@ -1,8 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ALL_LANES } from '@/hook.js';
-import { RenderEngine } from '@/renderEngine.js';
-import { BrowserRenderHost } from '@/renderHost/browser.js';
+import { RenderSession } from '@/renderSession.js';
 import {
   BrowserLocation,
   createFormSubmitHandler,
@@ -10,26 +9,26 @@ import {
 } from '@/router/browserLocation.js';
 import { CurrentLocation } from '@/router/location.js';
 import { RelativeURL } from '@/router/url.js';
-import { UpdateEngine } from '@/updateEngine.js';
-import { MockCoroutine } from '../../mocks.js';
+import { Runtime } from '@/runtime.js';
+import { MockCoroutine, MockRenderHost } from '../../mocks.js';
 import { cleanupHooks, createElement } from '../../testUtils.js';
 
 describe('BrowserLocation', () => {
-  const originalState = history.state;
   const originalUrl = location.href;
-  let context!: RenderEngine;
+  const originalState = history.state;
+  let session!: RenderSession;
 
   beforeEach(() => {
-    context = new RenderEngine(
+    session = new RenderSession(
       [],
       ALL_LANES,
       new MockCoroutine(),
-      new UpdateEngine(new BrowserRenderHost()),
+      new Runtime(new MockRenderHost()),
     );
   });
 
   afterEach(() => {
-    cleanupHooks(context['_hooks']);
+    cleanupHooks(session['_hooks']);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -39,7 +38,7 @@ describe('BrowserLocation', () => {
 
     history.replaceState(state, '', '/articles/123');
 
-    const [locationState, { getCurrentURL }] = context.use(BrowserLocation);
+    const [locationState, { getCurrentURL }] = session.use(BrowserLocation);
 
     expect(getCurrentURL().toString()).toBe('/articles/123');
     expect(location.pathname).toBe('/articles/123');
@@ -50,18 +49,18 @@ describe('BrowserLocation', () => {
   });
 
   it('registers the current location', () => {
-    const currentLocation = context.use(BrowserLocation);
+    const currentLocation = session.use(BrowserLocation);
 
-    expect(context.use(CurrentLocation)).toBe(currentLocation);
+    expect(session.use(CurrentLocation)).toBe(currentLocation);
   });
 
   it('adds event listeners', () => {
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    context.use(BrowserLocation);
-    context.finalize();
-    context.flush();
+    session.use(BrowserLocation);
+    session.finalize();
+    session.flush();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -77,7 +76,7 @@ describe('BrowserLocation', () => {
       expect.any(Function),
     );
 
-    cleanupHooks(context['_hooks']);
+    cleanupHooks(session['_hooks']);
 
     expect(removeEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
@@ -98,14 +97,14 @@ describe('BrowserLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationState1, locationNavigator1] = context.use(BrowserLocation);
+    const [locationState1, locationNavigator1] = session.use(BrowserLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     locationNavigator1.navigate(new RelativeURL('/articles/456'));
 
-    const [locationState2, locationNavigator2] = context.use(BrowserLocation);
+    const [locationState2, locationNavigator2] = session.use(BrowserLocation);
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -122,17 +121,17 @@ describe('BrowserLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationState1, locationNavigator1] = context.use(BrowserLocation);
+    const [locationState1, locationNavigator1] = session.use(BrowserLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     locationNavigator1.navigate(new RelativeURL('/articles/123'), {
       replace: true,
       state,
     });
 
-    const [locationState2, locationNavigator2] = context.use(BrowserLocation);
+    const [locationState2, locationNavigator2] = session.use(BrowserLocation);
 
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -147,16 +146,16 @@ describe('BrowserLocation', () => {
     const element = createElement('a', { href: '/articles/123' });
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-    const [locationState1] = context.use(BrowserLocation);
+    const [locationState1] = session.use(BrowserLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
 
-    const [locationState2] = context.use(BrowserLocation);
+    const [locationState2] = session.use(BrowserLocation);
 
     expect(locationState2).not.toBe(locationState1);
     expect(locationState2.url.toString()).toBe('/articles/123');
@@ -170,16 +169,16 @@ describe('BrowserLocation', () => {
     });
     const event = new MouseEvent('submit', { bubbles: true, cancelable: true });
 
-    const [locationState1] = context.use(BrowserLocation);
+    const [locationState1] = session.use(BrowserLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
 
-    const [locationState2] = context.use(BrowserLocation);
+    const [locationState2] = session.use(BrowserLocation);
 
     expect(locationState2).not.toBe(locationState1);
     expect(locationState2.url.toString()).toBe('/articles/123');
@@ -189,15 +188,15 @@ describe('BrowserLocation', () => {
   it('should update the location when the history has been changed', () => {
     const state = { key: 'foo' };
 
-    const [locationState1] = context.use(BrowserLocation);
+    const [locationState1] = session.use(BrowserLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     history.replaceState(state, '', '/articles/123');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
-    const [locationState2] = context.use(BrowserLocation);
+    const [locationState2] = session.use(BrowserLocation);
 
     expect(locationState2).not.toBe(locationState1);
     expect(locationState2.url.toString()).toBe('/articles/123');
@@ -208,15 +207,15 @@ describe('BrowserLocation', () => {
   it('should not update the location when only the hash has been changed', () => {
     const state = { key: 'foo' };
 
-    const [locationState1] = context.use(BrowserLocation);
+    const [locationState1] = session.use(BrowserLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
-    const [locationState2] = context.use(BrowserLocation);
+    const [locationState2] = session.use(BrowserLocation);
 
     expect(locationState1).toBe(locationState2);
   });

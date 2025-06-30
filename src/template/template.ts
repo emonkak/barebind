@@ -3,7 +3,7 @@ import type {
   Effect,
   EffectContext,
   Template,
-  TemplateBlock,
+  TemplateResult,
   UpdateContext,
 } from '../directive.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
@@ -18,9 +18,9 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
 
   private readonly _part: ChildNodePart;
 
-  private _pendingBlock: TemplateBlock | null = null;
+  private _pendingResult: TemplateResult | null = null;
 
-  private _memoizedBlock: TemplateBlock | null = null;
+  private _memoizedResult: TemplateResult | null = null;
 
   constructor(template: Template<TBinds>, binds: TBinds, part: ChildNodePart) {
     this._template = template;
@@ -41,7 +41,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   }
 
   shouldBind(binds: TBinds): boolean {
-    return this._memoizedBlock === null || binds !== this._binds;
+    return this._memoizedResult === null || binds !== this._binds;
   }
 
   bind(binds: TBinds): void {
@@ -49,30 +49,30 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    if (this._pendingBlock !== null) {
+    if (this._pendingResult !== null) {
       throw new HydrationError(
         'Hydration is failed because the template has already been rendered.',
       );
     }
 
-    this._pendingBlock = context.hydrateTemplate(
+    this._pendingResult = context.hydrateTemplate(
       this._template,
       this._binds,
       this._part,
       hydrationTree,
     );
-    this._memoizedBlock = this._pendingBlock;
+    this._memoizedResult = this._pendingResult;
   }
 
   connect(context: UpdateContext): void {
-    if (this._pendingBlock !== null) {
-      const { slots } = this._pendingBlock;
+    if (this._pendingResult !== null) {
+      const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.reconcile(this._binds[i]!, context);
       }
     } else {
-      this._pendingBlock = context.renderTemplate(
+      this._pendingResult = context.renderTemplate(
         this._template,
         this._binds,
         this._part,
@@ -81,8 +81,8 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   }
 
   disconnect(context: UpdateContext): void {
-    if (this._pendingBlock !== null) {
-      const { slots } = this._pendingBlock;
+    if (this._pendingResult !== null) {
+      const { slots } = this._pendingResult;
 
       for (let i = slots.length - 1; i >= 0; i--) {
         slots[i]!.disconnect(context);
@@ -91,10 +91,10 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   }
 
   commit(context: EffectContext): void {
-    if (this._pendingBlock !== null) {
-      const { childNodes, slots } = this._pendingBlock;
+    if (this._pendingResult !== null) {
+      const { childNodes, slots } = this._pendingResult;
 
-      if (this._memoizedBlock === null) {
+      if (this._memoizedResult === null) {
         this._part.node.before(...childNodes);
       }
 
@@ -112,12 +112,12 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
     }
 
-    this._memoizedBlock = this._pendingBlock;
+    this._memoizedResult = this._pendingResult;
   }
 
   rollback(context: EffectContext): void {
-    if (this._memoizedBlock !== null) {
-      const { childNodes, slots } = this._memoizedBlock;
+    if (this._memoizedResult !== null) {
+      const { childNodes, slots } = this._memoizedResult;
 
       for (let i = slots.length - 1; i >= 0; i--) {
         const slot = slots[i]!;
@@ -138,6 +138,6 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     }
 
     this._part.childNode = null;
-    this._memoizedBlock = null;
+    this._memoizedResult = null;
   }
 }

@@ -11,8 +11,8 @@ import type {
   Slot,
   SlotType,
   Template,
-  TemplateBlock,
   TemplateMode,
+  TemplateResult,
   UpdateContext,
 } from '../src/directive.js';
 import { type CommitPhase, type Lanes, NO_LANES } from '../src/hook.js';
@@ -318,7 +318,7 @@ export class MockTemplate implements Template<readonly unknown[]> {
     _binds: readonly unknown[],
     _part: ChildNodePart,
     _context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     return {
       childNodes: [],
       slots: [],
@@ -330,7 +330,7 @@ export class MockTemplate implements Template<readonly unknown[]> {
     _part: ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     return {
       childNodes: [],
       slots: [],

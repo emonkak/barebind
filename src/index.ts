@@ -1,3 +1,4 @@
+export { sequentialEqual, shallowEqual } from './compare.js';
 export { component } from './component.js';
 export type * from './directive.js';
 export type * from './hook.js';

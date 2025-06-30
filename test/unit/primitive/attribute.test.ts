@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('AttributePrimitive', () => {
@@ -20,8 +20,8 @@ describe('AttributePrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = AttributePrimitive.resolveBinding(value, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.directive).toBe(AttributePrimitive);
       expect(binding.value).toBe(value);
@@ -34,10 +34,10 @@ describe('AttributePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
-        AttributePrimitive.resolveBinding(value, part, context),
+        AttributePrimitive.resolveBinding(value, part, runtime),
       ).toThrow('AttributePrimitive must be used in an attribute part,');
     });
   });
@@ -66,10 +66,10 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding(value1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(value1)).toBe(false);
       expect(binding.shouldBind(value2)).toBe(true);
@@ -87,14 +87,14 @@ describe('AttributeBinding', () => {
           name: 'class',
         } as const;
         const binding = new AttributeBinding<unknown>(value1, part);
-        const context = new UpdateEngine(new MockRenderHost());
+        const runtime = new Runtime(new MockRenderHost());
 
-        binding.connect(context);
-        binding.commit(context);
+        binding.connect(runtime);
+        binding.commit(runtime);
 
         binding.bind(value2);
-        binding.connect(context);
-        binding.commit(context);
+        binding.connect(runtime);
+        binding.commit(runtime);
 
         expect(part.node.getAttribute(part.name)).toBe(null);
       },
@@ -120,10 +120,10 @@ describe('AttributeBinding', () => {
           name: 'class',
         } as const;
         const binding = new AttributeBinding(value, part);
-        const context = new UpdateEngine(new MockRenderHost());
+        const runtime = new Runtime(new MockRenderHost());
 
-        binding.connect(context);
-        binding.commit(context);
+        binding.connect(runtime);
+        binding.commit(runtime);
 
         expect(part.node.getAttribute(part.name)).toBe(expectedValue);
       },
@@ -141,10 +141,10 @@ describe('AttributeBinding', () => {
           name: 'class',
         } as const;
         const binding = new AttributeBinding(value, part);
-        const context = new UpdateEngine(new MockRenderHost());
+        const runtime = new Runtime(new MockRenderHost());
 
-        binding.connect(context);
-        binding.commit(context);
+        binding.connect(runtime);
+        binding.commit(runtime);
 
         expect(part.node.getAttribute(part.name)).toBe(expectedValue);
       },
@@ -160,13 +160,13 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding<unknown>(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(part.node.getAttribute(part.name)).toBe(null);
     });
@@ -179,12 +179,12 @@ describe('AttributeBinding', () => {
         name: 'class',
       } as const;
       const binding = new AttributeBinding<unknown>(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const removeAttributeSpy = vi.spyOn(part.node, 'removeAttribute');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(removeAttributeSpy).not.toHaveBeenCalled();
     });

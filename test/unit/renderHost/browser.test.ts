@@ -13,13 +13,13 @@ import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { BrowserRenderHost } from '@/renderHost/browser.js';
+import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/childNodeTemplate.js';
 import { EmptyTemplate } from '@/template/emptyTemplate.js';
 import { TaggedTemplate } from '@/template/taggedTemplate.js';
 import { TextTemplate } from '@/template/textTemplate.js';
-import { UpdateEngine } from '@/updateEngine.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -62,13 +62,13 @@ describe('BrowserRenderHost', () => {
         },
       ];
       const renderHost = new BrowserRenderHost();
-      const context = new UpdateEngine(renderHost);
+      const runtime = new Runtime(renderHost);
 
-      renderHost.commitEffects(effects, phase, context);
+      renderHost.commitEffects(effects, phase, runtime);
 
       for (const effect of effects) {
         expect(effect.commit).toHaveBeenCalledOnce();
-        expect(effect.commit).toHaveBeenCalledWith(context);
+        expect(effect.commit).toHaveBeenCalledWith(runtime);
       }
     });
   });

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
+import { Runtime } from '@/runtime.js';
 import { TemplateBinding } from '@/template/template.js';
-import { UpdateEngine } from '@/updateEngine.js';
 import {
   MockBinding,
   MockPrimitive,
@@ -14,7 +14,7 @@ import { createElement } from '../../testUtils.js';
 
 describe('TemplateBinding', () => {
   describe('shouldBind()', () => {
-    it('returns true if the committed block does not exist', () => {
+    it('returns true if the committed result does not exist', () => {
       const template = new MockTemplate();
       const binds = [] as const;
       const part = {
@@ -37,10 +37,10 @@ describe('TemplateBinding', () => {
         childNode: null,
       } as const;
       const binding = new TemplateBinding(template, binds1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(binds1)).toBe(false);
       expect(binding.shouldBind(binds2)).toBe(true);
@@ -59,26 +59,26 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const hydrationRoot = createElement('div', {}, 'foo', part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         childNodes: [hydrationRoot.firstChild!],
         slots: [],
       });
 
-      binding.hydrate(hydrationTree, context);
+      binding.hydrate(hydrationTree, runtime);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
       expect(hydrationRoot.innerHTML).toBe('foo<!---->');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(hydrationRoot.innerHTML).toBe('<!---->');
     });
@@ -94,12 +94,12 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const hydrationRoot = document.createElement('div');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
-      expect(() => binding.hydrate(hydrationTree, context)).toThrow(
+      expect(() => binding.hydrate(hydrationTree, runtime)).toThrow(
         HydrationError,
       );
     });
@@ -116,7 +116,7 @@ describe('TemplateBinding', () => {
         childNode: null,
       } as const;
       const binding = new TemplateBinding(template, binds1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const container = createElement('div', {}, part.node);
       const renderRoot = createElement(
@@ -128,7 +128,7 @@ describe('TemplateBinding', () => {
       );
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((binds, _part, context) => {
+        .mockImplementation((binds, _part, runtime) => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, binds[0], {
@@ -155,21 +155,21 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(context);
+            slot.connect(runtime);
           }
           return { childNodes: [renderRoot], slots };
         });
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(binds1, part, context);
+      expect(renderSpy).toHaveBeenCalledWith(binds1, part, runtime);
       expect(part.childNode).toBe(renderRoot);
       expect(container.innerHTML).toBe(
         '<div><div class="foo"></div>bar<!--baz--></div><!---->',
       );
-      expect(binding['_pendingBlock']).toStrictEqual({
+      expect(binding['_pendingResult']).toStrictEqual({
         childNodes: [renderRoot],
         slots: [
           expect.objectContaining({
@@ -189,18 +189,18 @@ describe('TemplateBinding', () => {
           }),
         ],
       });
-      expect(binding['_memoizedBlock']).toBe(binding['_pendingBlock']);
+      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
 
       binding.bind(binds2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toBe(renderRoot);
       expect(container.innerHTML).toBe(
         '<div><div class="qux"></div>quux<!--corge--></div><!---->',
       );
-      expect(binding['_pendingBlock']).toStrictEqual({
+      expect(binding['_pendingResult']).toStrictEqual({
         childNodes: [renderRoot],
         slots: [
           expect.objectContaining({
@@ -220,15 +220,15 @@ describe('TemplateBinding', () => {
           }),
         ],
       });
-      expect(binding['_memoizedBlock']).toBe(binding['_pendingBlock']);
+      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toBe(null);
       expect(container.innerHTML).toBe('<!---->');
-      expect(binding['_pendingBlock']).toStrictEqual({
+      expect(binding['_pendingResult']).toStrictEqual({
         childNodes: [renderRoot],
         slots: [
           expect.objectContaining({
@@ -248,7 +248,7 @@ describe('TemplateBinding', () => {
           }),
         ],
       });
-      expect(binding['_memoizedBlock']).toBe(null);
+      expect(binding['_memoizedResult']).toBe(null);
     });
 
     it('renders a template with multiple root nodes', () => {
@@ -261,7 +261,7 @@ describe('TemplateBinding', () => {
         childNode: null,
       } as const;
       const binding = new TemplateBinding(template, binds1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const container = createElement('div', {}, part.node);
       const childNodes = [
@@ -297,7 +297,7 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(context);
+            slot.connect(runtime);
           }
           return {
             childNodes,
@@ -305,16 +305,16 @@ describe('TemplateBinding', () => {
           };
         });
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(binds1, part, context);
+      expect(renderSpy).toHaveBeenCalledWith(binds1, part, runtime);
       expect(part.childNode).toStrictEqual(childNodes[0]);
       expect(container.innerHTML).toBe(
         '<!--foo-->bar<div class="baz"></div><!---->',
       );
-      expect(binding['_pendingBlock']).toStrictEqual({
+      expect(binding['_pendingResult']).toStrictEqual({
         childNodes,
         slots: [
           expect.objectContaining({
@@ -334,18 +334,18 @@ describe('TemplateBinding', () => {
           }),
         ],
       });
-      expect(binding['_memoizedBlock']).toBe(binding['_pendingBlock']);
+      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
 
       binding.bind(binds2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toStrictEqual(childNodes[0]);
       expect(container.innerHTML).toBe(
         '<!--qux-->quux<div class="corge"></div><!---->',
       );
-      expect(binding['_pendingBlock']).toStrictEqual({
+      expect(binding['_pendingResult']).toStrictEqual({
         childNodes,
         slots: [
           expect.objectContaining({
@@ -365,15 +365,15 @@ describe('TemplateBinding', () => {
           }),
         ],
       });
-      expect(binding['_memoizedBlock']).toBe(binding['_pendingBlock']);
+      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(part.childNode).toBe(null);
       expect(container.innerHTML).toBe('<!---->');
-      expect(binding['_pendingBlock']).toStrictEqual({
+      expect(binding['_pendingResult']).toStrictEqual({
         childNodes,
         slots: [
           expect.objectContaining({
@@ -393,7 +393,7 @@ describe('TemplateBinding', () => {
           }),
         ],
       });
-      expect(binding['_memoizedBlock']).toBe(null);
+      expect(binding['_memoizedResult']).toBe(null);
     });
   });
 });

@@ -5,7 +5,7 @@ import {
   createSlotObject,
 } from '@/directive.js';
 import { PartType } from '@/part.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import {
   MockDirective,
   MockPrimitive,
@@ -23,12 +23,12 @@ describe('createDirectiveObject()', () => {
       precedingText: '',
       followingText: '',
     };
-    const context = new UpdateEngine(new MockRenderHost());
+    const runtime = new Runtime(new MockRenderHost());
     const object = createDirectiveObject(directive, value);
 
     expect(object.directive).toBe(directive);
     expect(object.value).toBe(value);
-    expect(object[$toDirectiveElement](part, context)).toBe(object);
+    expect(object[$toDirectiveElement](part, runtime)).toBe(object);
   });
 });
 
@@ -42,9 +42,9 @@ describe('SlotObject', () => {
       precedingText: '',
       followingText: '',
     };
-    const context = new UpdateEngine(new MockRenderHost());
+    const runtime = new Runtime(new MockRenderHost());
     const object = createSlotObject(value, slotType);
-    const element = object[$toDirectiveElement](part, context);
+    const element = object[$toDirectiveElement](part, runtime);
 
     expect(element.directive).toBe(MockPrimitive);
     expect(element.value).toBe(value);

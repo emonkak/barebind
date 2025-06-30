@@ -1,4 +1,5 @@
 import type {
+  CommitPhase,
   Hook,
   HookContext,
   Lanes,
@@ -77,18 +78,18 @@ export interface Template<TBinds extends readonly unknown[]>
     binds: TBinds,
     part: ChildNodePart,
     context: UpdateContext,
-  ): TemplateBlock;
+  ): TemplateResult;
   hydrate(
     binds: TBinds,
     part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
-  ): TemplateBlock;
+  ): TemplateResult;
 }
 
 export type TemplateMode = 'html' | 'math' | 'svg';
 
-export interface TemplateBlock {
+export interface TemplateResult {
   readonly childNodes: readonly ChildNode[];
   readonly slots: Slot<unknown>[];
 }
@@ -108,7 +109,7 @@ export interface Coroutine extends Effect {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: T, part: Part): DirectiveElement<unknown>;
+  resolveDirective(value: unknown, part: Part): DirectiveElement<unknown>;
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
@@ -117,47 +118,28 @@ export interface EffectContext {
   undebugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
 }
 
-export interface UpdateContext extends DirectiveContext {
+export interface UpdateContext extends DirectiveContext, RenderSessionContext {
   enqueueCoroutine(coroutine: Coroutine): void;
-  enqueueLayoutEffect(effect: Effect): void;
-  enqueueMutationEffect(effect: Effect): void;
-  enqueuePassiveEffect(effect: Effect): void;
   enterRenderFrame(): UpdateContext;
   enterScope(scope: Scope): UpdateContext;
-  expandLiterals<T>(
-    strings: TemplateStringsArray,
-    values: readonly (T | Literal)[],
-  ): TemplateLiteral<T>;
-  flushAsync(options?: UpdateOptions): Promise<void>;
-  flushSync(): void;
-  getCurrentScope(): Scope;
   hydrateTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
     hydrationTree: HydrationTree,
-  ): TemplateBlock;
-  isPending(): boolean;
-  nextIdentifier(): string;
+  ): TemplateResult;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
     lanes: Lanes,
     coroutine: Coroutine,
-  ): RenderResult<TResult>;
+  ): ComponentResult<TResult>;
   renderTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
-  ): TemplateBlock;
-  resolveTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  waitForUpdate(coroutine: Coroutine): Promise<void>;
+  ): TemplateResult;
 }
 
 export interface RenderContext extends HookContext {
@@ -187,12 +169,33 @@ export interface RenderContext extends HookContext {
   ): Bindable<readonly unknown[]>;
 }
 
-export interface RenderResult<T> {
-  result: T;
+export interface RenderSessionContext {
+  enqueueEffect(effect: Effect, phase: CommitPhase): void;
+  expandLiterals<T>(
+    strings: TemplateStringsArray,
+    values: readonly (T | Literal)[],
+  ): TemplateLiteral<T>;
+  flushSync(): void;
+  getCurrentScope(): Scope;
+  nextIdentifier(): string;
+  resolveTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
+  waitForUpdate(coroutine: Coroutine): Promise<boolean>;
+}
+
+export interface ComponentResult<T> {
+  value: T;
   lanes: Lanes;
 }
 
-export interface DirectiveObject<T> extends Bindable<T>, DirectiveElement<T> {}
+export interface DirectiveObject<T> extends Bindable<T> {
+  readonly directive: Directive<T>;
+  readonly value: T;
+}
 
 export interface SlotObject<T> extends Bindable<unknown> {
   value: T;

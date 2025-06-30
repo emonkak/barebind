@@ -85,10 +85,15 @@ describe('sequentialEqual()', () => {
   it('returns true if there are no values', () => {
     expect(sequentialEqual([], [])).toBe(true);
   });
+
+  it('returns true if two values are the same', () => {
+    const xs = [] as const;
+    expect(sequentialEqual(xs, xs)).toBe(true);
+  });
 });
 
 describe('shallowEqual()', () => {
-  it('returns true if same values are given', () => {
+  it('returns true if two values are the same', () => {
     const props = { foo: 1 };
     expect(shallowEqual(props, props)).toBe(true);
   });

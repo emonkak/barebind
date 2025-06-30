@@ -2,7 +2,7 @@ import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
   Template,
-  TemplateBlock,
+  TemplateResult,
   UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
@@ -28,7 +28,7 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
     _part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     const childPart = {
       type: PartType.Text,
       node: hydrationTree.popNode(Node.TEXT_NODE, '#text'),
@@ -46,7 +46,7 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
     binds: readonly [T],
     part: ChildNodePart,
     context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     const document = part.node.ownerDocument;
     const slotPart = {
       type: PartType.Text,

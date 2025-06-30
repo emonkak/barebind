@@ -2,7 +2,7 @@ import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
   Template,
-  TemplateBlock,
+  TemplateResult,
   UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
@@ -16,14 +16,14 @@ export const EmptyTemplate = {
     _part: ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     return { childNodes: [], slots: [] };
   },
   render(
     _binds: readonly [],
     _part: ChildNodePart,
     _context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     return { childNodes: [], slots: [] };
   },
   resolveBinding(

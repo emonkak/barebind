@@ -8,8 +8,8 @@ import {
 } from '@/extensions/repeat.js';
 import { HydrationTree } from '@/hydration.js';
 import { type ChildNodePart, PartType } from '@/part.js';
+import { Runtime } from '@/runtime.js';
 import { TextTemplate } from '@/template/textTemplate.js';
-import { UpdateEngine } from '@/updateEngine.js';
 import { MockRenderHost } from '../../mocks.js';
 import {
   allCombinations,
@@ -46,8 +46,8 @@ describe('RepeatDirective', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = RepeatDirective.resolveBinding(props, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
       expect(binding.directive).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
@@ -60,10 +60,10 @@ describe('RepeatDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
-        RepeatDirective.resolveBinding(props, part, context),
+        RepeatDirective.resolveBinding(props, part, runtime),
       ).toThrow('RepeatDirective must be used in a child part,');
     });
   });
@@ -92,10 +92,10 @@ describe('RepeatBinding', () => {
         childNode: null,
       } as const;
       const binding = new RepeatBinding(props1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -127,10 +127,10 @@ describe('RepeatBinding', () => {
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const binding = new RepeatBinding(props, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.hydrate(hydrationTree, context);
-      binding.commit(context);
+      binding.hydrate(hydrationTree, runtime);
+      binding.commit(runtime);
 
       expect(hydrationRoot.innerHTML).toBe(
         source.map((item) => item + createComment()).join('') + createComment(),
@@ -161,10 +161,10 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const context = new UpdateEngine(new MockRenderHost());
+          const runtime = new Runtime(new MockRenderHost());
 
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             combinations1.map((item) => item + createComment()).join('') +
@@ -173,8 +173,8 @@ describe('RepeatBinding', () => {
           expect(part.childNode?.nodeValue).toBe(combinations1[0]);
 
           binding.bind(props2);
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             combinations2.map((item) => item + createComment()).join('') +
@@ -208,10 +208,10 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const context = new UpdateEngine(new MockRenderHost());
+          const runtime = new Runtime(new MockRenderHost());
 
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             permutation1.map((item) => item + createComment()).join('') +
@@ -220,8 +220,8 @@ describe('RepeatBinding', () => {
           expect(part.childNode?.nodeValue).toBe(permutation1[0]);
 
           binding.bind(props2);
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             permutation2.map((item) => item + createComment()).join('') +
@@ -230,8 +230,8 @@ describe('RepeatBinding', () => {
           expect(part.childNode?.nodeValue).toBe(permutation2[0]);
 
           binding.bind(props1);
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             permutation1.map((item) => item + createComment()).join('') +
@@ -264,10 +264,10 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const context = new UpdateEngine(new MockRenderHost());
+          const runtime = new Runtime(new MockRenderHost());
 
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             permutation1.map((item) => item + createComment()).join('') +
@@ -276,8 +276,8 @@ describe('RepeatBinding', () => {
           expect(part.childNode?.nodeValue).toBe(permutation1[0]);
 
           binding.bind(props2);
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             permutation2.map((item) => item + createComment()).join('') +
@@ -286,8 +286,8 @@ describe('RepeatBinding', () => {
           expect(part.childNode?.nodeValue).toBe(permutation2[0]);
 
           binding.bind(props1);
-          binding.connect(context);
-          binding.commit(context);
+          binding.connect(runtime);
+          binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
             permutation1.map((item) => item + createComment()).join('') +
@@ -322,10 +322,10 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
         source1.map((item) => createComment(item)).join('') + createComment(),
@@ -333,8 +333,8 @@ describe('RepeatBinding', () => {
       expect(part.childNode?.nodeValue).toBe(source1[0]);
 
       binding.bind(props2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
         source2.map((item) => createComment(item)).join('') + createComment(),
@@ -342,8 +342,8 @@ describe('RepeatBinding', () => {
       expect(part.childNode?.nodeValue).toBe(source2[0]);
 
       binding.bind(props1);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
         source1.map((item) => createComment(item)).join('') + createComment(),
@@ -365,22 +365,22 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
         source.map((item) => createComment(item)).join('') + createComment(),
       );
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(container.innerHTML).toBe(createComment());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
         source.map((item) => createComment(item)).join('') + createComment(),

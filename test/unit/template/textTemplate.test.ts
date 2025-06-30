@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
+import { Runtime } from '@/runtime.js';
 import { TextTemplate } from '@/template/textTemplate.js';
-import { UpdateEngine } from '@/updateEngine.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
 
@@ -26,12 +26,12 @@ describe('TextTemplate', () => {
       } as const;
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
 
       expect(childNodes).toStrictEqual([
@@ -62,10 +62,10 @@ describe('TextTemplate', () => {
       } as const;
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() => {
-        template.hydrate(binds, part, hydrationTree, context);
+        template.hydrate(binds, part, hydrationTree, runtime);
       }).toThrow(HydrationError);
     });
   });
@@ -79,8 +79,8 @@ describe('TextTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const { childNodes, slots } = template.render(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);
       expect(slots).toStrictEqual([
@@ -108,8 +108,8 @@ describe('TextTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = template.resolveBinding(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = template.resolveBinding(binds, part, runtime);
 
       expect(binding.directive).toBe(template);
       expect(binding.value).toBe(binds);
@@ -123,9 +123,9 @@ describe('TextTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      expect(() => template.resolveBinding(binds, part, context)).toThrow(
+      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
         'TextTemplate must be used in a child node part,',
       );
     });

@@ -6,7 +6,7 @@ import {
   ClassListPrimitive,
   type ClassName,
 } from '@/primitive/classList.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
 
@@ -65,11 +65,11 @@ describe('ClassListPrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         } as const;
-        const context = new UpdateEngine(new MockRenderHost());
+        const runtime = new Runtime(new MockRenderHost());
         const binding = ClassListPrimitive.resolveBinding(
           classNames,
           part,
-          context,
+          runtime,
         );
 
         expect(binding.directive).toBe(ClassListPrimitive);
@@ -85,10 +85,10 @@ describe('ClassListPrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
-        ClassListPrimitive.resolveBinding(classNames, part, context),
+        ClassListPrimitive.resolveBinding(classNames, part, runtime),
       ).toThrow(
         'ClassListPrimitive must be used in a ":classlist" attribute part,',
       );
@@ -119,10 +119,10 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       } as const;
       const binding = new ClassListBinding(classNames1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind([...classNames1])).toBe(false);
       expect(binding.shouldBind(classNames2)).toBe(true);
@@ -144,22 +144,22 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       } as const;
       const binding = new ClassListBinding(classNames1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('foo bar qux corge');
 
       binding.bind(classNames2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('baz quux');
 
       binding.bind(classNames1);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('foo bar qux corge');
     });
@@ -173,22 +173,22 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       } as const;
       const binding = new ClassListBinding(classNames1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('foo');
 
       binding.bind(classNames2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('bar foo');
 
       binding.bind(classNames1);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('foo');
     });
@@ -201,10 +201,10 @@ describe('ClassListBinding', () => {
         name: 'class',
       } as const;
       const binding = new ClassListBinding(classNames, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('baz foo bar');
     });
@@ -218,16 +218,16 @@ describe('ClassListBinding', () => {
         name: 'class',
       } as const;
       const binding = new ClassListBinding(classNames1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('foo bar baz');
 
       binding.bind(classNames2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('baz');
     });
@@ -242,15 +242,15 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       } as const;
       const binding = new ClassListBinding(classNames, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('foo bar');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(part.node.getAttribute('class')).toBe('');
     });

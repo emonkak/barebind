@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('PropertyPrimitive', () => {
@@ -21,8 +21,8 @@ describe('PropertyPrimitive', () => {
         name: 'innerHTML',
         defaultValue: '',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = PropertyPrimitive.resolveBinding(value, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.directive).toBe(PropertyPrimitive);
       expect(binding.value).toBe(value);
@@ -35,10 +35,10 @@ describe('PropertyPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
-        PropertyPrimitive.resolveBinding(value, part, context),
+        PropertyPrimitive.resolveBinding(value, part, runtime),
       ).toThrow('PropertyPrimitive must be used in a property part,');
     });
   });
@@ -69,10 +69,10 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       } as const;
       const binding = new PropertyBinding(value1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(value1)).toBe(false);
       expect(binding.shouldBind(value2)).toBe(true);
@@ -90,16 +90,16 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       } as const;
       const binding = new PropertyBinding(value1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.innerHTML).toBe(value1);
 
       binding.bind(value2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.innerHTML).toBe(value2);
     });
@@ -115,13 +115,13 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       } as const;
       const binding = new PropertyBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(part.node.innerHTML).toBe('');
     });
@@ -135,12 +135,12 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       } as const;
       const binding = new PropertyBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const setInnerHTMLSpy = vi.spyOn(part.node, 'innerHTML', 'set');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(setInnerHTMLSpy).not.toHaveBeenCalled();
     });

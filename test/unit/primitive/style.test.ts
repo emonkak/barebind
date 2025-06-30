@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
 
@@ -56,8 +56,8 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         } as const;
-        const context = new UpdateEngine(new MockRenderHost());
-        const binding = StylePrimitive.resolveBinding(style, part, context);
+        const runtime = new Runtime(new MockRenderHost());
+        const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
         expect(binding.directive).toBe(StylePrimitive);
         expect(binding.value).toBe(style);
@@ -72,9 +72,9 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: 'style',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      expect(() => StylePrimitive.resolveBinding(style, part, context)).toThrow(
+      expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
         'StylePrimitive must be used in a ":style" attribute part,',
       );
     });
@@ -104,10 +104,10 @@ describe('StyleBinding', () => {
         name: ':style',
       } as const;
       const binding = new StyleBinding(style1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind({ ...style1 })).toBe(false);
       expect(binding.shouldBind(style2)).toBe(true);
@@ -133,18 +133,18 @@ describe('StyleBinding', () => {
         name: ':style',
       } as const;
       const binding = new StyleBinding(style1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.style.cssText).toBe(
         '--my-css-variable: 1; color: red; background-color: blue; filter: grayscale(100%);',
       );
 
       binding.bind(style2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.style.cssText).toBe('--my-css-variable: 2;');
     });
@@ -159,10 +159,10 @@ describe('StyleBinding', () => {
         name: ':style',
       } as const;
       const binding = new StyleBinding(style, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.style.cssText).toBe(
         'background-color: blue; color: red;',
@@ -180,16 +180,16 @@ describe('StyleBinding', () => {
         name: ':style',
       } as const;
       const binding = new StyleBinding(style1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.style.cssText).toBe('background-color: red;');
 
       binding.bind(style2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.style.cssText).toBe('');
     });
@@ -209,17 +209,17 @@ describe('StyleBinding', () => {
         name: ':classlist',
       } as const;
       const binding = new StyleBinding(style, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.style.cssText).toBe(
         'color: red; background-color: blue;',
       );
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(part.node.style.cssText).toBe('');
     });

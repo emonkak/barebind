@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('LivePrimitive', () => {
@@ -21,8 +21,8 @@ describe('LivePrimitive', () => {
         name: 'value',
         defaultValue: '',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = LivePrimitive.resolveBinding(value, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.directive).toBe(LivePrimitive);
       expect(binding.value).toBe(value);
@@ -35,9 +35,9 @@ describe('LivePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('textarea'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      expect(() => LivePrimitive.resolveBinding(value, part, context)).toThrow(
+      expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
         'LivePrimitive must be used in a live part,',
       );
     });
@@ -70,18 +70,18 @@ describe('LiveBinding', () => {
         defaultValue: '',
       } as const;
       const binding = new LiveBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(setValueSpy).toHaveBeenCalledOnce();
       expect(setValueSpy).toHaveBeenCalledWith(value);
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(setValueSpy).toHaveBeenCalledOnce();
       expect(setValueSpy).toHaveBeenCalledWith(value);
@@ -98,13 +98,13 @@ describe('LiveBinding', () => {
         defaultValue: '',
       } as const;
       const binding = new LiveBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(part.node.value).toBe('');
     });

@@ -1,31 +1,30 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ALL_LANES } from '@/hook.js';
-import { RenderEngine } from '@/renderEngine.js';
-import { BrowserRenderHost } from '@/renderHost/browser.js';
+import { RenderSession } from '@/renderSession.js';
 import { createHashClickHandler, HashLocation } from '@/router/hashLocation.js';
 import { CurrentLocation } from '@/router/location.js';
 import { RelativeURL } from '@/router/url.js';
-import { UpdateEngine } from '@/updateEngine.js';
-import { MockCoroutine } from '../../mocks.js';
+import { Runtime } from '@/runtime.js';
+import { MockCoroutine, MockRenderHost } from '../../mocks.js';
 import { cleanupHooks, createElement } from '../../testUtils.js';
 
 describe('HashLocation', () => {
-  const originalState = history.state;
   const originalUrl = location.href;
-  let context!: RenderEngine;
+  const originalState = history.state;
+  let session!: RenderSession;
 
   beforeEach(() => {
-    context = new RenderEngine(
+    session = new RenderSession(
       [],
       ALL_LANES,
       new MockCoroutine(),
-      new UpdateEngine(new BrowserRenderHost()),
+      new Runtime(new MockRenderHost()),
     );
   });
 
   afterEach(() => {
-    cleanupHooks(context['_hooks']);
+    cleanupHooks(session['_hooks']);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -35,7 +34,7 @@ describe('HashLocation', () => {
 
     history.replaceState(state, '', '#/articles/foo%2Fbar');
 
-    const [locationState, { getCurrentURL }] = context.use(HashLocation);
+    const [locationState, { getCurrentURL }] = session.use(HashLocation);
 
     expect(getCurrentURL().toString()).toBe('/articles/foo%2Fbar');
     expect(location.hash).toBe('#/articles/foo%2Fbar');
@@ -46,20 +45,20 @@ describe('HashLocation', () => {
   });
 
   it('registers the current location', () => {
-    const locationState = context.use(HashLocation);
+    const locationState = session.use(HashLocation);
 
-    expect(context.use(CurrentLocation)).toBe(locationState);
+    expect(session.use(CurrentLocation)).toBe(locationState);
   });
 
   it('adds event listeners', () => {
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    context.use(HashLocation);
-    context.finalize();
-    context.flush();
+    session.use(HashLocation);
+    session.finalize();
+    session.flush();
 
-    cleanupHooks(context['_hooks']);
+    cleanupHooks(session['_hooks']);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -85,14 +84,14 @@ describe('HashLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationState1, locationNavigator1] = context.use(HashLocation);
+    const [locationState1, locationNavigator1] = session.use(HashLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'));
 
-    const [locationState2] = context.use(HashLocation);
+    const [locationState2] = session.use(HashLocation);
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -108,17 +107,17 @@ describe('HashLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationState1, locationNavigator1] = context.use(HashLocation);
+    const [locationState1, locationNavigator1] = session.use(HashLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'), {
       replace: true,
       state,
     });
 
-    const [locationState2] = context.use(HashLocation);
+    const [locationState2] = session.use(HashLocation);
 
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -132,16 +131,16 @@ describe('HashLocation', () => {
     const element = createElement('a', { href: '#/articles/foo%2Fbar' });
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-    const [locationState1] = context.use(HashLocation);
+    const [locationState1] = session.use(HashLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
 
-    const [locationState2] = context.use(HashLocation);
+    const [locationState2] = session.use(HashLocation);
 
     expect(locationState2).not.toBe(locationState1);
     expect(locationState2.url.toString()).toBe('/articles/foo%2Fbar');
@@ -155,14 +154,14 @@ describe('HashLocation', () => {
       newURL: getURLWithoutHash(location) + '#/articles/foo%2Fbar',
     });
 
-    const [locationState1] = context.use(HashLocation);
+    const [locationState1] = session.use(HashLocation);
 
-    context.finalize();
-    context.flush();
+    session.finalize();
+    session.flush();
 
     dispatchEvent(event);
 
-    const [locationState2] = context.use(HashLocation);
+    const [locationState2] = session.use(HashLocation);
 
     expect(locationState2).not.toBe(locationState1);
     expect(locationState2.url.toString()).toBe('/articles/foo%2Fbar');

@@ -2,17 +2,17 @@ import { inspectValue } from './debug.js';
 import {
   $toDirectiveElement,
   type Component,
+  type ComponentResult,
   type Coroutine,
   type Directive,
   type DirectiveElement,
   type Effect,
   type EffectContext,
   isBindableObject,
-  type RenderResult,
   type Slot,
   type Template,
-  type TemplateBlock,
   type TemplateMode,
+  type TemplateResult,
   type UpdateContext,
 } from './directive.js';
 import type { Hook, Lanes, UpdateTask } from './hook.js';
@@ -26,8 +26,8 @@ import {
 import type { HydrationTree } from './hydration.js';
 import { LinkedList } from './linkedList.js';
 import { type ChildNodePart, type Part, PartType } from './part.js';
-import { RenderEngine } from './renderEngine.js';
 import type { RenderHost } from './renderHost.js';
+import { RenderSession } from './renderSession.js';
 import { Scope } from './scope.js';
 import {
   type Literal,
@@ -55,7 +55,7 @@ interface CoroutineState {
   pendingTasks: LinkedList<UpdateTask>;
 }
 
-export class UpdateEngine implements EffectContext, UpdateContext {
+export class Runtime implements EffectContext, UpdateContext {
   private readonly _renderHost: RenderHost;
 
   private readonly _renderFrame: RenderFrame;
@@ -90,20 +90,22 @@ export class UpdateEngine implements EffectContext, UpdateContext {
     this._renderFrame.pendingCoroutines.push(coroutine);
   }
 
-  enqueueLayoutEffect(effect: Effect): void {
-    this._renderFrame.layoutEffects.push(effect);
+  enqueueEffect(effect: Effect, phase: CommitPhase): void {
+    switch (phase) {
+      case CommitPhase.Mutation:
+        this._renderFrame.mutationEffects.push(effect);
+        break;
+      case CommitPhase.Layout:
+        this._renderFrame.layoutEffects.push(effect);
+        break;
+      case CommitPhase.Passive:
+        this._renderFrame.passiveEffects.push(effect);
+        break;
+    }
   }
 
-  enqueueMutationEffect(effect: Effect): void {
-    this._renderFrame.mutationEffects.push(effect);
-  }
-
-  enqueuePassiveEffect(effect: Effect): void {
-    this._renderFrame.passiveEffects.push(effect);
-  }
-
-  enterRenderFrame(): UpdateEngine {
-    return new UpdateEngine(
+  enterRenderFrame(): Runtime {
+    return new Runtime(
       this._renderHost,
       createRenderFrame(),
       this._currentScope,
@@ -111,8 +113,8 @@ export class UpdateEngine implements EffectContext, UpdateContext {
     );
   }
 
-  enterScope(scope: Scope): UpdateEngine {
-    return new UpdateEngine(
+  enterScope(scope: Scope): Runtime {
+    return new Runtime(
       this._renderHost,
       this._renderFrame,
       scope,
@@ -219,23 +221,8 @@ export class UpdateEngine implements EffectContext, UpdateContext {
     binds: TBinds,
     part: ChildNodePart,
     hydrationTree: HydrationTree,
-  ): TemplateBlock {
+  ): TemplateResult {
     return template.hydrate(binds, part, hydrationTree, this);
-  }
-
-  isPending(): boolean {
-    const {
-      pendingCoroutines,
-      mutationEffects,
-      layoutEffects,
-      passiveEffects,
-    } = this._renderFrame;
-    return (
-      pendingCoroutines.length > 0 ||
-      mutationEffects.length > 0 ||
-      layoutEffects.length > 0 ||
-      passiveEffects.length > 0
-    );
   }
 
   nextIdentifier(): string {
@@ -250,22 +237,22 @@ export class UpdateEngine implements EffectContext, UpdateContext {
     hooks: Hook[],
     lanes: Lanes,
     coroutine: Coroutine,
-  ): RenderResult<TResult> {
-    const context = new RenderEngine(hooks, lanes, coroutine, this);
-    const result = component.render(props, context);
-    const nextLanes = context.finalize();
-    return { result, lanes: nextLanes };
+  ): ComponentResult<TResult> {
+    const session = new RenderSession(hooks, lanes, coroutine, this);
+    const result = component.render(props, session);
+    const nextLanes = session.finalize();
+    return { value: result, lanes: nextLanes };
   }
 
   renderTemplate<TBinds extends readonly unknown[]>(
     template: Template<TBinds>,
     binds: TBinds,
     part: ChildNodePart,
-  ): TemplateBlock {
+  ): TemplateResult {
     return template.render(binds, part, this);
   }
 
-  resolveDirective<T>(value: T, part: Part): DirectiveElement<unknown> {
+  resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
     if (isBindableObject(value)) {
       return value[$toDirectiveElement](part, this);
     } else {
@@ -361,14 +348,20 @@ export class UpdateEngine implements EffectContext, UpdateContext {
     }
   }
 
-  async waitForUpdate(coroutine: Coroutine): Promise<void> {
+  async waitForUpdate(coroutine: Coroutine): Promise<boolean> {
     const { coroutineStates } = this._sharedState;
     const coroutineState = coroutineStates.get(coroutine);
     if (coroutineState !== undefined) {
-      await Promise.allSettled(
-        Array.from(coroutineState.pendingTasks, (task) => task.promise),
-      );
+      if (!coroutineState.pendingTasks.isEmpty()) {
+        const pendingTasks = Array.from(
+          coroutineState.pendingTasks,
+          (task) => task.promise,
+        );
+        await Promise.allSettled(pendingTasks);
+        return true;
+      }
     }
+    return false;
   }
 }
 

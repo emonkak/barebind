@@ -3,7 +3,7 @@ import type {
   DirectiveContext,
   Slot,
   Template,
-  TemplateBlock,
+  TemplateResult,
   TemplateMode,
   UpdateContext,
 } from '../directive.js';
@@ -137,7 +137,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     part: ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     const holes = this._holes;
 
     assertNumberOfBinds(holes.length, binds.length);
@@ -269,7 +269,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     binds: TBinds,
     part: ChildNodePart,
     context: UpdateContext,
-  ): TemplateBlock {
+  ): TemplateResult {
     const holes = this._holes;
 
     assertNumberOfBinds(holes.length, binds.length);

@@ -54,12 +54,12 @@ export class ServerRenderHost implements RenderHost {
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     if (binds.length === 0) {
-      // Assumption: strings.length === 1
+      // Assert: strings.length === 1
       if (strings[0]!.trim() === '') {
         return EmptyTemplate;
       }
     } else if (binds.length === 1) {
-      // Assumption: strings.length === 2
+      // Assert: strings.length === 2
       const precedingString = strings[0]!.trim();
       const followingString = strings[1]!.trim();
 
@@ -74,7 +74,7 @@ export class ServerRenderHost implements RenderHost {
       }
 
       if (!precedingString.includes('<') && !followingString.includes('<')) {
-        // Tags are nowhere, so it's plain text.
+        // Tags are nowhere, so it is a plain text.
         return new TextTemplate(precedingString, followingString);
       }
     }

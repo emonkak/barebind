@@ -10,8 +10,8 @@ import {
 import { ALL_LANES } from '@/hook.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
-import { RenderEngine } from '@/renderEngine.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { RenderSession } from '@/renderSession.js';
+import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockRenderHost } from '../../mocks.js';
 import { cleanupHooks, createElement } from '../../testUtils.js';
 
@@ -31,8 +31,8 @@ describe('SignalDirective', () => {
         precedingText: '',
         followingText: '',
       };
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = SignalDirective.resolveBinding(signal, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.directive).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
@@ -44,27 +44,27 @@ describe('SignalDirective', () => {
 describe('Signal', () => {
   describe('[$customHook]()', () => {
     it('subscribes the signal and return its value', () => {
-      const context = new RenderEngine(
+      const session = new RenderSession(
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new UpdateEngine(new MockRenderHost()),
+        new Runtime(new MockRenderHost()),
       );
       const signal = new Atom('foo');
-      const value = context.use(signal);
+      const value = session.use(signal);
 
-      const forceUpdateSpy = vi.spyOn(context, 'forceUpdate');
+      const forceUpdateSpy = vi.spyOn(session, 'forceUpdate');
 
       expect(value).toBe(signal.value);
       expect(forceUpdateSpy).not.toHaveBeenCalled();
 
-      context.finalize();
-      context.flush();
+      session.finalize();
+      session.flush();
       signal.value = 'bar';
 
       expect(forceUpdateSpy).toHaveBeenCalledOnce();
 
-      cleanupHooks(context['_hooks']);
+      cleanupHooks(session['_hooks']);
       signal.value = 'baz';
 
       expect(forceUpdateSpy).toHaveBeenCalledOnce();
@@ -428,10 +428,10 @@ describe('SiganlBinding', () => {
         followingText: '',
       } as const;
       const binding = new SignalBinding(signal1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(signal1)).toBe(false);
       expect(binding.shouldBind(signal2)).toBe(true);
@@ -450,15 +450,16 @@ describe('SiganlBinding', () => {
       const binding = new SignalBinding(signal, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.hydrate(hydrationTree, context);
-      binding.commit(context);
+      binding.hydrate(hydrationTree, runtime);
+      binding.commit(runtime);
 
       expect(hydrationRoot.innerHTML).toBe(signal.value);
 
       signal.value = 'bar';
-      await context.waitForUpdate(binding);
+
+      expect(await runtime.waitForUpdate(binding)).toBe(true);
 
       expect(hydrationRoot.innerHTML).toBe(signal.value);
     });
@@ -474,15 +475,16 @@ describe('SiganlBinding', () => {
         followingText: '',
       } as const;
       const binding = new SignalBinding(signal, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe(signal.value);
 
       signal.value = 'bar';
-      await context.waitForUpdate(binding);
+
+      expect(await runtime.waitForUpdate(binding)).toBe(true);
 
       expect(part.node.nodeValue).toBe(signal.value);
     });
@@ -497,20 +499,21 @@ describe('SiganlBinding', () => {
         followingText: '',
       } as const;
       const binding = new SignalBinding(signal1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       binding.bind(signal2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe(signal2.value);
 
       signal1.value = 'baz';
       signal2.value = 'qux';
-      await context.waitForUpdate(binding);
+
+      expect(await runtime.waitForUpdate(binding)).toBe(true);
 
       expect(part.node.nodeValue).toBe(signal2.value);
     });
@@ -526,20 +529,20 @@ describe('SiganlBinding', () => {
         followingText: '',
       } as const;
       const binding = new SignalBinding(signal, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
-      expect(context.isPending()).toBe(false);
+      expect(await runtime.waitForUpdate(binding)).toBe(false);
       expect(part.node.nodeValue).toBe('');
 
       signal.value = 'bar';
 
-      expect(context.isPending()).toBe(false);
+      expect(await runtime.waitForUpdate(binding)).toBe(false);
       expect(part.node.nodeValue).toBe('');
     });
   });

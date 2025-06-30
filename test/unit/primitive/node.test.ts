@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { NodeBinding, NodePrimitive } from '@/primitive/node.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('NodePrimitive', () => {
@@ -20,8 +20,8 @@ describe('NodePrimitive', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = NodePrimitive.resolveBinding(value, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = NodePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.directive).toBe(NodePrimitive);
       expect(binding.value).toBe(value);
@@ -34,9 +34,9 @@ describe('NodePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      expect(() => NodePrimitive.resolveBinding(value, part, context)).toThrow(
+      expect(() => NodePrimitive.resolveBinding(value, part, runtime)).toThrow(
         'NodePrimitive must be used in a child node,',
       );
     });
@@ -66,10 +66,10 @@ describe('NodeBinding', () => {
         childNode: null,
       } as const;
       const binding = new NodeBinding(value1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(value1)).toBe(false);
       expect(binding.shouldBind(value2)).toBe(true);
@@ -86,16 +86,16 @@ describe('NodeBinding', () => {
         childNode: null,
       } as const;
       const binding = new NodeBinding<string | null>(value1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe(value1);
 
       binding.bind(value2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -109,16 +109,16 @@ describe('NodeBinding', () => {
         childNode: null,
       } as const;
       const binding = new NodeBinding<number | null>(value1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe(value1.toString());
 
       binding.bind(value2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -133,15 +133,15 @@ describe('NodeBinding', () => {
         childNode: null,
       } as const;
       const binding = new NodeBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(part.node.nodeValue).toBe(value);
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(part.node.nodeValue).toBe('');
     });
@@ -154,12 +154,12 @@ describe('NodeBinding', () => {
         childNode: null,
       } as const;
       const binding = new NodeBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(setNodeValueSpy).not.toHaveBeenCalled();
     });

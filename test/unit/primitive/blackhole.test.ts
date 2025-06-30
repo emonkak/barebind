@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('BlackholePrimitive', () => {
@@ -19,8 +19,8 @@ describe('BlackholePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = BlackholePrimitive.resolveBinding(value, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.directive).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);
@@ -53,10 +53,10 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new BlackholeBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
     });
   });
 
@@ -68,10 +68,10 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new BlackholeBinding(value, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
     });
   });
 });

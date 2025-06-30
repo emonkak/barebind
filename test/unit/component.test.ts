@@ -9,9 +9,9 @@ import type { RenderContext } from '@/directive.js';
 import { ALL_LANES, CommitPhase } from '@/hook.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
-import { RenderEngine } from '@/renderEngine.js';
-import { UpdateEngine } from '@/updateEngine.js';
-import { MockCoroutine, MockRenderHost } from '../mocks.js';
+import { RenderSession } from '@/renderSession.js';
+import { Runtime } from '@/runtime.js';
+import { MockCoroutine, MockRenderHost, MockSlot } from '../mocks.js';
 import { createElement } from '../testUtils.js';
 
 describe('component()', () => {
@@ -50,17 +50,17 @@ describe('ComponentDirective', () => {
         greet: 'Hello',
         name: 'foo',
       };
-      const context = new RenderEngine(
+      const session = new RenderSession(
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new UpdateEngine(new MockRenderHost()),
+        new Runtime(new MockRenderHost()),
       );
 
-      component.render(props, context);
+      component.render(props, session);
 
       expect(componentFn).toHaveBeenCalledOnce();
-      expect(componentFn).toHaveBeenCalledWith(props, context);
+      expect(componentFn).toHaveBeenCalledWith(props, session);
     });
   });
 
@@ -101,8 +101,8 @@ describe('ComponentDirective', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = component.resolveBinding(props, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = component.resolveBinding(props, part, runtime);
 
       expect(binding.directive).toBe(component);
       expect(binding.value).toBe(props);
@@ -136,11 +136,11 @@ describe('ComponentBinding', () => {
         childNode: null,
       } as const;
       const binding = new ComponentBinding(component, props1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      context.enqueueMutationEffect(binding);
-      context.flushSync();
+      binding.connect(runtime);
+      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.flushSync();
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -162,12 +162,13 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.hydrate(hydrationTree, context);
-      context.enqueueMutationEffect(binding);
-      context.flushSync();
+      binding.hydrate(hydrationTree, runtime);
+      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.flushSync();
 
+      expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
         expect.objectContaining({
           isConnected: true,
@@ -177,9 +178,10 @@ describe('ComponentBinding', () => {
       expect(binding['_slot']?.part).toBe(part);
       expect(hydrationRoot.innerHTML).toBe('<!--Hello, foo!-->');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
+      expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
         expect.objectContaining({
           isConnected: false,
@@ -208,12 +210,13 @@ describe('ComponentBinding', () => {
         childNode: null,
       } as const;
       const binding = new ComponentBinding(component, props1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      context.enqueueMutationEffect(binding);
-      context.flushSync();
+      binding.connect(runtime);
+      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.flushSync();
 
+      expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
         expect.objectContaining({
           isConnected: true,
@@ -224,9 +227,10 @@ describe('ComponentBinding', () => {
       expect(part.node.nodeValue).toBe('Hello, foo!');
 
       binding.bind(props2);
-      binding.connect(context);
-      context.flushSync();
+      binding.connect(runtime);
+      runtime.flushSync();
 
+      expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
         expect.objectContaining({
           isConnected: true,
@@ -251,12 +255,13 @@ describe('ComponentBinding', () => {
         childNode: null,
       } as const;
       const binding = new ComponentBinding(component, props, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      context.enqueueMutationEffect(binding);
-      context.flushSync();
+      binding.connect(runtime);
+      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.flushSync();
 
+      expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
         expect.objectContaining({
           isConnected: true,
@@ -266,10 +271,11 @@ describe('ComponentBinding', () => {
       expect(binding['_slot']?.part).toBe(part);
       expect(part.node.nodeValue).toBe('3 effects are enqueued');
 
-      binding.disconnect(context);
-      binding.rollback(context);
-      context.flushSync();
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
+      runtime.flushSync();
 
+      expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
         expect.objectContaining({
           isConnected: false,
@@ -304,7 +310,7 @@ interface MemoProps {
   value: unknown;
 }
 
-function Memo({ value }: MemoProps, _context: RenderContext): unknown {
+function Memo({ value }: MemoProps): unknown {
   return value;
 }
 

@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
+import { Runtime } from '@/runtime.js';
 import { EmptyTemplate } from '@/template/emptyTemplate.js';
-import { UpdateEngine } from '@/updateEngine.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('EmptyTemplate', () => {
@@ -22,12 +22,12 @@ describe('EmptyTemplate', () => {
         childNode: null,
       } as const;
       const hydrationTree = new HydrationTree(document.createElement('div'));
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = EmptyTemplate.hydrate(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
 
       expect(childNodes).toStrictEqual([]);
@@ -43,8 +43,8 @@ describe('EmptyTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const { childNodes, slots } = EmptyTemplate.render(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = EmptyTemplate.render(binds, part, runtime);
 
       expect(childNodes).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
@@ -59,8 +59,8 @@ describe('EmptyTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = EmptyTemplate.resolveBinding(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = EmptyTemplate.resolveBinding(binds, part, runtime);
 
       expect(binding.directive).toBe(EmptyTemplate);
       expect(binding.value).toBe(binds);
@@ -73,9 +73,9 @@ describe('EmptyTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      expect(() => EmptyTemplate.resolveBinding(binds, part, context)).toThrow(
+      expect(() => EmptyTemplate.resolveBinding(binds, part, runtime)).toThrow(
         'EmptyTemplate must be used in a child node part,',
       );
     });

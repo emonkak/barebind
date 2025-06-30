@@ -14,7 +14,6 @@ import {
 } from './directive.js';
 import {
   ALL_LANES,
-  CommitPhase,
   type EffectHook,
   type Hook,
   HookType,
@@ -129,7 +128,7 @@ export class ComponentBinding<TProps, TResult>
   resume(lanes: Lanes, context: UpdateContext): Lanes {
     const scope = new Scope(this._parentScope);
     const subcontext = context.enterScope(scope);
-    const { result, lanes: nextLanes } = subcontext.renderComponent(
+    const { value, lanes: nextLanes } = subcontext.renderComponent(
       this._component,
       this._props,
       this._hooks,
@@ -137,9 +136,9 @@ export class ComponentBinding<TProps, TResult>
       this,
     );
     if (this._slot !== null) {
-      this._slot.reconcile(result, subcontext);
+      this._slot.reconcile(value, subcontext);
     } else {
-      this._slot = subcontext.resolveSlot(result, this._part);
+      this._slot = subcontext.resolveSlot(value, this._part);
       this._slot.connect(subcontext);
     }
     return nextLanes;
@@ -149,7 +148,7 @@ export class ComponentBinding<TProps, TResult>
     const parentScope = context.getCurrentScope();
     const scope = new Scope(parentScope);
     const subcontext = context.enterScope(scope);
-    const { result } = subcontext.renderComponent(
+    const { value } = subcontext.renderComponent(
       this._component,
       this._props,
       this._hooks,
@@ -157,7 +156,7 @@ export class ComponentBinding<TProps, TResult>
       this,
     );
     this._parentScope = parentScope;
-    this._slot ??= subcontext.resolveSlot(result, this._part);
+    this._slot ??= subcontext.resolveSlot(value, this._part);
     this._slot.hydrate(hydrationTree, subcontext);
   }
 
@@ -171,17 +170,7 @@ export class ComponentBinding<TProps, TResult>
     for (let i = this._hooks.length - 1; i >= 0; i--) {
       const hook = this._hooks[i]!;
       if (hook.type === HookType.Effect) {
-        switch (hook.phase) {
-          case CommitPhase.Mutation:
-            context.enqueueMutationEffect(new CleanEffectHook(hook));
-            break;
-          case CommitPhase.Layout:
-            context.enqueueLayoutEffect(new CleanEffectHook(hook));
-            break;
-          case CommitPhase.Passive:
-            context.enqueuePassiveEffect(new CleanEffectHook(hook));
-            break;
-        }
+        context.enqueueEffect(new CleanEffectHook(hook), hook.phase);
       }
     }
 

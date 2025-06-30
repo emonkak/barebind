@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
-import { UpdateEngine } from '@/updateEngine.js';
-import { MockRenderHost } from '../../mocks.js';
+import { Runtime } from '@/runtime.js';
+import { MockRenderHost, MockSlot } from '../../mocks.js';
 
 describe('SpreadPrimitive', () => {
   describe('name', () => {
@@ -50,8 +50,8 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = SpreadPrimitive.resolveBinding(props, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
       expect(binding.directive).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
@@ -66,10 +66,10 @@ describe('SpreadPrimitive', () => {
         precedingText: '',
         followingText: '',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
-        SpreadPrimitive.resolveBinding(props, part, context),
+        SpreadPrimitive.resolveBinding(props, part, runtime),
       ).toThrow('SpreadPrimitive must be used in an element part,');
     });
   });
@@ -96,10 +96,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new SpreadBinding(props1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -124,13 +124,18 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       } as const;
       const binding = new SpreadBinding(props1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       const initialSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
+      expect(initialSlots).toStrictEqual(
+        Object.fromEntries(
+          Object.entries(props1).map(([key]) => [key, expect.any(MockSlot)]),
+        ),
+      );
       expect(initialSlots).toStrictEqual({
         id: expect.objectContaining({
           isConnected: true,
@@ -187,8 +192,10 @@ describe('SpreadBinding', () => {
       });
 
       binding.bind(props2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      const nextSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
       expect(initialSlots).toStrictEqual({
         id: expect.objectContaining({
@@ -218,20 +225,25 @@ describe('SpreadBinding', () => {
           isCommitted: false,
         }),
       });
-      expect(Object.fromEntries(binding['_memoizedSlots'] ?? [])).toStrictEqual(
-        {
-          class: expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
-            part: {
-              type: PartType.Attribute,
-              name: 'class',
-              node: part.node,
-            },
-            value: props1.class,
-          }),
-        },
+      expect(nextSlots).toStrictEqual(
+        Object.fromEntries(
+          Object.entries(props2)
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key]) => [key, expect.any(MockSlot)]),
+        ),
       );
+      expect(nextSlots).toStrictEqual({
+        class: expect.objectContaining({
+          isConnected: true,
+          isCommitted: true,
+          part: {
+            type: PartType.Attribute,
+            name: 'class',
+            node: part.node,
+          },
+          value: props1.class,
+        }),
+      });
     });
   });
 
@@ -243,10 +255,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       } as const;
       const binding = new SpreadBinding(props, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(binding['_memoizedSlots']).toBe(null);
     });
@@ -264,13 +276,18 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       } as const;
       const binding = new SpreadBinding(props, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       const initialSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
+      expect(initialSlots).toStrictEqual(
+        Object.fromEntries(
+          Object.entries(props).map(([key]) => [key, expect.any(MockSlot)]),
+        ),
+      );
       expect(initialSlots).toStrictEqual({
         id: expect.objectContaining({
           isConnected: true,
@@ -326,8 +343,8 @@ describe('SpreadBinding', () => {
         }),
       });
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(initialSlots).toStrictEqual({
         id: expect.objectContaining({

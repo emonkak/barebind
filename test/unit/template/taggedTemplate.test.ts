@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
+import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/taggedTemplate.js';
-import { UpdateEngine } from '@/updateEngine.js';
-import { MockRenderHost } from '../../mocks.js';
+import { MockRenderHost, MockSlot } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
@@ -440,13 +440,13 @@ describe('TaggedTemplate', () => {
       `,
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
 
       expect(childNodes.map(toHTML)).toStrictEqual([
@@ -456,6 +456,7 @@ describe('TaggedTemplate', () => {
           <input type="text" class="qux"><span>quux</span>
         </div>`.trim(),
       ]);
+      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -545,12 +546,12 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, 'foo'),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
 
       expect(childNodes.map(toHTML)).toStrictEqual(['<div>foo</div>']);
@@ -570,12 +571,12 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, 'Hello, World!'),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
 
       expect(childNodes.map(toHTML)).toStrictEqual([
@@ -586,6 +587,7 @@ describe('TaggedTemplate', () => {
           Array.from(childNode.childNodes, toHTML),
         ),
       ).toStrictEqual(['', 'Hello, World!']);
+      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -621,12 +623,12 @@ describe('TaggedTemplate', () => {
       };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
         hydrationTree,
-        context,
+        runtime,
       );
 
       expect(childNodes.map(toHTML)).toStrictEqual([]);
@@ -642,10 +644,10 @@ describe('TaggedTemplate', () => {
       };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() => {
-        template.hydrate([] as any, part, hydrationTree, context);
+        template.hydrate([] as any, part, hydrationTree, runtime);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
 
@@ -672,10 +674,10 @@ describe('TaggedTemplate', () => {
           childNode: null,
         };
         const hydrationTree = new HydrationTree(hydrationRoot);
-        const context = new UpdateEngine(new MockRenderHost());
+        const runtime = new Runtime(new MockRenderHost());
 
         expect(() => {
-          template.hydrate([], part, hydrationTree, context);
+          template.hydrate([], part, hydrationTree, runtime);
         }).toThrow(HydrationError);
       },
     );
@@ -694,8 +696,8 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       };
-      const context = new UpdateEngine(new MockRenderHost());
-      const { childNodes, slots } = template.render(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(toHTML)).toStrictEqual([
         `
@@ -704,6 +706,7 @@ describe('TaggedTemplate', () => {
           <input type="text"><span></span>
         </div>`.trim(),
       ]);
+      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -787,8 +790,8 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       };
-      const context = new UpdateEngine(new MockRenderHost());
-      const { childNodes, slots } = template.render(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(toHTML)).toStrictEqual(['<div>foo</div>']);
       expect(slots).toStrictEqual([]);
@@ -801,10 +804,11 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       };
-      const context = new UpdateEngine(new MockRenderHost());
-      const { childNodes, slots } = template.render(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(toHTML)).toStrictEqual(['']);
+      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
@@ -827,8 +831,8 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       };
-      const context = new UpdateEngine(new MockRenderHost());
-      const { childNodes, slots } = template.render(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(toHTML)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
@@ -841,10 +845,10 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       };
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() => {
-        template.render([] as any, part, context);
+        template.render([] as any, part, runtime);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
 
@@ -863,10 +867,10 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       };
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() => {
-        template.render(['foo'], part, context);
+        template.render(['foo'], part, runtime);
       }).toThrow('There is no node that the hole indicates.');
     });
   });
@@ -879,8 +883,8 @@ describe('TaggedTemplate', () => {
         node: document.createComment(''),
         childNode: null,
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = template.resolveBinding(binds, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = template.resolveBinding(binds, part, runtime);
 
       expect(binding.directive).toBe(template);
       expect(binding.value).toBe(binds);
@@ -893,9 +897,9 @@ describe('TaggedTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      expect(() => template.resolveBinding(binds, part, context)).toThrow(
+      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
         'TaggedTemplate must be used in a child node part,',
       );
     });

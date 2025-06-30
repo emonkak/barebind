@@ -1,21 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { ALL_LANES } from '@/hook.js';
-import { RenderEngine } from '@/renderEngine.js';
-import { BrowserRenderHost } from '@/renderHost/browser.js';
+import { RenderSession } from '@/renderSession.js';
 import { CurrentLocation } from '@/router/location.js';
-import { UpdateEngine } from '@/updateEngine.js';
-import { MockCoroutine } from '../../mocks.js';
+import { Runtime } from '@/runtime.js';
+import { MockCoroutine, MockRenderHost } from '../../mocks.js';
 
 describe('CurrentLocation', () => {
   it('should throw an error if the current location is not registered', () => {
-    const context = new RenderEngine(
+    const session = new RenderSession(
       [],
       ALL_LANES,
       new MockCoroutine(),
-      new UpdateEngine(new BrowserRenderHost()),
+      new Runtime(new MockRenderHost()),
     );
 
-    expect(() => context.use(CurrentLocation)).toThrow(
+    expect(() => session.use(CurrentLocation)).toThrow(
       'A context value for the current location does not exist,',
     );
   });

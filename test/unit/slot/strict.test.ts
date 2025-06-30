@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { createDirectiveObject } from '@/directive.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
+import { Runtime } from '@/runtime.js';
 import { StrictSlot, strict } from '@/slot/strict.js';
-import { UpdateEngine } from '@/updateEngine.js';
 import {
   MockBinding,
   MockDirective,
@@ -50,24 +50,24 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(context, 'debugValue');
+      const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.reconcile(value2, context);
-      slot.commit(context);
+      slot.reconcile(value2, runtime);
+      slot.commit(runtime);
 
       expect(shouldBindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledWith(value2);
       expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(context);
+      expect(connectSpy).toHaveBeenCalledWith(runtime);
       expect(commitSpy).toHaveBeenCalledOnce();
-      expect(commitSpy).toHaveBeenCalledWith(context);
+      expect(commitSpy).toHaveBeenCalledWith(runtime);
       expect(debugValueSpy).toHaveBeenCalledOnce();
       expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value2, part);
       expect(part.node.data).toBe(value2);
@@ -83,7 +83,7 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -91,10 +91,10 @@ describe('StrictSlot', () => {
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(context, 'debugValue');
+      const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.reconcile(value2, context);
-      slot.commit(context);
+      slot.reconcile(value2, runtime);
+      slot.commit(runtime);
 
       expect(shouldBindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).not.toHaveBeenCalled();
@@ -114,10 +114,10 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() => {
-        slot.reconcile(value2, context);
+        slot.reconcile(value2, runtime);
       }).toThrow(
         'The directive must be MockPrimitive in this slot, but got MockDirective.',
       );
@@ -134,24 +134,24 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
       const hydrationTree = new HydrationTree(document.createElement('div'));
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(context, 'debugValue');
+      const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.hydrate(hydrationTree, context);
-      slot.commit(context);
+      slot.hydrate(hydrationTree, runtime);
+      slot.commit(runtime);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(hydrationTree, context);
+      expect(hydrateSpy).toHaveBeenCalledWith(hydrationTree, runtime);
       expect(commitSpy).toHaveBeenCalledOnce();
-      expect(commitSpy).toHaveBeenCalledWith(context);
+      expect(commitSpy).toHaveBeenCalledWith(runtime);
       expect(debugValueSpy).toHaveBeenCalledOnce();
       expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
 
-      slot.commit(context);
+      slot.commit(runtime);
 
       expect(commitSpy).toHaveBeenCalledOnce();
       expect(debugValueSpy).toHaveBeenCalledOnce();
@@ -169,23 +169,23 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(context, 'debugValue');
+      const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.connect(context);
-      slot.commit(context);
+      slot.connect(runtime);
+      slot.commit(runtime);
 
       expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(context);
+      expect(connectSpy).toHaveBeenCalledWith(runtime);
       expect(commitSpy).toHaveBeenCalledOnce();
-      expect(commitSpy).toHaveBeenCalledWith(context);
+      expect(commitSpy).toHaveBeenCalledWith(runtime);
       expect(debugValueSpy).toHaveBeenCalledOnce();
       expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
 
-      slot.commit(context);
+      slot.commit(runtime);
 
       expect(commitSpy).toHaveBeenCalledOnce();
       expect(part.node.data).toBe(value);
@@ -202,23 +202,23 @@ describe('StrictSlot', () => {
       } as const;
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
-      const undebugValueSpy = vi.spyOn(context, 'undebugValue');
+      const undebugValueSpy = vi.spyOn(runtime, 'undebugValue');
 
-      slot.disconnect(context);
-      slot.rollback(context);
+      slot.disconnect(runtime);
+      slot.rollback(runtime);
 
       expect(disconnectSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledWith(context);
+      expect(disconnectSpy).toHaveBeenCalledWith(runtime);
       expect(rollbackSpy).toHaveBeenCalledOnce();
-      expect(rollbackSpy).toHaveBeenCalledWith(context);
+      expect(rollbackSpy).toHaveBeenCalledWith(runtime);
       expect(undebugValueSpy).toHaveBeenCalledOnce();
       expect(undebugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
 
-      slot.rollback(context);
+      slot.rollback(runtime);
 
       expect(rollbackSpy).toHaveBeenCalledOnce();
       expect(part.node.data).toBe('');

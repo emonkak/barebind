@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/part.js';
 import { EventBinding, EventPrimitive } from '@/primitive/event.js';
-import { UpdateEngine } from '@/updateEngine.js';
+import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('EventPrimitive', () => {
@@ -55,8 +55,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
-      const binding = EventPrimitive.resolveBinding(listener, part, context);
+      const runtime = new Runtime(new MockRenderHost());
+      const binding = EventPrimitive.resolveBinding(listener, part, runtime);
 
       expect(binding.directive).toBe(EventPrimitive);
       expect(binding.value).toBe(listener);
@@ -69,10 +69,10 @@ describe('EventPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
-        EventPrimitive.resolveBinding(listener, part, context),
+        EventPrimitive.resolveBinding(listener, part, runtime),
       ).toThrow('EventPrimitive must be used in an event part,');
     });
   });
@@ -101,10 +101,10 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(binding.shouldBind(listener1)).toBe(false);
       expect(binding.shouldBind(listener2)).toBe(true);
@@ -121,14 +121,14 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
@@ -139,8 +139,8 @@ describe('EventBinding', () => {
       expect(listener2).not.toHaveBeenCalled();
 
       binding.bind(listener2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
@@ -160,14 +160,14 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener1, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
@@ -182,8 +182,8 @@ describe('EventBinding', () => {
       expect(listener2.handleEvent).not.toHaveBeenCalled();
 
       binding.bind(listener2);
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
       part.node.dispatchEvent(event);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
@@ -213,7 +213,7 @@ describe('EventBinding', () => {
           name: 'click',
         } as const;
         const binding = new EventBinding(listener1, part);
-        const context = new UpdateEngine(new MockRenderHost());
+        const runtime = new Runtime(new MockRenderHost());
 
         const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
         const removeEventListenerSpy = vi.spyOn(
@@ -221,8 +221,8 @@ describe('EventBinding', () => {
           'removeEventListener',
         );
 
-        binding.connect(context);
-        binding.commit(context);
+        binding.connect(runtime);
+        binding.commit(runtime);
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -233,8 +233,8 @@ describe('EventBinding', () => {
         expect(removeEventListenerSpy).not.toHaveBeenCalled();
 
         binding.bind(listener2);
-        binding.connect(context);
-        binding.commit(context);
+        binding.connect(runtime);
+        binding.commit(runtime);
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).toHaveBeenCalledOnce();
@@ -256,13 +256,13 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(addEventListenerSpy).not.toHaveBeenCalled();
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
@@ -276,20 +276,20 @@ describe('EventBinding', () => {
         name: 'click',
       } as const;
       const binding = new EventBinding(listener, part);
-      const context = new UpdateEngine(new MockRenderHost());
+      const runtime = new Runtime(new MockRenderHost());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
-      binding.connect(context);
-      binding.commit(context);
+      binding.connect(runtime);
+      binding.commit(runtime);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
 
-      binding.disconnect(context);
-      binding.rollback(context);
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(removeEventListenerSpy).toHaveBeenCalledOnce();

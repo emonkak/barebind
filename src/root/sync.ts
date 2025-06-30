@@ -1,7 +1,8 @@
+import { CommitPhase } from '../hook.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
 import type { RenderHost } from '../renderHost.js';
-import { UpdateEngine } from '../updateEngine.js';
+import { Runtime } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
 export interface SyncRoot<T> {
@@ -16,39 +17,48 @@ export function createSyncRoot<T>(
   container: Element,
   renderHost: RenderHost,
 ): SyncRoot<T> {
-  const context = new UpdateEngine(renderHost);
+  const runtime = new Runtime(renderHost);
   const part = {
     type: PartType.ChildNode,
     node: container.ownerDocument.createComment(''),
     childNode: null,
   } as const;
-  const slot = context.resolveSlot(value, part);
+  const slot = runtime.resolveSlot(value, part);
 
   return {
     hydrate() {
       const hydrationTree = new HydrationTree(container);
 
-      slot.hydrate(hydrationTree, context);
+      slot.hydrate(hydrationTree, runtime);
       hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
       hydrationTree.replaceNode(part.node);
 
-      context.enqueueMutationEffect(new MountSlot(slot, container));
-      context.flushSync();
+      runtime.enqueueEffect(
+        new MountSlot(slot, container),
+        CommitPhase.Mutation,
+      );
+      runtime.flushSync();
     },
     mount() {
-      slot.connect(context);
-      context.enqueueMutationEffect(new MountSlot(slot, container));
-      context.flushSync();
+      slot.connect(runtime);
+      runtime.enqueueEffect(
+        new MountSlot(slot, container),
+        CommitPhase.Mutation,
+      );
+      runtime.flushSync();
     },
     update(value) {
-      slot.reconcile(value, context);
-      context.enqueueMutationEffect(slot);
-      context.flushSync();
+      slot.reconcile(value, runtime);
+      runtime.enqueueEffect(slot, CommitPhase.Mutation);
+      runtime.flushSync();
     },
     unmount() {
-      slot.disconnect(context);
-      context.enqueueMutationEffect(new UnmountSlot(slot, container));
-      context.flushSync();
+      slot.disconnect(runtime);
+      runtime.enqueueEffect(
+        new UnmountSlot(slot, container),
+        CommitPhase.Mutation,
+      );
+      runtime.flushSync();
     },
   };
 }
