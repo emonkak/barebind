@@ -1,0 +1,345 @@
+import { describe, expect, it, vi } from 'vitest';
+import {
+  ComponentBinding,
+  ComponentDirective,
+  component,
+  defineComponent,
+} from '@/component.js';
+import type { RenderContext } from '@/directive.js';
+import { ALL_LANES, CommitPhase } from '@/hook.js';
+import { HydrationTree } from '@/hydration.js';
+import { PartType } from '@/part.js';
+import { RenderEngine } from '@/renderEngine.js';
+import { UpdateEngine } from '@/updateEngine.js';
+import { MockCoroutine, MockRenderHost } from '../mocks.js';
+import { createElement } from '../testUtils.js';
+
+describe('component()', () => {
+  it('returns a directive element with the component', () => {
+    const props = { name: 'foo', greet: 'Hello' };
+    const element = component(Greet, props);
+
+    expect(element.directive).toBe(component(Greet, props).directive);
+    expect(element.directive).toBeInstanceOf(ComponentDirective);
+    expect(element.value).toBe(props);
+  });
+});
+
+describe('defineComponent()', () => {
+  it('memoizes the component by the component function', () => {
+    const component = defineComponent(Greet);
+
+    expect(defineComponent(Greet)).toBe(component);
+  });
+});
+
+describe('ComponentDirective', () => {
+  describe('name', () => {
+    it('returns the component function name', () => {
+      const component = new ComponentDirective(Greet);
+
+      expect(component.name).toBe(Greet.name);
+    });
+  });
+
+  describe('render()', () => {
+    it('invokes the component function with props', () => {
+      const componentFn = vi.fn(Greet);
+      const component = new ComponentDirective(componentFn);
+      const props = {
+        greet: 'Hello',
+        name: 'foo',
+      };
+      const context = new RenderEngine(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new UpdateEngine(new MockRenderHost()),
+      );
+
+      component.render(props, context);
+
+      expect(componentFn).toHaveBeenCalledOnce();
+      expect(componentFn).toHaveBeenCalledWith(props, context);
+    });
+  });
+
+  describe('shouldUpdate()', () => {
+    it('returns whether the props is not same', () => {
+      const component = new ComponentDirective(Greet);
+      const props1 = { greet: 'Hello', name: 'foo' };
+      const props2 = { greet: 'Chao', name: 'bar' };
+
+      expect(component.shouldUpdate(props1, props1)).toBe(false);
+      expect(component.shouldUpdate(props1, props2)).toBe(true);
+      expect(component.shouldUpdate(props2, props1)).toBe(true);
+      expect(component.shouldUpdate(props2, props2)).toBe(false);
+    });
+
+    it.each([
+      [{ key: 'foo', value: 1 }, { key: 'foo', value: 1 }, false],
+      [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }, true],
+    ])(
+      'returns the result of shouldUpdate() if it is definied in the function',
+      (props1, props2, expandedResult) => {
+        const component = new ComponentDirective(Memo);
+
+        expect(component.shouldUpdate(props1, props1)).toBe(false);
+        expect(component.shouldUpdate(props1, props2)).toBe(expandedResult);
+        expect(component.shouldUpdate(props2, props1)).toBe(expandedResult);
+        expect(component.shouldUpdate(props2, props2)).toBe(false);
+      },
+    );
+  });
+
+  describe('resolveBinding()', () => {
+    it('constructs a new ComponentBinding', () => {
+      const component = new ComponentDirective(Greet);
+      const props = { greet: 'Hello', name: 'foo' };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const context = new UpdateEngine(new MockRenderHost());
+      const binding = component.resolveBinding(props, part, context);
+
+      expect(binding.directive).toBe(component);
+      expect(binding.value).toBe(props);
+      expect(binding.part).toBe(part);
+    });
+  });
+});
+
+describe('ComponentBinding', () => {
+  describe('shouldBind()', () => {
+    it('returns true if the committed value does not exist', () => {
+      const component = new ComponentDirective(Greet);
+      const props = { greet: 'Hello', name: 'foo' };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new ComponentBinding(component, props, part);
+
+      expect(binding.shouldBind(props)).toBe(true);
+    });
+
+    it('returns true if the committed value is different from the new one', () => {
+      const component = new ComponentDirective(Greet);
+      const props1 = { greet: 'Hello', name: 'foo' };
+      const props2 = { greet: 'Chao', name: 'bar' };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new ComponentBinding(component, props1, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.connect(context);
+      context.enqueueMutationEffect(binding);
+      context.flushSync();
+
+      expect(binding.shouldBind(props1)).toBe(false);
+      expect(binding.shouldBind(props2)).toBe(true);
+    });
+  });
+
+  describe('hydrate()', () => {
+    it('hydrates the tree by the value rendered by the component', () => {
+      const component = new ComponentDirective(Greet);
+      const props = {
+        name: 'foo',
+        greet: 'Hello',
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment('Hello, foo!'),
+        childNode: null,
+      } as const;
+      const binding = new ComponentBinding(component, props, part);
+      const hydrationRoot = createElement('div', {}, part.node);
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.hydrate(hydrationTree, context);
+      context.enqueueMutationEffect(binding);
+      context.flushSync();
+
+      expect(binding['_slot']).toStrictEqual(
+        expect.objectContaining({
+          isConnected: true,
+          isCommitted: true,
+        }),
+      );
+      expect(binding['_slot']?.part).toBe(part);
+      expect(hydrationRoot.innerHTML).toBe('<!--Hello, foo!-->');
+
+      binding.disconnect(context);
+      binding.rollback(context);
+
+      expect(binding['_slot']).toStrictEqual(
+        expect.objectContaining({
+          isConnected: false,
+          isCommitted: false,
+        }),
+      );
+      expect(binding['_slot']?.part).toBe(part);
+      expect(hydrationRoot.innerHTML).toBe('<!---->');
+    });
+  });
+
+  describe('connect()', () => {
+    it('renders the component', () => {
+      const component = new ComponentDirective(Greet);
+      const props1 = {
+        name: 'foo',
+        greet: 'Hello',
+      };
+      const props2 = {
+        name: 'bar',
+        greet: 'Chao',
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new ComponentBinding(component, props1, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.connect(context);
+      context.enqueueMutationEffect(binding);
+      context.flushSync();
+
+      expect(binding['_slot']).toStrictEqual(
+        expect.objectContaining({
+          isConnected: true,
+          isCommitted: true,
+        }),
+      );
+      expect(binding['_slot']?.part).toBe(part);
+      expect(part.node.nodeValue).toBe('Hello, foo!');
+
+      binding.bind(props2);
+      binding.connect(context);
+      context.flushSync();
+
+      expect(binding['_slot']).toStrictEqual(
+        expect.objectContaining({
+          isConnected: true,
+          isCommitted: true,
+        }),
+      );
+      expect(binding['_slot']?.part).toBe(part);
+      expect(part.node.nodeValue).toBe('Hello, foo!');
+    });
+  });
+
+  describe('disconnect()', () => {
+    it('cleans effect hooks', () => {
+      const component = new ComponentDirective(EnqueueEffect);
+      const props = {
+        callback: vi.fn(),
+        cleanup: vi.fn(),
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new ComponentBinding(component, props, part);
+      const context = new UpdateEngine(new MockRenderHost());
+
+      binding.connect(context);
+      context.enqueueMutationEffect(binding);
+      context.flushSync();
+
+      expect(binding['_slot']).toStrictEqual(
+        expect.objectContaining({
+          isConnected: true,
+          isCommitted: true,
+        }),
+      );
+      expect(binding['_slot']?.part).toBe(part);
+      expect(part.node.nodeValue).toBe('3 effects are enqueued');
+
+      binding.disconnect(context);
+      binding.rollback(context);
+      context.flushSync();
+
+      expect(binding['_slot']).toStrictEqual(
+        expect.objectContaining({
+          isConnected: false,
+          isCommitted: false,
+        }),
+      );
+      expect(binding['_slot']?.part).toBe(part);
+      expect(props.callback).toHaveBeenCalledTimes(3);
+      expect(props.callback).toHaveBeenNthCalledWith(1, CommitPhase.Mutation);
+      expect(props.callback).toHaveBeenNthCalledWith(2, CommitPhase.Layout);
+      expect(props.callback).toHaveBeenNthCalledWith(3, CommitPhase.Passive);
+      expect(props.cleanup).toHaveBeenCalledTimes(3);
+      expect(props.cleanup).toHaveBeenNthCalledWith(1, CommitPhase.Mutation);
+      expect(props.cleanup).toHaveBeenNthCalledWith(2, CommitPhase.Layout);
+      expect(props.cleanup).toHaveBeenNthCalledWith(3, CommitPhase.Passive);
+      expect(part.node.nodeValue).toBe('');
+    });
+  });
+});
+
+interface GreetProps {
+  greet: string;
+  name: string;
+}
+
+function Greet({ name, greet }: GreetProps): unknown {
+  return `${greet}, ${name}!`;
+}
+
+interface MemoProps {
+  key: unknown;
+  value: unknown;
+}
+
+function Memo({ value }: MemoProps, _context: RenderContext): unknown {
+  return value;
+}
+
+Memo.shouldUpdate = (nextProps: MemoProps, prevProps: MemoProps): boolean =>
+  nextProps.key !== prevProps.key;
+
+interface EnqueueEffectProps {
+  callback: (phase: CommitPhase) => void;
+  cleanup: (phase: CommitPhase) => void;
+}
+
+function EnqueueEffect(
+  { callback, cleanup }: EnqueueEffectProps,
+  context: RenderContext,
+): unknown {
+  context.useInsertionEffect(() => {
+    callback(CommitPhase.Mutation);
+    return () => {
+      cleanup(CommitPhase.Mutation);
+    };
+  }, [callback, cleanup]);
+
+  context.useLayoutEffect(() => {
+    callback(CommitPhase.Layout);
+    return () => {
+      cleanup(CommitPhase.Layout);
+    };
+  }, [callback, cleanup]);
+
+  context.useEffect(() => {
+    callback(CommitPhase.Passive);
+    return () => {
+      cleanup(CommitPhase.Passive);
+    };
+  }, [callback, cleanup]);
+
+  return '3 effects are enqueued';
+}

@@ -1,4 +1,4 @@
-import { HookType } from '../src/hook.js';
+import { type Hook, HookType } from '../src/hook.js';
 import type { RenderEngine } from '../src/renderEngine.js';
 
 export function* allCombinations<T>(source: T[]): Generator<T[]> {
@@ -7,8 +7,7 @@ export function* allCombinations<T>(source: T[]): Generator<T[]> {
   }
 }
 
-export function cleanupRender(renderEngine: RenderEngine): void {
-  const hooks = renderEngine['_hooks'];
+export function cleanupHooks(hooks: Hook[]): void {
   for (let i = hooks.length - 1; i >= 0; i--) {
     const hook = hooks[i]!;
     if (hook.type === HookType.Effect) {
@@ -63,15 +62,6 @@ export function factorial(n: number): number {
   return result;
 }
 
-export function flushRender(renderEngine: RenderEngine): void {
-  const updateContext = renderEngine['_updateContext'];
-  renderEngine.finalize();
-  updateContext.enqueueCoroutine(renderEngine['_coroutine']);
-  updateContext.enqueueMutationEffect(renderEngine['_coroutine']);
-  updateContext.flushSync();
-  renderEngine['_hookIndex'] = 0;
-}
-
 export function* permutations<T>(
   source: T[],
   r: number = source.length,
@@ -90,4 +80,10 @@ export function* permutations<T>(
       }
     }
   }
+}
+
+export function resetRenderEngine(renderEngine: RenderEngine): void {
+  renderEngine.finalize();
+  renderEngine['_updateContext'].flushSync();
+  renderEngine['_hookIndex'] = 0;
 }

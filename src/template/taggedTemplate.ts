@@ -119,12 +119,12 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     return new TaggedTemplate(template, holes);
   }
 
-  private readonly _element: HTMLTemplateElement;
+  private readonly _template: HTMLTemplateElement;
 
   private readonly _holes: Hole[];
 
-  constructor(element: HTMLTemplateElement, holes: Hole[]) {
-    this._element = element;
+  constructor(template: HTMLTemplateElement, holes: Hole[]) {
+    this._template = template;
     this._holes = holes;
   }
 
@@ -143,7 +143,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     assertNumberOfBinds(holes.length, binds.length);
 
     const document = part.node.ownerDocument;
-    const rootNode = this._element.content;
+    const rootNode = this._template.content;
     const treeWalker = document.createTreeWalker(
       rootNode,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
@@ -275,7 +275,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     assertNumberOfBinds(holes.length, binds.length);
 
     const document = part.node.ownerDocument;
-    const fragment = document.importNode(this._element.content, true);
+    const fragment = document.importNode(this._template.content, true);
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
