@@ -232,30 +232,30 @@ export class RepeatBinding<TSource, TKey, TValue>
         const item = this._pendingItems[i]!;
         commitInsert(item, this._part.node);
       }
-    } else {
-      for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
-        const operation = this._pendingOperations[i]!;
-        switch (operation.type) {
-          case OperationType.Insert: {
-            const referenceNode =
-              operation.referenceItem !== undefined
-                ? getStartNode(operation.referenceItem.slot.part)
-                : this._part.node;
-            commitInsert(operation.item, referenceNode);
-            break;
-          }
-          case OperationType.Move: {
-            const referenceNode =
-              operation.referenceItem !== undefined
-                ? getStartNode(operation.referenceItem.slot.part)
-                : this._part.node;
-            commitMove(operation.item, referenceNode);
-            break;
-          }
-          case OperationType.Remove:
-            commitRemove(operation.item, context);
-            break;
+    }
+
+    for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
+      const operation = this._pendingOperations[i]!;
+      switch (operation.type) {
+        case OperationType.Insert: {
+          const referenceNode =
+            operation.referenceItem !== undefined
+              ? getStartNode(operation.referenceItem.slot.part)
+              : this._part.node;
+          commitInsert(operation.item, referenceNode);
+          break;
         }
+        case OperationType.Move: {
+          const referenceNode =
+            operation.referenceItem !== undefined
+              ? getStartNode(operation.referenceItem.slot.part)
+              : this._part.node;
+          commitMove(operation.item, referenceNode);
+          break;
+        }
+        case OperationType.Remove:
+          commitRemove(operation.item, context);
+          break;
       }
     }
 
