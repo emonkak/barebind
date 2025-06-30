@@ -17,6 +17,7 @@ import {
   type ChildNodePart,
   getChildNodes,
   getStartNode,
+  moveChildNodes,
   type Part,
   PartType,
 } from '../part.js';
@@ -301,16 +302,8 @@ function commitMove<TKey, TValue>(
   referenceNode: ChildNode,
 ): void {
   const { slot } = item;
-  const { parentNode } = slot.part.node;
-  if (parentNode !== null) {
-    /* v8 ignore next 2 @preserve */
-    const insertOrMoveBefore =
-      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
-    const childNodes = getChildNodes(slot.part as ChildNodePart);
-    for (let i = 0, l = childNodes.length; i < l; i++) {
-      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
-    }
-  }
+  const childNodes = getChildNodes(slot.part as ChildNodePart);
+  moveChildNodes(childNodes, referenceNode);
 }
 
 function commitRemove<TKey, TValue>(

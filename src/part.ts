@@ -84,3 +84,17 @@ export function getStartNode(part: Part): ChildNode {
     ? (part.childNode ?? part.node)
     : part.node;
 }
+
+export function moveChildNodes(
+  childNodes: ChildNode[],
+  referenceNode: Node,
+): void {
+  const insertOrMoveBefore =
+    Element.prototype.moveBefore ?? Element.prototype.insertBefore;
+  const { parentNode } = referenceNode;
+  if (parentNode !== null) {
+    for (let i = 0, l = childNodes.length; i < l; i++) {
+      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
+    }
+  }
+}

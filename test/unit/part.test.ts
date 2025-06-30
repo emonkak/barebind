@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { getChildNodes, getStartNode, PartType } from '@/part.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  getChildNodes,
+  getStartNode,
+  moveChildNodes,
+  PartType,
+} from '@/part.js';
 import { createElement } from '../testUtils.js';
 
 describe('getStartNode()', () => {
@@ -97,6 +102,42 @@ describe('getChildNodes()', () => {
 
     expect(getChildNodes(part)).toStrictEqual(
       Array.from(container.childNodes, (node) => expect.exact(node)),
+    );
+  });
+});
+
+describe.each([[true], [false]])('moveChildNodes()', (useMoveBefore) => {
+  const originalMoveBefore = Element.prototype.moveBefore;
+
+  beforeEach(() => {
+    if (useMoveBefore) {
+      Element.prototype.moveBefore ??= Element.prototype.insertBefore;
+    } else {
+      Element.prototype.moveBefore = undefined as any;
+    }
+  });
+
+  afterEach(() => {
+    Element.prototype.moveBefore = originalMoveBefore;
+  });
+
+  it('moves child nodes to before reference node', () => {
+    const foo = createElement('div', {}, 'foo');
+    const bar = createElement('div', {}, 'bar');
+    const baz = createElement('div', {}, 'baz');
+    const qux = createElement('div', {}, 'qux');
+    const container = createElement('div', {}, foo, bar, baz, qux);
+
+    moveChildNodes([foo], qux);
+
+    expect(container.innerHTML).toBe(
+      '<div>bar</div><div>baz</div><div>foo</div><div>qux</div>',
+    );
+
+    moveChildNodes([foo, qux], bar);
+
+    expect(container.innerHTML).toBe(
+      '<div>foo</div><div>qux</div><div>bar</div><div>baz</div>',
     );
   });
 });
