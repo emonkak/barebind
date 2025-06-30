@@ -54,7 +54,7 @@ export interface StoreExtensions {
   toSnapshot(): Pick<this, AtomKeys<this>>;
 }
 
-export function createStore<TClass extends Constructable>(
+export function createStoreClass<TClass extends Constructable>(
   superclass: TClass,
 ): StoreClass<TClass> {
   return class Store extends superclass implements StoreExtensions {
@@ -142,7 +142,7 @@ export function createStore<TClass extends Constructable>(
       }
       return state as Pick<this, AtomKeys<this>>;
     }
-  } as unknown as ReturnType<typeof createStore<TClass>>;
+  } as unknown as StoreClass<TClass>;
 }
 
 class StoreSignal<TClass extends StoreExtensions> extends Signal<TClass> {

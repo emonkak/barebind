@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Atom, Lazy } from '@/extensions/signal.js';
-import { createStore } from '@/extensions/store.js';
+import { createStoreClass } from '@/extensions/store.js';
 import { $customHook, type HookContext } from '@/hook.js';
 
 describe('Store', () => {
@@ -223,4 +223,4 @@ class Counter {
   }
 }
 
-const CounterStore = createStore(Counter);
+const CounterStore = createStoreClass(Counter);

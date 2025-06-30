@@ -7,7 +7,7 @@ export {
   Signal,
 } from './extensions/signal.js';
 export {
-  createStore,
+  createStoreClass,
   type Store,
   type StoreClass,
   type StoreExtensions,
