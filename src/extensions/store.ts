@@ -8,6 +8,8 @@ import {
   type Subscription,
 } from './signal.js';
 
+const $signalMap = Symbol('$signalMap');
+
 export type SignalKeys<T> = Exclude<keyof T, FunctionKeys<T>> & string;
 
 export type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
@@ -56,7 +58,7 @@ export function createStore<TClass extends Constructable>(
   superclass: TClass,
 ): StoreClass<TClass> {
   return class Store extends superclass implements StoreExtensions {
-    #signalMap: Record<PropertyKey, Signal<unknown>> = {};
+    private [$signalMap]: Record<PropertyKey, Signal<unknown>> = {};
 
     static [$customHook](
       this: Constructable<Store>,
@@ -73,8 +75,8 @@ export function createStore<TClass extends Constructable>(
 
     constructor(...args: any[]) {
       super(...args);
-      defineInstanceDescriptors(this, this.#signalMap);
-      definePrototypeDescriptors(this, this.#signalMap);
+      defineInstanceProperties(this, this[$signalMap]);
+      definePrototypeProperties(superclass, this, this[$signalMap]);
     }
 
     [$customHook](context: HookContext): void {
@@ -90,12 +92,12 @@ export function createStore<TClass extends Constructable>(
       key: TKey,
     ): Signal<this[TKey]> | undefined;
     getSignal(key: string): Signal<unknown> | undefined {
-      const signalMap = this.#signalMap;
+      const signalMap = this[$signalMap];
       return Object.hasOwn(signalMap, key) ? signalMap[key] : undefined;
     }
 
     getVersion(): number {
-      const signalMap = this.#signalMap;
+      const signalMap = this[$signalMap];
       let version = 0;
       for (const key in signalMap) {
         const signal = signalMap[key]!;
@@ -113,7 +115,7 @@ export function createStore<TClass extends Constructable>(
     }
 
     subscribe(subscriber: Subscriber): Subscription {
-      const signalMap = this.#signalMap;
+      const signalMap = this[$signalMap];
       const subscriptions: Subscription[] = [];
       for (const key in signalMap) {
         const signal = signalMap[key]!;
@@ -130,7 +132,7 @@ export function createStore<TClass extends Constructable>(
     }
 
     toSnapshot(): Pick<this, AtomKeys<this>> {
-      const signalMap = this.#signalMap;
+      const signalMap = this[$signalMap];
       const state: Partial<this> = {};
       for (const key in signalMap) {
         const signal = signalMap[key]!;
@@ -164,15 +166,14 @@ class StoreSignal<TClass extends StoreExtensions> extends Signal<TClass> {
   }
 }
 
-function defineInstanceDescriptors<T extends object>(
+function defineInstanceProperties<T extends object>(
   instance: T,
   signalMap: Record<PropertyKey, Signal<unknown>>,
 ): void {
-  const instanceDescriptors = Object.getOwnPropertyDescriptors(instance);
+  const descriptors = Object.getOwnPropertyDescriptors(instance);
 
-  for (const key in instanceDescriptors) {
-    const { writable, enumerable, configurable, value } =
-      instanceDescriptors[key]!;
+  for (const key in descriptors) {
+    const { writable, enumerable, configurable, value } = descriptors[key]!;
 
     if (writable && configurable) {
       const signal = new Atom(value);
@@ -191,19 +192,20 @@ function defineInstanceDescriptors<T extends object>(
   }
 }
 
-function definePrototypeDescriptors<T extends object>(
+function definePrototypeProperties<T extends object>(
+  superclass: Constructable<T>,
   instance: T,
   signalMap: Record<PropertyKey, Signal<unknown>>,
 ): void {
   for (
-    let prototype = Object.getPrototypeOf(instance);
+    let prototype = superclass.prototype;
     prototype !== null && prototype !== Object.prototype;
     prototype = Object.getPrototypeOf(prototype)
   ) {
-    const prototypeDescriptors = Object.getOwnPropertyDescriptors(prototype);
+    const descriptors = Object.getOwnPropertyDescriptors(prototype);
 
-    for (const key in prototypeDescriptors) {
-      const { configurable, enumerable, get, set } = prototypeDescriptors[key]!;
+    for (const key in descriptors) {
+      const { configurable, enumerable, get, set } = descriptors[key]!;
 
       if (get !== undefined && configurable) {
         const signal = new Lazy(() => {
@@ -239,13 +241,13 @@ function definePrototypeDescriptors<T extends object>(
 function trackSignals<T extends object>(
   instance: T,
   signalMap: Record<PropertyKey, Signal<unknown>>,
-  trackedSignals: Signal<unknown>[],
+  dependencies: Signal<unknown>[],
 ): T {
   return new Proxy(instance, {
     get: (target, key, receiver) => {
       if (Object.hasOwn(signalMap, key)) {
         const signal = signalMap[key]!;
-        trackedSignals.push(signal);
+        dependencies.push(signal);
         return signal.value;
       } else {
         return Reflect.get(target, key, receiver);
