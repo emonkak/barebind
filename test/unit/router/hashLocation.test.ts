@@ -8,11 +8,7 @@ import { CurrentLocation } from '@/router/location.js';
 import { RelativeURL } from '@/router/url.js';
 import { UpdateEngine } from '@/updateEngine.js';
 import { MockCoroutine } from '../../mocks.js';
-import {
-  cleanupHooks,
-  createElement,
-  resetRenderEngine,
-} from '../../testUtils.js';
+import { cleanupHooks, createElement } from '../../testUtils.js';
 
 describe('HashLocation', () => {
   const originalState = history.state;
@@ -60,8 +56,9 @@ describe('HashLocation', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     context.use(HashLocation);
+    context.finalize();
+    context.flush();
 
-    resetRenderEngine(context);
     cleanupHooks(context['_hooks']);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
@@ -90,7 +87,9 @@ describe('HashLocation', () => {
 
     const [locationState1, locationNavigator1] = context.use(HashLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'));
 
     const [locationState2] = context.use(HashLocation);
@@ -111,7 +110,9 @@ describe('HashLocation', () => {
 
     const [locationState1, locationNavigator1] = context.use(HashLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'), {
       replace: true,
       state,
@@ -133,7 +134,9 @@ describe('HashLocation', () => {
 
     const [locationState1] = context.use(HashLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
@@ -154,7 +157,9 @@ describe('HashLocation', () => {
 
     const [locationState1] = context.use(HashLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     dispatchEvent(event);
 
     const [locationState2] = context.use(HashLocation);

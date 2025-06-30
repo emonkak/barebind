@@ -1,5 +1,4 @@
 import { type Hook, HookType } from '../src/hook.js';
-import type { RenderEngine } from '../src/renderEngine.js';
 
 export function* allCombinations<T>(source: T[]): Generator<T[]> {
   for (let i = 1; i <= source.length; i++) {
@@ -80,10 +79,4 @@ export function* permutations<T>(
       }
     }
   }
-}
-
-export function resetRenderEngine(renderEngine: RenderEngine): void {
-  renderEngine.finalize();
-  renderEngine['_updateContext'].flushSync();
-  renderEngine['_hookIndex'] = 0;
 }

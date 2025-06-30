@@ -13,11 +13,7 @@ import { PartType } from '@/part.js';
 import { RenderEngine } from '@/renderEngine.js';
 import { UpdateEngine } from '@/updateEngine.js';
 import { MockCoroutine, MockRenderHost } from '../../mocks.js';
-import {
-  cleanupHooks,
-  createElement,
-  resetRenderEngine,
-} from '../../testUtils.js';
+import { cleanupHooks, createElement } from '../../testUtils.js';
 
 describe('SignalDirective', () => {
   describe('name', () => {
@@ -62,7 +58,8 @@ describe('Signal', () => {
       expect(value).toBe(signal.value);
       expect(forceUpdateSpy).not.toHaveBeenCalled();
 
-      resetRenderEngine(context);
+      context.finalize();
+      context.flush();
       signal.value = 'bar';
 
       expect(forceUpdateSpy).toHaveBeenCalledOnce();

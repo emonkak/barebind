@@ -12,11 +12,7 @@ import { CurrentLocation } from '@/router/location.js';
 import { RelativeURL } from '@/router/url.js';
 import { UpdateEngine } from '@/updateEngine.js';
 import { MockCoroutine } from '../../mocks.js';
-import {
-  cleanupHooks,
-  createElement,
-  resetRenderEngine,
-} from '../../testUtils.js';
+import { cleanupHooks, createElement } from '../../testUtils.js';
 
 describe('BrowserLocation', () => {
   const originalState = history.state;
@@ -64,8 +60,8 @@ describe('BrowserLocation', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     context.use(BrowserLocation);
-
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -104,7 +100,9 @@ describe('BrowserLocation', () => {
 
     const [locationState1, locationNavigator1] = context.use(BrowserLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     locationNavigator1.navigate(new RelativeURL('/articles/456'));
 
     const [locationState2, locationNavigator2] = context.use(BrowserLocation);
@@ -126,7 +124,9 @@ describe('BrowserLocation', () => {
 
     const [locationState1, locationNavigator1] = context.use(BrowserLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     locationNavigator1.navigate(new RelativeURL('/articles/123'), {
       replace: true,
       state,
@@ -149,7 +149,9 @@ describe('BrowserLocation', () => {
 
     const [locationState1] = context.use(BrowserLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
@@ -170,7 +172,9 @@ describe('BrowserLocation', () => {
 
     const [locationState1] = context.use(BrowserLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     document.body.appendChild(element);
     element.dispatchEvent(event);
     document.body.removeChild(element);
@@ -187,7 +191,9 @@ describe('BrowserLocation', () => {
 
     const [locationState1] = context.use(BrowserLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     history.replaceState(state, '', '/articles/123');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
@@ -204,7 +210,9 @@ describe('BrowserLocation', () => {
 
     const [locationState1] = context.use(BrowserLocation);
 
-    resetRenderEngine(context);
+    context.finalize();
+    context.flush();
+
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 

@@ -99,6 +99,11 @@ export class RenderEngine implements RenderContext {
     return this._nextLanes;
   }
 
+  flush(): void {
+    this._updateContext.flushSync();
+    this._hookIndex = 0;
+  }
+
   forceUpdate(options?: UpdateOptions): UpdateTask {
     return this._updateContext.scheduleUpdate(this._coroutine, options);
   }
