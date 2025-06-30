@@ -867,7 +867,7 @@ describe('TaggedTemplate', () => {
 
       expect(() => {
         template.render(['foo'], part, context);
-      }).toThrow('There is no node that the hole points.');
+      }).toThrow('There is no node that the hole indicates.');
     });
   });
 

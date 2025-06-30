@@ -298,7 +298,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           currentNode = treeWalker.nextNode();
           if (currentNode === null) {
             throw new Error(
-              'There is no node that the hole points. This might be a bug.',
+              'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
             );
           }
           nodeIndex++;
