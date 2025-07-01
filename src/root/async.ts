@@ -1,15 +1,17 @@
-import { CommitPhase, type UpdateOptions } from '../hook.js';
+import type { UpdateOptions } from '../hook.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
-import type { RenderHost, RequestCallbackOptions } from '../renderHost.js';
+import type { RenderHost } from '../renderHost.js';
+import type { RuntimeObserver } from '../runtime.js';
 import { Runtime } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
 export interface AsyncRoot<T> {
+  observe(observer: RuntimeObserver): () => void;
   hydrate(options?: UpdateOptions): Promise<void>;
   mount(options?: UpdateOptions): Promise<void>;
-  update(value: T, options?: UpdateOptions): Promise<void>;
   unmount(options?: UpdateOptions): Promise<void>;
+  update(value: T, options?: UpdateOptions): Promise<void>;
 }
 
 export function createAsyncRoot<T>(
@@ -26,6 +28,9 @@ export function createAsyncRoot<T>(
   const slot = runtime.resolveSlot(value, part);
 
   return {
+    observe(observer) {
+      return runtime.observe(observer);
+    },
     hydrate(options) {
       const hydrationTree = new HydrationTree(container);
 
@@ -33,49 +38,42 @@ export function createAsyncRoot<T>(
       hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
       hydrationTree.replaceNode(part.node);
 
+      options = { priority: renderHost.getCurrentPriority(), ...options };
+
       return renderHost.requestCallback(() => {
-        runtime.enqueueEffect(
-          new MountSlot(slot, container),
-          CommitPhase.Mutation,
-        );
+        runtime.enqueueMutationEffect(new MountSlot(slot, container));
         return runtime.flushAsync(options);
-      }, makeCallbackOptions(options));
+      }, options);
     },
     mount(options) {
       slot.connect(runtime);
 
+      options = { priority: renderHost.getCurrentPriority(), ...options };
+
       return renderHost.requestCallback(() => {
-        runtime.enqueueEffect(
-          new MountSlot(slot, container),
-          CommitPhase.Mutation,
-        );
+        runtime.enqueueMutationEffect(new MountSlot(slot, container));
         return runtime.flushAsync(options);
-      }, makeCallbackOptions(options));
+      }, options);
     },
     update(value, options) {
       slot.reconcile(value, runtime);
 
+      options = { priority: renderHost.getCurrentPriority(), ...options };
+
       return renderHost.requestCallback(() => {
-        runtime.enqueueEffect(slot, CommitPhase.Mutation);
+        runtime.enqueueMutationEffect(slot);
         return runtime.flushAsync(options);
-      }, makeCallbackOptions(options));
+      }, options);
     },
     unmount(options) {
       slot.disconnect(runtime);
 
+      options = { priority: renderHost.getCurrentPriority(), ...options };
+
       return renderHost.requestCallback(() => {
-        runtime.enqueueEffect(
-          new UnmountSlot(slot, container),
-          CommitPhase.Mutation,
-        );
+        runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
         return runtime.flushAsync(options);
-      }, makeCallbackOptions(options));
+      }, options);
     },
   };
-}
-
-function makeCallbackOptions(
-  options: UpdateOptions | undefined,
-): RequestCallbackOptions {
-  return { priority: options?.priority ?? 'user-blocking' };
 }

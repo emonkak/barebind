@@ -1,3 +1,10 @@
+export {
+  type ComponentMeasurement,
+  ConsoleReporter,
+  type Profile,
+  Profiler,
+  type Reporter,
+} from './extensions/profiler.js';
 export { type RepeatProps, repeat } from './extensions/repeat.js';
 export {
   Atom,

@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Effect } from '@/directive.js';
-import { CommitPhase } from '@/hook.js';
 import { PartType } from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
@@ -12,6 +11,7 @@ import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { ServerRenderHost } from '@/renderHost/server.js';
+import { CommitPhase } from '@/renderHost.js';
 import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
@@ -142,10 +142,10 @@ describe('ServerRenderHost', () => {
     );
   });
 
-  describe('getCurrentTaskPriority()', () => {
+  describe('getCurrentPriority()', () => {
     it('always returns "user-blocking"', () => {
       const renderHost = new ServerRenderHost(document);
-      expect(renderHost.getCurrentTaskPriority()).toBe('user-blocking');
+      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
     });
   });
 

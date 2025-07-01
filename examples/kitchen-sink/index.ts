@@ -5,7 +5,13 @@ import {
   Literal,
   type RenderContext,
 } from '@emonkak/ebit';
-import { Atom, repeat, type Signal } from '@emonkak/ebit/extensions.js';
+import {
+  Atom,
+  ConsoleReporter,
+  Profiler,
+  repeat,
+  type Signal,
+} from '@emonkak/ebit/extensions.js';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
 
@@ -261,5 +267,7 @@ const root = createAsyncRoot(
   document.body,
   new BrowserRenderHost(),
 );
+
+root.observe(new Profiler(new ConsoleReporter()));
 
 root.mount();

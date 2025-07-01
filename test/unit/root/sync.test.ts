@@ -1,46 +1,83 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createSyncRoot } from '@/root/sync.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
 
 describe('SyncRoot', () => {
-  it('mounts the value', () => {
-    const value1: string = 'foo';
-    const value2: string = 'bar';
-    const container = document.createElement('div');
-    const renderHost = new MockRenderHost();
-    const root = createSyncRoot(value1, container, renderHost);
+  describe('observe()', () => {
+    it('adds the observer to the runtime', () => {
+      const value = 'foo';
+      const container = document.createElement('div');
+      const renderHost = new MockRenderHost();
+      const root = createSyncRoot(value, container, renderHost);
+      const observer = { onRuntimeEvent: vi.fn() };
 
-    root.mount();
+      const unsubscribe = root.observe(observer);
 
-    expect(container.innerHTML).toBe('<!--foo-->');
+      root.mount();
 
-    root.update(value2);
+      expect(observer.onRuntimeEvent).toHaveBeenCalled();
+      expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
+        type: 'UPDATE_START',
+        id: 0,
+        options: {},
+      });
+      expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
+        type: 'UPDATE_END',
+        id: 0,
+        options: {},
+      });
 
-    expect(container.innerHTML).toBe('<!--bar-->');
+      const callCount = observer.onRuntimeEvent.mock.calls.length;
 
-    root.unmount();
+      unsubscribe();
+      root.unmount();
 
-    expect(container.innerHTML).toBe('');
+      expect(observer.onRuntimeEvent).toHaveBeenCalledTimes(callCount);
+    });
   });
 
-  it('hydrates the value', async () => {
-    const value1: string = 'foo';
-    const value2: string = 'bar';
-    const container = createElement('div', {}, document.createComment(''));
-    const renderHost = new MockRenderHost();
-    const root = createSyncRoot(value1, container, renderHost);
+  describe('mount()', () => {
+    it('mounts the value', () => {
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const container = document.createElement('div');
+      const renderHost = new MockRenderHost();
+      const root = createSyncRoot(value1, container, renderHost);
 
-    root.hydrate();
+      root.mount();
 
-    expect(container.innerHTML).toBe('<!--foo-->');
+      expect(container.innerHTML).toBe('<!--foo-->');
 
-    root.update(value2);
+      root.update(value2);
 
-    expect(container.innerHTML).toBe('<!--bar-->');
+      expect(container.innerHTML).toBe('<!--bar-->');
 
-    root.unmount();
+      root.unmount();
 
-    expect(container.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+  });
+
+  describe('hydrate()', () => {
+    it('hydrates the value', async () => {
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const container = createElement('div', {}, document.createComment(''));
+      const renderHost = new MockRenderHost();
+      const root = createSyncRoot(value1, container, renderHost);
+
+      root.hydrate();
+
+      expect(container.innerHTML).toBe('<!--foo-->');
+
+      root.update(value2);
+
+      expect(container.innerHTML).toBe('<!--bar-->');
+
+      root.unmount();
+
+      expect(container.innerHTML).toBe('');
+    });
   });
 });

@@ -1,5 +1,4 @@
 import type {
-  CommitPhase,
   Hook,
   HookContext,
   Lanes,
@@ -120,14 +119,7 @@ export interface EffectContext {
 
 export interface UpdateContext extends DirectiveContext, RenderSessionContext {
   enqueueCoroutine(coroutine: Coroutine): void;
-  enterRenderFrame(): UpdateContext;
   enterScope(scope: Scope): UpdateContext;
-  hydrateTemplate<TBinds extends readonly unknown[]>(
-    template: Template<TBinds>,
-    binds: TBinds,
-    part: ChildNodePart,
-    hydrationTree: HydrationTree,
-  ): TemplateResult;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
@@ -135,11 +127,6 @@ export interface UpdateContext extends DirectiveContext, RenderSessionContext {
     lanes: Lanes,
     coroutine: Coroutine,
   ): ComponentResult<TResult>;
-  renderTemplate<TBinds extends readonly unknown[]>(
-    template: Template<TBinds>,
-    binds: TBinds,
-    part: ChildNodePart,
-  ): TemplateResult;
 }
 
 export interface RenderContext extends HookContext {
@@ -170,11 +157,14 @@ export interface RenderContext extends HookContext {
 }
 
 export interface RenderSessionContext {
-  enqueueEffect(effect: Effect, phase: CommitPhase): void;
+  enqueueLayoutEffect(effect: Effect): void;
+  enqueueMutationEffect(effect: Effect): void;
+  enqueuePassiveEffect(effect: Effect): void;
   expandLiterals<T>(
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
+  flushAsync(options?: UpdateOptions): void;
   flushSync(): void;
   getCurrentScope(): Scope;
   nextIdentifier(): string;

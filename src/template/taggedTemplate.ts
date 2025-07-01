@@ -3,8 +3,8 @@ import type {
   DirectiveContext,
   Slot,
   Template,
-  TemplateResult,
   TemplateMode,
+  TemplateResult,
   UpdateContext,
 } from '../directive.js';
 import { ensureNode, type HydrationTree } from '../hydration.js';

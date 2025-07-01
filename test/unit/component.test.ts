@@ -6,9 +6,10 @@ import {
   defineComponent,
 } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
-import { ALL_LANES, CommitPhase } from '@/hook.js';
+import { ALL_LANES } from '@/hook.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
+import { CommitPhase } from '@/renderHost.js';
 import { RenderSession } from '@/renderSession.js';
 import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockRenderHost, MockSlot } from '../mocks.js';
@@ -139,7 +140,7 @@ describe('ComponentBinding', () => {
       const runtime = new Runtime(new MockRenderHost());
 
       binding.connect(runtime);
-      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.enqueueMutationEffect(binding);
       runtime.flushSync();
 
       expect(binding.shouldBind(props1)).toBe(false);
@@ -165,7 +166,7 @@ describe('ComponentBinding', () => {
       const runtime = new Runtime(new MockRenderHost());
 
       binding.hydrate(hydrationTree, runtime);
-      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.enqueueMutationEffect(binding);
       runtime.flushSync();
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -213,7 +214,7 @@ describe('ComponentBinding', () => {
       const runtime = new Runtime(new MockRenderHost());
 
       binding.connect(runtime);
-      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.enqueueMutationEffect(binding);
       runtime.flushSync();
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -258,7 +259,7 @@ describe('ComponentBinding', () => {
       const runtime = new Runtime(new MockRenderHost());
 
       binding.connect(runtime);
-      runtime.enqueueEffect(binding, CommitPhase.Mutation);
+      runtime.enqueueMutationEffect(binding);
       runtime.flushSync();
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);

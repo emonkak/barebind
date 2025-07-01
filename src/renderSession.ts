@@ -10,12 +10,11 @@ import {
 } from './directive.js';
 import {
   $customHook,
-  CommitPhase,
   type CustomHook,
   type EffectHook,
   ensureHookType,
   type FinalizerHook,
-  getLanesFromPriority,
+  getLaneFromPriority,
   type Hook,
   HookType,
   type IdHook,
@@ -156,7 +155,7 @@ export class RenderSession implements RenderContext {
     callback: () => (() => void) | void,
     dependencies: unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies, CommitPhase.Passive);
+    this._useEffect(callback, dependencies, HookType.Effect);
   }
 
   useId(): string {
@@ -181,14 +180,14 @@ export class RenderSession implements RenderContext {
     callback: () => (() => void) | void,
     dependencies: unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies, CommitPhase.Mutation);
+    this._useEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => (() => void) | void,
     dependencies: unknown[] | null = null,
   ): void {
-    this._useEffect(callback, dependencies, CommitPhase.Layout);
+    this._useEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
   useMemo<T>(factory: () => T, dependencies: unknown[]): T {
@@ -230,13 +229,12 @@ export class RenderSession implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
-      const nextLanes = currentHook.lanes & ~this._lanes;
-      if (nextLanes === NO_LANES) {
+      if ((currentHook.lanes & this._lanes) !== NO_LANES) {
         currentHook.lanes = NO_LANES;
         currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;
       } else {
-        this._nextLanes |= nextLanes;
+        this._nextLanes |= currentHook.lanes;
       }
     } else {
       const state =
@@ -254,7 +252,7 @@ export class RenderSession implements RenderContext {
           if (!Object.is(oldState, newState)) {
             const { priority } = this.forceUpdate(options);
             hook.pendingState = newState;
-            hook.lanes |= getLanesFromPriority(priority);
+            hook.lanes |= getLaneFromPriority(priority);
           }
         },
       };
@@ -349,28 +347,26 @@ export class RenderSession implements RenderContext {
   private _useEffect(
     callback: () => (() => void) | void,
     dependencies: unknown[] | null,
-    phase: CommitPhase,
+    type: EffectHook['type'],
   ): void {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(HookType.Effect, currentHook);
+      ensureHookType<EffectHook>(type, currentHook);
       if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
-        this._context.enqueueEffect(new InvokeEffectHook(currentHook), phase);
+        enqueueEffect(currentHook, this._context);
       }
-      currentHook.phase = phase;
       currentHook.callback = callback;
       currentHook.dependencies = dependencies;
     } else {
       const hook: EffectHook = {
-        type: HookType.Effect,
-        phase,
+        type,
         callback,
         dependencies,
         cleanup: undefined,
       };
       this._hooks.push(hook);
-      this._context.enqueueEffect(new InvokeEffectHook(hook), phase);
+      enqueueEffect(hook, this._context);
     }
 
     this._hookIndex++;
@@ -388,5 +384,20 @@ class InvokeEffectHook implements Effect {
     const { cleanup, callback } = this._hook;
     cleanup?.();
     this._hook.cleanup = callback();
+  }
+}
+
+function enqueueEffect(hook: EffectHook, context: RenderSessionContext): void {
+  const effect = new InvokeEffectHook(hook);
+  switch (hook.type) {
+    case HookType.Effect:
+      context.enqueuePassiveEffect(effect);
+      break;
+    case HookType.LayoutEffect:
+      context.enqueueLayoutEffect(effect);
+      break;
+    case HookType.InsertionEffect:
+      context.enqueueMutationEffect(effect);
+      break;
   }
 }

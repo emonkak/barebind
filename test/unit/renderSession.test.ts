@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $customHook, ALL_LANES, CommitPhase, Lane } from '@/hook.js';
+import { $customHook, ALL_LANES, Lane, NO_LANES } from '@/hook.js';
 import { RenderSession } from '@/renderSession.js';
 import { Runtime } from '@/runtime.js';
 import { Literal } from '@/templateLiteral.js';
@@ -321,10 +321,10 @@ describe('RenderSession', () => {
   });
 
   describe.each([
-    ['useEffect', CommitPhase.Passive],
-    ['useLayoutEffect', CommitPhase.Layout],
-    ['useInsertionEffect', CommitPhase.Mutation],
-  ] as const)('useEffect()', (method, phase) => {
+    ['useEffect', 'enqueuePassiveEffect'],
+    ['useLayoutEffect', 'enqueueLayoutEffect'],
+    ['useInsertionEffect', 'enqueueMutationEffect'],
+  ] as const)('useEffect()', (hookMethod, enqueueMethod) => {
     it('performs the cleanup function when the callback is changed', () => {
       const session = new RenderSession(
         [],
@@ -335,9 +335,9 @@ describe('RenderSession', () => {
 
       const cleanup = vi.fn();
       const callback = vi.fn().mockReturnValue(cleanup);
-      const enqueueEffectSpy = vi.spyOn(session['_context'], 'enqueueEffect');
+      const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
 
-      session[method](callback);
+      session[hookMethod](callback);
 
       session.finalize();
       session.flush();
@@ -345,7 +345,7 @@ describe('RenderSession', () => {
       expect(callback).toHaveBeenCalledTimes(1);
       expect(cleanup).toHaveBeenCalledTimes(0);
 
-      session[method](callback);
+      session[hookMethod](callback);
 
       session.finalize();
       session.flush();
@@ -353,7 +353,6 @@ describe('RenderSession', () => {
       expect(callback).toHaveBeenCalledTimes(2);
       expect(cleanup).toHaveBeenCalledTimes(1);
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
-      expect(enqueueEffectSpy).toHaveBeenCalledWith(expect.anything(), phase);
     });
 
     it('does not perform the callback function if dependencies are not changed', () => {
@@ -365,23 +364,22 @@ describe('RenderSession', () => {
       );
 
       const callback = vi.fn();
-      const enqueueEffectSpy = vi.spyOn(session['_context'], 'enqueueEffect');
+      const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
 
-      session[method](callback, []);
+      session[hookMethod](callback, []);
 
       session.finalize();
       session.flush();
 
       expect(callback).toHaveBeenCalledOnce();
 
-      session[method](callback, []);
+      session[hookMethod](callback, []);
 
       session.finalize();
       session.flush();
 
       expect(callback).toHaveBeenCalledOnce();
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
-      expect(enqueueEffectSpy).toHaveBeenCalledWith(expect.anything(), phase);
     });
   });
 
@@ -636,22 +634,24 @@ describe('RenderSession', () => {
         new Runtime(new MockRenderHost()),
       );
 
-      let [count, setCount] = session.useState(() => 0);
+      let [count, setCount, isPending] = session.useState(() => 0);
 
-      session.finalize();
+      expect(session.finalize()).toBe(NO_LANES);
       session.flush();
 
       expect(count).toBe(0);
+      expect(isPending).toBe(false);
 
       setCount(1, { priority: 'background' });
 
       expect(await session.waitforUpdate()).toBe(true);
 
-      [count, setCount] = session.useState(0);
+      [count, setCount, isPending] = session.useState(0);
 
       expect(count).toBe(0);
+      expect(isPending).toBe(true);
 
-      session.finalize();
+      expect(session.finalize()).toBe(Lane.Idle);
       session.flush();
     });
   });
@@ -718,9 +718,11 @@ describe('RenderSession', () => {
 
       expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
 
-      session.useInsertionEffect(() => {
-        count++;
-      }, []);
+      session['_context'].enqueueMutationEffect({
+        commit() {
+          count++;
+        },
+      });
 
       session.finalize();
       session.flush();
@@ -731,9 +733,11 @@ describe('RenderSession', () => {
 
       expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
 
-      session.useLayoutEffect(() => {
-        count++;
-      }, []);
+      session['_context'].enqueueLayoutEffect({
+        commit() {
+          count++;
+        },
+      });
 
       session.finalize();
       session.flush();

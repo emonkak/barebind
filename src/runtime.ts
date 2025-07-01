@@ -12,21 +12,18 @@ import {
   type Slot,
   type Template,
   type TemplateMode,
-  type TemplateResult,
   type UpdateContext,
 } from './directive.js';
 import type { Hook, Lanes, UpdateTask } from './hook.js';
 import {
   ALL_LANES,
-  CommitPhase,
   getLanesFromPriority,
   NO_LANES,
   type UpdateOptions,
 } from './hook.js';
-import type { HydrationTree } from './hydration.js';
 import { LinkedList } from './linkedList.js';
-import { type ChildNodePart, type Part, PartType } from './part.js';
-import type { RenderHost } from './renderHost.js';
+import { type Part, PartType } from './part.js';
+import { CommitPhase, type RenderHost } from './renderHost.js';
 import { RenderSession } from './renderSession.js';
 import { Scope } from './scope.js';
 import {
@@ -35,7 +32,35 @@ import {
   TemplateLiteralPreprocessor,
 } from './templateLiteral.js';
 
+export interface RuntimeObserver {
+  onRuntimeEvent(event: RuntimeEvent): void;
+}
+
+export type RuntimeEvent =
+  | {
+      type: 'UPDATE_START' | 'UPDATE_END';
+      id: number;
+      options: UpdateOptions;
+    }
+  | {
+      type: 'RENDER_START' | 'RENDER_END';
+      id: number;
+    }
+  | {
+      type: 'COMMIT_START' | 'COMMIT_END';
+      id: number;
+      effects: Effect[];
+      phase: CommitPhase;
+    }
+  | {
+      type: 'COMPONENT_RENDER_START' | 'COMPONENT_RENDER_END';
+      id: number;
+      component: Component<unknown, unknown>;
+      props: unknown;
+    };
+
 interface RenderFrame {
+  id: number;
   pendingCoroutines: Coroutine[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
@@ -45,7 +70,9 @@ interface RenderFrame {
 interface SharedState {
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
+  frameCount: number;
   identifierCount: number;
+  observers: LinkedList<RuntimeObserver>;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
   uniqueIdentifier: string;
 }
@@ -66,7 +93,7 @@ export class Runtime implements EffectContext, UpdateContext {
 
   constructor(
     renderHost: RenderHost,
-    renderFrame: RenderFrame = createRenderFrame(),
+    renderFrame: RenderFrame = createRenderFrame(0),
     currentScope: Scope = new Scope(null),
     sharedState: SharedState = createSharedState(),
   ) {
@@ -74,6 +101,14 @@ export class Runtime implements EffectContext, UpdateContext {
     this._renderFrame = renderFrame;
     this._currentScope = currentScope;
     this._sharedState = sharedState;
+  }
+
+  observe(observer: RuntimeObserver): () => void {
+    const observers = this._sharedState.observers;
+    const node = observers.pushBack(observer);
+    return () => {
+      observers.remove(node);
+    };
   }
 
   debugValue(directive: Directive<unknown>, value: unknown, part: Part): void {
@@ -90,27 +125,16 @@ export class Runtime implements EffectContext, UpdateContext {
     this._renderFrame.pendingCoroutines.push(coroutine);
   }
 
-  enqueueEffect(effect: Effect, phase: CommitPhase): void {
-    switch (phase) {
-      case CommitPhase.Mutation:
-        this._renderFrame.mutationEffects.push(effect);
-        break;
-      case CommitPhase.Layout:
-        this._renderFrame.layoutEffects.push(effect);
-        break;
-      case CommitPhase.Passive:
-        this._renderFrame.passiveEffects.push(effect);
-        break;
-    }
+  enqueueLayoutEffect(effect: Effect): void {
+    this._renderFrame.layoutEffects.push(effect);
   }
 
-  enterRenderFrame(): Runtime {
-    return new Runtime(
-      this._renderHost,
-      createRenderFrame(),
-      this._currentScope,
-      this._sharedState,
-    );
+  enqueueMutationEffect(effect: Effect): void {
+    this._renderFrame.mutationEffects.push(effect);
+  }
+
+  enqueuePassiveEffect(effect: Effect): void {
+    this._renderFrame.passiveEffects.push(effect);
   }
 
   enterScope(scope: Scope): Runtime {
@@ -133,102 +157,152 @@ export class Runtime implements EffectContext, UpdateContext {
   }
 
   async flushAsync(options?: UpdateOptions): Promise<void> {
-    const { coroutineStates } = this._sharedState;
+    const { coroutineStates, observers } = this._sharedState;
     const lanes =
       options?.priority !== undefined
         ? getLanesFromPriority(options.priority)
         : ALL_LANES;
 
-    while (true) {
-      const coroutines = consumeCoroutines(this._renderFrame);
-
-      for (let i = 0, l = coroutines.length; i < l; i++) {
-        const coroutine = coroutines[i]!;
-        const coroutineState = coroutineStates.get(coroutine);
-        const nextLanes = coroutine.resume(lanes, this);
-
-        if (coroutineState !== undefined) {
-          coroutineState.lanes = nextLanes;
-        }
-      }
-
-      if (this._renderFrame.pendingCoroutines.length === 0) {
-        break;
-      }
-
-      await this._renderHost.yieldToMain();
-    }
-
-    const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
-      this._renderFrame,
-    );
-    const callback = () => {
-      this._renderHost.commitEffects(
-        mutationEffects,
-        CommitPhase.Mutation,
-        this,
-      );
-      this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout, this);
-    };
-
-    if (options?.viewTransition) {
-      await this._renderHost.startViewTransition(callback);
-    } else {
-      await this._renderHost.requestCallback(callback, {
-        priority: 'user-blocking',
+    if (!observers.isEmpty()) {
+      this._notifyObservers({
+        type: 'UPDATE_START',
+        id: this._renderFrame.id,
+        options: options ?? {},
       });
     }
 
-    if (passiveEffects.length > 0) {
-      await this._renderHost.requestCallback(
-        () => {
-          this._renderHost.commitEffects(
-            passiveEffects,
-            CommitPhase.Passive,
-            this,
-          );
-        },
-        { priority: 'background' },
+    try {
+      if (!observers.isEmpty()) {
+        this._notifyObservers({
+          type: 'RENDER_START',
+          id: this._renderFrame.id,
+        });
+      }
+
+      while (true) {
+        const coroutines = consumeCoroutines(this._renderFrame);
+
+        for (let i = 0, l = coroutines.length; i < l; i++) {
+          const coroutine = coroutines[i]!;
+          const coroutineState = coroutineStates.get(coroutine);
+          const nextLanes = coroutine.resume(lanes, this);
+
+          if (coroutineState !== undefined) {
+            coroutineState.lanes = nextLanes;
+          }
+        }
+
+        if (this._renderFrame.pendingCoroutines.length === 0) {
+          break;
+        }
+
+        await this._renderHost.yieldToMain();
+      }
+
+      if (!observers.isEmpty()) {
+        this._notifyObservers({
+          type: 'RENDER_END',
+          id: this._renderFrame.id,
+        });
+      }
+
+      const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
+        this._renderFrame,
       );
+      const callback = () => {
+        this._commitEffects(mutationEffects, CommitPhase.Mutation);
+        this._commitEffects(layoutEffects, CommitPhase.Layout);
+      };
+
+      if (options?.viewTransition) {
+        await this._renderHost.startViewTransition(callback);
+      } else {
+        await this._renderHost.requestCallback(callback, {
+          priority: 'user-blocking',
+        });
+      }
+
+      if (passiveEffects.length > 0) {
+        await this._renderHost.requestCallback(
+          () => {
+            this._commitEffects(passiveEffects, CommitPhase.Passive);
+          },
+          { priority: 'background' },
+        );
+      }
+    } finally {
+      if (!observers.isEmpty()) {
+        this._notifyObservers({
+          type: 'UPDATE_END',
+          id: this._renderFrame.id,
+          options: options ?? {},
+        });
+      }
     }
   }
 
   flushSync(): void {
-    do {
-      const coroutines = consumeCoroutines(this._renderFrame);
+    const { observers } = this._sharedState;
 
-      for (let i = 0, l = coroutines.length; i < l; i++) {
-        const coroutine = coroutines[i]!;
-        coroutine.resume(ALL_LANES, this);
+    if (!observers.isEmpty()) {
+      this._notifyObservers({
+        type: 'UPDATE_START',
+        id: this._renderFrame.id,
+        options: {},
+      });
+    }
+
+    try {
+      if (!observers.isEmpty()) {
+        this._notifyObservers({
+          type: 'RENDER_START',
+          id: this._renderFrame.id,
+        });
       }
-    } while (this._renderFrame.pendingCoroutines.length > 0);
 
-    const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
-      this._renderFrame,
-    );
+      do {
+        const coroutines = consumeCoroutines(this._renderFrame);
 
-    this._renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, this);
-    this._renderHost.commitEffects(layoutEffects, CommitPhase.Layout, this);
-    this._renderHost.commitEffects(passiveEffects, CommitPhase.Passive, this);
+        for (let i = 0, l = coroutines.length; i < l; i++) {
+          const coroutine = coroutines[i]!;
+          coroutine.resume(ALL_LANES, this);
+        }
+      } while (this._renderFrame.pendingCoroutines.length > 0);
+
+      if (!observers.isEmpty()) {
+        this._notifyObservers({
+          type: 'RENDER_END',
+          id: this._renderFrame.id,
+        });
+      }
+
+      const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
+        this._renderFrame,
+      );
+
+      this._commitEffects(mutationEffects, CommitPhase.Mutation);
+      this._commitEffects(layoutEffects, CommitPhase.Layout);
+      this._commitEffects(passiveEffects, CommitPhase.Passive);
+    } finally {
+      if (!observers.isEmpty()) {
+        this._notifyObservers({
+          type: 'UPDATE_END',
+          id: this._renderFrame.id,
+          options: {},
+        });
+      }
+    }
   }
 
   getCurrentScope(): Scope {
     return this._currentScope;
   }
 
-  hydrateTemplate<TBinds extends readonly unknown[]>(
-    template: Template<TBinds>,
-    binds: TBinds,
-    part: ChildNodePart,
-    hydrationTree: HydrationTree,
-  ): TemplateResult {
-    return template.hydrate(binds, part, hydrationTree, this);
-  }
-
   nextIdentifier(): string {
     const prefix = this._sharedState.uniqueIdentifier;
-    const count = ++this._sharedState.identifierCount;
-    return prefix + '-' + count;
+    const nextId = incrementId(this._sharedState.identifierCount);
+    this._sharedState.identifierCount = nextId;
+    return prefix + '-' + nextId;
   }
 
   renderComponent<TProps, TResult>(
@@ -238,18 +312,31 @@ export class Runtime implements EffectContext, UpdateContext {
     lanes: Lanes,
     coroutine: Coroutine,
   ): ComponentResult<TResult> {
+    const { observers } = this._sharedState;
     const session = new RenderSession(hooks, lanes, coroutine, this);
+
+    if (!observers.isEmpty()) {
+      this._notifyObservers({
+        type: 'COMPONENT_RENDER_START',
+        id: this._renderFrame.id,
+        component,
+        props,
+      });
+    }
+
     const result = component.render(props, session);
     const nextLanes = session.finalize();
-    return { value: result, lanes: nextLanes };
-  }
 
-  renderTemplate<TBinds extends readonly unknown[]>(
-    template: Template<TBinds>,
-    binds: TBinds,
-    part: ChildNodePart,
-  ): TemplateResult {
-    return template.render(binds, part, this);
+    if (!observers.isEmpty()) {
+      this._notifyObservers({
+        type: 'COMPONENT_RENDER_END',
+        id: this._renderFrame.id,
+        component,
+        props,
+      });
+    }
+
+    return { value: result, lanes: nextLanes };
   }
 
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
@@ -274,16 +361,17 @@ export class Runtime implements EffectContext, UpdateContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    let template = this._sharedState.cachedTemplates.get(strings);
+    const { uniqueIdentifier, cachedTemplates } = this._sharedState;
+    let template = cachedTemplates.get(strings);
 
     if (template === undefined) {
       template = this._renderHost.createTemplate(
         strings,
         binds,
-        this._sharedState.uniqueIdentifier,
+        uniqueIdentifier,
         mode,
       );
-      this._sharedState.cachedTemplates.set(strings, template);
+      cachedTemplates.set(strings, template);
     }
 
     return template;
@@ -291,8 +379,7 @@ export class Runtime implements EffectContext, UpdateContext {
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
     const { coroutineStates } = this._sharedState;
-    const priority =
-      options?.priority ?? this._renderHost.getCurrentTaskPriority();
+    const priority = options?.priority ?? this._renderHost.getCurrentPriority();
     let coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState === undefined) {
@@ -318,12 +405,7 @@ export class Runtime implements EffectContext, UpdateContext {
 
           coroutineState.pendingTasks.remove(updateTaskNode);
 
-          const subcontext = this.enterRenderFrame();
-
-          subcontext._renderFrame.pendingCoroutines.push(coroutine);
-          subcontext._renderFrame.mutationEffects.push(coroutine);
-
-          return subcontext.flushAsync({
+          return this._createSubcontext(coroutine).flushAsync({
             priority,
             viewTransition: options?.viewTransition ?? false,
           });
@@ -363,6 +445,57 @@ export class Runtime implements EffectContext, UpdateContext {
     }
     return false;
   }
+
+  private _commitEffects(effects: Effect[], phase: CommitPhase): void {
+    const { observers } = this._sharedState;
+
+    if (!observers.isEmpty()) {
+      this._notifyObservers({
+        type: 'COMMIT_START',
+        id: this._renderFrame.id,
+        effects,
+        phase,
+      });
+    }
+
+    this._renderHost.commitEffects(effects, phase, this);
+
+    if (!observers.isEmpty()) {
+      this._notifyObservers({
+        type: 'COMMIT_END',
+        id: this._renderFrame.id,
+        effects,
+        phase,
+      });
+    }
+  }
+
+  private _createSubcontext(coroutine: Coroutine): Runtime {
+    const nextId = incrementId(this._sharedState.frameCount);
+    const renderFrame = createRenderFrame(nextId);
+
+    renderFrame.pendingCoroutines.push(coroutine);
+    renderFrame.mutationEffects.push(coroutine);
+
+    this._sharedState.frameCount = nextId;
+
+    return new Runtime(
+      this._renderHost,
+      renderFrame,
+      this._currentScope,
+      this._sharedState,
+    );
+  }
+
+  private _notifyObservers(event: RuntimeEvent): void {
+    for (
+      let node = this._sharedState.observers.front();
+      node !== null;
+      node = node.next
+    ) {
+      node.value.onRuntimeEvent(event);
+    }
+  }
 }
 
 function consumeCoroutines(renderFrame: RenderFrame): Coroutine[] {
@@ -389,14 +522,17 @@ function createSharedState(): SharedState {
   return {
     cachedTemplates: new WeakMap(),
     coroutineStates: new WeakMap(),
+    frameCount: 0,
     identifierCount: 0,
+    observers: new LinkedList(),
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
     uniqueIdentifier: generateUniqueIdentifier(8),
   };
 }
 
-function createRenderFrame(): RenderFrame {
+function createRenderFrame(id: number): RenderFrame {
   return {
+    id,
     pendingCoroutines: [],
     mutationEffects: [],
     layoutEffects: [],
@@ -408,4 +544,8 @@ function generateUniqueIdentifier(length: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
     (byte % 36).toString(36),
   ).join('');
+}
+
+function incrementId(id: number): number {
+  return (id % Number.MAX_SAFE_INTEGER) + 1;
 }

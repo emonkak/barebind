@@ -284,7 +284,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
     this._slot ??= context.resolveSlot(this._signal.value, this._part);
     this._slot.hydrate(hydrationTree, context);
-    this._subscription ??= this._subscribeSignal(context.enterRenderFrame());
+    this._subscription ??= this._subscribeSignal(context);
   }
 
   connect(context: UpdateContext): void {
@@ -294,7 +294,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
       this._slot ??= context.resolveSlot(this._signal.value, this._part);
       this._slot.connect(context);
     }
-    this._subscription ??= this._subscribeSignal(context.enterRenderFrame());
+    this._subscription ??= this._subscribeSignal(context);
   }
 
   disconnect(context: UpdateContext): void {

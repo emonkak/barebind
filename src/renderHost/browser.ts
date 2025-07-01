@@ -8,7 +8,6 @@ import type {
   Template,
   TemplateMode,
 } from '../directive.js';
-import type { CommitPhase } from '../hook.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
@@ -21,7 +20,11 @@ import { RefPrimitive } from '../primitive/ref.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
-import type { RenderHost, RequestCallbackOptions } from '../renderHost.js';
+import type {
+  CommitPhase,
+  RenderHost,
+  RequestCallbackOptions,
+} from '../renderHost.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
 import { ChildNodeTemplate } from '../template/childNodeTemplate.js';
@@ -75,7 +78,7 @@ export class BrowserRenderHost implements RenderHost {
     return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
   }
 
-  getCurrentTaskPriority(): TaskPriority {
+  getCurrentPriority(): TaskPriority {
     const currentEvent = window.event;
     if (currentEvent !== undefined) {
       return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';

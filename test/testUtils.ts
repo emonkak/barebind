@@ -9,7 +9,11 @@ export function* allCombinations<T>(xs: T[]): Generator<T[]> {
 export function cleanupHooks(hooks: Hook[]): void {
   for (let i = hooks.length - 1; i >= 0; i--) {
     const hook = hooks[i]!;
-    if (hook.type === HookType.Effect) {
+    if (
+      hook.type === HookType.Effect ||
+      hook.type === HookType.LayoutEffect ||
+      hook.type === HookType.InsertionEffect
+    ) {
       hook.cleanup?.();
       hook.cleanup = undefined;
     }

@@ -169,8 +169,16 @@ export class ComponentBinding<TProps, TResult>
     // Hooks must be cleaned in reverse order.
     for (let i = this._hooks.length - 1; i >= 0; i--) {
       const hook = this._hooks[i]!;
-      if (hook.type === HookType.Effect) {
-        context.enqueueEffect(new CleanEffectHook(hook), hook.phase);
+      switch (hook.type) {
+        case HookType.Effect:
+          context.enqueuePassiveEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.LayoutEffect:
+          context.enqueueLayoutEffect(new CleanEffectHook(hook));
+          break;
+        case HookType.InsertionEffect:
+          context.enqueueMutationEffect(new CleanEffectHook(hook));
+          break;
       }
     }
 

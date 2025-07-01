@@ -8,8 +8,19 @@ import type {
   Template,
   TemplateMode,
 } from './directive.js';
-import type { CommitPhase } from './hook.js';
 import type { Part } from './part.js';
+
+export const CommitPhase = {
+  Mutation: 0,
+  Layout: 1,
+  Passive: 2,
+} as const;
+
+export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
+
+export interface RequestCallbackOptions {
+  priority?: TaskPriority;
+}
 
 export interface RenderHost {
   commitEffects(
@@ -23,7 +34,7 @@ export interface RenderHost {
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
-  getCurrentTaskPriority(): TaskPriority;
+  getCurrentPriority(): TaskPriority;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
@@ -32,8 +43,4 @@ export interface RenderHost {
   resolveSlotType(part: Part): SlotType;
   startViewTransition(callback: () => void | Promise<void>): Promise<void>;
   yieldToMain(): Promise<void>;
-}
-
-export interface RequestCallbackOptions {
-  priority?: TaskPriority;
 }

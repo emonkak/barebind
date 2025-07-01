@@ -4,73 +4,112 @@ import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
 
 describe('AsyncRoot', () => {
-  it('mounts the value', async () => {
-    const value1: string = 'foo';
-    const value2: string = 'bar';
-    const container = document.createElement('div');
-    const renderHost = new MockRenderHost();
-    const root = createAsyncRoot(value1, container, renderHost);
+  describe('observe()', () => {
+    it('adds the observer to the runtime', async () => {
+      const value = 'foo';
+      const container = document.createElement('div');
+      const renderHost = new MockRenderHost();
+      const root = createAsyncRoot(value, container, renderHost);
+      const observer = { onRuntimeEvent: vi.fn() };
 
-    const requestCallbackSpy = vi.spyOn(renderHost, 'requestCallback');
+      const unsubscribe = root.observe(observer);
 
-    await root.mount();
+      await root.mount();
 
-    expect(container.innerHTML).toBe('<!--foo-->');
-    expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
-    expect(requestCallbackSpy).toHaveBeenNthCalledWith(
-      1,
-      expect.any(Function),
-      {
-        priority: 'user-blocking',
-      },
-    );
+      expect(observer.onRuntimeEvent).toHaveBeenCalled();
+      expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
+        type: 'UPDATE_START',
+        id: 0,
+        options: {
+          priority: 'user-blocking',
+        },
+      });
+      expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
+        type: 'UPDATE_END',
+        id: 0,
+        options: {
+          priority: 'user-blocking',
+        },
+      });
 
-    await root.update(value2, {
-      priority: 'user-blocking',
+      const callCount = observer.onRuntimeEvent.mock.calls.length;
+
+      unsubscribe();
+      await root.unmount();
+
+      expect(observer.onRuntimeEvent).toHaveBeenCalledTimes(callCount);
     });
-
-    expect(container.innerHTML).toBe('<!--bar-->');
-    expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
-    expect(requestCallbackSpy).toHaveBeenNthCalledWith(
-      3,
-      expect.any(Function),
-      {
-        priority: 'user-blocking',
-      },
-    );
-
-    await root.unmount({
-      priority: 'user-visible',
-    });
-
-    expect(container.innerHTML).toBe('');
-    expect(requestCallbackSpy).toHaveBeenCalledTimes(6);
-    expect(requestCallbackSpy).toHaveBeenNthCalledWith(
-      5,
-      expect.any(Function),
-      {
-        priority: 'user-visible',
-      },
-    );
   });
 
-  it('hydrates the value', async () => {
-    const value1: string = 'foo';
-    const value2: string = 'bar';
-    const container = createElement('div', {}, document.createComment(''));
-    const renderHost = new MockRenderHost();
-    const root = createAsyncRoot(value1, container, renderHost);
+  describe('mount()', () => {
+    it('mounts the value', async () => {
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const container = document.createElement('div');
+      const renderHost = new MockRenderHost();
+      const root = createAsyncRoot(value1, container, renderHost);
 
-    await root.hydrate();
+      const requestCallbackSpy = vi.spyOn(renderHost, 'requestCallback');
 
-    expect(container.innerHTML).toBe('<!--foo-->');
+      await root.mount();
 
-    await root.update(value2);
+      expect(container.innerHTML).toBe('<!--foo-->');
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
+      expect(requestCallbackSpy).toHaveBeenNthCalledWith(
+        1,
+        expect.any(Function),
+        {
+          priority: 'user-blocking',
+        },
+      );
 
-    expect(container.innerHTML).toBe('<!--bar-->');
+      await root.update(value2, {
+        priority: 'background',
+      });
 
-    await root.unmount();
+      expect(container.innerHTML).toBe('<!--bar-->');
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
+      expect(requestCallbackSpy).toHaveBeenNthCalledWith(
+        3,
+        expect.any(Function),
+        {
+          priority: 'background',
+        },
+      );
 
-    expect(container.innerHTML).toBe('');
+      await root.unmount();
+
+      expect(container.innerHTML).toBe('');
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(6);
+      expect(requestCallbackSpy).toHaveBeenNthCalledWith(
+        5,
+        expect.any(Function),
+        {
+          priority: 'user-blocking',
+        },
+      );
+    });
+  });
+
+  describe('hydrate()', () => {
+    it('hydrates the value', async () => {
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const container = createElement('div', {}, document.createComment(''));
+      const renderHost = new MockRenderHost();
+      const root = createAsyncRoot(value1, container, renderHost);
+
+      await root.hydrate();
+
+      expect(container.innerHTML).toBe('<!--foo-->');
+
+      await root.update(value2);
+
+      expect(container.innerHTML).toBe('<!--bar-->');
+
+      await root.unmount();
+
+      expect(container.innerHTML).toBe('');
+    });
   });
 });

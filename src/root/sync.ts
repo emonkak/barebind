@@ -1,11 +1,12 @@
-import { CommitPhase } from '../hook.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
 import type { RenderHost } from '../renderHost.js';
+import type { RuntimeObserver } from '../runtime.js';
 import { Runtime } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
 export interface SyncRoot<T> {
+  observe(observer: RuntimeObserver): () => void;
   hydrate(): void;
   mount(): void;
   update(value: T): void;
@@ -26,6 +27,9 @@ export function createSyncRoot<T>(
   const slot = runtime.resolveSlot(value, part);
 
   return {
+    observe(observer) {
+      return runtime.observe(observer);
+    },
     hydrate() {
       const hydrationTree = new HydrationTree(container);
 
@@ -33,31 +37,22 @@ export function createSyncRoot<T>(
       hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
       hydrationTree.replaceNode(part.node);
 
-      runtime.enqueueEffect(
-        new MountSlot(slot, container),
-        CommitPhase.Mutation,
-      );
+      runtime.enqueueMutationEffect(new MountSlot(slot, container));
       runtime.flushSync();
     },
     mount() {
       slot.connect(runtime);
-      runtime.enqueueEffect(
-        new MountSlot(slot, container),
-        CommitPhase.Mutation,
-      );
+      runtime.enqueueMutationEffect(new MountSlot(slot, container));
       runtime.flushSync();
     },
     update(value) {
       slot.reconcile(value, runtime);
-      runtime.enqueueEffect(slot, CommitPhase.Mutation);
+      runtime.enqueueMutationEffect(slot);
       runtime.flushSync();
     },
     unmount() {
       slot.disconnect(runtime);
-      runtime.enqueueEffect(
-        new UnmountSlot(slot, container),
-        CommitPhase.Mutation,
-      );
+      runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
       runtime.flushSync();
     },
   };

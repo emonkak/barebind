@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   ensureHookType,
+  getLaneFromPriority,
   getLanesFromPriority,
   HookType,
   Lane,
@@ -19,6 +20,16 @@ describe('ensureHookType()', () => {
         type: HookType.Finalizer,
       }),
     ).not.toThrow();
+  });
+});
+
+describe('getLaneFromPriority()', () => {
+  it.each([
+    ['user-blocking', Lane.UserInput],
+    ['user-visible', Lane.ContinuousInput],
+    ['background', Lane.Idle],
+  ] as const)('returns the lane according to priority', (priority, lanes) => {
+    expect(getLaneFromPriority(priority)).toBe(lanes);
   });
 });
 

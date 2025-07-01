@@ -15,10 +15,14 @@ import type {
   TemplateResult,
   UpdateContext,
 } from '../src/directive.js';
-import { type CommitPhase, type Lanes, NO_LANES } from '../src/hook.js';
+import { type Lanes, NO_LANES } from '../src/hook.js';
 import type { HydrationTree } from '../src/hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../src/part.js';
-import type { RenderHost, RequestCallbackOptions } from '../src/renderHost.js';
+import type {
+  CommitPhase,
+  RenderHost,
+  RequestCallbackOptions,
+} from '../src/renderHost.js';
 import { TemplateBinding } from '../src/template/template.js';
 
 export class MockDirective<T> {
@@ -190,7 +194,7 @@ export class MockRenderHost implements RenderHost {
     return new MockTemplate(strings, binds, placeholder, mode);
   }
 
-  getCurrentTaskPriority(): TaskPriority {
+  getCurrentPriority(): TaskPriority {
     return 'user-blocking';
   }
 

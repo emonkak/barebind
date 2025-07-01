@@ -12,28 +12,22 @@ export type Hook =
 export const HookType = {
   Finalizer: 0,
   Effect: 1,
-  Id: 2,
-  Memo: 3,
-  Reducer: 4,
+  LayoutEffect: 2,
+  InsertionEffect: 3,
+  Id: 4,
+  Memo: 5,
+  Reducer: 6,
 } as const;
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
-
-export const CommitPhase = {
-  Mutation: 0,
-  Layout: 1,
-  Passive: 2,
-} as const;
-
-export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
 
 export const NO_LANES: Lanes = 0;
 export const ALL_LANES: Lanes = -1;
 
 export const Lane = {
-  UserInput: 1,
-  ContinuousInput: 2,
-  Idle: 3,
+  UserInput: 0b1,
+  ContinuousInput: 0b10,
+  Idle: 0b100,
 } as const;
 
 export type Lane = (typeof Lane)[keyof typeof Lane];
@@ -45,8 +39,10 @@ export interface FinalizerHook {
 }
 
 export interface EffectHook {
-  type: typeof HookType.Effect;
-  phase: CommitPhase;
+  type:
+    | typeof HookType.Effect
+    | typeof HookType.LayoutEffect
+    | typeof HookType.InsertionEffect;
   callback: () => (() => void) | void;
   cleanup: (() => void) | void;
   dependencies: unknown[] | null;
@@ -147,6 +143,17 @@ export function ensureHookType<TExpectedHook extends Hook>(
     throw new Error(
       `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
     );
+  }
+}
+
+export function getLaneFromPriority(priority: TaskPriority): Lane {
+  switch (priority) {
+    case 'user-blocking':
+      return Lane.UserInput;
+    case 'user-visible':
+      return Lane.ContinuousInput;
+    case 'background':
+      return Lane.Idle;
   }
 }
 

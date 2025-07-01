@@ -8,7 +8,6 @@ import type {
   Template,
   TemplateMode,
 } from '../directive.js';
-import { CommitPhase } from '../hook.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
@@ -19,7 +18,11 @@ import { PropertyPrimitive } from '../primitive/property.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
-import type { RenderHost, RequestCallbackOptions } from '../renderHost.js';
+import {
+  CommitPhase,
+  type RenderHost,
+  type RequestCallbackOptions,
+} from '../renderHost.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
 import { ChildNodeTemplate } from '../template/childNodeTemplate.js';
@@ -88,7 +91,7 @@ export class ServerRenderHost implements RenderHost {
     );
   }
 
-  getCurrentTaskPriority(): TaskPriority {
+  getCurrentPriority(): TaskPriority {
     return 'user-blocking';
   }
 

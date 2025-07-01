@@ -55,11 +55,11 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       );
     }
 
-    this._pendingResult = context.hydrateTemplate(
-      this._template,
+    this._pendingResult = this._template.hydrate(
       this._binds,
       this._part,
       hydrationTree,
+      context,
     );
     this._memoizedResult = this._pendingResult;
   }
@@ -72,10 +72,10 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, context);
       }
     } else {
-      this._pendingResult = context.renderTemplate(
-        this._template,
+      this._pendingResult = this._template.render(
         this._binds,
         this._part,
+        context,
       );
     }
   }
