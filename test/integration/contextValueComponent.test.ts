@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+
 import { component } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
 import { BrowserRenderHost } from '@/renderHost/browser.js';

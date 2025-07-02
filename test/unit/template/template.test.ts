@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';

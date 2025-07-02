@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { createAsyncRoot } from '@/root/async.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import type { Effect } from '@/directive.js';
 import { PartType } from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';

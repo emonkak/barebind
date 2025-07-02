@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { resetScrollPosition } from '@/router/resetScrollPosition.js';
 import { RelativeURL } from '@/router/url.js';
 import { createElement } from '../../testUtils.js';

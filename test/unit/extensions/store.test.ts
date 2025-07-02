@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { Atom, Lazy } from '@/extensions/signal.js';
 import { createStoreClass } from '@/extensions/store.js';
 import { $customHook, type HookContext } from '@/hook.js';

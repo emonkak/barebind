@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { createDirectiveObject, type DirectiveObject } from '@/directive.js';
 import {
   RepeatBinding,

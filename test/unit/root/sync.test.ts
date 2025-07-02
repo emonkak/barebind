@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { createSyncRoot } from '@/root/sync.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../testUtils.js';
