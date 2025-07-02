@@ -178,7 +178,7 @@ export interface RenderSessionContext {
 
 export interface ComponentResult<T> {
   value: T;
-  lanes: Lanes;
+  pendingLanes: Lanes;
 }
 
 export interface DirectiveObject<T> extends Bindable<T> {

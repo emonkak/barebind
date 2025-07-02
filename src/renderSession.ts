@@ -40,7 +40,7 @@ export class RenderSession implements RenderContext {
 
   private _hookIndex = 0;
 
-  private _nextLanes = NO_LANES;
+  private _pendingLanes = NO_LANES;
 
   constructor(
     hooks: Hook[],
@@ -93,7 +93,7 @@ export class RenderSession implements RenderContext {
 
     this._hookIndex++;
 
-    return this._nextLanes;
+    return this._pendingLanes;
   }
 
   flush(): void {
@@ -234,7 +234,7 @@ export class RenderSession implements RenderContext {
         currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;
       } else {
-        this._nextLanes |= currentHook.lanes;
+        this._pendingLanes |= currentHook.lanes;
       }
     } else {
       const state =

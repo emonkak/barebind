@@ -128,7 +128,7 @@ export class ComponentBinding<TProps, TResult>
   resume(lanes: Lanes, context: UpdateContext): Lanes {
     const scope = new Scope(this._parentScope);
     const subcontext = context.enterScope(scope);
-    const { value, lanes: nextLanes } = subcontext.renderComponent(
+    const { value, pendingLanes } = subcontext.renderComponent(
       this._component,
       this._props,
       this._hooks,
@@ -141,7 +141,7 @@ export class ComponentBinding<TProps, TResult>
       this._slot = subcontext.resolveSlot(value, this._part);
       this._slot.connect(subcontext);
     }
-    return nextLanes;
+    return pendingLanes;
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {

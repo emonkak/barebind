@@ -17,6 +17,7 @@ import {
 import type { Hook, Lanes, UpdateTask } from './hook.js';
 import {
   ALL_LANES,
+  getLaneFromPriority,
   getLanesFromPriority,
   NO_LANES,
   type UpdateOptions,
@@ -78,8 +79,8 @@ interface SharedState {
 }
 
 interface CoroutineState {
-  lanes: Lanes;
   pendingTasks: LinkedList<UpdateTask>;
+  pendingLanes: Lanes;
 }
 
 export class Runtime implements EffectContext, UpdateContext {
@@ -182,10 +183,10 @@ export class Runtime implements EffectContext, UpdateContext {
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
           const coroutineState = coroutineStates.get(coroutine);
-          const nextLanes = coroutine.resume(lanes, this);
+          const peningLanes = coroutine.resume(lanes, this);
 
           if (coroutineState !== undefined) {
-            coroutineState.lanes = nextLanes;
+            coroutineState.pendingLanes = peningLanes;
           }
         }
 
@@ -321,8 +322,8 @@ export class Runtime implements EffectContext, UpdateContext {
       });
     }
 
-    const result = component.render(props, session);
-    const nextLanes = session.finalize();
+    const value = component.render(props, session);
+    const pendingLanes = session.finalize();
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -333,7 +334,7 @@ export class Runtime implements EffectContext, UpdateContext {
       });
     }
 
-    return { value: result, lanes: nextLanes };
+    return { value, pendingLanes };
   }
 
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
@@ -380,11 +381,14 @@ export class Runtime implements EffectContext, UpdateContext {
     let coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState === undefined) {
-      coroutineState = { lanes: NO_LANES, pendingTasks: new LinkedList() };
+      coroutineState = {
+        pendingTasks: new LinkedList(),
+        pendingLanes: NO_LANES,
+      };
       coroutineStates.set(coroutine, coroutineState);
     }
 
-    coroutineState.lanes |= getLanesFromPriority(priority);
+    coroutineState.pendingLanes |= getLaneFromPriority(priority);
 
     for (const updateTask of coroutineState.pendingTasks) {
       if (updateTask.priority === priority) {
@@ -396,7 +400,7 @@ export class Runtime implements EffectContext, UpdateContext {
       priority,
       promise: this._renderHost.requestCallback(
         () => {
-          if (coroutineState.lanes === NO_LANES) {
+          if (coroutineState.pendingLanes === NO_LANES) {
             return;
           }
 
