@@ -156,18 +156,15 @@ export class Runtime implements EffectContext, UpdateContext {
     );
   }
 
-  async flushAsync(options?: UpdateOptions): Promise<void> {
+  async flushAsync(options: Required<UpdateOptions>): Promise<void> {
     const { coroutineStates, observers } = this._sharedState;
-    const lanes =
-      options?.priority !== undefined
-        ? getLanesFromPriority(options.priority)
-        : ALL_LANES;
+    const lanes = getLanesFromPriority(options.priority);
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
         type: 'UPDATE_START',
         id: this._renderFrame.id,
-        options: options ?? {},
+        options,
       });
     }
 
@@ -214,7 +211,7 @@ export class Runtime implements EffectContext, UpdateContext {
         this._commitEffects(layoutEffects, CommitPhase.Layout);
       };
 
-      if (options?.viewTransition) {
+      if (options.viewTransition) {
         await this._renderHost.startViewTransition(callback);
       } else {
         await this._renderHost.requestCallback(callback, {
@@ -235,7 +232,7 @@ export class Runtime implements EffectContext, UpdateContext {
         this._notifyObservers({
           type: 'UPDATE_END',
           id: this._renderFrame.id,
-          options: options ?? {},
+          options,
         });
       }
     }

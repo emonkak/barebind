@@ -22,6 +22,7 @@ describe('AsyncRoot', () => {
         id: 0,
         options: {
           priority: 'user-blocking',
+          viewTransition: false,
         },
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
@@ -29,6 +30,7 @@ describe('AsyncRoot', () => {
         id: 0,
         options: {
           priority: 'user-blocking',
+          viewTransition: false,
         },
       });
 
@@ -60,6 +62,7 @@ describe('AsyncRoot', () => {
         expect.any(Function),
         {
           priority: 'user-blocking',
+          viewTransition: false,
         },
       );
 
@@ -74,6 +77,7 @@ describe('AsyncRoot', () => {
         expect.any(Function),
         {
           priority: 'background',
+          viewTransition: false,
         },
       );
 
@@ -86,6 +90,7 @@ describe('AsyncRoot', () => {
         expect.any(Function),
         {
           priority: 'user-blocking',
+          viewTransition: false,
         },
       );
     });

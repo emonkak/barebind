@@ -1,9 +1,12 @@
 export {
+  type CommitMeasurement,
   type ComponentMeasurement,
-  ConsoleReporter,
+  LogReporter,
   type Profile,
   Profiler,
+  type RenderMeasurement,
   type Reporter,
+  type UpdateMeasurement,
 } from './extensions/profiler.js';
 export { type RepeatProps, repeat } from './extensions/repeat.js';
 export {

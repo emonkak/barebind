@@ -164,7 +164,6 @@ export interface RenderSessionContext {
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
-  flushAsync(options?: UpdateOptions): void;
   flushSync(): void;
   getCurrentScope(): Scope;
   nextIdentifier(): string;

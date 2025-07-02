@@ -27,6 +27,16 @@ export function createAsyncRoot<T>(
   } as const;
   const slot = runtime.resolveSlot(value, part);
 
+  function completeOptions(
+    options: UpdateOptions | undefined,
+  ): Required<UpdateOptions> {
+    return {
+      priority: renderHost.getCurrentPriority(),
+      viewTransition: false,
+      ...options,
+    };
+  }
+
   return {
     observe(observer) {
       return runtime.observe(observer);
@@ -38,42 +48,42 @@ export function createAsyncRoot<T>(
       hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
       hydrationTree.replaceNode(part.node);
 
-      options = { priority: renderHost.getCurrentPriority(), ...options };
+      const completedOptions = completeOptions(options);
 
       return renderHost.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
-        return runtime.flushAsync(options);
-      }, options);
+        return runtime.flushAsync(completedOptions);
+      }, completedOptions);
     },
     mount(options) {
       slot.connect(runtime);
 
-      options = { priority: renderHost.getCurrentPriority(), ...options };
+      const completedOptions = completeOptions(options);
 
       return renderHost.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
-        return runtime.flushAsync(options);
-      }, options);
+        return runtime.flushAsync(completedOptions);
+      }, completedOptions);
     },
     update(value, options) {
       slot.reconcile(value, runtime);
 
-      options = { priority: renderHost.getCurrentPriority(), ...options };
+      const completedOptions = completeOptions(options);
 
       return renderHost.requestCallback(() => {
         runtime.enqueueMutationEffect(slot);
-        return runtime.flushAsync(options);
-      }, options);
+        return runtime.flushAsync(completedOptions);
+      }, completedOptions);
     },
     unmount(options) {
       slot.disconnect(runtime);
 
-      options = { priority: renderHost.getCurrentPriority(), ...options };
+      const completedOptions = completeOptions(options);
 
       return renderHost.requestCallback(() => {
         runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
-        return runtime.flushAsync(options);
-      }, options);
+        return runtime.flushAsync(completedOptions);
+      }, completedOptions);
     },
   };
 }
