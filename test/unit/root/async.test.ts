@@ -53,6 +53,10 @@ describe('AsyncRoot', () => {
       const root = createAsyncRoot(value1, container, renderHost);
 
       const requestCallbackSpy = vi.spyOn(renderHost, 'requestCallback');
+      const startViewTransitionSpy = vi.spyOn(
+        renderHost,
+        'startViewTransition',
+      );
 
       await root.mount();
 
@@ -61,39 +65,40 @@ describe('AsyncRoot', () => {
       expect(requestCallbackSpy).toHaveBeenNthCalledWith(
         1,
         expect.any(Function),
-        {
+        expect.objectContaining({
           priority: 'user-blocking',
-          viewTransition: false,
-        },
+        }),
       );
+      expect(startViewTransitionSpy).not.toHaveBeenCalled();
 
       await root.update(value2, {
         priority: 'background',
+        viewTransition: true,
       });
 
       expect(container.innerHTML).toBe('<!--bar-->');
-      expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
       expect(requestCallbackSpy).toHaveBeenNthCalledWith(
         3,
         expect.any(Function),
-        {
+        expect.objectContaining({
           priority: 'background',
-          viewTransition: false,
-        },
+        }),
       );
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
 
       await root.unmount();
 
       expect(container.innerHTML).toBe('');
-      expect(requestCallbackSpy).toHaveBeenCalledTimes(6);
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
       expect(requestCallbackSpy).toHaveBeenNthCalledWith(
         5,
         expect.any(Function),
-        {
+        expect.objectContaining({
           priority: 'user-blocking',
-          viewTransition: false,
-        },
+        }),
       );
+      expect(startViewTransitionSpy).toHaveBeenCalledOnce();
     });
   });
 
