@@ -391,23 +391,18 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      let identifierCount = 0;
 
-      const nextIdentifierSpy = vi
-        .spyOn(session['_context'], 'nextIdentifier')
-        .mockImplementation(() => {
-          return 'test-' + ++identifierCount;
-        });
+      const id1 = session.useId();
+      const id2 = session.useId();
 
-      expect(session.useId()).toBe('test-1');
-      expect(session.useId()).toBe('test-2');
+      expect(id1).toMatch(/[0-9a-z]+-1/);
+      expect(id2).toMatch(/[0-9a-z]+-2/);
 
       session.finalize();
       session.flush();
 
-      expect(session.useId()).toBe('test-1');
-      expect(session.useId()).toBe('test-2');
-      expect(nextIdentifierSpy).toHaveBeenCalledTimes(2);
+      expect(session.useId()).toBe(id1);
+      expect(session.useId()).toBe(id2);
     });
   });
 
