@@ -180,6 +180,7 @@ export class LogReporter implements Reporter {
       layoutMeasurement,
       passiveMeasurement,
     } = profile;
+
     if (updateMeasurement === null) {
       return;
     }

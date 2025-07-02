@@ -274,7 +274,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
@@ -448,11 +448,11 @@ describe('RenderSession', () => {
 
       expect(count).toBe(0);
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       increment(1);
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
 
       [count, increment] = session.useReducer(reducer, 0);
 
@@ -478,11 +478,11 @@ describe('RenderSession', () => {
 
       expect(count).toBe(0);
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       increment(0);
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       [count, increment] = session.useReducer(reducer, 0);
 
@@ -549,11 +549,11 @@ describe('RenderSession', () => {
 
       expect(count).toBe(0);
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       setCount(1);
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
 
       [count, setCount] = session.useState(0);
 
@@ -578,11 +578,11 @@ describe('RenderSession', () => {
 
       expect(count).toBe(0);
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       setCount(0);
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       [count, setCount] = session.useState(0);
 
@@ -611,7 +611,7 @@ describe('RenderSession', () => {
       setCount((count) => count + 1);
       setCount((count) => count + 1);
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
 
       [count, setCount] = session.useState(0);
 
@@ -639,7 +639,7 @@ describe('RenderSession', () => {
 
       setCount(1, { priority: 'background' });
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
 
       [count, setCount, isPending] = session.useState(0);
 
@@ -683,7 +683,7 @@ describe('RenderSession', () => {
 
       notifySubscribers();
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
       expect(subscribers.size).toBe(1);
 
       expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
@@ -691,7 +691,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       cleanupHooks(session['_hooks']);
 
@@ -722,7 +722,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(true);
+      expect(await session.waitforUpdate()).toBe(1);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
@@ -737,7 +737,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
@@ -769,7 +769,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(0);
@@ -783,7 +783,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);
@@ -797,7 +797,7 @@ describe('RenderSession', () => {
       session.finalize();
       session.flush();
 
-      expect(await session.waitforUpdate()).toBe(false);
+      expect(await session.waitforUpdate()).toBe(0);
 
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);

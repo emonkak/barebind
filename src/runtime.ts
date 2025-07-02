@@ -427,9 +427,10 @@ export class Runtime implements EffectContext, UpdateContext {
     }
   }
 
-  async waitForUpdate(coroutine: Coroutine): Promise<boolean> {
+  async waitForUpdate(coroutine: Coroutine): Promise<number> {
     const { coroutineStates } = this._sharedState;
     const coroutineState = coroutineStates.get(coroutine);
+
     if (coroutineState !== undefined) {
       if (!coroutineState.pendingTasks.isEmpty()) {
         const pendingTasks = Array.from(
@@ -437,10 +438,11 @@ export class Runtime implements EffectContext, UpdateContext {
           (task) => task.promise,
         );
         await Promise.allSettled(pendingTasks);
-        return true;
+        return pendingTasks.length;
       }
     }
-    return false;
+
+    return 0;
   }
 
   private _commitEffects(effects: Effect[], phase: CommitPhase): void {

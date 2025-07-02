@@ -173,7 +173,7 @@ export interface RenderSessionContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  waitForUpdate(coroutine: Coroutine): Promise<boolean>;
+  waitForUpdate(coroutine: Coroutine): Promise<number>;
 }
 
 export interface ComponentResult<T> {

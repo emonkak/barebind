@@ -459,7 +459,7 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(true);
+      expect(await runtime.waitForUpdate(binding)).toBe(1);
 
       expect(hydrationRoot.innerHTML).toBe(signal.value);
     });
@@ -484,7 +484,7 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(true);
+      expect(await runtime.waitForUpdate(binding)).toBe(1);
 
       expect(part.node.nodeValue).toBe(signal.value);
     });
@@ -513,7 +513,7 @@ describe('SiganlBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(true);
+      expect(await runtime.waitForUpdate(binding)).toBe(1);
 
       expect(part.node.nodeValue).toBe(signal2.value);
     });
@@ -537,12 +537,12 @@ describe('SiganlBinding', () => {
       binding.disconnect(runtime);
       binding.rollback(runtime);
 
-      expect(await runtime.waitForUpdate(binding)).toBe(false);
+      expect(await runtime.waitForUpdate(binding)).toBe(0);
       expect(part.node.nodeValue).toBe('');
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(false);
+      expect(await runtime.waitForUpdate(binding)).toBe(0);
       expect(part.node.nodeValue).toBe('');
     });
   });

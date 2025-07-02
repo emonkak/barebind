@@ -316,7 +316,7 @@ export class RenderSession implements RenderContext {
     return snapshot;
   }
 
-  waitforUpdate(): Promise<boolean> {
+  waitforUpdate(): Promise<number> {
     return this._context.waitForUpdate(this._coroutine);
   }
 
