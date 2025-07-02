@@ -83,7 +83,9 @@ export class BrowserRenderHost implements RenderHost {
     if (currentEvent !== undefined) {
       return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
     } else {
-      return 'background';
+      return document.readyState === 'complete'
+        ? 'background'
+        : 'user-blocking';
     }
   }
 

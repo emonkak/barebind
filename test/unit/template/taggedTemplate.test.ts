@@ -301,7 +301,7 @@ describe('TaggedTemplate', () => {
 
     it('should throw an error if passed a placeholder in an invalid format', () => {
       expect(() => {
-        TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html');
+        TaggedTemplate.parse([], [], 'INVALID_MARKER', 'html', document);
       }).toThrow('The placeholder is in an invalid format.');
       expect(() => {
         TaggedTemplate.parse(
@@ -309,6 +309,7 @@ describe('TaggedTemplate', () => {
           [],
           TEMPLATE_PLACEHOLDER.toUpperCase(),
           'html',
+          document,
         );
       }).toThrow('The placeholder is in an invalid format.');
     });
@@ -925,6 +926,7 @@ function html<TBinds extends readonly unknown[]>(
       binds,
       TEMPLATE_PLACEHOLDER,
       'html',
+      document,
     ),
     binds,
   };
@@ -940,6 +942,7 @@ function math<const TBinds extends readonly unknown[]>(
       binds,
       TEMPLATE_PLACEHOLDER,
       'math',
+      document,
     ),
     binds,
   };
@@ -950,7 +953,13 @@ function svg<const TBinds extends readonly unknown[]>(
   ...binds: TBinds
 ): { template: TaggedTemplate<TBinds>; binds: TBinds } {
   return {
-    template: TaggedTemplate.parse(strings, binds, TEMPLATE_PLACEHOLDER, 'svg'),
+    template: TaggedTemplate.parse(
+      strings,
+      binds,
+      TEMPLATE_PLACEHOLDER,
+      'svg',
+      document,
+    ),
     binds,
   };
 }

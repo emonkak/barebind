@@ -165,22 +165,12 @@ describe('BrowserRenderHost', () => {
       vi.restoreAllMocks();
     });
 
-    it('returns "user-blocking" if the current event is not continuous', () => {
-      const renderHost = new BrowserRenderHost();
-      const getEventSpy = vi
-        .spyOn(globalThis, 'event', 'get')
-        .mockReturnValue(new MouseEvent('click'));
-
-      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
-      expect(getEventSpy).toHaveBeenCalled();
-    });
-
     it.each(CONTINUOUS_EVENT_TYPES)(
       'returns "user-visible" if the current event is continuous',
       (eventType) => {
         const renderHost = new BrowserRenderHost();
         const getEventSpy = vi
-          .spyOn(globalThis, 'event', 'get')
+          .spyOn(window, 'event', 'get')
           .mockReturnValue(new CustomEvent(eventType));
 
         expect(renderHost.getCurrentPriority()).toBe('user-visible');
@@ -188,15 +178,44 @@ describe('BrowserRenderHost', () => {
       },
     );
 
-    it('returns "background" if there is no current event', () => {
+    it('returns "user-blocking" if the current event is not continuous', () => {
+      const renderHost = new BrowserRenderHost();
+      const getEventSpy = vi
+        .spyOn(window, 'event', 'get')
+        .mockReturnValue(new MouseEvent('click'));
+
+      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
+      expect(getEventSpy).toHaveBeenCalled();
+    });
+
+    it('returns "background" if the document loading state is "complete"', () => {
       const renderHost = new BrowserRenderHost();
 
       const getEventSpy = vi
-        .spyOn(globalThis, 'event', 'get')
+        .spyOn(window, 'event', 'get')
         .mockReturnValue(undefined);
+      const getDocumentReadyState = vi
+        .spyOn(document, 'readyState', 'get')
+        .mockReturnValue('complete');
 
       expect(renderHost.getCurrentPriority()).toBe('background');
       expect(getEventSpy).toHaveBeenCalledOnce();
+      expect(getDocumentReadyState).toHaveBeenCalledOnce();
+    });
+
+    it('otherwise returns "user-blocking"', () => {
+      const renderHost = new BrowserRenderHost();
+
+      const getEventSpy = vi
+        .spyOn(window, 'event', 'get')
+        .mockReturnValue(undefined);
+      const getDocumentReadyState = vi
+        .spyOn(document, 'readyState', 'get')
+        .mockReturnValue('interactive');
+
+      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
+      expect(getEventSpy).toHaveBeenCalledOnce();
+      expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
   });
 
@@ -216,7 +235,7 @@ describe('BrowserRenderHost', () => {
       const renderHost = new BrowserRenderHost();
       const callback = vi.fn();
       const options = { priority: 'user-blocking' } as const;
-      const postTaskSpy = vi.spyOn(globalThis.scheduler, 'postTask');
+      const postTaskSpy = vi.spyOn(window.scheduler, 'postTask');
 
       renderHost.requestCallback(callback, options);
 
@@ -255,7 +274,7 @@ describe('BrowserRenderHost', () => {
 
       const renderHost = new BrowserRenderHost();
       const callback = vi.fn();
-      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
       await renderHost.requestCallback(callback);
       await renderHost.requestCallback(callback, { priority: 'user-visible' });
@@ -272,7 +291,7 @@ describe('BrowserRenderHost', () => {
 
       const renderHost = new BrowserRenderHost();
       const callback = vi.fn();
-      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
       await renderHost.requestCallback(callback);
       await renderHost.requestCallback(callback, { priority: 'background' });
@@ -292,10 +311,7 @@ describe('BrowserRenderHost', () => {
 
       const renderHost = new BrowserRenderHost();
       const callback = vi.fn();
-      const requestIdleCallbackSpy = vi.spyOn(
-        globalThis,
-        'requestIdleCallback',
-      );
+      const requestIdleCallbackSpy = vi.spyOn(window, 'requestIdleCallback');
 
       await renderHost.requestCallback(callback, { priority: 'background' });
 
@@ -547,7 +563,7 @@ describe('BrowserRenderHost', () => {
       } as Partial<Scheduler>);
 
       const renderHost = new BrowserRenderHost();
-      const yieldSpy = vi.spyOn(globalThis.scheduler, 'yield');
+      const yieldSpy = vi.spyOn(window.scheduler, 'yield');
 
       expect(await renderHost.yieldToMain()).toBe(undefined);
       expect(yieldSpy).toHaveBeenCalledOnce();
@@ -557,7 +573,7 @@ describe('BrowserRenderHost', () => {
       vi.stubGlobal('scheduler', undefined);
 
       const renderHost = new BrowserRenderHost();
-      const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+      const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
       expect(await renderHost.yieldToMain()).toBe(undefined);
       expect(setTimeoutSpy).toHaveBeenCalledOnce();

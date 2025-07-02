@@ -96,7 +96,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     binds: TBinds,
     placeholder: string,
     mode: TemplateMode,
-    document: Document = globalThis.document,
+    document: Document,
   ): TaggedTemplate<TBinds> {
     const template = document.createElement('template');
     const marker = createMarker(placeholder);
