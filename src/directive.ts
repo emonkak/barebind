@@ -196,7 +196,7 @@ export function createDirectiveObject<T>(
   value: T,
 ): DirectiveObject<T> {
   return {
-    [$toDirectiveElement](): DirectiveElement<T> {
+    [$toDirectiveElement]() {
       return this;
     },
     directive,
@@ -209,10 +209,7 @@ export function createSlotObject<T>(
   slotType: SlotType,
 ): SlotObject<T> {
   return {
-    [$toDirectiveElement](
-      part: Part,
-      context: DirectiveContext,
-    ): DirectiveElement<unknown> {
+    [$toDirectiveElement](part, context) {
       const { directive, value } = context.resolveDirective(this.value, part);
       return {
         directive,
