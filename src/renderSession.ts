@@ -1,4 +1,4 @@
-import { dependenciesAreChanged } from './compare.js';
+import { sequentialEqual } from './compare.js';
 import {
   type Coroutine,
   createDirectiveObject,
@@ -196,7 +196,7 @@ export class RenderSession implements RenderContext {
     if (currentHook !== undefined) {
       ensureHookType<MemoHook<T>>(HookType.Memo, currentHook);
 
-      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
+      if (areDependenciesChanged(currentHook.dependencies, dependencies)) {
         currentHook.value = factory();
         currentHook.dependencies = dependencies;
       }
@@ -353,7 +353,7 @@ export class RenderSession implements RenderContext {
 
     if (currentHook !== undefined) {
       ensureHookType<EffectHook>(type, currentHook);
-      if (dependenciesAreChanged(currentHook.dependencies, dependencies)) {
+      if (areDependenciesChanged(currentHook.dependencies, dependencies)) {
         enqueueEffect(currentHook, this._context);
       }
       currentHook.callback = callback;
@@ -385,6 +385,17 @@ class InvokeEffectHook implements Effect {
     cleanup?.();
     this._hook.cleanup = callback();
   }
+}
+
+function areDependenciesChanged(
+  oldDependencies: ArrayLike<unknown> | null,
+  newDependencies: ArrayLike<unknown> | null,
+): boolean {
+  return (
+    oldDependencies === null ||
+    newDependencies === null ||
+    !sequentialEqual(oldDependencies, newDependencies)
+  );
 }
 
 function enqueueEffect(hook: EffectHook, context: RenderSessionContext): void {

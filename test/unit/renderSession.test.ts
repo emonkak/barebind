@@ -367,20 +367,29 @@ describe('RenderSession', () => {
       const callback = vi.fn();
       const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
 
-      session[hookMethod](callback, []);
+      session[hookMethod](callback, ['foo']);
 
       session.finalize();
       session.flush();
 
-      expect(callback).toHaveBeenCalledOnce();
-
-      session[hookMethod](callback, []);
-
-      session.finalize();
-      session.flush();
-
-      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveBeenCalledTimes(1);
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+
+      session[hookMethod](callback, ['foo']);
+
+      session.finalize();
+      session.flush();
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+
+      session[hookMethod](callback, ['bar']);
+
+      session.finalize();
+      session.flush();
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -1,14 +1,3 @@
-export function dependenciesAreChanged(
-  oldDependencies: ArrayLike<unknown> | null,
-  newDependencies: ArrayLike<unknown> | null,
-): boolean {
-  return (
-    oldDependencies === null ||
-    newDependencies === null ||
-    !sequentialEqual(oldDependencies, newDependencies)
-  );
-}
-
 export function sequentialEqual<T>(
   first: ArrayLike<T>,
   second: ArrayLike<T>,
@@ -35,15 +24,15 @@ export function shallowEqual<T extends {}>(first: T, second: T): boolean {
     return true;
   }
 
-  const firstKeys = Object.keys(first) as (keyof T)[];
-  const secondKeys = Object.keys(second) as (keyof T)[];
+  const firstKeys = Object.keys(first);
+  const secondKeys = Object.keys(second);
 
   if (firstKeys.length !== secondKeys.length) {
     return false;
   }
 
   for (let i = 0, l = firstKeys.length; i < l; i++) {
-    const key = firstKeys[i]!;
+    const key = firstKeys[i]! as keyof T;
     if (!Object.hasOwn(second, key) || !Object.is(first[key], second[key])) {
       return false;
     }
