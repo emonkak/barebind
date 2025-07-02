@@ -131,7 +131,7 @@ describe('LooseSlot', () => {
       expect(part.node.data).toBe(value2.value);
     });
 
-    it('does not updates the value of the binding if shouldUpdate() returns false', () => {
+    it('does not updates the value of the binding if shouldBind() returns false', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const part = {

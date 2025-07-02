@@ -66,30 +66,30 @@ describe('ComponentDirective', () => {
     });
   });
 
-  describe('shouldUpdate()', () => {
-    it('returns whether the props is not same', () => {
+  describe('shouldSkipUpdate()', () => {
+    it('returns whether the props is the same', () => {
       const component = new ComponentDirective(Greet);
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
 
-      expect(component.shouldUpdate(props1, props1)).toBe(false);
-      expect(component.shouldUpdate(props1, props2)).toBe(true);
-      expect(component.shouldUpdate(props2, props1)).toBe(true);
-      expect(component.shouldUpdate(props2, props2)).toBe(false);
+      expect(component.shouldSkipUpdate(props1, props1)).toBe(true);
+      expect(component.shouldSkipUpdate(props1, props2)).toBe(false);
+      expect(component.shouldSkipUpdate(props2, props1)).toBe(false);
+      expect(component.shouldSkipUpdate(props2, props2)).toBe(true);
     });
 
     it.each([
-      [{ key: 'foo', value: 1 }, { key: 'foo', value: 1 }, false],
-      [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }, true],
+      [{ key: 'foo', value: 1 }, { key: 'foo', value: 1 }, true],
+      [{ key: 'foo', value: 1 }, { key: 'bar', value: 2 }, false],
     ])(
-      'returns the result of shouldUpdate() if it is definied in the function',
+      'returns the result of shouldSkipUpdate() if it is definied in the function',
       (props1, props2, expandedResult) => {
         const component = new ComponentDirective(Memo);
 
-        expect(component.shouldUpdate(props1, props1)).toBe(false);
-        expect(component.shouldUpdate(props1, props2)).toBe(expandedResult);
-        expect(component.shouldUpdate(props2, props1)).toBe(expandedResult);
-        expect(component.shouldUpdate(props2, props2)).toBe(false);
+        expect(component.shouldSkipUpdate(props1, props1)).toBe(true);
+        expect(component.shouldSkipUpdate(props1, props2)).toBe(expandedResult);
+        expect(component.shouldSkipUpdate(props2, props1)).toBe(expandedResult);
+        expect(component.shouldSkipUpdate(props2, props2)).toBe(true);
       },
     );
   });
@@ -316,8 +316,8 @@ function Memo({ value }: MemoProps): unknown {
   return value;
 }
 
-Memo.shouldUpdate = (nextProps: MemoProps, prevProps: MemoProps): boolean =>
-  nextProps.key !== prevProps.key;
+Memo.shouldSkipUpdate = (nextProps: MemoProps, prevProps: MemoProps): boolean =>
+  nextProps.key === prevProps.key;
 
 interface EnqueueEffectProps {
   callback: (phase: CommitPhase) => void;

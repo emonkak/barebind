@@ -61,10 +61,10 @@ export class ComponentDirective<TProps, TResult>
     return componentFn(props, context);
   }
 
-  shouldUpdate(nextProps: TProps, prevProps: TProps): boolean {
+  shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean {
     return (
-      this._componentFn.shouldUpdate?.(nextProps, prevProps) ??
-      nextProps !== prevProps
+      this._componentFn.shouldSkipUpdate?.(nextProps, prevProps) ??
+      nextProps === prevProps
     );
   }
 
@@ -117,7 +117,7 @@ export class ComponentBinding<TProps, TResult>
   shouldBind(props: TProps): boolean {
     return (
       this._hooks.length === 0 ||
-      this._component.shouldUpdate(props, this._props)
+      !this._component.shouldSkipUpdate(props, this._props)
     );
   }
 

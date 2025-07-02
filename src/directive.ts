@@ -95,12 +95,12 @@ export interface TemplateResult {
 
 export interface Component<TProps, TResult> extends Directive<TProps> {
   render(props: TProps, context: RenderContext): TResult;
-  shouldUpdate(nextProps: TProps, prevProps: TProps): boolean;
+  shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
 
 export interface ComponentFunction<TProps, TResult = unknown> {
   (props: TProps, context: RenderContext): TResult;
-  shouldUpdate?(nextProps: TProps, prevProps: TProps): boolean;
+  shouldSkipUpdate?(nextProps: TProps, prevProps: TProps): boolean;
 }
 
 export interface Coroutine extends Effect {
