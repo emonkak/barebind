@@ -1,8 +1,7 @@
 import { sequentialEqual } from './compare.js';
 import {
   type Coroutine,
-  createDirectiveObject,
-  type DirectiveObject,
+  DirectiveObject,
   type Effect,
   type RenderContext,
   type RenderSessionContext,
@@ -332,7 +331,7 @@ export class RenderSession implements RenderContext {
       expandedBinds as unknown[],
       mode,
     );
-    return createDirectiveObject(template, expandedBinds);
+    return new DirectiveObject(template, expandedBinds);
   }
 
   private _template(
@@ -341,7 +340,7 @@ export class RenderSession implements RenderContext {
     mode: TemplateMode,
   ): DirectiveObject<readonly unknown[]> {
     const template = this._context.resolveTemplate(strings, binds, mode);
-    return createDirectiveObject(template, binds);
+    return new DirectiveObject(template, binds);
   }
 
   private _useEffect(

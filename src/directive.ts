@@ -181,45 +181,45 @@ export interface ComponentResult<T> {
   pendingLanes: Lanes;
 }
 
-export interface DirectiveObject<T> extends Bindable<T> {
+export class DirectiveObject<T> implements Bindable<T> {
   readonly directive: Directive<T>;
+
   readonly value: T;
+
+  constructor(directive: Directive<T>, value: T) {
+    this.directive = directive;
+    this.value = value;
+  }
+
+  [$toDirectiveElement](
+    _part: Part,
+    _context: DirectiveContext,
+  ): DirectiveElement<T> {
+    return this;
+  }
 }
 
-export interface SlotObject<T> extends Bindable<unknown> {
-  value: T;
-  slotType: SlotType;
-}
+export class SlotObject<T> implements Bindable<unknown> {
+  readonly value: T;
 
-export function createDirectiveObject<T>(
-  directive: Directive<T>,
-  value: T,
-): DirectiveObject<T> {
-  return {
-    [$toDirectiveElement]() {
-      return this;
-    },
-    directive,
-    value,
-  };
-}
+  readonly slotType: SlotType;
 
-export function createSlotObject<T>(
-  value: T,
-  slotType: SlotType,
-): SlotObject<T> {
-  return {
-    [$toDirectiveElement](part, context) {
-      const { directive, value } = context.resolveDirective(this.value, part);
-      return {
-        directive,
-        value,
-        slotType: this.slotType,
-      };
-    },
-    value,
-    slotType,
-  };
+  constructor(value: T, slotType: SlotType) {
+    this.value = value;
+    this.slotType = slotType;
+  }
+
+  [$toDirectiveElement](
+    part: Part,
+    context: DirectiveContext,
+  ): DirectiveElement<unknown> {
+    const { directive, value } = context.resolveDirective(this.value, part);
+    return {
+      directive,
+      value,
+      slotType: this.slotType,
+    };
+  }
 }
 
 export function isBindableObject<T>(value: T): value is T & Bindable<T> {

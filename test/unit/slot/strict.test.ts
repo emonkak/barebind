@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { createDirectiveObject } from '@/directive.js';
+import { DirectiveObject } from '@/directive.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
@@ -107,7 +107,7 @@ describe('StrictSlot', () => {
 
     it('throws the error if the directive is mismatched', () => {
       const value1 = 'foo';
-      const value2 = createDirectiveObject(new MockDirective(), 'bar');
+      const value2 = new DirectiveObject(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

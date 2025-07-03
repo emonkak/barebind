@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createDirectiveObject, type DirectiveObject } from '@/directive.js';
+import { DirectiveObject } from '@/directive.js';
 import {
   RepeatBinding,
   RepeatDirective,
@@ -393,7 +393,7 @@ describe('RepeatBinding', () => {
 function textTemplateObject(
   content: string,
 ): DirectiveObject<readonly [string]> {
-  return createDirectiveObject(TEXT_TEMPLATE, [content]);
+  return new DirectiveObject(TEXT_TEMPLATE, [content]);
 }
 
 function createComment(key: string = ''): string {

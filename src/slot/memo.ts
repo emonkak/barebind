@@ -1,17 +1,16 @@
 import {
   type Binding,
-  createSlotObject,
   type Directive,
   type EffectContext,
   type Slot,
-  type SlotObject,
+  SlotObject,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function memo<T>(value: T): SlotObject<T> {
-  return createSlotObject(value, MemoSlot);
+  return new SlotObject(value, MemoSlot);
 }
 
 export class MemoSlot<T> implements Slot<T> {
