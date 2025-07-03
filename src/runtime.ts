@@ -401,26 +401,26 @@ export class Runtime implements EffectContext, UpdateContext {
       coroutineStates.set(coroutine, coroutineState);
     }
 
-    for (const updateTask of coroutineState.pendingTasks) {
-      if (updateTask.lanes === lanes) {
-        return updateTask;
+    for (const task of coroutineState.pendingTasks) {
+      if (task.lanes === lanes) {
+        return task;
       }
     }
 
-    const updateTaskNode = coroutineState.pendingTasks.pushBack({
+    const taskNode = coroutineState.pendingTasks.pushBack({
       lanes,
       promise: this._renderHost.requestCallback(() => {
+        coroutineState.pendingTasks.remove(taskNode);
+
         if ((coroutineState.pendingLanes & lanes) === NO_LANES) {
           return;
         }
-
-        coroutineState.pendingTasks.remove(updateTaskNode);
 
         return this._createSubcontext(coroutine).flushAsync(completeOptions);
       }, completeOptions),
     });
 
-    return updateTaskNode.value;
+    return taskNode.value;
   }
 
   undebugValue(
@@ -441,14 +441,11 @@ export class Runtime implements EffectContext, UpdateContext {
     const coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState !== undefined) {
-      if (!coroutineState.pendingTasks.isEmpty()) {
-        const pendingTasks = Array.from(
-          coroutineState.pendingTasks,
-          (task) => task.promise,
-        );
-        await Promise.allSettled(pendingTasks);
-        return pendingTasks.length;
-      }
+      const pendingTasks = Iterator.from(coroutineState.pendingTasks).map(
+        (task) => task.promise,
+      );
+      const results = await Promise.allSettled(pendingTasks);
+      return results.length;
     }
 
     return 0;
