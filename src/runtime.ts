@@ -1,3 +1,5 @@
+/// <reference path="../typings/scheduler.d.ts" />
+
 import { inspectValue } from './debug.js';
 import {
   $toDirectiveElement,
@@ -41,7 +43,8 @@ export type RuntimeEvent =
   | {
       type: 'UPDATE_START' | 'UPDATE_END';
       id: number;
-      options: UpdateOptions;
+      priority: TaskPriority | null;
+      viewTransition: boolean;
     }
   | {
       type: 'RENDER_START' | 'RENDER_END';
@@ -165,7 +168,8 @@ export class Runtime implements EffectContext, UpdateContext {
       this._notifyObservers({
         type: 'UPDATE_START',
         id: this._renderFrame.id,
-        options,
+        priority: options.priority,
+        viewTransition: options.viewTransition,
       });
     }
 
@@ -233,7 +237,8 @@ export class Runtime implements EffectContext, UpdateContext {
         this._notifyObservers({
           type: 'UPDATE_END',
           id: this._renderFrame.id,
-          options,
+          priority: options.priority,
+          viewTransition: options.viewTransition,
         });
       }
     }
@@ -246,7 +251,8 @@ export class Runtime implements EffectContext, UpdateContext {
       this._notifyObservers({
         type: 'UPDATE_START',
         id: this._renderFrame.id,
-        options: {},
+        priority: null,
+        viewTransition: false,
       });
     }
 
@@ -286,7 +292,8 @@ export class Runtime implements EffectContext, UpdateContext {
         this._notifyObservers({
           type: 'UPDATE_END',
           id: this._renderFrame.id,
-          options: {},
+          priority: null,
+          viewTransition: false,
         });
       }
     }

@@ -21,12 +21,14 @@ describe('SyncRoot', () => {
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_START',
         id: 0,
-        options: {},
+        priority: null,
+        viewTransition: false,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
         id: 0,
-        options: {},
+        priority: null,
+        viewTransition: false,
       });
 
       const callCount = observer.onRuntimeEvent.mock.calls.length;

@@ -5,8 +5,7 @@
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"]
-    },
-    "rootDir": ".."
+    }
   },
   "include": ["../src/**/*.ts", "./**/*.ts"]
 }

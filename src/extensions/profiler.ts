@@ -13,10 +13,6 @@ export interface Profile {
   passiveMeasurement: CommitMeasurement | null;
 }
 
-export interface Reporter {
-  reportProfile(profile: Profile): void;
-}
-
 export interface UpdateMeasurement {
   startTime: number;
   duration: number;
@@ -40,6 +36,12 @@ export interface CommitMeasurement {
   duration: number;
   totalEffects: number;
 }
+
+export interface Reporter {
+  reportProfile(profile: Profile): void;
+}
+
+export type Logger = Pick<Console, 'group' | 'groupEnd' | 'log' | 'table'>;
 
 const RENDER_PHASE_STYLE =
   'color: light-dark(#0b57d0, #4c8df6); font-weight: bold';
@@ -72,12 +74,11 @@ export class Profiler implements RuntimeObserver {
 
     switch (event.type) {
       case 'UPDATE_START': {
-        const { priority, viewTransition } = event.options;
         profile.updateMeasurement = {
           startTime: performance.now(),
           duration: 0,
-          priority: priority ?? null,
-          viewTransition: viewTransition ?? false,
+          priority: event.priority,
+          viewTransition: event.viewTransition,
         };
         break;
       }
@@ -165,9 +166,9 @@ export class Profiler implements RuntimeObserver {
 }
 
 export class LogReporter implements Reporter {
-  private readonly _logger: Console;
+  private readonly _logger: Logger;
 
-  constructor(logger: Console = console) {
+  constructor(logger: Logger = console) {
     this._logger = logger;
   }
 
@@ -193,8 +194,8 @@ export class LogReporter implements Reporter {
         ? `with ${updateMeasurement.priority}`
         : 'without';
 
-    console.group(
-      `${titleLablel} #${profile.id} with ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,
+    this._logger.group(
+      `${titleLablel} #${profile.id} ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,
       DURATION_STYLE,
     );
 

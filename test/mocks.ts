@@ -1,13 +1,16 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { ComponentBinding } from '@/component.js';
 import type {
   Binding,
+  Component,
   Coroutine,
   Directive,
   DirectiveContext,
   Effect,
   EffectContext,
   Primitive,
+  RenderContext,
   Slot,
   SlotType,
   Template,
@@ -24,20 +27,6 @@ import type {
   RequestCallbackOptions,
 } from '../src/renderHost.js';
 import { TemplateBinding } from '../src/template/template.js';
-
-export class MockDirective<T> {
-  readonly name: string;
-
-  constructor(name: string = this.constructor.name) {
-    this.name = name;
-  }
-
-  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
-    return new MockBinding(this, value, part);
-  }
-}
-
-export const MockPrimitive = new MockDirective<unknown>('MockPrimitive');
 
 export class MockBinding<T> implements Binding<T> {
   private readonly _directive: Directive<T>;
@@ -166,12 +155,52 @@ export class MockBinding<T> implements Binding<T> {
   }
 }
 
+export class MockComponent implements Component<unknown, unknown> {
+  get name(): string {
+    return MockComponent.name;
+  }
+
+  render(_props: unknown, _context: RenderContext): unknown {
+    return null;
+  }
+
+  shouldSkipUpdate(_nextProps: unknown, _prevProps: unknown): boolean {
+    return false;
+  }
+
+  resolveBinding(
+    props: unknown,
+    part: Part,
+    _context: DirectiveContext,
+  ): Binding<unknown> {
+    return new ComponentBinding(this, props, part);
+  }
+}
+
 export class MockCoroutine implements Coroutine {
   resume(_lanes: Lanes, _context: UpdateContext): Lanes {
     return NO_LANES;
   }
 
   commit(): void {}
+}
+
+export class MockDirective<T> {
+  readonly name: string;
+
+  constructor(name: string = this.constructor.name) {
+    this.name = name;
+  }
+
+  resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
+    return new MockBinding(this, value, part);
+  }
+}
+
+export const MockPrimitive = new MockDirective<unknown>('MockPrimitive');
+
+export class MockEffect implements Effect {
+  commit(_context: EffectContext): void {}
 }
 
 export class MockRenderHost implements RenderHost {

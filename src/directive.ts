@@ -14,11 +14,7 @@ export const $toDirectiveElement: unique symbol = Symbol('$toDirectiveElement');
 
 export interface Directive<T> {
   readonly name: string;
-  resolveBinding(
-    argument: T,
-    part: Part,
-    context: DirectiveContext,
-  ): Binding<T>;
+  resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
 export interface DirectiveElement<T> {
