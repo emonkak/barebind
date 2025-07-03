@@ -27,7 +27,7 @@ describe('Profiler', () => {
           type: 'UPDATE_START',
           id: 0,
           priority: 'user-blocking',
-          viewTransition: false,
+          transition: false,
         },
         {
           type: 'RENDER_START',
@@ -89,7 +89,7 @@ describe('Profiler', () => {
           type: 'UPDATE_END',
           id: 0,
           priority: 'user-blocking',
-          viewTransition: false,
+          transition: false,
         },
       ];
 
@@ -104,7 +104,7 @@ describe('Profiler', () => {
           startTime: expect.any(Number),
           duration: expect.any(Number),
           priority: 'user-blocking',
-          viewTransition: false,
+          transition: false,
         },
         renderMeasurement: {
           startTime: expect.any(Number),
@@ -144,7 +144,7 @@ describe('Profiler', () => {
       startTime: 0,
       duration: 10,
       priority: 'user-blocking',
-      viewTransition: false,
+      transition: false,
     },
     renderMeasurement: {
       startTime: 0,
@@ -198,7 +198,7 @@ describe('LogReporter', () => {
             startTime: 0,
             duration: 10,
             priority: 'user-blocking',
-            viewTransition: false,
+            transition: false,
           },
           renderMeasurement: {
             startTime: 0,
@@ -254,7 +254,7 @@ describe('LogReporter', () => {
             startTime: 0,
             duration: 3,
             priority: null,
-            viewTransition: true,
+            transition: true,
           },
           renderMeasurement: {
             startTime: 0,

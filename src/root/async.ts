@@ -32,7 +32,7 @@ export function createAsyncRoot<T>(
   ): Required<UpdateOptions> {
     return {
       priority: renderHost.getCurrentPriority(),
-      viewTransition: false,
+      transition: false,
       ...options,
     };
   }

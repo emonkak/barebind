@@ -13,7 +13,6 @@ import {
   type EffectHook,
   ensureHookType,
   type FinalizerHook,
-  getLaneFromPriority,
   type Hook,
   HookType,
   type IdHook,
@@ -249,9 +248,9 @@ export class RenderSession implements RenderContext {
           const newState = hook.reducer(oldState, action);
 
           if (!Object.is(oldState, newState)) {
-            const { priority } = this.forceUpdate(options);
+            const { lanes } = this.forceUpdate(options);
             hook.pendingState = newState;
-            hook.lanes |= getLaneFromPriority(priority);
+            hook.lanes |= lanes;
           }
         },
       };

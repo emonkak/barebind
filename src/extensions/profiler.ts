@@ -17,7 +17,7 @@ export interface UpdateMeasurement {
   startTime: number;
   duration: number;
   priority: TaskPriority | null;
-  viewTransition: boolean;
+  transition: boolean;
 }
 
 export interface RenderMeasurement {
@@ -78,7 +78,7 @@ export class Profiler implements RuntimeObserver {
           startTime: performance.now(),
           duration: 0,
           priority: event.priority,
-          viewTransition: event.viewTransition,
+          transition: event.transition,
         };
         break;
       }
@@ -186,7 +186,7 @@ export class LogReporter implements Reporter {
       return;
     }
 
-    const titleLablel = updateMeasurement.viewTransition
+    const titleLablel = updateMeasurement.transition
       ? 'View transition'
       : 'Update';
     const priorityLabel =

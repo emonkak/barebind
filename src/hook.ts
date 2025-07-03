@@ -21,14 +21,17 @@ export const HookType = {
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
 
+export const Lane = {
+  UserBlocking: 0b1,
+  UserVisible: 0b10,
+  Background: 0b100,
+  Transition: 0b1000,
+} as const;
+
 export const NO_LANES: Lanes = 0;
 export const ALL_LANES: Lanes = -1;
-
-export const Lane = {
-  UserInput: 0b1,
-  ContinuousInput: 0b10,
-  Idle: 0b100,
-} as const;
+export const DEFAULT_LANES: Lanes =
+  Lane.UserBlocking | Lane.UserVisible | Lane.Background;
 
 export type Lane = (typeof Lane)[keyof typeof Lane];
 
@@ -84,11 +87,11 @@ export interface RefObject<T> {
 
 export interface UpdateOptions {
   priority?: TaskPriority;
-  viewTransition?: boolean;
+  transition?: boolean;
 }
 
 export interface UpdateTask {
-  priority: TaskPriority;
+  lanes: Lanes;
   promise: Promise<void>;
 }
 
@@ -146,24 +149,52 @@ export function ensureHookType<TExpectedHook extends Hook>(
   }
 }
 
-export function getLaneFromPriority(priority: TaskPriority): Lane {
-  switch (priority) {
+export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
+  let lanes: Lanes;
+
+  switch (options.priority) {
     case 'user-blocking':
-      return Lane.UserInput;
+      lanes = Lane.UserBlocking;
+      break;
     case 'user-visible':
-      return Lane.ContinuousInput;
+      lanes = Lane.UserBlocking | Lane.UserVisible;
+      break;
     case 'background':
-      return Lane.Idle;
+      lanes = Lane.UserBlocking | Lane.UserVisible | Lane.Background;
+      break;
+    default:
+      lanes = DEFAULT_LANES;
+      break;
   }
+
+  if (options.transition) {
+    lanes |= Lane.Transition;
+  }
+
+  return lanes;
 }
 
-export function getLanesFromPriority(priority: TaskPriority): Lanes {
-  switch (priority) {
+export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
+  let lanes: Lanes;
+
+  switch (options.priority) {
     case 'user-blocking':
-      return Lane.UserInput;
+      lanes = Lane.UserBlocking;
+      break;
     case 'user-visible':
-      return Lane.UserInput | Lane.ContinuousInput;
+      lanes = Lane.UserVisible;
+      break;
     case 'background':
-      return Lane.UserInput | Lane.ContinuousInput | Lane.Idle;
+      lanes = Lane.Background;
+      break;
+    default:
+      lanes = DEFAULT_LANES;
+      break;
   }
+
+  if (options.transition) {
+    lanes |= Lane.Transition;
+  }
+
+  return lanes;
 }

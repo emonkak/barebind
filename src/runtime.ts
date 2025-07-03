@@ -19,8 +19,8 @@ import {
 import type { Hook, Lanes, UpdateTask } from './hook.js';
 import {
   ALL_LANES,
-  getLaneFromPriority,
-  getLanesFromPriority,
+  getFlushLanesFromOptions,
+  getScheduleLanesFromOptions,
   NO_LANES,
   type UpdateOptions,
 } from './hook.js';
@@ -44,7 +44,7 @@ export type RuntimeEvent =
       type: 'UPDATE_START' | 'UPDATE_END';
       id: number;
       priority: TaskPriority | null;
-      viewTransition: boolean;
+      transition: boolean;
     }
   | {
       type: 'RENDER_START' | 'RENDER_END';
@@ -162,14 +162,14 @@ export class Runtime implements EffectContext, UpdateContext {
 
   async flushAsync(options: Required<UpdateOptions>): Promise<void> {
     const { coroutineStates, observers } = this._sharedState;
-    const lanes = getLanesFromPriority(options.priority);
+    const lanes = getFlushLanesFromOptions(options);
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
         type: 'UPDATE_START',
         id: this._renderFrame.id,
         priority: options.priority,
-        viewTransition: options.viewTransition,
+        transition: options.transition,
       });
     }
 
@@ -216,7 +216,7 @@ export class Runtime implements EffectContext, UpdateContext {
         this._commitEffects(layoutEffects, CommitPhase.Layout);
       };
 
-      if (options.viewTransition) {
+      if (options.transition) {
         await this._renderHost.startViewTransition(callback);
       } else {
         await this._renderHost.requestCallback(callback, {
@@ -238,7 +238,7 @@ export class Runtime implements EffectContext, UpdateContext {
           type: 'UPDATE_END',
           id: this._renderFrame.id,
           priority: options.priority,
-          viewTransition: options.viewTransition,
+          transition: options.transition,
         });
       }
     }
@@ -252,7 +252,7 @@ export class Runtime implements EffectContext, UpdateContext {
         type: 'UPDATE_START',
         id: this._renderFrame.id,
         priority: null,
-        viewTransition: false,
+        transition: false,
       });
     }
 
@@ -293,7 +293,7 @@ export class Runtime implements EffectContext, UpdateContext {
           type: 'UPDATE_END',
           id: this._renderFrame.id,
           priority: null,
-          viewTransition: false,
+          transition: false,
         });
       }
     }
@@ -384,42 +384,40 @@ export class Runtime implements EffectContext, UpdateContext {
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
     const { coroutineStates } = this._sharedState;
-    const priority = options?.priority ?? this._renderHost.getCurrentPriority();
+    const completeOptions = {
+      priority: options?.priority ?? this._renderHost.getCurrentPriority(),
+      transition: options?.transition ?? false,
+    };
+    const lanes = getScheduleLanesFromOptions(completeOptions);
     let coroutineState = coroutineStates.get(coroutine);
 
-    if (coroutineState === undefined) {
+    if (coroutineState !== undefined) {
+      coroutineState.pendingLanes |= lanes;
+    } else {
       coroutineState = {
         pendingTasks: new LinkedList(),
-        pendingLanes: NO_LANES,
+        pendingLanes: lanes,
       };
       coroutineStates.set(coroutine, coroutineState);
     }
 
-    coroutineState.pendingLanes |= getLaneFromPriority(priority);
-
     for (const updateTask of coroutineState.pendingTasks) {
-      if (updateTask.priority === priority) {
+      if (updateTask.lanes === lanes) {
         return updateTask;
       }
     }
 
     const updateTaskNode = coroutineState.pendingTasks.pushBack({
-      priority,
-      promise: this._renderHost.requestCallback(
-        () => {
-          if (coroutineState.pendingLanes === NO_LANES) {
-            return;
-          }
+      lanes,
+      promise: this._renderHost.requestCallback(() => {
+        if ((coroutineState.pendingLanes & lanes) === NO_LANES) {
+          return;
+        }
 
-          coroutineState.pendingTasks.remove(updateTaskNode);
+        coroutineState.pendingTasks.remove(updateTaskNode);
 
-          return this._createSubcontext(coroutine).flushAsync({
-            priority,
-            viewTransition: options?.viewTransition ?? false,
-          });
-        },
-        { priority },
-      ),
+        return this._createSubcontext(coroutine).flushAsync(completeOptions);
+      }, completeOptions),
     });
 
     return updateTaskNode.value;

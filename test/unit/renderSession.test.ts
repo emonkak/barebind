@@ -126,7 +126,7 @@ describe('RenderSession', () => {
       const scheduleUpdateSpy = vi
         .spyOn(session['_context'], 'scheduleUpdate')
         .mockImplementation(() => ({
-          priority: options.priority,
+          lanes: Lane.Background,
           promise: Promise.resolve(),
         }));
 
@@ -634,7 +634,7 @@ describe('RenderSession', () => {
     it('should not return the pending state', async () => {
       const session = new RenderSession(
         [],
-        Lane.UserInput,
+        Lane.UserBlocking,
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
@@ -656,7 +656,7 @@ describe('RenderSession', () => {
       expect(count).toBe(0);
       expect(isPending).toBe(true);
 
-      expect(session.finalize()).toBe(Lane.Idle);
+      expect(session.finalize()).toBe(Lane.Background);
       session.flush();
     });
   });

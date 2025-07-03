@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  DEFAULT_LANES,
   ensureHookType,
-  getLaneFromPriority,
-  getLanesFromPriority,
+  getFlushLanesFromOptions,
+  getScheduleLanesFromOptions,
   HookType,
   Lane,
+  type UpdateOptions,
 } from '@/hook.js';
 
 describe('ensureHookType()', () => {
@@ -23,22 +25,59 @@ describe('ensureHookType()', () => {
   });
 });
 
-describe('getLaneFromPriority()', () => {
+describe('getFlushLanesFromOptions()', () => {
   it.each([
-    ['user-blocking', Lane.UserInput],
-    ['user-visible', Lane.ContinuousInput],
-    ['background', Lane.Idle],
-  ] as const)('returns the lane according to priority', (priority, lanes) => {
-    expect(getLaneFromPriority(priority)).toBe(lanes);
-  });
+    [{}, DEFAULT_LANES],
+    [{ priority: 'user-blocking' }, Lane.UserBlocking],
+    [{ priority: 'user-visible' }, Lane.UserBlocking | Lane.UserVisible],
+    [
+      { priority: 'background' },
+      Lane.UserBlocking | Lane.UserVisible | Lane.Background,
+    ],
+    [{ transition: true }, DEFAULT_LANES | Lane.Transition],
+    [
+      { priority: 'user-blocking', transition: true },
+      Lane.UserBlocking | Lane.Transition,
+    ],
+    [
+      { priority: 'user-visible', transition: true },
+      Lane.UserBlocking | Lane.UserVisible | Lane.Transition,
+    ],
+    [
+      { priority: 'background', transition: true },
+      Lane.UserBlocking | Lane.UserVisible | Lane.Background | Lane.Transition,
+    ],
+  ] as [UpdateOptions, Lane][])(
+    'returns the lanes for flush',
+    (options, lanes) => {
+      expect(getFlushLanesFromOptions(options)).toBe(lanes);
+    },
+  );
 });
 
-describe('getLanesFromPriority()', () => {
+describe('getScheduleLanesFromOptions()', () => {
   it.each([
-    ['user-blocking', Lane.UserInput],
-    ['user-visible', Lane.UserInput | Lane.ContinuousInput],
-    ['background', Lane.UserInput | Lane.ContinuousInput | Lane.Idle],
-  ] as const)('returns lanes according to priority', (priority, lanes) => {
-    expect(getLanesFromPriority(priority)).toBe(lanes);
-  });
+    [{}, DEFAULT_LANES],
+    [{ priority: 'user-blocking' }, Lane.UserBlocking],
+    [{ priority: 'user-visible' }, Lane.UserVisible],
+    [{ priority: 'background' }, Lane.Background],
+    [{ transition: true }, DEFAULT_LANES | Lane.Transition],
+    [
+      { priority: 'user-blocking', transition: true },
+      Lane.UserBlocking | Lane.Transition,
+    ],
+    [
+      { priority: 'user-visible', transition: true },
+      Lane.UserVisible | Lane.Transition,
+    ],
+    [
+      { priority: 'background', transition: true },
+      Lane.Background | Lane.Transition,
+    ],
+  ] as [UpdateOptions, Lane][])(
+    'returns lanes for schedule',
+    (options, lanes) => {
+      expect(getScheduleLanesFromOptions(options)).toBe(lanes);
+    },
+  );
 });
