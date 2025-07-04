@@ -13,13 +13,14 @@ import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { ServerRenderHost } from '@/renderHost/server.js';
 import { CommitPhase } from '@/renderHost.js';
-import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/childNodeTemplate.js';
 import { EmptyTemplate } from '@/template/emptyTemplate.js';
 import { TaggedTemplate } from '@/template/taggedTemplate.js';
 import { TextTemplate } from '@/template/textTemplate.js';
+import { MockEffectContext } from '../../mocks.js';
+import { templateLiteral } from '../../testUtils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -42,14 +43,14 @@ describe('ServerRenderHost', () => {
         },
       ];
       const renderHost = new ServerRenderHost(document);
-      const runtime = new Runtime(renderHost);
+      const context = new MockEffectContext();
 
-      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, runtime);
-      renderHost.commitEffects(layoutEffects, CommitPhase.Layout, runtime);
-      renderHost.commitEffects(passiveEffects, CommitPhase.Layout, runtime);
+      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, context);
+      renderHost.commitEffects(layoutEffects, CommitPhase.Layout, context);
+      renderHost.commitEffects(passiveEffects, CommitPhase.Layout, context);
 
       expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
-      expect(mutationEffects[0].commit).toHaveBeenCalledWith(runtime);
+      expect(mutationEffects[0].commit).toHaveBeenCalledWith(context);
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(passiveEffects[0].commit).not.toHaveBeenCalled();
@@ -59,7 +60,8 @@ describe('ServerRenderHost', () => {
   describe('createTemplate()', () => {
     it('creates a TaggedTemplate', () => {
       const renderHost = new ServerRenderHost(document);
-      const { strings, values } = tmpl`<div>${'Hello'}, ${'World'}!</div>`;
+      const { strings, values } =
+        templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const template = renderHost.createTemplate(
         strings,
         values,
@@ -89,7 +91,7 @@ describe('ServerRenderHost', () => {
       ]);
     });
 
-    it.each([[tmpl``], [tmpl` `]])(
+    it.each([[templateLiteral``], [templateLiteral` `]])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const renderHost = new ServerRenderHost(document);
@@ -105,11 +107,11 @@ describe('ServerRenderHost', () => {
     );
 
     it.each([
-      [tmpl`<${'foo'}>`],
-      [tmpl`<${'foo'}/>`],
-      [tmpl` <${'foo'} /> `],
-      [tmpl` <!--${'foo'}--> `],
-      [tmpl` <!-- ${'foo'} --> `],
+      [templateLiteral`<${'foo'}>`],
+      [templateLiteral`<${'foo'}/>`],
+      [templateLiteral` <${'foo'} /> `],
+      [templateLiteral` <!--${'foo'}--> `],
+      [templateLiteral` <!-- ${'foo'} --> `],
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
@@ -125,7 +127,11 @@ describe('ServerRenderHost', () => {
       },
     );
 
-    it.each([[tmpl`${'foo'}`], [tmpl` ${'foo'} `], [tmpl`(${'foo'})`]])(
+    it.each([
+      [templateLiteral`${'foo'}`],
+      [templateLiteral` ${'foo'} `],
+      [templateLiteral`(${'foo'})`],
+    ])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
         const renderHost = new ServerRenderHost(document);
@@ -400,10 +406,3 @@ describe('ServerRenderHost', () => {
     });
   });
 });
-
-function tmpl<TValues extends readonly unknown[]>(
-  strings: TemplateStringsArray,
-  ...values: TValues
-): { strings: TemplateStringsArray; values: TValues } {
-  return { strings, values };
-}

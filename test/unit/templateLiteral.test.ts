@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
 import { Literal, TemplateLiteralPreprocessor } from '@/templateLiteral.js';
+import { templateLiteral } from '../testUtils.js';
 
 describe('TemplateLiteralPreprocessor', () => {
   const createDate = (year: String, month: String, day: String) =>
-    tmpl`${year}-${month}-${day}`;
+    templateLiteral`${year}-${month}-${day}`;
 
   const createElement = (type: String, children: String) =>
-    tmpl`<${type}>${children}</${type}>`;
+    templateLiteral`<${type}>${children}</${type}>`;
 
   it('returns the same strings as the argument if there are no literals', () => {
     const templateLiteralPreprocessor = new TemplateLiteralPreprocessor();
@@ -91,8 +92,8 @@ describe('TemplateLiteralPreprocessor', () => {
 
   it('returns a new strings if the template changes', () => {
     const templateLiteralPreprocessor = new TemplateLiteralPreprocessor();
-    const template1 = tmpl`<div>Hello, ${'World'}!</div>`;
-    const template2 = tmpl`<div>Hello, ${'World'}!</div>`;
+    const template1 = templateLiteral`<div>Hello, ${'World'}!</div>`;
+    const template2 = templateLiteral`<div>Hello, ${'World'}!</div>`;
     const preprocessedTemplate1 = templateLiteralPreprocessor.process(
       template1.strings,
       template1.values,
@@ -133,10 +134,3 @@ describe('Literal', () => {
     });
   });
 });
-
-function tmpl(
-  strings: TemplateStringsArray,
-  ...values: readonly unknown[]
-): { strings: TemplateStringsArray; values: readonly unknown[] } {
-  return { strings, values };
-}

@@ -144,7 +144,7 @@ export class ComponentBinding<TProps, TResult>
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    const parentScope = context.getCurrentScope();
+    const parentScope = context.getScope();
     const scope = new Scope(parentScope);
     const subcontext = context.enterScope(scope);
     const { value } = subcontext.renderComponent(
@@ -161,7 +161,7 @@ export class ComponentBinding<TProps, TResult>
 
   connect(context: UpdateContext): void {
     context.enqueueCoroutine(this);
-    this._parentScope = context.getCurrentScope();
+    this._parentScope = context.getScope();
   }
 
   disconnect(context: UpdateContext): void {

@@ -161,7 +161,7 @@ export interface RenderSessionContext {
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
   flushSync(): void;
-  getCurrentScope(): Scope;
+  getScope(): Scope;
   nextIdentifier(): string;
   resolveTemplate(
     strings: readonly string[],

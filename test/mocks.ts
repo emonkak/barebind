@@ -1,6 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import { ComponentBinding } from '@/component.js';
+import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import type {
   Binding,
   Component,
@@ -185,7 +186,7 @@ export class MockCoroutine implements Coroutine {
   commit(): void {}
 }
 
-export class MockDirective<T> {
+export class MockDirective<T> implements Directive<T> {
   readonly name: string;
 
   constructor(name: string = this.constructor.name) {
@@ -197,10 +198,34 @@ export class MockDirective<T> {
   }
 }
 
-export const MockPrimitive = new MockDirective<unknown>('MockPrimitive');
+export const MockPrimitive = {
+  name: 'MockPrimitive',
+  ensureValue(_value: unknown): asserts _value is unknown {},
+  resolveBinding(
+    value: unknown,
+    part: Part,
+    _context: DirectiveContext,
+  ): Binding<unknown> {
+    return new MockBinding(this, value, part);
+  },
+};
 
 export class MockEffect implements Effect {
   commit(_context: EffectContext): void {}
+}
+
+export class MockEffectContext implements EffectContext {
+  debugValue(
+    _directive: Directive<unknown>,
+    _value: unknown,
+    _part: Part,
+  ): void {}
+
+  undebugValue(
+    _directive: Directive<unknown>,
+    _value: unknown,
+    _part: Part,
+  ): void {}
 }
 
 export class MockRenderHost implements RenderHost {
@@ -248,6 +273,20 @@ export class MockRenderHost implements RenderHost {
 
   yieldToMain(): Promise<void> {
     return Promise.resolve();
+  }
+}
+
+export class MockRuntimeObserver implements RuntimeObserver {
+  private _events: RuntimeEvent[] = [];
+
+  onRuntimeEvent(event: RuntimeEvent) {
+    this._events.push(event);
+  }
+
+  flushEvents(): RuntimeEvent[] {
+    const events = this._events;
+    this._events = [];
+    return events;
   }
 }
 

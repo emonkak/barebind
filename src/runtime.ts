@@ -81,11 +81,11 @@ interface RenderFrame {
 interface SharedState {
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
-  frameCount: number;
   identifierCount: number;
   observers: LinkedList<RuntimeObserver>;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
   uniqueIdentifier: string;
+  updateCount: number;
 }
 
 interface CoroutineState {
@@ -98,19 +98,19 @@ export class Runtime implements EffectContext, UpdateContext {
 
   private readonly _renderFrame: RenderFrame;
 
-  private readonly _currentScope: Scope;
+  private readonly _scope: Scope;
 
   private readonly _sharedState: SharedState;
 
   constructor(
     renderHost: RenderHost,
-    renderFrame: RenderFrame = createRenderFrame(0),
-    currentScope: Scope = new Scope(null),
+    renderFrame: RenderFrame = createInitialRenderFrame(),
+    scope: Scope = new Scope(null),
     sharedState: SharedState = createSharedState(),
   ) {
     this._renderHost = renderHost;
     this._renderFrame = renderFrame;
-    this._currentScope = currentScope;
+    this._scope = scope;
     this._sharedState = sharedState;
   }
 
@@ -128,7 +128,7 @@ export class Runtime implements EffectContext, UpdateContext {
       (part.node.data === '' ||
         part.node.data.startsWith('/' + directive.name + '('))
     ) {
-      part.node.nodeValue = `/${directive.name}(${inspectValue(value)})`;
+      part.node.data = `/${directive.name}(${inspectValue(value)})`;
     }
   }
 
@@ -306,8 +306,8 @@ export class Runtime implements EffectContext, UpdateContext {
     }
   }
 
-  getCurrentScope(): Scope {
-    return this._currentScope;
+  getScope(): Scope {
+    return this._scope;
   }
 
   nextIdentifier(): string {
@@ -421,18 +421,18 @@ export class Runtime implements EffectContext, UpdateContext {
 
     if (coroutineState !== undefined) {
       coroutineState.pendingLanes |= lanes;
+
+      for (const task of coroutineState.pendingTasks) {
+        if (task.lanes === lanes) {
+          return task;
+        }
+      }
     } else {
       coroutineState = {
         pendingTasks: new LinkedList(),
         pendingLanes: lanes,
       };
       coroutineStates.set(coroutine, coroutineState);
-    }
-
-    for (const task of coroutineState.pendingTasks) {
-      if (task.lanes === lanes) {
-        return task;
-      }
     }
 
     const taskNode = coroutineState.pendingTasks.pushBack({
@@ -460,7 +460,7 @@ export class Runtime implements EffectContext, UpdateContext {
       part.type === PartType.ChildNode &&
       part.node.data.startsWith('/' + directive.name + '(')
     ) {
-      part.node.nodeValue = '';
+      part.node.data = '';
     }
   }
 
@@ -504,18 +504,21 @@ export class Runtime implements EffectContext, UpdateContext {
   }
 
   private _createSubcontext(coroutine: Coroutine): Runtime {
-    const nextId = incrementId(this._sharedState.frameCount);
-    const renderFrame = createRenderFrame(nextId);
+    const nextId = incrementId(this._sharedState.updateCount);
+    const renderFrame = {
+      id: nextId,
+      pendingCoroutines: [coroutine],
+      mutationEffects: [coroutine],
+      layoutEffects: [],
+      passiveEffects: [],
+    };
 
-    renderFrame.pendingCoroutines.push(coroutine);
-    renderFrame.mutationEffects.push(coroutine);
-
-    this._sharedState.frameCount = nextId;
+    this._sharedState.updateCount = nextId;
 
     return new Runtime(
       this._renderHost,
       renderFrame,
-      this._currentScope,
+      this._scope,
       this._sharedState,
     );
   }
@@ -551,25 +554,25 @@ function consumeEffects(
   };
 }
 
-function createSharedState(): SharedState {
+function createInitialRenderFrame(): RenderFrame {
   return {
-    cachedTemplates: new WeakMap(),
-    coroutineStates: new WeakMap(),
-    frameCount: 0,
-    identifierCount: 0,
-    observers: new LinkedList(),
-    templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
-    uniqueIdentifier: generateUniqueIdentifier(8),
-  };
-}
-
-function createRenderFrame(id: number): RenderFrame {
-  return {
-    id,
+    id: 0,
     pendingCoroutines: [],
     mutationEffects: [],
     layoutEffects: [],
     passiveEffects: [],
+  };
+}
+
+function createSharedState(): SharedState {
+  return {
+    cachedTemplates: new WeakMap(),
+    coroutineStates: new WeakMap(),
+    identifierCount: 0,
+    observers: new LinkedList(),
+    templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
+    uniqueIdentifier: generateUniqueIdentifier(8),
+    updateCount: 0,
   };
 }
 

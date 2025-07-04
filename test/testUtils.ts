@@ -65,6 +65,16 @@ export function factorial(n: number): number {
   return result;
 }
 
+export function getPromiseState(
+  promise: Promise<unknown>,
+): Promise<'pending' | 'fulfilled' | 'rejected'> {
+  const tag = {};
+  return Promise.race([promise, tag]).then(
+    (value) => (value === tag ? 'pending' : 'fulfilled'),
+    () => 'rejected',
+  );
+}
+
 export function* permutations<T>(
   xs: T[],
   r: number = xs.length,
@@ -83,4 +93,11 @@ export function* permutations<T>(
       }
     }
   }
+}
+
+export function templateLiteral(
+  strings: TemplateStringsArray,
+  ...values: readonly unknown[]
+): { strings: TemplateStringsArray; values: readonly unknown[] } {
+  return { strings, values };
 }

@@ -14,13 +14,14 @@ import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { BrowserRenderHost } from '@/renderHost/browser.js';
 import { CommitPhase } from '@/renderHost.js';
-import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/childNodeTemplate.js';
 import { EmptyTemplate } from '@/template/emptyTemplate.js';
 import { TaggedTemplate } from '@/template/taggedTemplate.js';
 import { TextTemplate } from '@/template/textTemplate.js';
+import { MockEffectContext } from '../../mocks.js';
+import { templateLiteral } from '../../testUtils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -63,13 +64,13 @@ describe('BrowserRenderHost', () => {
         },
       ];
       const renderHost = new BrowserRenderHost();
-      const runtime = new Runtime(renderHost);
+      const context = new MockEffectContext();
 
-      renderHost.commitEffects(effects, phase, runtime);
+      renderHost.commitEffects(effects, phase, context);
 
       for (const effect of effects) {
         expect(effect.commit).toHaveBeenCalledOnce();
-        expect(effect.commit).toHaveBeenCalledWith(runtime);
+        expect(effect.commit).toHaveBeenCalledWith(context);
       }
     });
   });
@@ -77,7 +78,8 @@ describe('BrowserRenderHost', () => {
   describe('createTemplate()', () => {
     it('creates a TaggedTemplate', () => {
       const renderHost = new BrowserRenderHost();
-      const { strings, values } = tmpl`<div>${'Hello'}, ${'World'}!</div>`;
+      const { strings, values } =
+        templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const template = renderHost.createTemplate(
         strings,
         values,
@@ -107,7 +109,7 @@ describe('BrowserRenderHost', () => {
       ]);
     });
 
-    it.each([[tmpl``], [tmpl` `]])(
+    it.each([[templateLiteral``], [templateLiteral` `]])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const renderHost = new BrowserRenderHost();
@@ -123,11 +125,11 @@ describe('BrowserRenderHost', () => {
     );
 
     it.each([
-      [tmpl`<${'foo'}>`],
-      [tmpl`<${'foo'}/>`],
-      [tmpl` <${'foo'} /> `],
-      [tmpl` <!--${'foo'}--> `],
-      [tmpl` <!-- ${'foo'} --> `],
+      [templateLiteral`<${'foo'}>`],
+      [templateLiteral`<${'foo'}/>`],
+      [templateLiteral` <${'foo'} /> `],
+      [templateLiteral` <!--${'foo'}--> `],
+      [templateLiteral` <!-- ${'foo'} --> `],
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
@@ -143,7 +145,11 @@ describe('BrowserRenderHost', () => {
       },
     );
 
-    it.each([[tmpl`${'foo'}`], [tmpl` ${'foo'} `], [tmpl`(${'foo'})`]])(
+    it.each([
+      [templateLiteral`${'foo'}`],
+      [templateLiteral` ${'foo'} `],
+      [templateLiteral`(${'foo'})`],
+    ])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
         const renderHost = new BrowserRenderHost();
@@ -581,10 +587,3 @@ describe('BrowserRenderHost', () => {
     });
   });
 });
-
-function tmpl<TValues extends readonly unknown[]>(
-  strings: TemplateStringsArray,
-  ...values: TValues
-): { strings: TemplateStringsArray; values: TValues } {
-  return { strings, values };
-}
