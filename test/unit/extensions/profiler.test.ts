@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Effect } from '@/directive.js';
+import type { Effect, RenderContext } from '@/directive.js';
 import {
   type Logger,
   LogReporter,
@@ -38,6 +38,7 @@ describe('Profiler', () => {
           id: 0,
           component,
           props: {},
+          context: {} as RenderContext,
         },
         {
           type: 'TEMPLATE_CREATE_START',
@@ -58,6 +59,7 @@ describe('Profiler', () => {
           id: 0,
           component,
           props: {},
+          context: {} as RenderContext,
         },
         {
           type: 'RENDER_END',

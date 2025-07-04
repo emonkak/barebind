@@ -4,6 +4,7 @@ import { $toDirectiveElement, type Coroutine } from '@/directive.js';
 import { ALL_LANES, type Hook, Lane, NO_LANES } from '@/hook.js';
 import { PartType } from '@/part.js';
 import { CommitPhase } from '@/renderHost.js';
+import { RenderSession } from '@/renderSession.js';
 import { Runtime, type RuntimeEvent } from '@/runtime.js';
 import { Scope } from '@/scope.js';
 import { Literal } from '@/templateLiteral.js';
@@ -542,12 +543,14 @@ describe('Runtime', () => {
           id: 0,
           component,
           props,
+          context: expect.any(RenderSession),
         },
         {
           type: 'COMPONENT_RENDER_END',
           id: 0,
           component,
           props,
+          context: expect.any(RenderSession),
         },
       ]);
       expect(result.value).toBe(null);

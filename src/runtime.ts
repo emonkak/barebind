@@ -11,6 +11,7 @@ import {
   type Effect,
   type EffectContext,
   isBindableObject,
+  type RenderContext,
   type Slot,
   type Template,
   type TemplateMode,
@@ -61,6 +62,7 @@ export type RuntimeEvent =
       id: number;
       component: Component<unknown, unknown>;
       props: unknown;
+      context: RenderContext;
     }
   | {
       type: 'TEMPLATE_CREATE_START' | 'TEMPLATE_CREATE_END';
@@ -325,7 +327,7 @@ export class Runtime implements EffectContext, UpdateContext {
     coroutine: Coroutine,
   ): ComponentResult<TResult> {
     const { observers } = this._sharedState;
-    const session = new RenderSession(hooks, lanes, coroutine, this);
+    const context = new RenderSession(hooks, lanes, coroutine, this);
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -333,11 +335,12 @@ export class Runtime implements EffectContext, UpdateContext {
         id: this._renderFrame.id,
         component,
         props,
+        context,
       });
     }
 
-    const value = component.render(props, session);
-    const pendingLanes = session.finalize();
+    const value = component.render(props, context);
+    const pendingLanes = context.finalize();
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -345,6 +348,7 @@ export class Runtime implements EffectContext, UpdateContext {
         id: this._renderFrame.id,
         component,
         props,
+        context,
       });
     }
 
