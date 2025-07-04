@@ -40,6 +40,20 @@ describe('Profiler', () => {
           props: {},
         },
         {
+          type: 'TEMPLATE_CREATE_START',
+          id: 0,
+          strings: ['<div>', '</div>'],
+          binds: [],
+          mode: 'html',
+        },
+        {
+          type: 'TEMPLATE_CREATE_END',
+          id: 0,
+          strings: ['<div>', '</div>'],
+          binds: [],
+          mode: 'html',
+        },
+        {
           type: 'COMPONENT_RENDER_END',
           id: 0,
           component,
@@ -117,6 +131,14 @@ describe('Profiler', () => {
             duration: expect.any(Number),
           },
         ],
+        templateMeasurements: [
+          {
+            content: '<div>{}</div>',
+            mode: 'html',
+            startTime: expect.any(Number),
+            duration: expect.any(Number),
+          },
+        ],
         mutationMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -137,45 +159,6 @@ describe('Profiler', () => {
   });
 });
 
-[
-  {
-    id: 0,
-    updateMeasurement: {
-      startTime: 0,
-      duration: 10,
-      priority: 'user-blocking',
-      transition: false,
-    },
-    renderMeasurement: {
-      startTime: 0,
-      duration: 10,
-    },
-    componentMeasurements: [
-      {
-        name: 'MockComponent',
-        startTime: 0,
-        duration: 5,
-      },
-    ],
-    mutationMeasurement: {
-      startTime: 5,
-      duration: 3,
-      totalEffects: 2,
-    },
-    layoutMeasurement: {
-      startTime: 8,
-      duration: 1,
-      totalEffects: 1,
-    },
-    passiveMeasurement: {
-      startTime: 9,
-      duration: 1,
-      totalEffects: 1,
-    },
-  },
-  'Update #0 with user-blocking priority in %c10ms',
-];
-
 describe('LogReporter', () => {
   describe('reportProfile()', () => {
     it.each([
@@ -185,11 +168,31 @@ describe('LogReporter', () => {
           updateMeasurement: null,
           renderMeasurement: null,
           componentMeasurements: [],
+          templateMeasurements: [],
           mutationMeasurement: null,
           layoutMeasurement: null,
           passiveMeasurement: null,
         },
         [],
+      ],
+
+      [
+        {
+          id: 0,
+          updateMeasurement: {
+            startTime: 0,
+            duration: 10,
+            priority: null,
+            transition: true,
+          },
+          renderMeasurement: null,
+          componentMeasurements: [],
+          templateMeasurements: [],
+          mutationMeasurement: null,
+          layoutMeasurement: null,
+          passiveMeasurement: null,
+        },
+        [['group', 'Transition #0 without priority in %c10ms'], ['groupEnd']],
       ],
       [
         {
@@ -209,6 +212,14 @@ describe('LogReporter', () => {
               name: 'MockComponent',
               startTime: 0,
               duration: 4,
+            },
+          ],
+          templateMeasurements: [
+            {
+              content: '<div>{}</div>',
+              mode: 'html',
+              startTime: 0,
+              duration: 1,
             },
           ],
           mutationMeasurement: {
@@ -240,39 +251,21 @@ describe('LogReporter', () => {
               },
             ],
           ],
+          [
+            'table',
+            [
+              {
+                content: '<div>{}</div>',
+                mode: 'html',
+                startTime: 0,
+                duration: 1,
+              },
+            ],
+          ],
           ['groupEnd'],
           ['log', '%cMUTATION PHASE:%c 3 effect(s) committed in %c3ms'],
           ['log', '%cLAYOUT PHASE:%c 2 effect(s) committed in %c2ms'],
           ['log', '%cPASSIVE PHASE:%c 1 effect(s) committed in %c1ms'],
-          ['groupEnd'],
-        ],
-      ],
-      [
-        {
-          id: 0,
-          updateMeasurement: {
-            startTime: 0,
-            duration: 3,
-            priority: null,
-            transition: true,
-          },
-          renderMeasurement: {
-            startTime: 0,
-            duration: 1,
-          },
-          componentMeasurements: [],
-          mutationMeasurement: {
-            startTime: 1,
-            duration: 2,
-            totalEffects: 1,
-          },
-          layoutMeasurement: null,
-          passiveMeasurement: null,
-        },
-        [
-          ['group', 'View transition #0 without priority in %c3ms'],
-          ['log', '%cRENDER PHASE:%c No components rendered in %c1ms'],
-          ['log', '%cMUTATION PHASE:%c 1 effect(s) committed in %c2ms'],
           ['groupEnd'],
         ],
       ],
