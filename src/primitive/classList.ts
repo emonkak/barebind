@@ -1,8 +1,8 @@
 import { sequentialEqual } from '../compare.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
+  CommitContext,
   DirectiveContext,
-  EffectContext,
   Primitive,
 } from '../directive.js';
 import type { AttributePart, Part } from '../part.js';
@@ -55,7 +55,7 @@ export class ClassListBinding extends PrimitiveBinding<
     return !sequentialEqual(classNames, this._memoizedValue);
   }
 
-  commit(_context: EffectContext): void {
+  commit(_context: CommitContext): void {
     const { classList } = this._part.node;
     const newClassNames = this._pendingValue;
     const oldClassNames = this._memoizedValue;
@@ -98,7 +98,7 @@ export class ClassListBinding extends PrimitiveBinding<
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: EffectContext): void {
+  rollback(_context: CommitContext): void {
     const { classList } = this._part.node;
     const classNames = this._memoizedValue;
 

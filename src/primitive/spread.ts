@@ -1,8 +1,8 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
   Binding,
+  CommitContext,
   DirectiveContext,
-  EffectContext,
   Primitive,
   Slot,
   UpdateContext,
@@ -110,7 +110,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     if (this._memoizedSlots !== null) {
       for (const [name, slot] of this._memoizedSlots.entries()) {
         if (!this._pendingSlots.has(name)) {
@@ -126,7 +126,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
     this._memoizedSlots = this._pendingSlots;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     if (this._memoizedSlots !== null) {
       for (const binding of this._memoizedSlots.values()) {
         binding.rollback(context);

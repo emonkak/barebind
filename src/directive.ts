@@ -31,11 +31,11 @@ export interface Bindable<T> {
 }
 
 export interface Effect {
-  commit(context: EffectContext): void;
+  commit(context: CommitContext): void;
 }
 
 export interface ReversibleEffect extends Effect {
-  rollback(context: EffectContext): void;
+  rollback(context: CommitContext): void;
 }
 
 export interface Binding<T> extends ReversibleEffect {
@@ -108,7 +108,7 @@ export interface DirectiveContext {
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
-export interface EffectContext {
+export interface CommitContext {
   debugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
   undebugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
 }

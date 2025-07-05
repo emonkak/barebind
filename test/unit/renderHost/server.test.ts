@@ -19,7 +19,7 @@ import { ChildNodeTemplate } from '@/template/childNodeTemplate.js';
 import { EmptyTemplate } from '@/template/emptyTemplate.js';
 import { TaggedTemplate } from '@/template/taggedTemplate.js';
 import { TextTemplate } from '@/template/textTemplate.js';
-import { MockEffectContext } from '../../mocks.js';
+import { MockCommitContext } from '../../mocks.js';
 import { templateLiteral } from '../../testUtils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
@@ -43,7 +43,7 @@ describe('ServerRenderHost', () => {
         },
       ];
       const renderHost = new ServerRenderHost(document);
-      const context = new MockEffectContext();
+      const context = new MockCommitContext();
 
       renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, context);
       renderHost.commitEffects(layoutEffects, CommitPhase.Layout, context);

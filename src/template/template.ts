@@ -1,7 +1,7 @@
 import type {
   Binding,
+  CommitContext,
   Effect,
-  EffectContext,
   Template,
   TemplateResult,
   UpdateContext,
@@ -90,7 +90,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     if (this._pendingResult !== null) {
       const { childNodes, slots } = this._pendingResult;
 
@@ -115,7 +115,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     this._memoizedResult = this._pendingResult;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     if (this._memoizedResult !== null) {
       const { childNodes, slots } = this._memoizedResult;
 

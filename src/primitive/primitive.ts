@@ -1,6 +1,6 @@
 import type {
   Binding,
-  EffectContext,
+  CommitContext,
   Primitive,
   UpdateContext,
 } from '../directive.js';
@@ -41,7 +41,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   disconnect(_context: UpdateContext): void {}
 
-  abstract commit(_context: EffectContext): void;
+  abstract commit(_context: CommitContext): void;
 
-  abstract rollback(_context: EffectContext): void;
+  abstract rollback(_context: CommitContext): void;
 }

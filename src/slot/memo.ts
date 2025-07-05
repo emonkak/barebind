@@ -1,7 +1,7 @@
 import {
   type Binding,
+  type CommitContext,
   type Directive,
-  type EffectContext,
   type Slot,
   SlotObject,
   type UpdateContext,
@@ -88,7 +88,7 @@ export class MemoSlot<T> implements Slot<T> {
     this._dirty = true;
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     if (!this._dirty) {
       return;
     }
@@ -121,7 +121,7 @@ export class MemoSlot<T> implements Slot<T> {
     this._dirty = false;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     if (!this._dirty) {
       return;
     }

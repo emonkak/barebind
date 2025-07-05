@@ -7,7 +7,7 @@ import {
   type Directive,
   type DirectiveContext,
   DirectiveObject,
-  type EffectContext,
+  type CommitContext,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -183,7 +183,7 @@ class VDOMBinding implements Binding<VChild[]> {
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     let currentNode: BlockNode | null = this._rootNode;
     let lastNode: BlockNode | null = null;
 
@@ -198,7 +198,7 @@ class VDOMBinding implements Binding<VChild[]> {
     }
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     let currentNode: BlockNode | null = this._rootNode;
     while ((currentNode = nextNode(currentNode)) !== null) {
       unmountBlock(currentNode.block, context);
@@ -212,7 +212,7 @@ function commitNode(
   node: BlockNode,
   lastNode: BlockNode | null,
   part: ChildNodePart,
-  context: EffectContext,
+  context: CommitContext,
 ): BlockNode | null {
   const newBlock = node.alternateBlock;
   const oldBlock = node.block;
@@ -347,7 +347,7 @@ function mountBlock(
   node: BlockNode,
   block: Block,
   part: ChildNodePart,
-  context: EffectContext,
+  context: CommitContext,
 ): void {
   switch (block.type) {
     case BlockType.Directive: {
@@ -545,7 +545,7 @@ function removeProp(element: Element, key: string, oldValue: unknown): void {
   element.removeAttribute(key);
 }
 
-function unmountBlock(block: Block, context: EffectContext): void {
+function unmountBlock(block: Block, context: CommitContext): void {
   if (block.type === BlockType.Directive) {
     block.slot.rollback(context);
     block.slot.part.node.remove();

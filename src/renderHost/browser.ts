@@ -1,8 +1,8 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import type {
+  CommitContext,
   Effect,
-  EffectContext,
   Primitive,
   SlotType,
   Template,
@@ -36,7 +36,7 @@ export class BrowserRenderHost implements RenderHost {
   commitEffects(
     effects: Effect[],
     _phase: CommitPhase,
-    context: EffectContext,
+    context: CommitContext,
   ): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(context);

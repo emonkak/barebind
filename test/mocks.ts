@@ -4,12 +4,12 @@ import { ComponentBinding } from '@/component.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import type {
   Binding,
+  CommitContext,
   Component,
   Coroutine,
   Directive,
   DirectiveContext,
   Effect,
-  EffectContext,
   Primitive,
   RenderContext,
   Slot,
@@ -211,10 +211,10 @@ export const MockPrimitive = {
 };
 
 export class MockEffect implements Effect {
-  commit(_context: EffectContext): void {}
+  commit(_context: CommitContext): void {}
 }
 
-export class MockEffectContext implements EffectContext {
+export class MockCommitContext implements CommitContext {
   debugValue(
     _directive: Directive<unknown>,
     _value: unknown,
@@ -232,7 +232,7 @@ export class MockRenderHost implements RenderHost {
   commitEffects(
     effects: Effect[],
     _phase: CommitPhase,
-    context: EffectContext,
+    context: CommitContext,
   ): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(context);
@@ -350,12 +350,12 @@ export class MockSlot<T> implements Slot<T> {
     this._isConnected = false;
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     this._binding.commit(context);
     this._isCommitted = true;
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     this._binding.rollback(context);
     this._isCommitted = false;
   }

@@ -1,8 +1,8 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 //
 import type {
+  CommitContext,
   Effect,
-  EffectContext,
   Primitive,
   SlotType,
   Template,
@@ -40,7 +40,7 @@ export class ServerRenderHost implements RenderHost {
   commitEffects(
     effects: Effect[],
     phase: CommitPhase,
-    context: EffectContext,
+    context: CommitContext,
   ): void {
     if (phase !== CommitPhase.Mutation) {
       return;

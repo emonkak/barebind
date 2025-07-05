@@ -1,8 +1,8 @@
 import { shallowEqual } from '../compare.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
+  CommitContext,
   DirectiveContext,
-  EffectContext,
   Primitive,
 } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
@@ -60,7 +60,7 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
     return !shallowEqual(props, this._memoizedValue);
   }
 
-  commit(_context: EffectContext): void {
+  commit(_context: CommitContext): void {
     const newProps = this._pendingValue;
     const oldProps = this._memoizedValue;
     const { style } = this._part.node as
@@ -89,7 +89,7 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: EffectContext): void {
+  rollback(_context: CommitContext): void {
     const props = this._memoizedValue;
     const { style } = this._part.node as
       | HTMLElement

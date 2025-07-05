@@ -1,7 +1,7 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
-  EffectContext,
+  CommitContext,
   Primitive,
 } from '../directive.js';
 import { type EventPart, type Part, PartType } from '../part.js';
@@ -52,7 +52,7 @@ export class EventBinding extends PrimitiveBinding<
     return listener !== this._memoizedValue;
   }
 
-  commit(_context: EffectContext): void {
+  commit(_context: CommitContext): void {
     const newListener = this._pendingValue;
     const oldListener = this._memoizedValue;
 
@@ -73,7 +73,7 @@ export class EventBinding extends PrimitiveBinding<
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: EffectContext): void {
+  rollback(_context: CommitContext): void {
     const listener = this._memoizedValue;
 
     if (listener != null) {

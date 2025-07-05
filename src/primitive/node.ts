@@ -1,7 +1,7 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
-  EffectContext,
+  CommitContext,
   Primitive,
 } from '../directive.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
@@ -35,13 +35,13 @@ export class NodeBinding<T> extends PrimitiveBinding<T, ChildNodePart> {
     return !Object.is(value, this._memoizedValue);
   }
 
-  commit(_context: EffectContext): void {
+  commit(_context: CommitContext): void {
     const value = this._pendingValue;
     this._part.node.nodeValue = value?.toString() ?? null;
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: EffectContext): void {
+  rollback(_context: CommitContext): void {
     if (this._memoizedValue !== null) {
       this._part.node.nodeValue = null;
       this._memoizedValue = null;

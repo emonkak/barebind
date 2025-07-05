@@ -1,6 +1,6 @@
 import type {
+  CommitContext,
   DirectiveContext,
-  EffectContext,
   Primitive,
 } from '../directive.js';
 import type { Part } from '../part.js';
@@ -26,7 +26,7 @@ export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
     return false;
   }
 
-  commit(_context: EffectContext): void {}
+  commit(_context: CommitContext): void {}
 
-  rollback(_context: EffectContext): void {}
+  rollback(_context: CommitContext): void {}
 }

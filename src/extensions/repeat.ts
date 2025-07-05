@@ -3,11 +3,11 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
+  type CommitContext,
   type Directive,
   type DirectiveContext,
   DirectiveObject,
   type Effect,
-  type EffectContext,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -226,7 +226,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     if (this._memoizedItems === null || this._memoizedItems.length === 0) {
       for (let i = 0, l = this._pendingItems.length; i < l; i++) {
         const item = this._pendingItems[i]!;
@@ -274,7 +274,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._pendingOperations = [];
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     if (this._memoizedItems !== null) {
       for (let i = this._memoizedItems.length - 1; i >= 0; i--) {
         const item = this._memoizedItems[i]!;
@@ -307,7 +307,7 @@ function commitMove<TKey, TValue>(
 
 function commitRemove<TKey, TValue>(
   item: Item<TKey, TValue>,
-  context: EffectContext,
+  context: CommitContext,
 ): void {
   const { slot } = item;
 

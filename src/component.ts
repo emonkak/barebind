@@ -1,12 +1,12 @@
 import {
   type Binding,
+  type CommitContext,
   type Component,
   type ComponentFunction,
   type Coroutine,
   type DirectiveContext,
   DirectiveObject,
   type Effect,
-  type EffectContext,
   type RenderContext,
   type Slot,
   type UpdateContext,
@@ -185,11 +185,11 @@ export class ComponentBinding<TProps, TResult>
     this._hooks = [];
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     this._slot?.commit(context);
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     this._slot?.rollback(context);
   }
 }

@@ -1,8 +1,8 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import type {
+  CommitContext,
   Effect,
-  EffectContext,
   Primitive,
   SlotType,
   Template,
@@ -26,7 +26,7 @@ export interface RenderHost {
   commitEffects(
     effects: Effect[],
     phase: CommitPhase,
-    context: EffectContext,
+    context: CommitContext,
   ): void;
   createTemplate(
     strings: readonly string[],

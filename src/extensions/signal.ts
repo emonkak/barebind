@@ -2,11 +2,11 @@ import {
   $toDirectiveElement,
   type Bindable,
   type Binding,
+  type CommitContext,
   type Coroutine,
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
-  type EffectContext,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -303,11 +303,11 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription = null;
   }
 
-  commit(context: EffectContext): void {
+  commit(context: CommitContext): void {
     this._slot?.commit(context);
   }
 
-  rollback(context: EffectContext): void {
+  rollback(context: CommitContext): void {
     this._slot?.rollback(context);
   }
 

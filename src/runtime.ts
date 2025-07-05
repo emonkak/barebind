@@ -3,13 +3,13 @@
 import { inspectValue } from './debug.js';
 import {
   $toDirectiveElement,
+  type CommitContext,
   type Component,
   type ComponentResult,
   type Coroutine,
   type Directive,
   type DirectiveElement,
   type Effect,
-  type EffectContext,
   isBindable,
   type RenderContext,
   type Slot,
@@ -95,7 +95,7 @@ interface CoroutineState {
   pendingLanes: Lanes;
 }
 
-export class Runtime implements EffectContext, UpdateContext {
+export class Runtime implements CommitContext, UpdateContext {
   private readonly _renderHost: RenderHost;
 
   private readonly _renderFrame: RenderFrame;
