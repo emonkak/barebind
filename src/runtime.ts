@@ -10,7 +10,7 @@ import {
   type DirectiveElement,
   type Effect,
   type EffectContext,
-  isBindableObject,
+  isBindable,
   type RenderContext,
   type Slot,
   type Template,
@@ -356,7 +356,7 @@ export class Runtime implements EffectContext, UpdateContext {
   }
 
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
-    if (isBindableObject(value)) {
+    if (isBindable(value)) {
       return value[$toDirectiveElement](part, this);
     } else {
       const directive = this._renderHost.resolvePrimitive(part);

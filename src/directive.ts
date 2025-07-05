@@ -218,6 +218,8 @@ export class SlotObject<T> implements Bindable<unknown> {
   }
 }
 
-export function isBindableObject<T>(value: T): value is T & Bindable<T> {
-  return typeof (value as Bindable<T>)?.[$toDirectiveElement] === 'function';
+export function isBindable(value: unknown): value is Bindable<unknown> {
+  return (
+    typeof (value as Bindable<unknown>)?.[$toDirectiveElement] === 'function'
+  );
 }
