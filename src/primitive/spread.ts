@@ -83,16 +83,17 @@ export class SpreadBinding implements Binding<SpreadProps> {
       }
     }
 
-    for (const key in this._props) {
-      if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
+    for (const key of Object.keys(this._props)) {
+      const value = this._props[key];
+      if (value === undefined) {
         continue;
       }
       let slot = nextSlots.get(key);
       if (slot !== undefined) {
-        slot.reconcile(this._props[key], context);
+        slot.reconcile(value, context);
       } else {
         const part = resolveNamedPart(key, this._part.node);
-        slot = context.resolveSlot(this._props[key], part);
+        slot = context.resolveSlot(value, part);
         slot.connect(context);
         nextSlots.set(key, slot);
       }

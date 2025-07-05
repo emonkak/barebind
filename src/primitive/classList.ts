@@ -131,7 +131,7 @@ function addClassNames(
   if (typeof className === 'string') {
     classList.add(className);
   } else {
-    for (const key in className) {
+    for (const key of Object.keys(className)) {
       classList.toggle(key, className[key]);
     }
   }
@@ -144,7 +144,7 @@ function removeClassNames(
   if (typeof className === 'string') {
     classList.remove(className);
   } else {
-    for (const key in className) {
+    for (const key of Object.keys(className)) {
       if (className[key]) {
         classList.remove(key);
       }
@@ -164,12 +164,12 @@ function updateClassNames(
     }
     classList.add(newClassName);
   } else {
-    for (const key in oldClassName as ClassMap) {
+    for (const key of Object.keys(oldClassName as ClassMap)) {
       if (!Object.hasOwn(newClassName, key) || !newClassName[key]) {
         classList.remove(key);
       }
     }
-    for (const key in newClassName) {
+    for (const key of Object.keys(newClassName)) {
       classList.toggle(key, newClassName[key]);
     }
   }

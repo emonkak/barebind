@@ -68,7 +68,7 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
       | MathMLElement
       | SVGElement;
 
-    for (const key in oldProps) {
+    for (const key of Object.keys(oldProps)) {
       if (
         oldProps[key] != null &&
         (!Object.hasOwn(newProps, key) || newProps[key] == null)
@@ -78,7 +78,7 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
       }
     }
 
-    for (const key in newProps) {
+    for (const key of Object.keys(newProps)) {
       const value = newProps[key];
       if (value != null) {
         const property = toCSSProperty(key);
@@ -96,7 +96,7 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
       | MathMLElement
       | SVGElement;
 
-    for (const key in props) {
+    for (const key of Object.keys(props)) {
       if (props[key] != null) {
         const property = toCSSProperty(key);
         style.removeProperty(property);
