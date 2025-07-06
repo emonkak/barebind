@@ -50,7 +50,10 @@ export interface Reporter {
   reportProfile(profile: Profile): void;
 }
 
-export type Logger = Pick<Console, 'group' | 'groupEnd' | 'log' | 'table'>;
+export type Logger = Pick<
+  Console,
+  'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
+>;
 
 const RENDER_PHASE_STYLE =
   'color: light-dark(#0b57d0, #4c8df6); font-weight: bold';
@@ -224,7 +227,7 @@ export class LogReporter implements Reporter {
     );
 
     if (renderMeasurement !== null) {
-      this._logger.group(
+      this._logger.groupCollapsed(
         `%cRENDER PHASE:%c ${componentMeasurements.length} component(s) rendered in %c${renderMeasurement.duration}ms`,
         RENDER_PHASE_STYLE,
         DEFAULT_STYLE,

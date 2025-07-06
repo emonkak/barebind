@@ -242,7 +242,10 @@ describe('LogReporter', () => {
         },
         [
           ['group', 'Update #0 with user-blocking priority in %c10ms'],
-          ['group', '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms'],
+          [
+            'groupCollapsed',
+            '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms',
+          ],
           [
             'table',
             [
@@ -298,6 +301,10 @@ class MockLogger implements Logger {
 
   group(...args: unknown[]): void {
     this._logs.push(['group', args[0]]);
+  }
+
+  groupCollapsed(...args: unknown[]): void {
+    this._logs.push(['groupCollapsed', args[0]]);
   }
 
   groupEnd(): void {
