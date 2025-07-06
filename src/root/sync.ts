@@ -34,8 +34,9 @@ export function createSyncRoot<T>(
       const hydrationTree = new HydrationTree(container);
 
       slot.hydrate(hydrationTree, runtime);
-      hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
-      hydrationTree.replaceNode(part.node);
+      hydrationTree
+        .popNode(part.node.nodeType, part.node.nodeName)
+        .replaceWith(part.node);
 
       runtime.enqueueMutationEffect(new MountSlot(slot, container));
       runtime.flushSync();

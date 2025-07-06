@@ -15,50 +15,60 @@ type InferNode<T extends number> = T extends keyof NodeTypeMap
 export class HydrationTree {
   private readonly _treeWalker: TreeWalker;
 
+  private _lookaheadNode: Node | null;
+
   constructor(root: Node) {
     this._treeWalker = root.ownerDocument!.createTreeWalker(
       root,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );
+    this._lookaheadNode = this._treeWalker.nextNode();
   }
 
-  peekNode(): ChildNode {
-    const previousNode = this._treeWalker.currentNode;
-    const nextNode = this._treeWalker.nextNode();
-    if (nextNode === null) {
-      throw new HydrationError('Hydration is failed because there is no node.');
-    }
-    this._treeWalker.currentNode = previousNode;
-    return nextNode as ChildNode;
+  peekNode<T extends number>(
+    expectedType: T,
+    expectedName: string,
+  ): InferNode<T> {
+    const lookaheadNode = this._lookaheadNode;
+    ensureNode(lookaheadNode, expectedType, expectedName);
+    return lookaheadNode;
   }
 
   popNode<T extends number>(
     expectedType: T,
     expectedName: string,
   ): InferNode<T> {
-    const currentNode = this._treeWalker.nextNode();
-    if (currentNode === null) {
-      throw new HydrationError(
-        `Hydration is failed because there is no node. ${expectedName.toLowerCase()} node is expected here.`,
-      );
-    }
-    ensureNode(currentNode, expectedType, expectedName);
-    return currentNode;
+    const lookaheadNode = this._lookaheadNode;
+    ensureNode(lookaheadNode, expectedType, expectedName);
+    this._lookaheadNode = this._treeWalker.nextNode();
+    return lookaheadNode;
   }
 
-  replaceNode(node: Node): void {
-    (this._treeWalker.currentNode as ChildNode).replaceWith(node);
-    this._treeWalker.currentNode = node;
+  splitText(): Text {
+    const lookaheadNode = this._lookaheadNode;
+    if (lookaheadNode === null) {
+      throw new HydrationError(
+        `Hydration is failed because there is no node. #text node is expected here.`,
+      );
+    }
+    ensureNode(lookaheadNode, Node.TEXT_NODE, '#text');
+    return lookaheadNode.splitText(0);
   }
 }
 
 export class HydrationError extends Error {}
 
-export function ensureNode<T extends number>(
-  actualNode: Node,
+function ensureNode<T extends number>(
+  actualNode: Node | null,
   expectedType: T,
   expectedName: string,
 ): asserts actualNode is InferNode<T> {
+  if (actualNode === null) {
+    throw new HydrationError(
+      `Hydration is failed because there is no node. ${expectedName.toLowerCase()} node is expected here.`,
+    );
+  }
+
   if (
     actualNode.nodeType !== expectedType ||
     actualNode.nodeName !== expectedName

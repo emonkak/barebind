@@ -150,8 +150,9 @@ export class RepeatBinding<TSource, TKey, TValue>
       const slot = context.resolveSlot(value, part);
 
       slot.hydrate(hydrationTree, context);
-      hydrationTree.popNode(part.node.nodeType, part.node.nodeName);
-      hydrationTree.replaceNode(part.node);
+      hydrationTree
+        .popNode(part.node.nodeType, part.node.nodeName)
+        .replaceWith(part.node);
 
       newItems[i] = {
         key,

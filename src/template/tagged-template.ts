@@ -7,7 +7,7 @@ import type {
   TemplateResult,
   UpdateContext,
 } from '../directive.js';
-import { ensureNode, type HydrationTree } from '../hydration.js';
+import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
@@ -149,7 +149,6 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
       (currentNode = treeWalker.nextNode()) !== null;
       nodeIndex++
     ) {
-      const lookaheadNode = hydrationTree.peekNode();
       let alternateNode: ChildNode | null = null;
       let skip = false;
 
@@ -162,14 +161,17 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         let childPart: Part;
 
         switch (hole.type) {
-          case PartType.Attribute:
-            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
+          case PartType.Attribute: {
             childPart = {
               type: PartType.Attribute,
-              node: lookaheadNode,
+              node: hydrationTree.peekNode(
+                Node.ELEMENT_NODE,
+                currentNode.nodeName,
+              ),
               name: hole.name,
             };
             break;
+          }
           case PartType.ChildNode:
             childPart = {
               type: PartType.ChildNode,
@@ -179,47 +181,60 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             alternateNode = childPart.node;
             break;
           case PartType.Element:
-            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Element,
-              node: lookaheadNode,
+              node: hydrationTree.peekNode(
+                Node.ELEMENT_NODE,
+                currentNode.nodeName,
+              ),
             };
             break;
           case PartType.Event:
-            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Event,
-              node: lookaheadNode,
+              node: hydrationTree.peekNode(
+                Node.ELEMENT_NODE,
+                currentNode.nodeName,
+              ),
               name: hole.name,
             };
             break;
-          case PartType.Live:
-            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
+          case PartType.Live: {
+            const node = hydrationTree.peekNode(
+              Node.ELEMENT_NODE,
+              currentNode.nodeName,
+            );
             childPart = {
               type: PartType.Live,
-              node: lookaheadNode,
+              node,
               name: hole.name,
-              defaultValue: lookaheadNode[hole.name as keyof Node],
+              defaultValue: node[hole.name as keyof Element],
             };
             break;
-          case PartType.Property:
-            ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
+          }
+          case PartType.Property: {
+            const node = hydrationTree.peekNode(
+              Node.ELEMENT_NODE,
+              currentNode.nodeName,
+            );
             childPart = {
               type: PartType.Property,
-              node: lookaheadNode,
+              node,
               name: hole.name,
-              defaultValue: lookaheadNode[hole.name as keyof Node],
+              defaultValue: node[hole.name as keyof Element],
             };
             break;
+          }
           case PartType.Text: {
-            ensureNode(lookaheadNode, Node.TEXT_NODE, currentNode.nodeName);
             let node: Text;
             if (hole.split) {
-              node = document.createTextNode('');
+              node = hydrationTree.splitText();
               skip = true;
-              lookaheadNode.before(node);
             } else {
-              node = lookaheadNode;
+              node = hydrationTree.peekNode(
+                Node.TEXT_NODE,
+                currentNode.nodeName,
+              );
             }
             childPart = {
               type: PartType.Text,
@@ -243,7 +258,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         );
 
         if (alternateNode !== null) {
-          hydrationTree.replaceNode(alternateNode);
+          consumedNode.replaceWith(alternateNode);
         }
 
         if (currentNode.parentNode === rootNode) {
