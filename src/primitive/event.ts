@@ -1,7 +1,7 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
-  DirectiveContext,
   CommitContext,
+  DirectiveContext,
   Primitive,
 } from '../directive.js';
 import { type EventPart, type Part, PartType } from '../part.js';
@@ -57,10 +57,10 @@ export class EventBinding extends PrimitiveBinding<
     const oldListener = this._memoizedValue;
 
     if (
-      typeof oldListener === 'object' ||
       typeof newListener === 'object' ||
-      oldListener == null ||
-      newListener == null
+      typeof oldListener === 'object' ||
+      newListener == null ||
+      oldListener == null
     ) {
       if (oldListener != null) {
         detachEventListener(this._part, this, oldListener);

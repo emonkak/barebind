@@ -1,7 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "lib"
+    "jsx": "react-jsx",
+    "jsxImportSource": "@emonkak/ebit/extensions",
+    "outDir": "lib",
+    "rootDir": "."
   },
-  "files": ["index.ts"]
+  "files": ["index.tsx"]
 }

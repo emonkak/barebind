@@ -8,7 +8,10 @@ export {
   type Reporter,
   type UpdateMeasurement,
 } from './extensions/profiler.js';
-export { type RepeatProps, repeat } from './extensions/repeat.js';
+export {
+  type RepeatProps,
+  repeat,
+} from './extensions/repeat.js';
 export {
   Atom,
   Computed,
@@ -22,3 +25,8 @@ export {
   type StoreClass,
   type StoreExtensions,
 } from './extensions/store.js';
+export {
+  createElement,
+  createFragment,
+  type VNode,
+} from './extensions/vdom.js';

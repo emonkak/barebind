@@ -11,7 +11,7 @@ import {
   Profiler,
   repeat,
   type Signal,
-} from '@emonkak/ebit/extensions.js';
+} from '@emonkak/ebit/extensions';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
 
@@ -44,13 +44,13 @@ function App(_props: {}, context: RenderContext) {
     `${state.items.length} item(s) are available`,
   );
 
-  const onIncrement = context.useCallback(() => {
+  const handleIncrement = context.useCallback(() => {
     count$.value += 1;
   }, []);
-  const onDecrement = context.useCallback(() => {
+  const handleDecrement = context.useCallback(() => {
     count$.value -= 1;
   }, []);
-  const onAdd = context.useCallback(() => {
+  const handleAdd = context.useCallback(() => {
     if (state.resevedItems.length > 0) {
       const items = state.items.concat([state.resevedItems[0]!]);
       setState({
@@ -59,7 +59,7 @@ function App(_props: {}, context: RenderContext) {
       });
     }
   }, [state]);
-  const onUp = context.useCallback(
+  const handleUp = context.useCallback(
     (index: number) => {
       if (index > 0) {
         const items = state.items.slice();
@@ -71,7 +71,7 @@ function App(_props: {}, context: RenderContext) {
     },
     [state],
   );
-  const onDown = context.useCallback(
+  const handleDown = context.useCallback(
     (index: number) => {
       if (index + 1 < state.items.length) {
         const items = state.items.slice();
@@ -83,7 +83,7 @@ function App(_props: {}, context: RenderContext) {
     },
     [state],
   );
-  const onDelete = context.useCallback(
+  const handleDelete = context.useCallback(
     (index: number) => {
       const items = state.items.slice();
       const deletedItems = items.splice(index, 1);
@@ -94,48 +94,75 @@ function App(_props: {}, context: RenderContext) {
     },
     [state],
   );
-  const onShuffle = context.useCallback(() => {
+  const handleShuffle = context.useCallback(() => {
     const items = shuffle(state.items.slice());
     setState((state) => ({ ...state, items }));
   }, [state]);
 
   return context.html`
     <div ${{ class: 'root' }}>
-      <${component(Dashboard, { count$ })} />
-      <div>
-        <button type="button" @click=${onIncrement}>+1</button>
-        <button type="button" @click=${onDecrement}>-1</button>
-        <button type="button" disabled=${state.items.length >= ITEM_LABELS.length} @click=${onAdd}>Add</button>
-        <button type="button" @click=${onShuffle}>Shuffle</button>
-      </div>
+      <${component(Dashboard, { count$ })}>
+      <nav>
+        <button type="button" @click=${handleIncrement}>+1</button>
+        <button type="button" @click=${handleDecrement}>-1</button>
+        <button type="button" disabled=${state.items.length >= ITEM_LABELS.length} @click=${handleAdd}>Add</button>
+        <button type="button" @click=${handleShuffle}>Shuffle</button>
+      </nav>
       <${component(List, {
         items: state.items,
-        onUp,
-        onDown,
-        onDelete,
+        onUp: handleUp,
+        onDown: handleDown,
+        onDelete: handleDelete,
       })}>
+      <${component(TemplateCounter, {})}>
+      <${component(VDOMCounter, {})}>
+      <div class="SVGCounter">
+        <h1>SVG Counter</h1>
+        <svg width="100" height="100" viewBox="0 0 100 100">
+          <${component(SVGCounter, { cx: 50, cy: 50, r: 50, fill: 'red', text$: count$.map((count) => count.toString()) })}>
+        </svg>
+      </div>
     </div>
-    <svg width="100" height="100" viewBox="0 0 100 100">
-      <${component(Circle, { cx: 50, cy: 50, r: 50, fill: 'red', text$: count$.map((count) => count.toString()) })}>
-    </svg>
   `;
 }
 
-interface CircleProps {
-  cx: number;
-  cy: number;
-  r: number;
-  fill: string;
-  text$: Signal<string>;
+interface DashboardProps {
+  count$: Signal<number>;
 }
 
-function Circle(
-  { cx, cy, r, fill, text$ }: CircleProps,
+function Dashboard(
+  { count$ }: DashboardProps,
   context: RenderContext,
-) {
-  return context.svg`
-    <circle cx=${cx} cy=${cy} r=${r} fill=${fill} />
-    <text x=${cx} y=${cy} fill="white" dominant-baseline="middle" text-anchor="middle">${text$}</text>
+): unknown {
+  const env = context.getContextValue(ENV_CONTEXT);
+  const countElementRef = context.useRef<Element | null>(null);
+  const count = context.use(count$);
+
+  const greetTag = new Literal(count$.value % 2 === 0 ? 'span' : 'em');
+
+  return context.html`
+    <div
+      :classlist=${[
+        'Dashboard',
+        {
+          'is-odd': count % 2 !== 0,
+          'is-even': count % 2 === 0,
+        },
+      ]}
+      :ref=${countElementRef}
+      data-count=${count}
+    >
+      <h1>
+        <${context.dynamicHTML`
+          <${greetTag} :style=${{ color: 'blue' }}>Hello, World!</${greetTag}>
+        `}>
+      </h1>
+      <h1 .innerHTML=${`<${greetTag} style="color: red">Hello, World!</${greetTag}>`}></h1>
+      <ul>
+        <li>Env: ${env}</li>
+        <li>Count: ${count}</li>
+      </ul>
+    </div>
   `;
 }
 
@@ -149,7 +176,7 @@ interface ListProps {
 function List(
   { items, onUp, onDown, onDelete }: ListProps,
   context: RenderContext,
-) {
+): unknown {
   const itemsList = context.useMemo(
     () =>
       repeat({
@@ -170,7 +197,10 @@ function List(
   );
 
   return context.html`
-    <ol><${itemsList}></ol>
+    <div class="List">
+      <h1>List</h1>
+      <ol><${itemsList}></ol>
+    </div>
   `;
 }
 
@@ -208,43 +238,62 @@ function Item(
   `;
 }
 
-interface DashboardProps {
-  count$: Signal<number>;
-}
+function TemplateCounter(_props: {}, context: RenderContext): unknown {
+  const [count, setCount] = context.useState(0);
 
-function Dashboard(
-  { count$ }: DashboardProps,
-  context: RenderContext,
-): unknown {
-  const env = context.getContextValue(ENV_CONTEXT);
-  const countElementRef = context.useRef<Element | null>(null);
-  const count = context.use(count$);
-
-  const greetTag = new Literal(count$.value % 2 === 0 ? 'span' : 'em');
+  const handleIncrement = context.useCallback(() => {
+    setCount((count) => count + 1);
+  }, []);
 
   return context.html`
-    <div
-      data-count=${count}
-      :classlist=${[
-        'Dashboard',
-        {
-          'is-odd': count % 2 !== 0,
-          'is-even': count % 2 === 0,
-        },
-      ]}
-      :ref=${countElementRef}
-    >
-      <h1>
-        <${context.dynamicHTML`
-          <${greetTag} :style=${{ color: 'blue' }}>Hello, World!</${greetTag}>
-        `}>
-      </h1>
-      <h1 .innerHTML=${`<${greetTag} style="color: red">Hello, World!</${greetTag}>`}></h1>
-      <ul>
-        <li>Env: ${env}</li>
-        <li>Count: ${count}</li>
-      </ul>
+    <div class="TemplateCounter">
+      <h1>Tempalte Counter</h1>
+      <button type="button" @click=${handleIncrement}>${count}</button>
     </div>
+  `;
+}
+
+function VDOMCounter(_props: {}, context: RenderContext): unknown {
+  const [count, setCount] = context.useState(0);
+
+  const handleIncrement = context.useCallback(() => {
+    setCount((count) => count + 1);
+  }, []);
+  const handleDecrement = context.useCallback(() => {
+    setCount((count) => count - 1);
+  }, []);
+
+  return (
+    <div class="VDOMCounter">
+      <h1>Virtual DOM Counter</h1>
+      <nav>
+        <button type="button" onclick={handleIncrement}>
+          +1
+        </button>
+        <button type="button" onclick={handleDecrement}>
+          -1
+        </button>
+      </nav>
+      <div>Count: {count}</div>
+    </div>
+  );
+}
+
+interface SVGCounterProps {
+  cx: number;
+  cy: number;
+  r: number;
+  fill: string;
+  text$: Signal<string>;
+}
+
+function SVGCounter(
+  { cx, cy, r, fill, text$ }: SVGCounterProps,
+  context: RenderContext,
+): unknown {
+  return context.svg`
+    <circle cx=${cx} cy=${cy} r=${r} fill=${fill} />
+    <text x=${cx} y=${cy} fill="white" dominant-baseline="middle" text-anchor="middle">${text$}</text>
   `;
 }
 

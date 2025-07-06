@@ -5,10 +5,13 @@
     ".": {
       "import": "./src/index.ts"
     },
-    "./extensions.js": {
+    "./extensions": {
       "import": "./src/extensions.ts"
     },
-    "./router.js": {
+    "./extensions/jsx-runtime": {
+      "import": "./src/extensions/jsx-runtime.ts"
+    },
+    "./router": {
       "import": "./src/router.ts"
     }
   },
@@ -18,11 +21,16 @@
         "import": "./lib/index.js",
         "types": "./lib/index.d.ts"
       },
-      "./extensions.js": {
+      "./extensions": {
         "import": "./lib/extensions.js",
         "types": "./lib/extensions.d.ts"
       },
-      "./router.js": {
+      "./extensions/jsx-runtime": {
+        "import": "./lib/extensions/jsx-runtime.js",
+        "types": "./lib/extensions/jsx-runtime.d.ts"
+      },
+
+      "./router": {
         "import": "./lib/router.js",
         "types": "./lib/router.d.ts"
       }
