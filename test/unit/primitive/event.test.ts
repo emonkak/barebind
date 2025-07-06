@@ -19,8 +19,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       } as const;
-      const ensureValue: (typeof EventPrimitive)['ensureValue'] =
-        EventPrimitive.ensureValue;
+      const ensureValue: NonNullable<typeof EventPrimitive.ensureValue> =
+        EventPrimitive.ensureValue!;
 
       expect(() => {
         ensureValue(null, part);
@@ -36,8 +36,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       } as const;
-      const ensureValue: (typeof EventPrimitive)['ensureValue'] =
-        EventPrimitive.ensureValue;
+      const ensureValue: NonNullable<typeof EventPrimitive.ensureValue> =
+        EventPrimitive.ensureValue!;
 
       expect(() => {
         ensureValue({}, part);

@@ -12,7 +12,7 @@ import { type ElementPart, type Part, PartType } from '../part.js';
 
 export type SpreadProps = { [key: string]: unknown };
 
-export const SpreadPrimitive = {
+export const SpreadPrimitive: Primitive<SpreadProps> = {
   name: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
@@ -35,7 +35,7 @@ export const SpreadPrimitive = {
     }
     return new SpreadBinding(props, part);
   },
-} as const satisfies Primitive<SpreadProps>;
+};
 
 export class SpreadBinding implements Binding<SpreadProps> {
   private _props: SpreadProps;

@@ -9,7 +9,7 @@ import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
-export const EmptyTemplate = {
+export const EmptyTemplate: Template<readonly []> = {
   name: 'EmptyTemplate',
   hydrate(
     _binds: readonly [],
@@ -39,4 +39,4 @@ export const EmptyTemplate = {
     }
     return new TemplateBinding(this, binds, part);
   },
-} as const satisfies Template<readonly []>;
+};

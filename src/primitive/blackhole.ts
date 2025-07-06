@@ -6,7 +6,7 @@ import type {
 import type { Part } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const BlackholePrimitive = {
+export const BlackholePrimitive: Primitive<any> = {
   name: 'BlackholePrimitive',
   resolveBinding<T>(
     value: T,
@@ -15,7 +15,7 @@ export const BlackholePrimitive = {
   ): BlackholeBinding<T> {
     return new BlackholeBinding(value, part);
   },
-} as const satisfies Primitive<unknown>;
+};
 
 export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
   get directive(): Primitive<T> {

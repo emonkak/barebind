@@ -21,7 +21,7 @@ type StringKeys<T> = {
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
-export const StylePrimitive = {
+export const StylePrimitive: Primitive<StyleProps> = {
   name: 'StylePrimitive',
   ensureValue(value: unknown, part: Part): asserts value is StyleProps {
     if (!(typeof value === 'object' && value !== null)) {
@@ -47,7 +47,7 @@ export const StylePrimitive = {
     }
     return new StyleBinding(props, part);
   },
-} as const satisfies Primitive<StyleProps>;
+};
 
 export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
   private _memoizedValue: StyleProps = {};

@@ -25,7 +25,7 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-export const SignalDirective = {
+export const SignalDirective: Directive<Signal<any>> = {
   name: 'SignalDirective',
   resolveBinding<T>(
     signal: Signal<T>,
@@ -34,7 +34,7 @@ export const SignalDirective = {
   ): SignalBinding<T> {
     return new SignalBinding(signal, part);
   },
-} as const satisfies Directive<Signal<unknown>>;
+};
 
 export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   abstract get value(): T;

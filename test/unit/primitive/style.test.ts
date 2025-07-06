@@ -20,8 +20,8 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: ':style',
       } as const;
-      const ensureValue: (typeof StylePrimitive)['ensureValue'] =
-        StylePrimitive.ensureValue;
+      const ensureValue: NonNullable<typeof StylePrimitive.ensureValue> =
+        StylePrimitive.ensureValue!;
 
       expect(() => {
         ensureValue({ color: 'red' }, part);
@@ -36,8 +36,8 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: ':style',
         } as const;
-        const ensureValue: (typeof StylePrimitive)['ensureValue'] =
-          StylePrimitive.ensureValue;
+        const ensureValue: NonNullable<typeof StylePrimitive.ensureValue> =
+          StylePrimitive.ensureValue!;
 
         expect(() => {
           ensureValue(value, part);

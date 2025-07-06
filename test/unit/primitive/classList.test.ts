@@ -26,8 +26,8 @@ describe('ClassListPrimitive', () => {
           node: document.createElement('div'),
           name: ':classlist',
         } as const;
-        const ensureValue: (typeof ClassListPrimitive)['ensureValue'] =
-          ClassListPrimitive.ensureValue;
+        const ensureValue: NonNullable<typeof ClassListPrimitive.ensureValue> =
+          ClassListPrimitive.ensureValue!;
 
         expect(() => {
           ensureValue(value, part);
@@ -43,8 +43,8 @@ describe('ClassListPrimitive', () => {
           node: document.createElement('div'),
           name: ':classlist',
         } as const;
-        const ensureValue: (typeof ClassListPrimitive)['ensureValue'] =
-          ClassListPrimitive.ensureValue;
+        const ensureValue: NonNullable<typeof ClassListPrimitive.ensureValue> =
+          ClassListPrimitive.ensureValue!;
 
         expect(() => {
           ensureValue(value, part);

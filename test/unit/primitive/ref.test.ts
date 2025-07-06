@@ -19,8 +19,8 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: ':ref',
       } as const;
-      const ensureValue: (typeof RefPrimitive)['ensureValue'] =
-        RefPrimitive.ensureValue;
+      const ensureValue: NonNullable<typeof RefPrimitive.ensureValue> =
+        RefPrimitive.ensureValue!;
 
       expect(() => {
         ensureValue(() => {}, part);
@@ -36,8 +36,8 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: ':ref',
       } as const;
-      const ensureValue: (typeof RefPrimitive)['ensureValue'] =
-        RefPrimitive.ensureValue;
+      const ensureValue: NonNullable<typeof RefPrimitive.ensureValue> =
+        RefPrimitive.ensureValue!;
 
       expect(() => {
         ensureValue({}, part);

@@ -1,13 +1,13 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  DirectiveContext,
   CommitContext,
+  DirectiveContext,
   Primitive,
 } from '../directive.js';
 import { type LivePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const LivePrimitive = {
+export const LivePrimitive: Primitive<any> = {
   name: 'LivePrimitive',
   resolveBinding<T>(
     value: T,
@@ -22,7 +22,7 @@ export const LivePrimitive = {
     }
     return new LiveBinding(value, part);
   },
-} as const satisfies Primitive<unknown>;
+};
 
 export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
   get directive(): Primitive<T> {

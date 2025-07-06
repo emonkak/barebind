@@ -1,13 +1,13 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  DirectiveContext,
   CommitContext,
+  DirectiveContext,
   Primitive,
 } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const AttributePrimitive = {
+export const AttributePrimitive: Primitive<any> = {
   name: 'AttributePrimitive',
   resolveBinding<T>(
     value: T,
@@ -22,7 +22,7 @@ export const AttributePrimitive = {
     }
     return new AttributeBinding(value, part);
   },
-} as const satisfies Primitive<unknown>;
+};
 
 export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
   private _memoizedValue: T | null = null;

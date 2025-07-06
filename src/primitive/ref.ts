@@ -1,7 +1,7 @@
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
-  DirectiveContext,
   CommitContext,
+  DirectiveContext,
   Primitive,
 } from '../directive.js';
 import type { RefObject } from '../hook.js';
@@ -16,7 +16,7 @@ export type Ref =
 
 export type RefCallback<T> = (value: T) => (() => void) | void;
 
-export const RefPrimitive = {
+export const RefPrimitive: Primitive<Ref> = {
   name: 'RefPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is Ref {
     if (!isRef(value)) {
@@ -38,7 +38,7 @@ export const RefPrimitive = {
     }
     return new RefBinding(ref, part);
   },
-} as const satisfies Primitive<Ref>;
+};
 
 export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
   private _memoizedValue: Ref = null;

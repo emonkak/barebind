@@ -1,13 +1,13 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
-  DirectiveContext,
   CommitContext,
+  DirectiveContext,
   Primitive,
 } from '../directive.js';
 import { type Part, PartType, type TextPart } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export const TextPrimitive = {
+export const TextPrimitive: Primitive<any> = {
   name: 'TextPrimitive',
   resolveBinding<T>(
     value: T,
@@ -22,7 +22,7 @@ export const TextPrimitive = {
     }
     return new TextBinding(value, part);
   },
-} as const satisfies Primitive<unknown>;
+};
 
 export class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
   private _memoizedValue: T | null = null;

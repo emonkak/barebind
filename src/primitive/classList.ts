@@ -13,7 +13,7 @@ export type ClassName = ClassMap | string | null | undefined;
 
 export type ClassMap = { [key: string]: boolean };
 
-export const ClassListPrimitive = {
+export const ClassListPrimitive: Primitive<ClassName[]> = {
   name: 'ClassListPrimitive',
   ensureValue: (value: unknown, part: Part): asserts value is ClassName[] => {
     if (!(Array.isArray(value) && value.every(isClassName))) {
@@ -39,7 +39,7 @@ export const ClassListPrimitive = {
     }
     return new ClassListBinding(classNames, part);
   },
-} as const satisfies Primitive<ClassName[]>;
+};
 
 export class ClassListBinding extends PrimitiveBinding<
   ClassName[],

@@ -13,7 +13,7 @@ export type EventListenerValue =
   | null
   | undefined;
 
-export const EventPrimitive = {
+export const EventPrimitive: Primitive<EventListenerValue> = {
   name: 'EventPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is EventListenerValue {
     if (!isEventListenerValue(value)) {
@@ -36,7 +36,7 @@ export const EventPrimitive = {
     }
     return new EventBinding(listener, part);
   },
-} as const satisfies Primitive<EventListenerValue>;
+};
 
 export class EventBinding extends PrimitiveBinding<
   EventListenerValue,

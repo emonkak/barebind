@@ -279,7 +279,7 @@ export class MockRenderHost implements RenderHost {
 export class MockRuntimeObserver implements RuntimeObserver {
   private _events: RuntimeEvent[] = [];
 
-  onRuntimeEvent(event: RuntimeEvent) {
+  onRuntimeEvent(event: RuntimeEvent): void {
     this._events.push(event);
   }
 

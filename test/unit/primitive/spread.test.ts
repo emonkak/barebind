@@ -18,8 +18,8 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const ensureValue: (typeof SpreadPrimitive)['ensureValue'] =
-        SpreadPrimitive.ensureValue;
+      const ensureValue: NonNullable<typeof SpreadPrimitive.ensureValue> =
+        SpreadPrimitive.ensureValue!;
 
       expect(() => {
         ensureValue({ class: 'foo' }, part);
@@ -33,8 +33,8 @@ describe('SpreadPrimitive', () => {
           type: PartType.Element,
           node: document.createElement('div'),
         } as const;
-        const ensureValue: (typeof SpreadPrimitive)['ensureValue'] =
-          SpreadPrimitive.ensureValue;
+        const ensureValue: NonNullable<typeof SpreadPrimitive.ensureValue> =
+          SpreadPrimitive.ensureValue!;
 
         expect(() => {
           ensureValue(value, part);

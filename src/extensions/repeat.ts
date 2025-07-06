@@ -80,7 +80,7 @@ export function repeat<TSource, TKey, TValue>(
   );
 }
 
-export const RepeatDirective = {
+export const RepeatDirective: Directive<RepeatProps<any, any, any>> = {
   name: 'RepeatDirective',
   resolveBinding<TSource, TKey, TValue>(
     props: RepeatProps<TSource, TKey, TValue>,
@@ -95,7 +95,7 @@ export const RepeatDirective = {
     }
     return new RepeatBinding(props, part);
   },
-} as const satisfies Directive<RepeatProps<unknown, unknown, unknown>>;
+};
 
 export class RepeatBinding<TSource, TKey, TValue>
   implements Binding<RepeatProps<TSource, TKey, TValue>>, Effect
