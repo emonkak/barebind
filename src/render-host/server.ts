@@ -11,7 +11,7 @@ import type {
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { ClassListPrimitive } from '../primitive/classList.js';
+import { ClassListPrimitive } from '../primitive/class-list.js';
 import { LivePrimitive } from '../primitive/live.js';
 import { NodePrimitive } from '../primitive/node.js';
 import { PropertyPrimitive } from '../primitive/property.js';
@@ -22,13 +22,13 @@ import {
   CommitPhase,
   type RenderHost,
   type RequestCallbackOptions,
-} from '../renderHost.js';
+} from '../render-host.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
-import { ChildNodeTemplate } from '../template/childNodeTemplate.js';
-import { EmptyTemplate } from '../template/emptyTemplate.js';
-import { TaggedTemplate } from '../template/taggedTemplate.js';
-import { TextTemplate } from '../template/textTemplate.js';
+import { ChildNodeTemplate } from '../template/child-node-template.js';
+import { EmptyTemplate } from '../template/empty-template.js';
+import { TaggedTemplate } from '../template/tagged-template.js';
+import { TextTemplate } from '../template/text-template.js';
 
 export class ServerRenderHost implements RenderHost {
   private readonly _document: Document;

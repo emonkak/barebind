@@ -1,13 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { ALL_LANES } from '@/hook.js';
-import { RenderSession } from '@/renderSession.js';
-import { createHashClickHandler, HashLocation } from '@/router/hashLocation.js';
+import { RenderSession } from '@/render-session.js';
+import {
+  createHashClickHandler,
+  HashLocation,
+} from '@/router/hash-location.js';
 import { CurrentLocation } from '@/router/location.js';
 import { RelativeURL } from '@/router/url.js';
 import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockRenderHost } from '../../mocks.js';
-import { cleanupHooks, createElement } from '../../testUtils.js';
+import { cleanupHooks, createElement } from '../../test-utils.js';
 
 describe('HashLocation', () => {
   const originalUrl = location.href;

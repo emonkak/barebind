@@ -10,11 +10,11 @@ import type { RenderContext } from '@/directive.js';
 import { ALL_LANES } from '@/hook.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
-import { CommitPhase } from '@/renderHost.js';
-import { RenderSession } from '@/renderSession.js';
+import { CommitPhase } from '@/render-host.js';
+import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockRenderHost, MockSlot } from '../mocks.js';
-import { createElement } from '../testUtils.js';
+import { createElement } from '../test-utils.js';
 
 describe('component()', () => {
   it('returns a directive element with the component', () => {

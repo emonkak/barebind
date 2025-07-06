@@ -11,10 +11,10 @@ import {
 import { ALL_LANES } from '@/hook.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
-import { RenderSession } from '@/renderSession.js';
+import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockRenderHost } from '../../mocks.js';
-import { cleanupHooks, createElement } from '../../testUtils.js';
+import { cleanupHooks, createElement } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
   describe('name', () => {

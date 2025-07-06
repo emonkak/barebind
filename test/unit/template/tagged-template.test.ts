@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { TaggedTemplate } from '@/template/taggedTemplate.js';
+import { TaggedTemplate } from '@/template/tagged-template.js';
 import { MockRenderHost, MockSlot } from '../../mocks.js';
-import { createElement } from '../../testUtils.js';
+import { createElement } from '../../test-utils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 

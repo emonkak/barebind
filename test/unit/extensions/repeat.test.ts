@@ -10,13 +10,13 @@ import {
 import { HydrationTree } from '@/hydration.js';
 import { type ChildNodePart, PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { TextTemplate } from '@/template/textTemplate.js';
+import { TextTemplate } from '@/template/text-template.js';
 import { MockRenderHost } from '../../mocks.js';
 import {
   allCombinations,
   createElement,
   permutations,
-} from '../../testUtils.js';
+} from '../../test-utils.js';
 
 const TEXT_TEMPLATE = new TextTemplate<string>('', '');
 

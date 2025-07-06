@@ -6,7 +6,7 @@ import {
   moveChildNodes,
   PartType,
 } from '@/part.js';
-import { createElement } from '../testUtils.js';
+import { createElement } from '../test-utils.js';
 
 describe('getStartNode()', () => {
   it.each([

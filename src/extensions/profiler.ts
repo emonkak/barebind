@@ -1,7 +1,7 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import type { TemplateMode } from '../directive.js';
-import { CommitPhase } from '../renderHost.js';
+import { CommitPhase } from '../render-host.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface Profile {

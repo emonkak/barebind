@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { TextTemplate } from '@/template/textTemplate.js';
+import { TextTemplate } from '@/template/text-template.js';
 import { MockRenderHost } from '../../mocks.js';
-import { createElement } from '../../testUtils.js';
+import { createElement } from '../../test-utils.js';
 
 describe('TextTemplate', () => {
   describe('name', () => {

@@ -1,6 +1,6 @@
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
-import type { RenderHost } from '../renderHost.js';
+import type { RenderHost } from '../render-host.js';
 import type { RuntimeObserver } from '../runtime.js';
 import { Runtime } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';

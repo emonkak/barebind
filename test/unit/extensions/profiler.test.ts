@@ -6,7 +6,7 @@ import {
   type Profile,
   Profiler,
 } from '@/extensions/profiler.js';
-import { CommitPhase } from '@/renderHost.js';
+import { CommitPhase } from '@/render-host.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { MockComponent, MockEffect } from '../../mocks.js';
 

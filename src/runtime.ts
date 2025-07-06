@@ -25,16 +25,16 @@ import {
   NO_LANES,
   type UpdateOptions,
 } from './hook.js';
-import { LinkedList } from './linkedList.js';
+import { LinkedList } from './linked-list.js';
 import { type Part, PartType } from './part.js';
-import { CommitPhase, type RenderHost } from './renderHost.js';
-import { RenderSession } from './renderSession.js';
+import { CommitPhase, type RenderHost } from './render-host.js';
+import { RenderSession } from './render-session.js';
 import { Scope } from './scope.js';
 import {
   type Literal,
   type TemplateLiteral,
   TemplateLiteralPreprocessor,
-} from './templateLiteral.js';
+} from './template-literal.js';
 
 export interface RuntimeObserver {
   onRuntimeEvent(event: RuntimeEvent): void;

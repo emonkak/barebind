@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { ChildNodeTemplate } from '@/template/childNodeTemplate.js';
+import { ChildNodeTemplate } from '@/template/child-node-template.js';
 import { MockRenderHost, MockSlot } from '../../mocks.js';
-import { createElement } from '../../testUtils.js';
+import { createElement } from '../../test-utils.js';
 
 describe('ChildNodeTemplate', () => {
   describe('name', () => {

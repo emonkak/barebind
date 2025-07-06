@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 
 import { component } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
-import { BrowserRenderHost } from '@/renderHost/browser.js';
+import { BrowserRenderHost } from '@/render-host/browser.js';
 import { createSyncRoot } from '@/root/sync.js';
-import { createElement } from '../testUtils.js';
+import { createElement } from '../test-utils.js';
 
 test('hydrate the component using a context value', () => {
   const value = component(Parent, {

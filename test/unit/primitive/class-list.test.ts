@@ -5,10 +5,10 @@ import {
   ClassListBinding,
   ClassListPrimitive,
   type ClassName,
-} from '@/primitive/classList.js';
+} from '@/primitive/class-list.js';
 import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
-import { createElement } from '../../testUtils.js';
+import { createElement } from '../../test-utils.js';
 
 describe('ClassListPrimitive', () => {
   describe('name', () => {

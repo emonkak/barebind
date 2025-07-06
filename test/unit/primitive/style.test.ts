@@ -4,7 +4,7 @@ import { PartType } from '@/part.js';
 import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
 import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
-import { createElement } from '../../testUtils.js';
+import { createElement } from '../../test-utils.js';
 
 describe('StylePrimitive', () => {
   describe('name', () => {

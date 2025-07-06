@@ -8,7 +8,7 @@ import type {
 import type { HydrationTree } from './hydration.js';
 import type { ChildNodePart, Part } from './part.js';
 import type { Scope } from './scope.js';
-import type { Literal, TemplateLiteral } from './templateLiteral.js';
+import type { Literal, TemplateLiteral } from './template-literal.js';
 
 export const $toDirectiveElement: unique symbol = Symbol('$toDirectiveElement');
 

@@ -26,7 +26,7 @@ import type {
   CommitPhase,
   RenderHost,
   RequestCallbackOptions,
-} from '../src/renderHost.js';
+} from '../src/render-host.js';
 import { TemplateBinding } from '../src/template/template.js';
 
 export class MockBinding<T> implements Binding<T> {

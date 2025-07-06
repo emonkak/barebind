@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { Literal, TemplateLiteralPreprocessor } from '@/templateLiteral.js';
-import { templateLiteral } from '../testUtils.js';
+import { Literal, TemplateLiteralPreprocessor } from '@/template-literal.js';
+import { templateLiteral } from '../test-utils.js';
 
 describe('TemplateLiteralPreprocessor', () => {
   const createDate = (year: String, month: String, day: String) =>

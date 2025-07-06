@@ -11,7 +11,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
-import { createElement } from '../../testUtils.js';
+import { createElement } from '../../test-utils.js';
 
 describe('TemplateBinding', () => {
   describe('shouldBind()', () => {

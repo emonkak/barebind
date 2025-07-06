@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { ALL_LANES, Lane, NO_LANES } from '@/hook.js';
-import { RenderSession } from '@/renderSession.js';
+import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { Literal } from '@/templateLiteral.js';
+import { Literal } from '@/template-literal.js';
 import { MockCoroutine, MockRenderHost, MockTemplate } from '../mocks.js';
-import { cleanupHooks } from '../testUtils.js';
+import { cleanupHooks } from '../test-utils.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {

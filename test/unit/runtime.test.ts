@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from 'vitest';
 import { $toDirectiveElement, type Coroutine } from '@/directive.js';
 import { ALL_LANES, type Hook, Lane, NO_LANES } from '@/hook.js';
 import { PartType } from '@/part.js';
-import { CommitPhase } from '@/renderHost.js';
-import { RenderSession } from '@/renderSession.js';
+import { CommitPhase } from '@/render-host.js';
+import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeEvent } from '@/runtime.js';
 import { Scope } from '@/scope.js';
-import { Literal } from '@/templateLiteral.js';
+import { Literal } from '@/template-literal.js';
 import {
   MockComponent,
   MockCoroutine,
@@ -18,7 +18,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
-import { getPromiseState, templateLiteral } from '../testUtils.js';
+import { getPromiseState, templateLiteral } from '../test-utils.js';
 
 describe('Runtime', () => {
   describe('debugValue()', () => {

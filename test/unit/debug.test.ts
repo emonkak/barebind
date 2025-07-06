@@ -7,7 +7,7 @@ import {
   markUsedValue,
 } from '@/debug.js';
 import { PartType } from '@/part.js';
-import { createElement } from '../testUtils.js';
+import { createElement } from '../test-utils.js';
 
 const NODE_MAKRER = '[[NODE IN HERE!]]';
 
