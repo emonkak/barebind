@@ -11,7 +11,6 @@ import {
   type UpdateContext,
 } from '../directive.js';
 import {
-  $customHook,
   type CustomHook,
   type HookContext,
   type Lanes,
@@ -41,17 +40,6 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
 
   abstract get version(): number;
 
-  [$customHook](context: HookContext): T {
-    context.useLayoutEffect(
-      () =>
-        this.subscribe(() => {
-          context.forceUpdate();
-        }),
-      [this],
-    );
-    return this.value;
-  }
-
   [$toDirectiveElement](): DirectiveElement<Signal<T>> {
     return { directive: SignalDirective, value: this };
   }
@@ -62,11 +50,22 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
     return new Projected(this, selector);
   }
 
-  valueOf(): T {
+  onCustomHook(context: HookContext): T {
+    context.useLayoutEffect(
+      () =>
+        this.subscribe(() => {
+          context.forceUpdate();
+        }),
+      [this],
+    );
     return this.value;
   }
 
   toJSON(): T {
+    return this.value;
+  }
+
+  valueOf(): T {
     return this.value;
   }
 }

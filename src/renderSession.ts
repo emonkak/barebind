@@ -8,7 +8,6 @@ import {
   type TemplateMode,
 } from './directive.js';
 import {
-  $customHook,
   type CustomHook,
   type EffectHook,
   ensureHookType,
@@ -129,7 +128,7 @@ export class RenderSession implements RenderContext {
   }
 
   use<T>(hook: CustomHook<T>): T {
-    return hook[$customHook](this);
+    return hook.onCustomHook(this);
   }
 
   useCallback<T extends Function>(callback: T, dependencies: unknown[]): T {

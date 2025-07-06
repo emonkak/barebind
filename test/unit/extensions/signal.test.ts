@@ -43,7 +43,18 @@ describe('SignalDirective', () => {
 });
 
 describe('Signal', () => {
-  describe('[$customHook]()', () => {
+  describe('[$toDirectiveElement]()', () => {
+    it('returns a DirectiveElement with the signal', () => {
+      const signal = new Atom('foo');
+      const element = signal[$toDirectiveElement]();
+
+      expect(element.directive).toBe(SignalDirective);
+      expect(element.value).toBe(signal);
+      expect(element.slotType).toBe(undefined);
+    });
+  });
+
+  describe('onCustomHook()', () => {
     it('subscribes the signal and return its value', () => {
       const session = new RenderSession(
         [],
@@ -72,14 +83,12 @@ describe('Signal', () => {
     });
   });
 
-  describe('[$toDirectiveElement]()', () => {
-    it('returns a DirectiveElement with the signal', () => {
-      const signal = new Atom('foo');
-      const element = signal[$toDirectiveElement]();
+  describe('toJSON()', () => {
+    it('returns the signal value', () => {
+      const value = 'foo';
+      const signal = new Atom(value);
 
-      expect(element.directive).toBe(SignalDirective);
-      expect(element.value).toBe(signal);
-      expect(element.slotType).toBe(undefined);
+      expect(signal.toJSON()).toBe(value);
     });
   });
 
@@ -89,15 +98,6 @@ describe('Signal', () => {
       const signal = new Atom(value);
 
       expect(signal.valueOf()).toBe(value);
-    });
-  });
-
-  describe('toJSON()', () => {
-    it('returns the signal value', () => {
-      const value = 'foo';
-      const signal = new Atom(value);
-
-      expect(signal.toJSON()).toBe(value);
     });
   });
 });

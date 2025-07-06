@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { Atom, Lazy } from '@/extensions/signal.js';
 import { createStoreClass } from '@/extensions/store.js';
-import { $customHook, type HookContext } from '@/hook.js';
+import type { HookContext } from '@/hook.js';
 
 describe('Store', () => {
   it('recalculates the computed property when any dependent properties are updated', () => {
@@ -31,7 +31,7 @@ describe('Store', () => {
     expect(store.getQuadruplyCountVersion()).toBe(3);
   });
 
-  describe('static [$customHook]', () => {
+  describe('static onCustomHook()', () => {
     it('returns the store in the context', () => {
       const store = new CounterStore();
       const contextStorage = new Map();
@@ -44,9 +44,9 @@ describe('Store', () => {
         },
       } as HookContext;
 
-      store[$customHook](context);
+      store.onCustomHook(context);
 
-      expect(CounterStore[$customHook](context)).toBe(store);
+      expect(CounterStore.onCustomHook(context)).toBe(store);
     });
 
     it('throws the error when the store is not registered in the context', () => {
@@ -58,7 +58,7 @@ describe('Store', () => {
       } as HookContext;
 
       expect(() => {
-        CounterStore[$customHook](context);
+        CounterStore.onCustomHook(context);
       }).toThrow(
         `The context value for the store of ${Counter.name} is not registered,`,
       );

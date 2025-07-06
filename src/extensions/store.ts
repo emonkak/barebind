@@ -1,4 +1,4 @@
-import { $customHook, type HookContext } from '../hook.js';
+import type { CustomHook, HookContext } from '../hook.js';
 import {
   Atom,
   Computed,
@@ -37,13 +37,13 @@ type StrictEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
 
 export type Store<T> = T & StoreExtensions;
 
-export interface StoreClass<TClass extends Constructable> {
+export interface StoreClass<TClass extends Constructable>
+  extends CustomHook<Store<InstanceType<TClass>>> {
   new (...args: unknown[]): Store<InstanceType<TClass>>;
-  [$customHook](context: HookContext): Store<InstanceType<TClass>>;
+  onCustomHook(context: HookContext): Store<InstanceType<TClass>>;
 }
 
-export interface StoreExtensions {
-  [$customHook](context: HookContext): void;
+export interface StoreExtensions extends CustomHook<void> {
   asSignal(): Signal<this>;
   getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
   getSignal<TKey extends keyof this>(key: TKey): Signal<this[TKey]> | undefined;
@@ -63,7 +63,7 @@ export function createStoreClass<TClass extends Constructable>(
       {},
     );
 
-    static [$customHook](
+    static onCustomHook(
       this: Constructable<Store>,
       context: HookContext,
     ): Store {
@@ -83,7 +83,7 @@ export function createStoreClass<TClass extends Constructable>(
       Object.freeze(this[$signalMap]);
     }
 
-    [$customHook](context: HookContext): void {
+    onCustomHook(context: HookContext): void {
       context.setContextValue(this.constructor, this);
     }
 

@@ -1,7 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-export const $customHook: unique symbol = Symbol('$customHook');
-
 export type Hook =
   | FinalizerHook
   | EffectHook
@@ -72,7 +70,7 @@ export interface ReducerHook<TState, TAction> {
 }
 
 export interface CustomHook<T> {
-  [$customHook](context: HookContext): T;
+  onCustomHook(context: HookContext): T;
 }
 
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;

@@ -1,4 +1,4 @@
-import { $customHook, type CustomHook, type HookContext } from '../hook.js';
+import type { CustomHook, HookContext } from '../hook.js';
 import {
   anyModifiersArePressed,
   CurrentLocation,
@@ -13,7 +13,7 @@ import { RelativeURL } from './url.js';
 export const BrowserLocation: CustomHook<
   readonly [LocationState, LocationNavigator]
 > = {
-  [$customHook](
+  onCustomHook(
     context: HookContext,
   ): readonly [LocationState, LocationNavigator] {
     const [locationState, setLocationState] = context.useState<LocationState>(
