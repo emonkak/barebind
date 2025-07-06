@@ -20,54 +20,42 @@ export type Hole =
   | PropertyHole
   | TextHole;
 
-export const HoleType = {
-  Attribute: 0,
-  ChildNode: 1,
-  Element: 2,
-  Event: 3,
-  Live: 4,
-  Property: 5,
-  Text: 6,
-} as const;
-
-export type HoleType = (typeof HoleType)[keyof typeof HoleType];
-
 export interface AttributeHole {
-  type: typeof HoleType.Attribute;
+  type: typeof PartType.Attribute;
   index: number;
   name: string;
 }
 
 export interface ChildNodeHole {
-  type: typeof HoleType.ChildNode;
+  type: typeof PartType.ChildNode;
   index: number;
 }
 
 export interface ElementHole {
-  type: typeof HoleType.Element;
+  type: typeof PartType.Element;
   index: number;
 }
 
 export interface EventHole {
-  type: typeof HoleType.Event;
+  type: typeof PartType.Event;
   index: number;
   name: string;
 }
 
 export interface LiveHole {
-  type: typeof HoleType.Live;
+  type: typeof PartType.Live;
   index: number;
   name: string;
 }
 
 export interface PropertyHole {
-  type: typeof HoleType.Property;
+  type: typeof PartType.Property;
   index: number;
   name: string;
 }
 
 export interface TextHole {
-  type: typeof HoleType.Text;
+  type: typeof PartType.Text;
   index: number;
   precedingText: string;
   followingText: string;
@@ -75,6 +63,8 @@ export interface TextHole {
 }
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
+
+const ONLY_SPACES_REGEXP = /^[\s\n\r]*$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
@@ -172,7 +162,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         let childPart: Part;
 
         switch (hole.type) {
-          case HoleType.Attribute:
+          case PartType.Attribute:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Attribute,
@@ -180,7 +170,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               name: hole.name,
             };
             break;
-          case HoleType.ChildNode:
+          case PartType.ChildNode:
             childPart = {
               type: PartType.ChildNode,
               node: document.createComment(''),
@@ -188,14 +178,14 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             alternateNode = childPart.node;
             break;
-          case HoleType.Element:
+          case PartType.Element:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Element,
               node: lookaheadNode,
             };
             break;
-          case HoleType.Event:
+          case PartType.Event:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Event,
@@ -203,7 +193,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               name: hole.name,
             };
             break;
-          case HoleType.Live:
+          case PartType.Live:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Live,
@@ -212,7 +202,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               defaultValue: lookaheadNode[hole.name as keyof Node],
             };
             break;
-          case HoleType.Property:
+          case PartType.Property:
             ensureNode(lookaheadNode, Node.ELEMENT_NODE, currentNode.nodeName);
             childPart = {
               type: PartType.Property,
@@ -221,7 +211,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               defaultValue: lookaheadNode[hole.name as keyof Node],
             };
             break;
-          case HoleType.Text: {
+          case PartType.Text: {
             ensureNode(lookaheadNode, Node.TEXT_NODE, currentNode.nodeName);
             let node: Text;
             if (hole.split) {
@@ -307,34 +297,34 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         let childPart: Part;
 
         switch (currentHole.type) {
-          case HoleType.Attribute:
+          case PartType.Attribute:
             childPart = {
               type: PartType.Attribute,
               node: currentNode as Element,
               name: currentHole.name,
             };
             break;
-          case HoleType.ChildNode:
+          case PartType.ChildNode:
             childPart = {
               type: PartType.ChildNode,
               node: currentNode as Comment,
               childNode: null,
             };
             break;
-          case HoleType.Element:
+          case PartType.Element:
             childPart = {
               type: PartType.Element,
               node: currentNode as Element,
             };
             break;
-          case HoleType.Event:
+          case PartType.Event:
             childPart = {
               type: PartType.Event,
               node: currentNode as Element,
               name: currentHole.name,
             };
             break;
-          case HoleType.Live:
+          case PartType.Live:
             childPart = {
               type: PartType.Live,
               node: currentNode as Element,
@@ -342,7 +332,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               defaultValue: currentNode[currentHole.name as keyof Node],
             };
             break;
-          case HoleType.Property:
+          case PartType.Property:
             childPart = {
               type: PartType.Property,
               node: currentNode as Element,
@@ -350,7 +340,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               defaultValue: currentNode[currentHole.name as keyof Node],
             };
             break;
-          case HoleType.Text:
+          case PartType.Text:
             childPart = {
               type: PartType.Text,
               node: currentNode as Text,
@@ -449,7 +439,7 @@ function parseAttribtues(
 
     if (name === marker && value === '') {
       hole = {
-        type: HoleType.Element,
+        type: PartType.Element,
         index,
       };
     } else if (value === marker) {
@@ -471,25 +461,25 @@ function parseAttribtues(
 
       if (caseSensitiveName[0] === '@' && caseSensitiveName.length > 1) {
         hole = {
-          type: HoleType.Event,
+          type: PartType.Event,
           index,
           name: caseSensitiveName.slice(1),
         };
       } else if (caseSensitiveName[0] === '$' && caseSensitiveName.length > 1) {
         hole = {
-          type: HoleType.Live,
+          type: PartType.Live,
           index,
           name: caseSensitiveName.slice(1),
         };
       } else if (caseSensitiveName[0] === '.' && caseSensitiveName.length > 1) {
         hole = {
-          type: HoleType.Property,
+          type: PartType.Property,
           index,
           name: caseSensitiveName.slice(1),
         };
       } else {
         hole = {
-          type: HoleType.Attribute,
+          type: PartType.Attribute,
           index,
           name: caseSensitiveName,
         };
@@ -544,10 +534,11 @@ function parseChildren(
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
   );
   const holes: Hole[] = [];
-  let currentNode: ChildNode | null;
+  let nextNode: ChildNode | null = treeWalker.nextNode() as ChildNode | null;
   let index = 0;
 
-  while ((currentNode = treeWalker.nextNode() as ChildNode | null) !== null) {
+  while (nextNode !== null) {
+    const currentNode = nextNode;
     switch (currentNode.nodeType) {
       case Node.ELEMENT_NODE: {
         DEBUG: {
@@ -569,7 +560,7 @@ function parseChildren(
           trimTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
-            type: HoleType.ChildNode,
+            type: PartType.ChildNode,
             index,
           });
           (currentNode as Comment).data = '';
@@ -593,6 +584,16 @@ function parseChildren(
         break;
       }
       case Node.TEXT_NODE: {
+        if (
+          (currentNode.previousSibling !== null ||
+            currentNode.nextSibling !== null) &&
+          ONLY_SPACES_REGEXP.test((currentNode as Text).data)
+        ) {
+          nextNode = treeWalker.nextNode() as ChildNode | null;
+          currentNode.remove();
+          continue;
+        }
+
         const components = (currentNode as Text).data.split(marker);
 
         if (components.length > 1) {
@@ -601,7 +602,7 @@ function parseChildren(
 
           for (let i = 1; i < tail; i++) {
             holes.push({
-              type: HoleType.Text,
+              type: PartType.Text,
               index,
               precedingText: lastComponent,
               followingText: '',
@@ -613,7 +614,7 @@ function parseChildren(
           }
 
           holes.push({
-            type: HoleType.Text,
+            type: PartType.Text,
             index,
             precedingText: lastComponent,
             followingText: components[tail]!,
@@ -625,6 +626,8 @@ function parseChildren(
         break;
       }
     }
+
+    nextNode = treeWalker.nextNode() as ChildNode | null;
     index++;
   }
 

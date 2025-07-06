@@ -82,7 +82,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a hole inside a tag name', () => {
+    it('should parse holes inside tag names', () => {
       const { template } = html`
         <${0}>
         <${1} >
@@ -91,18 +91,13 @@ describe('TaggedTemplate', () => {
       `;
 
       expect(template['_template'].innerHTML).toBe(
-        `
-        <!---->
-        <!---->
-        <!---->
-        <!---->
-      `.trim(),
+        '<!----><!----><!----><!---->',
       );
       expect(template['_holes']).toStrictEqual([
         { type: PartType.ChildNode, index: 0 },
+        { type: PartType.ChildNode, index: 1 },
         { type: PartType.ChildNode, index: 2 },
-        { type: PartType.ChildNode, index: 4 },
-        { type: PartType.ChildNode, index: 6 },
+        { type: PartType.ChildNode, index: 3 },
       ]);
     });
 
@@ -114,16 +109,12 @@ describe('TaggedTemplate', () => {
       `;
 
       expect(template['_template'].innerHTML).toBe(
-        `
-        <div id="foo"></div>
-        <div id="foo"></div>
-        <div id="foo" class="bar"></div>
-      `.trim(),
+        '<div id="foo"></div><div id="foo"></div><div id="foo" class="bar"></div>',
       );
       expect(template['_holes']).toStrictEqual([
         { type: PartType.Element, index: 0 },
+        { type: PartType.Element, index: 1 },
         { type: PartType.Element, index: 2 },
-        { type: PartType.Element, index: 4 },
       ]);
     });
 
@@ -136,24 +127,19 @@ describe('TaggedTemplate', () => {
       `;
 
       expect(template['_template'].innerHTML).toBe(
-        `
-        <ul>
-          <li></li>
-          <li></li>
-        </ul>
-      `.trim(),
+        '<ul><li></li><li></li></ul>',
       );
       expect(template['_holes']).toStrictEqual([
         {
           type: PartType.Text,
-          index: 3,
+          index: 2,
           precedingText: '',
           followingText: '',
           split: false,
         },
         {
           type: PartType.Text,
-          index: 6,
+          index: 4,
           precedingText: '',
           followingText: '',
           split: false,
@@ -163,49 +149,62 @@ describe('TaggedTemplate', () => {
 
     it('should parse holes inside children', () => {
       const { template } = html`
-        <div>[${0}, ${1}]</div>
-        <div>${0}, ${1}</div>
+        <div>  </div>
+        <div> ${0} ${1} </div>
+        <div>[${2} ${3}]</div>
+        <div>${4} ${5}</div>
       `;
 
       expect(template['_template'].innerHTML).toBe(
-        `
-        <div></div>
-        <div></div>
-      `.trim(),
+        '<div>  </div><div></div><div></div><div></div>',
       );
       expect(template['_holes']).toStrictEqual([
         {
           type: PartType.Text,
-          index: 1,
+          index: 3,
+          precedingText: ' ',
+          followingText: '',
+          split: true,
+        },
+        {
+          type: PartType.Text,
+          index: 4,
+          precedingText: ' ',
+          followingText: ' ',
+          split: false,
+        },
+        {
+          type: PartType.Text,
+          index: 6,
           precedingText: '[',
           followingText: '',
           split: true,
         },
         {
           type: PartType.Text,
-          index: 2,
-          precedingText: ', ',
+          index: 7,
+          precedingText: ' ',
           followingText: ']',
           split: false,
         },
         {
           type: PartType.Text,
-          index: 5,
+          index: 9,
           precedingText: '',
           followingText: '',
           split: true,
         },
         {
           type: PartType.Text,
-          index: 6,
-          precedingText: ', ',
+          index: 10,
+          precedingText: ' ',
           followingText: '',
           split: false,
         },
       ]);
     });
 
-    it('should parse holes inside a comment as ChildNodeHole', () => {
+    it('should parse holes inside comments as ChildNodeHole', () => {
       const { template } = html`
         <!---->
         <!--${0}-->
@@ -215,23 +214,17 @@ describe('TaggedTemplate', () => {
       `;
 
       expect(template['_template'].innerHTML).toBe(
-        `
-        <!---->
-        <!---->
-        <!---->
-        <!---->
-        <!---->
-      `.trim(),
+        '<!----><!----><!----><!----><!---->',
       );
       expect(template['_holes']).toStrictEqual([
+        { type: PartType.ChildNode, index: 1 },
         { type: PartType.ChildNode, index: 2 },
+        { type: PartType.ChildNode, index: 3 },
         { type: PartType.ChildNode, index: 4 },
-        { type: PartType.ChildNode, index: 6 },
-        { type: PartType.ChildNode, index: 8 },
       ]);
     });
 
-    it('should parse holes inside a tag with leading spaces as TextHole', () => {
+    it('should parse holes inside tags with leading spaces as TextHole', () => {
       const { template } = html`
         < ${0}>< ${0}/>
       `;
@@ -434,12 +427,13 @@ describe('TaggedTemplate', () => {
       const hydrationRoot = createElement(
         'div',
         {},
-        fragment`
-        <div class="foo">
-          <!-- bar -->
-          <input type="text" class="qux"><span>quux</span>
-        </div>
-      `,
+        createElement(
+          'div',
+          { class: 'foo' },
+          document.createComment('bar'),
+          createElement('input', { type: 'text', class: 'qux' }),
+          createElement('span', {}, 'quux'),
+        ),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
@@ -452,11 +446,7 @@ describe('TaggedTemplate', () => {
       );
 
       expect(childNodes.map(toHTML)).toStrictEqual([
-        `
-        <div class="foo">
-          <!---->
-          <input type="text" class="qux"><span>quux</span>
-        </div>`.trim(),
+        '<div class="foo"><!----><input type="text" class="qux"><span>quux</span></div>',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
@@ -702,11 +692,7 @@ describe('TaggedTemplate', () => {
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(toHTML)).toStrictEqual([
-        `
-        <div>
-          <!---->
-          <input type="text"><span></span>
-        </div>`.trim(),
+        '<div><!----><input type="text"><span></span></div>',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
@@ -907,15 +893,6 @@ describe('TaggedTemplate', () => {
     });
   });
 });
-
-function fragment(
-  strings: TemplateStringsArray,
-  ...values: string[]
-): DocumentFragment {
-  const template = document.createElement('template');
-  template.innerHTML = String.raw(strings, values).trim();
-  return template.content;
-}
 
 function html<TBinds extends readonly unknown[]>(
   strings: TemplateStringsArray,
