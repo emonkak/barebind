@@ -141,7 +141,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     const slots: Slot<unknown>[] = new Array(holes.length);
     const childNodes: ChildNode[] = [];
 
-    OUTER: for (
+    for (
       let currentNode: Node | null,
         nodeIndex = 0,
         holeIndex = 0,
@@ -276,7 +276,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           NodeFilter.SHOW_COMMENT,
       );
 
-      OUTER: for (
+      for (
         let holeIndex = 0, holesLength = holes.length, nodeIndex = -1;
         holeIndex < holesLength;
         holeIndex++
