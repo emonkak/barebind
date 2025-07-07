@@ -8,7 +8,7 @@ import {
 } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
 import { ALL_LANES } from '@/hook.js';
-import { HydrationTree } from '@/hydration.js';
+import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { CommitPhase } from '@/render-host.js';
 import { RenderSession } from '@/render-session.js';
@@ -192,6 +192,31 @@ describe('ComponentBinding', () => {
       );
       expect(binding['_slot']?.part).toBe(part);
       expect(hydrationRoot.innerHTML).toBe('<!---->');
+    });
+
+    it('should throw the error if the component has already been rendered', () => {
+      const component = new ComponentDirective(Greet);
+      const props = {
+        name: 'foo',
+        greet: 'Hello',
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new ComponentBinding(component, props, part);
+      const hydrationRoot = document.createElement('div');
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const runtime = new Runtime(new MockRenderHost());
+
+      runtime.enqueueCoroutine(binding);
+      runtime.enqueueMutationEffect(binding);
+      runtime.flushSync();
+
+      expect(() => binding.hydrate(hydrationTree, runtime)).toThrow(
+        HydrationError,
+      );
     });
   });
 

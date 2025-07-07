@@ -7,7 +7,7 @@ import {
   type RepeatProps,
   repeat,
 } from '@/extensions/repeat.js';
-import { HydrationTree } from '@/hydration.js';
+import { HydrationError, HydrationTree } from '@/hydration.js';
 import { type ChildNodePart, PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { TextTemplate } from '@/template/text-template.js';
@@ -104,7 +104,7 @@ describe('RepeatBinding', () => {
   });
 
   describe('hydrate()', () => {
-    it('hydrates items', () => {
+    it('hydrates the tree by items', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
         source,
@@ -136,6 +136,40 @@ describe('RepeatBinding', () => {
       expect(hydrationRoot.innerHTML).toBe(
         source.map((item) => item + createComment()).join('') + createComment(),
       );
+    });
+
+    it('should throw the error if the items has already been initialized', () => {
+      const source = ['foo', 'bar', 'baz'];
+      const props: RepeatProps<string> = {
+        source,
+        valueSelector: textTemplateObject,
+      };
+      const part: ChildNodePart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+      const hydrationRoot = createElement(
+        'div',
+        {},
+        'foo',
+        document.createComment(''),
+        'bar',
+        document.createComment(''),
+        'baz',
+        document.createComment(''),
+        document.createComment(''),
+      );
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const binding = new RepeatBinding(props, part);
+      const runtime = new Runtime(new MockRenderHost());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(() => {
+        binding.hydrate(hydrationTree, runtime);
+      }).toThrow(HydrationError);
     });
   });
 

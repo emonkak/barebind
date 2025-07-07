@@ -16,7 +16,7 @@ import {
   type Lanes,
   NO_LANES,
 } from '../hook.js';
-import type { HydrationTree } from '../hydration.js';
+import { HydrationError, type HydrationTree } from '../hydration.js';
 import { LinkedList } from '../linked-list.js';
 import type { Part } from '../part.js';
 
@@ -281,7 +281,13 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    this._slot ??= context.resolveSlot(this._signal.value, this._part);
+    if (this._slot !== null) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initilized.',
+      );
+    }
+
+    this._slot = context.resolveSlot(this._signal.value, this._part);
     this._slot.hydrate(hydrationTree, context);
     this._subscription ??= this._subscribeSignal(context);
   }

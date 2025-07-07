@@ -9,7 +9,7 @@ import {
   SignalDirective,
 } from '@/extensions/signal.js';
 import { ALL_LANES } from '@/hook.js';
-import { HydrationTree } from '@/hydration.js';
+import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
@@ -440,7 +440,7 @@ describe('SiganlBinding', () => {
   });
 
   describe('hydrate()', () => {
-    it('subscribes the signal', async () => {
+    it('hydrates the tree by the signal value', async () => {
       const signal = new Atom('foo');
       const part = {
         type: PartType.Text,
@@ -463,6 +463,27 @@ describe('SiganlBinding', () => {
       expect(await runtime.waitForUpdate(binding)).toBe(1);
 
       expect(hydrationRoot.innerHTML).toBe(signal.value);
+    });
+
+    it('should throw the error if the binding has already been initialized', async () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      } as const;
+      const binding = new SignalBinding(signal, part);
+      const hydrationRoot = createElement('div', {}, part.node);
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const runtime = new Runtime(new MockRenderHost());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(() => {
+        binding.hydrate(hydrationTree, runtime);
+      }).toThrow(HydrationError);
     });
   });
 

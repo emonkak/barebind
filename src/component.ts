@@ -18,7 +18,7 @@ import {
   HookType,
   type Lanes,
 } from './hook.js';
-import type { HydrationTree } from './hydration.js';
+import { HydrationError, type HydrationTree } from './hydration.js';
 import type { Part } from './part.js';
 import { Scope } from './scope.js';
 
@@ -144,6 +144,12 @@ export class ComponentBinding<TProps, TResult>
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    if (this._slot !== null) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initilized.',
+      );
+    }
+
     const parentScope = context.getScope();
     const scope = new Scope(parentScope);
     const subcontext = context.enterScope(scope);
@@ -155,7 +161,7 @@ export class ComponentBinding<TProps, TResult>
       this,
     );
     this._parentScope = parentScope;
-    this._slot ??= subcontext.resolveSlot(value, this._part);
+    this._slot = subcontext.resolveSlot(value, this._part);
     this._slot.hydrate(hydrationTree, subcontext);
   }
 

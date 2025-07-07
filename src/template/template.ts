@@ -51,7 +51,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
     if (this._pendingResult !== null) {
       throw new HydrationError(
-        'Hydration is failed because the template has already been rendered.',
+        'Hydration is failed because the binding has already been initilized.',
       );
     }
 

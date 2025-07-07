@@ -11,7 +11,7 @@ import {
   type Slot,
   type UpdateContext,
 } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
+import { HydrationError, type HydrationTree } from '../hydration.js';
 import {
   type ChildNodePart,
   getChildNodes,
@@ -136,6 +136,12 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    if (this._memoizedItems !== null) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initilized.',
+      );
+    }
+
     const newPairs = generateKeyValuePairs(this._props);
     const newItems = new Array(newPairs.length);
     const document = this._part.node.ownerDocument;
