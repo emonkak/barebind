@@ -63,7 +63,8 @@ export interface TextHole {
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
 
-const ONLY_SPACES_REGEXP = /^[\s\n\r]*$/;
+const LEADING_SPACES_REGEXP = /^\n\s*/;
+const TAILING_SPACES_REGEXP = /\n\s*$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
@@ -432,6 +433,18 @@ function extractCaseSensitiveAttributeName(token: string): string | undefined {
   return ATTRIBUTE_NAME_REGEXP.exec(token)?.[1];
 }
 
+function normalizeText(text: string): string {
+  if (LEADING_SPACES_REGEXP.test(text)) {
+    text = text.trimStart();
+  }
+
+  if (TAILING_SPACES_REGEXP.test(text)) {
+    text = text.trimEnd();
+  }
+
+  return text;
+}
+
 function parseAttribtues(
   element: Element,
   strings: readonly string[],
@@ -595,18 +608,14 @@ function parseChildren(
         break;
       }
       case Node.TEXT_NODE: {
-        if (
-          (currentNode.previousSibling !== null ||
-            currentNode.nextSibling !== null) &&
-          ONLY_SPACES_REGEXP.test((currentNode as Text).data)
-        ) {
+        const normalizedText = normalizeText((currentNode as Text).data);
+        if (normalizedText === '') {
           nextNode = treeWalker.nextNode() as ChildNode | null;
           currentNode.remove();
           continue;
         }
 
-        const components = (currentNode as Text).data.split(marker);
-
+        const components = normalizedText.split(marker);
         if (components.length > 1) {
           const tail = components.length - 1;
           let lastComponent = components[0]!;
@@ -630,6 +639,8 @@ function parseChildren(
             followingText: components[tail]!,
           });
           (currentNode as Text).data = '';
+        } else {
+          (currentNode as Text).data = normalizedText;
         }
 
         break;

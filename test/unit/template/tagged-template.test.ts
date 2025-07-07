@@ -151,10 +151,13 @@ describe('TaggedTemplate', () => {
         <div> ${0} ${1} </div>
         <div>[${2} ${3}]</div>
         <div>${4} ${5}</div>
+        <div>
+          ${6}
+        </div>
       `;
 
       expect(template['_template'].innerHTML).toBe(
-        '<div>  </div><div></div><div></div><div></div>',
+        '<div>  </div><div></div><div></div><div></div><div></div>',
       );
       expect(template['_holes']).toStrictEqual([
         {
@@ -191,6 +194,12 @@ describe('TaggedTemplate', () => {
           type: PartType.Text,
           index: 10,
           precedingText: ' ',
+          followingText: '',
+        },
+        {
+          type: PartType.Text,
+          index: 12,
+          precedingText: '',
           followingText: '',
         },
       ]);
@@ -796,7 +805,7 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a split text template', () => {
-      const { template, binds } = html`${'foo'}`;
+      const { template, binds } = html`${'Hello'}, ${'World'}!`;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -805,7 +814,7 @@ describe('TaggedTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
-      expect(childNodes.map(toHTML)).toStrictEqual(['']);
+      expect(childNodes.map(toHTML)).toStrictEqual(['', '']);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
@@ -816,6 +825,17 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[0],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            precedingText: ', ',
+            followingText: '!',
+          },
+          value: binds[1],
           isConnected: true,
           isCommitted: false,
         }),
