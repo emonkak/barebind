@@ -15,10 +15,10 @@ import {
 describe('loose()', () => {
   it('creates a DirectiveInstance with LooseSlot', () => {
     const value = 'foo';
-    const object = loose(value);
+    const bindable = loose(value);
 
-    expect(object.value).toBe(value);
-    expect(object.slotType).toBe(LooseSlot);
+    expect(bindable.value).toBe(value);
+    expect(bindable.slotType).toBe(LooseSlot);
   });
 });
 

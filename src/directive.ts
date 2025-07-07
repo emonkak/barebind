@@ -24,10 +24,7 @@ export interface DirectiveElement<T> {
 }
 
 export interface Bindable<T> {
-  [$toDirectiveElement](
-    part: Part,
-    context: DirectiveContext,
-  ): DirectiveElement<T>;
+  [$toDirectiveElement](): DirectiveElement<T>;
 }
 
 export interface Effect {
@@ -178,6 +175,22 @@ export interface ComponentResult<T> {
   pendingLanes: Lanes;
 }
 
+export const DelegateDirective: Directive<any> = {
+  name: 'DelegateDirective',
+  resolveBinding<T>(
+    value: T,
+    part: Part,
+    context: DirectiveContext,
+  ): Binding<T> {
+    const element = context.resolveDirective(value, part);
+    return element.directive.resolveBinding(
+      element.value,
+      part,
+      context,
+    ) as Binding<T>;
+  },
+};
+
 export class DirectiveObject<T> implements Bindable<T> {
   readonly directive: Directive<T>;
 
@@ -188,10 +201,7 @@ export class DirectiveObject<T> implements Bindable<T> {
     this.value = value;
   }
 
-  [$toDirectiveElement](
-    _part: Part,
-    _context: DirectiveContext,
-  ): DirectiveElement<T> {
+  [$toDirectiveElement](): DirectiveElement<T> {
     return this;
   }
 }
@@ -206,16 +216,18 @@ export class SlotObject<T> implements Bindable<unknown> {
     this.slotType = slotType;
   }
 
-  [$toDirectiveElement](
-    part: Part,
-    context: DirectiveContext,
-  ): DirectiveElement<unknown> {
-    const { directive, value } = context.resolveDirective(this.value, part);
-    return {
-      directive,
-      value,
-      slotType: this.slotType,
-    };
+  [$toDirectiveElement](): DirectiveElement<unknown> {
+    const { value, slotType } = this;
+
+    if (isBindable(value)) {
+      return { ...value[$toDirectiveElement](), slotType };
+    } else {
+      return {
+        directive: DelegateDirective,
+        value,
+        slotType,
+      };
+    }
   }
 }
 

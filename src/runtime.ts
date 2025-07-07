@@ -353,7 +353,7 @@ export class Runtime implements CommitContext, UpdateContext {
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown>;
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
     if (isBindable(value)) {
-      return value[$toDirectiveElement](part, this);
+      return value[$toDirectiveElement]();
     } else {
       const directive = this._renderHost.resolvePrimitive(part);
       directive.ensureValue?.(value, part);
