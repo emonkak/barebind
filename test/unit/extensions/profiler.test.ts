@@ -41,20 +41,6 @@ describe('Profiler', () => {
           context: {} as RenderContext,
         },
         {
-          type: 'TEMPLATE_CREATE_START',
-          id: 0,
-          strings: ['<div>', '</div>'],
-          binds: [],
-          mode: 'html',
-        },
-        {
-          type: 'TEMPLATE_CREATE_END',
-          id: 0,
-          strings: ['<div>', '</div>'],
-          binds: [],
-          mode: 'html',
-        },
-        {
           type: 'COMPONENT_RENDER_END',
           id: 0,
           component,
@@ -133,14 +119,6 @@ describe('Profiler', () => {
             duration: expect.any(Number),
           },
         ],
-        templateMeasurements: [
-          {
-            content: '<div>{}</div>',
-            mode: 'html',
-            startTime: expect.any(Number),
-            duration: expect.any(Number),
-          },
-        ],
         mutationMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -170,7 +148,6 @@ describe('LogReporter', () => {
           updateMeasurement: null,
           renderMeasurement: null,
           componentMeasurements: [],
-          templateMeasurements: [],
           mutationMeasurement: null,
           layoutMeasurement: null,
           passiveMeasurement: null,
@@ -189,7 +166,6 @@ describe('LogReporter', () => {
           },
           renderMeasurement: null,
           componentMeasurements: [],
-          templateMeasurements: [],
           mutationMeasurement: null,
           layoutMeasurement: null,
           passiveMeasurement: null,
@@ -214,14 +190,6 @@ describe('LogReporter', () => {
               name: 'MockComponent',
               startTime: 0,
               duration: 4,
-            },
-          ],
-          templateMeasurements: [
-            {
-              content: '<div>{}</div>',
-              mode: 'html',
-              startTime: 0,
-              duration: 1,
             },
           ],
           mutationMeasurement: {
@@ -253,17 +221,6 @@ describe('LogReporter', () => {
                 name: 'MockComponent',
                 startTime: 0,
                 duration: 4,
-              },
-            ],
-          ],
-          [
-            'table',
-            [
-              {
-                content: '<div>{}</div>',
-                mode: 'html',
-                startTime: 0,
-                duration: 1,
               },
             ],
           ],

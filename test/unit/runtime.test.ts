@@ -656,15 +656,7 @@ describe('Runtime', () => {
       const strings = ['<div>', '</div>'];
       const binds = ['foo'];
       const mode = 'html';
-      const observer = {
-        events: [] as RuntimeEvent[],
-        onRuntimeEvent(event: RuntimeEvent) {
-          this.events.push(event);
-        },
-      };
       const runtime = new Runtime(new MockRenderHost());
-
-      runtime.observe(observer);
 
       const template = runtime.resolveTemplate(strings, binds, mode);
 
@@ -678,22 +670,6 @@ describe('Runtime', () => {
       );
 
       expect(runtime.resolveTemplate(strings, binds, mode)).toBe(template);
-      expect(observer.events).toStrictEqual([
-        {
-          type: 'TEMPLATE_CREATE_START',
-          id: 0,
-          strings,
-          binds,
-          mode,
-        },
-        {
-          type: 'TEMPLATE_CREATE_END',
-          id: 0,
-          strings,
-          binds,
-          mode,
-        },
-      ]);
     });
   });
 

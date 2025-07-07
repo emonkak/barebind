@@ -1,6 +1,5 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import type { TemplateMode } from '../directive.js';
 import { CommitPhase } from '../render-host.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
@@ -9,7 +8,6 @@ export interface Profile {
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
   componentMeasurements: ComponentMeasurement[];
-  templateMeasurements: TemplateMeasurement[];
   mutationMeasurement: CommitMeasurement | null;
   layoutMeasurement: CommitMeasurement | null;
   passiveMeasurement: CommitMeasurement | null;
@@ -29,13 +27,6 @@ export interface RenderMeasurement {
 
 export interface ComponentMeasurement {
   name: string;
-  startTime: number;
-  duration: number;
-}
-
-export interface TemplateMeasurement {
-  content: string;
-  mode: TemplateMode;
   startTime: number;
   duration: number;
 }
@@ -131,22 +122,6 @@ export class Profiler implements RuntimeObserver {
         }
         break;
       }
-      case 'TEMPLATE_CREATE_START': {
-        profile.templateMeasurements.push({
-          content: event.strings.join('{}').trim(),
-          mode: event.mode,
-          startTime: performance.now(),
-          duration: 0,
-        });
-        break;
-      }
-      case 'TEMPLATE_CREATE_END': {
-        const measurement = profile.templateMeasurements.at(-1);
-        if (measurement !== undefined) {
-          measurement.duration = performance.now() - measurement.startTime;
-        }
-        break;
-      }
       case 'COMMIT_START':
         {
           const measurement = {
@@ -205,7 +180,6 @@ export class LogReporter implements Reporter {
       updateMeasurement,
       renderMeasurement,
       componentMeasurements,
-      templateMeasurements,
       mutationMeasurement,
       layoutMeasurement,
       passiveMeasurement,
@@ -235,13 +209,6 @@ export class LogReporter implements Reporter {
       );
       if (componentMeasurements.length > 0) {
         this._logger.table(componentMeasurements, ['name', 'duration']);
-      }
-      if (templateMeasurements.length > 0) {
-        this._logger.table(templateMeasurements, [
-          'content',
-          'mode',
-          'duration',
-        ]);
       }
       this._logger.groupEnd();
     }
@@ -283,7 +250,6 @@ function createProfile(id: number): Profile {
     updateMeasurement: null,
     renderMeasurement: null,
     componentMeasurements: [],
-    templateMeasurements: [],
     mutationMeasurement: null,
     layoutMeasurement: null,
     passiveMeasurement: null,

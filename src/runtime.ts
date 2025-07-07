@@ -63,13 +63,6 @@ export type RuntimeEvent =
       component: Component<unknown, unknown>;
       props: unknown;
       context: RenderContext;
-    }
-  | {
-      type: 'TEMPLATE_CREATE_START' | 'TEMPLATE_CREATE_END';
-      id: number;
-      strings: readonly string[];
-      binds: readonly unknown[];
-      mode: TemplateMode;
     };
 
 interface RenderFrame {
@@ -377,37 +370,16 @@ export class Runtime implements CommitContext, UpdateContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    const { uniqueIdentifier, observers, cachedTemplates } = this._sharedState;
+    const { uniqueIdentifier, cachedTemplates } = this._sharedState;
     let template = cachedTemplates.get(strings);
 
     if (template === undefined) {
-      if (!observers.isEmpty()) {
-        this._notifyObservers({
-          type: 'TEMPLATE_CREATE_START',
-          id: this._renderFrame.id,
-          strings,
-          binds,
-          mode,
-        });
-      }
-
       template = this._renderHost.createTemplate(
         strings,
         binds,
         uniqueIdentifier,
         mode,
       );
-
-      if (!observers.isEmpty()) {
-        this._notifyObservers({
-          type: 'TEMPLATE_CREATE_END',
-          id: this._renderFrame.id,
-          strings,
-          binds,
-          mode,
-        });
-      }
-
       cachedTemplates.set(strings, template);
     }
 
