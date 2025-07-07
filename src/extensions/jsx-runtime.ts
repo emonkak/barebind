@@ -1,4 +1,4 @@
-import { VElement, type VElementType, type VNode } from './vdom.js';
+import { VElement, type VElementType, VFragment, type VNode } from './vdom.js';
 
 export function jsx<const TProps extends { children?: unknown }>(
   type: VElementType<TProps>,
@@ -12,6 +12,10 @@ export function jsx<const TProps extends { children?: unknown }>(
 }
 
 export const jsxs: typeof jsx = jsx;
+
+export function Fragment(props: { children: VNode[] }): VFragment {
+  return new VFragment(props.children);
+}
 
 declare global {
   namespace JSX {
