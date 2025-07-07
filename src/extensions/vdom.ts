@@ -148,14 +148,14 @@ export class VFragment implements Bindable<VNode[]> {
 }
 
 export class VDOMBinding implements Binding<VNode[]> {
-  private _newChildren: VNode[];
+  private _pendingChildren: VNode[];
 
-  private readonly _oldChildren: RenderNode[] = [];
+  private readonly _memoizedChildren: RenderNode[] = [];
 
   private readonly _part: ChildNodePart;
 
   constructor(children: VNode[], part: ChildNodePart) {
-    this._newChildren = children;
+    this._pendingChildren = children;
     this._part = part;
   }
 
@@ -164,7 +164,7 @@ export class VDOMBinding implements Binding<VNode[]> {
   }
 
   get value(): VNode[] {
-    return this._newChildren;
+    return this._pendingChildren;
   }
 
   get part(): ChildNodePart {
@@ -173,13 +173,13 @@ export class VDOMBinding implements Binding<VNode[]> {
 
   shouldBind(children: VNode[]): boolean {
     return (
-      this._oldChildren.length === children.length ||
-      children !== this._newChildren
+      this._memoizedChildren.length !== children.length ||
+      children !== this._pendingChildren
     );
   }
 
   bind(children: VNode[]): void {
-    this._newChildren = children;
+    this._pendingChildren = children;
   }
 
   hydrate(_hydrationTree: HydrationTree, _context: DirectiveContext): void {
@@ -188,29 +188,31 @@ export class VDOMBinding implements Binding<VNode[]> {
 
   connect(context: UpdateContext): void {
     patchChildren(
-      this._newChildren,
-      this._oldChildren,
+      this._pendingChildren,
+      this._memoizedChildren,
       this._part.node.ownerDocument,
       context,
     );
   }
 
   disconnect(context: UpdateContext): void {
-    invalidateChildren(this._oldChildren, context);
+    invalidateChildren(this._memoizedChildren, context);
   }
 
   commit(context: CommitContext): void {
-    commitChildren(this._oldChildren, this._part, context);
+    commitChildren(this._memoizedChildren, this._part, context);
 
-    if (this._oldChildren.length > 0) {
-      this._part.childNode = getStartNode(this._oldChildren[0]!.binding.part);
+    if (this._memoizedChildren.length > 0) {
+      this._part.childNode = getStartNode(
+        this._memoizedChildren[0]!.binding.part,
+      );
     } else {
       this._part.childNode = null;
     }
   }
 
   rollback(context: CommitContext): void {
-    rollbackChildren(this._oldChildren, context);
+    rollbackChildren(this._memoizedChildren, context);
 
     this._part.childNode = null;
   }
@@ -260,9 +262,9 @@ export class ElementBinding implements Binding<Props> {
   disconnect(_context: UpdateContext): void {}
 
   commit(_context: CommitContext): void {
+    const element = this._part.node;
     const newProps = this._pendingProps;
     const oldProps = this._memoizedProps ?? {};
-    const element = this._part.node;
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
@@ -278,8 +280,8 @@ export class ElementBinding implements Binding<Props> {
   }
 
   rollback(_context: CommitContext): void {
-    const props = this._memoizedProps;
     const element = this._part.node;
+    const props = this._memoizedProps;
 
     if (props !== null) {
       for (const key of Object.keys(props)) {
@@ -656,8 +658,6 @@ function rollbackChildren(
       binding.part.node.remove();
     }
   }
-
-  children.length = 0;
 }
 
 function updateNode<T>(
