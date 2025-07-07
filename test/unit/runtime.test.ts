@@ -5,7 +5,7 @@ import { ALL_LANES, type Hook, Lane, NO_LANES } from '@/hook.js';
 import { PartType } from '@/part.js';
 import { CommitPhase } from '@/render-host.js';
 import { RenderSession } from '@/render-session.js';
-import { Runtime, type RuntimeEvent } from '@/runtime.js';
+import { Runtime } from '@/runtime.js';
 import { Scope } from '@/scope.js';
 import { Literal } from '@/template-literal.js';
 import {

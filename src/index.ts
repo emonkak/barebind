@@ -7,6 +7,7 @@ export { BrowserRenderHost } from './render-host/browser.js';
 export { ServerRenderHost } from './render-host/server.js';
 export { type AsyncRoot, createAsyncRoot } from './root/async.js';
 export { createSyncRoot, type SyncRoot } from './root/sync.js';
+export type { RuntimeEvent, RuntimeObserver } from './runtime.js';
 export { loose } from './slot/loose.js';
 export { memo } from './slot/memo.js';
 export { strict } from './slot/strict.js';
