@@ -4,10 +4,13 @@ export function jsx<const TProps extends { children?: unknown }>(
   type: VElementType<TProps>,
   props: TProps,
 ): VElement<TProps> {
-  if (Array.isArray(props.children)) {
-    return new VElement(type, props, props.children);
+  if (typeof type === 'string') {
+    const children = Array.isArray(props.children)
+      ? props.children
+      : [props.children];
+    return new VElement(type, props, children);
   } else {
-    return new VElement(type, props, [props.children as VNode]);
+    return new VElement(type, props, []);
   }
 }
 
