@@ -7,7 +7,6 @@ import {
   type Directive,
   type DirectiveContext,
   DirectiveObject,
-  type Effect,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -98,7 +97,7 @@ export const RepeatDirective: Directive<RepeatProps<any, any, any>> = {
 };
 
 export class RepeatBinding<TSource, TKey, TValue>
-  implements Binding<RepeatProps<TSource, TKey, TValue>>, Effect
+  implements Binding<RepeatProps<TSource, TKey, TValue>>
 {
   private _props: RepeatProps<TSource, TKey, TValue>;
 
