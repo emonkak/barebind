@@ -1,6 +1,13 @@
-import { VElement, type VElementType, VFragment, type VNode } from './vdom.js';
+import type { DirectiveObject } from '../directive.js';
+import {
+  createFragment,
+  type VChild,
+  VElement,
+  type VElementType,
+  type VProps,
+} from './vdom.js';
 
-export function jsx<const TProps extends { children?: unknown }>(
+export function jsx<const TProps extends VProps & { children?: unknown }>(
   type: VElementType<TProps>,
   props: TProps,
 ): VElement<TProps> {
@@ -16,8 +23,10 @@ export function jsx<const TProps extends { children?: unknown }>(
 
 export const jsxs: typeof jsx = jsx;
 
-export function Fragment(props: { children: VNode[] }): VFragment {
-  return new VFragment(props.children);
+export function Fragment(props: {
+  children: VChild[];
+}): DirectiveObject<VChild[]> {
+  return createFragment(props.children);
 }
 
 declare global {

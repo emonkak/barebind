@@ -1,4 +1,3 @@
-import { shallowEqual } from '../compare.js';
 import { defineComponent } from '../component.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
@@ -10,6 +9,7 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveElement,
+  DirectiveObject,
   isBindable,
   type UpdateContext,
 } from '../directive.js';
@@ -24,8 +24,11 @@ import {
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { TextPrimitive } from '../primitive/text.js';
 
-export type VNode =
-  | VNode[]
+const TEXT_NODE = '#text';
+const COMMENT_NODE = '#comment';
+
+export type VChild =
+  | VChild[]
   | VElement
   | Bindable<unknown>
   | bigint
@@ -36,17 +39,21 @@ export type VNode =
   | null
   | undefined;
 
-export type VElementType<TProps extends Props> =
-  | ComponentFunction<TProps>
-  | string;
+interface VNode<T = unknown> {
+  directive: Directive<T>;
+  value: T;
+  nodeType: VNodeType;
+}
 
-export type Props = Record<string, unknown>;
+export type VProps = Record<string, unknown>;
 
-interface RenderSlot<T = unknown> {
-  binding: Binding<T>;
-  children: RenderSlot[];
-  alternate: RenderSlot<T> | null;
-  flags: number;
+export type VElementType<TProps> = ComponentFunction<TProps> | string;
+
+type VNodeType = typeof TEXT_NODE | typeof COMMENT_NODE | string;
+
+interface VNodeSlot {
+  binding: Binding<unknown>;
+  dirty: boolean;
 }
 
 type EventRegistry = Pick<
@@ -58,16 +65,16 @@ type EventListenerWithOptions =
   | EventListener
   | (EventListenerObject & AddEventListenerOptions);
 
-export const VDOMDirective: Directive<VNode[]> = {
+export const VDOMDirective: Directive<VChild[]> = {
   name: 'VDOMDirective',
   resolveBinding(
-    children: VNode[],
+    children: VChild[],
     part: Part,
     _context: DirectiveContext,
   ): VDOMBinding {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
-        'VDOMDirective must be used in a child node, but it is used here in:\n' +
+        'VDOMDirective must be used in a child node part, but it is used here:\n' +
           inspectPart(part, markUsedValue(children)),
       );
     }
@@ -75,56 +82,208 @@ export const VDOMDirective: Directive<VNode[]> = {
   },
 };
 
-export const ElementDirective: Directive<Props> = {
-  name: 'ElementDirective',
+export const VElementDirective: Directive<VElement> = {
+  name: 'VElementDirective',
   resolveBinding(
-    props: Props,
+    element: VElement,
     part: Part,
     _context: DirectiveContext,
-  ): ElementBinding {
+  ): VElementBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
-        'ElementDirective must be used in an element part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(props)),
+        'VElementDirective must be used in an element part, but it is used here:\n' +
+          inspectPart(part, markUsedValue(element)),
       );
     }
-    return new ElementBinding(props, part);
+    return new VElementBinding(element, part);
   },
 };
 
-const NO_FLAGS = 0b0;
-const FLAG_NEW = 0b1;
-const FLAG_DIRTY = 0b10;
-const FLAG_INVALIDATE = 0b100;
-
-export function createElement<const TProps extends Props>(
-  type: VElementType<{ children: VNode[] } & TProps>,
+export function createElement<const TProps extends VProps>(
+  type: VElementType<TProps>,
   props: TProps,
-  ...children: VNode[]
-): VElement<{ children: VNode[] } & TProps> {
-  return new VElement(type, { children, ...props }, children);
+  ...children: VChild[]
+): VElement<TProps> {
+  return new VElement(type, props, children);
 }
 
-export function createFragment(children: VNode[]): VFragment {
-  return new VFragment(children);
+export function createFragment(children: VChild[]): DirectiveObject<VChild[]> {
+  return new DirectiveObject(VDOMDirective, children);
 }
 
-export class VElement<TProps extends Props = Props>
-  implements Bindable<VNode[]>
+export class VDOMBinding implements Binding<VChild[]> {
+  private _children: VChild[];
+
+  private readonly _part: ChildNodePart;
+
+  private _pendingSlots: VNodeSlot[] = [];
+
+  private _memoizedSlots: VNodeSlot[] | null = null;
+
+  constructor(children: VChild[], part: ChildNodePart) {
+    this._children = children;
+    this._part = part;
+  }
+
+  get directive(): Directive<VChild[]> {
+    return VDOMDirective;
+  }
+
+  get value(): VChild[] {
+    return this._children;
+  }
+
+  get part(): ChildNodePart {
+    return this._part;
+  }
+
+  shouldBind(children: VChild[]): boolean {
+    return this._memoizedSlots === null || children !== this._children;
+  }
+
+  bind(children: VChild[]): void {
+    this._children = children;
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    if (this._memoizedSlots !== null) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initilized.',
+      );
+    }
+
+    const slots: VNodeSlot[] = new Array(this._children.length);
+    const document = this._part.node.ownerDocument;
+
+    for (let i = 0, l = this._children.length; i < l; i++) {
+      const node = resolveNode(this._children[i]!);
+      slots[i] = {
+        binding: hydrateNode(node, hydrationTree, document, context),
+        dirty: true,
+      };
+    }
+
+    this._pendingSlots = slots;
+  }
+
+  connect(context: UpdateContext): void {
+    const newChildren = this._children;
+    const newSlots: VNodeSlot[] = new Array(this._children.length);
+    const oldSlots = this._pendingSlots;
+    const newTail = newChildren.length - 1;
+    const oldTail = oldSlots.length - 1;
+    const document = this._part.node.ownerDocument;
+    let index = 0;
+
+    while (index <= newTail && index <= oldTail) {
+      const newNode = resolveNode(newChildren[index]!);
+      const oldSlot = oldSlots![index]!;
+      newSlots[index] = patchSlot(oldSlot, newNode, context);
+      index++;
+    }
+
+    while (index <= oldTail) {
+      const oldSlot = oldSlots[index]!;
+      oldSlot.binding.disconnect(context);
+      oldSlot.dirty = true;
+      index++;
+    }
+
+    while (index <= newTail) {
+      const newElement = resolveNode(newChildren[index]!);
+      const binding = renderNode(newElement, document, context);
+      binding.connect(context);
+      newSlots[index] = { binding, dirty: true };
+      index++;
+    }
+
+    this._pendingSlots = newSlots;
+  }
+
+  disconnect(context: UpdateContext): void {
+    for (let i = this._pendingSlots.length - 1; i >= 0; i--) {
+      const slot = this._pendingSlots[i]!;
+      slot.binding.disconnect(context);
+      slot.dirty = true;
+    }
+  }
+
+  commit(context: CommitContext): void {
+    const newSlots = this._pendingSlots;
+    const oldSlots = this._memoizedSlots;
+    const newTail = newSlots.length - 1;
+    const oldTail = oldSlots !== null ? oldSlots.length - 1 : -1;
+    let index = 0;
+
+    while (index <= newTail && index <= oldTail) {
+      const newSlot = newSlots[index]!;
+      const oldSlot = oldSlots![index]!;
+
+      if (newSlot !== oldSlot) {
+        oldSlot.binding.rollback(context);
+        oldSlot.binding.part.node.replaceWith(newSlot.binding.part.node);
+      }
+
+      if (newSlot.dirty) {
+        newSlot.binding.commit(context);
+        newSlot.dirty = false;
+      }
+
+      index++;
+    }
+
+    while (index <= oldTail) {
+      const oldSlot = oldSlots![index]!;
+      oldSlot.binding.rollback(context);
+      oldSlot.binding.part.node.remove();
+      index++;
+    }
+
+    while (index <= newTail) {
+      const newSlot = newSlots[index]!;
+      this._part.node.before(newSlot.binding.part.node);
+      newSlot.binding.commit(context);
+      newSlot.dirty = false;
+      index++;
+    }
+
+    this._memoizedSlots = newSlots;
+    this._part.childNode =
+      newSlots.length > 0 ? getStartNode(newSlots[0]!.binding.part) : null;
+  }
+
+  rollback(context: CommitContext): void {
+    const slots = this._memoizedSlots;
+
+    if (slots !== null) {
+      for (let i = slots.length - 1; i >= 0; i--) {
+        const { binding } = slots[i]!;
+        binding.rollback(context);
+        binding.part.node.remove();
+      }
+    }
+
+    this._memoizedSlots = null;
+    this._part.childNode = null;
+  }
+}
+
+export class VElement<TProps extends VProps = VProps>
+  implements Bindable<VChild[]>
 {
   readonly type: VElementType<TProps>;
 
   readonly props: TProps;
 
-  readonly children: VNode[];
+  readonly children: VChild[];
 
-  constructor(type: VElementType<TProps>, props: TProps, children: VNode[]) {
+  constructor(type: VElementType<TProps>, props: TProps, children: VChild[]) {
     this.type = type;
     this.props = props;
     this.children = children;
   }
 
-  [$toDirectiveElement](): DirectiveElement<VNode[]> {
+  [$toDirectiveElement](): DirectiveElement<VChild[]> {
     return {
       directive: VDOMDirective,
       value: [this],
@@ -132,174 +291,126 @@ export class VElement<TProps extends Props = Props>
   }
 }
 
-export class VFragment implements Bindable<VNode[]> {
-  readonly children: VNode[];
+export class VElementBinding<TProps extends VProps = VProps>
+  implements Binding<VElement<TProps>>
+{
+  private _pendingElement: VElement<TProps>;
 
-  constructor(children: VNode[]) {
-    this.children = children;
-  }
-
-  [$toDirectiveElement](): DirectiveElement<VNode[]> {
-    return {
-      directive: VDOMDirective,
-      value: this.children,
-    };
-  }
-}
-
-export class VDOMBinding implements Binding<VNode[]> {
-  private _pendingChildren: VNode[];
-
-  private readonly _slots: RenderSlot[] = [];
-
-  private readonly _part: ChildNodePart;
-
-  constructor(children: VNode[], part: ChildNodePart) {
-    this._pendingChildren = children;
-    this._part = part;
-  }
-
-  get directive(): Directive<VNode[]> {
-    return VDOMDirective;
-  }
-
-  get value(): VNode[] {
-    return this._pendingChildren;
-  }
-
-  get part(): ChildNodePart {
-    return this._part;
-  }
-
-  shouldBind(children: VNode[]): boolean {
-    return (
-      children.length !== this._slots.length ||
-      children !== this._pendingChildren
-    );
-  }
-
-  bind(children: VNode[]): void {
-    this._pendingChildren = children;
-  }
-
-  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    if (this._slots.length > 0) {
-      throw new HydrationError(
-        'Hydration is failed because the binding has already been initilized.',
-      );
-    }
-
-    const document = this._part.node.ownerDocument;
-
-    for (let i = 0, l = this._pendingChildren.length; i < l; i++) {
-      const child = this._pendingChildren[i]!;
-      const childSlot = hydrateNode(child, hydrationTree, document, context);
-      this._slots.push(childSlot);
-    }
-  }
-
-  connect(context: UpdateContext): void {
-    patchChildren(
-      this._slots,
-      this._pendingChildren,
-      this._part.node.ownerDocument,
-      context,
-    );
-  }
-
-  disconnect(context: UpdateContext): void {
-    invalidateChildren(this._slots, context);
-  }
-
-  commit(context: CommitContext): void {
-    commitChildren(this._slots, this._part, context);
-
-    if (this._slots.length > 0) {
-      this._part.childNode = getStartNode(this._slots[0]!.binding.part);
-    } else {
-      this._part.childNode = null;
-    }
-  }
-
-  rollback(context: CommitContext): void {
-    rollbackChildren(this._slots, context);
-
-    this._part.childNode = null;
-  }
-}
-
-export class ElementBinding implements Binding<Props> {
-  private _pendingProps: Props;
-
-  private _memoizedProps: Props | null = null;
+  private _memoizedElement: VElement<TProps> | null = null;
 
   private readonly _part: ElementPart;
+
+  private readonly _children: VDOMBinding;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
-  constructor(props: Props, part: ElementPart) {
-    this._pendingProps = props;
+  constructor(element: VElement<TProps>, part: ElementPart) {
+    this._pendingElement = element;
     this._part = part;
+    this._children = new VDOMBinding(element.children ?? [], {
+      type: PartType.ChildNode,
+      node: part.node.ownerDocument.createComment(''),
+      childNode: null,
+    });
   }
 
-  get directive(): Directive<Props> {
-    return ElementDirective;
+  get directive(): Directive<VElement<TProps>> {
+    return VElementDirective as Directive<VElement<TProps>>;
   }
 
-  get value(): Props {
-    return this._pendingProps;
+  get value(): VElement<TProps> {
+    return this._pendingElement;
   }
 
   get part(): ElementPart {
     return this._part;
   }
 
-  shouldBind(props: Props): boolean {
-    return (
-      this._memoizedProps === null || !shallowEqual(props, this._memoizedProps)
-    );
+  shouldBind(element: VElement<TProps>): boolean {
+    return this._memoizedElement !== element;
   }
 
-  bind(props: Props): void {
-    this._pendingProps = props;
+  bind(element: VElement<TProps>): void {
+    this._pendingElement = element;
+    this._children.bind(element.children ?? []);
   }
 
-  hydrate(_hydrationTree: HydrationTree, _context: UpdateContext): void {}
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    this._children.hydrate(hydrationTree, context);
+  }
 
-  connect(_context: UpdateContext): void {}
+  connect(context: UpdateContext): void {
+    this._children.connect(context);
+  }
 
-  disconnect(_context: UpdateContext): void {}
+  disconnect(context: UpdateContext): void {
+    this._children.disconnect(context);
+  }
 
-  commit(_context: CommitContext): void {
+  commit(context: CommitContext): void {
+    const newProps = this._pendingElement.props ?? ({} as TProps);
+    const oldProps = this._memoizedElement?.props ?? ({} as TProps);
     const element = this._part.node;
-    const newProps = this._pendingProps;
-    const oldProps = this._memoizedProps ?? {};
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
-        removeProperty(element, key, oldProps[key]!, this);
+        removeProperty(element, key, oldProps[key as keyof TProps]!, this);
       }
     }
 
     for (const key of Object.keys(newProps)) {
-      updateProperty(element, key, newProps[key], oldProps[key], this);
+      updateProperty(
+        element,
+        key,
+        newProps[key as keyof TProps],
+        oldProps[key as keyof TProps],
+        this,
+      );
     }
 
-    this._memoizedProps = newProps;
+    if (this._memoizedElement === null) {
+      element.appendChild(this._children.part.node);
+    }
+
+    DEBUG: {
+      context.debugValue(
+        this._children.directive,
+        this._children.value,
+        this._children.part,
+      );
+    }
+
+    this._children.commit(context);
+
+    this._memoizedElement = this._pendingElement;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(context: CommitContext): void {
+    const props = this._memoizedElement?.props;
     const element = this._part.node;
-    const props = this._memoizedProps;
 
-    if (props !== null) {
+    if (props !== undefined) {
       for (const key of Object.keys(props)) {
-        removeProperty(element, key, props[key], this);
+        removeProperty(element, key, props[key as keyof TProps], this);
       }
     }
 
-    this._memoizedProps = null;
+    this._children.rollback(context);
+
+    DEBUG: {
+      context.undebugValue(
+        this._children.directive,
+        this._children.value,
+        this._children.part,
+      );
+    }
+
+    if (this._memoizedElement !== undefined) {
+      this._children.part.node.remove();
+    }
+
+    this._memoizedElement = null;
   }
 
   addEventListener(type: string, listener: EventListenerWithOptions): void {
@@ -335,77 +446,68 @@ export class ElementBinding implements Binding<Props> {
   }
 }
 
-function commitChildren(
-  childSlots: RenderSlot[],
-  part: Part,
-  context: CommitContext,
-): void {
-  let deletedCount = 0;
-
-  for (let i = 0, l = childSlots.length; i < l; i++) {
-    const slot = childSlots[i]!;
-
-    commitSlot(slot, part, context);
-
-    if (slot.alternate !== null) {
-      childSlots[i] = slot.alternate;
-    } else {
-      if (slot.flags & FLAG_INVALIDATE) {
-        deletedCount++;
-      }
-    }
+function createPart(nodeType: VNodeType, document: Document): Part {
+  switch (nodeType) {
+    case COMMENT_NODE:
+      return {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+    case TEXT_NODE:
+      return {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+    default:
+      return {
+        type: PartType.Element,
+        node: document.createElement(nodeType),
+      };
   }
-
-  childSlots.length -= deletedCount;
 }
 
-function commitSlot(
-  slot: RenderSlot,
-  part: Part,
-  context: CommitContext,
-): void {
-  const { binding, children, alternate, flags } = slot;
-
-  if (flags & FLAG_INVALIDATE) {
-    binding.rollback(context);
-
-    if (alternate !== null) {
-      binding.part.node.replaceWith(alternate.binding.part.node);
-      commitChildren(alternate.children, alternate.binding.part, context);
-      alternate.binding.commit(context);
-      alternate.flags = NO_FLAGS;
-    } else {
-      binding.part.node.remove();
+function patchSlot(
+  slot: VNodeSlot,
+  node: VNode,
+  context: UpdateContext,
+): VNodeSlot {
+  const { binding } = slot;
+  if (
+    binding.directive === node.directive &&
+    getNodeType(binding.part) === node.nodeType.toUpperCase()
+  ) {
+    if (binding.shouldBind(node.value)) {
+      binding.bind(node.value);
+      binding.connect(context);
+      slot.dirty = true;
     }
+    return slot;
   } else {
-    if (flags & FLAG_NEW) {
-      if (part.type === PartType.Element) {
-        part.node.appendChild(binding.part.node);
-      } else {
-        part.node.before(binding.part.node);
-      }
-    }
-
-    commitChildren(children, binding.part, context);
-
-    if (flags & FLAG_DIRTY) {
-      binding.commit(context);
-    }
-
-    slot.flags = NO_FLAGS;
+    binding.disconnect(context);
+    const newBinding = renderNode(
+      node,
+      binding.part.node.ownerDocument,
+      context,
+    );
+    return {
+      binding: newBinding,
+      dirty: true,
+    };
   }
 }
 
-function createRenderSlot<T>(
-  binding: Binding<T>,
-  children: RenderSlot[],
-): RenderSlot<T> {
-  return {
-    binding,
-    children,
-    alternate: null,
-    flags: FLAG_NEW | FLAG_DIRTY,
-  };
+function getNodeType(part: Part): VNodeType {
+  switch (part.type) {
+    case PartType.Text:
+      return TEXT_NODE;
+    case PartType.ChildNode:
+      return COMMENT_NODE;
+    default:
+      return part.node.nodeName;
+  }
 }
 
 function hydrateNode(
@@ -413,108 +515,47 @@ function hydrateNode(
   hydrationTree: HydrationTree,
   document: Document,
   context: UpdateContext,
-): RenderSlot {
-  if (node == null || typeof node === 'boolean') {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-    };
-    const binding = BlackholePrimitive.resolveBinding(node, part, context);
-    binding.hydrate(hydrationTree, context);
+): Binding<unknown> {
+  const { directive, value, nodeType } = node;
+  const part = hydratePart(nodeType, hydrationTree, document);
+  const binding = directive.resolveBinding(value, part, context);
+
+  binding.hydrate(hydrationTree, context);
+
+  if (part.node.parentNode === null) {
     hydrationTree
       .popNode(part.node.nodeType, part.node.nodeName)
       .replaceWith(part.node);
-    return createRenderSlot(binding, []);
-  } else if (Array.isArray(node)) {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-    };
-    const binding = VDOMDirective.resolveBinding(node, part, context);
-    binding.hydrate(hydrationTree, context);
-    hydrationTree
-      .popNode(part.node.nodeType, part.node.nodeName)
-      .replaceWith(part.node);
-    return createRenderSlot(binding, []);
-  } else if (node instanceof VElement) {
-    if (typeof node.type === 'string') {
-      const part = {
-        type: PartType.Element,
-        node: hydrationTree.popNode(Node.ELEMENT_NODE, node.type.toUpperCase()),
-      };
-      const binding = ElementDirective.resolveBinding(
-        node.props,
-        part,
-        context,
-      );
-      const childSlots = node.children.map((child) =>
-        renderNode(child, document, context),
-      );
-      binding.hydrate(hydrationTree, context);
-      return createRenderSlot(binding, childSlots);
-    } else {
-      const props = { children: node.children, ...node.props };
-      const part = {
+  }
+
+  return binding;
+}
+
+function hydratePart(
+  nodeType: VNodeType,
+  hydrationTree: HydrationTree,
+  document: Document,
+): Part {
+  switch (nodeType) {
+    case COMMENT_NODE:
+      return {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
       };
-      const binding = defineComponent(node.type).resolveBinding(
-        props,
-        part,
-        context,
-      );
-      binding.hydrate(hydrationTree, context);
-      hydrationTree
-        .popNode(part.node.nodeType, part.node.nodeName)
-        .replaceWith(part.node);
-      return createRenderSlot(binding, []);
-    }
-  } else if (isBindable(node)) {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-    };
-    const element = node[$toDirectiveElement](part, context);
-    const binding = element.directive.resolveBinding(
-      element.value,
-      part,
-      context,
-    );
-    binding.hydrate(hydrationTree, context);
-    hydrationTree
-      .popNode(part.node.nodeType, part.node.nodeName)
-      .replaceWith(part.node);
-    return createRenderSlot(binding, []);
-  } else {
-    const part = {
-      type: PartType.Text,
-      node: hydrationTree.splitText().popNode(Node.TEXT_NODE, '#text'),
-      precedingText: '',
-      followingText: '',
-    };
-    const binding = TextPrimitive.resolveBinding(node, part, context);
-    binding.hydrate(hydrationTree, context);
-    return createRenderSlot(binding, []);
+    case TEXT_NODE:
+      return {
+        type: PartType.Text,
+        node: hydrationTree.popNode(Node.TEXT_NODE, TEXT_NODE),
+        precedingText: '',
+        followingText: '',
+      };
+    default:
+      return {
+        type: PartType.Element,
+        node: hydrationTree.popNode(Node.ELEMENT_NODE, nodeType.toUpperCase()),
+      };
   }
-}
-
-function invalidateChildren(
-  childSlots: RenderSlot[],
-  context: UpdateContext,
-): void {
-  for (let i = 0, l = childSlots.length; i < l; i++) {
-    invalidateSlot(childSlots[i]!, context);
-  }
-}
-
-function invalidateSlot(slot: RenderSlot, context: UpdateContext): void {
-  invalidateChildren(slot.children, context);
-  slot.binding.disconnect(context);
-  slot.flags |= FLAG_INVALIDATE;
 }
 
 function narrowElement<
@@ -526,94 +567,6 @@ function narrowElement<
   return (expectedTypes as string[]).includes(element.tagName);
 }
 
-function patchChildren(
-  childSlots: RenderSlot[],
-  childNodes: VNode[],
-  document: Document,
-  context: UpdateContext,
-): void {
-  const nodeTail = childNodes.length - 1;
-  const slotTail = childSlots.length - 1;
-  let index = 0;
-
-  while (index <= nodeTail && index <= slotTail) {
-    patchSlot(childSlots[index]!, childNodes[index]!, context);
-    index++;
-  }
-
-  while (index <= slotTail) {
-    invalidateSlot(childSlots[index]!, context);
-    index++;
-  }
-
-  while (index <= nodeTail) {
-    const newSlot = renderNode(childNodes[index]!, document, context);
-    childSlots.push(newSlot);
-    index++;
-  }
-}
-
-function patchSlot(
-  slot: RenderSlot,
-  node: VNode,
-  context: UpdateContext,
-): void {
-  const { binding } = slot;
-
-  if (node == null || typeof node === 'boolean') {
-    if (binding.directive === BlackholePrimitive) {
-      updateSlot(slot, node, context);
-      return;
-    }
-  } else if (Array.isArray(node)) {
-    if (binding.directive === VDOMDirective) {
-      updateSlot(slot, node, context);
-      return;
-    }
-  } else if (node instanceof VElement) {
-    if (typeof node.type === 'string') {
-      if (
-        binding.directive === ElementDirective &&
-        binding.part.node.nodeName === node.type.toUpperCase()
-      ) {
-        patchChildren(
-          slot.children,
-          node.children,
-          binding.part.node.ownerDocument,
-          context,
-        );
-        updateSlot(slot, node.props, context);
-        return;
-      }
-    } else {
-      if (binding.directive === defineComponent(node.type)) {
-        updateSlot(slot, { children: node.children, ...node.props }, context);
-        return;
-      }
-    }
-  } else if (isBindable(node)) {
-    if (binding.part.type === PartType.ChildNode) {
-      const { directive, value } = node[$toDirectiveElement](
-        binding.part,
-        context,
-      );
-      if (binding.directive === directive) {
-        updateSlot(slot, value, context);
-        return;
-      }
-    }
-  } else {
-    if (binding.directive === TextPrimitive) {
-      updateSlot(slot, node, context);
-      return;
-    }
-  }
-
-  invalidateSlot(slot, context);
-
-  slot.alternate = renderNode(node, binding.part.node.ownerDocument, context);
-}
-
 function removeProperty(
   element: Element,
   key: string,
@@ -621,6 +574,10 @@ function removeProperty(
   target: EventRegistry,
 ): void {
   switch (key.toLowerCase()) {
+    case 'children':
+    case 'key':
+      // Skip special properties.
+      return;
     case 'defaultchecked':
       if (narrowElement(element, 'INPUT')) {
         element.defaultChecked = false;
@@ -665,98 +622,48 @@ function renderNode(
   node: VNode,
   document: Document,
   context: UpdateContext,
-): RenderSlot {
-  if (node == null || typeof node === 'boolean') {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-    };
-    const binding = BlackholePrimitive.resolveBinding(node, part, context);
-    binding.connect(context);
-    return createRenderSlot(binding, []);
-  } else if (Array.isArray(node)) {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-    };
-    const binding = VDOMDirective.resolveBinding(node, part, context);
-    binding.connect(context);
-    return createRenderSlot(binding, []);
-  } else if (node instanceof VElement) {
-    if (typeof node.type === 'string') {
-      const part = {
-        type: PartType.Element,
-        node: document.createElement(node.type),
-      };
-      const binding = ElementDirective.resolveBinding(
-        node.props,
-        part,
-        context,
-      );
-      const childSlots = node.children.map((child) =>
-        renderNode(child, document, context),
-      );
-      binding.connect(context);
-      return createRenderSlot(binding, childSlots);
-    } else {
-      const props = { children: node.children, ...node.props };
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-      const binding = defineComponent(node.type).resolveBinding(
-        props,
-        part,
-        context,
-      );
-      binding.connect(context);
-      return createRenderSlot(binding, []);
-    }
-  } else if (isBindable(node)) {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-    };
-    const element = node[$toDirectiveElement](part, context);
-    const binding = element.directive.resolveBinding(
-      element.value,
-      part,
-      context,
-    );
-    binding.connect(context);
-    return createRenderSlot(binding, []);
-  } else {
-    const part = {
-      type: PartType.Text,
-      node: document.createTextNode(''),
-      precedingText: '',
-      followingText: '',
-    };
-    const binding = TextPrimitive.resolveBinding(node, part, context);
-    binding.connect(context);
-    return createRenderSlot(binding, []);
-  }
+): Binding<unknown> {
+  const { directive, value, nodeType } = node;
+  const part = createPart(nodeType, document);
+  const binding = directive.resolveBinding(value, part, context);
+  binding.connect(context);
+  return binding;
 }
 
-function rollbackChildren(
-  childSlots: RenderSlot[],
-  context: CommitContext,
-): void {
-  for (let i = 0, l = childSlots.length; i < l; i++) {
-    const slot = childSlots[i]!;
-    const { binding, flags } = slot;
-
-    if (flags & FLAG_INVALIDATE) {
-      binding.rollback(context);
-      binding.part.node.remove();
+function resolveNode(child: VChild): VNode {
+  if (child == null || typeof child === 'boolean') {
+    return {
+      directive: BlackholePrimitive,
+      value: child,
+      nodeType: COMMENT_NODE,
+    };
+  } else if (Array.isArray(child)) {
+    return {
+      directive: VDOMDirective,
+      value: child,
+      nodeType: COMMENT_NODE,
+    };
+  } else if (child instanceof VElement) {
+    if (typeof child.type === 'string') {
+      return {
+        directive: VElementDirective,
+        value: child,
+        nodeType: child.type,
+      };
+    } else {
+      const directive = defineComponent(child.type);
+      return {
+        directive,
+        value: child.props,
+        nodeType: TEXT_NODE,
+      };
     }
+  } else if (isBindable(child)) {
+    const { directive, value } = child[$toDirectiveElement]();
+    return { directive, value, nodeType: COMMENT_NODE };
+  } else {
+    return { directive: TextPrimitive, value: child, nodeType: TEXT_NODE };
   }
-
-  childSlots.length = 0;
 }
 
 function updateProperty(
@@ -835,19 +742,4 @@ function updateProperty(
   if (!Object.is(newValue, oldValue)) {
     element.setAttribute(key, newValue?.toString() ?? '');
   }
-}
-
-function updateSlot<T>(
-  slot: RenderSlot<T>,
-  value: T,
-  context: UpdateContext,
-): void {
-  if (slot.binding.shouldBind(value)) {
-    slot.binding.bind(value);
-    slot.binding.connect(context);
-    slot.flags |= FLAG_DIRTY;
-  }
-
-  slot.alternate = null;
-  slot.flags &= ~FLAG_INVALIDATE;
 }
