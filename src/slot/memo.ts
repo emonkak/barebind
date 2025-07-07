@@ -42,7 +42,7 @@ export class MemoSlot<T> implements Slot<T> {
   reconcile(value: T, context: UpdateContext): void {
     const element = context.resolveDirective(value, this._pendingBinding.part);
     if (this._pendingBinding.directive === element.directive) {
-      if (this._pendingBinding.shouldBind(element.value)) {
+      if (this._dirty || this._pendingBinding.shouldBind(element.value)) {
         this._pendingBinding.bind(element.value);
         this._pendingBinding.connect(context);
         this._dirty = true;

@@ -43,7 +43,7 @@ export class StrictSlot<T> implements Slot<T> {
           inspectPart(this._binding.part, markUsedValue(element.value)),
       );
     }
-    if (this._binding.shouldBind(element.value)) {
+    if (this._dirty || this._binding.shouldBind(element.value)) {
       this._binding.bind(element.value);
       this._binding.connect(context);
       this._dirty = true;

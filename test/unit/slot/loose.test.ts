@@ -131,6 +131,43 @@ describe('LooseSlot', () => {
       expect(part.node.data).toBe(value2.value);
     });
 
+    it('updates the binding is dirty', () => {
+      const value = 'foo';
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const binding = new MockBinding(MockPrimitive, value, part);
+      const slot = new LooseSlot(binding);
+      const runtime = new Runtime(new MockRenderHost());
+
+      const shouldBindSpy = vi
+        .spyOn(binding, 'shouldBind')
+        .mockReturnValue(false);
+      const bindSpy = vi.spyOn(binding, 'bind');
+      const connectSpy = vi.spyOn(binding, 'connect');
+      const disconnectSpy = vi.spyOn(binding, 'disconnect');
+      const commitSpy = vi.spyOn(binding, 'commit');
+      const debugValueSpy = vi.spyOn(runtime, 'debugValue');
+
+      slot.connect(runtime);
+      slot.reconcile(value, runtime);
+      slot.commit(runtime);
+
+      slot.disconnect(runtime);
+      slot.reconcile(value, runtime);
+      slot.commit(runtime);
+
+      expect(shouldBindSpy).not.toHaveBeenCalled();
+      expect(bindSpy).toHaveBeenCalledTimes(2);
+      expect(connectSpy).toHaveBeenCalledTimes(3);
+      expect(disconnectSpy).toHaveBeenCalledTimes(1);
+      expect(commitSpy).toHaveBeenCalledTimes(2);
+      expect(debugValueSpy).toHaveBeenCalledTimes(2);
+      expect(part.node.data).toBe('foo');
+    });
+
     it('does not updates the value of the binding if shouldBind() returns false', () => {
       const value1 = 'foo';
       const value2 = 'bar';
