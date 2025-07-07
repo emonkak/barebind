@@ -59,7 +59,6 @@ export interface TextHole {
   index: number;
   precedingText: string;
   followingText: string;
-  split: boolean;
 }
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
@@ -150,7 +149,6 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
       nodeIndex++
     ) {
       let alternateNode: ChildNode | null = null;
-      let skip = false;
 
       for (; holeIndex < holesLength; holeIndex++) {
         const hole = holes[holeIndex]!;
@@ -225,25 +223,16 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
             };
             break;
           }
-          case PartType.Text: {
-            let node: Text;
-            if (hole.split) {
-              node = hydrationTree.splitText();
-              skip = true;
-            } else {
-              node = hydrationTree.peekNode(
-                Node.TEXT_NODE,
-                currentNode.nodeName,
-              );
-            }
+          case PartType.Text:
             childPart = {
               type: PartType.Text,
-              node,
+              node: hydrationTree
+                .splitText()
+                .peekNode(Node.TEXT_NODE, currentNode.nodeName),
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
             break;
-          }
         }
 
         const slot = context.resolveSlot(binds[holeIndex]!, childPart);
@@ -251,19 +240,17 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         slot.hydrate(hydrationTree, context);
       }
 
-      if (!skip) {
-        const consumedNode = hydrationTree.popNode(
-          currentNode.nodeType,
-          currentNode.nodeName,
-        );
+      const actualNode = hydrationTree.popNode(
+        currentNode.nodeType,
+        currentNode.nodeName,
+      );
 
-        if (alternateNode !== null) {
-          consumedNode.replaceWith(alternateNode);
-        }
+      if (alternateNode !== null) {
+        actualNode.replaceWith(alternateNode);
+      }
 
-        if (currentNode.parentNode === rootNode) {
-          childNodes.push(consumedNode);
-        }
+      if (currentNode.parentNode === rootNode) {
+        childNodes.push(actualNode);
       }
     }
 
@@ -621,7 +608,6 @@ function parseChildren(
               index,
               precedingText: lastComponent,
               followingText: '',
-              split: true,
             });
             currentNode.before(document.createTextNode(''));
             lastComponent = components[i]!;
@@ -633,7 +619,6 @@ function parseChildren(
             index,
             precedingText: lastComponent,
             followingText: components[tail]!,
-            split: false,
           });
           (currentNode as Text).data = '';
         }

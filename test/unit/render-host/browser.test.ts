@@ -97,14 +97,12 @@ describe('BrowserRenderHost', () => {
           index: 1,
           precedingText: '',
           followingText: '',
-          split: true,
         },
         {
           type: PartType.Text,
           index: 2,
           precedingText: ', ',
           followingText: '!',
-          split: false,
         },
       ]);
     });

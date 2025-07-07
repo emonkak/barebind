@@ -135,14 +135,12 @@ describe('TaggedTemplate', () => {
           index: 2,
           precedingText: '',
           followingText: '',
-          split: false,
         },
         {
           type: PartType.Text,
           index: 4,
           precedingText: '',
           followingText: '',
-          split: false,
         },
       ]);
     });
@@ -164,42 +162,36 @@ describe('TaggedTemplate', () => {
           index: 3,
           precedingText: ' ',
           followingText: '',
-          split: true,
         },
         {
           type: PartType.Text,
           index: 4,
           precedingText: ' ',
           followingText: ' ',
-          split: false,
         },
         {
           type: PartType.Text,
           index: 6,
           precedingText: '[',
           followingText: '',
-          split: true,
         },
         {
           type: PartType.Text,
           index: 7,
           precedingText: ' ',
           followingText: ']',
-          split: false,
         },
         {
           type: PartType.Text,
           index: 9,
           precedingText: '',
           followingText: '',
-          split: true,
         },
         {
           type: PartType.Text,
           index: 10,
           precedingText: ' ',
           followingText: '',
-          split: false,
         },
       ]);
     });
@@ -236,14 +228,12 @@ describe('TaggedTemplate', () => {
           index: 0,
           precedingText: '< ',
           followingText: '',
-          split: true,
         },
         {
           type: PartType.Text,
           index: 1,
           precedingText: '>< ',
           followingText: '/>',
-          split: false,
         },
       ]);
     });
@@ -281,14 +271,12 @@ describe('TaggedTemplate', () => {
           index: 2,
           precedingText: '',
           followingText: '',
-          split: false,
         },
         {
           type: PartType.Text,
           index: 4,
           precedingText: '',
           followingText: '',
-          split: false,
         },
       ]);
     });
@@ -514,7 +502,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.exact(hydrationRoot.querySelector('span')?.firstChild),
+            node: expect.exact(hydrationRoot.querySelector('span')!.firstChild),
             followingText: '',
             precedingText: '',
           },
@@ -575,16 +563,14 @@ describe('TaggedTemplate', () => {
         '<div>Hello, World!</div>',
       ]);
       expect(
-        childNodes.flatMap((childNode) =>
-          Array.from(childNode.childNodes, toHTML),
-        ),
-      ).toStrictEqual(['', 'Hello, World!']);
+        childNodes.map((childNode) => Array.from(childNode.childNodes, toHTML)),
+      ).toStrictEqual([['Hello, World!', '']]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.any(Text),
+            node: expect.exact(hydrationRoot.firstChild!.firstChild),
             precedingText: '',
             followingText: '',
           },
@@ -595,7 +581,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.exact(hydrationRoot.firstChild?.firstChild),
+            node: expect.any(Text),
             precedingText: ', ',
             followingText: '!',
           },

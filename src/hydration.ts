@@ -2,15 +2,15 @@ import { inspectNode } from './debug.js';
 
 const ACTUAL_NODE_MAKER = '[[ACTUAL NODE IN HERE!]]';
 
-interface NodeTypeMap {
+interface ExpectedNodeTypeMap {
   [Node.ELEMENT_NODE]: Element;
   [Node.TEXT_NODE]: Text;
   [Node.COMMENT_NODE]: Comment;
 }
 
-type InferNode<T extends number> = T extends keyof NodeTypeMap
-  ? NodeTypeMap[T]
-  : ChildNode;
+type InferNode<T extends number> = T extends keyof ExpectedNodeTypeMap
+  ? ExpectedNodeTypeMap[T]
+  : ExpectedNodeTypeMap[keyof ExpectedNodeTypeMap];
 
 export class HydrationTree {
   private readonly _treeWalker: TreeWalker;
@@ -44,15 +44,20 @@ export class HydrationTree {
     return lookaheadNode;
   }
 
-  splitText(): Text {
+  splitText(): this {
+    const currentNode = this._treeWalker.currentNode;
     const lookaheadNode = this._lookaheadNode;
-    if (lookaheadNode === null) {
-      throw new HydrationError(
-        `Hydration is failed because there is no node. #text node is expected here.`,
-      );
+
+    if (
+      narrowNode(currentNode, Node.TEXT_NODE) &&
+      (lookaheadNode === null || lookaheadNode.previousSibling === currentNode)
+    ) {
+      const splittedText = currentNode.ownerDocument.createTextNode('');
+      currentNode.after(splittedText);
+      this._lookaheadNode = splittedText;
     }
-    ensureNode(lookaheadNode, Node.TEXT_NODE, '#text');
-    return lookaheadNode.splitText(0);
+
+    return this;
   }
 }
 
@@ -78,4 +83,11 @@ function ensureNode<T extends number>(
         inspectNode(actualNode, ACTUAL_NODE_MAKER),
     );
   }
+}
+
+function narrowNode<T extends number>(
+  actualNode: Node,
+  expectedType: T,
+): actualNode is InferNode<T> {
+  return actualNode.nodeType === expectedType;
 }

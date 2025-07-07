@@ -31,7 +31,7 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
   ): TemplateResult {
     const childPart = {
       type: PartType.Text,
-      node: hydrationTree.popNode(Node.TEXT_NODE, '#text'),
+      node: hydrationTree.splitText().popNode(Node.TEXT_NODE, '#text'),
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;
