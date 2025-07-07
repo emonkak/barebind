@@ -521,7 +521,7 @@ function removeProperty(
   value: unknown,
   target: EventRegistry,
 ): void {
-  switch (key) {
+  switch (key.toLowerCase()) {
     case 'defaultchecked':
       if (narrowElement(element, 'INPUT')) {
         element.defaultChecked = false;
@@ -682,7 +682,7 @@ function updateProperty(
   oldValue: unknown,
   target: EventRegistry,
 ): void {
-  switch (key) {
+  switch (key.toLowerCase()) {
     case 'children':
     case 'key':
       // Skip special properties.
