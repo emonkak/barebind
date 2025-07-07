@@ -3,6 +3,7 @@
 import { inspectValue } from './debug.js';
 import {
   $toDirectiveElement,
+  type Bindable,
   type CommitContext,
   type Component,
   type ComponentResult,
@@ -348,6 +349,8 @@ export class Runtime implements CommitContext, UpdateContext {
     return { value, pendingLanes };
   }
 
+  resolveDirective<T>(value: Bindable<T>, part: Part): DirectiveElement<T>;
+  resolveDirective(value: unknown, part: Part): DirectiveElement<unknown>;
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
     if (isBindable(value)) {
       return value[$toDirectiveElement](part, this);

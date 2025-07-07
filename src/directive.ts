@@ -104,6 +104,7 @@ export interface Coroutine extends Effect {
 }
 
 export interface DirectiveContext {
+  resolveDirective<T>(value: Bindable<T>, part: Part): DirectiveElement<T>;
   resolveDirective(value: unknown, part: Part): DirectiveElement<unknown>;
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
