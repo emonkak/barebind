@@ -17,7 +17,7 @@ export class Scope {
     do {
       for (let i = currentScope._entries.length - 1; i >= 0; i--) {
         const entry = currentScope._entries[i]!;
-        if (entry.key === key) {
+        if (Object.is(entry.key, key)) {
           return entry.value;
         }
       }
