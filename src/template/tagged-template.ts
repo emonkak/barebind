@@ -139,18 +139,14 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     );
     const slots: Slot<unknown>[] = new Array(holes.length);
     const childNodes: ChildNode[] = [];
+    let currentNode: Node | null = null;
+    let nodeIndex = 0;
+    let holeIndex = 0;
 
-    for (
-      let currentNode: Node | null,
-        nodeIndex = 0,
-        holeIndex = 0,
-        holesLength = holes.length;
-      (currentNode = treeWalker.nextNode()) !== null;
-      nodeIndex++
-    ) {
+    while ((currentNode = treeWalker.nextNode()) !== null) {
       let alternateNode: ChildNode | null = null;
 
-      for (; holeIndex < holesLength; holeIndex++) {
+      for (; holeIndex < holes.length; holeIndex++) {
         const hole = holes[holeIndex]!;
         if (hole.index !== nodeIndex) {
           break;
@@ -252,6 +248,14 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
       if (currentNode.parentNode === rootNode) {
         childNodes.push(actualNode);
       }
+
+      nodeIndex++;
+    }
+
+    if (holeIndex < holes.length) {
+      throw new Error(
+        'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
+      );
     }
 
     return { childNodes, slots };
@@ -277,84 +281,89 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
           NodeFilter.SHOW_TEXT |
           NodeFilter.SHOW_COMMENT,
       );
+      let currentNode: Node | null;
+      let currentHole = holes[0]!;
+      let nodeIndex = 0;
+      let holeIndex = 0;
 
-      for (
-        let holeIndex = 0, holesLength = holes.length, nodeIndex = -1;
-        holeIndex < holesLength;
-        holeIndex++
-      ) {
-        const currentHole = holes[holeIndex]!;
-        let currentNode: Node | null = treeWalker.currentNode;
+      OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
+        while (currentHole.index === nodeIndex) {
+          let localPart: Part;
 
-        while (currentHole.index !== nodeIndex) {
-          currentNode = treeWalker.nextNode();
-          if (currentNode === null) {
-            throw new Error(
-              'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
-            );
+          switch (currentHole.type) {
+            case PartType.Attribute:
+              localPart = {
+                type: PartType.Attribute,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.ChildNode:
+              localPart = {
+                type: PartType.ChildNode,
+                node: currentNode as Comment,
+                childNode: null,
+              };
+              break;
+            case PartType.Element:
+              localPart = {
+                type: PartType.Element,
+                node: currentNode as Element,
+              };
+              break;
+            case PartType.Event:
+              localPart = {
+                type: PartType.Event,
+                node: currentNode as Element,
+                name: currentHole.name,
+              };
+              break;
+            case PartType.Live:
+              localPart = {
+                type: PartType.Live,
+                node: currentNode as Element,
+                name: currentHole.name,
+                defaultValue: currentNode[currentHole.name as keyof Node],
+              };
+              break;
+            case PartType.Property:
+              localPart = {
+                type: PartType.Property,
+                node: currentNode as Element,
+                name: currentHole.name,
+                defaultValue: currentNode[currentHole.name as keyof Node],
+              };
+              break;
+            case PartType.Text:
+              localPart = {
+                type: PartType.Text,
+                node: currentNode as Text,
+                precedingText: currentHole.precedingText,
+                followingText: currentHole.followingText,
+              };
+              break;
           }
-          nodeIndex++;
+
+          const slot = context.resolveSlot(binds[holeIndex]!, localPart);
+          slots[holeIndex] = slot;
+          slot.connect(context);
+
+          holeIndex++;
+
+          if (holeIndex >= holes.length) {
+            break OUTER;
+          }
+
+          currentHole = holes[holeIndex]!;
         }
 
-        let childPart: Part;
+        nodeIndex++;
+      }
 
-        switch (currentHole.type) {
-          case PartType.Attribute:
-            childPart = {
-              type: PartType.Attribute,
-              node: currentNode as Element,
-              name: currentHole.name,
-            };
-            break;
-          case PartType.ChildNode:
-            childPart = {
-              type: PartType.ChildNode,
-              node: currentNode as Comment,
-              childNode: null,
-            };
-            break;
-          case PartType.Element:
-            childPart = {
-              type: PartType.Element,
-              node: currentNode as Element,
-            };
-            break;
-          case PartType.Event:
-            childPart = {
-              type: PartType.Event,
-              node: currentNode as Element,
-              name: currentHole.name,
-            };
-            break;
-          case PartType.Live:
-            childPart = {
-              type: PartType.Live,
-              node: currentNode as Element,
-              name: currentHole.name,
-              defaultValue: currentNode[currentHole.name as keyof Node],
-            };
-            break;
-          case PartType.Property:
-            childPart = {
-              type: PartType.Property,
-              node: currentNode as Element,
-              name: currentHole.name,
-              defaultValue: currentNode[currentHole.name as keyof Node],
-            };
-            break;
-          case PartType.Text:
-            childPart = {
-              type: PartType.Text,
-              node: currentNode as Text,
-              precedingText: currentHole.precedingText,
-              followingText: currentHole.followingText,
-            };
-            break;
-        }
-
-        const slot = context.resolveSlot(binds[holeIndex]!, childPart);
-        slots[holeIndex] = slot;
-        slot.connect(context);
+      if (holeIndex < holes.length) {
+        throw new Error(
+          'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
+        );
       }
     }
 

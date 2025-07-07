@@ -29,17 +29,17 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
-    const childPart = {
+    const localPart = {
       type: PartType.Text,
       node: hydrationTree.splitText().popNode(Node.TEXT_NODE, '#text'),
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;
-    const slot = context.resolveSlot(binds[0], childPart);
+    const slot = context.resolveSlot(binds[0], localPart);
 
     slot.hydrate(hydrationTree, context);
 
-    return { childNodes: [childPart.node], slots: [slot] };
+    return { childNodes: [localPart.node], slots: [slot] };
   }
 
   render(
@@ -48,17 +48,17 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
-    const slotPart = {
+    const localPart = {
       type: PartType.Text,
       node: document.createTextNode(''),
       precedingText: this._precedingText,
       followingText: this._followingText,
     } as const;
-    const slot = context.resolveSlot(binds[0], slotPart);
+    const slot = context.resolveSlot(binds[0], localPart);
 
     slot.connect(context);
 
-    return { childNodes: [slotPart.node], slots: [slot] };
+    return { childNodes: [localPart.node], slots: [slot] };
   }
 
   resolveBinding(

@@ -629,6 +629,30 @@ describe('TaggedTemplate', () => {
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
 
+    it('should throw the error if the template is invalid', () => {
+      const template: TaggedTemplate = new TaggedTemplate(
+        document.createElement('template'),
+        [
+          {
+            type: PartType.Element,
+            index: 0,
+          },
+        ],
+      );
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+      const hydrationRoot = createElement('div', {}, 'foo');
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const runtime = new Runtime(new MockRenderHost());
+
+      expect(() => {
+        template.hydrate(['foo'], part, hydrationTree, runtime);
+      }).toThrow('There is no node that the hole indicates.');
+    });
+
     it.each([
       [html`<div></div>`, createElement('div', {})],
       [html`<div></div>`, createElement('div', {}, createElement('span'))],

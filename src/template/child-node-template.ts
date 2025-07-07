@@ -18,20 +18,20 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
-    const childPart = {
+    const localPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
     } as const;
-    const slot = context.resolveSlot(binds[0], childPart);
+    const slot = context.resolveSlot(binds[0], localPart);
 
     slot.hydrate(hydrationTree, context);
 
     hydrationTree
-      .popNode(childPart.node.nodeType, childPart.node.nodeName)
-      .replaceWith(childPart.node);
+      .popNode(localPart.node.nodeType, localPart.node.nodeName)
+      .replaceWith(localPart.node);
 
-    return { childNodes: [childPart.node], slots: [slot] };
+    return { childNodes: [localPart.node], slots: [slot] };
   },
   render(
     binds: readonly [unknown],
@@ -39,16 +39,16 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
-    const slotPart = {
+    const localPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
     } as const;
-    const slot = context.resolveSlot(binds[0], slotPart);
+    const slot = context.resolveSlot(binds[0], localPart);
 
     slot.connect(context);
 
-    return { childNodes: [slotPart.node], slots: [slot] };
+    return { childNodes: [localPart.node], slots: [slot] };
   },
   resolveBinding<T>(
     binds: readonly [T],
