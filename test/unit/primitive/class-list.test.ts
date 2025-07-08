@@ -72,7 +72,7 @@ describe('ClassListPrimitive', () => {
           runtime,
         );
 
-        expect(binding.directive).toBe(ClassListPrimitive);
+        expect(binding.type).toBe(ClassListPrimitive);
         expect(binding.value).toBe(classNames);
         expect(binding.part).toBe(part);
       },

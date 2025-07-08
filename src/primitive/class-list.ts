@@ -47,7 +47,7 @@ export class ClassListBinding extends PrimitiveBinding<
 > {
   private _memoizedValue: ClassName[] = [];
 
-  get directive(): Primitive<ClassName[]> {
+  get type(): Primitive<ClassName[]> {
     return ClassListPrimitive;
   }
 

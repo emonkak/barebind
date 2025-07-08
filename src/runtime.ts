@@ -2,14 +2,14 @@
 
 import { inspectValue } from './debug.js';
 import {
-  $toDirectiveElement,
+  $toDirective,
   type Bindable,
   type CommitContext,
   type Component,
   type ComponentResult,
   type Coroutine,
   type Directive,
-  type DirectiveElement,
+  type DirectiveType,
   type Effect,
   isBindable,
   type RenderContext,
@@ -118,13 +118,13 @@ export class Runtime implements CommitContext, UpdateContext {
     };
   }
 
-  debugValue(directive: Directive<unknown>, value: unknown, part: Part): void {
+  debugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void {
     if (
       part.type === PartType.ChildNode &&
       (part.node.data === '' ||
-        part.node.data.startsWith('/' + directive.displayName + '('))
+        part.node.data.startsWith('/' + type.displayName + '('))
     ) {
-      part.node.data = `/${directive.displayName}(${inspectValue(value)})`;
+      part.node.data = `/${type.displayName}(${inspectValue(value)})`;
     }
   }
 
@@ -349,22 +349,23 @@ export class Runtime implements CommitContext, UpdateContext {
     return { value, pendingLanes };
   }
 
-  resolveDirective<T>(value: Bindable<T>, part: Part): DirectiveElement<T>;
-  resolveDirective(value: unknown, part: Part): DirectiveElement<unknown>;
-  resolveDirective(value: unknown, part: Part): DirectiveElement<unknown> {
+  resolveDirective<T>(value: Bindable<T>, part: Part): Directive<T>;
+  resolveDirective(value: unknown, part: Part): Directive<unknown>;
+  resolveDirective(value: unknown, part: Part): Directive<unknown> {
     if (isBindable(value)) {
-      return value[$toDirectiveElement]();
+      return value[$toDirective]();
     } else {
-      const directive = this._renderHost.resolvePrimitive(part);
-      directive.ensureValue?.(value, part);
-      return { directive, value: value };
+      const type = this._renderHost.resolvePrimitive(part);
+      type.ensureValue?.(value, part);
+      return { type, value: value };
     }
   }
 
   resolveSlot<T>(value: T, part: Part): Slot<T> {
-    const element = this.resolveDirective(value, part);
-    const binding = element.directive.resolveBinding(element.value, part, this);
-    const slotType = element.slotType ?? this._renderHost.resolveSlotType(part);
+    const directive = this.resolveDirective(value, part);
+    const binding = directive.type.resolveBinding(directive.value, part, this);
+    const slotType =
+      directive.slotType ?? this._renderHost.resolveSlotType(part);
     return new slotType(binding);
   }
 
@@ -431,13 +432,13 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   undebugValue(
-    directive: Directive<unknown>,
+    type: DirectiveType<unknown>,
     _value: unknown,
     part: Part,
   ): void {
     if (
       part.type === PartType.ChildNode &&
-      part.node.data.startsWith('/' + directive.displayName + '(')
+      part.node.data.startsWith('/' + type.displayName + '(')
     ) {
       part.node.data = '';
     }

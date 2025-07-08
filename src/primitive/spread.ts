@@ -51,7 +51,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
     this._part = part;
   }
 
-  get directive(): Primitive<SpreadProps> {
+  get type(): Primitive<SpreadProps> {
     return SpreadPrimitive;
   }
 

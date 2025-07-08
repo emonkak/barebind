@@ -1,8 +1,8 @@
 import {
-  areDirectivesEqual,
+  areDirectiveTypesEqual,
   type Binding,
   type CommitContext,
-  type Directive,
+  type DirectiveType,
   type Slot,
   SlotSpecifier,
   type UpdateContext,
@@ -25,8 +25,8 @@ export class LooseSlot<T> implements Slot<T> {
     this._pendingBinding = binding;
   }
 
-  get directive(): Directive<unknown> {
-    return this._pendingBinding.directive;
+  get type(): DirectiveType<unknown> {
+    return this._pendingBinding.type;
   }
 
   get value(): unknown {
@@ -38,17 +38,20 @@ export class LooseSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): void {
-    const element = context.resolveDirective(value, this._pendingBinding.part);
-    if (areDirectivesEqual(this._pendingBinding.directive, element.directive)) {
-      if (this._dirty || this._pendingBinding.shouldBind(element.value)) {
-        this._pendingBinding.bind(element.value);
+    const directive = context.resolveDirective(
+      value,
+      this._pendingBinding.part,
+    );
+    if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
+      if (this._dirty || this._pendingBinding.shouldBind(directive.value)) {
+        this._pendingBinding.bind(directive.value);
         this._pendingBinding.connect(context);
         this._dirty = true;
       }
     } else {
       this._pendingBinding.disconnect(context);
-      this._pendingBinding = element.directive.resolveBinding(
-        element.value,
+      this._pendingBinding = directive.type.resolveBinding(
+        directive.value,
         this._pendingBinding.part,
         context,
       );
@@ -86,7 +89,7 @@ export class LooseSlot<T> implements Slot<T> {
 
         DEBUG: {
           context.undebugValue(
-            oldBinding.directive,
+            oldBinding.type,
             oldBinding.value,
             oldBinding.part,
           );
@@ -95,11 +98,7 @@ export class LooseSlot<T> implements Slot<T> {
     }
 
     DEBUG: {
-      context.debugValue(
-        newBinding.directive,
-        newBinding.value,
-        newBinding.part,
-      );
+      context.debugValue(newBinding.type, newBinding.value, newBinding.part);
     }
 
     newBinding.commit(context);
@@ -119,7 +118,7 @@ export class LooseSlot<T> implements Slot<T> {
       binding.rollback(context);
 
       DEBUG: {
-        context.undebugValue(binding.directive, binding.value, binding.part);
+        context.undebugValue(binding.type, binding.value, binding.part);
       }
     }
 

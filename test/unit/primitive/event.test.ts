@@ -58,7 +58,7 @@ describe('EventPrimitive', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = EventPrimitive.resolveBinding(listener, part, runtime);
 
-      expect(binding.directive).toBe(EventPrimitive);
+      expect(binding.type).toBe(EventPrimitive);
       expect(binding.value).toBe(listener);
       expect(binding.part).toBe(part);
     });

@@ -23,7 +23,7 @@ describe('NodePrimitive', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = NodePrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.directive).toBe(NodePrimitive);
+      expect(binding.type).toBe(NodePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

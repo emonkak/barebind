@@ -24,7 +24,7 @@ describe('TextPrimitive', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = TextPrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.directive).toBe(TextPrimitive);
+      expect(binding.type).toBe(TextPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

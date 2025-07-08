@@ -1,9 +1,9 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
-  type Directive,
   type DirectiveContext,
   DirectiveSpecifier,
+  type DirectiveType,
   type Template,
   type TemplateResult,
   type UpdateContext,
@@ -65,7 +65,7 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
     return ElementTemplate.name;
   }
 
-  equals(other: Directive<unknown>): boolean {
+  equals(other: DirectiveType<unknown>): boolean {
     return (
       other instanceof ElementTemplate &&
       other._name === this._name &&

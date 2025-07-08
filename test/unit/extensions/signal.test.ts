@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { $toDirectiveElement } from '@/directive.js';
+import { $toDirective } from '@/directive.js';
 import {
   Atom,
   Computed,
@@ -35,7 +35,7 @@ describe('SignalDirective', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
-      expect(binding.directive).toBe(SignalDirective);
+      expect(binding.type).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
       expect(binding.part).toBe(part);
     });
@@ -46,11 +46,11 @@ describe('Signal', () => {
   describe('[$toDirectiveElement]()', () => {
     it('returns a DirectiveElement with the signal', () => {
       const signal = new Atom('foo');
-      const element = signal[$toDirectiveElement]();
+      const directive = signal[$toDirective]();
 
-      expect(element.directive).toBe(SignalDirective);
-      expect(element.value).toBe(signal);
-      expect(element.slotType).toBe(undefined);
+      expect(directive.type).toBe(SignalDirective);
+      expect(directive.value).toBe(signal);
+      expect(directive.slotType).toBe(undefined);
     });
   });
 

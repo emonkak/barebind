@@ -44,7 +44,7 @@ export class EventBinding extends PrimitiveBinding<
 > {
   private _memoizedValue: EventListenerValue = null;
 
-  get directive(): Primitive<EventListenerValue> {
+  get type(): Primitive<EventListenerValue> {
     return EventPrimitive;
   }
 

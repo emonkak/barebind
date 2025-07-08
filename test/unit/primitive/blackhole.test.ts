@@ -22,7 +22,7 @@ describe('BlackholePrimitive', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.directive).toBe(BlackholePrimitive);
+      expect(binding.type).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

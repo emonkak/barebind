@@ -34,7 +34,7 @@ describe('StrictSlot', () => {
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
 
-      expect(slot.directive).toBe(MockPrimitive);
+      expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });

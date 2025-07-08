@@ -59,7 +59,7 @@ describe('StylePrimitive', () => {
         const runtime = new Runtime(new MockRenderHost());
         const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
-        expect(binding.directive).toBe(StylePrimitive);
+        expect(binding.type).toBe(StylePrimitive);
         expect(binding.value).toBe(style);
         expect(binding.part).toBe(part);
       },

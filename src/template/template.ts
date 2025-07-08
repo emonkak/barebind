@@ -28,7 +28,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     this._part = part;
   }
 
-  get directive(): Template<TBinds> {
+  get type(): Template<TBinds> {
     return this._template;
   }
 

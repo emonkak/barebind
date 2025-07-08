@@ -1,9 +1,9 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
-  areDirectivesEqual,
+  areDirectiveTypesEqual,
   type Binding,
   type CommitContext,
-  type Directive,
+  type DirectiveType,
   type Slot,
   SlotSpecifier,
   type UpdateContext,
@@ -24,8 +24,8 @@ export class StrictSlot<T> implements Slot<T> {
     this._binding = binding;
   }
 
-  get directive(): Directive<unknown> {
-    return this._binding.directive;
+  get type(): DirectiveType<unknown> {
+    return this._binding.type;
   }
 
   get value(): unknown {
@@ -37,15 +37,15 @@ export class StrictSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): void {
-    const element = context.resolveDirective(value, this._binding.part);
-    if (!areDirectivesEqual(this._binding.directive, element.directive)) {
+    const directive = context.resolveDirective(value, this._binding.part);
+    if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this._binding.directive.displayName} in this slot, but got ${element.directive.displayName}.\n` +
-          inspectPart(this._binding.part, markUsedValue(element.value)),
+        `The directive must be ${this._binding.type.displayName} in this slot, but got ${directive.type.displayName}.\n` +
+          inspectPart(this._binding.part, markUsedValue(directive.value)),
       );
     }
-    if (this._dirty || this._binding.shouldBind(element.value)) {
-      this._binding.bind(element.value);
+    if (this._dirty || this._binding.shouldBind(directive.value)) {
+      this._binding.bind(directive.value);
       this._binding.connect(context);
       this._dirty = true;
     }
@@ -73,7 +73,7 @@ export class StrictSlot<T> implements Slot<T> {
 
     DEBUG: {
       context.debugValue(
-        this._binding.directive,
+        this._binding.type,
         this._binding.value,
         this._binding.part,
       );
@@ -93,7 +93,7 @@ export class StrictSlot<T> implements Slot<T> {
 
     DEBUG: {
       context.undebugValue(
-        this._binding.directive,
+        this._binding.type,
         this._binding.value,
         this._binding.part,
       );

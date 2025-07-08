@@ -4,9 +4,9 @@ import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
   type CommitContext,
-  type Directive,
   type DirectiveContext,
   DirectiveSpecifier,
+  type DirectiveType,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -71,12 +71,12 @@ export function repeat<TTarget, TKey, TValue>(
   props: RepeatProps<TTarget, TKey, TValue>,
 ): DirectiveSpecifier<RepeatProps<TTarget, TKey, TValue>> {
   return new DirectiveSpecifier(
-    RepeatDirective as Directive<RepeatProps<TTarget, TKey, TValue>>,
+    RepeatDirective as DirectiveType<RepeatProps<TTarget, TKey, TValue>>,
     props,
   );
 }
 
-export const RepeatDirective: Directive<RepeatProps<any, any, any>> = {
+export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   displayName: 'RepeatDirective',
   resolveBinding<TTarget, TKey, TValue>(
     props: RepeatProps<TTarget, TKey, TValue>,
@@ -111,7 +111,7 @@ export class RepeatBinding<TTarget, TKey, TValue>
     this._part = part;
   }
 
-  get directive(): Directive<RepeatProps<TTarget, TKey, TValue>> {
+  get type(): DirectiveType<RepeatProps<TTarget, TKey, TValue>> {
     return RepeatDirective;
   }
 

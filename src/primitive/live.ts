@@ -25,7 +25,7 @@ export const LivePrimitive: Primitive<any> = {
 };
 
 export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
-  get directive(): Primitive<T> {
+  get type(): Primitive<T> {
     return LivePrimitive;
   }
 

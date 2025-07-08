@@ -1,12 +1,12 @@
 import {
-  $toDirectiveElement,
+  $toDirective,
   type Bindable,
   type Binding,
   type CommitContext,
   type Coroutine,
   type Directive,
   type DirectiveContext,
-  type DirectiveElement,
+  type DirectiveType,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -24,7 +24,7 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-export const SignalDirective: Directive<Signal<any>> = {
+export const SignalDirective: DirectiveType<Signal<any>> = {
   displayName: 'SignalDirective',
   resolveBinding<T>(
     signal: Signal<T>,
@@ -40,8 +40,8 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
 
   abstract get version(): number;
 
-  [$toDirectiveElement](): DirectiveElement<Signal<T>> {
-    return { directive: SignalDirective, value: this };
+  [$toDirective](): Directive<Signal<T>> {
+    return { type: SignalDirective, value: this };
   }
 
   abstract subscribe(subscriber: Subscriber): Subscription;
@@ -253,7 +253,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._part = part;
   }
 
-  get directive(): Directive<Signal<T>> {
+  get type(): DirectiveType<Signal<T>> {
     return SignalDirective;
   }
 

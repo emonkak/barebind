@@ -45,7 +45,7 @@ export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
 
   private _memoizedCleanup: (() => void) | void = void 0;
 
-  get directive(): Primitive<Ref> {
+  get type(): Primitive<Ref> {
     return RefPrimitive;
   }
 

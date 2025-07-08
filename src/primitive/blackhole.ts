@@ -18,7 +18,7 @@ export const BlackholePrimitive: Primitive<any> = {
 };
 
 export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
-  get directive(): Primitive<T> {
+  get type(): Primitive<T> {
     return BlackholePrimitive;
   }
 

@@ -19,7 +19,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._part = part;
   }
 
-  abstract get directive(): Primitive<TValue>;
+  abstract get type(): Primitive<TValue>;
 
   get value(): TValue {
     return this._pendingValue;

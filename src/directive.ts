@@ -10,22 +10,22 @@ import type { ChildNodePart, Part } from './part.js';
 import type { Scope } from './scope.js';
 import type { Literal, TemplateLiteral } from './template-literal.js';
 
-export const $toDirectiveElement: unique symbol = Symbol('$toDirectiveElement');
+export const $toDirective: unique symbol = Symbol('$toDirective');
 
 export interface Directive<T> {
-  readonly displayName: string;
-  equals?(other: Directive<unknown>): boolean;
-  resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
-}
-
-export interface DirectiveElement<T> {
-  readonly directive: Directive<T>;
+  readonly type: DirectiveType<T>;
   readonly value: T;
   readonly slotType?: SlotType;
 }
 
+export interface DirectiveType<T> {
+  readonly displayName: string;
+  equals?(other: DirectiveType<unknown>): boolean;
+  resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
+}
+
 export interface Bindable<T = unknown> {
-  [$toDirectiveElement](): DirectiveElement<T>;
+  [$toDirective](): Directive<T>;
 }
 
 export interface Effect {
@@ -37,7 +37,7 @@ export interface ReversibleEffect extends Effect {
 }
 
 export interface Binding<T> extends ReversibleEffect {
-  readonly directive: Directive<T>;
+  readonly type: DirectiveType<T>;
   readonly value: T;
   readonly part: Part;
   shouldBind(value: T): boolean;
@@ -48,7 +48,7 @@ export interface Binding<T> extends ReversibleEffect {
 }
 
 export interface Slot<T> extends ReversibleEffect {
-  readonly directive: Directive<unknown>;
+  readonly type: DirectiveType<unknown>;
   readonly value: unknown;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): void;
@@ -61,12 +61,12 @@ export interface SlotType {
   new <T>(binding: Binding<unknown>): Slot<T>;
 }
 
-export interface Primitive<T> extends Directive<T> {
+export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
 
 export interface Template<TBinds extends readonly unknown[]>
-  extends Directive<TBinds> {
+  extends DirectiveType<TBinds> {
   render(
     binds: TBinds,
     part: ChildNodePart,
@@ -87,7 +87,7 @@ export interface TemplateResult {
   readonly slots: Slot<unknown>[];
 }
 
-export interface Component<TProps, TResult> extends Directive<TProps> {
+export interface Component<TProps, TResult> extends DirectiveType<TProps> {
   render(props: TProps, context: RenderContext): TResult;
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
@@ -102,14 +102,14 @@ export interface Coroutine extends Effect {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: Bindable<T>, part: Part): DirectiveElement<T>;
-  resolveDirective(value: unknown, part: Part): DirectiveElement<unknown>;
+  resolveDirective<T>(value: Bindable<T>, part: Part): Directive<T>;
+  resolveDirective(value: unknown, part: Part): Directive<unknown>;
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
 export interface CommitContext {
-  debugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
-  undebugValue(directive: Directive<unknown>, value: unknown, part: Part): void;
+  debugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void;
+  undebugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void;
 }
 
 export interface UpdateContext extends DirectiveContext, RenderSessionContext {
@@ -176,16 +176,16 @@ export interface ComponentResult<T> {
   pendingLanes: Lanes;
 }
 
-export const DelegateDirective: Directive<any> = {
+export const DelegateDirective: DirectiveType<any> = {
   displayName: 'DelegateDirective',
   resolveBinding<T>(
     value: T,
     part: Part,
     context: DirectiveContext,
   ): Binding<T> {
-    const element = context.resolveDirective(value, part);
-    return element.directive.resolveBinding(
-      element.value,
+    const directive = context.resolveDirective(value, part);
+    return directive.type.resolveBinding(
+      directive.value,
       part,
       context,
     ) as Binding<T>;
@@ -193,16 +193,16 @@ export const DelegateDirective: Directive<any> = {
 };
 
 export class DirectiveSpecifier<T> implements Bindable<T> {
-  readonly directive: Directive<T>;
+  readonly type: DirectiveType<T>;
 
   readonly value: T;
 
-  constructor(directive: Directive<T>, value: T) {
-    this.directive = directive;
+  constructor(type: DirectiveType<T>, value: T) {
+    this.type = type;
     this.value = value;
   }
 
-  [$toDirectiveElement](): DirectiveElement<T> {
+  [$toDirective](): Directive<T> {
     return this;
   }
 }
@@ -217,14 +217,14 @@ export class SlotSpecifier<T> implements Bindable {
     this.slotType = slotType;
   }
 
-  [$toDirectiveElement](): DirectiveElement<unknown> {
+  [$toDirective](): Directive<unknown> {
     const { value, slotType } = this;
 
     if (isBindable(value)) {
-      return { ...value[$toDirectiveElement](), slotType };
+      return { ...value[$toDirective](), slotType };
     } else {
       return {
-        directive: DelegateDirective,
+        type: DelegateDirective,
         value,
         slotType,
       };
@@ -232,18 +232,16 @@ export class SlotSpecifier<T> implements Bindable {
   }
 }
 
-export function areDirectivesEqual(
-  firstDirective: Directive<unknown>,
-  secondDirective: Directive<unknown>,
+export function areDirectiveTypesEqual(
+  firstDirectiveType: DirectiveType<unknown>,
+  secondDirectiveType: DirectiveType<unknown>,
 ) {
   return (
-    firstDirective.equals?.(secondDirective) ??
-    firstDirective === secondDirective
+    firstDirectiveType.equals?.(secondDirectiveType) ??
+    firstDirectiveType === secondDirectiveType
   );
 }
 
 export function isBindable(value: unknown): value is Bindable {
-  return (
-    typeof (value as Bindable<unknown>)?.[$toDirectiveElement] === 'function'
-  );
+  return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
 }

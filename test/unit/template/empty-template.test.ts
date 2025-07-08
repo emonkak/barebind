@@ -62,7 +62,7 @@ describe('EmptyTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = EmptyTemplate.resolveBinding(binds, part, runtime);
 
-      expect(binding.directive).toBe(EmptyTemplate);
+      expect(binding.type).toBe(EmptyTemplate);
       expect(binding.value).toBe(binds);
       expect(binding.part).toBe(part);
     });

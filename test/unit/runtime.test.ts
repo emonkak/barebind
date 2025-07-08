@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { $toDirectiveElement, type Coroutine } from '@/directive.js';
+import { $toDirective, type Coroutine } from '@/directive.js';
 import { ALL_LANES, type Hook, Lane, NO_LANES } from '@/hook.js';
 import { PartType } from '@/part.js';
 import { CommitPhase } from '@/render-host.js';
@@ -560,9 +560,9 @@ describe('Runtime', () => {
 
   describe('resolveDirective()', () => {
     it('resolves the directive from the bindable object', () => {
-      const element = { directive: MockPrimitive, value: 'foo' };
+      const directive = { type: MockPrimitive, value: 'foo' };
       const value = {
-        [$toDirectiveElement]: vi.fn(() => element),
+        [$toDirective]: vi.fn(() => directive),
       };
       const part = {
         type: PartType.ChildNode,
@@ -571,7 +571,7 @@ describe('Runtime', () => {
       };
       const runtime = new Runtime(new MockRenderHost());
 
-      expect(runtime.resolveDirective(value, part)).toBe(element);
+      expect(runtime.resolveDirective(value, part)).toBe(directive);
     });
 
     it('resolves the directive from the primitive value', () => {
@@ -592,7 +592,7 @@ describe('Runtime', () => {
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(part);
-      expect(element.directive).toBe(MockPrimitive);
+      expect(element.type).toBe(MockPrimitive);
       expect(element.value).toBe(value);
       expect(element.slotType).toBe(undefined);
     });
@@ -600,9 +600,9 @@ describe('Runtime', () => {
 
   describe('resolveSlot()', () => {
     it('resolves the slot from the bindable object', () => {
-      const element = { directive: MockPrimitive, value: 'foo' };
+      const directive = { type: MockPrimitive, value: 'foo' };
       const value = {
-        [$toDirectiveElement]: vi.fn(() => element),
+        [$toDirective]: vi.fn(() => directive),
       };
       const part = {
         type: PartType.ChildNode,
@@ -621,8 +621,8 @@ describe('Runtime', () => {
       expect(resolveSlotSpy).toHaveBeenCalledOnce();
       expect(resolveSlotSpy).toHaveBeenCalledWith(part);
       expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.directive).toBe(element.directive);
-      expect(slot.value).toBe(element.value);
+      expect(slot.type).toBe(directive.type);
+      expect(slot.value).toBe(directive.value);
       expect(slot.part).toBe(part);
     });
 
@@ -645,7 +645,7 @@ describe('Runtime', () => {
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(part);
       expect(slot).toBeInstanceOf(MockSlot);
-      expect(slot.directive).toBe(MockPrimitive);
+      expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });

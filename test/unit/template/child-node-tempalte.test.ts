@@ -114,7 +114,7 @@ describe('ChildNodeTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = ChildNodeTemplate.resolveBinding(binds, part, runtime);
 
-      expect(binding.directive).toBe(ChildNodeTemplate);
+      expect(binding.type).toBe(ChildNodeTemplate);
       expect(binding.value).toBe(binds);
       expect(binding.part).toBe(part);
     });

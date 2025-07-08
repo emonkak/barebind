@@ -4,15 +4,15 @@ import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
   CommitContext,
-  Directive,
   DirectiveContext,
+  DirectiveType,
   UpdateContext,
 } from '../directive.js';
 import {
-  $toDirectiveElement,
+  $toDirective,
   type Bindable,
   type ComponentFunction,
-  type DirectiveElement,
+  type Directive,
   DirectiveSpecifier,
   isBindable,
 } from '../directive.js';
@@ -65,7 +65,7 @@ const TEXT_TEMPLATE = new TextTemplate('', '');
 
 const $cleanup = Symbol('$cleanup');
 
-export const ElementDirective: Directive<ElementProps> = {
+export const ElementDirective: DirectiveType<ElementProps> = {
   displayName: 'ElementDirective',
   resolveBinding(
     props: ElementProps,
@@ -97,15 +97,15 @@ export class VElement<TProps extends ElementProps = ElementProps>
     this.key = key;
   }
 
-  [$toDirectiveElement](): DirectiveElement<unknown> {
+  [$toDirective](): Directive<unknown> {
     if (typeof this.type === 'function') {
       return {
-        directive: defineComponent(this.type),
+        type: defineComponent(this.type),
         value: this.props,
       };
     } else {
       return {
-        directive: new ElementTemplate(this.type, HTML_NAMESPACE),
+        type: new ElementTemplate(this.type, HTML_NAMESPACE),
         value: [
           new DirectiveSpecifier(ElementDirective, this.props),
           new VFragment(getChildren(this.props)),
@@ -122,9 +122,9 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
     this.children = children;
   }
 
-  [$toDirectiveElement](): DirectiveElement<RepeatProps<VNode>> {
+  [$toDirective](): Directive<RepeatProps<VNode>> {
     return {
-      directive: RepeatDirective,
+      type: RepeatDirective,
       value: {
         source: this.children,
         keySelector: resolveKey,
@@ -151,8 +151,8 @@ export class ElementBinding<TProps extends ElementProps>
     this._part = part;
   }
 
-  get directive(): Directive<TProps> {
-    return ElementDirective as Directive<TProps>;
+  get type(): DirectiveType<TProps> {
+    return ElementDirective as DirectiveType<TProps>;
   }
 
   get value(): TProps {

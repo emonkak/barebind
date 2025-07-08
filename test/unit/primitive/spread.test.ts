@@ -53,7 +53,7 @@ describe('SpreadPrimitive', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
-      expect(binding.directive).toBe(SpreadPrimitive);
+      expect(binding.type).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });

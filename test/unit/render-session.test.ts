@@ -16,17 +16,17 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      const element = session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`;
+      const bindable = session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`;
 
-      expect(element.directive).toBeInstanceOf(MockTemplate);
-      expect(element.directive).toStrictEqual(
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
           binds: ['World'],
           mode: 'html',
         }),
       );
-      expect(element.value).toStrictEqual(['World']);
+      expect(bindable.value).toStrictEqual(['World']);
     });
   });
 
@@ -38,17 +38,17 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      const element = session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`;
+      const bindable = session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`;
 
-      expect(element.directive).toBeInstanceOf(MockTemplate);
-      expect(element.directive).toStrictEqual(
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<mi>', '</mi>'],
           binds: ['x'],
           mode: 'math',
         }),
       );
-      expect(element.value).toStrictEqual(['x']);
+      expect(bindable.value).toStrictEqual(['x']);
     });
   });
 
@@ -60,17 +60,17 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      const element = session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`;
+      const bindable = session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`;
 
-      expect(element.directive).toBeInstanceOf(MockTemplate);
-      expect(element.directive).toStrictEqual(
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<text>Hello, ', '!</text>'],
           binds: ['World'],
           mode: 'svg',
         }),
       );
-      expect(element.value).toStrictEqual(['World']);
+      expect(bindable.value).toStrictEqual(['World']);
     });
   });
 
@@ -148,17 +148,17 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      const element = session.html`<div>Hello, ${'World'}!</div>`;
+      const bindable = session.html`<div>Hello, ${'World'}!</div>`;
 
-      expect(element.directive).toBeInstanceOf(MockTemplate);
-      expect(element.directive).toStrictEqual(
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
           binds: ['World'],
           mode: 'html',
         }),
       );
-      expect(element.value).toStrictEqual(['World']);
+      expect(bindable.value).toStrictEqual(['World']);
     });
   });
 
@@ -170,17 +170,17 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      const element = session.math`<mi>${'x'}</mi>`;
+      const bindable = session.math`<mi>${'x'}</mi>`;
 
-      expect(element.directive).toBeInstanceOf(MockTemplate);
-      expect(element.directive).toStrictEqual(
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<mi>', '</mi>'],
           binds: ['x'],
           mode: 'math',
         }),
       );
-      expect(element.value).toStrictEqual(['x']);
+      expect(bindable.value).toStrictEqual(['x']);
     });
   });
 
@@ -192,17 +192,17 @@ describe('RenderSession', () => {
         new MockCoroutine(),
         new Runtime(new MockRenderHost()),
       );
-      const element = session.svg`<text>Hello, ${'World'}!</text>`;
+      const bindable = session.svg`<text>Hello, ${'World'}!</text>`;
 
-      expect(element.directive).toBeInstanceOf(MockTemplate);
-      expect(element.directive).toStrictEqual(
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<text>Hello, ', '!</text>'],
           binds: ['World'],
           mode: 'svg',
         }),
       );
-      expect(element.value).toStrictEqual(['World']);
+      expect(bindable.value).toStrictEqual(['World']);
     });
   });
 

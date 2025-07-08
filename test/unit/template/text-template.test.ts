@@ -122,7 +122,7 @@ describe('TextTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = template.resolveBinding(binds, part, runtime);
 
-      expect(binding.directive).toBe(template);
+      expect(binding.type).toBe(template);
       expect(binding.value).toBe(binds);
       expect(binding.part).toBe(part);
     });

@@ -19,11 +19,11 @@ import { createElement } from '../test-utils.js';
 describe('component()', () => {
   it('returns a new DirectiveSpecifier with the component', () => {
     const props = { name: 'foo', greet: 'Hello' };
-    const element = component(Greet, props);
+    const directive = component(Greet, props);
 
-    expect(element.directive).toBe(component(Greet, props).directive);
-    expect(element.directive).toBeInstanceOf(ComponentDirective);
-    expect(element.value).toBe(props);
+    expect(directive.type).toBe(component(Greet, props).type);
+    expect(directive.type).toBeInstanceOf(ComponentDirective);
+    expect(directive.value).toBe(props);
   });
 });
 
@@ -106,7 +106,7 @@ describe('ComponentDirective', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = component.resolveBinding(props, part, runtime);
 
-      expect(binding.directive).toBe(component);
+      expect(binding.type).toBe(component);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });

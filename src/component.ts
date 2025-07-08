@@ -22,7 +22,7 @@ import { HydrationError, type HydrationTree } from './hydration.js';
 import type { Part } from './part.js';
 import { Scope } from './scope.js';
 
-const directiveTag = Symbol('ComponentFunction.directive');
+const $component = Symbol('ComponentFunction.component');
 
 export function component<TProps, TResult>(
   component: ComponentFunction<TProps, TResult>,
@@ -37,9 +37,9 @@ export function defineComponent<TProps, TResult>(
 ): ComponentDirective<TProps, TResult> {
   return ((
     componentFn as {
-      [directiveTag]?: ComponentDirective<TProps, TResult>;
+      [$component]?: ComponentDirective<TProps, TResult>;
     }
-  )[directiveTag] ??= new ComponentDirective(componentFn));
+  )[$component] ??= new ComponentDirective(componentFn));
 }
 
 export class ComponentDirective<TProps, TResult>
@@ -101,7 +101,7 @@ export class ComponentBinding<TProps, TResult>
     this._part = part;
   }
 
-  get directive(): Component<TProps, TResult> {
+  get type(): Component<TProps, TResult> {
     return this._component;
   }
 

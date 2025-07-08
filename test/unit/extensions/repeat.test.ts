@@ -27,10 +27,10 @@ describe('repeat()', () => {
     const props: RepeatProps<string> = {
       source: ['foo', 'bar', 'baz'],
     };
-    const element = repeat(props);
+    const bindable = repeat(props);
 
-    expect(element.directive).toBe(RepeatDirective);
-    expect(element.value).toBe(props);
+    expect(bindable.type).toBe(RepeatDirective);
+    expect(bindable.value).toBe(props);
   });
 });
 
@@ -52,7 +52,7 @@ describe('RepeatDirective', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
-      expect(binding.directive).toBe(RepeatDirective);
+      expect(binding.type).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
       expect(binding.part).toBe(part);
     });

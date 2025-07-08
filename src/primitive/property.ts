@@ -29,7 +29,7 @@ export const PropertyPrimitive: Primitive<any> = {
 export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
   private _memoizedValue: T | typeof noValue = noValue;
 
-  get directive(): Primitive<T> {
+  get type(): Primitive<T> {
     return PropertyPrimitive;
   }
 

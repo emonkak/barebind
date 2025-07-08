@@ -23,7 +23,7 @@ describe('AttributePrimitive', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.directive).toBe(AttributePrimitive);
+      expect(binding.type).toBe(AttributePrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });

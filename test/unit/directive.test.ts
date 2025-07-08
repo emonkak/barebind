@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  $toDirectiveElement,
-  areDirectivesEqual,
+  $toDirective,
+  areDirectiveTypesEqual,
   DelegateDirective,
   DirectiveSpecifier,
   SlotSpecifier,
@@ -28,7 +28,7 @@ describe('DelegateDirective', () => {
       const runtime = new Runtime(new MockRenderHost());
       const binding = DelegateDirective.resolveBinding(value, part, runtime);
 
-      expect(binding.directive).toBe(MockPrimitive);
+      expect(binding.type).toBe(MockPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -38,13 +38,13 @@ describe('DelegateDirective', () => {
 describe('DirectiveSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
     it('returns itself as a directive element', () => {
-      const directive = new MockDirective();
+      const type = new MockDirective();
       const value = 'foo';
-      const bindable = new DirectiveSpecifier(directive, value);
+      const bindable = new DirectiveSpecifier(type, value);
 
-      expect(bindable.directive).toBe(directive);
+      expect(bindable.type).toBe(type);
       expect(bindable.value).toBe(value);
-      expect(bindable[$toDirectiveElement]()).toBe(bindable);
+      expect(bindable[$toDirective]()).toBe(bindable);
     });
   });
 });
@@ -55,34 +55,34 @@ describe('SlotSpecifier', () => {
       const value = 'foo';
       const slotType = MockSlot;
       const bindable = new SlotSpecifier(value, slotType);
-      const element = bindable[$toDirectiveElement]();
+      const directive = bindable[$toDirective]();
 
-      expect(element.directive).toBe(DelegateDirective);
-      expect(element.value).toBe(value);
-      expect(element.slotType).toBe(slotType);
+      expect(directive.type).toBe(DelegateDirective);
+      expect(directive.value).toBe(value);
+      expect(directive.slotType).toBe(slotType);
     });
 
     it('returns a directive element with the bindable value', () => {
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const slotType = MockSlot;
       const bindable = new SlotSpecifier(value, slotType);
-      const element = bindable[$toDirectiveElement]();
+      const directive = bindable[$toDirective]();
 
-      expect(element.directive).toBe(value.directive);
-      expect(element.value).toBe(value.value);
-      expect(element.slotType).toBe(slotType);
+      expect(directive.type).toBe(value.type);
+      expect(directive.value).toBe(value.value);
+      expect(directive.slotType).toBe(slotType);
     });
   });
 });
 
-describe('areDirectivesEqual', () => {
+describe('areDirectiveTypesEqual', () => {
   it('returns the result from Directive.equals() if it is definied', () => {
-    const directive1 = new MockDirective();
-    const directive2 = MockPrimitive;
+    const directiveType1 = new MockDirective();
+    const directiveType2 = MockPrimitive;
 
-    expect(areDirectivesEqual(directive1, directive1)).toBe(true);
-    expect(areDirectivesEqual(directive1, directive2)).toBe(false);
-    expect(areDirectivesEqual(directive2, directive1)).toBe(false);
-    expect(areDirectivesEqual(directive2, directive2)).toBe(true);
+    expect(areDirectiveTypesEqual(directiveType1, directiveType1)).toBe(true);
+    expect(areDirectiveTypesEqual(directiveType1, directiveType2)).toBe(false);
+    expect(areDirectiveTypesEqual(directiveType2, directiveType1)).toBe(false);
+    expect(areDirectiveTypesEqual(directiveType2, directiveType2)).toBe(true);
   });
 });

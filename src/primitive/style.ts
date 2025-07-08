@@ -52,7 +52,7 @@ export const StylePrimitive: Primitive<StyleProps> = {
 export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
   private _memoizedValue: StyleProps = {};
 
-  get directive(): Primitive<StyleProps> {
+  get type(): Primitive<StyleProps> {
     return StylePrimitive;
   }
 

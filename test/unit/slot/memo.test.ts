@@ -34,7 +34,7 @@ describe('MemoSlot', () => {
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new MemoSlot(binding);
 
-      expect(slot.directive).toBe(MockPrimitive);
+      expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
       expect(slot.part).toBe(part);
     });
@@ -117,14 +117,14 @@ describe('MemoSlot', () => {
       expect(debugValueSpy).toHaveBeenCalledTimes(3);
       expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value1, part);
       expect(debugValueSpy).toHaveBeenCalledWith(
-        value2.directive,
+        value2.type,
         value2.value,
         part,
       );
       expect(undebugValueSpy).toHaveBeenCalledTimes(2);
       expect(undebugValueSpy).toHaveBeenCalledWith(MockPrimitive, value1, part);
       expect(undebugValueSpy).toHaveBeenCalledWith(
-        value2.directive,
+        value2.type,
         value2.value,
         part,
       );

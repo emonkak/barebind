@@ -3,13 +3,13 @@
 import { ComponentBinding } from '@/component.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import {
-  areDirectivesEqual,
+  areDirectiveTypesEqual,
   type Binding,
   type CommitContext,
   type Component,
   type Coroutine,
-  type Directive,
   type DirectiveContext,
+  type DirectiveType,
   type Effect,
   type Primitive,
   type RenderContext,
@@ -31,7 +31,7 @@ import type {
 import { TemplateBinding } from '../src/template/template.js';
 
 export class MockBinding<T> implements Binding<T> {
-  private readonly _directive: Directive<T>;
+  private readonly _type: DirectiveType<T>;
 
   private _value: T;
 
@@ -41,14 +41,14 @@ export class MockBinding<T> implements Binding<T> {
 
   private _isCommitted: boolean = false;
 
-  constructor(directive: Directive<T>, value: T, part: Part) {
-    this._directive = directive;
+  constructor(type: DirectiveType<T>, value: T, part: Part) {
+    this._type = type;
     this._value = value;
     this._part = part;
   }
 
-  get directive(): Directive<T> {
-    return this._directive;
+  get type(): DirectiveType<T> {
+    return this._type;
   }
 
   get value(): T {
@@ -187,7 +187,7 @@ export class MockCoroutine implements Coroutine {
   commit(): void {}
 }
 
-export class MockDirective<T> implements Directive<T> {
+export class MockDirective<T> implements DirectiveType<T> {
   readonly displayName: string;
 
   constructor(name: string = this.constructor.name) {
@@ -221,13 +221,13 @@ export class MockEffect implements Effect {
 
 export class MockCommitContext implements CommitContext {
   debugValue(
-    _directive: Directive<unknown>,
+    _type: DirectiveType<unknown>,
     _value: unknown,
     _part: Part,
   ): void {}
 
   undebugValue(
-    _directive: Directive<unknown>,
+    _type: DirectiveType<unknown>,
     _value: unknown,
     _part: Part,
   ): void {}
@@ -306,8 +306,8 @@ export class MockSlot<T> implements Slot<T> {
     this._binding = binding;
   }
 
-  get directive(): Directive<unknown> {
-    return this._binding.directive;
+  get type(): DirectiveType<unknown> {
+    return this._binding.type;
   }
 
   get value(): unknown {
@@ -327,14 +327,14 @@ export class MockSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): void {
-    const element = context.resolveDirective(value, this._binding.part);
-    if (!areDirectivesEqual(this._binding.directive, element.directive)) {
+    const directive = context.resolveDirective(value, this._binding.part);
+    if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this._binding.directive.displayName} in this slot, but got ${element.directive.displayName}.`,
+        `The directive must be ${this._binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
       );
     }
-    if (this._binding.shouldBind(element.value)) {
-      this._binding.bind(element.value);
+    if (this._binding.shouldBind(directive.value)) {
+      this._binding.bind(directive.value);
       this._binding.connect(context);
       this._isConnected = true;
     }

@@ -27,7 +27,7 @@ export const AttributePrimitive: Primitive<any> = {
 export class AttributeBinding<T> extends PrimitiveBinding<T, AttributePart> {
   private _memoizedValue: T | null = null;
 
-  get directive(): Primitive<T> {
+  get type(): Primitive<T> {
     return AttributePrimitive;
   }
 

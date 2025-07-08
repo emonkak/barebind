@@ -18,14 +18,14 @@ describe('htmlElement()', () => {
   it('returns a new DirectiveSpecifier with the HTML element', () => {
     const props = { class: 'foo' };
     const children = 'bar';
-    const element = htmlElement('div', props, children);
+    const bindable = htmlElement('div', props, children);
 
-    expect(element.directive).toBeInstanceOf(ElementTemplate);
-    expect((element.directive as ElementTemplate)['_name']).toBe('div');
-    expect((element.directive as ElementTemplate)['_namespace']).toBe(
+    expect(bindable.type).toBeInstanceOf(ElementTemplate);
+    expect((bindable.type as ElementTemplate)['_name']).toBe('div');
+    expect((bindable.type as ElementTemplate)['_namespace']).toBe(
       HTML_NAMESPACE,
     );
-    expect(element.value).toStrictEqual([props, children]);
+    expect(bindable.value).toStrictEqual([props, children]);
   });
 });
 
@@ -33,14 +33,14 @@ describe('mathElement()', () => {
   it('returns a new DirectiveSpecifier with the MathML element', () => {
     const props = { class: 'foo' };
     const children = 'bar';
-    const element = mathElement('mi', props, children);
+    const bindable = mathElement('mi', props, children);
 
-    expect(element.directive).toBeInstanceOf(ElementTemplate);
-    expect((element.directive as ElementTemplate)['_name']).toBe('mi');
-    expect((element.directive as ElementTemplate)['_namespace']).toBe(
+    expect(bindable.type).toBeInstanceOf(ElementTemplate);
+    expect((bindable.type as ElementTemplate)['_name']).toBe('mi');
+    expect((bindable.type as ElementTemplate)['_namespace']).toBe(
       MATH_NAMESPACE,
     );
-    expect(element.value).toStrictEqual([props, children]);
+    expect(bindable.value).toStrictEqual([props, children]);
   });
 });
 
@@ -48,14 +48,14 @@ describe('svgElement()', () => {
   it('returns a new DirectiveSpecifier with the SVG element', () => {
     const props = { class: 'foo' };
     const children = 'bar';
-    const element = svgElement('text', props, children);
+    const bindable = svgElement('text', props, children);
 
-    expect(element.directive).toBeInstanceOf(ElementTemplate);
-    expect((element.directive as ElementTemplate)['_name']).toBe('text');
-    expect((element.directive as ElementTemplate)['_namespace']).toBe(
+    expect(bindable.type).toBeInstanceOf(ElementTemplate);
+    expect((bindable.type as ElementTemplate)['_name']).toBe('text');
+    expect((bindable.type as ElementTemplate)['_namespace']).toBe(
       SVG_NAMESPACE,
     );
-    expect(element.value).toStrictEqual([props, children]);
+    expect(bindable.value).toStrictEqual([props, children]);
   });
 });
 
@@ -223,7 +223,7 @@ describe('ElementTemplate', () => {
       const template = new ElementTemplate('div', HTML_NAMESPACE);
       const binding = template.resolveBinding(binds, part, runtime);
 
-      expect(binding.directive).toBe(template);
+      expect(binding.type).toBe(template);
       expect(binding.value).toBe(binds);
       expect(binding.part).toBe(part);
     });

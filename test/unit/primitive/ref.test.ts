@@ -60,7 +60,7 @@ describe('RefPrimitive', () => {
         const runtime = new Runtime(new MockRenderHost());
         const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
-        expect(binding.directive).toBe(RefPrimitive);
+        expect(binding.type).toBe(RefPrimitive);
         expect(binding.value).toBe(ref);
         expect(binding.part).toBe(part);
       },

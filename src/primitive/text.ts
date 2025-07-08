@@ -27,7 +27,7 @@ export const TextPrimitive: Primitive<any> = {
 export class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
   private _memoizedValue: T | null = null;
 
-  get directive(): Primitive<T> {
+  get type(): Primitive<T> {
     return TextPrimitive;
   }
 
