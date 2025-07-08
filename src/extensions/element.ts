@@ -1,12 +1,23 @@
 import { shallowEqual } from '../compare.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import type {
+  Binding,
   CommitContext,
+  Directive,
   DirectiveContext,
   Primitive,
+  Template,
+  TemplateResult,
+  UpdateContext,
 } from '../directive.js';
-import { type ElementPart, type Part, PartType } from '../part.js';
-import { PrimitiveBinding } from '../primitive/primitive.js';
+import type { HydrationTree } from '../hydration.js';
+import {
+  type ChildNodePart,
+  type ElementPart,
+  type Part,
+  PartType,
+} from '../part.js';
+import { TemplateBinding } from '../template/template.js';
 
 export type ElementProps = Record<string, unknown>;
 
@@ -19,16 +30,8 @@ type EventListenerWithOptions =
   | EventListener
   | (EventListenerObject & AddEventListenerOptions);
 
-export const ElementPrimitive: Primitive<ElementProps> = {
-  displayName: 'ElementPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ElementProps {
-    if (!isElementProps(value)) {
-      throw new Error(
-        `The value of ElementPrimitive must be object, but got ${inspectValue(value)}.\n` +
-          inspectPart(part, markUsedValue(value)),
-      );
-    }
-  },
+export const ElementDirective: Primitive<ElementProps> = {
+  displayName: 'ElementDirective',
   resolveBinding(
     props: ElementProps,
     part: Part,
@@ -36,7 +39,7 @@ export const ElementPrimitive: Primitive<ElementProps> = {
   ): ElementBinding<ElementProps> {
     if (part.type !== PartType.Element) {
       throw new Error(
-        'ElementPrimitive must be used in an element part, but it is used here:\n' +
+        'ElementDirective must be used in an element part, but it is used here:\n' +
           inspectPart(part, markUsedValue(props)),
       );
     }
@@ -44,16 +47,33 @@ export const ElementPrimitive: Primitive<ElementProps> = {
   },
 };
 
-export class ElementBinding<
-  TProps extends Record<string, unknown>,
-> extends PrimitiveBinding<TProps, ElementPart> {
+export class ElementBinding<TProps extends Record<string, unknown>>
+  implements Binding<TProps>
+{
+  private _pendingProps: TProps;
+
   private _memoizedProps: TProps | null = null;
+
+  protected readonly _part: ElementPart;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
+  constructor(props: TProps, part: ElementPart) {
+    this._pendingProps = props;
+    this._part = part;
+  }
+
   get directive(): Primitive<TProps> {
-    return ElementPrimitive as Primitive<TProps>;
+    return ElementDirective as Primitive<TProps>;
+  }
+
+  get value(): TProps {
+    return this._pendingProps;
+  }
+
+  get part(): ElementPart {
+    return this._part;
   }
 
   shouldBind(props: TProps): boolean {
@@ -62,8 +82,18 @@ export class ElementBinding<
     );
   }
 
+  bind(props: TProps): void {
+    this._pendingProps = props;
+  }
+
+  hydrate(_hydrationTree: HydrationTree, _context: UpdateContext): void {}
+
+  connect(_context: UpdateContext): void {}
+
+  disconnect(_context: UpdateContext): void {}
+
   commit(_context: CommitContext): void {
-    const newProps = this._pendingValue;
+    const newProps = this._pendingProps;
     const oldProps = this._memoizedProps ?? ({} as TProps);
     const element = this._part.node;
 
@@ -129,6 +159,100 @@ export class ElementBinding<
     } else {
       listener?.handleEvent(event);
     }
+  }
+}
+
+export class ElementTemplate<TProps, TChildren>
+  implements Template<readonly [TProps, TChildren]>
+{
+  private readonly _name: string;
+
+  constructor(name: string) {
+    this._name = name;
+  }
+
+  get displayName(): string {
+    return ElementTemplate.name;
+  }
+
+  equals(other: Directive<unknown>): boolean {
+    return other instanceof ElementTemplate && other._name === this._name;
+  }
+
+  hydrate(
+    binds: readonly [TProps, TChildren],
+    part: ChildNodePart,
+    hydrationTree: HydrationTree,
+    context: UpdateContext,
+  ): TemplateResult {
+    const document = part.node.ownerDocument;
+    const elementPart = {
+      type: PartType.Element,
+      node: hydrationTree.popNode(Node.ELEMENT_NODE, this._name.toUpperCase()),
+    };
+    const childrenPart = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      childNode: null,
+    };
+    const elementSlot = context.resolveSlot(binds[0], elementPart);
+    const childrenSlot = context.resolveSlot(binds[1], childrenPart);
+
+    elementSlot.hydrate(hydrationTree, context);
+    childrenSlot.hydrate(hydrationTree, context);
+
+    hydrationTree
+      .popNode(childrenPart.node.nodeType, childrenPart.node.nodeName)
+      .replaceWith(childrenPart.node);
+
+    return {
+      childNodes: [elementPart.node],
+      slots: [elementSlot, childrenSlot],
+    };
+  }
+
+  render(
+    binds: readonly [TProps, TChildren],
+    part: ChildNodePart,
+    context: UpdateContext,
+  ): TemplateResult {
+    const document = part.node.ownerDocument;
+    const elementPart = {
+      type: PartType.Element,
+      node: document.createElement(this._name),
+    };
+    const childrenPart = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      childNode: null,
+    };
+    const elementSlot = context.resolveSlot(binds[0], elementPart);
+    const childrenSlot = context.resolveSlot(binds[1], childrenPart);
+
+    elementSlot.connect(context);
+    childrenSlot.connect(context);
+
+    elementPart.node.appendChild(childrenPart.node);
+
+    return {
+      childNodes: [elementPart.node],
+      slots: [elementSlot, childrenSlot],
+    };
+  }
+
+  resolveBinding(
+    binds: readonly [TProps, TChildren],
+    part: Part,
+    _context: DirectiveContext,
+  ): Binding<readonly [TProps, TChildren]> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error(
+        'ElementTemplate must be used in a child node part, but it is used here in:\n' +
+          inspectPart(part, markUsedValue(binds)),
+      );
+    }
+
+    return new TemplateBinding(this, binds, part);
   }
 }
 
@@ -268,8 +392,4 @@ function updateProperty(
   if (!Object.is(newValue, oldValue)) {
     element.setAttribute(key, newValue?.toString() ?? '');
   }
-}
-
-function isElementProps(value: unknown): value is ElementProps {
-  return value !== null && typeof value === 'object';
 }

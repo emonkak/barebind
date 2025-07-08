@@ -7,10 +7,10 @@ import {
   DirectiveObject,
   isBindable,
 } from '../directive.js';
+import { ElementTemplate } from '../extensions/element.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { ElementTemplate } from '../template/element-template.js';
 import { TextTemplate } from '../template/text-template.js';
-import { ElementPrimitive, type ElementProps } from './element.js';
+import { ElementDirective, type ElementProps } from './element.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
 export type VChild =
@@ -64,7 +64,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
       return {
         directive: new ElementTemplate(this.type),
         value: [
-          new DirectiveObject(ElementPrimitive, this.props),
+          new DirectiveObject(ElementDirective, this.props),
           new DirectiveObject(
             RepeatDirective,
             createRepeatProps(this.children),
