@@ -2,26 +2,84 @@ import { describe, expect, it } from 'vitest';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { ElementTemplate } from '@/template/element-template.js';
+import {
+  ElementTemplate,
+  HTML_NAMESPACE,
+  htmlElement,
+  MATH_NAMESPACE,
+  mathElement,
+  SVG_NAMESPACE,
+  svgElement,
+} from '@/template/element-template.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
+
+describe('htmlElement()', () => {
+  it('returns a new DirectiveSpecifier with the HTML element', () => {
+    const props = { class: 'foo' };
+    const children = 'bar';
+    const element = htmlElement('div', props, children);
+
+    expect(element.directive).toBeInstanceOf(ElementTemplate);
+    expect((element.directive as ElementTemplate)['_name']).toBe('div');
+    expect((element.directive as ElementTemplate)['_namespace']).toBe(
+      HTML_NAMESPACE,
+    );
+    expect(element.value).toStrictEqual([props, children]);
+  });
+});
+
+describe('mathElement()', () => {
+  it('returns a new DirectiveSpecifier with the MathML element', () => {
+    const props = { class: 'foo' };
+    const children = 'bar';
+    const element = mathElement('mi', props, children);
+
+    expect(element.directive).toBeInstanceOf(ElementTemplate);
+    expect((element.directive as ElementTemplate)['_name']).toBe('mi');
+    expect((element.directive as ElementTemplate)['_namespace']).toBe(
+      MATH_NAMESPACE,
+    );
+    expect(element.value).toStrictEqual([props, children]);
+  });
+});
+
+describe('svgElement()', () => {
+  it('returns a new DirectiveSpecifier with the SVG element', () => {
+    const props = { class: 'foo' };
+    const children = 'bar';
+    const element = svgElement('text', props, children);
+
+    expect(element.directive).toBeInstanceOf(ElementTemplate);
+    expect((element.directive as ElementTemplate)['_name']).toBe('text');
+    expect((element.directive as ElementTemplate)['_namespace']).toBe(
+      SVG_NAMESPACE,
+    );
+    expect(element.value).toStrictEqual([props, children]);
+  });
+});
 
 describe('ElementTemplate', () => {
   describe('displayName', () => {
     it('is a string that represents the template itself', () => {
-      const template = new ElementTemplate('div');
+      const template = new ElementTemplate('div', HTML_NAMESPACE);
 
       expect(template.displayName, 'ElementTemplate');
     });
   });
 
   describe('equals()', () => {
-    it('returns true if the tag name is the same', () => {
-      const template = new ElementTemplate('div');
+    it('returns true if the name and the namespace are the same', () => {
+      const template = new ElementTemplate('div', HTML_NAMESPACE);
 
       expect(template.equals(template)).toBe(true);
-      expect(template.equals(new ElementTemplate('div'))).toBe(true);
-      expect(template.equals(new ElementTemplate('span'))).toBe(false);
+      expect(template.equals(new ElementTemplate('div', HTML_NAMESPACE))).toBe(
+        true,
+      );
+      expect(template.equals(new ElementTemplate('div', null))).toBe(false);
+      expect(template.equals(new ElementTemplate('span', HTML_NAMESPACE))).toBe(
+        false,
+      );
     });
   });
 
@@ -40,7 +98,7 @@ describe('ElementTemplate', () => {
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div');
+      const template = new ElementTemplate('div', HTML_NAMESPACE);
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -74,7 +132,7 @@ describe('ElementTemplate', () => {
   });
 
   describe('render()', () => {
-    it('renders an element', () => {
+    it('renders an HTML element', () => {
       const binds = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -82,7 +140,7 @@ describe('ElementTemplate', () => {
         childNode: null,
       } as const;
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div');
+      const template = new ElementTemplate('div', HTML_NAMESPACE);
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -109,6 +167,47 @@ describe('ElementTemplate', () => {
           isCommitted: false,
         }),
       ]);
+      expect((slots[0]!.part.node as Element).namespaceURI).toBe(
+        HTML_NAMESPACE,
+      );
+    });
+
+    it('renders an SVG element', () => {
+      const binds = [{ class: 'foo' }, 'bar'] as const;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      } as const;
+      const runtime = new Runtime(new MockRenderHost());
+      const template = new ElementTemplate('text', SVG_NAMESPACE);
+      const { childNodes, slots } = template.render(binds, part, runtime);
+
+      expect(childNodes.map(serializeNode)).toStrictEqual([
+        '<text><!----></text>',
+      ]);
+      expect(slots).toStrictEqual([
+        expect.objectContaining({
+          value: binds[0],
+          part: {
+            type: PartType.Element,
+            node: expect.any(Element),
+          },
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          value: binds[1],
+          part: {
+            type: PartType.ChildNode,
+            node: expect.any(Comment),
+            childNode: null,
+          },
+          isConnected: true,
+          isCommitted: false,
+        }),
+      ]);
+      expect((slots[0]!.part.node as Element).namespaceURI).toBe(SVG_NAMESPACE);
     });
   });
 
@@ -121,7 +220,7 @@ describe('ElementTemplate', () => {
         childNode: null,
       } as const;
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div');
+      const template = new ElementTemplate('div', HTML_NAMESPACE);
       const binding = template.resolveBinding(binds, part, runtime);
 
       expect(binding.directive).toBe(template);
@@ -135,7 +234,7 @@ describe('ElementTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       } as const;
-      const template = new ElementTemplate('div');
+      const template = new ElementTemplate('div', HTML_NAMESPACE);
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(

@@ -40,12 +40,30 @@ export function* combinations<T>(xs: T[], r: number): Generator<T[]> {
   }
 }
 
-export function createElement<const T extends keyof HTMLElementTagNameMap>(
-  tagName: T,
+export function createElement<const TName extends keyof HTMLElementTagNameMap>(
+  name: TName,
   attributes: { [key: string]: string } = {},
   ...children: (Node | string)[]
-): HTMLElementTagNameMap[T] {
-  const element = document.createElement(tagName);
+): HTMLElementTagNameMap[TName] {
+  const element = document.createElement(name);
+  for (const key in attributes) {
+    element.setAttribute(key, attributes[key]!);
+  }
+  for (const child of children) {
+    element.appendChild(
+      child instanceof Node ? child : document.createTextNode(child),
+    );
+  }
+  return element;
+}
+
+export function createElementNS(
+  namespace: string,
+  name: string,
+  attributes: { [key: string]: string } = {},
+  ...children: (Node | string)[]
+): Element {
+  const element = document.createElementNS(namespace, name);
   for (const key in attributes) {
     element.setAttribute(key, attributes[key]!);
   }

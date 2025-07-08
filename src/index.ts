@@ -11,4 +11,9 @@ export type { RuntimeEvent, RuntimeObserver } from './runtime.js';
 export { loose } from './slot/loose.js';
 export { memo } from './slot/memo.js';
 export { strict } from './slot/strict.js';
+export {
+  htmlElement,
+  mathElement,
+  svgElement,
+} from './template/element-template.js';
 export { Literal } from './template-literal.js';

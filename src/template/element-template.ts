@@ -1,23 +1,64 @@
 import { inspectPart, markUsedValue } from '../debug.js';
-import type {
-  Binding,
-  Directive,
-  DirectiveContext,
-  Template,
-  TemplateResult,
-  UpdateContext,
+import {
+  type Binding,
+  type Directive,
+  type DirectiveContext,
+  DirectiveSpecifier,
+  type Template,
+  type TemplateResult,
+  type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from '../template/template.js';
 
-export class ElementTemplate<TProps, TChildren>
+export const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+export const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
+export const MATH_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
+
+export function htmlElement<TProps, TChildren>(
+  name: string,
+  props: TProps,
+  children: TChildren,
+): DirectiveSpecifier<readonly [TProps, TChildren]> {
+  return new DirectiveSpecifier(new ElementTemplate(name, HTML_NAMESPACE), [
+    props,
+    children,
+  ]);
+}
+
+export function mathElement<TProps, TChildren>(
+  name: string,
+  props: TProps,
+  children: TChildren,
+): DirectiveSpecifier<readonly [TProps, TChildren]> {
+  return new DirectiveSpecifier(new ElementTemplate(name, MATH_NAMESPACE), [
+    props,
+    children,
+  ]);
+}
+
+export function svgElement<TProps, TChildren>(
+  name: string,
+  props: TProps,
+  children: TChildren,
+): DirectiveSpecifier<readonly [TProps, TChildren]> {
+  return new DirectiveSpecifier(new ElementTemplate(name, SVG_NAMESPACE), [
+    props,
+    children,
+  ]);
+}
+
+export class ElementTemplate<TProps = unknown, TChildren = unknown>
   implements Template<readonly [TProps, TChildren]>
 {
   private readonly _name: string;
 
-  constructor(name: string) {
+  private readonly _namespace: string | null;
+
+  constructor(name: string, namespace: string | null) {
     this._name = name;
+    this._namespace = namespace;
   }
 
   get displayName(): string {
@@ -25,7 +66,11 @@ export class ElementTemplate<TProps, TChildren>
   }
 
   equals(other: Directive<unknown>): boolean {
-    return other instanceof ElementTemplate && other._name === this._name;
+    return (
+      other instanceof ElementTemplate &&
+      other._name === this._name &&
+      other._namespace === this._namespace
+    );
   }
 
   hydrate(
@@ -68,7 +113,7 @@ export class ElementTemplate<TProps, TChildren>
     const document = part.node.ownerDocument;
     const elementPart = {
       type: PartType.Element,
-      node: document.createElement(this._name),
+      node: document.createElementNS(this._namespace, this._name),
     };
     const childrenPart = {
       type: PartType.ChildNode,

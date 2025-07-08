@@ -19,7 +19,10 @@ import {
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { ElementTemplate } from '../template/element-template.js';
+import {
+  ElementTemplate,
+  HTML_NAMESPACE,
+} from '../template/element-template.js';
 import { TextTemplate } from '../template/text-template.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
@@ -102,7 +105,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
       };
     } else {
       return {
-        directive: new ElementTemplate(this.type),
+        directive: new ElementTemplate(this.type, HTML_NAMESPACE),
         value: [
           new DirectiveSpecifier(ElementDirective, this.props),
           new VFragment(getChildren(this.props)),

@@ -23,7 +23,7 @@ const TEXT_TEMPLATE = new TextTemplate<string>('', '');
 const EMPTY_COMMENT = '<!---->';
 
 describe('repeat()', () => {
-  it('returns a DirectiveSpecifier with RepeatDirective', () => {
+  it('returns a new DirectiveSpecifier with RepeatDirective', () => {
     const props: RepeatProps<string> = {
       source: ['foo', 'bar', 'baz'],
     };

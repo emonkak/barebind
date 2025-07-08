@@ -17,7 +17,7 @@ import { MockCoroutine, MockRenderHost, MockSlot } from '../mocks.js';
 import { createElement } from '../test-utils.js';
 
 describe('component()', () => {
-  it('returns a directive element with the component', () => {
+  it('returns a new DirectiveSpecifier with the component', () => {
     const props = { name: 'foo', greet: 'Hello' };
     const element = component(Greet, props);
 
