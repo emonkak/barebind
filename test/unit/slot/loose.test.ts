@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { DirectiveObject } from '@/directive.js';
+import { DirectiveSpecifier } from '@/directive.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
@@ -76,7 +76,7 @@ describe('LooseSlot', () => {
 
     it('updates the binding with a different directive value', () => {
       const value1 = 'foo';
-      const value2 = new DirectiveObject(new MockDirective(), 'bar');
+      const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),

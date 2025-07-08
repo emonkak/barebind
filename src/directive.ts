@@ -192,7 +192,7 @@ export const DelegateDirective: Directive<any> = {
   },
 };
 
-export class DirectiveObject<T> implements Bindable<T> {
+export class DirectiveSpecifier<T> implements Bindable<T> {
   readonly directive: Directive<T>;
 
   readonly value: T;
@@ -207,7 +207,7 @@ export class DirectiveObject<T> implements Bindable<T> {
   }
 }
 
-export class SlotObject<T> implements Bindable {
+export class SlotSpecifier<T> implements Bindable {
   readonly value: T;
 
   readonly slotType: SlotType;

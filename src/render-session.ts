@@ -1,7 +1,7 @@
 import { sequentialEqual } from './compare.js';
 import {
   type Coroutine,
-  DirectiveObject,
+  DirectiveSpecifier,
   type Effect,
   type RenderContext,
   type RenderSessionContext,
@@ -54,21 +54,21 @@ export class RenderSession implements RenderContext {
   dynamicHTML(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'html');
   }
 
   dynamicMath(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'math');
   }
 
   dynamicSVG(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
 
@@ -105,14 +105,14 @@ export class RenderSession implements RenderContext {
   html(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     return this._template(strings, binds, 'html');
   }
 
   math(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     return this._template(strings, binds, 'math');
   }
 
@@ -123,7 +123,7 @@ export class RenderSession implements RenderContext {
   svg(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     return this._template(strings, binds, 'svg');
   }
 
@@ -321,7 +321,7 @@ export class RenderSession implements RenderContext {
     strings: TemplateStringsArray,
     binds: readonly unknown[],
     mode: TemplateMode,
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
       this._context.expandLiterals(strings, binds);
     const template = this._context.resolveTemplate(
@@ -329,16 +329,16 @@ export class RenderSession implements RenderContext {
       expandedBinds as unknown[],
       mode,
     );
-    return new DirectiveObject(template, expandedBinds);
+    return new DirectiveSpecifier(template, expandedBinds);
   }
 
   private _template(
     strings: TemplateStringsArray,
     binds: readonly unknown[],
     mode: TemplateMode,
-  ): DirectiveObject<readonly unknown[]> {
+  ): DirectiveSpecifier<readonly unknown[]> {
     const template = this._context.resolveTemplate(strings, binds, mode);
-    return new DirectiveObject(template, binds);
+    return new DirectiveSpecifier(template, binds);
   }
 
   private _useEffect(

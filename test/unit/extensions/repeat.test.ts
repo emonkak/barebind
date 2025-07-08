@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DirectiveObject } from '@/directive.js';
+import { DirectiveSpecifier } from '@/directive.js';
 import {
   RepeatBinding,
   RepeatDirective,
@@ -23,7 +23,7 @@ const TEXT_TEMPLATE = new TextTemplate<string>('', '');
 const EMPTY_COMMENT = '<!---->';
 
 describe('repeat()', () => {
-  it('returns a DirectiveObject with RepeatDirective', () => {
+  it('returns a DirectiveSpecifier with RepeatDirective', () => {
     const props: RepeatProps<string> = {
       source: ['foo', 'bar', 'baz'],
     };
@@ -426,8 +426,8 @@ describe('RepeatBinding', () => {
   });
 });
 
-function textTemplate(content: string): DirectiveObject<readonly [string]> {
-  return new DirectiveObject(TEXT_TEMPLATE, [content]);
+function textTemplate(content: string): DirectiveSpecifier<readonly [string]> {
+  return new DirectiveSpecifier(TEXT_TEMPLATE, [content]);
 }
 
 function toComment(content: string): string {

@@ -4,14 +4,14 @@ import {
   type CommitContext,
   type Directive,
   type Slot,
-  SlotObject,
+  SlotSpecifier,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
-export function loose<T>(value: T): SlotObject<T> {
-  return new SlotObject(value, LooseSlot);
+export function loose<T>(value: T): SlotSpecifier<T> {
+  return new SlotSpecifier(value, LooseSlot);
 }
 
 export class LooseSlot<T> implements Slot<T> {

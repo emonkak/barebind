@@ -5,7 +5,7 @@ import {
   type ComponentFunction,
   type Coroutine,
   type DirectiveContext,
-  DirectiveObject,
+  DirectiveSpecifier,
   type Effect,
   type RenderContext,
   type Slot,
@@ -27,9 +27,9 @@ const directiveTag = Symbol('ComponentFunction.directive');
 export function component<TProps, TResult>(
   component: ComponentFunction<TProps, TResult>,
   props: TProps,
-): DirectiveObject<TProps> {
+): DirectiveSpecifier<TProps> {
   const directive = defineComponent(component);
-  return new DirectiveObject(directive, props);
+  return new DirectiveSpecifier(directive, props);
 }
 
 export function defineComponent<TProps, TResult>(

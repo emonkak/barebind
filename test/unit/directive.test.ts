@@ -4,8 +4,8 @@ import {
   $toDirectiveElement,
   areDirectivesEqual,
   DelegateDirective,
-  DirectiveObject,
-  SlotObject,
+  DirectiveSpecifier,
+  SlotSpecifier,
 } from '@/directive.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
@@ -35,12 +35,12 @@ describe('DelegateDirective', () => {
   });
 });
 
-describe('DirectiveObject', () => {
+describe('DirectiveSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
     it('returns itself as a directive element', () => {
       const directive = new MockDirective();
       const value = 'foo';
-      const bindable = new DirectiveObject(directive, value);
+      const bindable = new DirectiveSpecifier(directive, value);
 
       expect(bindable.directive).toBe(directive);
       expect(bindable.value).toBe(value);
@@ -49,12 +49,12 @@ describe('DirectiveObject', () => {
   });
 });
 
-describe('SlotObject', () => {
+describe('SlotSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
     it('returns a directive element with the primitive value', () => {
       const value = 'foo';
       const slotType = MockSlot;
-      const bindable = new SlotObject(value, slotType);
+      const bindable = new SlotSpecifier(value, slotType);
       const element = bindable[$toDirectiveElement]();
 
       expect(element.directive).toBe(DelegateDirective);
@@ -63,9 +63,9 @@ describe('SlotObject', () => {
     });
 
     it('returns a directive element with the bindable value', () => {
-      const value = new DirectiveObject(new MockDirective(), 'foo');
+      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const slotType = MockSlot;
-      const bindable = new SlotObject(value, slotType);
+      const bindable = new SlotSpecifier(value, slotType);
       const element = bindable[$toDirectiveElement]();
 
       expect(element.directive).toBe(value.directive);

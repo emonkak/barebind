@@ -6,7 +6,7 @@ import {
   type CommitContext,
   type Directive,
   type DirectiveContext,
-  DirectiveObject,
+  DirectiveSpecifier,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -69,8 +69,8 @@ interface ReconciliationHandler<TKey, TTarget, TSource> {
 
 export function repeat<TTarget, TKey, TValue>(
   props: RepeatProps<TTarget, TKey, TValue>,
-): DirectiveObject<RepeatProps<TTarget, TKey, TValue>> {
-  return new DirectiveObject(
+): DirectiveSpecifier<RepeatProps<TTarget, TKey, TValue>> {
+  return new DirectiveSpecifier(
     RepeatDirective as Directive<RepeatProps<TTarget, TKey, TValue>>,
     props,
   );

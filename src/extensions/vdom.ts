@@ -4,7 +4,7 @@ import {
   type Bindable,
   type ComponentFunction,
   type DirectiveElement,
-  DirectiveObject,
+  DirectiveSpecifier,
   isBindable,
 } from '../directive.js';
 import { ElementTemplate } from '../extensions/element.js';
@@ -64,8 +64,8 @@ export class VElement<TProps extends ElementProps = ElementProps>
       return {
         directive: new ElementTemplate(this.type),
         value: [
-          new DirectiveObject(ElementDirective, this.props),
-          new DirectiveObject(
+          new DirectiveSpecifier(ElementDirective, this.props),
+          new DirectiveSpecifier(
             RepeatDirective,
             createRepeatProps(this.children),
           ),
@@ -104,12 +104,12 @@ function resolveKey(child: VChild, index: number): unknown {
 
 function resolveValue(child: VChild): Bindable<unknown> {
   if (child == null || typeof child === 'boolean') {
-    return new DirectiveObject(BlackholePrimitive, child);
+    return new DirectiveSpecifier(BlackholePrimitive, child);
   } else if (Array.isArray(child)) {
-    return new DirectiveObject(RepeatDirective, createRepeatProps(child));
+    return new DirectiveSpecifier(RepeatDirective, createRepeatProps(child));
   } else if (isBindable(child)) {
     return child;
   } else {
-    return new DirectiveObject(new TextTemplate('', ''), [child]);
+    return new DirectiveSpecifier(new TextTemplate('', ''), [child]);
   }
 }
