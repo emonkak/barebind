@@ -1,9 +1,9 @@
 import {
   type ElementProps,
-  type VChild,
   VElement,
   type VElementType,
   VFragment,
+  type VNode,
 } from './vdom.js';
 
 export function jsx<const TProps extends ElementProps>(
@@ -16,7 +16,7 @@ export function jsx<const TProps extends ElementProps>(
 
 export const jsxs: typeof jsx = jsx;
 
-export function Fragment(props: { children: VChild[] }): VFragment {
+export function Fragment(props: { children: VNode[] }): VFragment {
   return new VFragment(props.children);
 }
 

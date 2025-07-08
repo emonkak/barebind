@@ -4,8 +4,8 @@ import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
   CommitContext,
+  Directive,
   DirectiveContext,
-  Primitive,
   UpdateContext,
 } from '../directive.js';
 import {
@@ -23,8 +23,8 @@ import { ElementTemplate } from '../template/element-template.js';
 import { TextTemplate } from '../template/text-template.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
-export type VChild =
-  | VChild[]
+export type VNode =
+  | VNode[]
   | VElement
   | Bindable
   | bigint
@@ -39,6 +39,8 @@ export type VElementType<TProps> = ComponentFunction<TProps> | string;
 
 export type ElementProps = Record<string, unknown>;
 
+type NormalizeProps<TProps> = { children: VNode[] } & Omit<TProps, 'key'>;
+
 type EventRegistry = Pick<
   EventTarget,
   'addEventListener' | 'removeEventListener'
@@ -50,7 +52,7 @@ type EventListenerWithOptions =
 
 const TEXT_TEMPLATE = new TextTemplate('', '');
 
-export const ElementDirective: Primitive<ElementProps> = {
+export const ElementDirective: Directive<ElementProps> = {
   displayName: 'ElementDirective',
   resolveBinding(
     props: ElementProps,
@@ -93,27 +95,28 @@ export class VElement<TProps extends ElementProps = ElementProps>
         directive: new ElementTemplate(this.type),
         value: [
           new DirectiveSpecifier(ElementDirective, this.props),
-          new DirectiveSpecifier(
-            RepeatDirective,
-            createRepeatProps(getChildren(this.props)),
-          ),
+          new VFragment(getChildren(this.props)),
         ],
       };
     }
   }
 }
 
-export class VFragment implements Bindable<RepeatProps<VChild>> {
-  readonly children: VChild[];
+export class VFragment implements Bindable<RepeatProps<VNode>> {
+  readonly children: VNode[];
 
-  constructor(children: VChild[]) {
+  constructor(children: VNode[]) {
     this.children = children;
   }
 
-  [$toDirectiveElement](): DirectiveElement<RepeatProps<VChild>> {
+  [$toDirectiveElement](): DirectiveElement<RepeatProps<VNode>> {
     return {
       directive: RepeatDirective,
-      value: createRepeatProps(this.children),
+      value: {
+        source: this.children,
+        keySelector: resolveKey,
+        valueSelector: resolveValue,
+      },
     };
   }
 }
@@ -135,8 +138,8 @@ export class ElementBinding<TProps extends ElementProps>
     this._part = part;
   }
 
-  get directive(): Primitive<TProps> {
-    return ElementDirective as Primitive<TProps>;
+  get directive(): Directive<TProps> {
+    return ElementDirective as Directive<TProps>;
   }
 
   get value(): TProps {
@@ -234,23 +237,16 @@ export class ElementBinding<TProps extends ElementProps>
 }
 
 export function createElement<const TProps extends ElementProps>(
-  type: VElementType<TProps>,
-  props: TProps = {} as TProps,
-  ...children: VChild[]
-): VElement<{ children: VChild[] } & TProps> {
-  return new VElement(type, { children, ...props }, children);
+  type: VElementType<NormalizeProps<TProps>>,
+  props: TProps,
+  ...children: VNode[]
+): VElement<NormalizeProps<TProps>> {
+  const { key, ...restProps } = props;
+  return new VElement(type, { children, ...restProps }, key);
 }
 
-export function createFragment(children: VChild[]): VFragment {
+export function createFragment(children: VNode[]): VFragment {
   return new VFragment(children);
-}
-
-function createRepeatProps(children: VChild[]): RepeatProps<VChild> {
-  return {
-    source: children,
-    keySelector: resolveKey,
-    valueSelector: resolveValue,
-  };
 }
 
 function deleteProperty(
@@ -262,6 +258,7 @@ function deleteProperty(
   switch (key.toLowerCase()) {
     case 'children':
     case 'key':
+    case 'ref':
       // Skip special properties.
       return;
     case 'checked':
@@ -310,38 +307,38 @@ function deleteProperty(
   element.removeAttribute(key);
 }
 
-function getChildren(props: ElementProps): VChild[] {
-  if (Object.hasOwn(props, 'children')) {
+function getChildren(props: ElementProps): VNode[] {
+  if (props['children'] !== undefined) {
     return Array.isArray(props['children'])
-      ? (props['children'] as VChild[])
-      : [props['children'] as VChild];
+      ? (props['children'] as VNode[])
+      : [props['children'] as VNode];
   } else {
     return [];
   }
 }
 
 function narrowElement<
-  const TType extends Uppercase<keyof HTMLElementTagNameMap>,
+  const TName extends Uppercase<keyof HTMLElementTagNameMap>,
 >(
   element: Element,
-  ...expectedTypes: TType[]
-): element is HTMLElementTagNameMap[Lowercase<TType>] {
-  return (expectedTypes as string[]).includes(element.tagName);
+  ...expectedNames: TName[]
+): element is HTMLElementTagNameMap[Lowercase<TName>] {
+  return (expectedNames as string[]).includes(element.tagName);
 }
 
-function resolveKey(child: VChild, index: number): unknown {
-  return child instanceof VElement ? (child.key ?? index) : index;
+function resolveKey(node: VNode, index: number): unknown {
+  return node instanceof VElement ? (node.key ?? index) : index;
 }
 
-function resolveValue(child: VChild): Bindable<unknown> {
-  if (isBindable(child)) {
-    return child;
-  } else if (Array.isArray(child)) {
-    return new VFragment(child);
-  } else if (child == null || typeof child === 'boolean') {
-    return new DirectiveSpecifier(BlackholePrimitive, child);
+function resolveValue(node: VNode): Bindable<unknown> {
+  if (isBindable(node)) {
+    return node;
+  } else if (Array.isArray(node)) {
+    return new VFragment(node);
+  } else if (node == null || typeof node === 'boolean') {
+    return new DirectiveSpecifier(BlackholePrimitive, node);
   } else {
-    return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
+    return new DirectiveSpecifier(TEXT_TEMPLATE, [node]);
   }
 }
 
@@ -355,6 +352,7 @@ function updateProperty(
   switch (key.toLowerCase()) {
     case 'children':
     case 'key':
+    case 'ref':
       // Skip special properties.
       return;
     case 'checked':

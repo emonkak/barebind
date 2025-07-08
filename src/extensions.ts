@@ -28,7 +28,7 @@ export {
 export {
   createElement,
   createFragment,
-  type VChild,
   type VElement,
   type VFragment,
+  type VNode as VChild,
 } from './extensions/vdom.js';
