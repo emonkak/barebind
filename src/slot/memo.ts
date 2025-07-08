@@ -93,15 +93,18 @@ export class MemoSlot<T> implements Slot<T> {
       return;
     }
 
-    if (this._memoizedBinding !== this._pendingBinding) {
-      if (this._memoizedBinding !== null) {
-        this._memoizedBinding.rollback(context);
+    const newBinding = this._pendingBinding;
+    const oldBinding = this._memoizedBinding;
+
+    if (oldBinding !== newBinding) {
+      if (oldBinding !== null) {
+        oldBinding.rollback(context);
 
         DEBUG: {
           context.undebugValue(
-            this._memoizedBinding.directive,
-            this._memoizedBinding.value,
-            this._memoizedBinding.part,
+            oldBinding.directive,
+            oldBinding.value,
+            oldBinding.part,
           );
         }
       }
@@ -109,15 +112,15 @@ export class MemoSlot<T> implements Slot<T> {
 
     DEBUG: {
       context.debugValue(
-        this._pendingBinding.directive,
-        this._pendingBinding.value,
-        this._pendingBinding.part,
+        newBinding.directive,
+        newBinding.value,
+        newBinding.part,
       );
     }
 
-    this._pendingBinding.commit(context);
+    newBinding.commit(context);
 
-    this._memoizedBinding = this._pendingBinding;
+    this._memoizedBinding = newBinding;
     this._dirty = false;
   }
 
@@ -126,15 +129,13 @@ export class MemoSlot<T> implements Slot<T> {
       return;
     }
 
-    if (this._memoizedBinding !== null) {
-      this._memoizedBinding.rollback(context);
+    const binding = this._memoizedBinding;
+
+    if (binding !== null) {
+      binding.rollback(context);
 
       DEBUG: {
-        context.undebugValue(
-          this._memoizedBinding.directive,
-          this._memoizedBinding.value,
-          this._memoizedBinding.part,
-        );
+        context.undebugValue(binding.directive, binding.value, binding.part);
       }
     }
 
