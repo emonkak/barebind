@@ -7,6 +7,7 @@ import {
   type Directive,
   type DirectiveContext,
   DirectiveObject,
+  isBindable,
   type Slot,
   type UpdateContext,
 } from '../directive.js';
@@ -22,31 +23,18 @@ import {
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   source: Iterable<TSource>;
-  keySelector?: (value: TSource, index: number) => TKey;
-  valueSelector?: (value: TSource, index: number) => TValue;
+  keySelector?: (element: TSource, index: number) => TKey;
+  valueSelector?: (element: TSource, index: number) => TValue;
+  itemTypeResolver?: (element: TSource, key: TKey, value: TValue) => ItemType;
 };
 
-interface ReconciliationHandler<TKey, TValue> {
-  insert(
-    key: TKey,
-    value: TValue,
-    referenceItem: Item<TKey, TValue> | undefined,
-  ): Item<TKey, TValue>;
-  update(item: Item<TKey, TValue>, value: TValue): Item<TKey, TValue>;
-  move(
-    item: Item<TKey, TValue>,
-    value: TValue,
-    referenceItem: Item<TKey, TValue> | undefined,
-  ): Item<TKey, TValue>;
-  remove(item: Item<TKey, TValue>): void;
-}
+export type ItemType =
+  | { type: typeof Node.COMMENT_NODE }
+  | { type: typeof Node.TEXT_NODE }
+  | { type: typeof Node.ELEMENT_NODE; name: string };
 
 interface Item<TKey, TValue> {
-  key: TKey;
-  slot: Slot<TValue>;
-}
-
-interface KeyValuePair<TKey, TValue> {
+  type: ItemType;
   key: TKey;
   value: TValue;
 }
@@ -54,15 +42,15 @@ interface KeyValuePair<TKey, TValue> {
 type Operation<TKey, TValue> =
   | {
       type: typeof OperationType.Insert;
-      item: Item<TKey, TValue>;
-      referenceItem: Item<TKey, TValue> | undefined;
+      item: Item<TKey, Slot<TValue>>;
+      referenceItem: Item<TKey, Slot<TValue>> | undefined;
     }
   | {
       type: typeof OperationType.Move;
-      item: Item<TKey, TValue>;
-      referenceItem: Item<TKey, TValue> | undefined;
+      item: Item<TKey, Slot<TValue>>;
+      referenceItem: Item<TKey, Slot<TValue>> | undefined;
     }
-  | { type: typeof OperationType.Remove; item: Item<TKey, TValue> };
+  | { type: typeof OperationType.Remove; item: Item<TKey, Slot<TValue>> };
 
 const OperationType = {
   Insert: 0,
@@ -70,22 +58,39 @@ const OperationType = {
   Remove: 2,
 } as const;
 
-export function repeat<TSource, TKey, TValue>(
-  props: RepeatProps<TSource, TKey, TValue>,
-): DirectiveObject<RepeatProps<TSource, TKey, TValue>> {
+interface ReconciliationHandler<TKey, TTarget, TSource> {
+  insert(
+    newItem: Item<TKey, TSource>,
+    referenceItem: Item<TKey, TTarget> | undefined,
+  ): Item<TKey, TTarget>;
+  update(
+    item: Item<TKey, TTarget>,
+    newItem: Item<TKey, TSource>,
+  ): Item<TKey, TTarget>;
+  move(
+    item: Item<TKey, TTarget>,
+    newItem: Item<TKey, TSource>,
+    referenceItem: Item<TKey, TTarget> | undefined,
+  ): Item<TKey, TTarget>;
+  remove(item: Item<TKey, TTarget>): void;
+}
+
+export function repeat<TTarget, TKey, TValue>(
+  props: RepeatProps<TTarget, TKey, TValue>,
+): DirectiveObject<RepeatProps<TTarget, TKey, TValue>> {
   return new DirectiveObject(
-    RepeatDirective as Directive<RepeatProps<TSource, TKey, TValue>>,
+    RepeatDirective as Directive<RepeatProps<TTarget, TKey, TValue>>,
     props,
   );
 }
 
 export const RepeatDirective: Directive<RepeatProps<any, any, any>> = {
   name: 'RepeatDirective',
-  resolveBinding<TSource, TKey, TValue>(
-    props: RepeatProps<TSource, TKey, TValue>,
+  resolveBinding<TTarget, TKey, TValue>(
+    props: RepeatProps<TTarget, TKey, TValue>,
     part: Part,
     _context: DirectiveContext,
-  ): RepeatBinding<TSource, TKey, TValue> {
+  ): RepeatBinding<TTarget, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'RepeatDirective must be used in a child part, but it is used here in:\n' +
@@ -96,29 +101,29 @@ export const RepeatDirective: Directive<RepeatProps<any, any, any>> = {
   },
 };
 
-export class RepeatBinding<TSource, TKey, TValue>
-  implements Binding<RepeatProps<TSource, TKey, TValue>>
+export class RepeatBinding<TTarget, TKey, TValue>
+  implements Binding<RepeatProps<TTarget, TKey, TValue>>
 {
-  private _props: RepeatProps<TSource, TKey, TValue>;
+  private _props: RepeatProps<TTarget, TKey, TValue>;
 
   private readonly _part: ChildNodePart;
 
-  private _pendingItems: Item<TKey, TValue>[] = [];
+  private _pendingItems: Item<TKey, Slot<TValue>>[] = [];
 
-  private _memoizedItems: Item<TKey, TValue>[] | null = null;
+  private _memoizedItems: Item<TKey, Slot<TValue>>[] | null = null;
 
   private _pendingOperations: Operation<TKey, TValue>[] = [];
 
-  constructor(props: RepeatProps<TSource, TKey, TValue>, part: ChildNodePart) {
+  constructor(props: RepeatProps<TTarget, TKey, TValue>, part: ChildNodePart) {
     this._props = props;
     this._part = part;
   }
 
-  get directive(): Directive<RepeatProps<TSource, TKey, TValue>> {
+  get directive(): Directive<RepeatProps<TTarget, TKey, TValue>> {
     return RepeatDirective;
   }
 
-  get value(): RepeatProps<TSource, TKey, TValue> {
+  get value(): RepeatProps<TTarget, TKey, TValue> {
     return this._props;
   }
 
@@ -126,11 +131,11 @@ export class RepeatBinding<TSource, TKey, TValue>
     return this._part;
   }
 
-  shouldBind(props: RepeatProps<TSource, TKey, TValue>): boolean {
+  shouldBind(props: RepeatProps<TTarget, TKey, TValue>): boolean {
     return this._memoizedItems === null || props !== this._props;
   }
 
-  bind(props: RepeatProps<TSource, TKey, TValue>): void {
+  bind(props: RepeatProps<TTarget, TKey, TValue>): void {
     this._props = props;
   }
 
@@ -141,86 +146,77 @@ export class RepeatBinding<TSource, TKey, TValue>
       );
     }
 
-    const newPairs = generateKeyValuePairs(this._props);
-    const newItems = new Array(newPairs.length);
+    const sourceItems = generateItems(this._props);
+    const targetItems: Item<TKey, Slot<TValue>>[] = new Array(
+      sourceItems.length,
+    );
     const document = this._part.node.ownerDocument;
 
-    for (let i = 0, l = newPairs.length; i < l; i++) {
-      const { key, value } = newPairs[i]!;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      } as const;
+    for (let i = 0, l = sourceItems.length; i < l; i++) {
+      const { type, key, value } = sourceItems[i]!;
+      const part = hydratePart(type, hydrationTree, document);
       const slot = context.resolveSlot(value, part);
 
       slot.hydrate(hydrationTree, context);
-      hydrationTree
-        .popNode(part.node.nodeType, part.node.nodeName)
-        .replaceWith(part.node);
 
-      newItems[i] = {
+      if (part.node.parentNode === null) {
+        hydrationTree
+          .popNode(part.node.nodeType, part.node.nodeName)
+          .replaceWith(part.node);
+      }
+
+      targetItems[i] = {
+        type,
         key,
-        slot,
+        value: slot,
       };
     }
 
-    this._pendingItems = newItems;
-    this._memoizedItems = newItems;
+    this._pendingItems = targetItems;
+    this._memoizedItems = targetItems;
   }
 
   connect(context: UpdateContext): void {
-    const oldItems = this._pendingItems;
-    const newPairs = generateKeyValuePairs(this._props);
+    const targetItems = this._pendingItems;
+    const sourceItems = generateItems(this._props);
     const document = this._part.node.ownerDocument;
-    const isEmpty =
-      this._memoizedItems === null || this._memoizedItems.length === 0;
 
-    this._pendingItems = reconcileItems(oldItems, newPairs, {
-      insert: (key, value, referenceItem) => {
-        const part = {
-          type: PartType.ChildNode,
-          node: document.createComment(''),
-          childNode: null,
-        } as const;
+    this._pendingItems = reconcileItems(targetItems, sourceItems, {
+      insert: ({ type, key, value }, referenceItem) => {
+        const part = createPart(type, document);
         const slot = context.resolveSlot(value, part);
         slot.connect(context);
-        const item: Item<TKey, TValue> = {
+        const item: Item<TKey, Slot<TValue>> = {
+          type,
           key,
-          slot,
+          value: slot,
         };
-        if (!isEmpty) {
-          this._pendingOperations.push({
-            type: OperationType.Insert,
-            item,
-            referenceItem,
-          });
-        }
+        this._pendingOperations.push({
+          type: OperationType.Insert,
+          item,
+          referenceItem,
+        });
         return item;
       },
-      update: (item, value) => {
-        item.slot.reconcile(value, context);
+      update: (item, { value }) => {
+        item.value.reconcile(value, context);
         return item;
       },
-      move: (item, value, referenceItem) => {
-        item.slot.reconcile(value, context);
-        if (!isEmpty) {
-          this._pendingOperations.push({
-            type: OperationType.Move,
-            item,
-            referenceItem,
-          });
-        }
+      move: (item, { value }, referenceItem) => {
+        item.value.reconcile(value, context);
+        this._pendingOperations.push({
+          type: OperationType.Move,
+          item,
+          referenceItem,
+        });
         return item;
       },
       remove: (item) => {
-        item.slot.disconnect(context);
-        if (!isEmpty) {
-          this._pendingOperations.push({
-            type: OperationType.Remove,
-            item,
-          });
-        }
+        item.value.disconnect(context);
+        this._pendingOperations.push({
+          type: OperationType.Remove,
+          item,
+        });
       },
     });
   }
@@ -228,7 +224,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   disconnect(context: UpdateContext): void {
     for (let i = this._pendingItems.length - 1; i >= 0; i--) {
       const item = this._pendingItems[i]!;
-      item.slot.disconnect(context);
+      item.value.disconnect(context);
     }
   }
 
@@ -238,40 +234,40 @@ export class RepeatBinding<TSource, TKey, TValue>
         const item = this._pendingItems[i]!;
         commitInsert(item, this._part.node);
       }
-    }
-
-    for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
-      const operation = this._pendingOperations[i]!;
-      switch (operation.type) {
-        case OperationType.Insert: {
-          const referenceNode =
-            operation.referenceItem !== undefined
-              ? getStartNode(operation.referenceItem.slot.part)
-              : this._part.node;
-          commitInsert(operation.item, referenceNode);
-          break;
+    } else {
+      for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
+        const operation = this._pendingOperations[i]!;
+        switch (operation.type) {
+          case OperationType.Insert: {
+            const referenceNode =
+              operation.referenceItem !== undefined
+                ? getStartNode(operation.referenceItem.value.part)
+                : this._part.node;
+            commitInsert(operation.item, referenceNode);
+            break;
+          }
+          case OperationType.Move: {
+            const referenceNode =
+              operation.referenceItem !== undefined
+                ? getStartNode(operation.referenceItem.value.part)
+                : this._part.node;
+            commitMove(operation.item, referenceNode);
+            break;
+          }
+          case OperationType.Remove:
+            commitRemove(operation.item, context);
+            break;
         }
-        case OperationType.Move: {
-          const referenceNode =
-            operation.referenceItem !== undefined
-              ? getStartNode(operation.referenceItem.slot.part)
-              : this._part.node;
-          commitMove(operation.item, referenceNode);
-          break;
-        }
-        case OperationType.Remove:
-          commitRemove(operation.item, context);
-          break;
       }
     }
 
     for (let i = 0, l = this._pendingItems.length; i < l; i++) {
-      const { slot } = this._pendingItems[i]!;
-      slot.commit(context);
+      const { value } = this._pendingItems[i]!;
+      value.commit(context);
     }
 
     if (this._pendingItems.length > 0) {
-      this._part.childNode = getStartNode(this._pendingItems[0]!.slot.part);
+      this._part.childNode = getStartNode(this._pendingItems[0]!.value.part);
     } else {
       this._part.childNode = null;
     }
@@ -295,135 +291,239 @@ export class RepeatBinding<TSource, TKey, TValue>
 }
 
 function commitInsert<TKey, TValue>(
-  item: Item<TKey, TValue>,
+  item: Item<TKey, Slot<TValue>>,
   referenceNode: ChildNode,
 ): void {
-  const { slot } = item;
-  referenceNode.before(slot.part.node);
+  const { value } = item;
+  referenceNode.before(value.part.node);
 }
 
 function commitMove<TKey, TValue>(
-  item: Item<TKey, TValue>,
+  item: Item<TKey, Slot<TValue>>,
   referenceNode: ChildNode,
 ): void {
-  const { slot } = item;
-  const childNodes = getChildNodes(slot.part as ChildNodePart);
+  const { value } = item;
+  const childNodes = getChildNodes(value.part as ChildNodePart);
   moveChildNodes(childNodes, referenceNode);
 }
 
 function commitRemove<TKey, TValue>(
-  item: Item<TKey, TValue>,
+  item: Item<TKey, Slot<TValue>>,
   context: CommitContext,
 ): void {
-  const { slot } = item;
+  const { value } = item;
 
-  slot.rollback(context);
-  slot.part.node.remove();
+  value.rollback(context);
+  value.part.node.remove();
 }
 
-function defaultKeySelector(_value: unknown, index: number): any {
+function createPart(type: ItemType, document: Document): Part {
+  switch (type.type) {
+    case Node.COMMENT_NODE:
+      return {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+    case Node.TEXT_NODE:
+      return {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+    case Node.ELEMENT_NODE:
+      return {
+        type: PartType.Element,
+        node: document.createElement(type.name),
+      };
+  }
+}
+
+function defaultItemTypeResolver(
+  _element: unknown,
+  _key: unknown,
+  value: unknown,
+): ItemType {
+  return isBindable(value)
+    ? { type: Node.COMMENT_NODE }
+    : { type: Node.TEXT_NODE };
+}
+
+function defaultKeySelector(_element: unknown, index: number): any {
   return index;
 }
 
-function defaultValueSelector(value: unknown, _index: number): any {
-  return value;
+function defaultValueSelector(element: unknown): any {
+  return element;
 }
 
-function generateKeyValuePairs<TSource, TKey, TValue>({
+function generateItems<TTarget, TKey, TValue>({
   source,
   keySelector = defaultKeySelector,
   valueSelector = defaultValueSelector,
-}: RepeatProps<TSource, TKey, TValue>): KeyValuePair<TKey, TValue>[] {
-  return Array.from(source, (value, i) => ({
-    key: keySelector(value, i),
-    value: valueSelector(value, i),
-  }));
+  itemTypeResolver = defaultItemTypeResolver,
+}: RepeatProps<TTarget, TKey, TValue>): Item<TKey, TValue>[] {
+  return Array.from(source, (element, i) => {
+    const key = keySelector(element, i);
+    const value = valueSelector(element, i);
+    const type = itemTypeResolver(element, key, value);
+    return { type, key, value };
+  });
 }
 
-function reconcileItems<TKey, TValue>(
-  oldItems: (Item<TKey, TValue> | undefined)[],
-  newPairs: KeyValuePair<TKey, TValue>[],
-  handler: ReconciliationHandler<TKey, TValue>,
-): Item<TKey, TValue>[] {
-  const newItems = new Array(newPairs.length);
+function hydratePart(
+  type: ItemType,
+  hydrationTree: HydrationTree,
+  document: Document,
+): Part {
+  switch (type.type) {
+    case Node.COMMENT_NODE:
+      return {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+      };
+    case Node.TEXT_NODE:
+      return {
+        type: PartType.Text,
+        node: hydrationTree.popNode(Node.TEXT_NODE, '#text'),
+        precedingText: '',
+        followingText: '',
+      };
+    case Node.ELEMENT_NODE:
+      return {
+        type: PartType.Element,
+        node: hydrationTree.popNode(Node.ELEMENT_NODE, type.name.toUpperCase()),
+      };
+  }
+}
+
+function isEqualItemType(firstType: ItemType, secondType: ItemType) {
+  switch (firstType.type) {
+    case Node.ELEMENT_NODE:
+      return (
+        firstType.type === secondType.type && firstType.name === secondType.name
+      );
+    default:
+      return firstType.type === secondType.type;
+  }
+}
+
+function matchesItem<TKey, TTarget, TSource>(
+  targetItem: Item<TKey, TTarget>,
+  sourceItem: Item<TKey, TSource>,
+) {
+  return (
+    isEqualItemType(targetItem.type, sourceItem.type) &&
+    Object.is(targetItem.key, sourceItem.key)
+  );
+}
+
+function reconcileItems<TKey, TTarget, TSource>(
+  oldTargetItems: (Item<TKey, TTarget> | undefined)[],
+  newSourceItems: Item<TKey, TSource>[],
+  handler: ReconciliationHandler<TKey, TTarget, TSource>,
+): Item<TKey, TTarget>[] {
+  const newTargetItems: Item<TKey, TTarget>[] = new Array(
+    newSourceItems.length,
+  );
 
   let oldHead = 0;
-  let oldTail = oldItems.length - 1;
+  let oldTail = oldTargetItems.length - 1;
   let newHead = 0;
-  let newTail = newItems.length - 1;
+  let newTail = newTargetItems.length - 1;
 
   while (true) {
     if (newHead > newTail) {
       while (oldHead <= oldTail) {
-        handler.remove(oldItems[oldHead]!);
+        handler.remove(oldTargetItems[oldHead]!);
         oldHead++;
       }
       break;
     } else if (oldHead > oldTail) {
       while (newHead <= newTail) {
-        const { key, value } = newPairs[newHead]!;
-        newItems[newHead] = handler.insert(key, value, newItems[newTail + 1]);
+        newTargetItems[newHead] = handler.insert(
+          newSourceItems[newHead]!,
+          newTargetItems[newTail + 1],
+        );
         newHead++;
       }
       break;
-    } else if (oldItems[oldHead]!.key === newPairs[newHead]!.key) {
-      newItems[newHead] = handler.update(
-        oldItems[oldHead]!,
-        newPairs[newHead]!.value,
+    } else if (
+      matchesItem(oldTargetItems[oldHead]!, newSourceItems[newHead]!)
+    ) {
+      newTargetItems[newHead] = handler.update(
+        oldTargetItems[oldHead]!,
+        newSourceItems[newHead]!,
       );
       newHead++;
       oldHead++;
-    } else if (oldItems[oldTail]!.key === newPairs[newTail]!.key) {
-      newItems[newTail] = handler.update(
-        oldItems[oldTail]!,
-        newPairs[newTail]!.value,
+    } else if (
+      matchesItem(oldTargetItems[oldTail]!, newSourceItems[newTail]!)
+    ) {
+      newTargetItems[newTail] = handler.update(
+        oldTargetItems[oldTail]!,
+        newSourceItems[newTail]!,
       );
       newTail--;
       oldTail--;
-    } else if (oldItems[oldHead]!.key === newPairs[newTail]!.key) {
-      newItems[newTail] = handler.move(
-        oldItems[oldHead]!,
-        newPairs[newTail]!.value,
-        newItems[newTail + 1]!,
+    } else if (
+      matchesItem(oldTargetItems[oldHead]!, newSourceItems[newTail]!)
+    ) {
+      newTargetItems[newTail] = handler.move(
+        oldTargetItems[oldHead]!,
+        newSourceItems[newTail]!,
+        newTargetItems[newTail + 1]!,
       );
       newTail--;
       oldHead++;
-    } else if (oldItems[oldTail]!.key === newPairs[newHead]!.key) {
-      newItems[newHead] = handler.move(
-        oldItems[oldTail]!,
-        newPairs[newHead]!.value,
-        oldItems[oldHead]!,
+    } else if (
+      matchesItem(oldTargetItems[oldTail]!, newSourceItems[newHead]!)
+    ) {
+      newTargetItems[newHead] = handler.move(
+        oldTargetItems[oldTail]!,
+        newSourceItems[newHead]!,
+        oldTargetItems[oldHead]!,
       );
       newHead++;
       oldTail--;
     } else {
       const oldIndexMap = new Map();
       for (let i = oldHead; i <= oldTail; i++) {
-        oldIndexMap.set(oldItems[i]!.key, i);
+        oldIndexMap.set(oldTargetItems[i]!.key, i);
       }
       while (newHead <= newTail) {
-        const { key, value } = newPairs[newTail]!;
-        const oldIndex = oldIndexMap.get(key);
-        if (oldIndex !== undefined && oldItems[oldIndex] !== undefined) {
-          newItems[newTail] = handler.move(
-            oldItems[oldIndex]!,
-            value,
-            newItems[newTail + 1],
+        const newSourceItem = newSourceItems[newTail]!;
+        const oldIndex = oldIndexMap.get(newSourceItem.key);
+
+        if (
+          oldIndex !== undefined &&
+          oldTargetItems[oldIndex] !== undefined &&
+          isEqualItemType(oldTargetItems[oldIndex].type, newSourceItem.type)
+        ) {
+          newTargetItems[newTail] = handler.move(
+            oldTargetItems[oldIndex],
+            newSourceItem,
+            newTargetItems[newTail + 1],
           );
-          oldItems[oldIndex] = undefined;
+          oldTargetItems[oldIndex] = undefined;
         } else {
-          newItems[newTail] = handler.insert(key, value, newItems[newTail + 1]);
+          newTargetItems[newTail] = handler.insert(
+            newSourceItem,
+            newTargetItems[newTail + 1],
+          );
         }
         newTail--;
       }
       for (let i = oldHead; i <= oldTail; i++) {
-        if (oldItems[i] !== undefined) {
-          handler.remove(oldItems[i]!);
+        if (oldTargetItems[i] !== undefined) {
+          handler.remove(oldTargetItems[i]!);
         }
       }
       break;
     }
   }
 
-  return newItems;
+  return newTargetItems;
 }
