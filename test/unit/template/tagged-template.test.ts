@@ -5,7 +5,7 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged-template.js';
 import { MockRenderHost, MockSlot } from '../../mocks.js';
-import { createElement } from '../../test-utils.js';
+import { createElement, serializeNode } from '../../test-utils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -442,7 +442,7 @@ describe('TaggedTemplate', () => {
         runtime,
       );
 
-      expect(childNodes.map(toHTML)).toStrictEqual([
+      expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div class="foo"><!----><input type="text" class="qux"><span>quux</span></div>',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
@@ -543,7 +543,7 @@ describe('TaggedTemplate', () => {
         runtime,
       );
 
-      expect(childNodes.map(toHTML)).toStrictEqual(['<div>foo</div>']);
+      expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
       expect(slots).toStrictEqual([]);
     });
 
@@ -568,11 +568,13 @@ describe('TaggedTemplate', () => {
         runtime,
       );
 
-      expect(childNodes.map(toHTML)).toStrictEqual([
+      expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div>Hello, World!</div>',
       ]);
       expect(
-        childNodes.map((childNode) => Array.from(childNode.childNodes, toHTML)),
+        childNodes.map((childNode) =>
+          Array.from(childNode.childNodes, serializeNode),
+        ),
       ).toStrictEqual([['Hello, World!', '']]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
@@ -618,7 +620,7 @@ describe('TaggedTemplate', () => {
         runtime,
       );
 
-      expect(childNodes.map(toHTML)).toStrictEqual([]);
+      expect(childNodes.map(serializeNode)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
     });
 
@@ -710,7 +712,7 @@ describe('TaggedTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
-      expect(childNodes.map(toHTML)).toStrictEqual([
+      expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div><!----><input type="text"><span></span></div>',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
@@ -800,7 +802,7 @@ describe('TaggedTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
-      expect(childNodes.map(toHTML)).toStrictEqual(['<div>foo</div>']);
+      expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
       expect(slots).toStrictEqual([]);
     });
 
@@ -814,7 +816,7 @@ describe('TaggedTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
-      expect(childNodes.map(toHTML)).toStrictEqual(['', '']);
+      expect(childNodes.map(serializeNode)).toStrictEqual(['', '']);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
@@ -852,7 +854,7 @@ describe('TaggedTemplate', () => {
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
-      expect(childNodes.map(toHTML)).toStrictEqual([]);
+      expect(childNodes.map(serializeNode)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
     });
 
@@ -970,10 +972,4 @@ function svg<const TBinds extends readonly unknown[]>(
     ),
     binds,
   };
-}
-
-function toHTML(node: Node): string {
-  const wrapper = document.createElement('div');
-  wrapper.appendChild(node.cloneNode(true));
-  return wrapper.innerHTML;
 }

@@ -36,7 +36,7 @@ describe('EmptyTemplate', () => {
   });
 
   describe('render()', () => {
-    it('renders an empty template', () => {
+    it('renders an empty tree', () => {
       const binds = [] as const;
       const part = {
         type: PartType.ChildNode,

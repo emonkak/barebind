@@ -95,6 +95,12 @@ export function* permutations<T>(
   }
 }
 
+export function serializeNode(node: Node): string {
+  const wrapper = document.createElement('div');
+  wrapper.appendChild(node.cloneNode(true));
+  return wrapper.innerHTML;
+}
+
 export function templateLiteral(
   strings: TemplateStringsArray,
   ...values: readonly unknown[]
