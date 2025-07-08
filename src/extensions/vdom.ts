@@ -27,6 +27,8 @@ export type VChild =
 
 export type VElementType<TProps> = ComponentFunction<TProps> | string;
 
+const TEXT_TEMPLATE = new TextTemplate('', '');
+
 export function createElement<const TProps extends ElementProps>(
   type: VElementType<TProps>,
   props: TProps,
@@ -46,12 +48,12 @@ export class VElement<TProps extends ElementProps = ElementProps>
 
   readonly props: TProps;
 
-  readonly children: VChild[];
+  readonly key: unknown;
 
-  constructor(type: VElementType<TProps>, props: TProps, children: VChild[]) {
+  constructor(type: VElementType<TProps>, props: TProps, key: unknown) {
     this.type = type;
     this.props = props;
-    this.children = children;
+    this.key = key;
   }
 
   [$toDirectiveElement](): DirectiveElement<unknown> {
@@ -67,7 +69,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
           new DirectiveSpecifier(ElementDirective, this.props),
           new DirectiveSpecifier(
             RepeatDirective,
-            createRepeatProps(this.children),
+            createRepeatProps(getChildren(this.props)),
           ),
         ],
       };
@@ -98,18 +100,28 @@ function createRepeatProps(children: VChild[]): RepeatProps<VChild> {
   };
 }
 
+function getChildren(props: ElementProps): VChild[] {
+  if (Object.hasOwn(props, 'children')) {
+    return Array.isArray(props['children'])
+      ? (props['children'] as VChild[])
+      : [props['children'] as VChild];
+  } else {
+    return [];
+  }
+}
+
 function resolveKey(child: VChild, index: number): unknown {
-  return child instanceof VElement ? (child.props['key'] ?? index) : index;
+  return child instanceof VElement ? (child.key ?? index) : index;
 }
 
 function resolveValue(child: VChild): Bindable<unknown> {
-  if (child == null || typeof child === 'boolean') {
-    return new DirectiveSpecifier(BlackholePrimitive, child);
-  } else if (Array.isArray(child)) {
-    return new DirectiveSpecifier(RepeatDirective, createRepeatProps(child));
-  } else if (isBindable(child)) {
+  if (isBindable(child)) {
     return child;
+  } else if (Array.isArray(child)) {
+    return new VFragment(child);
+  } else if (child == null || typeof child === 'boolean') {
+    return new DirectiveSpecifier(BlackholePrimitive, child);
   } else {
-    return new DirectiveSpecifier(new TextTemplate('', ''), [child]);
+    return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
   }
 }

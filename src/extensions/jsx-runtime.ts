@@ -4,15 +4,9 @@ import { type VChild, VElement, type VElementType, VFragment } from './vdom.js';
 export function jsx<const TProps extends ElementProps & { children?: unknown }>(
   type: VElementType<TProps>,
   props: TProps,
+  key: unknown,
 ): VElement<TProps> {
-  if (typeof type === 'string') {
-    const children = Array.isArray(props.children)
-      ? props.children
-      : [props.children];
-    return new VElement(type, props, children);
-  } else {
-    return new VElement(type, props, []);
-  }
+  return new VElement(type, props, key);
 }
 
 export const jsxs: typeof jsx = jsx;
