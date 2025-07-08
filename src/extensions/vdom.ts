@@ -13,19 +13,16 @@ import {
   isBindable,
   type UpdateContext,
 } from '../directive.js';
-import { HydrationError, type HydrationTree } from '../hydration.js';
-import {
-  type ChildNodePart,
-  type ElementPart,
-  getStartNode,
-  type Part,
-  PartType,
-} from '../part.js';
+import type { HydrationTree } from '../hydration.js';
+import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { TextPrimitive } from '../primitive/text.js';
-
-const TEXT_NODE = '#text';
-const COMMENT_NODE = '#comment';
+import {
+  type ItemType,
+  RepeatBinding,
+  RepeatDirective,
+  type RepeatProps,
+} from './repeat.js';
 
 export type VChild =
   | VChild[]
@@ -39,22 +36,9 @@ export type VChild =
   | null
   | undefined;
 
-interface VNode<T = unknown> {
-  directive: Directive<T>;
-  value: T;
-  nodeType: VNodeType;
-}
-
 export type VProps = Record<string, unknown>;
 
 export type VElementType<TProps> = ComponentFunction<TProps> | string;
-
-type VNodeType = typeof TEXT_NODE | typeof COMMENT_NODE | string;
-
-interface VNodeSlot {
-  binding: Binding<unknown>;
-  dirty: boolean;
-}
 
 type EventRegistry = Pick<
   EventTarget,
@@ -64,23 +48,6 @@ type EventRegistry = Pick<
 type EventListenerWithOptions =
   | EventListener
   | (EventListenerObject & AddEventListenerOptions);
-
-export const VDOMDirective: Directive<VChild[]> = {
-  name: 'VDOMDirective',
-  resolveBinding(
-    children: VChild[],
-    part: Part,
-    _context: DirectiveContext,
-  ): VDOMBinding {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'VDOMDirective must be used in a child node part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(children)),
-      );
-    }
-    return new VDOMBinding(children, part);
-  },
-};
 
 export const VElementDirective: Directive<VElement> = {
   name: 'VElementDirective',
@@ -107,169 +74,29 @@ export function createElement<const TProps extends VProps>(
   return new VElement(type, props, children);
 }
 
-export function createFragment(children: VChild[]): DirectiveObject<VChild[]> {
-  return new DirectiveObject(VDOMDirective, children);
+export function createFragment(
+  children: VChild[],
+): DirectiveObject<RepeatProps<VChild>> {
+  return new DirectiveObject(RepeatDirective, createRepeatProps(children));
 }
 
-export class VDOMBinding implements Binding<VChild[]> {
-  private _children: VChild[];
+export class VFragment implements Bindable<RepeatProps<VChild>> {
+  readonly children: VChild[];
 
-  private readonly _part: ChildNodePart;
-
-  private _pendingSlots: VNodeSlot[] = [];
-
-  private _memoizedSlots: VNodeSlot[] | null = null;
-
-  constructor(children: VChild[], part: ChildNodePart) {
-    this._children = children;
-    this._part = part;
+  constructor(children: VChild[]) {
+    this.children = children;
   }
 
-  get directive(): Directive<VChild[]> {
-    return VDOMDirective;
-  }
-
-  get value(): VChild[] {
-    return this._children;
-  }
-
-  get part(): ChildNodePart {
-    return this._part;
-  }
-
-  shouldBind(children: VChild[]): boolean {
-    return this._memoizedSlots === null || children !== this._children;
-  }
-
-  bind(children: VChild[]): void {
-    this._children = children;
-  }
-
-  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    if (this._memoizedSlots !== null) {
-      throw new HydrationError(
-        'Hydration is failed because the binding has already been initilized.',
-      );
-    }
-
-    const slots: VNodeSlot[] = new Array(this._children.length);
-    const document = this._part.node.ownerDocument;
-
-    for (let i = 0, l = this._children.length; i < l; i++) {
-      const node = resolveNode(this._children[i]!);
-      slots[i] = {
-        binding: hydrateNode(node, hydrationTree, document, context),
-        dirty: true,
-      };
-    }
-
-    this._pendingSlots = slots;
-  }
-
-  connect(context: UpdateContext): void {
-    const newChildren = this._children;
-    const newSlots: VNodeSlot[] = new Array(this._children.length);
-    const oldSlots = this._pendingSlots;
-    const newTail = newChildren.length - 1;
-    const oldTail = oldSlots.length - 1;
-    const document = this._part.node.ownerDocument;
-    let index = 0;
-
-    while (index <= newTail && index <= oldTail) {
-      const newNode = resolveNode(newChildren[index]!);
-      const oldSlot = oldSlots![index]!;
-      newSlots[index] = patchSlot(oldSlot, newNode, context);
-      index++;
-    }
-
-    while (index <= oldTail) {
-      const oldSlot = oldSlots[index]!;
-      oldSlot.binding.disconnect(context);
-      oldSlot.dirty = true;
-      index++;
-    }
-
-    while (index <= newTail) {
-      const newElement = resolveNode(newChildren[index]!);
-      const binding = renderNode(newElement, document, context);
-      binding.connect(context);
-      newSlots[index] = { binding, dirty: true };
-      index++;
-    }
-
-    this._pendingSlots = newSlots;
-  }
-
-  disconnect(context: UpdateContext): void {
-    for (let i = this._pendingSlots.length - 1; i >= 0; i--) {
-      const slot = this._pendingSlots[i]!;
-      slot.binding.disconnect(context);
-      slot.dirty = true;
-    }
-  }
-
-  commit(context: CommitContext): void {
-    const newSlots = this._pendingSlots;
-    const oldSlots = this._memoizedSlots;
-    const newTail = newSlots.length - 1;
-    const oldTail = oldSlots !== null ? oldSlots.length - 1 : -1;
-    let index = 0;
-
-    while (index <= newTail && index <= oldTail) {
-      const newSlot = newSlots[index]!;
-      const oldSlot = oldSlots![index]!;
-
-      if (newSlot !== oldSlot) {
-        oldSlot.binding.rollback(context);
-        oldSlot.binding.part.node.replaceWith(newSlot.binding.part.node);
-      }
-
-      if (newSlot.dirty) {
-        newSlot.binding.commit(context);
-        newSlot.dirty = false;
-      }
-
-      index++;
-    }
-
-    while (index <= oldTail) {
-      const oldSlot = oldSlots![index]!;
-      oldSlot.binding.rollback(context);
-      oldSlot.binding.part.node.remove();
-      index++;
-    }
-
-    while (index <= newTail) {
-      const newSlot = newSlots[index]!;
-      this._part.node.before(newSlot.binding.part.node);
-      newSlot.binding.commit(context);
-      newSlot.dirty = false;
-      index++;
-    }
-
-    this._memoizedSlots = newSlots;
-    this._part.childNode =
-      newSlots.length > 0 ? getStartNode(newSlots[0]!.binding.part) : null;
-  }
-
-  rollback(context: CommitContext): void {
-    const slots = this._memoizedSlots;
-
-    if (slots !== null) {
-      for (let i = slots.length - 1; i >= 0; i--) {
-        const { binding } = slots[i]!;
-        binding.rollback(context);
-        binding.part.node.remove();
-      }
-    }
-
-    this._memoizedSlots = null;
-    this._part.childNode = null;
+  [$toDirectiveElement](): DirectiveElement<RepeatProps<VChild>> {
+    return {
+      directive: RepeatDirective,
+      value: { source: this.children },
+    };
   }
 }
 
 export class VElement<TProps extends VProps = VProps>
-  implements Bindable<VChild[]>
+  implements Bindable<RepeatProps<VChild>>
 {
   readonly type: VElementType<TProps>;
 
@@ -283,10 +110,10 @@ export class VElement<TProps extends VProps = VProps>
     this.children = children;
   }
 
-  [$toDirectiveElement](): DirectiveElement<VChild[]> {
+  [$toDirectiveElement](): DirectiveElement<RepeatProps<VChild>> {
     return {
-      directive: VDOMDirective,
-      value: [this],
+      directive: RepeatDirective,
+      value: createRepeatProps([this]),
     };
   }
 }
@@ -300,7 +127,7 @@ export class VElementBinding<TProps extends VProps = VProps>
 
   private readonly _part: ElementPart;
 
-  private readonly _children: VDOMBinding;
+  private readonly _children: RepeatBinding<VChild, unknown, unknown>;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
@@ -308,11 +135,14 @@ export class VElementBinding<TProps extends VProps = VProps>
   constructor(element: VElement<TProps>, part: ElementPart) {
     this._pendingElement = element;
     this._part = part;
-    this._children = new VDOMBinding(element.children ?? [], {
-      type: PartType.ChildNode,
-      node: part.node.ownerDocument.createComment(''),
-      childNode: null,
-    });
+    this._children = new RepeatBinding(
+      { source: element.children ?? [] },
+      {
+        type: PartType.ChildNode,
+        node: part.node.ownerDocument.createComment(''),
+        childNode: null,
+      },
+    );
   }
 
   get directive(): Directive<VElement<TProps>> {
@@ -333,7 +163,7 @@ export class VElementBinding<TProps extends VProps = VProps>
 
   bind(element: VElement<TProps>): void {
     this._pendingElement = element;
-    this._children.bind(element.children ?? []);
+    this._children.bind(createRepeatProps(element.children));
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
@@ -349,7 +179,7 @@ export class VElementBinding<TProps extends VProps = VProps>
   }
 
   commit(context: CommitContext): void {
-    const newProps = this._pendingElement.props ?? ({} as TProps);
+    const newProps = this._pendingElement.props;
     const oldProps = this._memoizedElement?.props ?? ({} as TProps);
     const element = this._part.node;
 
@@ -446,116 +276,13 @@ export class VElementBinding<TProps extends VProps = VProps>
   }
 }
 
-function createPart(nodeType: VNodeType, document: Document): Part {
-  switch (nodeType) {
-    case COMMENT_NODE:
-      return {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-    case TEXT_NODE:
-      return {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-    default:
-      return {
-        type: PartType.Element,
-        node: document.createElement(nodeType),
-      };
-  }
-}
-
-function patchSlot(
-  slot: VNodeSlot,
-  node: VNode,
-  context: UpdateContext,
-): VNodeSlot {
-  const { binding } = slot;
-  if (
-    binding.directive === node.directive &&
-    getNodeType(binding.part) === node.nodeType.toUpperCase()
-  ) {
-    if (binding.shouldBind(node.value)) {
-      binding.bind(node.value);
-      binding.connect(context);
-      slot.dirty = true;
-    }
-    return slot;
-  } else {
-    binding.disconnect(context);
-    const newBinding = renderNode(
-      node,
-      binding.part.node.ownerDocument,
-      context,
-    );
-    return {
-      binding: newBinding,
-      dirty: true,
-    };
-  }
-}
-
-function getNodeType(part: Part): VNodeType {
-  switch (part.type) {
-    case PartType.Text:
-      return TEXT_NODE;
-    case PartType.ChildNode:
-      return COMMENT_NODE;
-    default:
-      return part.node.nodeName;
-  }
-}
-
-function hydrateNode(
-  node: VNode,
-  hydrationTree: HydrationTree,
-  document: Document,
-  context: UpdateContext,
-): Binding<unknown> {
-  const { directive, value, nodeType } = node;
-  const part = hydratePart(nodeType, hydrationTree, document);
-  const binding = directive.resolveBinding(value, part, context);
-
-  binding.hydrate(hydrationTree, context);
-
-  if (part.node.parentNode === null) {
-    hydrationTree
-      .popNode(part.node.nodeType, part.node.nodeName)
-      .replaceWith(part.node);
-  }
-
-  return binding;
-}
-
-function hydratePart(
-  nodeType: VNodeType,
-  hydrationTree: HydrationTree,
-  document: Document,
-): Part {
-  switch (nodeType) {
-    case COMMENT_NODE:
-      return {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-    case TEXT_NODE:
-      return {
-        type: PartType.Text,
-        node: hydrationTree.popNode(Node.TEXT_NODE, TEXT_NODE),
-        precedingText: '',
-        followingText: '',
-      };
-    default:
-      return {
-        type: PartType.Element,
-        node: hydrationTree.popNode(Node.ELEMENT_NODE, nodeType.toUpperCase()),
-      };
-  }
+function createRepeatProps(children: VChild[]): RepeatProps<VChild> {
+  return {
+    source: children,
+    keySelector: resolveKey,
+    valueSelector: resolveValue,
+    itemTypeResolver: resolveItemType,
+  };
 }
 
 function narrowElement<
@@ -618,51 +345,57 @@ function removeProperty(
   element.removeAttribute(key);
 }
 
-function renderNode(
-  node: VNode,
-  document: Document,
-  context: UpdateContext,
-): Binding<unknown> {
-  const { directive, value, nodeType } = node;
-  const part = createPart(nodeType, document);
-  const binding = directive.resolveBinding(value, part, context);
-  binding.connect(context);
-  return binding;
-}
-
-function resolveNode(child: VChild): VNode {
+function resolveItemType(child: VChild): ItemType {
   if (child == null || typeof child === 'boolean') {
     return {
-      directive: BlackholePrimitive,
-      value: child,
-      nodeType: COMMENT_NODE,
+      type: Node.COMMENT_NODE,
     };
   } else if (Array.isArray(child)) {
     return {
-      directive: VDOMDirective,
-      value: child,
-      nodeType: COMMENT_NODE,
+      type: Node.COMMENT_NODE,
     };
   } else if (child instanceof VElement) {
     if (typeof child.type === 'string') {
       return {
-        directive: VElementDirective,
-        value: child,
-        nodeType: child.type,
+        type: Node.ELEMENT_NODE,
+        name: child.type,
       };
     } else {
-      const directive = defineComponent(child.type);
       return {
-        directive,
-        value: child.props,
-        nodeType: TEXT_NODE,
+        type: Node.COMMENT_NODE,
       };
     }
   } else if (isBindable(child)) {
-    const { directive, value } = child[$toDirectiveElement]();
-    return { directive, value, nodeType: COMMENT_NODE };
+    return {
+      type: Node.COMMENT_NODE,
+    };
   } else {
-    return { directive: TextPrimitive, value: child, nodeType: TEXT_NODE };
+    return {
+      type: Node.TEXT_NODE,
+    };
+  }
+}
+
+function resolveKey(child: VChild, index: number): unknown {
+  return child instanceof VElement ? (child.props['key'] ?? index) : index;
+}
+
+function resolveValue(child: VChild): Bindable<unknown> {
+  if (child == null || typeof child === 'boolean') {
+    return new DirectiveObject(BlackholePrimitive, child);
+  } else if (Array.isArray(child)) {
+    return new DirectiveObject(RepeatDirective, createRepeatProps(child));
+  } else if (child instanceof VElement) {
+    if (typeof child.type === 'string') {
+      return new DirectiveObject(VElementDirective, child);
+    } else {
+      const directive = defineComponent(child.type);
+      return new DirectiveObject(directive, child.props);
+    }
+  } else if (isBindable(child)) {
+    return child;
+  } else {
+    return new DirectiveObject(TextPrimitive, child);
   }
 }
 

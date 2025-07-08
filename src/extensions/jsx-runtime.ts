@@ -1,4 +1,5 @@
 import type { DirectiveObject } from '../directive.js';
+import type { RepeatProps } from './repeat.js';
 import {
   createFragment,
   type VChild,
@@ -25,7 +26,7 @@ export const jsxs: typeof jsx = jsx;
 
 export function Fragment(props: {
   children: VChild[];
-}): DirectiveObject<VChild[]> {
+}): DirectiveObject<RepeatProps<VChild>> {
   return createFragment(props.children);
 }
 
