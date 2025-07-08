@@ -1,7 +1,5 @@
 import { inspectNode } from './debug.js';
 
-const ACTUAL_NODE_MAKER = '[[ACTUAL NODE IN HERE!]]';
-
 interface ExpectedNodeTypeMap {
   [Node.ELEMENT_NODE]: Element;
   [Node.TEXT_NODE]: Text;
@@ -70,7 +68,7 @@ function ensureNode<T extends number>(
 ): asserts actualNode is InferNode<T> {
   if (actualNode === null) {
     throw new HydrationError(
-      `Hydration is failed because there is no node. ${expectedName.toLowerCase()} node is expected here.`,
+      `Hydration is failed because there is no node. ${expectedName} node is expected here.`,
     );
   }
 
@@ -79,8 +77,8 @@ function ensureNode<T extends number>(
     actualNode.nodeName !== expectedName
   ) {
     throw new HydrationError(
-      `Hydration is failed because the node is mismatched. ${expectedName.toLowerCase()} node is expected here:\n` +
-        inspectNode(actualNode, ACTUAL_NODE_MAKER),
+      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here:\n` +
+        inspectNode(actualNode, `[[${actualNode.nodeName} IS IN HERE!]]`),
     );
   }
 }
