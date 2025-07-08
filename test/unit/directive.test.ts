@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   $toDirectiveElement,
+  areDirectivesEqual,
   DelegateDirective,
   DirectiveObject,
   SlotObject,
@@ -71,5 +72,17 @@ describe('SlotObject', () => {
       expect(element.value).toBe(value.value);
       expect(element.slotType).toBe(slotType);
     });
+  });
+});
+
+describe('areDirectivesEqual', () => {
+  it('returns the result from Directive.equals() if it is definied', () => {
+    const directive1 = new MockDirective();
+    const directive2 = MockPrimitive;
+
+    expect(areDirectivesEqual(directive1, directive1)).toBe(true);
+    expect(areDirectivesEqual(directive1, directive2)).toBe(false);
+    expect(areDirectivesEqual(directive2, directive1)).toBe(false);
+    expect(areDirectivesEqual(directive2, directive2)).toBe(true);
   });
 });

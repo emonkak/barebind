@@ -2,22 +2,23 @@
 
 import { ComponentBinding } from '@/component.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
-import type {
-  Binding,
-  CommitContext,
-  Component,
-  Coroutine,
-  Directive,
-  DirectiveContext,
-  Effect,
-  Primitive,
-  RenderContext,
-  Slot,
-  SlotType,
-  Template,
-  TemplateMode,
-  TemplateResult,
-  UpdateContext,
+import {
+  areDirectivesEqual,
+  type Binding,
+  type CommitContext,
+  type Component,
+  type Coroutine,
+  type Directive,
+  type DirectiveContext,
+  type Effect,
+  type Primitive,
+  type RenderContext,
+  type Slot,
+  type SlotType,
+  type Template,
+  type TemplateMode,
+  type TemplateResult,
+  type UpdateContext,
 } from '../src/directive.js';
 import { type Lanes, NO_LANES } from '../src/hook.js';
 import type { HydrationTree } from '../src/hydration.js';
@@ -193,6 +194,10 @@ export class MockDirective<T> implements Directive<T> {
     this.displayName = name;
   }
 
+  equals(other: unknown) {
+    return other instanceof MockDirective;
+  }
+
   resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
     return new MockBinding(this, value, part);
   }
@@ -323,7 +328,7 @@ export class MockSlot<T> implements Slot<T> {
 
   reconcile(value: T, context: UpdateContext): void {
     const element = context.resolveDirective(value, this._binding.part);
-    if (element.directive !== this._binding.directive) {
+    if (!areDirectivesEqual(this._binding.directive, element.directive)) {
       throw new Error(
         `The directive must be ${this._binding.directive.displayName} in this slot, but got ${element.directive.displayName}.`,
       );

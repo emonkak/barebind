@@ -15,6 +15,17 @@ describe('TextTemplate', () => {
     });
   });
 
+  describe('equals()', () => {
+    it('returns true if the preceding and following texts are the same', () => {
+      const template = new TextTemplate('foo', 'bar');
+
+      expect(template.equals(template)).toBe(true);
+      expect(template.equals(new TextTemplate('foo', 'bar'))).toBe(true);
+      expect(template.equals(new TextTemplate('foo', ''))).toBe(false);
+      expect(template.equals(new TextTemplate('', 'bar'))).toBe(false);
+    });
+  });
+
   describe('hydrate()', () => {
     it('hydrates a valid tree containing a text part', () => {
       const template = new TextTemplate('(', ')');

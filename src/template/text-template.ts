@@ -19,6 +19,14 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
     this._followingText = followingText;
   }
 
+  equals(other: unknown): boolean {
+    return (
+      other instanceof TextTemplate &&
+      other._precedingText === this._precedingText &&
+      other._followingText === this._followingText
+    );
+  }
+
   get displayName(): string {
     return 'TextTemplate';
   }

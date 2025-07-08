@@ -1,5 +1,6 @@
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
+  areDirectivesEqual,
   type Binding,
   type CommitContext,
   type Directive,
@@ -37,7 +38,7 @@ export class StrictSlot<T> implements Slot<T> {
 
   reconcile(value: T, context: UpdateContext): void {
     const element = context.resolveDirective(value, this._binding.part);
-    if (this._binding.directive !== element.directive) {
+    if (!areDirectivesEqual(this._binding.directive, element.directive)) {
       throw new Error(
         `The directive must be ${this._binding.directive.displayName} in this slot, but got ${element.directive.displayName}.\n` +
           inspectPart(this._binding.part, markUsedValue(element.value)),

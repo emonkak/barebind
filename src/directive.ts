@@ -14,6 +14,7 @@ export const $toDirectiveElement: unique symbol = Symbol('$toDirectiveElement');
 
 export interface Directive<T> {
   readonly displayName: string;
+  equals?(other: Directive<unknown>): boolean;
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
@@ -229,6 +230,16 @@ export class SlotObject<T> implements Bindable<unknown> {
       };
     }
   }
+}
+
+export function areDirectivesEqual(
+  firstDirective: Directive<unknown>,
+  secondDirective: Directive<unknown>,
+) {
+  return (
+    firstDirective.equals?.(secondDirective) ??
+    firstDirective === secondDirective
+  );
 }
 
 export function isBindable(value: unknown): value is Bindable<unknown> {
