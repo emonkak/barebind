@@ -13,7 +13,7 @@ import {
   isBindable,
   type UpdateContext,
 } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
+import { HydrationError, type HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { TextPrimitive } from '../primitive/text.js';
@@ -167,7 +167,19 @@ export class VElementBinding<TProps extends VProps = VProps>
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    if (this._memoizedElement !== null) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initilized.',
+      );
+    }
+
     this._children.hydrate(hydrationTree, context);
+
+    const childrenPart = this._children.part;
+
+    hydrationTree
+      .popNode(childrenPart.node.nodeType, childrenPart.node.nodeName)
+      .replaceWith(childrenPart.node);
   }
 
   connect(context: UpdateContext): void {
