@@ -24,7 +24,7 @@ export interface DirectiveElement<T> {
   readonly slotType?: SlotType;
 }
 
-export interface Bindable<T> {
+export interface Bindable<T = unknown> {
   [$toDirectiveElement](): DirectiveElement<T>;
 }
 
@@ -207,7 +207,7 @@ export class DirectiveObject<T> implements Bindable<T> {
   }
 }
 
-export class SlotObject<T> implements Bindable<unknown> {
+export class SlotObject<T> implements Bindable {
   readonly value: T;
 
   readonly slotType: SlotType;
@@ -242,7 +242,7 @@ export function areDirectivesEqual(
   );
 }
 
-export function isBindable(value: unknown): value is Bindable<unknown> {
+export function isBindable(value: unknown): value is Bindable {
   return (
     typeof (value as Bindable<unknown>)?.[$toDirectiveElement] === 'function'
   );

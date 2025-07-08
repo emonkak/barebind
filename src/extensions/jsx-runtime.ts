@@ -1,14 +1,7 @@
-import type { DirectiveObject } from '../directive.js';
-import type { RepeatProps } from './repeat.js';
-import {
-  createFragment,
-  type VChild,
-  VElement,
-  type VElementType,
-  type VProps,
-} from './vdom.js';
+import type { ElementProps } from './element.js';
+import { type VChild, VElement, type VElementType, VFragment } from './vdom.js';
 
-export function jsx<const TProps extends VProps & { children?: unknown }>(
+export function jsx<const TProps extends ElementProps & { children?: unknown }>(
   type: VElementType<TProps>,
   props: TProps,
 ): VElement<TProps> {
@@ -24,10 +17,8 @@ export function jsx<const TProps extends VProps & { children?: unknown }>(
 
 export const jsxs: typeof jsx = jsx;
 
-export function Fragment(props: {
-  children: VChild[];
-}): DirectiveObject<RepeatProps<VChild>> {
-  return createFragment(props.children);
+export function Fragment(props: { children: VChild[] }): VFragment {
+  return new VFragment(props.children);
 }
 
 declare global {
