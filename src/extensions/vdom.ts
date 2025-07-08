@@ -170,7 +170,7 @@ export class ElementBinding<TProps extends ElementProps>
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
-        removeProperty(element, key, oldProps[key as keyof TProps]!, this);
+        deleteProperty(element, key, oldProps[key as keyof TProps]!, this);
       }
     }
 
@@ -193,7 +193,7 @@ export class ElementBinding<TProps extends ElementProps>
 
     if (props !== null) {
       for (const key of Object.keys(props)) {
-        removeProperty(element, key, props[key as keyof TProps], this);
+        deleteProperty(element, key, props[key as keyof TProps], this);
       }
     }
 
@@ -253,42 +253,7 @@ function createRepeatProps(children: VChild[]): RepeatProps<VChild> {
   };
 }
 
-function getChildren(props: ElementProps): VChild[] {
-  if (Object.hasOwn(props, 'children')) {
-    return Array.isArray(props['children'])
-      ? (props['children'] as VChild[])
-      : [props['children'] as VChild];
-  } else {
-    return [];
-  }
-}
-
-function resolveKey(child: VChild, index: number): unknown {
-  return child instanceof VElement ? (child.key ?? index) : index;
-}
-
-function resolveValue(child: VChild): Bindable<unknown> {
-  if (isBindable(child)) {
-    return child;
-  } else if (Array.isArray(child)) {
-    return new VFragment(child);
-  } else if (child == null || typeof child === 'boolean') {
-    return new DirectiveSpecifier(BlackholePrimitive, child);
-  } else {
-    return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
-  }
-}
-
-function narrowElement<
-  const TType extends Uppercase<keyof HTMLElementTagNameMap>,
->(
-  element: Element,
-  ...expectedTypes: TType[]
-): element is HTMLElementTagNameMap[Lowercase<TType>] {
-  return (expectedTypes as string[]).includes(element.tagName);
-}
-
-function removeProperty(
+function deleteProperty(
   element: Element,
   key: string,
   value: unknown,
@@ -299,6 +264,12 @@ function removeProperty(
     case 'key':
       // Skip special properties.
       return;
+    case 'checked':
+      if (narrowElement(element, 'INPUT')) {
+        element.checked = element.defaultChecked;
+        return;
+      }
+      break;
     case 'defaultchecked':
       if (narrowElement(element, 'INPUT')) {
         element.defaultChecked = false;
@@ -311,9 +282,9 @@ function removeProperty(
         return;
       }
       break;
-    case 'checked':
-      if (narrowElement(element, 'INPUT')) {
-        element.checked = element.defaultChecked;
+    case 'htmlfor':
+      if (narrowElement(element, 'LABEL')) {
+        element.htmlFor = '';
         return;
       }
       break;
@@ -339,6 +310,41 @@ function removeProperty(
   element.removeAttribute(key);
 }
 
+function getChildren(props: ElementProps): VChild[] {
+  if (Object.hasOwn(props, 'children')) {
+    return Array.isArray(props['children'])
+      ? (props['children'] as VChild[])
+      : [props['children'] as VChild];
+  } else {
+    return [];
+  }
+}
+
+function narrowElement<
+  const TType extends Uppercase<keyof HTMLElementTagNameMap>,
+>(
+  element: Element,
+  ...expectedTypes: TType[]
+): element is HTMLElementTagNameMap[Lowercase<TType>] {
+  return (expectedTypes as string[]).includes(element.tagName);
+}
+
+function resolveKey(child: VChild, index: number): unknown {
+  return child instanceof VElement ? (child.key ?? index) : index;
+}
+
+function resolveValue(child: VChild): Bindable<unknown> {
+  if (isBindable(child)) {
+    return child;
+  } else if (Array.isArray(child)) {
+    return new VFragment(child);
+  } else if (child == null || typeof child === 'boolean') {
+    return new DirectiveSpecifier(BlackholePrimitive, child);
+  } else {
+    return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
+  }
+}
+
 function updateProperty(
   element: Element,
   key: string,
@@ -351,6 +357,21 @@ function updateProperty(
     case 'key':
       // Skip special properties.
       return;
+    case 'checked':
+      if (narrowElement(element, 'INPUT')) {
+        const newChecked = !!newValue;
+        const oldChecked = element.checked;
+        if (newChecked !== oldChecked) {
+          element.checked = newChecked;
+        }
+        return;
+      }
+      break;
+    case 'classname':
+      if (!Object.is(newValue, oldValue)) {
+        element.className = newValue?.toString() ?? '';
+      }
+      break;
     case 'defaultchecked':
       if (narrowElement(element, 'INPUT')) {
         if (!Object.is(newValue, oldValue)) {
@@ -367,19 +388,12 @@ function updateProperty(
         return;
       }
       break;
-    case 'checked':
-      if (narrowElement(element, 'INPUT')) {
-        const newChecked = !!newValue;
-        const oldChecked = element.checked;
-        if (newChecked !== oldChecked) {
-          element.checked = newChecked;
+    case 'htmlfor':
+      if (narrowElement(element, 'LABEL')) {
+        if (!Object.is(newValue, oldValue)) {
+          element.htmlFor = newValue?.toString() ?? '';
         }
         return;
-      }
-      break;
-    case 'classname':
-      if (!Object.is(newValue, oldValue)) {
-        element.className = newValue?.toString() ?? '';
       }
       break;
     case 'value':
