@@ -118,7 +118,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     this._holes = holes;
   }
 
-  get name(): string {
+  get displayName(): string {
     return 'TaggedTemplate';
   }
 
@@ -289,38 +289,38 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
 
       OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
         while (currentHole.index === nodeIndex) {
-          let localPart: Part;
+          let currentPart: Part;
 
           switch (currentHole.type) {
             case PartType.Attribute:
-              localPart = {
+              currentPart = {
                 type: PartType.Attribute,
                 node: currentNode as Element,
                 name: currentHole.name,
               };
               break;
             case PartType.ChildNode:
-              localPart = {
+              currentPart = {
                 type: PartType.ChildNode,
                 node: currentNode as Comment,
                 childNode: null,
               };
               break;
             case PartType.Element:
-              localPart = {
+              currentPart = {
                 type: PartType.Element,
                 node: currentNode as Element,
               };
               break;
             case PartType.Event:
-              localPart = {
+              currentPart = {
                 type: PartType.Event,
                 node: currentNode as Element,
                 name: currentHole.name,
               };
               break;
             case PartType.Live:
-              localPart = {
+              currentPart = {
                 type: PartType.Live,
                 node: currentNode as Element,
                 name: currentHole.name,
@@ -328,7 +328,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               };
               break;
             case PartType.Property:
-              localPart = {
+              currentPart = {
                 type: PartType.Property,
                 node: currentNode as Element,
                 name: currentHole.name,
@@ -336,7 +336,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               };
               break;
             case PartType.Text:
-              localPart = {
+              currentPart = {
                 type: PartType.Text,
                 node: currentNode as Text,
                 precedingText: currentHole.precedingText,
@@ -345,7 +345,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               break;
           }
 
-          const slot = context.resolveSlot(binds[holeIndex]!, localPart);
+          const slot = context.resolveSlot(binds[holeIndex]!, currentPart);
           slots[holeIndex] = slot;
           slot.connect(context);
 

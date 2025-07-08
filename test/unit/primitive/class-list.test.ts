@@ -11,9 +11,9 @@ import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('ClassListPrimitive', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(ClassListPrimitive.name, 'ClassListPrimitive');
+      expect(ClassListPrimitive.displayName, 'ClassListPrimitive');
     });
   });
 

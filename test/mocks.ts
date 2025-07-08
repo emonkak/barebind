@@ -157,7 +157,7 @@ export class MockBinding<T> implements Binding<T> {
 }
 
 export class MockComponent implements Component<unknown, unknown> {
-  get name(): string {
+  get displayName(): string {
     return MockComponent.name;
   }
 
@@ -187,10 +187,10 @@ export class MockCoroutine implements Coroutine {
 }
 
 export class MockDirective<T> implements Directive<T> {
-  readonly name: string;
+  readonly displayName: string;
 
   constructor(name: string = this.constructor.name) {
-    this.name = name;
+    this.displayName = name;
   }
 
   resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
@@ -199,7 +199,7 @@ export class MockDirective<T> implements Directive<T> {
 }
 
 export const MockPrimitive = {
-  name: 'MockPrimitive',
+  displayName: 'MockPrimitive',
   ensureValue(_value: unknown): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
@@ -325,7 +325,7 @@ export class MockSlot<T> implements Slot<T> {
     const element = context.resolveDirective(value, this._binding.part);
     if (element.directive !== this._binding.directive) {
       throw new Error(
-        `The directive must be ${this._binding.directive.name} in this slot, but got ${element.directive.name}.`,
+        `The directive must be ${this._binding.directive.displayName} in this slot, but got ${element.directive.displayName}.`,
       );
     }
     if (this._binding.shouldBind(element.value)) {
@@ -382,7 +382,7 @@ export class MockTemplate implements Template<readonly unknown[]> {
     this.mode = mode;
   }
 
-  get name(): string {
+  get displayName(): string {
     return this.constructor.name;
   }
 

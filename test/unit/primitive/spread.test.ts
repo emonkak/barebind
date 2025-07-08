@@ -6,9 +6,9 @@ import { Runtime } from '@/runtime.js';
 import { MockRenderHost, MockSlot } from '../../mocks.js';
 
 describe('SpreadPrimitive', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(SpreadPrimitive.name, 'SpreadPrimitive');
+      expect(SpreadPrimitive.displayName, 'SpreadPrimitive');
     });
   });
 

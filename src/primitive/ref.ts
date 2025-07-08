@@ -17,7 +17,7 @@ export type Ref =
 export type RefCallback<T> = (value: T) => (() => void) | void;
 
 export const RefPrimitive: Primitive<Ref> = {
-  name: 'RefPrimitive',
+  displayName: 'RefPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is Ref {
     if (!isRef(value)) {
       throw new Error(

@@ -14,7 +14,7 @@ export type EventListenerValue =
   | undefined;
 
 export const EventPrimitive: Primitive<EventListenerValue> = {
-  name: 'EventPrimitive',
+  displayName: 'EventPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is EventListenerValue {
     if (!isEventListenerValue(value)) {
       throw new Error(

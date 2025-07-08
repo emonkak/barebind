@@ -10,7 +10,7 @@ import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
 export const EmptyTemplate: Template<readonly []> = {
-  name: 'EmptyTemplate',
+  displayName: 'EmptyTemplate',
   hydrate(
     _binds: readonly [],
     _part: ChildNodePart,

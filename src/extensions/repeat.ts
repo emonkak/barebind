@@ -85,7 +85,7 @@ export function repeat<TTarget, TKey, TValue>(
 }
 
 export const RepeatDirective: Directive<RepeatProps<any, any, any>> = {
-  name: 'RepeatDirective',
+  displayName: 'RepeatDirective',
   resolveBinding<TTarget, TKey, TValue>(
     props: RepeatProps<TTarget, TKey, TValue>,
     part: Part,

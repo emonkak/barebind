@@ -22,7 +22,7 @@ const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export const StylePrimitive: Primitive<StyleProps> = {
-  name: 'StylePrimitive',
+  displayName: 'StylePrimitive',
   ensureValue(value: unknown, part: Part): asserts value is StyleProps {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(

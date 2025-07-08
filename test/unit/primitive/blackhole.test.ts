@@ -6,9 +6,9 @@ import { Runtime } from '@/runtime.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('BlackholePrimitive', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(BlackholePrimitive.name, 'BlackholePrimitive');
+      expect(BlackholePrimitive.displayName, 'BlackholePrimitive');
     });
   });
 

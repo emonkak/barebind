@@ -10,7 +10,7 @@ import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { TemplateBinding } from './template.js';
 
 export const ChildNodeTemplate: Template<readonly [unknown]> = {
-  name: 'ChildNodeTemplate',
+  displayName: 'ChildNodeTemplate',
   hydrate(
     binds: readonly [unknown],
     part: ChildNodePart,
@@ -18,20 +18,20 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
-    const localPart = {
+    const childNodePart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
     } as const;
-    const slot = context.resolveSlot(binds[0], localPart);
+    const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    slot.hydrate(hydrationTree, context);
+    childNodeSlot.hydrate(hydrationTree, context);
 
     hydrationTree
-      .popNode(localPart.node.nodeType, localPart.node.nodeName)
-      .replaceWith(localPart.node);
+      .popNode(childNodePart.node.nodeType, childNodePart.node.nodeName)
+      .replaceWith(childNodePart.node);
 
-    return { childNodes: [localPart.node], slots: [slot] };
+    return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   },
   render(
     binds: readonly [unknown],
@@ -39,16 +39,16 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
-    const localPart = {
+    const childNodePart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
     } as const;
-    const slot = context.resolveSlot(binds[0], localPart);
+    const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    slot.connect(context);
+    childNodeSlot.connect(context);
 
-    return { childNodes: [localPart.node], slots: [slot] };
+    return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   },
   resolveBinding<T>(
     binds: readonly [T],

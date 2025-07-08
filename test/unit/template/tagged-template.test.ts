@@ -10,10 +10,10 @@ import { createElement } from '../../test-utils.js';
 const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('TaggedTemplate', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the template itself', () => {
       const { template } = html`<div>foo</div>`;
-      expect(template.name, 'TaggedTemplate');
+      expect(template.displayName, 'TaggedTemplate');
     });
   });
 

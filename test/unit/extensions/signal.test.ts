@@ -17,9 +17,9 @@ import { MockCoroutine, MockRenderHost } from '../../mocks.js';
 import { cleanupHooks, createElement } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the directive itself', () => {
-      expect(SignalDirective.name, 'SignalDirective');
+      expect(SignalDirective.displayName, 'SignalDirective');
     });
   });
 

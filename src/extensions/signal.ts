@@ -25,7 +25,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 export const SignalDirective: Directive<Signal<any>> = {
-  name: 'SignalDirective',
+  displayName: 'SignalDirective',
   resolveBinding<T>(
     signal: Signal<T>,
     part: Part,

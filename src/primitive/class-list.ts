@@ -14,7 +14,7 @@ export type ClassName = ClassMap | string | null | undefined;
 export type ClassMap = { [key: string]: boolean };
 
 export const ClassListPrimitive: Primitive<ClassName[]> = {
-  name: 'ClassListPrimitive',
+  displayName: 'ClassListPrimitive',
   ensureValue: (value: unknown, part: Part): asserts value is ClassName[] => {
     if (!(Array.isArray(value) && value.every(isClassName))) {
       throw new Error(

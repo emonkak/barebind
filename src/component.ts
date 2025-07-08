@@ -51,7 +51,7 @@ export class ComponentDirective<TProps, TResult>
     this._componentFn = componentFn;
   }
 
-  get name(): string {
+  get displayName(): string {
     return this._componentFn.name;
   }
 

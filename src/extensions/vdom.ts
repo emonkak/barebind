@@ -50,7 +50,7 @@ type EventListenerWithOptions =
   | (EventListenerObject & AddEventListenerOptions);
 
 export const VElementDirective: Directive<VElement> = {
-  name: 'VElementDirective',
+  displayName: 'VElementDirective',
   resolveBinding(
     element: VElement,
     part: Part,

@@ -7,9 +7,9 @@ import { EmptyTemplate } from '@/template/empty-template.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('EmptyTemplate', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the template itself', () => {
-      expect(EmptyTemplate.name, 'EmptyTemplate');
+      expect(EmptyTemplate.displayName, 'EmptyTemplate');
     });
   });
 

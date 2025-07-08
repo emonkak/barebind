@@ -8,7 +8,7 @@ import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const AttributePrimitive: Primitive<any> = {
-  name: 'AttributePrimitive',
+  displayName: 'AttributePrimitive',
   resolveBinding<T>(
     value: T,
     part: Part,

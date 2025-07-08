@@ -13,7 +13,7 @@ import { type ElementPart, type Part, PartType } from '../part.js';
 export type SpreadProps = { [key: string]: unknown };
 
 export const SpreadPrimitive: Primitive<SpreadProps> = {
-  name: 'SpreadPrimitive',
+  displayName: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new Error(

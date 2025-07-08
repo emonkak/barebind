@@ -8,7 +8,7 @@ import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const NodePrimitive: Primitive<any> = {
-  name: 'NodePrimitive',
+  displayName: 'NodePrimitive',
   resolveBinding<T>(
     value: T,
     part: Part,

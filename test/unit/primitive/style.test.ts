@@ -7,9 +7,9 @@ import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('StylePrimitive', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(StylePrimitive.name, 'StylePrimitive');
+      expect(StylePrimitive.displayName, 'StylePrimitive');
     });
   });
 

@@ -8,9 +8,9 @@ import { MockRenderHost, MockSlot } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('ChildNodeTemplate', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the template itself', () => {
-      expect(ChildNodeTemplate.name, 'ChildNodeTemplate');
+      expect(ChildNodeTemplate.displayName, 'ChildNodeTemplate');
     });
   });
 

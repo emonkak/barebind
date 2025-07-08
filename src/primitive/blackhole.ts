@@ -7,7 +7,7 @@ import type { Part } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {
-  name: 'BlackholePrimitive',
+  displayName: 'BlackholePrimitive',
   resolveBinding<T>(
     value: T,
     part: Part,

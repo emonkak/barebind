@@ -122,9 +122,9 @@ export class Runtime implements CommitContext, UpdateContext {
     if (
       part.type === PartType.ChildNode &&
       (part.node.data === '' ||
-        part.node.data.startsWith('/' + directive.name + '('))
+        part.node.data.startsWith('/' + directive.displayName + '('))
     ) {
-      part.node.data = `/${directive.name}(${inspectValue(value)})`;
+      part.node.data = `/${directive.displayName}(${inspectValue(value)})`;
     }
   }
 
@@ -437,7 +437,7 @@ export class Runtime implements CommitContext, UpdateContext {
   ): void {
     if (
       part.type === PartType.ChildNode &&
-      part.node.data.startsWith('/' + directive.name + '(')
+      part.node.data.startsWith('/' + directive.displayName + '(')
     ) {
       part.node.data = '';
     }

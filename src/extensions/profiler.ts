@@ -109,7 +109,7 @@ export class Profiler implements RuntimeObserver {
       }
       case 'COMPONENT_RENDER_START': {
         profile.componentMeasurements.push({
-          name: event.component.name,
+          name: event.component.displayName,
           startTime: performance.now(),
           duration: 0,
         });

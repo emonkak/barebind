@@ -8,10 +8,10 @@ import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('TextTemplate', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('is a string that represents the template itself', () => {
       const template = new TextTemplate('', '');
-      expect(template.name, 'TextTemplate');
+      expect(template.displayName, 'TextTemplate');
     });
   });
 

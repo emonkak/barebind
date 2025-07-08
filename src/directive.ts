@@ -13,7 +13,7 @@ import type { Literal, TemplateLiteral } from './template-literal.js';
 export const $toDirectiveElement: unique symbol = Symbol('$toDirectiveElement');
 
 export interface Directive<T> {
-  readonly name: string;
+  readonly displayName: string;
   resolveBinding(value: T, part: Part, context: DirectiveContext): Binding<T>;
 }
 
@@ -176,7 +176,7 @@ export interface ComponentResult<T> {
 }
 
 export const DelegateDirective: Directive<any> = {
-  name: 'DelegateDirective',
+  displayName: 'DelegateDirective',
   resolveBinding<T>(
     value: T,
     part: Part,

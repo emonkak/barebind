@@ -36,11 +36,11 @@ describe('defineComponent()', () => {
 });
 
 describe('ComponentDirective', () => {
-  describe('name', () => {
+  describe('displayName', () => {
     it('returns the component function name', () => {
       const component = new ComponentDirective(Greet);
 
-      expect(component.name).toBe(Greet.name);
+      expect(component.displayName).toBe(Greet.name);
     });
   });
 
