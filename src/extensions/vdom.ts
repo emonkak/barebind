@@ -41,7 +41,7 @@ export type ElementProps = Record<string, unknown>;
 
 type NormalizeProps<TProps> = { children: VNode[] } & Omit<TProps, 'key'>;
 
-type EventRegistry = Pick<
+type ReadonlyEventTarget = Pick<
   EventTarget,
   'addEventListener' | 'removeEventListener'
 >;
@@ -50,7 +50,17 @@ type EventListenerWithOptions =
   | EventListener
   | (EventListenerObject & AddEventListenerOptions);
 
+type Ref<T> =
+  | { current: T }
+  | (((current: T) => (() => void) | void) & {
+      [$cleanup]?: (() => void) | void;
+    })
+  | null
+  | undefined;
+
 const TEXT_TEMPLATE = new TextTemplate('', '');
+
+const $cleanup = Symbol('$cleanup');
 
 export const ElementDirective: Directive<ElementProps> = {
   displayName: 'ElementDirective',
@@ -128,7 +138,7 @@ export class ElementBinding<TProps extends ElementProps>
 
   private _memoizedProps: TProps | null = null;
 
-  protected readonly _part: ElementPart;
+  private readonly _part: ElementPart;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
@@ -249,11 +259,22 @@ export function createFragment(children: VNode[]): VFragment {
   return new VFragment(children);
 }
 
+function cleanupRef(ref: NonNullable<Ref<Element | null>>): void {
+  if (typeof ref === 'function') {
+    if (ref[$cleanup] !== undefined) {
+      ref[$cleanup]();
+      ref[$cleanup] = undefined;
+    }
+  } else {
+    ref.current = null;
+  }
+}
+
 function deleteProperty(
   element: Element,
   key: string,
   value: unknown,
-  target: EventRegistry,
+  target: ReadonlyEventTarget,
 ): void {
   switch (key.toLowerCase()) {
     case 'children':
@@ -285,6 +306,11 @@ function deleteProperty(
         return;
       }
       break;
+    case 'ref':
+      if (value != null) {
+        cleanupRef(value as NonNullable<Ref<Element | null>>);
+      }
+      return;
     case 'value':
       if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
         element.value = element.defaultValue;
@@ -308,12 +334,23 @@ function deleteProperty(
 }
 
 function getChildren(props: ElementProps): VNode[] {
-  if (props['children'] !== undefined) {
+  if (Object.hasOwn(props, 'children')) {
     return Array.isArray(props['children'])
       ? (props['children'] as VNode[])
       : [props['children'] as VNode];
   } else {
     return [];
+  }
+}
+
+function invokeRef(
+  ref: NonNullable<Ref<Element | null>>,
+  element: Element,
+): void {
+  if (typeof ref === 'function') {
+    ref[$cleanup] = ref(element);
+  } else {
+    ref.current = element;
   }
 }
 
@@ -347,12 +384,11 @@ function updateProperty(
   key: string,
   newValue: unknown,
   oldValue: unknown,
-  target: EventRegistry,
+  target: ReadonlyEventTarget,
 ): void {
   switch (key.toLowerCase()) {
     case 'children':
     case 'key':
-    case 'ref':
       // Skip special properties.
       return;
     case 'checked':
@@ -394,6 +430,16 @@ function updateProperty(
         return;
       }
       break;
+    case 'ref':
+      if (newValue !== oldValue) {
+        if (oldValue != null) {
+          invokeRef(oldValue as NonNullable<Ref<Element | null>>, element);
+        }
+        if (newValue != null) {
+          cleanupRef(newValue as NonNullable<Ref<Element | null>>);
+        }
+      }
+      return;
     case 'value':
       if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
         const newString = newValue?.toString() ?? '';
