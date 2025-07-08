@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ElementTemplate } from '@/extensions/element.js';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
+import { ElementTemplate } from '@/template/element-template.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 

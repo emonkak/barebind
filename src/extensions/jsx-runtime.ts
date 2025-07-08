@@ -1,7 +1,12 @@
-import type { ElementProps } from './element.js';
-import { type VChild, VElement, type VElementType, VFragment } from './vdom.js';
+import {
+  type ElementProps,
+  type VChild,
+  VElement,
+  type VElementType,
+  VFragment,
+} from './vdom.js';
 
-export function jsx<const TProps extends ElementProps & { children?: unknown }>(
+export function jsx<const TProps extends ElementProps>(
   type: VElementType<TProps>,
   props: TProps,
   key: unknown,
