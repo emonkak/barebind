@@ -57,20 +57,22 @@ export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
     const newRef = this._pendingValue;
     const oldRef = this._memoizedValue;
 
-    if (oldRef != null) {
-      if (typeof oldRef === 'function') {
-        this._memoizedCleanup?.();
-        this._memoizedCleanup = undefined;
-      } else {
-        oldRef.current = null;
+    if (newRef !== oldRef) {
+      if (oldRef != null) {
+        if (typeof oldRef === 'function') {
+          this._memoizedCleanup?.();
+          this._memoizedCleanup = undefined;
+        } else {
+          oldRef.current = null;
+        }
       }
-    }
 
-    if (newRef != null) {
-      if (typeof newRef === 'function') {
-        this._memoizedCleanup = newRef(this._part.node);
-      } else {
-        newRef.current = this._part.node;
+      if (newRef != null) {
+        if (typeof newRef === 'function') {
+          this._memoizedCleanup = newRef(this._part.node);
+        } else {
+          newRef.current = this._part.node;
+        }
       }
     }
 

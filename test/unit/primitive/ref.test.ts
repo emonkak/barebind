@@ -163,6 +163,9 @@ describe('RefBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
+      binding.connect(runtime);
+      binding.commit(runtime);
+
       binding.bind(ref2);
       binding.connect(runtime);
       binding.commit(runtime);
