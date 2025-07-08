@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { DirectiveObject, isBindable } from '@/directive.js';
+import { DirectiveObject } from '@/directive.js';
 import {
   RepeatBinding,
   RepeatDirective,
@@ -106,7 +106,7 @@ describe('RepeatBinding', () => {
   });
 
   describe('hydrate()', () => {
-    it('hydrates the tree by child node items', () => {
+    it('hydrates the tree by items', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
         source,
@@ -137,66 +137,6 @@ describe('RepeatBinding', () => {
 
       expect(hydrationRoot.innerHTML).toBe(
         source.map((item) => item + EMPTY_COMMENT).join('') + EMPTY_COMMENT,
-      );
-    });
-
-    it('hydrates the tree by text items', () => {
-      const source = ['foo', 'bar', 'baz'];
-      const props: RepeatProps<string> = {
-        source,
-      };
-      const part: ChildNodePart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-      const hydrationRoot = createElement(
-        'div',
-        {},
-        'foo',
-        'bar',
-        'baz',
-        document.createComment(''),
-      );
-      const hydrationTree = new HydrationTree(hydrationRoot);
-      const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockRenderHost());
-
-      binding.hydrate(hydrationTree, runtime);
-      binding.commit(runtime);
-
-      expect(hydrationRoot.innerHTML).toBe(source.join('') + EMPTY_COMMENT);
-    });
-
-    it('hydrates the tree by element items', () => {
-      const source = [{ class: 'foo' }, { class: 'bar' }, { class: 'baz' }];
-      const props: RepeatProps<Record<string, unknown>> = {
-        source,
-        itemTypeResolver: () => ({ type: Node.ELEMENT_NODE, name: 'div' }),
-      };
-      const part: ChildNodePart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-      const hydrationRoot = createElement(
-        'div',
-        {},
-        createElement('div'),
-        createElement('div'),
-        createElement('div'),
-        document.createComment(''),
-      );
-      const hydrationTree = new HydrationTree(hydrationRoot);
-      const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockRenderHost());
-
-      binding.hydrate(hydrationTree, runtime);
-      binding.commit(runtime);
-
-      expect(hydrationRoot.innerHTML).toBe(
-        '<div class="foo"></div><div class="bar"></div><div class="baz"></div>' +
-          EMPTY_COMMENT,
       );
     });
 
@@ -424,14 +364,18 @@ describe('RepeatBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(container.innerHTML).toBe(source1.join('') + EMPTY_COMMENT);
+      expect(container.innerHTML).toBe(
+        source1.map(toComment).join('') + EMPTY_COMMENT,
+      );
       expect(part.childNode?.nodeValue).toBe(source1[0]);
 
       binding.bind(props2);
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(container.innerHTML).toBe(source2.join('') + EMPTY_COMMENT);
+      expect(container.innerHTML).toBe(
+        source2.map(toComment).join('') + EMPTY_COMMENT,
+      );
       expect(part.childNode?.nodeValue).toBe(source2[0]);
 
       binding.bind(props1);
@@ -439,61 +383,9 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source1.map((item) => item).join('') + EMPTY_COMMENT,
+        source1.map(toComment).join('') + EMPTY_COMMENT,
       );
       expect(part.childNode?.nodeValue).toBe(source1[0]);
-    });
-
-    it('updates items with multiple item types', () => {
-      const itemTypeResolver = (element: unknown) => {
-        return typeof element === 'object'
-          ? isBindable(element)
-            ? { type: Node.COMMENT_NODE }
-            : { type: Node.ELEMENT_NODE, name: 'div' }
-          : { type: Node.TEXT_NODE };
-      };
-      const props1: RepeatProps<unknown> = {
-        source: ['foo', textTemplate('bar'), { class: 'baz' }],
-        itemTypeResolver,
-      };
-      const props2: RepeatProps<unknown> = {
-        source: [textTemplate('foo'), 'bar', { class: 'baz' }],
-        itemTypeResolver,
-      };
-      const part: ChildNodePart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-      const container = createElement('div', {}, part.node);
-      const binding = new RepeatBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(container.innerHTML).toBe(
-        'foobar<!----><div class="baz"></div>' + EMPTY_COMMENT,
-      );
-      expect(part.childNode?.nodeValue).toBe('foo');
-
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(container.innerHTML).toBe(
-        'foo<!---->bar<div class="baz"></div>' + EMPTY_COMMENT,
-      );
-      expect(part.childNode?.nodeValue).toBe('foo');
-
-      binding.bind(props1);
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(container.innerHTML).toBe(
-        'foobar<!----><div class="baz"></div>' + EMPTY_COMMENT,
-      );
-      expect(part.childNode?.nodeValue).toBe('foo');
     });
   });
 
@@ -515,7 +407,9 @@ describe('RepeatBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(container.innerHTML).toBe(source.join('') + EMPTY_COMMENT);
+      expect(container.innerHTML).toBe(
+        source.map(toComment).join('') + EMPTY_COMMENT,
+      );
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
@@ -525,11 +419,18 @@ describe('RepeatBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(container.innerHTML).toBe(source.join('') + EMPTY_COMMENT);
+      expect(container.innerHTML).toBe(
+        source.map(toComment).join('') + EMPTY_COMMENT,
+      );
     });
   });
 });
 
 function textTemplate(content: string): DirectiveObject<readonly [string]> {
   return new DirectiveObject(TEXT_TEMPLATE, [content]);
+}
+
+function toComment(content: string): string {
+  const node = document.createComment(content);
+  return new XMLSerializer().serializeToString(node);
 }

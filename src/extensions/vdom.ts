@@ -8,10 +8,10 @@ import {
   isBindable,
 } from '../directive.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { TextPrimitive } from '../primitive/text.js';
 import { ElementTemplate } from '../template/element-template.js';
+import { TextTemplate } from '../template/text-template.js';
 import { ElementPrimitive, type ElementProps } from './element.js';
-import { type ItemType, RepeatDirective, type RepeatProps } from './repeat.js';
+import { RepeatDirective, type RepeatProps } from './repeat.js';
 
 export type VChild =
   | VChild[]
@@ -95,38 +95,7 @@ function createRepeatProps(children: VChild[]): RepeatProps<VChild> {
     source: children,
     keySelector: resolveKey,
     valueSelector: resolveValue,
-    itemTypeResolver: resolveItemType,
   };
-}
-
-function resolveItemType(child: VChild): ItemType {
-  if (child == null || typeof child === 'boolean') {
-    return {
-      type: Node.COMMENT_NODE,
-    };
-  } else if (Array.isArray(child)) {
-    return {
-      type: Node.COMMENT_NODE,
-    };
-  } else if (child instanceof VElement) {
-    if (typeof child.type === 'string') {
-      return {
-        type: Node.COMMENT_NODE,
-      };
-    } else {
-      return {
-        type: Node.COMMENT_NODE,
-      };
-    }
-  } else if (isBindable(child)) {
-    return {
-      type: Node.COMMENT_NODE,
-    };
-  } else {
-    return {
-      type: Node.TEXT_NODE,
-    };
-  }
 }
 
 function resolveKey(child: VChild, index: number): unknown {
@@ -141,6 +110,6 @@ function resolveValue(child: VChild): Bindable<unknown> {
   } else if (isBindable(child)) {
     return child;
   } else {
-    return new DirectiveObject(TextPrimitive, child);
+    return new DirectiveObject(new TextTemplate('', ''), [child]);
   }
 }
