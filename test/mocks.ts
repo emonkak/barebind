@@ -14,6 +14,7 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
+  isBindable,
   type Primitive,
   type RenderContext,
   type Slot,
@@ -311,7 +312,9 @@ export class MockSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): void {
-    const directive = context.resolveDirective(value, this.binding.part);
+    const directive = isBindable(value)
+      ? value[$toDirective]()
+      : context.resolveDirective(value, this.binding.part);
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
         `The directive must be ${this.binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,

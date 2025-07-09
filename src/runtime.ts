@@ -12,6 +12,7 @@ import {
   type DirectiveType,
   type Effect,
   isBindable,
+  type Primitive,
   type RenderContext,
   type Slot,
   type Template,
@@ -349,20 +350,16 @@ export class Runtime implements CommitContext, UpdateContext {
     return { value, pendingLanes };
   }
 
-  resolveDirective<T>(value: Bindable<T>, part: Part): Directive<T>;
-  resolveDirective(value: unknown, part: Part): Directive<unknown>;
-  resolveDirective(value: unknown, part: Part): Directive<unknown> {
-    if (isBindable(value)) {
-      return value[$toDirective]();
-    } else {
-      const type = this._renderHost.resolvePrimitive(part);
-      type.ensureValue?.(value, part);
-      return { type, value: value };
-    }
+  resolveDirective<T>(value: T, part: Part): Directive<T> {
+    const type = this._renderHost.resolvePrimitive(part);
+    type.ensureValue?.(value, part);
+    return { type: type as Primitive<T>, value };
   }
 
   resolveSlot<T>(value: T, part: Part): Slot<T> {
-    const directive = this.resolveDirective(value, part);
+    const directive = isBindable(value)
+      ? value[$toDirective]()
+      : this.resolveDirective(value, part);
     const binding = directive.type.resolveBinding(directive.value, part, this);
     const slotType =
       directive.slotType ?? this._renderHost.resolveSlotType(part);

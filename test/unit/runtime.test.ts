@@ -559,21 +559,6 @@ describe('Runtime', () => {
   });
 
   describe('resolveDirective()', () => {
-    it('resolves the directive from the bindable object', () => {
-      const directive = { type: MockPrimitive, value: 'foo' };
-      const value = {
-        [$toDirective]: vi.fn(() => directive),
-      };
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-      };
-      const runtime = new Runtime(new MockRenderHost());
-
-      expect(runtime.resolveDirective(value, part)).toBe(directive);
-    });
-
     it('resolves the directive from the primitive value', () => {
       const value = 'foo';
       const part = {
@@ -588,13 +573,13 @@ describe('Runtime', () => {
         'resolvePrimitive',
       );
 
-      const element = runtime.resolveDirective(value, part);
+      const directive = runtime.resolveDirective(value, part);
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
       expect(resolvePrimitiveSpy).toHaveBeenCalledWith(part);
-      expect(element.type).toBe(MockPrimitive);
-      expect(element.value).toBe(value);
-      expect(element.slotType).toBe(undefined);
+      expect(directive.type).toBe(MockPrimitive);
+      expect(directive.value).toBe(value);
+      expect(directive.slotType).toBe(undefined);
     });
   });
 

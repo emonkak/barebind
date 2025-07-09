@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   $toDirective,
   areDirectiveTypesEqual,
-  DelegateDirective,
   DirectiveSpecifier,
+  PrimitiveDirective,
   SlotSpecifier,
 } from '@/directive.js';
 import { PartType } from '@/part.js';
@@ -16,9 +16,9 @@ import {
   MockSlot,
 } from '../mocks.js';
 
-describe('DelegateDirective', () => {
+describe('PrimitiveDirective', () => {
   describe('resolveBinding()', () => {
-    it('delegates directive resolution to the context', () => {
+    it('resolve the directive from the primitive value', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -26,7 +26,7 @@ describe('DelegateDirective', () => {
         childNode: null,
       } as const;
       const runtime = new Runtime(new MockRenderHost());
-      const binding = DelegateDirective.resolveBinding(value, part, runtime);
+      const binding = PrimitiveDirective.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(MockPrimitive);
       expect(binding.value).toBe(value);
@@ -57,7 +57,7 @@ describe('SlotSpecifier', () => {
       const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective]();
 
-      expect(directive.type).toBe(DelegateDirective);
+      expect(directive.type).toBe(PrimitiveDirective);
       expect(directive.value).toBe(value);
       expect(directive.slotType).toBe(slotType);
     });

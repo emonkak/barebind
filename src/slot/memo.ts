@@ -1,8 +1,10 @@
 import {
+  $toDirective,
   areDirectiveTypesEqual,
   type Binding,
   type CommitContext,
   type DirectiveType,
+  isBindable,
   type Slot,
   SlotSpecifier,
   type UpdateContext,
@@ -43,10 +45,9 @@ export class MemoSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): void {
-    const directive = context.resolveDirective(
-      value,
-      this._pendingBinding.part,
-    );
+    const directive = isBindable(value)
+      ? value[$toDirective]()
+      : context.resolveDirective(value, this._pendingBinding.part);
     if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
       if (this._dirty || this._pendingBinding.shouldBind(directive.value)) {
         this._pendingBinding.bind(directive.value);

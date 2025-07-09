@@ -102,8 +102,7 @@ export interface Coroutine extends Effect {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: Bindable<T>, part: Part): Directive<T>;
-  resolveDirective(value: unknown, part: Part): Directive<unknown>;
+  resolveDirective<T>(value: T, part: Part): Directive<T>;
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
@@ -176,19 +175,15 @@ export interface ComponentResult<T> {
   pendingLanes: Lanes;
 }
 
-export const DelegateDirective: DirectiveType<any> = {
-  displayName: 'DelegateDirective',
+export const PrimitiveDirective: DirectiveType<any> = {
+  displayName: 'PrimitiveDirective',
   resolveBinding<T>(
     value: T,
     part: Part,
     context: DirectiveContext,
   ): Binding<T> {
     const directive = context.resolveDirective(value, part);
-    return directive.type.resolveBinding(
-      directive.value,
-      part,
-      context,
-    ) as Binding<T>;
+    return directive.type.resolveBinding(directive.value, part, context);
   },
 };
 
@@ -224,7 +219,7 @@ export class SlotSpecifier<T> implements Bindable {
       return { ...value[$toDirective](), slotType };
     } else {
       return {
-        type: DelegateDirective,
+        type: PrimitiveDirective,
         value,
         slotType,
       };
