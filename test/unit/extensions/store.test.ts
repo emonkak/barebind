@@ -1,8 +1,52 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { Atom, Lazy } from '@/extensions/signal.js';
-import { createStoreClass } from '@/extensions/store.js';
+import { defineStore } from '@/extensions/store.js';
 import type { HookContext } from '@/hook.js';
+
+class Counter {
+  count: number;
+
+  private _doublyCountVersion: number = 0;
+
+  private _quadruplyCountVersion: number = 0;
+
+  constructor(initialCount: number = 0) {
+    this.count = initialCount;
+  }
+
+  get doublyCount(): number {
+    this.incrementDoublyCountVersion();
+    return this.count * 2;
+  }
+
+  get quadruplyCount(): number {
+    this.incrementQuadruplyCountVersion();
+    return this.doublyCount * 2;
+  }
+
+  get _privateCount(): number {
+    return this.count;
+  }
+
+  getDoublyCountVersion(): number {
+    return this._doublyCountVersion;
+  }
+
+  getQuadruplyCountVersion(): number {
+    return this._quadruplyCountVersion;
+  }
+
+  incrementDoublyCountVersion(): number {
+    return this._doublyCountVersion++;
+  }
+
+  incrementQuadruplyCountVersion(): number {
+    return this._quadruplyCountVersion++;
+  }
+}
+
+const CounterStore = defineStore(Counter);
 
 describe('Store', () => {
   it('recalculates the computed property when any dependent properties are updated', () => {
@@ -183,47 +227,3 @@ describe('Store', () => {
     });
   });
 });
-
-class Counter {
-  count: number;
-
-  private _doublyCountVersion: number = 0;
-
-  private _quadruplyCountVersion: number = 0;
-
-  constructor(initialCount: number = 0) {
-    this.count = initialCount;
-  }
-
-  get doublyCount(): number {
-    this.incrementDoublyCountVersion();
-    return this.count * 2;
-  }
-
-  get quadruplyCount(): number {
-    this.incrementQuadruplyCountVersion();
-    return this.doublyCount * 2;
-  }
-
-  get _privateCount(): number {
-    return this.count;
-  }
-
-  getDoublyCountVersion(): number {
-    return this._doublyCountVersion;
-  }
-
-  getQuadruplyCountVersion(): number {
-    return this._quadruplyCountVersion;
-  }
-
-  incrementDoublyCountVersion(): number {
-    return this._doublyCountVersion++;
-  }
-
-  incrementQuadruplyCountVersion(): number {
-    return this._quadruplyCountVersion++;
-  }
-}
-
-const CounterStore = createStoreClass(Counter);

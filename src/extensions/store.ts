@@ -58,7 +58,7 @@ export interface StoreExtensions extends CustomHook<void> {
   toSnapshot(): Pick<this, AtomKeys<this>>;
 }
 
-export function createStoreClass<TClass extends Constructable>(
+export function defineStore<TClass extends Constructable>(
   superclass: TClass,
 ): StoreClass<TClass> {
   return class Store extends superclass implements StoreExtensions {
@@ -87,10 +87,6 @@ export function createStoreClass<TClass extends Constructable>(
       Object.freeze(this[$signalMap]);
     }
 
-    onCustomHook(context: HookContext): void {
-      context.setContextValue(this.constructor, this);
-    }
-
     asSignal(): Signal<this> {
       return new StoreSignal(this);
     }
@@ -110,6 +106,10 @@ export function createStoreClass<TClass extends Constructable>(
         }
       }
       return version;
+    }
+
+    onCustomHook(context: HookContext): void {
+      context.setContextValue(this.constructor, this);
     }
 
     restoreSnapshot(state: Pick<this, AtomKeys<this>>): void {
