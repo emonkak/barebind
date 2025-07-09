@@ -50,19 +50,23 @@ export function inspectValue(
               .join(', ') +
             ']'
           );
-        case Object:
-          return (
-            '{' +
-            Object.entries(value)
-              .map(
-                ([k, v]) =>
-                  (UNQUOTED_PROPERTY_PATTERN.test(k) ? k : JSON.stringify(k)) +
-                  ': ' +
-                  inspectValue(v, maxDepth - 1, seenObjects),
-              )
-              .join(', ') +
-            '}'
-          );
+        case Object: {
+          const entries = Object.entries(value);
+          return entries.length > 0
+            ? '{ ' +
+                entries
+                  .map(
+                    ([k, v]) =>
+                      (UNQUOTED_PROPERTY_PATTERN.test(k)
+                        ? k
+                        : JSON.stringify(k)) +
+                      ': ' +
+                      inspectValue(v, maxDepth - 1, seenObjects),
+                  )
+                  .join(', ') +
+                ' }'
+            : '{}';
+        }
         default:
           if (isJSONSerializable(value)) {
             return inspectValue(value.toJSON(), maxDepth - 1, seenObjects);

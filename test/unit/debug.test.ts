@@ -313,17 +313,20 @@ describe('inspectValue()', () => {
     [function foo() {}, 'Function(foo)'],
     [() => {}, 'Function'],
     [[], '[]'],
-    [[1, [2], { $qux: 3, 'foo-bar': 4 }], '[1, [2], {$qux: 3, "foo-bar": 4}]'],
+    [
+      [1, [2], { $qux: 3, 'foo-bar': 4 }],
+      '[1, [2], { $qux: 3, "foo-bar": 4 }]',
+    ],
     [{}, '{}'],
     [
       { foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } },
-      '{foo: 1, bar: [2], baz: {$qux: 3, "foo-bar": 4}}',
+      '{ foo: 1, bar: [2], baz: { $qux: 3, "foo-bar": 4 } }',
     ],
     [
       { foo: { bar: { baz: { qux: 123 } } } },
-      '{foo: {bar: {baz: {qux: ...}}}}',
+      '{ foo: { bar: { baz: { qux: ... } } } }',
     ],
-    [circlerValue, '{x: [Circular]}'],
+    [circlerValue, '{ x: [Circular] }'],
   ])(
     'returns a string representation of the value',
     (value, expectedString) => {
