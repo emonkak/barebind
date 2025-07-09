@@ -113,11 +113,12 @@ describe('Store', () => {
       expect(doublyCount$.version).toBe(1);
     });
 
-    it('returns undefinied if the property does not have the signal', () => {
+    it('returns undefinied if the property is private', () => {
       const store = new CounterStore();
 
-      expect(store.getSignal($doublyCountVersion)).toBe(undefined);
-      expect(store.getSignal($quadruplyCountVersion)).toBe(undefined);
+      expect(store.getSignal('_doublyCountVersion')).toBe(undefined);
+      expect(store.getSignal('_quadruplyCountVersion')).toBe(undefined);
+      expect(store.getSignal('_privateCount')).toBe(undefined);
     });
   });
 
@@ -183,15 +184,12 @@ describe('Store', () => {
   });
 });
 
-const $doublyCountVersion = Symbol('$doublyCountVersion');
-const $quadruplyCountVersion = Symbol('$quadruplyCountVersion');
-
 class Counter {
   count: number;
 
-  [$doublyCountVersion]: number = 0;
+  private _doublyCountVersion: number = 0;
 
-  [$quadruplyCountVersion]: number = 0;
+  private _quadruplyCountVersion: number = 0;
 
   constructor(initialCount: number = 0) {
     this.count = initialCount;
@@ -207,20 +205,24 @@ class Counter {
     return this.doublyCount * 2;
   }
 
+  get _privateCount(): number {
+    return this.count;
+  }
+
   getDoublyCountVersion(): number {
-    return this[$doublyCountVersion];
+    return this._doublyCountVersion;
   }
 
   getQuadruplyCountVersion(): number {
-    return this[$quadruplyCountVersion];
+    return this._quadruplyCountVersion;
   }
 
   incrementDoublyCountVersion(): number {
-    return this[$doublyCountVersion]++;
+    return this._doublyCountVersion++;
   }
 
   incrementQuadruplyCountVersion(): number {
-    return this[$quadruplyCountVersion]++;
+    return this._quadruplyCountVersion++;
   }
 }
 

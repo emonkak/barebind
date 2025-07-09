@@ -10,7 +10,10 @@ import {
 
 const $signalMap = Symbol('$signalMap');
 
-export type SignalKeys<T> = Exclude<keyof T, FunctionKeys<T>> & string;
+export type SignalKeys<T> = Exclude<
+  keyof T & string,
+  FunctionKeys<T> | PrivateKeys
+>;
 
 export type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
 
@@ -19,6 +22,8 @@ type Constructable<T = object> = new (...args: any[]) => T;
 type FunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? K : never;
 }[keyof T];
+
+type PrivateKeys = `_${string}`;
 
 type WritableKeys<T> = {
   [K in keyof T]: StrictEqual<
@@ -46,7 +51,6 @@ export interface StoreClass<TClass extends Constructable>
 export interface StoreExtensions extends CustomHook<void> {
   asSignal(): Signal<this>;
   getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
-  getSignal<TKey extends keyof this>(key: TKey): Signal<this[TKey]> | undefined;
   getSignal(key: string): Signal<unknown> | undefined;
   getVersion(): number;
   restoreSnapshot(state: Pick<this, AtomKeys<this>>): void;
@@ -92,9 +96,6 @@ export function createStoreClass<TClass extends Constructable>(
     }
 
     getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
-    getSignal<TKey extends keyof this>(
-      key: TKey,
-    ): Signal<this[TKey]> | undefined;
     getSignal(key: string): Signal<unknown> | undefined {
       return this[$signalMap][key];
     }
@@ -178,7 +179,7 @@ function defineInstanceProperties<T extends object>(
   for (const key in descriptors) {
     const { writable, enumerable, configurable, value } = descriptors[key]!;
 
-    if (writable && configurable) {
+    if (writable && configurable && !key.startsWith('_')) {
       const signal = new Atom(value);
       signalMap[key] = signal;
       Object.defineProperty(instance, key, {
@@ -210,11 +211,11 @@ function definePrototypeProperties<T extends object>(
     for (const key in descriptors) {
       const { configurable, enumerable, get, set } = descriptors[key]!;
 
-      if (get !== undefined && configurable) {
+      if (get !== undefined && configurable && !key.startsWith('_')) {
         const signal = new Lazy(() => {
           const dependencies: Signal<unknown>[] = [];
           const initialResult = get.call(
-            trackSignals(instance, signalMap, dependencies),
+            trackSignalAccesses(instance, signalMap, dependencies),
           );
           const initialVersion = dependencies.reduce(
             (version, dependency) => version + dependency.version,
@@ -241,7 +242,7 @@ function definePrototypeProperties<T extends object>(
   }
 }
 
-function trackSignals<T extends object>(
+function trackSignalAccesses<T extends object>(
   instance: T,
   signalMap: Record<PropertyKey, Signal<unknown>>,
   dependencies: Signal<unknown>[],
