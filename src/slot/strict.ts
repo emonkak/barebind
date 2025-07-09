@@ -12,7 +12,7 @@ import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function strict<T>(value: T): SlotSpecifier<T> {
-  return new SlotSpecifier(value, StrictSlot);
+  return new SlotSpecifier(StrictSlot, value);
 }
 
 export class StrictSlot<T> implements Slot<T> {

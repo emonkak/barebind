@@ -11,7 +11,7 @@ import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
 export function memo<T>(value: T): SlotSpecifier<T> {
-  return new SlotSpecifier(value, MemoSlot);
+  return new SlotSpecifier(MemoSlot, value);
 }
 
 export class MemoSlot<T> implements Slot<T> {

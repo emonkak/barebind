@@ -208,13 +208,13 @@ export class DirectiveSpecifier<T> implements Bindable<T> {
 }
 
 export class SlotSpecifier<T> implements Bindable {
-  readonly value: T;
-
   readonly slotType: SlotType;
 
-  constructor(value: T, slotType: SlotType) {
-    this.value = value;
+  readonly value: T;
+
+  constructor(slotType: SlotType, value: T) {
     this.slotType = slotType;
+    this.value = value;
   }
 
   [$toDirective](): Directive<unknown> {

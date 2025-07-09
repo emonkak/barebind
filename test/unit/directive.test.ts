@@ -52,9 +52,9 @@ describe('DirectiveSpecifier', () => {
 describe('SlotSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
     it('returns a directive element with the primitive value', () => {
-      const value = 'foo';
       const slotType = MockSlot;
-      const bindable = new SlotSpecifier(value, slotType);
+      const value = 'foo';
+      const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective]();
 
       expect(directive.type).toBe(DelegateDirective);
@@ -63,9 +63,9 @@ describe('SlotSpecifier', () => {
     });
 
     it('returns a directive element with the bindable value', () => {
-      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const slotType = MockSlot;
-      const bindable = new SlotSpecifier(value, slotType);
+      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective]();
 
       expect(directive.type).toBe(value.type);
