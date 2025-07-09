@@ -32,6 +32,10 @@ import {
 import { TextTemplate } from '../template/text-template.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
+const $cleanup = Symbol('$cleanup');
+
+const TEXT_TEMPLATE = new TextTemplate('', '');
+
 export type VChild = VNode | VNode[];
 
 export type VNode =
@@ -67,10 +71,6 @@ type Ref<T> =
     })
   | null
   | undefined;
-
-const TEXT_TEMPLATE = new TextTemplate('', '');
-
-const $cleanup = Symbol('$cleanup');
 
 export const ElementDirective: DirectiveType<ElementProps> = {
   displayName: 'ElementDirective',

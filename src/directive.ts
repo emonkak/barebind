@@ -230,7 +230,7 @@ export class SlotSpecifier<T> implements Bindable {
 export function areDirectiveTypesEqual(
   firstDirectiveType: DirectiveType<unknown>,
   secondDirectiveType: DirectiveType<unknown>,
-) {
+): boolean {
   return (
     firstDirectiveType.equals?.(secondDirectiveType) ??
     firstDirectiveType === secondDirectiveType

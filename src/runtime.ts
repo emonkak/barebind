@@ -3,7 +3,6 @@
 import { inspectValue } from './debug.js';
 import {
   $toDirective,
-  type Bindable,
   type CommitContext,
   type Component,
   type ComponentResult,
