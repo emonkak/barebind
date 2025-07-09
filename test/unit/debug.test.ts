@@ -7,6 +7,7 @@ import {
   markUsedValue,
 } from '@/debug.js';
 import { PartType } from '@/part.js';
+import { MockBindable, MockDirective } from '../mocks.js';
 import { createElement } from '../test-utils.js';
 
 const NODE_MAKRER = '[[NODE IN HERE!]]';
@@ -306,10 +307,14 @@ describe('inspectValue()', () => {
     [NaN, 'NaN'],
     [Infinity, 'Infinity'],
     [true, 'true'],
-    [new Date('2000-01-01T00:00:00.000Z'), '"2000-01-01T00:00:00.000Z"'],
+    [new Date(), 'Date'],
     [new Map(), 'Map'],
     [new Set(), 'Set'],
     [new (class Foo {})(), 'Foo'],
+    [
+      new MockBindable({ type: new MockDirective(), value: 'foo' }),
+      'MockDirective("foo")',
+    ],
     [function foo() {}, 'Function(foo)'],
     [() => {}, 'Function'],
     [[], '[]'],

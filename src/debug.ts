@@ -1,8 +1,5 @@
+import { $toDirective, isBindable } from './directive.js';
 import { type Part, PartType } from './part.js';
-
-interface JSONSerializable {
-  toJSON(): unknown;
-}
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
@@ -68,8 +65,14 @@ export function inspectValue(
             : '{}';
         }
         default:
-          if (isJSONSerializable(value)) {
-            return inspectValue(value.toJSON(), maxDepth - 1, seenObjects);
+          if (isBindable(value)) {
+            const directive = value[$toDirective]();
+            return (
+              directive.type.displayName +
+              '(' +
+              inspectValue(directive.value, maxDepth - 1, seenObjects) +
+              ')'
+            );
           }
           if (Symbol.toStringTag in value) {
             return value[Symbol.toStringTag] as string;
@@ -198,10 +201,6 @@ function inspectAround(node: Node, marker: string): string {
     complexity += getComplexity(currentNode);
   } while (complexity < 10);
   return before + marker + after;
-}
-
-function isJSONSerializable(value: unknown): value is JSONSerializable {
-  return typeof (value as JSONSerializable).toJSON === 'function';
 }
 
 function isSelfClosingTag(element: Element): boolean {

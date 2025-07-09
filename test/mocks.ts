@@ -3,11 +3,14 @@
 import { ComponentBinding } from '@/component.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import {
+  $toDirective,
   areDirectiveTypesEqual,
+  type Bindable,
   type Binding,
   type CommitContext,
   type Component,
   type Coroutine,
+  type Directive,
   type DirectiveContext,
   type DirectiveType,
   type Effect,
@@ -30,41 +33,33 @@ import type {
 } from '../src/render-host.js';
 import { TemplateBinding } from '../src/template/template.js';
 
+export class MockBindable<T> implements Bindable<T> {
+  directive: Directive<T>;
+
+  constructor(directive: Directive<T>) {
+    this.directive = directive;
+  }
+
+  [$toDirective](): Directive<T> {
+    return this.directive;
+  }
+}
+
 export class MockBinding<T> implements Binding<T> {
-  private readonly _type: DirectiveType<T>;
+  readonly type: DirectiveType<T>;
 
-  private _value: T;
+  value: T;
 
-  private readonly _part: Part;
+  readonly part: Part;
 
-  private _isConnected: boolean = false;
+  isConnected: boolean = false;
 
-  private _isCommitted: boolean = false;
+  isCommitted: boolean = false;
 
   constructor(type: DirectiveType<T>, value: T, part: Part) {
-    this._type = type;
-    this._value = value;
-    this._part = part;
-  }
-
-  get type(): DirectiveType<T> {
-    return this._type;
-  }
-
-  get value(): T {
-    return this._value;
-  }
-
-  get part(): Part {
-    return this._part;
-  }
-
-  get isConnected(): boolean {
-    return this._isConnected;
-  }
-
-  get isCommitted(): boolean {
-    return this._isCommitted;
+    this.type = type;
+    this.value = value;
+    this.part = part;
   }
 
   shouldBind(_value: T): boolean {
@@ -72,88 +67,85 @@ export class MockBinding<T> implements Binding<T> {
   }
 
   bind(value: T): void {
-    this._value = value;
+    this.value = value;
   }
 
   hydrate(_hydrationTree: HydrationTree, _context: UpdateContext): void {
-    this._isConnected = true;
+    this.isConnected = true;
   }
 
   connect(_context: UpdateContext): void {
-    this._isConnected = true;
+    this.isConnected = true;
   }
 
   disconnect(_context: UpdateContext): void {
-    this._isConnected = false;
+    this.isConnected = false;
   }
 
   commit(): void {
-    switch (this._part.type) {
+    switch (this.part.type) {
       case PartType.Attribute:
-        this._part.node.setAttribute(
-          this._part.name,
-          this._value?.toString() ?? '',
+        this.part.node.setAttribute(
+          this.part.name,
+          this.value?.toString() ?? '',
         );
         break;
       case PartType.ChildNode:
-        this._part.node.nodeValue = this._value?.toString() ?? null;
+        this.part.node.nodeValue = this.value?.toString() ?? null;
         break;
       case PartType.Element:
-        for (const name in this._value) {
-          this._part.node.setAttribute(
-            name,
-            this._value[name]?.toString() ?? '',
-          );
+        for (const name in this.value) {
+          this.part.node.setAttribute(name, this.value[name]?.toString() ?? '');
         }
         break;
       case PartType.Live:
       case PartType.Property:
-        (this._part.node as any)[this._part.name] = this._value;
+        (this.part.node as any)[this.part.name] = this.value;
         break;
       case PartType.Event:
-        this._part.node.addEventListener(
-          this._part.name,
-          this._value as EventListenerOrEventListenerObject,
+        this.part.node.addEventListener(
+          this.part.name,
+          this.value as EventListenerOrEventListenerObject,
         );
         break;
       case PartType.Text:
-        this._part.node.data =
-          this._part.precedingText +
-          (this._value?.toString() ?? '') +
-          this._part.followingText;
+        this.part.node.data =
+          this.part.precedingText +
+          (this.value?.toString() ?? '') +
+          this.part.followingText;
         break;
     }
 
-    this._isCommitted = true;
+    this.isCommitted = true;
   }
 
   rollback(): void {
-    switch (this._part.type) {
+    switch (this.part.type) {
       case PartType.Attribute:
-        this._part.node.removeAttribute(this._part.name);
+        this.part.node.removeAttribute(this.part.name);
         break;
       case PartType.Element:
-        for (const name in this._value) {
-          this._part.node.removeAttribute(name);
+        for (const name in this.value) {
+          this.part.node.removeAttribute(name);
         }
         break;
       case PartType.Live:
       case PartType.Property:
-        (this._part.node as any)[this._part.name] = this._part.defaultValue;
+        (this.part.node as any)[this.part.name] = this.part.defaultValue;
         break;
       case PartType.Event:
-        this._part.node.removeEventListener(
-          this._part.name,
-          this._value as EventListenerOrEventListenerObject,
+        this.part.node.removeEventListener(
+          this.part.name,
+          this.value as EventListenerOrEventListenerObject,
         );
         break;
       case PartType.ChildNode:
       case PartType.Text:
-        this._part.node.nodeValue = null;
+        this.part.node.nodeValue = null;
         break;
     }
 
-    this._isCommitted = false;
+    this.isCommitted = false;
   }
 }
 
@@ -296,73 +288,65 @@ export class MockRuntimeObserver implements RuntimeObserver {
 }
 
 export class MockSlot<T> implements Slot<T> {
-  private readonly _binding: Binding<unknown>;
+  readonly binding: Binding<unknown>;
 
-  private _isConnected = false;
+  isConnected = false;
 
-  private _isCommitted = false;
+  isCommitted = false;
 
   constructor(binding: Binding<unknown>) {
-    this._binding = binding;
+    this.binding = binding;
   }
 
   get type(): DirectiveType<unknown> {
-    return this._binding.type;
+    return this.binding.type;
   }
 
   get value(): unknown {
-    return this._binding.value;
+    return this.binding.value;
   }
 
   get part(): Part {
-    return this._binding.part;
-  }
-
-  get isConnected(): boolean {
-    return this._isConnected;
-  }
-
-  get isCommitted(): boolean {
-    return this._isCommitted;
+    return this.binding.part;
   }
 
   reconcile(value: T, context: UpdateContext): void {
-    const directive = context.resolveDirective(value, this._binding.part);
-    if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
+    const directive = context.resolveDirective(value, this.binding.part);
+    if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this._binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
+        `The directive must be ${this.binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
       );
     }
-    if (this._binding.shouldBind(directive.value)) {
-      this._binding.bind(directive.value);
-      this._binding.connect(context);
-      this._isConnected = true;
+    if (this.binding.shouldBind(directive.value)) {
+      this.binding.bind(directive.value);
+      this.binding.connect(context);
+      this.isConnected = true;
     }
   }
 
   hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    this._binding.hydrate(hydrationTree, context);
-    this._isConnected = true;
+    this.binding.hydrate(hydrationTree, context);
+    this.isConnected = true;
   }
 
   connect(context: UpdateContext): void {
-    this._binding.connect(context);
-    this._isConnected = true;
+    this.binding.connect(context);
+    this.isConnected = true;
   }
 
   disconnect(context: UpdateContext): void {
-    this._binding.disconnect(context);
-    this._isConnected = false;
+    this.binding.disconnect(context);
+    this.isConnected = false;
   }
 
   commit(context: CommitContext): void {
-    this._binding.commit(context);
-    this._isCommitted = true;
+    this.binding.commit(context);
+    this.isCommitted = true;
   }
 
   rollback(context: CommitContext): void {
-    this._binding.rollback(context);
-    this._isCommitted = false;
+    this.binding.rollback(context);
+    this.isCommitted = false;
   }
 }
 
