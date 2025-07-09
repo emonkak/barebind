@@ -305,11 +305,15 @@ function deleteProperty(
   value: unknown,
   target: ReadonlyEventTarget,
 ): void {
-  switch (key.toLowerCase()) {
+  switch (key) {
     case 'children':
     case 'key':
-    case 'ref':
       // Skip special properties.
+      return;
+    case 'className':
+    case 'innerHTML':
+    case 'textContent':
+      element[key] = '';
       return;
     case 'checked':
       if (narrowElement(element, 'INPUT')) {
@@ -317,19 +321,19 @@ function deleteProperty(
         return;
       }
       break;
-    case 'defaultchecked':
+    case 'defaultChecked':
       if (narrowElement(element, 'INPUT')) {
         element.defaultChecked = false;
         return;
       }
       break;
-    case 'defaultvalue':
+    case 'defaultValue':
       if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
         element.defaultValue = '';
         return;
       }
       break;
-    case 'htmlfor':
+    case 'htmlFor':
       if (narrowElement(element, 'LABEL')) {
         element.htmlFor = '';
         return;
@@ -361,7 +365,7 @@ function deleteProperty(
     default:
       if (key.length > 2 && key.startsWith('on')) {
         target.removeEventListener(
-          key.slice(2),
+          key.slice(2).toLowerCase(),
           value as EventListenerWithOptions,
         );
         return;
@@ -430,10 +434,17 @@ function updateProperty(
   oldValue: unknown,
   target: ReadonlyEventTarget,
 ): void {
-  switch (key.toLowerCase()) {
+  switch (key) {
     case 'children':
     case 'key':
       // Skip special properties.
+      return;
+    case 'className':
+    case 'innerHTML':
+    case 'textContent':
+      if (!Object.is(newValue, oldValue)) {
+        element[key] = newValue?.toString() ?? '';
+      }
       return;
     case 'checked':
       if (narrowElement(element, 'INPUT')) {
@@ -445,12 +456,7 @@ function updateProperty(
         return;
       }
       break;
-    case 'classname':
-      if (!Object.is(newValue, oldValue)) {
-        element.className = newValue?.toString() ?? '';
-      }
-      break;
-    case 'defaultchecked':
+    case 'defaultChecked':
       if (narrowElement(element, 'INPUT')) {
         if (!Object.is(newValue, oldValue)) {
           element.defaultChecked = !!newValue;
@@ -458,7 +464,7 @@ function updateProperty(
         return;
       }
       break;
-    case 'defaultvalue':
+    case 'defaultValue':
       if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
         if (!Object.is(newValue, oldValue)) {
           element.defaultValue = newValue?.toString() ?? '';
@@ -466,7 +472,7 @@ function updateProperty(
         return;
       }
       break;
-    case 'htmlfor':
+    case 'htmlFor':
       if (narrowElement(element, 'LABEL')) {
         if (!Object.is(newValue, oldValue)) {
           element.htmlFor = newValue?.toString() ?? '';
@@ -512,13 +518,13 @@ function updateProperty(
         if (newValue !== oldValue) {
           if (oldValue != null) {
             target.removeEventListener(
-              key.slice(2),
+              key.slice(2).toLowerCase(),
               oldValue as EventListenerWithOptions,
             );
           }
           if (newValue != null) {
             target.addEventListener(
-              key.slice(2),
+              key.slice(2).toLowerCase(),
               newValue as EventListenerWithOptions,
             );
           }
