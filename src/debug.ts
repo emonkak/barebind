@@ -48,7 +48,9 @@ export function inspectValue(
                 .join(', ') +
               ']'
             );
-          case Object: {
+          case Object:
+          case null:
+          case undefined: {
             const entries = Object.entries(value);
             return entries.length > 0
               ? '{ ' +

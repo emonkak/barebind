@@ -327,6 +327,7 @@ describe('inspectValue()', () => {
       '[1, [2], { $qux: 3, "foo-bar": 4 }]',
     ],
     [{}, '{}'],
+    [{ __proto__: null, foo: 1 }, '{ foo: 1 }'],
     [
       { foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } },
       '{ foo: 1, bar: [2], baz: { $qux: 3, "foo-bar": 4 } }',
