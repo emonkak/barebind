@@ -2,7 +2,7 @@ import {
   type Binding,
   type CommitContext,
   type Component,
-  type ComponentFunction,
+  type ComponentType,
   type Coroutine,
   type DirectiveContext,
   DirectiveSpecifier,
@@ -22,47 +22,39 @@ import { HydrationError, type HydrationTree } from './hydration.js';
 import type { Part } from './part.js';
 import { Scope } from './scope.js';
 
-const $component = Symbol('ComponentFunction.component');
-
 export function component<TProps, TResult>(
-  component: ComponentFunction<TProps, TResult>,
+  component: ComponentType<TProps, TResult>,
   props: TProps,
 ): DirectiveSpecifier<TProps> {
-  const directive = defineComponent(component);
+  const directive = new ComponentDirective(component);
   return new DirectiveSpecifier(directive, props);
-}
-
-export function defineComponent<TProps, TResult>(
-  componentFn: ComponentFunction<TProps, TResult>,
-): ComponentDirective<TProps, TResult> {
-  return ((
-    componentFn as {
-      [$component]?: ComponentDirective<TProps, TResult>;
-    }
-  )[$component] ??= new ComponentDirective(componentFn));
 }
 
 export class ComponentDirective<TProps, TResult>
   implements Component<TProps, TResult>
 {
-  private readonly _componentFn: ComponentFunction<TProps, TResult>;
+  private readonly _type: ComponentType<TProps, TResult>;
 
-  constructor(componentFn: ComponentFunction<TProps, TResult>) {
-    this._componentFn = componentFn;
+  constructor(type: ComponentType<TProps, TResult>) {
+    this._type = type;
   }
 
   get displayName(): string {
-    return this._componentFn.name;
+    return this._type.name;
+  }
+
+  equals(other: unknown): boolean {
+    return other instanceof ComponentDirective && other._type === this._type;
   }
 
   render(props: TProps, context: RenderContext): TResult {
-    const componentFn = this._componentFn;
-    return componentFn(props, context);
+    const type = this._type;
+    return type(props, context);
   }
 
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean {
     return (
-      this._componentFn.shouldSkipUpdate?.(nextProps, prevProps) ??
+      this._type.shouldSkipUpdate?.(nextProps, prevProps) ??
       nextProps === prevProps
     );
   }

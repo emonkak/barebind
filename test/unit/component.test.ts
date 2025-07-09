@@ -4,7 +4,6 @@ import {
   ComponentBinding,
   ComponentDirective,
   component,
-  defineComponent,
 } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
 import { ALL_LANES } from '@/hook.js';
@@ -21,17 +20,8 @@ describe('component()', () => {
     const props = { name: 'foo', greet: 'Hello' };
     const directive = component(Greet, props);
 
-    expect(directive.type).toBe(component(Greet, props).type);
     expect(directive.type).toBeInstanceOf(ComponentDirective);
     expect(directive.value).toBe(props);
-  });
-});
-
-describe('defineComponent()', () => {
-  it('memoizes the component by the component function', () => {
-    const component = defineComponent(Greet);
-
-    expect(defineComponent(Greet)).toBe(component);
   });
 });
 
@@ -41,6 +31,16 @@ describe('ComponentDirective', () => {
       const component = new ComponentDirective(Greet);
 
       expect(component.displayName).toBe(Greet.name);
+    });
+  });
+
+  describe('equals()', () => {
+    it('returns true if the component type is the same', () => {
+      const component = new ComponentDirective(Greet);
+
+      expect(component.equals(component)).toBe(true);
+      expect(component.equals(new ComponentDirective(Greet))).toBe(true);
+      expect(component.equals(new ComponentDirective(() => {}))).toBe(false);
     });
   });
 

@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { defineComponent } from '../component.js';
+import { ComponentDirective } from '../component.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
@@ -11,7 +11,7 @@ import type {
 import {
   $toDirective,
   type Bindable,
-  type ComponentFunction,
+  type ComponentType,
   type Directive,
   DirectiveSpecifier,
   isBindable,
@@ -45,7 +45,7 @@ export type VNode =
   | null
   | undefined;
 
-export type VElementType<TProps> = ComponentFunction<TProps> | string;
+export type VElementType<TProps> = ComponentType<TProps> | string;
 
 export type ElementProps = Record<string, unknown> & { children: unknown };
 
@@ -107,7 +107,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
   [$toDirective](): Directive<unknown> {
     if (typeof this.type === 'function') {
       return {
-        type: defineComponent(this.type),
+        type: new ComponentDirective(this.type),
         value: this.props,
       };
     } else {
