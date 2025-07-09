@@ -296,6 +296,7 @@ describe('inspectPart()', () => {
 });
 
 describe('inspectValue()', () => {
+  const x = {};
   const circlerValue = { x: {} };
   circlerValue.x = circlerValue;
 
@@ -318,6 +319,7 @@ describe('inspectValue()', () => {
     [function foo() {}, 'Function(foo)'],
     [() => {}, 'Function'],
     [[], '[]'],
+    [[x, x], '[{}, {}]'],
     [
       [1, [2], { $qux: 3, 'foo-bar': 4 }],
       '[1, [2], { $qux: 3, "foo-bar": 4 }]',

@@ -14,9 +14,9 @@ export function inspectPart(part: Part, marker: string): string {
 export function inspectValue(
   value: unknown,
   maxDepth: number = 3,
-  seenObjects: WeakSet<object> = new WeakSet(),
+  seenObjects: object[] = [],
 ): string {
-  if (maxDepth < 0) {
+  if (maxDepth < seenObjects.length) {
     return '...';
   }
   switch (typeof value) {
@@ -34,50 +34,54 @@ export function inspectValue(
       if (value === null) {
         return 'null';
       }
-      if (seenObjects.has(value)) {
+      if (seenObjects.includes(value)) {
         return '[Circular]';
       }
-      seenObjects.add(value);
-      switch (value.constructor) {
-        case Array:
-          return (
-            '[' +
-            (value as unknown[])
-              .map((v) => inspectValue(v, maxDepth - 1, seenObjects))
-              .join(', ') +
-            ']'
-          );
-        case Object: {
-          const entries = Object.entries(value);
-          return entries.length > 0
-            ? '{ ' +
-                entries
-                  .map(
-                    ([k, v]) =>
-                      (UNQUOTED_PROPERTY_PATTERN.test(k)
-                        ? k
-                        : JSON.stringify(k)) +
-                      ': ' +
-                      inspectValue(v, maxDepth - 1, seenObjects),
-                  )
-                  .join(', ') +
-                ' }'
-            : '{}';
-        }
-        default:
-          if (isBindable(value)) {
-            const directive = value[$toDirective]();
+      seenObjects.push(value);
+      try {
+        switch (value.constructor) {
+          case Array:
             return (
-              directive.type.displayName +
-              '(' +
-              inspectValue(directive.value, maxDepth - 1, seenObjects) +
-              ')'
+              '[' +
+              (value as unknown[])
+                .map((v) => inspectValue(v, maxDepth, seenObjects))
+                .join(', ') +
+              ']'
             );
+          case Object: {
+            const entries = Object.entries(value);
+            return entries.length > 0
+              ? '{ ' +
+                  entries
+                    .map(
+                      ([k, v]) =>
+                        (UNQUOTED_PROPERTY_PATTERN.test(k)
+                          ? k
+                          : JSON.stringify(k)) +
+                        ': ' +
+                        inspectValue(v, maxDepth, seenObjects),
+                    )
+                    .join(', ') +
+                  ' }'
+              : '{}';
           }
-          if (Symbol.toStringTag in value) {
-            return value[Symbol.toStringTag] as string;
-          }
-          return value.constructor.name;
+          default:
+            if (isBindable(value)) {
+              const directive = value[$toDirective]();
+              return (
+                directive.type.displayName +
+                '(' +
+                inspectValue(directive.value, maxDepth, seenObjects) +
+                ')'
+              );
+            }
+            if (Symbol.toStringTag in value) {
+              return value[Symbol.toStringTag] as string;
+            }
+            return value.constructor.name;
+        }
+      } finally {
+        seenObjects.pop();
       }
     default:
       return value!.toString();
