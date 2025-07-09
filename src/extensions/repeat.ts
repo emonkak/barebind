@@ -150,6 +150,7 @@ export class RepeatBinding<TTarget, TKey, TValue>
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: this._part.namespaceURI,
       };
       const slot = context.resolveSlot(value, part);
 
@@ -180,6 +181,7 @@ export class RepeatBinding<TTarget, TKey, TValue>
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
+          namespaceURI: this._part.namespaceURI,
         };
         const slot = context.resolveSlot(value, part);
         slot.connect(context);

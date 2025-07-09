@@ -5,6 +5,7 @@ import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { StrictSlot, strict } from '@/slot/strict.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
   MockDirective,
@@ -30,7 +31,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
 
@@ -48,7 +50,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -80,7 +83,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -118,7 +122,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -149,7 +154,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -169,7 +175,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -204,7 +211,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -237,7 +245,8 @@ describe('StrictSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockRenderHost());

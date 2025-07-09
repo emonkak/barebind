@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/part.js';
 import { NodeBinding, NodePrimitive } from '@/primitive/node.js';
 import { Runtime } from '@/runtime.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('NodePrimitive', () => {
@@ -19,7 +20,8 @@ describe('NodePrimitive', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = NodePrimitive.resolveBinding(value, part, runtime);
 
@@ -33,7 +35,7 @@ describe('NodePrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => NodePrimitive.resolveBinding(value, part, runtime)).toThrow(
@@ -51,7 +53,8 @@ describe('NodeBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new NodeBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
@@ -64,7 +67,8 @@ describe('NodeBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new NodeBinding(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -84,7 +88,8 @@ describe('NodeBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new NodeBinding<string | null>(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -107,7 +112,8 @@ describe('NodeBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new NodeBinding<number | null>(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -131,7 +137,8 @@ describe('NodeBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new NodeBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -152,7 +159,8 @@ describe('NodeBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new NodeBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 

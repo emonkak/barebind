@@ -18,7 +18,7 @@ describe('RefPrimitive', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const ensureValue: NonNullable<typeof RefPrimitive.ensureValue> =
         RefPrimitive.ensureValue!;
 
@@ -35,7 +35,7 @@ describe('RefPrimitive', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const ensureValue: NonNullable<typeof RefPrimitive.ensureValue> =
         RefPrimitive.ensureValue!;
 
@@ -56,7 +56,7 @@ describe('RefPrimitive', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: attributeName,
-        } as const;
+        };
         const runtime = new Runtime(new MockRenderHost());
         const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
@@ -71,7 +71,7 @@ describe('RefPrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
@@ -89,7 +89,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref, part);
 
       expect(binding.shouldBind(ref)).toBe(true);
@@ -102,7 +102,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -122,7 +122,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -156,7 +156,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -190,7 +190,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -206,7 +206,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -228,7 +228,7 @@ describe('RefBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':ref',
-      } as const;
+      };
       const binding = new RefBinding(ref, part);
       const runtime = new Runtime(new MockRenderHost());
 

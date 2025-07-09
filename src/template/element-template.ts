@@ -10,43 +10,17 @@ import {
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { TemplateBinding } from '../template/template.js';
+import {
+  getNamespaceURIByTagName,
+  TemplateBinding,
+} from '../template/template.js';
 
-export const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
-export const SVG_NAMESPACE = 'http://www.w3.org/2000/svg';
-export const MATH_NAMESPACE = 'http://www.w3.org/1998/Math/MathML';
-
-export function htmlElement<TProps, TChildren>(
+export function element<TProps, TChildren>(
   name: string,
   props: TProps,
   children: TChildren,
 ): DirectiveSpecifier<readonly [TProps, TChildren]> {
-  return new DirectiveSpecifier(new ElementTemplate(name, HTML_NAMESPACE), [
-    props,
-    children,
-  ]);
-}
-
-export function mathElement<TProps, TChildren>(
-  name: string,
-  props: TProps,
-  children: TChildren,
-): DirectiveSpecifier<readonly [TProps, TChildren]> {
-  return new DirectiveSpecifier(new ElementTemplate(name, MATH_NAMESPACE), [
-    props,
-    children,
-  ]);
-}
-
-export function svgElement<TProps, TChildren>(
-  name: string,
-  props: TProps,
-  children: TChildren,
-): DirectiveSpecifier<readonly [TProps, TChildren]> {
-  return new DirectiveSpecifier(new ElementTemplate(name, SVG_NAMESPACE), [
-    props,
-    children,
-  ]);
+  return new DirectiveSpecifier(new ElementTemplate(name), [props, children]);
 }
 
 export class ElementTemplate<TProps = unknown, TChildren = unknown>
@@ -54,11 +28,8 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
 {
   private readonly _name: string;
 
-  private readonly _namespace: string | null;
-
-  constructor(name: string, namespace: string | null) {
+  constructor(name: string) {
     this._name = name;
-    this._namespace = namespace;
   }
 
   get displayName(): string {
@@ -66,11 +37,7 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
   }
 
   equals(other: DirectiveType<unknown>): boolean {
-    return (
-      other instanceof ElementTemplate &&
-      other._name === this._name &&
-      other._namespace === this._namespace
-    );
+    return other instanceof ElementTemplate && other._name === this._name;
   }
 
   hydrate(
@@ -80,6 +47,8 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
+    const namespaceURI =
+      getNamespaceURIByTagName(this._name) ?? part.namespaceURI;
     const elementPart = {
       type: PartType.Element,
       node: hydrationTree.popNode(Node.ELEMENT_NODE, this._name.toUpperCase()),
@@ -88,6 +57,7 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
+      namespaceURI,
     };
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);
@@ -111,14 +81,17 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
+    const namespaceURI =
+      getNamespaceURIByTagName(this._name) ?? part.namespaceURI;
     const elementPart = {
       type: PartType.Element,
-      node: document.createElementNS(this._namespace, this._name),
+      node: document.createElementNS(namespaceURI, this._name),
     };
     const childrenPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
+      namespaceURI,
     };
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);

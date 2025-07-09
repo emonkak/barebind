@@ -1,4 +1,4 @@
-import { inspectPart, markUsedValue } from '../debug.js';
+import { inspectNode, inspectPart, markUsedValue } from '../debug.js';
 import type {
   DirectiveContext,
   Slot,
@@ -9,7 +9,7 @@ import type {
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { TemplateBinding } from './template.js';
+import { getNamespaceURIByTagName, TemplateBinding } from './template.js';
 
 export type Hole =
   | AttributeHole
@@ -106,16 +106,23 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
         ? parseChildren(strings, binds, marker, template.content)
         : [];
 
-    return new TaggedTemplate(template, holes);
+    return new TaggedTemplate(template, holes, mode);
   }
 
   private readonly _template: HTMLTemplateElement;
 
   private readonly _holes: Hole[];
 
-  constructor(template: HTMLTemplateElement, holes: Hole[]) {
+  private readonly _mode: TemplateMode;
+
+  constructor(
+    template: HTMLTemplateElement,
+    holes: Hole[],
+    mode: TemplateMode,
+  ) {
     this._template = template;
     this._holes = holes;
+    this._mode = mode;
   }
 
   get displayName(): string {
@@ -172,6 +179,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
               type: PartType.ChildNode,
               node: document.createComment(''),
               childNode: null,
+              namespaceURI: getNamespaceURI(currentNode, this._mode),
             };
             alternateNode = childPart.node;
             break;
@@ -304,6 +312,7 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
                 type: PartType.ChildNode,
                 node: currentNode as Comment,
                 childNode: null,
+                namespaceURI: getNamespaceURI(currentNode, this._mode),
               };
               break;
             case PartType.Element:
@@ -431,6 +440,10 @@ function createMarker(placeholder: string): string {
 
 function extractCaseSensitiveAttributeName(token: string): string | undefined {
   return ATTRIBUTE_NAME_REGEXP.exec(token)?.[1];
+}
+
+function getNamespaceURI(node: Node, mode: TemplateMode): string | null {
+  return node.lookupNamespaceURI(null) ?? getNamespaceURIByTagName(mode);
 }
 
 function normalizeText(text: string): string {
@@ -593,14 +606,7 @@ function parseChildren(
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
-                  inspectPart(
-                    {
-                      type: PartType.ChildNode,
-                      node: currentNode as Comment,
-                      childNode: null,
-                    },
-                    ERROR_MAKER,
-                  ),
+                  inspectNode(currentNode, ERROR_MAKER),
               );
             }
           }

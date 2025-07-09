@@ -5,6 +5,7 @@ import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { LooseSlot, loose } from '@/slot/loose.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
   MockDirective,
@@ -30,7 +31,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
 
@@ -48,7 +50,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -81,7 +84,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -137,7 +141,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -175,7 +180,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -207,7 +213,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const hydrationTree = new HydrationTree(document.createElement('div'));
@@ -242,7 +249,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -275,7 +283,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());
@@ -309,7 +318,8 @@ describe('LooseSlot', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const runtime = new Runtime(new MockRenderHost());

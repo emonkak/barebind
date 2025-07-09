@@ -20,7 +20,7 @@ describe('PropertyPrimitive', () => {
         node: document.createElement('div'),
         name: 'innerHTML',
         defaultValue: '',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
@@ -34,7 +34,7 @@ describe('PropertyPrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
@@ -53,7 +53,7 @@ describe('PropertyBinding', () => {
         node: document.createElement('div'),
         name: 'innerHTML',
         defaultValue: '',
-      } as const;
+      };
       const binding = new PropertyBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
@@ -67,7 +67,7 @@ describe('PropertyBinding', () => {
         node: document.createElement('div'),
         name: 'innerHTML',
         defaultValue: '',
-      } as const;
+      };
       const binding = new PropertyBinding(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -88,7 +88,7 @@ describe('PropertyBinding', () => {
         node: document.createElement('div'),
         name: 'innerHTML',
         defaultValue: '',
-      } as const;
+      };
       const binding = new PropertyBinding(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -113,7 +113,7 @@ describe('PropertyBinding', () => {
         node: document.createElement('div'),
         name: 'innerHTML',
         defaultValue: '',
-      } as const;
+      };
       const binding = new PropertyBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -133,7 +133,7 @@ describe('PropertyBinding', () => {
         node: document.createElement('div'),
         name: 'innerHTML',
         defaultValue: '',
-      } as const;
+      };
       const binding = new PropertyBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 

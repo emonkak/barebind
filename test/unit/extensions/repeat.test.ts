@@ -10,6 +10,7 @@ import {
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { type ChildNodePart, PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text-template.js';
 import { MockRenderHost } from '../../mocks.js';
 import {
@@ -48,7 +49,8 @@ describe('RepeatDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
@@ -62,7 +64,7 @@ describe('RepeatDirective', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
@@ -80,7 +82,8 @@ describe('RepeatBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new RepeatBinding(props, part);
 
       expect(binding.shouldBind(props)).toBe(true);
@@ -93,7 +96,8 @@ describe('RepeatBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new RepeatBinding(props1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -116,6 +120,7 @@ describe('RepeatBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement(
         'div',
@@ -150,6 +155,7 @@ describe('RepeatBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement(
         'div',
@@ -195,6 +201,7 @@ describe('RepeatBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
@@ -242,6 +249,7 @@ describe('RepeatBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
@@ -298,6 +306,7 @@ describe('RepeatBinding', () => {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
@@ -356,6 +365,7 @@ describe('RepeatBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
@@ -399,6 +409,7 @@ describe('RepeatBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);

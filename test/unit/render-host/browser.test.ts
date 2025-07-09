@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-
 import { PartType } from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
@@ -19,6 +18,7 @@ import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
 import { EmptyTemplate } from '@/template/empty-template.js';
 import { TaggedTemplate } from '@/template/tagged-template.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text-template.js';
 import { MockCommitContext } from '../../mocks.js';
 import { templateLiteral } from '../../test-utils.js';
@@ -342,6 +342,7 @@ describe('BrowserRenderHost', () => {
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
         },
         NodePrimitive,
       ],
@@ -460,6 +461,7 @@ describe('BrowserRenderHost', () => {
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
         },
         LooseSlot,
       ],

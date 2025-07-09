@@ -25,7 +25,7 @@ describe('ClassListPrimitive', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: ':classlist',
-        } as const;
+        };
         const ensureValue: NonNullable<typeof ClassListPrimitive.ensureValue> =
           ClassListPrimitive.ensureValue!;
 
@@ -42,7 +42,7 @@ describe('ClassListPrimitive', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: ':classlist',
-        } as const;
+        };
         const ensureValue: NonNullable<typeof ClassListPrimitive.ensureValue> =
           ClassListPrimitive.ensureValue!;
 
@@ -64,7 +64,7 @@ describe('ClassListPrimitive', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: attributeName,
-        } as const;
+        };
         const runtime = new Runtime(new MockRenderHost());
         const binding = ClassListPrimitive.resolveBinding(
           classNames,
@@ -84,7 +84,7 @@ describe('ClassListPrimitive', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'class',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
@@ -104,7 +104,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':classlist',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames, part);
 
       expect(binding.shouldBind(classNames)).toBe(true);
@@ -117,7 +117,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':classlist',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -142,7 +142,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':classlist',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -171,7 +171,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':classlist',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -199,7 +199,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: createElement('div', { class: 'baz' }),
         name: 'class',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -216,7 +216,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: createElement('div', { class: 'foo bar baz' }),
         name: 'class',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -240,7 +240,7 @@ describe('ClassListBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':classlist',
-      } as const;
+      };
       const binding = new ClassListBinding(classNames, part);
       const runtime = new Runtime(new MockRenderHost());
 

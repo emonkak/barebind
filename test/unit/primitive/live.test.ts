@@ -20,7 +20,7 @@ describe('LivePrimitive', () => {
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
@@ -34,7 +34,7 @@ describe('LivePrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('textarea'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
@@ -53,7 +53,7 @@ describe('LiveBinding', () => {
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      } as const;
+      };
       const binding = new LiveBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
@@ -68,7 +68,7 @@ describe('LiveBinding', () => {
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      } as const;
+      };
       const binding = new LiveBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -96,7 +96,7 @@ describe('LiveBinding', () => {
         node: document.createElement('textarea'),
         name: 'value',
         defaultValue: '',
-      } as const;
+      };
       const binding = new LiveBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 

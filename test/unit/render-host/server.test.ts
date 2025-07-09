@@ -18,6 +18,7 @@ import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
 import { EmptyTemplate } from '@/template/empty-template.js';
 import { TaggedTemplate } from '@/template/tagged-template.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text-template.js';
 import { MockCommitContext } from '../../mocks.js';
 import { templateLiteral } from '../../test-utils.js';
@@ -204,6 +205,7 @@ describe('ServerRenderHost', () => {
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
         },
         NodePrimitive,
       ],
@@ -322,6 +324,7 @@ describe('ServerRenderHost', () => {
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
         },
         LooseSlot,
       ],

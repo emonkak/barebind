@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text-template.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
@@ -27,14 +28,15 @@ describe('TextTemplate', () => {
   });
 
   describe('hydrate()', () => {
-    it('hydrates a valid tree containing a text part', () => {
+    it('hydrates a tree containing a text part', () => {
       const template = new TextTemplate('(', ')');
       const binds = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
@@ -70,7 +72,8 @@ describe('TextTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
@@ -89,7 +92,8 @@ describe('TextTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
@@ -118,7 +122,8 @@ describe('TextTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = template.resolveBinding(binds, part, runtime);
 
@@ -133,7 +138,7 @@ describe('TextTemplate', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(

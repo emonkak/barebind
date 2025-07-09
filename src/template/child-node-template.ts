@@ -22,7 +22,8 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
-    } as const;
+      namespaceURI: part.namespaceURI,
+    };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.hydrate(hydrationTree, context);
@@ -43,7 +44,8 @@ export const ChildNodeTemplate: Template<readonly [unknown]> = {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
-    } as const;
+      namespaceURI: part.namespaceURI,
+    };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.connect(context);

@@ -6,6 +6,7 @@ import {
   moveChildNodes,
   PartType,
 } from '@/part.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createElement } from '../test-utils.js';
 
 describe('getStartNode()', () => {
@@ -22,6 +23,7 @@ describe('getStartNode()', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       },
     ],
     [
@@ -70,7 +72,8 @@ describe('getStartNode()', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: document.createElement('div'),
-    } as const;
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
 
     expect(getStartNode(part)).toBe(part.childNode);
   });
@@ -82,7 +85,8 @@ describe('getChildNodes()', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: null,
-    } as const;
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
 
     expect(getChildNodes(part)).toStrictEqual([expect.exact(part.node)]);
   });
@@ -92,7 +96,8 @@ describe('getChildNodes()', () => {
       type: PartType.ChildNode,
       node: document.createComment(''),
       childNode: document.createElement('div'),
-    } as const;
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
     const container = createElement(
       'div',
       {},

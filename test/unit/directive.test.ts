@@ -9,6 +9,7 @@ import {
 } from '@/directive.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockDirective,
   MockPrimitive,
@@ -24,7 +25,8 @@ describe('PrimitiveDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = PrimitiveDirective.resolveBinding(value, part, runtime);
 

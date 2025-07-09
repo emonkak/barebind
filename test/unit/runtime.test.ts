@@ -7,6 +7,7 @@ import { CommitPhase } from '@/render-host.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { Scope } from '@/scope.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { Literal } from '@/template-literal.js';
 import {
   MockComponent,
@@ -27,7 +28,8 @@ describe('Runtime', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       runtime.debugValue(new MockDirective('FirstDirective'), 'foo', part);
@@ -52,7 +54,7 @@ describe('Runtime', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       runtime.debugValue(new MockDirective('FirstDirective'), 'foo', part);
@@ -565,6 +567,7 @@ describe('Runtime', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
 
@@ -593,6 +596,7 @@ describe('Runtime', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
 
@@ -617,6 +621,7 @@ describe('Runtime', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
 

@@ -58,12 +58,12 @@ export function createElement<const TName extends keyof HTMLElementTagNameMap>(
 }
 
 export function createElementNS(
-  namespace: string,
+  namespaceURI: string,
   name: string,
   attributes: { [key: string]: string } = {},
   ...children: (Node | string)[]
 ): Element {
-  const element = document.createElementNS(namespace, name);
+  const element = document.createElementNS(namespaceURI, name);
   for (const key in attributes) {
     element.setAttribute(key, attributes[key]!);
   }

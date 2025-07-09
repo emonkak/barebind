@@ -22,6 +22,10 @@ export function Fragment(props: { children: VChild[] }): VFragment {
 
 declare global {
   namespace JSX {
-    type IntrinsicElements = { [K in keyof HTMLElementTagNameMap]: unknown };
+    type IntrinsicElements = {
+      [K in keyof (HTMLElementTagNameMap &
+        MathMLElementTagNameMap &
+        SVGElementTagNameMap)]: unknown;
+    };
   }
 }

@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
-
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged-template.js';
+import {
+  HTML_NAMESPACE_URI,
+  MATH_NAMESPACE_URI,
+  SVG_NAMESPACE_URI,
+} from '@/template/template.js';
 import { MockRenderHost, MockSlot } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 
@@ -257,7 +261,7 @@ describe('TaggedTemplate', () => {
       );
       expect(
         template['_template'].content.firstElementChild?.namespaceURI,
-      ).toBe('http://www.w3.org/2000/svg');
+      ).toBe(SVG_NAMESPACE_URI);
       expect(template['_holes']).toStrictEqual([
         { type: PartType.Attribute, name: 'cx', index: 0 },
         { type: PartType.Attribute, name: 'cy', index: 0 },
@@ -273,7 +277,7 @@ describe('TaggedTemplate', () => {
       );
       expect(
         template['_template'].content.firstElementChild?.namespaceURI,
-      ).toBe('http://www.w3.org/1998/Math/MathML');
+      ).toBe(MATH_NAMESPACE_URI);
       expect(template['_holes']).toStrictEqual([
         {
           type: PartType.Text,
@@ -420,6 +424,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement(
         'div',
@@ -462,6 +467,7 @@ describe('TaggedTemplate', () => {
             type: PartType.ChildNode,
             node: expect.any(Comment),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[1],
           isConnected: true,
@@ -528,6 +534,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement(
         'div',
@@ -553,6 +560,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement(
         'div',
@@ -609,6 +617,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -630,6 +639,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -649,11 +659,13 @@ describe('TaggedTemplate', () => {
             index: 0,
           },
         ],
+        'html',
       );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -685,6 +697,7 @@ describe('TaggedTemplate', () => {
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
         };
         const hydrationTree = new HydrationTree(hydrationRoot);
         const runtime = new Runtime(new MockRenderHost());
@@ -708,6 +721,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
@@ -732,6 +746,7 @@ describe('TaggedTemplate', () => {
             type: PartType.ChildNode,
             node: expect.any(Comment),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[1],
           isConnected: true,
@@ -798,6 +813,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
@@ -812,6 +828,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
@@ -844,12 +861,68 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
+    it('renders a template containing nodes in another namespace', () => {
+      const { template, binds } =
+        html`<${'foo'}><math><${'bar'}></math><svg><${'baz'}></svg>`;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const runtime = new Runtime(new MockRenderHost());
+      const { childNodes, slots } = template.render(binds, part, runtime);
+
+      expect(childNodes.map(serializeNode)).toStrictEqual([
+        '<!---->',
+        '<math><!----></math>',
+        '<svg><!----></svg>',
+      ]);
+      expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
+      expect(slots).toStrictEqual([
+        expect.objectContaining({
+          part: {
+            type: PartType.ChildNode,
+            node: expect.any(Comment),
+            childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
+          value: binds[0],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.ChildNode,
+            node: expect.any(Comment),
+            childNode: null,
+            namespaceURI: MATH_NAMESPACE_URI,
+          },
+          value: binds[1],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.ChildNode,
+            node: expect.any(Comment),
+            childNode: null,
+            namespaceURI: SVG_NAMESPACE_URI,
+          },
+          value: binds[2],
+          isConnected: true,
+          isCommitted: false,
+        }),
+      ]);
+    });
+
     it('renders an empty template', () => {
       const { template, binds } = html``;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = template.render(binds, part, runtime);
@@ -864,6 +937,7 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
 
@@ -881,11 +955,13 @@ describe('TaggedTemplate', () => {
             index: 0,
           },
         ],
+        'html',
       );
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
 
@@ -902,7 +978,8 @@ describe('TaggedTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = template.resolveBinding(binds, part, runtime);
 
@@ -916,7 +993,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(

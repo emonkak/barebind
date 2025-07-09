@@ -3,7 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { TemplateBinding } from '@/template/template.js';
+import {
+  getNamespaceURIByTagName,
+  HTML_NAMESPACE_URI,
+  MATH_NAMESPACE_URI,
+  SVG_NAMESPACE_URI,
+  TemplateBinding,
+} from '@/template/template.js';
 import {
   MockBinding,
   MockPrimitive,
@@ -22,7 +28,8 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new TemplateBinding(template, binds, part);
 
       expect(binding.shouldBind(binds)).toBe(true);
@@ -36,7 +43,8 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new TemplateBinding(template, binds1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -56,7 +64,8 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new TemplateBinding(template, binds, part);
       const hydrationRoot = createElement('div', {}, 'foo', part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -91,7 +100,8 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new TemplateBinding(template, binds, part);
       const hydrationRoot = document.createElement('div');
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -115,7 +125,8 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new TemplateBinding(template, binds1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -152,6 +163,7 @@ describe('TemplateBinding', () => {
                 node: renderRoot.firstChild!.nextSibling!
                   .nextSibling as Comment,
                 childNode: null,
+                namespaceURI: HTML_NAMESPACE_URI,
               }),
             ),
           ];
@@ -260,7 +272,8 @@ describe('TemplateBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new TemplateBinding(template, binds1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -279,6 +292,7 @@ describe('TemplateBinding', () => {
                 type: PartType.ChildNode,
                 node: childNodes[0],
                 childNode: null,
+                namespaceURI: HTML_NAMESPACE_URI,
               }),
             ),
             new MockSlot(
@@ -396,5 +410,17 @@ describe('TemplateBinding', () => {
       });
       expect(binding['_memoizedResult']).toBe(null);
     });
+  });
+});
+
+describe('getNamespaceURIByTagName()', () => {
+  it('returns the namespace URI from the tag name', () => {
+    expect(getNamespaceURIByTagName('HTML')).toBe(HTML_NAMESPACE_URI);
+    expect(getNamespaceURIByTagName('MATH')).toBe(MATH_NAMESPACE_URI);
+    expect(getNamespaceURIByTagName('SVG')).toBe(SVG_NAMESPACE_URI);
+    expect(getNamespaceURIByTagName('html')).toBe(HTML_NAMESPACE_URI);
+    expect(getNamespaceURIByTagName('math')).toBe(MATH_NAMESPACE_URI);
+    expect(getNamespaceURIByTagName('svg')).toBe(SVG_NAMESPACE_URI);
+    expect(getNamespaceURIByTagName('div')).toBe(null);
   });
 });

@@ -19,7 +19,7 @@ describe('AttributePrimitive', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'class',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
@@ -33,7 +33,7 @@ describe('AttributePrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
@@ -51,7 +51,7 @@ describe('AttributeBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'class',
-      } as const;
+      };
       const binding = new AttributeBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
@@ -64,7 +64,7 @@ describe('AttributeBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'class',
-      } as const;
+      };
       const binding = new AttributeBinding(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -85,7 +85,7 @@ describe('AttributeBinding', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: 'class',
-        } as const;
+        };
         const binding = new AttributeBinding<unknown>(value1, part);
         const runtime = new Runtime(new MockRenderHost());
 
@@ -118,7 +118,7 @@ describe('AttributeBinding', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: 'class',
-        } as const;
+        };
         const binding = new AttributeBinding(value, part);
         const runtime = new Runtime(new MockRenderHost());
 
@@ -139,7 +139,7 @@ describe('AttributeBinding', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: 'class',
-        } as const;
+        };
         const binding = new AttributeBinding(value, part);
         const runtime = new Runtime(new MockRenderHost());
 
@@ -158,7 +158,7 @@ describe('AttributeBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'class',
-      } as const;
+      };
       const binding = new AttributeBinding<unknown>(value, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -177,7 +177,7 @@ describe('AttributeBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'class',
-      } as const;
+      };
       const binding = new AttributeBinding<unknown>(value, part);
       const runtime = new Runtime(new MockRenderHost());
 

@@ -4,6 +4,7 @@ import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { EmptyTemplate } from '@/template/empty-template.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockRenderHost } from '../../mocks.js';
 
 describe('EmptyTemplate', () => {
@@ -20,7 +21,8 @@ describe('EmptyTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const hydrationTree = new HydrationTree(document.createElement('div'));
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = EmptyTemplate.hydrate(
@@ -42,7 +44,8 @@ describe('EmptyTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = EmptyTemplate.render(binds, part, runtime);
 
@@ -58,7 +61,8 @@ describe('EmptyTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = EmptyTemplate.resolveBinding(binds, part, runtime);
 
@@ -72,7 +76,7 @@ describe('EmptyTemplate', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => EmptyTemplate.resolveBinding(binds, part, runtime)).toThrow(

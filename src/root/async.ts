@@ -24,7 +24,8 @@ export function createAsyncRoot<T>(
     type: PartType.ChildNode,
     node: container.ownerDocument.createComment(''),
     childNode: null,
-  } as const;
+    namespaceURI: container.namespaceURI,
+  };
   const slot = runtime.resolveSlot(value, part);
 
   function completeOptions(

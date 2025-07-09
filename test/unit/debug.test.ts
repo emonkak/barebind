@@ -7,6 +7,7 @@ import {
   markUsedValue,
 } from '@/debug.js';
 import { PartType } from '@/part.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective } from '../mocks.js';
 import { createElement } from '../test-utils.js';
 
@@ -76,7 +77,7 @@ describe('inspectPart()', () => {
       type: PartType.Attribute,
       name: 'class',
       node: createElement('input', { type: 'text' }),
-    } as const;
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
@@ -101,7 +102,7 @@ describe('inspectPart()', () => {
       type: PartType.Attribute,
       name: 'class',
       node: createElement('input', { type: 'text' }),
-    } as const;
+    };
     const value = 'my value';
 
     const myDocument = document.implementation.createHTMLDocument();
@@ -140,7 +141,8 @@ describe('inspectPart()', () => {
       name: 'click',
       node: document.createComment(''),
       childNode: null,
-    } as const;
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
@@ -164,7 +166,7 @@ describe('inspectPart()', () => {
     const part = {
       type: PartType.Element,
       node: document.createElement('div'),
-    } as const;
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
@@ -189,7 +191,7 @@ describe('inspectPart()', () => {
       type: PartType.Event,
       name: 'click',
       node: createElement('button', { type: 'button' }),
-    } as const;
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
@@ -215,7 +217,7 @@ describe('inspectPart()', () => {
       name: 'value',
       node: createElement('input', { type: 'text' }),
       defaultValue: '',
-    } as const;
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
@@ -241,7 +243,7 @@ describe('inspectPart()', () => {
       name: 'value',
       node: createElement('input', { type: 'text' }),
       defaultValue: '',
-    } as const;
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
@@ -268,7 +270,7 @@ describe('inspectPart()', () => {
       node: document.createTextNode('foo'),
       precedingText: '',
       followingText: '',
-    } as const;
+    };
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(

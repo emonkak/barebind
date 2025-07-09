@@ -9,6 +9,10 @@ import type {
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import { type ChildNodePart, getStartNode, PartType } from '../part.js';
 
+export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
+export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
+export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
+
 export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect
 {
@@ -139,5 +143,18 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
 
     this._part.childNode = null;
     this._memoizedResult = null;
+  }
+}
+
+export function getNamespaceURIByTagName(tagName: string): string | null {
+  switch (tagName.toLowerCase()) {
+    case 'html':
+      return HTML_NAMESPACE_URI;
+    case 'math':
+      return MATH_NAMESPACE_URI;
+    case 'svg':
+      return SVG_NAMESPACE_URI;
+    default:
+      return null;
   }
 }

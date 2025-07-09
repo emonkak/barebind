@@ -29,6 +29,7 @@ export interface ChildNodePart {
   type: typeof PartType.ChildNode;
   node: Comment;
   childNode: ChildNode | null;
+  namespaceURI: string | null;
 }
 
 export interface ElementPart {

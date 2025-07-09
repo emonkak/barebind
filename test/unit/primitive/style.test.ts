@@ -19,7 +19,7 @@ describe('StylePrimitive', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':style',
-      } as const;
+      };
       const ensureValue: NonNullable<typeof StylePrimitive.ensureValue> =
         StylePrimitive.ensureValue!;
 
@@ -35,7 +35,7 @@ describe('StylePrimitive', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: ':style',
-        } as const;
+        };
         const ensureValue: NonNullable<typeof StylePrimitive.ensureValue> =
           StylePrimitive.ensureValue!;
 
@@ -55,7 +55,7 @@ describe('StylePrimitive', () => {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: attributeName,
-        } as const;
+        };
         const runtime = new Runtime(new MockRenderHost());
         const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
@@ -71,7 +71,7 @@ describe('StylePrimitive', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: 'style',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
@@ -89,7 +89,7 @@ describe('StyleBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':style',
-      } as const;
+      };
       const binding = new StyleBinding(style, part);
 
       expect(binding.shouldBind(style)).toBe(true);
@@ -102,7 +102,7 @@ describe('StyleBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':style',
-      } as const;
+      };
       const binding = new StyleBinding(style1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -131,7 +131,7 @@ describe('StyleBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':style',
-      } as const;
+      };
       const binding = new StyleBinding(style1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -157,7 +157,7 @@ describe('StyleBinding', () => {
         type: PartType.Attribute,
         node: createElement('div', { style: 'background-color: blue' }),
         name: ':style',
-      } as const;
+      };
       const binding = new StyleBinding(style, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -178,7 +178,7 @@ describe('StyleBinding', () => {
         type: PartType.Attribute,
         node: createElement('div', { style: 'background-color: blue' }),
         name: ':style',
-      } as const;
+      };
       const binding = new StyleBinding(style1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -207,7 +207,7 @@ describe('StyleBinding', () => {
         type: PartType.Attribute,
         node: document.createElement('div'),
         name: ':classlist',
-      } as const;
+      };
       const binding = new StyleBinding(style, part);
       const runtime = new Runtime(new MockRenderHost());
 

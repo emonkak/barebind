@@ -413,7 +413,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal, part);
 
       expect(binding.shouldBind(signal)).toBe(true);
@@ -427,7 +427,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -447,7 +447,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -472,7 +472,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -495,7 +495,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -519,7 +519,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -549,7 +549,7 @@ describe('SiganlBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new SignalBinding(signal, part);
       const runtime = new Runtime(new MockRenderHost());
 

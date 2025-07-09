@@ -42,7 +42,7 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
       node: hydrationTree.splitText().popNode(Node.TEXT_NODE, '#text'),
       precedingText: this._precedingText,
       followingText: this._followingText,
-    } as const;
+    };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
     textSlot.hydrate(hydrationTree, context);
@@ -61,7 +61,7 @@ export class TextTemplate<T = unknown> implements Template<readonly [T]> {
       node: document.createTextNode(''),
       precedingText: this._precedingText,
       followingText: this._followingText,
-    } as const;
+    };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
     textSlot.connect(context);

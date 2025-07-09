@@ -2,59 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import {
-  ElementTemplate,
-  HTML_NAMESPACE,
-  htmlElement,
-  MATH_NAMESPACE,
-  mathElement,
-  SVG_NAMESPACE,
-  svgElement,
-} from '@/template/element-template.js';
+import { ElementTemplate, element } from '@/template/element-template.js';
+import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import { MockRenderHost } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 
-describe('htmlElement()', () => {
-  it('returns a new DirectiveSpecifier with the HTML element', () => {
+describe('element()', () => {
+  it('returns a new DirectiveSpecifier with the element', () => {
     const props = { class: 'foo' };
     const children = 'bar';
-    const bindable = htmlElement('div', props, children);
+    const bindable = element('div', props, children);
 
     expect(bindable.type).toBeInstanceOf(ElementTemplate);
     expect((bindable.type as ElementTemplate)['_name']).toBe('div');
-    expect((bindable.type as ElementTemplate)['_namespace']).toBe(
-      HTML_NAMESPACE,
-    );
-    expect(bindable.value).toStrictEqual([props, children]);
-  });
-});
-
-describe('mathElement()', () => {
-  it('returns a new DirectiveSpecifier with the MathML element', () => {
-    const props = { class: 'foo' };
-    const children = 'bar';
-    const bindable = mathElement('mi', props, children);
-
-    expect(bindable.type).toBeInstanceOf(ElementTemplate);
-    expect((bindable.type as ElementTemplate)['_name']).toBe('mi');
-    expect((bindable.type as ElementTemplate)['_namespace']).toBe(
-      MATH_NAMESPACE,
-    );
-    expect(bindable.value).toStrictEqual([props, children]);
-  });
-});
-
-describe('svgElement()', () => {
-  it('returns a new DirectiveSpecifier with the SVG element', () => {
-    const props = { class: 'foo' };
-    const children = 'bar';
-    const bindable = svgElement('text', props, children);
-
-    expect(bindable.type).toBeInstanceOf(ElementTemplate);
-    expect((bindable.type as ElementTemplate)['_name']).toBe('text');
-    expect((bindable.type as ElementTemplate)['_namespace']).toBe(
-      SVG_NAMESPACE,
-    );
     expect(bindable.value).toStrictEqual([props, children]);
   });
 });
@@ -62,35 +22,31 @@ describe('svgElement()', () => {
 describe('ElementTemplate', () => {
   describe('displayName', () => {
     it('is a string that represents the template itself', () => {
-      const template = new ElementTemplate('div', HTML_NAMESPACE);
+      const template = new ElementTemplate('div');
 
       expect(template.displayName, 'ElementTemplate');
     });
   });
 
   describe('equals()', () => {
-    it('returns true if the name and the namespace are the same', () => {
-      const template = new ElementTemplate('div', HTML_NAMESPACE);
+    it('returns true if the name is the same', () => {
+      const template = new ElementTemplate('div');
 
       expect(template.equals(template)).toBe(true);
-      expect(template.equals(new ElementTemplate('div', HTML_NAMESPACE))).toBe(
-        true,
-      );
-      expect(template.equals(new ElementTemplate('div', null))).toBe(false);
-      expect(template.equals(new ElementTemplate('span', HTML_NAMESPACE))).toBe(
-        false,
-      );
+      expect(template.equals(new ElementTemplate('div'))).toBe(true);
+      expect(template.equals(new ElementTemplate('span'))).toBe(false);
     });
   });
 
   describe('hydrate()', () => {
-    it('hydrates an element', () => {
+    it('hydrates a tree containing a element', () => {
       const binds = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const hydrationRoot = createElement(
         'div',
         {},
@@ -98,7 +54,7 @@ describe('ElementTemplate', () => {
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div', HTML_NAMESPACE);
+      const template = new ElementTemplate('div');
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -123,6 +79,7 @@ describe('ElementTemplate', () => {
             type: PartType.ChildNode,
             node: expect.exact(hydrationRoot.firstChild!.firstChild),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
           isCommitted: false,
@@ -138,9 +95,10 @@ describe('ElementTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div', HTML_NAMESPACE);
+      const template = new ElementTemplate('div');
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -162,13 +120,14 @@ describe('ElementTemplate', () => {
             type: PartType.ChildNode,
             node: expect.any(Comment),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
           isCommitted: false,
         }),
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(
-        HTML_NAMESPACE,
+        HTML_NAMESPACE_URI,
       );
     });
 
@@ -178,13 +137,14 @@ describe('ElementTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('text', SVG_NAMESPACE);
+      const template = new ElementTemplate('svg');
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
-        '<text><!----></text>',
+        '<svg><!----></svg>',
       ]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
@@ -202,12 +162,15 @@ describe('ElementTemplate', () => {
             type: PartType.ChildNode,
             node: expect.any(Comment),
             childNode: null,
+            namespaceURI: SVG_NAMESPACE_URI,
           },
           isConnected: true,
           isCommitted: false,
         }),
       ]);
-      expect((slots[0]!.part.node as Element).namespaceURI).toBe(SVG_NAMESPACE);
+      expect((slots[0]!.part.node as Element).namespaceURI).toBe(
+        SVG_NAMESPACE_URI,
+      );
     });
   });
 
@@ -218,9 +181,10 @@ describe('ElementTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div', HTML_NAMESPACE);
+      const template = new ElementTemplate('div');
       const binding = template.resolveBinding(binds, part, runtime);
 
       expect(binding.type).toBe(template);
@@ -233,8 +197,8 @@ describe('ElementTemplate', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
-      const template = new ElementTemplate('div', HTML_NAMESPACE);
+      };
+      const template = new ElementTemplate('div');
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(

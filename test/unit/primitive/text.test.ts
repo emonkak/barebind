@@ -20,7 +20,7 @@ describe('TextPrimitive', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = TextPrimitive.resolveBinding(value, part, runtime);
 
@@ -34,7 +34,7 @@ describe('TextPrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
@@ -53,7 +53,7 @@ describe('TextBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new TextBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
@@ -67,7 +67,7 @@ describe('TextBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new TextBinding(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -88,7 +88,7 @@ describe('TextBinding', () => {
         node: document.createTextNode(''),
         precedingText: '(',
         followingText: ')',
-      } as const;
+      };
       const binding = new TextBinding<string | null>(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -112,7 +112,7 @@ describe('TextBinding', () => {
         node: document.createTextNode(''),
         precedingText: '(',
         followingText: ')',
-      } as const;
+      };
       const binding = new TextBinding<number | null>(value1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -137,7 +137,7 @@ describe('TextBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new TextBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -159,7 +159,7 @@ describe('TextBinding', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const binding = new TextBinding(value, part);
       const runtime = new Runtime(new MockRenderHost());
 

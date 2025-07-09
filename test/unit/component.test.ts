@@ -12,6 +12,7 @@ import { PartType } from '@/part.js';
 import { CommitPhase } from '@/render-host.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockCoroutine, MockRenderHost, MockSlot } from '../mocks.js';
 import { createElement } from '../test-utils.js';
 
@@ -102,7 +103,8 @@ describe('ComponentDirective', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = component.resolveBinding(props, part, runtime);
 
@@ -122,7 +124,8 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new ComponentBinding(component, props, part);
 
       expect(binding.shouldBind(props)).toBe(true);
@@ -136,7 +139,8 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new ComponentBinding(component, props1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -160,7 +164,8 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment('Hello, foo!'),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -204,7 +209,8 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = document.createElement('div');
       const hydrationTree = new HydrationTree(hydrationRoot);
@@ -235,7 +241,8 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new ComponentBinding(component, props1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -280,7 +287,8 @@ describe('ComponentBinding', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const binding = new ComponentBinding(component, props, part);
       const runtime = new Runtime(new MockRenderHost());
 

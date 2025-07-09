@@ -17,7 +17,7 @@ describe('SpreadPrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const ensureValue: NonNullable<typeof SpreadPrimitive.ensureValue> =
         SpreadPrimitive.ensureValue!;
 
@@ -32,7 +32,7 @@ describe('SpreadPrimitive', () => {
         const part = {
           type: PartType.Element,
           node: document.createElement('div'),
-        } as const;
+        };
         const ensureValue: NonNullable<typeof SpreadPrimitive.ensureValue> =
           SpreadPrimitive.ensureValue!;
 
@@ -49,7 +49,7 @@ describe('SpreadPrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
@@ -65,7 +65,7 @@ describe('SpreadPrimitive', () => {
         node: document.createTextNode(''),
         precedingText: '',
         followingText: '',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
@@ -82,7 +82,7 @@ describe('SpreadBinding', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const binding = new SpreadBinding(props, part);
 
       expect(binding.shouldBind(props)).toBe(true);
@@ -94,7 +94,7 @@ describe('SpreadBinding', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const binding = new SpreadBinding(props1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -122,7 +122,7 @@ describe('SpreadBinding', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('dialog'),
-      } as const;
+      };
       const binding = new SpreadBinding(props1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -253,7 +253,7 @@ describe('SpreadBinding', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const binding = new SpreadBinding(props, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -274,7 +274,7 @@ describe('SpreadBinding', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('dialog'),
-      } as const;
+      };
       const binding = new SpreadBinding(props, part);
       const runtime = new Runtime(new MockRenderHost());
 

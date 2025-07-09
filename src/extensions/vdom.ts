@@ -25,10 +25,7 @@ import {
   updateStyles,
 } from '../primitive/style.js';
 import { ChildNodeTemplate } from '../template/child-node-template.js';
-import {
-  ElementTemplate,
-  HTML_NAMESPACE,
-} from '../template/element-template.js';
+import { ElementTemplate } from '../template/element-template.js';
 import { TextTemplate } from '../template/text-template.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
@@ -111,31 +108,15 @@ export class VElement<TProps extends ElementProps = ElementProps>
         value: this.props,
       };
     } else {
-      let namespaceURI: string | null;
-      let children: VChild;
-
-      if (Object.hasOwn(this.props, 'namespaceURI')) {
-        namespaceURI = this.props['namespaceURI'] as string | null;
-        children = mapChildren(this.props.children as VChild, (child) =>
-          child instanceof VElement
-            ? new VElement(
-                child.type,
-                { namespaceURI, ...child.props },
-                child.key,
-              )
-            : child,
-        );
-      } else {
-        namespaceURI = HTML_NAMESPACE;
-        children = this.props.children as VChild;
-      }
-
+      const element = new DirectiveSpecifier(ElementDirective, this.props);
+      const children = Array.isArray(this.props.children)
+        ? new VFragment(this.props.children)
+        : new DirectiveSpecifier(ChildNodeTemplate, [
+            resolveValue(this.props.children as VChild),
+          ]);
       return {
-        type: new ElementTemplate(this.type, namespaceURI),
-        value: [
-          new DirectiveSpecifier(ElementDirective, this.props),
-          resolveChildren(children),
-        ],
+        type: new ElementTemplate(this.type),
+        value: [element, children],
       };
     }
   }
@@ -308,6 +289,7 @@ function deleteProperty(
   switch (key) {
     case 'children':
     case 'key':
+    case 'namespaceURI':
       // Skip special properties.
       return;
     case 'className':
@@ -386,14 +368,6 @@ function invokeRef(
   }
 }
 
-function mapChildren(child: VChild, selector: (node: VNode) => VNode): VChild {
-  if (Array.isArray(child)) {
-    return child.map(selector);
-  } else {
-    return selector(child);
-  }
-}
-
 function narrowElement<
   const TName extends Uppercase<keyof HTMLElementTagNameMap>,
 >(
@@ -401,14 +375,6 @@ function narrowElement<
   ...expectedNames: TName[]
 ): element is HTMLElementTagNameMap[Lowercase<TName>] {
   return (expectedNames as string[]).includes(element.tagName);
-}
-
-function resolveChildren(children: VChild): Bindable<unknown> {
-  if (Array.isArray(children)) {
-    return new VFragment(children);
-  } else {
-    return new DirectiveSpecifier(ChildNodeTemplate, [resolveValue(children)]);
-  }
 }
 
 function resolveKey(child: VChild, index: number): unknown {
@@ -437,6 +403,7 @@ function updateProperty(
   switch (key) {
     case 'children':
     case 'key':
+    case 'namespaceURI':
       // Skip special properties.
       return;
     case 'className':

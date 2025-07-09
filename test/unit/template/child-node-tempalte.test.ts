@@ -4,6 +4,7 @@ import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
+import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockRenderHost, MockSlot } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
@@ -15,13 +16,14 @@ describe('ChildNodeTemplate', () => {
   });
 
   describe('hydrate()', () => {
-    it('hydrates a valid tree containing a comment node', () => {
+    it('hydrates a tree containing a comment node', () => {
       const binds = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const hydrationRoot = createElement(
         'div',
         {},
@@ -47,6 +49,7 @@ describe('ChildNodeTemplate', () => {
             type: PartType.ChildNode,
             node: expect.exact(hydrationRoot.firstChild),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
           isCommitted: false,
@@ -60,7 +63,8 @@ describe('ChildNodeTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
@@ -78,7 +82,8 @@ describe('ChildNodeTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const { childNodes, slots } = ChildNodeTemplate.render(
         binds,
@@ -95,6 +100,7 @@ describe('ChildNodeTemplate', () => {
             type: PartType.ChildNode,
             node: expect.any(Comment),
             childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
           isCommitted: false,
@@ -110,7 +116,8 @@ describe('ChildNodeTemplate', () => {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
-      } as const;
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = ChildNodeTemplate.resolveBinding(binds, part, runtime);
 
@@ -124,7 +131,7 @@ describe('ChildNodeTemplate', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>

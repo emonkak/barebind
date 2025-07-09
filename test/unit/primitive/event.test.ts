@@ -18,7 +18,7 @@ describe('EventPrimitive', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const ensureValue: NonNullable<typeof EventPrimitive.ensureValue> =
         EventPrimitive.ensureValue!;
 
@@ -35,7 +35,7 @@ describe('EventPrimitive', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const ensureValue: NonNullable<typeof EventPrimitive.ensureValue> =
         EventPrimitive.ensureValue!;
 
@@ -54,7 +54,7 @@ describe('EventPrimitive', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
       const binding = EventPrimitive.resolveBinding(listener, part, runtime);
 
@@ -68,7 +68,7 @@ describe('EventPrimitive', () => {
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
-      } as const;
+      };
       const runtime = new Runtime(new MockRenderHost());
 
       expect(() =>
@@ -86,7 +86,7 @@ describe('EventBinding', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const binding = new EventBinding(listener, part);
 
       expect(binding.shouldBind(listener)).toBe(true);
@@ -99,7 +99,7 @@ describe('EventBinding', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const binding = new EventBinding(listener1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -119,7 +119,7 @@ describe('EventBinding', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const binding = new EventBinding(listener1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -158,7 +158,7 @@ describe('EventBinding', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const binding = new EventBinding(listener1, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -211,7 +211,7 @@ describe('EventBinding', () => {
           type: PartType.Event,
           node: document.createElement('div'),
           name: 'click',
-        } as const;
+        };
         const binding = new EventBinding(listener1, part);
         const runtime = new Runtime(new MockRenderHost());
 
@@ -254,7 +254,7 @@ describe('EventBinding', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const binding = new EventBinding(listener, part);
       const runtime = new Runtime(new MockRenderHost());
 
@@ -274,7 +274,7 @@ describe('EventBinding', () => {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
-      } as const;
+      };
       const binding = new EventBinding(listener, part);
       const runtime = new Runtime(new MockRenderHost());
 

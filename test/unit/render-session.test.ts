@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-
 import { ALL_LANES, Lane, NO_LANES } from '@/hook.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';

@@ -11,6 +11,7 @@ import {
   Profiler,
   repeat,
   type Signal,
+  type VElement,
 } from '@emonkak/ebit/extensions';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
@@ -116,6 +117,7 @@ function App(_props: {}, context: RenderContext) {
       })}>
       <${component(TemplateCounter, {})}>
       <${component(VDOMCounter, {})}>
+      <${component(VDOMSVG, {})}>
       <div class="SVGCounter">
         <h1>SVG Counter</h1>
         <svg width="100" height="100" viewBox="0 0 100 100">
@@ -253,7 +255,7 @@ function TemplateCounter(_props: {}, context: RenderContext): unknown {
   `;
 }
 
-function VDOMCounter(_props: {}, context: RenderContext): unknown {
+function VDOMCounter(_props: {}, context: RenderContext): VElement {
   const [count, setCount] = context.useState(0);
 
   const handleIncrement = context.useCallback(() => {
@@ -275,6 +277,21 @@ function VDOMCounter(_props: {}, context: RenderContext): unknown {
         </button>
       </nav>
       <div>Count: {count}</div>
+    </div>
+  );
+}
+
+function VDOMSVG(_props: {}): VElement {
+  return (
+    <div>
+      <h1>Virtual DOM SVG</h1>
+      <svg width="100" height="100" viewBox="0 0 100 100">
+        <title>Virtual DOM SVG</title>
+        <circle cx="50" cy="50" r="50" fill="blue" />
+        <text x="50" y="50" dominant-baseline="middle" text-anchor="middle">
+          Hello, World!
+        </text>
+      </svg>
     </div>
   );
 }
