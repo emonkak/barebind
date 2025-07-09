@@ -12,8 +12,11 @@ export { loose } from './slot/loose.js';
 export { memo } from './slot/memo.js';
 export { strict } from './slot/strict.js';
 export {
+  HTML_NAMESPACE,
   htmlElement,
+  MATH_NAMESPACE,
   mathElement,
+  SVG_NAMESPACE,
   svgElement,
 } from './template/element-template.js';
 export { Literal } from './template-literal.js';
