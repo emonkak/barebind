@@ -19,6 +19,11 @@ import {
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
+import {
+  deleteStyles,
+  type StyleProps,
+  updateStyles,
+} from '../primitive/style.js';
 import { ChildNodeTemplate } from '../template/child-node-template.js';
 import {
   ElementTemplate,
@@ -335,6 +340,15 @@ function deleteProperty(
         cleanupRef(value as NonNullable<Ref<Element | null>>);
       }
       return;
+    case 'style':
+      if (typeof value === 'object' || value === undefined) {
+        deleteStyles(
+          (element as HTMLElement).style,
+          (value ?? {}) as StyleProps,
+        );
+        return;
+      }
+      break;
     case 'value':
       if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
         element.value = element.defaultValue;
@@ -470,6 +484,19 @@ function updateProperty(
         }
       }
       return;
+    case 'style':
+      if (
+        (typeof newValue === 'object' || newValue === undefined) &&
+        (typeof oldValue === 'object' || oldValue === undefined)
+      ) {
+        updateStyles(
+          (element as HTMLElement).style,
+          (newValue ?? {}) as StyleProps,
+          (oldValue ?? {}) as StyleProps,
+        );
+        return;
+      }
+      break;
     case 'value':
       if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
         const newString = newValue?.toString() ?? '';

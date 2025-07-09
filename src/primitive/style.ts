@@ -68,23 +68,7 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
       | MathMLElement
       | SVGElement;
 
-    for (const key of Object.keys(oldProps)) {
-      if (
-        oldProps[key] != null &&
-        (!Object.hasOwn(newProps, key) || newProps[key] == null)
-      ) {
-        const property = toCSSProperty(key);
-        style.removeProperty(property);
-      }
-    }
-
-    for (const key of Object.keys(newProps)) {
-      const value = newProps[key];
-      if (value != null) {
-        const property = toCSSProperty(key);
-        style.setProperty(property, value);
-      }
-    }
+    updateStyles(style, newProps, oldProps);
 
     this._memoizedValue = this._pendingValue;
   }
@@ -96,14 +80,45 @@ export class StyleBinding extends PrimitiveBinding<StyleProps, AttributePart> {
       | MathMLElement
       | SVGElement;
 
-    for (const key of Object.keys(props)) {
-      if (props[key] != null) {
-        const property = toCSSProperty(key);
-        style.removeProperty(property);
-      }
-    }
+    deleteStyles(style, props);
 
     this._memoizedValue = {};
+  }
+}
+
+export function deleteStyles(
+  style: CSSStyleDeclaration,
+  props: StyleProps,
+): void {
+  for (const key of Object.keys(props)) {
+    if (props[key] != null) {
+      const property = toCSSProperty(key);
+      style.removeProperty(property);
+    }
+  }
+}
+
+export function updateStyles(
+  style: CSSStyleDeclaration,
+  newProps: StyleProps,
+  oldProps: StyleProps,
+): void {
+  for (const key of Object.keys(oldProps)) {
+    if (
+      oldProps[key] != null &&
+      (!Object.hasOwn(newProps, key) || newProps[key] == null)
+    ) {
+      const property = toCSSProperty(key);
+      style.removeProperty(property);
+    }
+  }
+
+  for (const key of Object.keys(newProps)) {
+    const value = newProps[key];
+    if (value != null) {
+      const property = toCSSProperty(key);
+      style.setProperty(property, value);
+    }
   }
 }
 
