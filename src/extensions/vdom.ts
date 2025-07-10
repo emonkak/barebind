@@ -33,9 +33,8 @@ const $cleanup = Symbol('$cleanup');
 
 const TEXT_TEMPLATE = new TextTemplate('', '');
 
-export type VChild = VNode | VNode[];
-
 export type VNode =
+  | VNode[]
   | VElement
   | Bindable
   | bigint
@@ -50,12 +49,7 @@ export type VElementType<TProps> = ComponentType<TProps> | string;
 
 export type ElementProps = Record<string, unknown> & { children: unknown };
 
-type NormalizeProps<TProps> = { children: VChild[] } & Omit<TProps, 'key'>;
-
-type ReadonlyEventTarget = Pick<
-  EventTarget,
-  'addEventListener' | 'removeEventListener'
->;
+type NormalizeProps<TProps> = { children: VNode[] } & Omit<TProps, 'key'>;
 
 type EventListenerWithOptions =
   | EventListener
@@ -63,11 +57,15 @@ type EventListenerWithOptions =
 
 type Ref<T> =
   | { current: T }
-  | (((current: T) => (() => void) | void) & {
-      [$cleanup]?: (() => void) | void;
-    })
+  | ((current: T) => Cleanup | void)
   | null
   | undefined;
+
+type Cleanup = () => void;
+
+interface HasCleanup {
+  [$cleanup]?: Cleanup | void;
+}
 
 export const ElementDirective: DirectiveType<ElementProps> = {
   displayName: 'ElementDirective',
@@ -112,7 +110,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
       const children = Array.isArray(this.props.children)
         ? new VFragment(this.props.children)
         : new DirectiveSpecifier(ChildNodeTemplate, [
-            resolveValue(this.props.children as VChild),
+            resolveValue(this.props.children as VNode),
           ]);
       return {
         type: new ElementTemplate(this.type),
@@ -122,14 +120,14 @@ export class VElement<TProps extends ElementProps = ElementProps>
   }
 }
 
-export class VFragment implements Bindable<RepeatProps<VChild>> {
-  readonly children: VChild[];
+export class VFragment implements Bindable<RepeatProps<VNode>> {
+  readonly children: VNode[];
 
-  constructor(children: VChild[]) {
+  constructor(children: VNode[]) {
     this.children = children;
   }
 
-  [$toDirective](): Directive<RepeatProps<VChild>> {
+  [$toDirective](): Directive<RepeatProps<VNode>> {
     return {
       type: RepeatDirective,
       value: {
@@ -193,17 +191,16 @@ export class ElementBinding<TProps extends ElementProps>
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
-        deleteProperty(element, key, oldProps[key as keyof TProps]!, this);
+        this._deleteProperty(element, key, oldProps[key as keyof TProps]!);
       }
     }
 
     for (const key of Object.keys(newProps)) {
-      updateProperty(
+      this._updateProperty(
         element,
         key,
         newProps[key as keyof TProps],
         oldProps[key as keyof TProps],
-        this,
       );
     }
 
@@ -216,33 +213,11 @@ export class ElementBinding<TProps extends ElementProps>
 
     if (props !== null) {
       for (const key of Object.keys(props)) {
-        deleteProperty(element, key, props[key as keyof TProps], this);
+        this._deleteProperty(element, key, props[key as keyof TProps]);
       }
     }
 
     this._memoizedProps = null;
-  }
-
-  addEventListener(type: string, listener: EventListenerWithOptions): void {
-    if (!this._listenerMap.has(type)) {
-      if (typeof listener === 'function') {
-        this._part.node.addEventListener(type, this);
-      } else {
-        this._part.node.addEventListener(type, this, listener);
-      }
-    }
-
-    this._listenerMap.set(type, listener);
-  }
-
-  removeEventListener(type: string, listener: EventListenerWithOptions): void {
-    if (typeof listener === 'function') {
-      this._part.node.removeEventListener(type, this);
-    } else {
-      this._part.node.removeEventListener(type, this, listener);
-    }
-
-    this._listenerMap.delete(type);
   }
 
   handleEvent(event: Event): void {
@@ -254,115 +229,246 @@ export class ElementBinding<TProps extends ElementProps>
       listener?.handleEvent(event);
     }
   }
+
+  private _addEventListener(
+    type: string,
+    listener: EventListenerWithOptions,
+  ): void {
+    if (!this._listenerMap.has(type)) {
+      if (typeof listener === 'function') {
+        this._part.node.addEventListener(type, this);
+      } else {
+        this._part.node.addEventListener(type, this, listener);
+      }
+    }
+
+    this._listenerMap.set(type, listener);
+  }
+
+  private _deleteProperty(element: Element, key: string, value: unknown): void {
+    switch (key) {
+      case 'children':
+      case 'key':
+        // Skip special properties.
+        return;
+      case 'className':
+      case 'innerHTML':
+      case 'textContent':
+        element[key] = '';
+        return;
+      case 'checked':
+        if (narrowElement(element, 'INPUT')) {
+          element.checked = element.defaultChecked;
+          return;
+        }
+        break;
+      case 'defaultChecked':
+        if (narrowElement(element, 'INPUT')) {
+          element.defaultChecked = false;
+          return;
+        }
+        break;
+      case 'defaultValue':
+        if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
+          element.defaultValue = '';
+          return;
+        }
+        break;
+      case 'htmlFor':
+        if (narrowElement(element, 'LABEL')) {
+          element.htmlFor = '';
+          return;
+        }
+        break;
+      case 'ref':
+        if (value != null) {
+          cleanupRef(value as NonNullable<Ref<Element | null>>, element);
+        }
+        return;
+      case 'style':
+        if (typeof value === 'object' || value === undefined) {
+          deleteStyles(
+            (element as HTMLElement).style,
+            (value ?? {}) as StyleProps,
+          );
+          return;
+        }
+        break;
+      case 'value':
+        if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
+          element.value = element.defaultValue;
+          return;
+        } else if (narrowElement(element, 'SELECT')) {
+          element.value = '';
+          return;
+        }
+        break;
+      default:
+        if (key.length > 2 && key.startsWith('on')) {
+          this._removeEventListener(
+            key.slice(2).toLowerCase(),
+            value as EventListenerWithOptions,
+          );
+          return;
+        }
+    }
+
+    element.removeAttribute(key);
+  }
+
+  private _removeEventListener(
+    type: string,
+    listener: EventListenerWithOptions,
+  ): void {
+    if (typeof listener === 'function') {
+      this._part.node.removeEventListener(type, this);
+    } else {
+      this._part.node.removeEventListener(type, this, listener);
+    }
+
+    this._listenerMap.delete(type);
+  }
+
+  private _updateProperty(
+    element: Element,
+    key: string,
+    newValue: unknown,
+    oldValue: unknown,
+  ): void {
+    switch (key) {
+      case 'children':
+      case 'key':
+        // Skip special properties.
+        return;
+      case 'className':
+      case 'innerHTML':
+      case 'textContent':
+        if (!Object.is(newValue, oldValue)) {
+          element[key] = newValue?.toString() ?? '';
+        }
+        return;
+      case 'checked':
+        if (narrowElement(element, 'INPUT')) {
+          const newChecked = !!newValue;
+          const oldChecked = element.checked;
+          if (newChecked !== oldChecked) {
+            element.checked = newChecked;
+          }
+          return;
+        }
+        break;
+      case 'defaultChecked':
+        if (narrowElement(element, 'INPUT')) {
+          if (!Object.is(newValue, oldValue)) {
+            element.defaultChecked = !!newValue;
+          }
+          return;
+        }
+        break;
+      case 'defaultValue':
+        if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
+          if (!Object.is(newValue, oldValue)) {
+            element.defaultValue = newValue?.toString() ?? '';
+          }
+          return;
+        }
+        break;
+      case 'htmlFor':
+        if (narrowElement(element, 'LABEL')) {
+          if (!Object.is(newValue, oldValue)) {
+            element.htmlFor = newValue?.toString() ?? '';
+          }
+          return;
+        }
+        break;
+      case 'ref':
+        if (newValue !== oldValue) {
+          if (oldValue != null) {
+            cleanupRef(oldValue as NonNullable<Ref<Element | null>>, element);
+          }
+          if (newValue != null) {
+            invokeRef(newValue as NonNullable<Ref<Element | null>>, element);
+          }
+        }
+        return;
+      case 'style':
+        if (
+          (typeof newValue === 'object' || newValue === undefined) &&
+          (typeof oldValue === 'object' || oldValue === undefined)
+        ) {
+          updateStyles(
+            (element as HTMLElement).style,
+            (newValue ?? {}) as StyleProps,
+            (oldValue ?? {}) as StyleProps,
+          );
+          return;
+        }
+        break;
+      case 'value':
+        if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
+          const newString = newValue?.toString() ?? '';
+          const oldString = element.value;
+          if (newString !== oldString) {
+            element.value = newString;
+          }
+          return;
+        }
+        break;
+      default:
+        if (key.length > 2 && key.startsWith('on') && newValue !== oldValue) {
+          if (oldValue != null) {
+            this._removeEventListener(
+              key.slice(2).toLowerCase(),
+              oldValue as EventListenerWithOptions,
+            );
+          }
+          if (newValue != null) {
+            this._addEventListener(
+              key.slice(2).toLowerCase(),
+              newValue as EventListenerWithOptions,
+            );
+          }
+          return;
+        }
+    }
+
+    if (!Object.is(newValue, oldValue)) {
+      element.setAttribute(key, newValue?.toString() ?? '');
+    }
+  }
 }
 
 export function createElement<const TProps extends ElementProps>(
   type: VElementType<NormalizeProps<TProps>>,
   props: TProps,
-  ...children: VChild[]
+  ...children: VNode[]
 ): VElement<NormalizeProps<TProps>> {
   const { key, ...restProps } = props;
   return new VElement(type, { children, ...restProps }, key);
 }
 
-export function createFragment(children: VChild[]): VFragment {
+export function createFragment(children: VNode[]): VFragment {
   return new VFragment(children);
 }
 
-function cleanupRef(ref: NonNullable<Ref<Element | null>>): void {
+function cleanupRef(
+  ref: NonNullable<Ref<Element | null>>,
+  element: Element & HasCleanup,
+): void {
   if (typeof ref === 'function') {
-    if (ref[$cleanup] !== undefined) {
-      ref[$cleanup]();
-      ref[$cleanup] = undefined;
-    }
+    element[$cleanup]?.();
+    element[$cleanup] = undefined;
   } else {
     ref.current = null;
   }
 }
 
-function deleteProperty(
-  element: Element,
-  key: string,
-  value: unknown,
-  target: ReadonlyEventTarget,
-): void {
-  switch (key) {
-    case 'children':
-    case 'key':
-    case 'namespaceURI':
-      // Skip special properties.
-      return;
-    case 'className':
-    case 'innerHTML':
-    case 'textContent':
-      element[key] = '';
-      return;
-    case 'checked':
-      if (narrowElement(element, 'INPUT')) {
-        element.checked = element.defaultChecked;
-        return;
-      }
-      break;
-    case 'defaultChecked':
-      if (narrowElement(element, 'INPUT')) {
-        element.defaultChecked = false;
-        return;
-      }
-      break;
-    case 'defaultValue':
-      if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
-        element.defaultValue = '';
-        return;
-      }
-      break;
-    case 'htmlFor':
-      if (narrowElement(element, 'LABEL')) {
-        element.htmlFor = '';
-        return;
-      }
-      break;
-    case 'ref':
-      if (value != null) {
-        cleanupRef(value as NonNullable<Ref<Element | null>>);
-      }
-      return;
-    case 'style':
-      if (typeof value === 'object' || value === undefined) {
-        deleteStyles(
-          (element as HTMLElement).style,
-          (value ?? {}) as StyleProps,
-        );
-        return;
-      }
-      break;
-    case 'value':
-      if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
-        element.value = element.defaultValue;
-        return;
-      } else if (narrowElement(element, 'SELECT')) {
-        element.value = '';
-        return;
-      }
-      break;
-    default:
-      if (key.length > 2 && key.startsWith('on')) {
-        target.removeEventListener(
-          key.slice(2).toLowerCase(),
-          value as EventListenerWithOptions,
-        );
-        return;
-      }
-  }
-
-  element.removeAttribute(key);
-}
-
 function invokeRef(
   ref: NonNullable<Ref<Element | null>>,
-  element: Element,
+  element: Element & HasCleanup,
 ): void {
   if (typeof ref === 'function') {
-    ref[$cleanup] = ref(element);
+    element[$cleanup] = ref(element);
   } else {
     ref.current = element;
   }
@@ -377,11 +483,11 @@ function narrowElement<
   return (expectedNames as string[]).includes(element.tagName);
 }
 
-function resolveKey(child: VChild, index: number): unknown {
+function resolveKey(child: VNode, index: number): unknown {
   return child instanceof VElement ? (child.key ?? index) : index;
 }
 
-function resolveValue(child: VChild): Bindable<unknown> {
+function resolveValue(child: VNode): Bindable<unknown> {
   if (isBindable(child)) {
     return child;
   } else if (Array.isArray(child)) {
@@ -390,117 +496,5 @@ function resolveValue(child: VChild): Bindable<unknown> {
     return new DirectiveSpecifier(BlackholePrimitive, child);
   } else {
     return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
-  }
-}
-
-function updateProperty(
-  element: Element,
-  key: string,
-  newValue: unknown,
-  oldValue: unknown,
-  target: ReadonlyEventTarget,
-): void {
-  switch (key) {
-    case 'children':
-    case 'key':
-    case 'namespaceURI':
-      // Skip special properties.
-      return;
-    case 'className':
-    case 'innerHTML':
-    case 'textContent':
-      if (!Object.is(newValue, oldValue)) {
-        element[key] = newValue?.toString() ?? '';
-      }
-      return;
-    case 'checked':
-      if (narrowElement(element, 'INPUT')) {
-        const newChecked = !!newValue;
-        const oldChecked = element.checked;
-        if (newChecked !== oldChecked) {
-          element.checked = newChecked;
-        }
-        return;
-      }
-      break;
-    case 'defaultChecked':
-      if (narrowElement(element, 'INPUT')) {
-        if (!Object.is(newValue, oldValue)) {
-          element.defaultChecked = !!newValue;
-        }
-        return;
-      }
-      break;
-    case 'defaultValue':
-      if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
-        if (!Object.is(newValue, oldValue)) {
-          element.defaultValue = newValue?.toString() ?? '';
-        }
-        return;
-      }
-      break;
-    case 'htmlFor':
-      if (narrowElement(element, 'LABEL')) {
-        if (!Object.is(newValue, oldValue)) {
-          element.htmlFor = newValue?.toString() ?? '';
-        }
-        return;
-      }
-      break;
-    case 'ref':
-      if (newValue !== oldValue) {
-        if (oldValue != null) {
-          invokeRef(oldValue as NonNullable<Ref<Element | null>>, element);
-        }
-        if (newValue != null) {
-          cleanupRef(newValue as NonNullable<Ref<Element | null>>);
-        }
-      }
-      return;
-    case 'style':
-      if (
-        (typeof newValue === 'object' || newValue === undefined) &&
-        (typeof oldValue === 'object' || oldValue === undefined)
-      ) {
-        updateStyles(
-          (element as HTMLElement).style,
-          (newValue ?? {}) as StyleProps,
-          (oldValue ?? {}) as StyleProps,
-        );
-        return;
-      }
-      break;
-    case 'value':
-      if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
-        const newString = newValue?.toString() ?? '';
-        const oldString = element.value;
-        if (newString !== oldString) {
-          element.value = newString;
-        }
-        return;
-      }
-      break;
-    default:
-      if (key.length > 2 && key.startsWith('on')) {
-        if (newValue !== oldValue) {
-          if (oldValue != null) {
-            target.removeEventListener(
-              key.slice(2).toLowerCase(),
-              oldValue as EventListenerWithOptions,
-            );
-          }
-          if (newValue != null) {
-            target.addEventListener(
-              key.slice(2).toLowerCase(),
-              newValue as EventListenerWithOptions,
-            );
-          }
-        }
-        return;
-      }
-  }
-
-  if (!Object.is(newValue, oldValue)) {
-    element.setAttribute(key, newValue?.toString() ?? '');
   }
 }

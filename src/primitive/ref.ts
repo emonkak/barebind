@@ -14,7 +14,9 @@ export type Ref =
   | null
   | undefined;
 
-export type RefCallback<T> = (value: T) => (() => void) | void;
+export type RefCallback<T> = (value: T) => Cleanup | void;
+
+export type Cleanup = () => void;
 
 export const RefPrimitive: Primitive<Ref> = {
   displayName: 'RefPrimitive',
@@ -43,7 +45,7 @@ export const RefPrimitive: Primitive<Ref> = {
 export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
   private _memoizedValue: Ref = null;
 
-  private _memoizedCleanup: (() => void) | void = void 0;
+  private _memoizedCleanup: Cleanup | void = undefined;
 
   get type(): Primitive<Ref> {
     return RefPrimitive;
