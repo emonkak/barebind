@@ -124,7 +124,12 @@ export class RepeatBinding<TTarget, TKey, TValue>
   }
 
   shouldBind(props: RepeatProps<TTarget, TKey, TValue>): boolean {
-    return this._memoizedItems === null || props !== this._props;
+    return (
+      this._memoizedItems === null ||
+      props.source !== this._props.source ||
+      props.keySelector !== this._props.keySelector ||
+      props.valueSelector !== this._props.valueSelector
+    );
   }
 
   bind(props: RepeatProps<TTarget, TKey, TValue>): void {

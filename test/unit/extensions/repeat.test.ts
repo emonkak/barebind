@@ -105,6 +105,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(binding.shouldBind(props1)).toBe(false);
+      expect(binding.shouldBind({ ...props1 })).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
     });
   });
