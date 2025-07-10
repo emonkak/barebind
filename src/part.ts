@@ -1,3 +1,5 @@
+/// <reference path="../typings/moveBefore.d.ts" />
+
 export type Part =
   | AttributePart
   | ChildNodePart
@@ -64,9 +66,10 @@ export interface TextPart {
   followingText: string;
 }
 
-export function getChildNodes(part: ChildNodePart): ChildNode[] {
-  const startNode = part.childNode ?? part.node;
-  const endNode = part.node;
+export function getChildNodes(
+  startNode: ChildNode,
+  endNode: ChildNode,
+): ChildNode[] {
   const childNodes = [startNode];
   let currentNode: ChildNode | null = startNode;
 
@@ -90,10 +93,12 @@ export function moveChildNodes(
   childNodes: ChildNode[],
   referenceNode: Node,
 ): void {
-  const insertOrMoveBefore =
-    Element.prototype.moveBefore ?? Element.prototype.insertBefore;
   const { parentNode } = referenceNode;
+
   if (parentNode !== null) {
+    const insertOrMoveBefore =
+      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
+
     for (let i = 0, l = childNodes.length; i < l; i++) {
       insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
     }

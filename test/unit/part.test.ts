@@ -80,33 +80,24 @@ describe('getStartNode()', () => {
 });
 
 describe('getChildNodes()', () => {
-  it('returns the part node as the only child node', () => {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: null,
-      namespaceURI: HTML_NAMESPACE_URI,
-    };
+  it('returns a single node when the start node and end node are the same', () => {
+    const node = document.createComment('');
 
-    expect(getChildNodes(part)).toStrictEqual([expect.exact(part.node)]);
+    expect(getChildNodes(node, node)).toStrictEqual([expect.exact(node)]);
   });
 
-  it('returns child nodes from the child node to the part node if the part has a child node', () => {
-    const part = {
-      type: PartType.ChildNode,
-      node: document.createComment(''),
-      childNode: document.createElement('div'),
-      namespaceURI: HTML_NAMESPACE_URI,
-    };
+  it('returns children from the start node to the end node', () => {
     const container = createElement(
       'div',
       {},
-      part.childNode,
+      document.createElement('div'),
       'foo',
-      part.node,
+      document.createComment(''),
     );
 
-    expect(getChildNodes(part)).toStrictEqual(
+    expect(
+      getChildNodes(container.firstChild!, container.lastChild!),
+    ).toStrictEqual(
       Array.from(container.childNodes, (node) => expect.exact(node)),
     );
   });

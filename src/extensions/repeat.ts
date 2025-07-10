@@ -1,5 +1,3 @@
-/// <reference path="../../typings/moveBefore.d.ts" />
-
 import { inspectPart, markUsedValue } from '../debug.js';
 import {
   type Binding,
@@ -50,7 +48,7 @@ const OperationType = {
   Remove: 2,
 } as const;
 
-interface ReconciliationHandler<TKey, TTarget, TSource> {
+interface ReconciliationHandler<TKey, TSource, TTarget> {
   insert(
     newItem: Item<TKey, TSource>,
     referenceItem: Item<TKey, TTarget> | undefined,
@@ -67,22 +65,19 @@ interface ReconciliationHandler<TKey, TTarget, TSource> {
   remove(item: Item<TKey, TTarget>): void;
 }
 
-export function repeat<TTarget, TKey, TValue>(
-  props: RepeatProps<TTarget, TKey, TValue>,
-): DirectiveSpecifier<RepeatProps<TTarget, TKey, TValue>> {
-  return new DirectiveSpecifier(
-    RepeatDirective as DirectiveType<RepeatProps<TTarget, TKey, TValue>>,
-    props,
-  );
+export function repeat<TSource, TKey, TValue>(
+  props: RepeatProps<TSource, TKey, TValue>,
+): DirectiveSpecifier<RepeatProps<TSource, TKey, TValue>> {
+  return new DirectiveSpecifier(RepeatDirective, props);
 }
 
 export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   displayName: 'RepeatDirective',
-  resolveBinding<TTarget, TKey, TValue>(
-    props: RepeatProps<TTarget, TKey, TValue>,
+  resolveBinding<TSource, TKey, TValue>(
+    props: RepeatProps<TSource, TKey, TValue>,
     part: Part,
     _context: DirectiveContext,
-  ): RepeatBinding<TTarget, TKey, TValue> {
+  ): RepeatBinding<TSource, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'RepeatDirective must be used in a child part, but it is used here in:\n' +
@@ -93,10 +88,12 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   },
 };
 
-export class RepeatBinding<TTarget, TKey, TValue>
-  implements Binding<RepeatProps<TTarget, TKey, TValue>>
+export class RepeatBinding<TSource, TKey, TValue>
+  implements Binding<RepeatProps<TSource, TKey, TValue>>
 {
-  private _props: RepeatProps<TTarget, TKey, TValue>;
+  private _props: RepeatProps<TSource, TKey, TValue>;
+
+  private readonly _part: ChildNodePart;
 
   private _pendingItems: Item<TKey, Slot<TValue>>[] = [];
 
@@ -104,18 +101,16 @@ export class RepeatBinding<TTarget, TKey, TValue>
 
   private _pendingOperations: Operation<TKey, Slot<TValue>>[] = [];
 
-  private readonly _part: ChildNodePart;
-
-  constructor(props: RepeatProps<TTarget, TKey, TValue>, part: ChildNodePart) {
+  constructor(props: RepeatProps<TSource, TKey, TValue>, part: ChildNodePart) {
     this._props = props;
     this._part = part;
   }
 
-  get type(): DirectiveType<RepeatProps<TTarget, TKey, TValue>> {
+  get type(): DirectiveType<RepeatProps<TSource, TKey, TValue>> {
     return RepeatDirective;
   }
 
-  get value(): RepeatProps<TTarget, TKey, TValue> {
+  get value(): RepeatProps<TSource, TKey, TValue> {
     return this._props;
   }
 
@@ -123,7 +118,7 @@ export class RepeatBinding<TTarget, TKey, TValue>
     return this._part;
   }
 
-  shouldBind(props: RepeatProps<TTarget, TKey, TValue>): boolean {
+  shouldBind(props: RepeatProps<TSource, TKey, TValue>): boolean {
     return (
       this._memoizedItems === null ||
       props.source !== this._props.source ||
@@ -132,7 +127,7 @@ export class RepeatBinding<TTarget, TKey, TValue>
     );
   }
 
-  bind(props: RepeatProps<TTarget, TKey, TValue>): void {
+  bind(props: RepeatProps<TSource, TKey, TValue>): void {
     this._props = props;
   }
 
@@ -189,11 +184,11 @@ export class RepeatBinding<TTarget, TKey, TValue>
           namespaceURI: this._part.namespaceURI,
         };
         const slot = context.resolveSlot(value, part);
-        slot.connect(context);
-        const item: Item<TKey, Slot<TValue>> = {
+        const item = {
           key,
           value: slot,
         };
+        slot.connect(context);
         this._pendingOperations.push({
           type: OperationType.Insert,
           item,
@@ -226,41 +221,26 @@ export class RepeatBinding<TTarget, TKey, TValue>
 
   disconnect(context: UpdateContext): void {
     for (let i = this._pendingItems.length - 1; i >= 0; i--) {
-      const item = this._pendingItems[i]!;
-      item.value.disconnect(context);
+      const { value } = this._pendingItems[i]!;
+      value.disconnect(context);
     }
   }
 
   commit(context: CommitContext): void {
-    if (this._memoizedItems === null || this._memoizedItems.length === 0) {
-      for (let i = 0, l = this._pendingItems.length; i < l; i++) {
-        const item = this._pendingItems[i]!;
-        commitInsert(item, this._part.node);
-      }
-    } else {
-      for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
-        const operation = this._pendingOperations[i]!;
-        switch (operation.type) {
-          case OperationType.Insert: {
-            const referenceNode =
-              operation.referenceItem !== undefined
-                ? getStartNode(operation.referenceItem.value.part)
-                : this._part.node;
-            commitInsert(operation.item, referenceNode);
-            break;
-          }
-          case OperationType.Move: {
-            const referenceNode =
-              operation.referenceItem !== undefined
-                ? getStartNode(operation.referenceItem.value.part)
-                : this._part.node;
-            commitMove(operation.item, referenceNode);
-            break;
-          }
-          case OperationType.Remove:
-            commitRemove(operation.item, context);
-            break;
-        }
+    for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
+      const operation = this._pendingOperations[i]!;
+      switch (operation.type) {
+        case OperationType.Insert:
+          commitInsert(operation.item, operation.referenceItem, this._part);
+          break;
+
+        case OperationType.Move:
+          commitMove(operation.item, operation.referenceItem, this._part);
+          break;
+
+        case OperationType.Remove:
+          commitRemove(operation.item, context);
+          break;
       }
     }
 
@@ -288,34 +268,43 @@ export class RepeatBinding<TTarget, TKey, TValue>
     }
 
     this._part.childNode = null;
+    this._pendingItems = [];
     this._memoizedItems = null;
     this._pendingOperations = [];
   }
 }
 
 function commitInsert<TKey, TValue>(
-  item: Item<TKey, Slot<TValue>>,
-  referenceNode: ChildNode,
+  { value }: Item<TKey, Slot<TValue>>,
+  referenceItem: Item<TKey, Slot<TValue>> | undefined,
+  part: ChildNodePart,
 ): void {
-  const { value } = item;
+  const referenceNode =
+    referenceItem !== undefined
+      ? getStartNode(referenceItem.value.part)
+      : part.node;
   referenceNode.before(value.part.node);
 }
 
 function commitMove<TKey, TValue>(
-  item: Item<TKey, Slot<TValue>>,
-  referenceNode: ChildNode,
+  { value }: Item<TKey, Slot<TValue>>,
+  referenceItem: Item<TKey, Slot<TValue>> | undefined,
+  part: ChildNodePart,
 ): void {
-  const { value } = item;
-  const childNodes = getChildNodes(value.part as ChildNodePart);
+  const startNode = getStartNode(value.part);
+  const endNode = value.part.node;
+  const childNodes = getChildNodes(startNode, endNode);
+  const referenceNode =
+    referenceItem !== undefined
+      ? getStartNode(referenceItem.value.part)
+      : part.node;
   moveChildNodes(childNodes, referenceNode);
 }
 
 function commitRemove<TKey, TValue>(
-  item: Item<TKey, Slot<TValue>>,
+  { value }: Item<TKey, Slot<TValue>>,
   context: CommitContext,
 ): void {
-  const { value } = item;
-
   value.rollback(context);
   value.part.node.remove();
 }
@@ -328,11 +317,11 @@ function defaultValueSelector(element: unknown): any {
   return element;
 }
 
-function generateItems<TTarget, TKey, TValue>({
+function generateItems<TSource, TKey, TValue>({
   source,
   keySelector = defaultKeySelector,
   valueSelector = defaultValueSelector,
-}: RepeatProps<TTarget, TKey, TValue>): Item<TKey, TValue>[] {
+}: RepeatProps<TSource, TKey, TValue>): Item<TKey, TValue>[] {
   return Array.from(source, (element, i) => {
     const key = keySelector(element, i);
     const value = valueSelector(element, i);
@@ -340,17 +329,17 @@ function generateItems<TTarget, TKey, TValue>({
   });
 }
 
-function matchesItem<TKey, TTarget, TSource>(
+function matchesItem<TKey, TSource, TTarget>(
   targetItem: Item<TKey, TTarget>,
   sourceItem: Item<TKey, TSource>,
 ) {
   return Object.is(targetItem.key, sourceItem.key);
 }
 
-function reconcileItems<TKey, TTarget, TSource>(
+function reconcileItems<TKey, TSource, TTarget>(
   oldTargetItems: (Item<TKey, TTarget> | undefined)[],
   newSourceItems: Item<TKey, TSource>[],
-  handler: ReconciliationHandler<TKey, TTarget, TSource>,
+  handler: ReconciliationHandler<TKey, TSource, TTarget>,
 ): Item<TKey, TTarget>[] {
   const newTargetItems: Item<TKey, TTarget>[] = new Array(
     newSourceItems.length,
@@ -417,8 +406,8 @@ function reconcileItems<TKey, TTarget, TSource>(
       oldTail--;
     } else {
       const oldIndexMap = new Map();
-      for (let i = oldHead; i <= oldTail; i++) {
-        oldIndexMap.set(oldTargetItems[i]!.key, i);
+      for (let index = oldHead; index <= oldTail; index++) {
+        oldIndexMap.set(oldTargetItems[index]!.key, index);
       }
       while (newHead <= newTail) {
         const newSourceItem = newSourceItems[newTail]!;
