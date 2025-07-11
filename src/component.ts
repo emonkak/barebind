@@ -26,11 +26,11 @@ export function component<TProps, TResult>(
   component: ComponentType<TProps, TResult>,
   props: NoInfer<TProps>,
 ): DirectiveSpecifier<TProps> {
-  const directive = new ComponentDirective(component);
+  const directive = new FunctionComponent(component);
   return new DirectiveSpecifier(directive, props);
 }
 
-export class ComponentDirective<TProps, TResult>
+export class FunctionComponent<TProps, TResult>
   implements Component<TProps, TResult>
 {
   private readonly _type: ComponentType<TProps, TResult>;
@@ -44,7 +44,7 @@ export class ComponentDirective<TProps, TResult>
   }
 
   equals(other: unknown): boolean {
-    return other instanceof ComponentDirective && other._type === this._type;
+    return other instanceof FunctionComponent && other._type === this._type;
   }
 
   render(props: TProps, context: RenderContext): TResult {

@@ -1,5 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { ComponentDirective } from '../component.js';
+import { FunctionComponent } from '../component.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
@@ -125,7 +125,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
   [$toDirective](): Directive<unknown> {
     if (typeof this.type === 'function') {
       return {
-        type: new ComponentDirective(this.type),
+        type: new FunctionComponent(this.type),
         value: this.props,
       };
     } else {

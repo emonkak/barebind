@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { ComponentDirective } from '@/component.js';
+import { FunctionComponent } from '@/component.js';
 import { $toDirective, DirectiveSpecifier } from '@/directive.js';
 import {
   createElement as createVElement,
@@ -54,7 +54,7 @@ describe('VElement', () => {
       const element = new VElement(type, props);
       const directive = element[$toDirective]();
 
-      expect(directive.type).toStrictEqual(new ComponentDirective(type));
+      expect(directive.type).toStrictEqual(new FunctionComponent(type));
       expect(directive.value).toBe(props);
     });
 

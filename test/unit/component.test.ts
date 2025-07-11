@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   ComponentBinding,
-  ComponentDirective,
+  FunctionComponent,
   component,
 } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
@@ -21,15 +21,15 @@ describe('component()', () => {
     const props = { name: 'foo', greet: 'Hello' };
     const directive = component(Greet, props);
 
-    expect(directive.type).toBeInstanceOf(ComponentDirective);
+    expect(directive.type).toBeInstanceOf(FunctionComponent);
     expect(directive.value).toBe(props);
   });
 });
 
-describe('ComponentDirective', () => {
+describe('FunctionComponent', () => {
   describe('displayName', () => {
     it('returns the component function name', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
 
       expect(component.displayName).toBe(Greet.name);
     });
@@ -37,18 +37,18 @@ describe('ComponentDirective', () => {
 
   describe('equals()', () => {
     it('returns true if the component type is the same', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
 
       expect(component.equals(component)).toBe(true);
-      expect(component.equals(new ComponentDirective(Greet))).toBe(true);
-      expect(component.equals(new ComponentDirective(() => {}))).toBe(false);
+      expect(component.equals(new FunctionComponent(Greet))).toBe(true);
+      expect(component.equals(new FunctionComponent(() => {}))).toBe(false);
     });
   });
 
   describe('render()', () => {
     it('invokes the component function with props', () => {
       const componentFn = vi.fn(Greet);
-      const component = new ComponentDirective(componentFn);
+      const component = new FunctionComponent(componentFn);
       const props = {
         greet: 'Hello',
         name: 'foo',
@@ -69,7 +69,7 @@ describe('ComponentDirective', () => {
 
   describe('shouldSkipUpdate()', () => {
     it('returns whether the props is the same', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
 
@@ -85,7 +85,7 @@ describe('ComponentDirective', () => {
     ])(
       'returns the result of shouldSkipUpdate() if it is definied in the function',
       (props1, props2, expandedResult) => {
-        const component = new ComponentDirective(Memo);
+        const component = new FunctionComponent(Memo);
 
         expect(component.shouldSkipUpdate(props1, props1)).toBe(true);
         expect(component.shouldSkipUpdate(props1, props2)).toBe(expandedResult);
@@ -97,7 +97,7 @@ describe('ComponentDirective', () => {
 
   describe('resolveBinding()', () => {
     it('constructs a new ComponentBinding', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props = { greet: 'Hello', name: 'foo' };
       const part = {
         type: PartType.ChildNode,
@@ -118,7 +118,7 @@ describe('ComponentDirective', () => {
 describe('ComponentBinding', () => {
   describe('shouldBind()', () => {
     it('returns true if the committed value does not exist', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props = { greet: 'Hello', name: 'foo' };
       const part = {
         type: PartType.ChildNode,
@@ -132,7 +132,7 @@ describe('ComponentBinding', () => {
     });
 
     it('returns true if the committed value is different from the new one', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
       const part = {
@@ -155,7 +155,7 @@ describe('ComponentBinding', () => {
 
   describe('hydrate()', () => {
     it('hydrates the tree by the value rendered by the component', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props = {
         name: 'foo',
         greet: 'Hello',
@@ -200,7 +200,7 @@ describe('ComponentBinding', () => {
     });
 
     it('should throw the error if the component has already been rendered', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props = {
         name: 'foo',
         greet: 'Hello',
@@ -228,7 +228,7 @@ describe('ComponentBinding', () => {
 
   describe('connect()', () => {
     it('renders the component', () => {
-      const component = new ComponentDirective(Greet);
+      const component = new FunctionComponent(Greet);
       const props1 = {
         name: 'foo',
         greet: 'Hello',
@@ -278,7 +278,7 @@ describe('ComponentBinding', () => {
 
   describe('disconnect()', () => {
     it('cleans effect hooks', () => {
-      const component = new ComponentDirective(EnqueueEffect);
+      const component = new FunctionComponent(EnqueueEffect);
       const props = {
         callback: vi.fn(),
         cleanup: vi.fn(),
