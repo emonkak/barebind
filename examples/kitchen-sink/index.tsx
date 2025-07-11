@@ -4,6 +4,7 @@ import {
   createAsyncRoot,
   Literal,
   type RenderContext,
+  shallowEqual,
 } from '@emonkak/ebit';
 import {
   Atom,
@@ -52,53 +53,62 @@ function App(_props: {}, context: RenderContext) {
     count$.value -= 1;
   }, []);
   const handleAdd = context.useCallback(() => {
-    if (state.resevedItems.length > 0) {
-      const items = state.items.concat([state.resevedItems[0]!]);
-      setState({
-        items,
-        resevedItems: state.resevedItems.slice(1),
-      });
-    }
-  }, [state]);
+    setState((state) => {
+      if (state.resevedItems.length > 0) {
+        const items = state.items.concat([state.resevedItems[0]!]);
+        return {
+          items,
+          resevedItems: state.resevedItems.slice(1),
+        };
+      } else {
+        return state;
+      }
+    });
+  }, []);
   const handleUp = context.useCallback(
-    (index: number) => {
-      if (index > 0) {
-        const items = state.items.slice();
-        const tmp = items[index]!;
-        items[index] = items[index - 1]!;
-        items[index - 1] = tmp;
-        setState((state) => ({ ...state, items }));
+    (index: number, isFirst: boolean, _isLast: boolean) => {
+      if (!isFirst) {
+        setState((state) => {
+          const items = state.items.slice();
+          const tmp = items[index]!;
+          items[index] = items[index - 1]!;
+          items[index - 1] = tmp;
+          return { ...state, items };
+        });
       }
     },
-    [state],
+    [],
   );
   const handleDown = context.useCallback(
-    (index: number) => {
-      if (index + 1 < state.items.length) {
-        const items = state.items.slice();
-        const tmp = items[index]!;
-        items[index] = items[index + 1]!;
-        items[index + 1] = tmp;
-        setState((state) => ({ ...state, items }));
+    (index: number, _isFirst: boolean, isLast: boolean) => {
+      if (!isLast) {
+        setState((state) => {
+          const items = state.items.slice();
+          const tmp = items[index]!;
+          items[index] = items[index + 1]!;
+          items[index + 1] = tmp;
+          return { ...state, items };
+        });
       }
     },
-    [state],
+    [],
   );
-  const handleDelete = context.useCallback(
-    (index: number) => {
+  const handleDelete = context.useCallback((index: number) => {
+    setState((state) => {
       const items = state.items.slice();
       const deletedItems = items.splice(index, 1);
-      setState((state) => ({
+      return {
         items,
         resevedItems: deletedItems.concat(state.resevedItems),
-      }));
-    },
-    [state],
-  );
+      };
+    });
+  }, []);
   const handleShuffle = context.useCallback(() => {
-    const items = shuffle(state.items.slice());
-    setState((state) => ({ ...state, items }));
-  }, [state]);
+    setState((state) => {
+      const items = shuffle(state.items.slice());
+      return { ...state, items };
+    });
+  }, []);
 
   return context.html`
     <div ${{ class: 'root' }}>
@@ -171,8 +181,8 @@ function Dashboard(
 interface ListProps {
   items: string[];
   onDelete: (index: number) => void;
-  onDown: (index: number) => void;
-  onUp: (index: number) => void;
+  onDown: (index: number, isFirst: boolean, isLast: boolean) => void;
+  onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
 function List(
@@ -212,23 +222,23 @@ interface ItemProps {
   isLast: boolean;
   label: string;
   onDelete: (index: number) => void;
-  onDown: (index: number) => void;
-  onUp: (index: number) => void;
+  onDown: (index: number, isFirst: boolean, isLast: boolean) => void;
+  onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
 function Item(
   { isFirst, isLast, index, label, onUp, onDown, onDelete }: ItemProps,
   context: RenderContext,
 ) {
-  const handleUp = context.useCallback(() => {
-    onUp(index);
-  }, [index, onUp]);
-  const handleDown = context.useCallback(() => {
-    onDown(index);
-  }, [index, onDown]);
-  const handleDelete = context.useCallback(() => {
+  const handleUp = () => {
+    onUp(index, isFirst, isLast);
+  };
+  const handleDown = () => {
+    onDown(index, isFirst, isLast);
+  };
+  const handleDelete = () => {
     onDelete(index);
-  }, [index, onDelete]);
+  };
 
   return context.html`
     <li>
@@ -239,6 +249,8 @@ function Item(
     </li>
   `;
 }
+
+Item.shouldSkipUpdate = shallowEqual;
 
 function TemplateCounter(_props: {}, context: RenderContext): unknown {
   const [count, setCount] = context.useState(0);
