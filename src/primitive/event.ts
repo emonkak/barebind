@@ -59,8 +59,8 @@ export class EventBinding extends PrimitiveBinding<
     if (
       typeof newListener === 'object' ||
       typeof oldListener === 'object' ||
-      newListener == null ||
-      oldListener == null
+      newListener === undefined ||
+      oldListener === undefined
     ) {
       if (oldListener != null) {
         detachEventListener(this._part, this, oldListener);

@@ -8,6 +8,9 @@
     "./extensions": {
       "import": "./src/extensions.ts"
     },
+    "./extensions/jsx-dev-runtime": {
+      "import": "./src/extensions/jsx-runtime.ts"
+    },
     "./extensions/jsx-runtime": {
       "import": "./src/extensions/jsx-runtime.ts"
     },
@@ -25,11 +28,14 @@
         "import": "./lib/extensions.js",
         "types": "./lib/extensions.d.ts"
       },
+      "./extensions/jsx-dev-runtime": {
+        "import": "./lib/extensions/jsx-runtime.js",
+        "types": "./lib/extensions/jsx-runtime.d.ts"
+      },
       "./extensions/jsx-runtime": {
         "import": "./lib/extensions/jsx-runtime.js",
         "types": "./lib/extensions/jsx-runtime.d.ts"
       },
-
       "./router": {
         "import": "./lib/router.js",
         "types": "./lib/router.d.ts"

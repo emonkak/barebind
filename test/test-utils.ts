@@ -119,6 +119,25 @@ export function serializeNode(node: Node): string {
   return wrapper.innerHTML;
 }
 
+export function stripComments<T extends Node>(node: T): T {
+  const iterator = document.createNodeIterator(
+    node.cloneNode(true),
+    NodeFilter.SHOW_COMMENT,
+  );
+
+  while (true) {
+    const nextNode = iterator.nextNode() as Comment | null;
+
+    if (nextNode === null) {
+      break;
+    }
+
+    nextNode.remove();
+  }
+
+  return iterator.root as T;
+}
+
 export function templateLiteral(
   strings: TemplateStringsArray,
   ...values: readonly unknown[]

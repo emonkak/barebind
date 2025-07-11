@@ -988,7 +988,7 @@ describe('TaggedTemplate', () => {
       expect(binding.part).toBe(part);
     });
 
-    it('throws the error if the part is not child part', () => {
+    it('throws an error if the part is not child part', () => {
       const { template, binds } = html`<div>${'foo'}</div>`;
       const part = {
         type: PartType.Element,

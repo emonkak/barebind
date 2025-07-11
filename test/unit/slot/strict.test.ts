@@ -147,7 +147,7 @@ describe('StrictSlot', () => {
       expect(part.node.data).toBe('');
     });
 
-    it('throws the error if the directive is mismatched', () => {
+    it('throws an error if the directive is mismatched', () => {
       const value1 = 'foo';
       const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {

@@ -36,7 +36,7 @@ describe('ClassListPrimitive', () => {
     );
 
     it.each([[[123]], [{}], ['foo'], [null], [undefined]])(
-      'throws the error if the value is not an array',
+      'throws an error if the value is not an array',
       (value) => {
         const part = {
           type: PartType.Attribute,
@@ -78,7 +78,7 @@ describe('ClassListPrimitive', () => {
       },
     );
 
-    it('throws the error if the part is not a ":classlist" attribute part', () => {
+    it('throws an error if the part is not a ":classlist" attribute part', () => {
       const classNames = ['foo', 'bar', 'baz'];
       const part = {
         type: PartType.Attribute,

@@ -4,9 +4,9 @@ import { component } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
 import { BrowserRenderHost } from '@/render-host/browser.js';
 import { createSyncRoot } from '@/root/sync.js';
-import { createElement } from '../test-utils.js';
+import { createElement, stripComments } from '../test-utils.js';
 
-test('hydrate the component using a context value', () => {
+test('hydrate a component using a context value', () => {
   const value = component(Parent, {
     greet: 'Hello',
     name: 'foo',
@@ -28,8 +28,8 @@ test('hydrate the component using a context value', () => {
 
   root.hydrate();
 
-  expect(container.innerHTML).toBe(
-    '<div>Hello, <strong>foo</strong>!<!--/Child({name: "foo"})--></div><!--/Parent({greet: "Hello", name: "foo"})-->',
+  expect(stripComments(container).innerHTML).toBe(
+    '<div>Hello, <strong>foo</strong>!</div>',
   );
 
   root.unmount();
@@ -37,7 +37,7 @@ test('hydrate the component using a context value', () => {
   expect(container.innerHTML).toBe('');
 });
 
-test('render the component using a context value', () => {
+test('render a component using a context value', () => {
   const value1 = component(Parent, {
     greet: 'Hello',
     name: 'foo',
@@ -51,14 +51,14 @@ test('render the component using a context value', () => {
 
   root.mount();
 
-  expect(container.innerHTML).toBe(
-    '<div>Hello, <strong>foo</strong>!<!--/Child({name: "foo"})--></div><!--/Parent({greet: "Hello", name: "foo"})-->',
+  expect(stripComments(container).innerHTML).toBe(
+    '<div>Hello, <strong>foo</strong>!</div>',
   );
 
   root.update(value2);
 
-  expect(container.innerHTML).toBe(
-    '<div>Chao, <strong>bar</strong>!<!--/Child({name: "bar"})--></div><!--/Parent({greet: "Chao", name: "bar"})-->',
+  expect(stripComments(container).innerHTML).toBe(
+    '<div>Chao, <strong>bar</strong>!</div>',
   );
 
   root.unmount();

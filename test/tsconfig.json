@@ -2,10 +2,12 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "@emonkak/ebit/extensions",
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"]
     }
   },
-  "include": ["../src/**/*.ts", "./**/*.ts"]
+  "include": ["../src/**/*.ts", "./**/*.ts", "./**/*.tsx"]
 }

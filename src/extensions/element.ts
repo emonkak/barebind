@@ -47,7 +47,7 @@ export type VNode =
 
 export type VElementType<TProps> = ComponentType<TProps> | string;
 
-export type ElementProps = Record<string, unknown> & { children: unknown };
+export type ElementProps = Record<string, unknown> & { children?: unknown };
 
 type NormalizeProps<TProps> = { children: VNode[] } & Omit<TProps, 'key'>;
 
@@ -73,7 +73,7 @@ export const ElementDirective: DirectiveType<ElementProps> = {
     props: ElementProps,
     part: Part,
     _context: DirectiveContext,
-  ): ElementBinding<ElementProps> {
+  ): ElementBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
         'ElementDirective must be used in an element part, but it is used here:\n' +
@@ -84,6 +84,29 @@ export const ElementDirective: DirectiveType<ElementProps> = {
   },
 };
 
+export function createElement(
+  type: string,
+  props?: ElementProps,
+  ...children: VNode[]
+): VElement<NormalizeProps<ElementProps>>;
+export function createElement<const TProps extends ElementProps>(
+  type: ComponentType<NormalizeProps<TProps>>,
+  props: TProps,
+  ...children: VNode[]
+): VElement<NormalizeProps<TProps>>;
+export function createElement<const TProps extends ElementProps>(
+  type: VElementType<NormalizeProps<TProps>>,
+  props: TProps = {} as TProps,
+  ...children: VNode[]
+): VElement<NormalizeProps<TProps>> {
+  const { key, ...restProps } = props;
+  return new VElement(type, { children, ...restProps }, key);
+}
+
+export function createFragment(children: VNode[]): VFragment {
+  return new VFragment(children);
+}
+
 export class VElement<TProps extends ElementProps = ElementProps>
   implements Bindable<unknown>
 {
@@ -93,7 +116,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
 
   readonly key: unknown;
 
-  constructor(type: VElementType<TProps>, props: TProps, key: unknown) {
+  constructor(type: VElementType<TProps>, props: TProps, key?: unknown) {
     this.type = type;
     this.props = props;
     this.key = key;
@@ -139,28 +162,26 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
   }
 }
 
-export class ElementBinding<TProps extends ElementProps>
-  implements Binding<TProps>
-{
-  private _pendingProps: TProps;
+export class ElementBinding implements Binding<ElementProps> {
+  private _pendingProps: ElementProps;
 
-  private _memoizedProps: TProps | null = null;
+  private _memoizedProps: ElementProps | null = null;
 
   private readonly _part: ElementPart;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
-  constructor(props: TProps, part: ElementPart) {
+  constructor(props: ElementProps, part: ElementPart) {
     this._pendingProps = props;
     this._part = part;
   }
 
-  get type(): DirectiveType<TProps> {
-    return ElementDirective as DirectiveType<TProps>;
+  get type(): DirectiveType<ElementProps> {
+    return ElementDirective as DirectiveType<ElementProps>;
   }
 
-  get value(): TProps {
+  get value(): ElementProps {
     return this._pendingProps;
   }
 
@@ -168,13 +189,13 @@ export class ElementBinding<TProps extends ElementProps>
     return this._part;
   }
 
-  shouldBind(props: TProps): boolean {
+  shouldBind(props: ElementProps): boolean {
     return (
       this._memoizedProps === null || !shallowEqual(this._memoizedProps, props)
     );
   }
 
-  bind(props: TProps): void {
+  bind(props: ElementProps): void {
     this._pendingProps = props;
   }
 
@@ -186,12 +207,16 @@ export class ElementBinding<TProps extends ElementProps>
 
   commit(_context: CommitContext): void {
     const newProps = this._pendingProps;
-    const oldProps = this._memoizedProps ?? ({} as TProps);
+    const oldProps = this._memoizedProps ?? ({} as ElementProps);
     const element = this._part.node;
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
-        this._deleteProperty(element, key, oldProps[key as keyof TProps]!);
+        this._deleteProperty(
+          element,
+          key,
+          oldProps[key as keyof ElementProps]!,
+        );
       }
     }
 
@@ -199,8 +224,8 @@ export class ElementBinding<TProps extends ElementProps>
       this._updateProperty(
         element,
         key,
-        newProps[key as keyof TProps],
-        oldProps[key as keyof TProps],
+        newProps[key as keyof ElementProps],
+        oldProps[key as keyof ElementProps],
       );
     }
 
@@ -213,7 +238,7 @@ export class ElementBinding<TProps extends ElementProps>
 
     if (props !== null) {
       for (const key of Object.keys(props)) {
-        this._deleteProperty(element, key, props[key as keyof TProps]);
+        this._deleteProperty(element, key, props[key as keyof ElementProps]);
       }
     }
 
@@ -234,22 +259,18 @@ export class ElementBinding<TProps extends ElementProps>
     type: string,
     listener: EventListenerWithOptions,
   ): void {
-    if (!this._listenerMap.has(type)) {
-      if (typeof listener === 'function') {
-        this._part.node.addEventListener(type, this);
-      } else {
-        this._part.node.addEventListener(type, this, listener);
-      }
+    if (typeof listener === 'function') {
+      this._part.node.addEventListener(type, this);
+    } else {
+      this._part.node.addEventListener(type, this, listener);
     }
-
-    this._listenerMap.set(type, listener);
   }
 
   private _deleteProperty(element: Element, key: string, value: unknown): void {
     switch (key) {
       case 'children':
       case 'key':
-        // Skip special properties.
+        // Skip reserved properties.
         return;
       case 'className':
       case 'innerHTML':
@@ -258,7 +279,7 @@ export class ElementBinding<TProps extends ElementProps>
         return;
       case 'checked':
         if (narrowElement(element, 'INPUT')) {
-          element.checked = element.defaultChecked;
+          element.checked = false;
           return;
         }
         break;
@@ -286,29 +307,21 @@ export class ElementBinding<TProps extends ElementProps>
         }
         return;
       case 'style':
-        if (typeof value === 'object' || value === undefined) {
-          deleteStyles(
-            (element as HTMLElement).style,
-            (value ?? {}) as StyleProps,
-          );
-          return;
-        }
-        break;
+        deleteStyles(
+          (element as HTMLElement).style,
+          (value ?? {}) as StyleProps,
+        );
+        return;
       case 'value':
-        if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
-          element.value = element.defaultValue;
-          return;
-        } else if (narrowElement(element, 'SELECT')) {
+        if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
           element.value = '';
-          return;
         }
         break;
       default:
         if (key.length > 2 && key.startsWith('on')) {
-          this._removeEventListener(
-            key.slice(2).toLowerCase(),
-            value as EventListenerWithOptions,
-          );
+          const type = key.slice(2).toLowerCase();
+          this._removeEventListener(type, value as EventListenerWithOptions);
+          this._listenerMap.delete(type);
           return;
         }
     }
@@ -325,8 +338,6 @@ export class ElementBinding<TProps extends ElementProps>
     } else {
       this._part.node.removeEventListener(type, this, listener);
     }
-
-    this._listenerMap.delete(type);
   }
 
   private _updateProperty(
@@ -338,13 +349,13 @@ export class ElementBinding<TProps extends ElementProps>
     switch (key) {
       case 'children':
       case 'key':
-        // Skip special properties.
+        // Skip reserved properties.
         return;
       case 'className':
       case 'innerHTML':
       case 'textContent':
         if (!Object.is(newValue, oldValue)) {
-          element[key] = newValue?.toString() ?? '';
+          element[key] = safeToString(newValue);
         }
         return;
       case 'checked':
@@ -368,7 +379,7 @@ export class ElementBinding<TProps extends ElementProps>
       case 'defaultValue':
         if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
           if (!Object.is(newValue, oldValue)) {
-            element.defaultValue = newValue?.toString() ?? '';
+            element.defaultValue = safeToString(newValue);
           }
           return;
         }
@@ -376,7 +387,7 @@ export class ElementBinding<TProps extends ElementProps>
       case 'htmlFor':
         if (narrowElement(element, 'LABEL')) {
           if (!Object.is(newValue, oldValue)) {
-            element.htmlFor = newValue?.toString() ?? '';
+            element.htmlFor = safeToString(newValue);
           }
           return;
         }
@@ -392,21 +403,20 @@ export class ElementBinding<TProps extends ElementProps>
         }
         return;
       case 'style':
-        if (
-          (typeof newValue === 'object' || newValue === undefined) &&
-          (typeof oldValue === 'object' || oldValue === undefined)
-        ) {
-          updateStyles(
-            (element as HTMLElement).style,
-            (newValue ?? {}) as StyleProps,
-            (oldValue ?? {}) as StyleProps,
+        if (!isNullableObject(newValue) || !isNullableObject(oldValue)) {
+          throw new Error(
+            'The "style" property expects a object, not a string.',
           );
-          return;
         }
-        break;
+        updateStyles(
+          (element as HTMLElement).style,
+          (newValue ?? {}) as StyleProps,
+          (oldValue ?? {}) as StyleProps,
+        );
+        return;
       case 'value':
         if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
-          const newString = newValue?.toString() ?? '';
+          const newString = safeToString(newValue);
           const oldString = element.value;
           if (newString !== oldString) {
             element.value = newString;
@@ -415,40 +425,40 @@ export class ElementBinding<TProps extends ElementProps>
         }
         break;
       default:
-        if (key.length > 2 && key.startsWith('on') && newValue !== oldValue) {
-          if (oldValue != null) {
-            this._removeEventListener(
-              key.slice(2).toLowerCase(),
-              oldValue as EventListenerWithOptions,
-            );
+        if (key.length > 2 && key.startsWith('on')) {
+          const type = key.slice(2).toLowerCase();
+          if (
+            typeof newValue === 'object' ||
+            typeof oldValue === 'object' ||
+            newValue === undefined ||
+            oldValue === undefined
+          ) {
+            if (oldValue != null) {
+              this._removeEventListener(
+                type,
+                oldValue as EventListenerWithOptions,
+              );
+            }
+            if (newValue != null) {
+              this._addEventListener(
+                type,
+                newValue as EventListenerWithOptions,
+              );
+            }
           }
-          if (newValue != null) {
-            this._addEventListener(
-              key.slice(2).toLowerCase(),
-              newValue as EventListenerWithOptions,
-            );
-          }
+          this._listenerMap.set(type, newValue as EventListenerWithOptions);
           return;
         }
     }
 
     if (!Object.is(newValue, oldValue)) {
-      element.setAttribute(key, newValue?.toString() ?? '');
+      if (newValue == null) {
+        element.removeAttribute(key);
+      } else {
+        element.setAttribute(key, newValue.toString());
+      }
     }
   }
-}
-
-export function createElement<const TProps extends ElementProps>(
-  type: VElementType<NormalizeProps<TProps>>,
-  props: TProps,
-  ...children: VNode[]
-): VElement<NormalizeProps<TProps>> {
-  const { key, ...restProps } = props;
-  return new VElement(type, { children, ...restProps }, key);
-}
-
-export function createFragment(children: VNode[]): VFragment {
-  return new VFragment(children);
 }
 
 function cleanupRef(
@@ -474,6 +484,10 @@ function invokeRef(
   }
 }
 
+function isNullableObject(value: unknown): value is object | null | undefined {
+  return typeof value === 'object' || value === undefined;
+}
+
 function narrowElement<
   const TName extends Uppercase<keyof HTMLElementTagNameMap>,
 >(
@@ -497,4 +511,8 @@ function resolveValue(child: VNode): Bindable<unknown> {
   } else {
     return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
   }
+}
+
+function safeToString(value: unknown): string {
+  return value?.toString() ?? '';
 }

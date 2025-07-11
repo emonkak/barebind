@@ -1,4 +1,11 @@
 export {
+  createElement,
+  createFragment,
+  type VElement,
+  type VFragment,
+  type VNode,
+} from './extensions/element.js';
+export {
   type CommitMeasurement,
   type ComponentMeasurement,
   LogReporter,
@@ -25,10 +32,3 @@ export {
   type StoreClass,
   type StoreExtensions,
 } from './extensions/store.js';
-export {
-  createElement,
-  createFragment,
-  type VElement,
-  type VFragment,
-  type VNode,
-} from './extensions/vdom.js';

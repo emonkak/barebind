@@ -24,7 +24,7 @@ import { Scope } from './scope.js';
 
 export function component<TProps, TResult>(
   component: ComponentType<TProps, TResult>,
-  props: TProps,
+  props: NoInfer<TProps>,
 ): DirectiveSpecifier<TProps> {
   const directive = new ComponentDirective(component);
   return new DirectiveSpecifier(directive, props);

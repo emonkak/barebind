@@ -10,7 +10,7 @@ import { PrimitiveBinding } from './primitive.js';
 
 export type StyleProps = {
   [P in StyleKeys]?: string | null | undefined;
-} & { [unknownProperty: string]: string | null | undefined };
+} & Record<string, string | null | undefined>;
 
 type StyleKeys = StringKeys<CSSStyleDeclaration>;
 

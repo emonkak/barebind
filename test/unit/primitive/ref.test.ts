@@ -30,7 +30,7 @@ describe('RefPrimitive', () => {
       }).not.toThrow();
     });
 
-    it('throws the error if the value is not valid', () => {
+    it('throws an error if the value is not valid', () => {
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),

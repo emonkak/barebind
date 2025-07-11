@@ -93,7 +93,7 @@ describe('Store', () => {
       expect(CounterStore.onCustomHook(context)).toBe(store);
     });
 
-    it('throws the error when the store is not registered in the context', () => {
+    it('throws an error when the store is not registered in the context', () => {
       const context = {
         getContextValue(_key: unknown): unknown {
           return undefined;

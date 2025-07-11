@@ -29,7 +29,7 @@ describe('StylePrimitive', () => {
     });
 
     it.each([[null], [undefined], ['foo']])(
-      'throws the error if the value is not object',
+      'throws an error if the value is not object',
       (value) => {
         const part = {
           type: PartType.Attribute,
