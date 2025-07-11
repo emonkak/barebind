@@ -2,9 +2,9 @@ import { expect, test } from 'vitest';
 import { component } from '@/component.js';
 import { BrowserRenderHost } from '@/render-host/browser.js';
 import { createSyncRoot } from '@/root/sync.js';
-import { stripComments } from '../test-utils.js';
+import { filterComments, stripComments } from '../test-utils.js';
 
-test('return a component returning virtual DOM', () => {
+test('render a component returning virtual DOM', () => {
   const value1 = component(App, {
     footerItems: [],
     greet: 'Hello',
@@ -22,7 +22,12 @@ test('return a component returning virtual DOM', () => {
       { title: 'baz', content: 'qux' },
     ],
     greet: 'Chao',
-    items: [],
+    items: [
+      { label: 'qux' },
+      { label: 'baz' },
+      { label: 'bar' },
+      { label: 'foo' },
+    ],
     name: 'Alternative world',
   });
   const container = document.createElement('div');
@@ -30,15 +35,28 @@ test('return a component returning virtual DOM', () => {
 
   root.mount();
 
+  const itemNodes = filterComments(
+    container.querySelector('ul')?.childNodes ?? [],
+  );
+
   expect(stripComments(container).innerHTML).toBe(
     '<div><ul><li>foo</li><li>bar</li><li>qux</li></ul><p>Hello, World!</p></div>',
   );
+  expect(itemNodes).toHaveLength(3);
 
   root.update(value2);
 
   expect(stripComments(container).innerHTML).toBe(
-    '<div><ul></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
+    '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
   );
+  expect(
+    filterComments(container.querySelector('ul')?.childNodes ?? []),
+  ).toStrictEqual([
+    expect.exact(itemNodes[2]),
+    expect.any(HTMLLIElement),
+    expect.exact(itemNodes[1]),
+    expect.exact(itemNodes[0]),
+  ]);
 
   root.unmount();
 
@@ -66,7 +84,9 @@ function App({ footerItems, greet, items, name }: AppProps) {
   return (
     <div>
       <ul>
-        {items.map((item) => (item.hidden ? null : <li>{item.label}</li>))}
+        {items.map((item) =>
+          item.hidden ? null : <li key={item.label}>{item.label}</li>,
+        )}
       </ul>
       <p>
         {greet}, {name}!

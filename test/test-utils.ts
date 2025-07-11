@@ -83,6 +83,12 @@ export function factorial(n: number): number {
   return result;
 }
 
+export function filterComments(children: ArrayLike<Node>): Node[] {
+  return Array.from(children).filter(
+    (node) => node.nodeType !== Node.COMMENT_NODE,
+  );
+}
+
 export function getPromiseState(
   promise: Promise<unknown>,
 ): Promise<'pending' | 'fulfilled' | 'rejected'> {
