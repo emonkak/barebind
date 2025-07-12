@@ -10,17 +10,17 @@ import {
   type RenderContext,
   type Slot,
   type UpdateContext,
-} from './directive.js';
+} from '../directive.js';
 import {
   ALL_LANES,
   type EffectHook,
   type Hook,
   HookType,
   type Lanes,
-} from './hook.js';
-import { HydrationError, type HydrationTree } from './hydration.js';
-import type { Part } from './part.js';
-import { Scope } from './scope.js';
+} from '../hook.js';
+import { HydrationError, type HydrationTree } from '../hydration.js';
+import type { Part } from '../part.js';
+import { Scope } from '../scope.js';
 
 export function component<TProps, TResult>(
   component: ComponentType<TProps, TResult>,

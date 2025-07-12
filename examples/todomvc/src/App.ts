@@ -1,4 +1,5 @@
-import { component, type RenderContext } from '@emonkak/ebit';
+import type { RenderContext } from '@emonkak/ebit';
+import { component } from '@emonkak/ebit/extensions';
 
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';

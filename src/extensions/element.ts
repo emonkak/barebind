@@ -1,5 +1,4 @@
 import { shallowEqual } from '../compare.js';
-import { FunctionComponent } from '../component.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
@@ -27,6 +26,7 @@ import {
 import { ChildNodeTemplate } from '../template/child-node-template.js';
 import { ElementTemplate } from '../template/element-template.js';
 import { TextTemplate } from '../template/text-template.js';
+import { FunctionComponent } from './component.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
 const $cleanup = Symbol('$cleanup');

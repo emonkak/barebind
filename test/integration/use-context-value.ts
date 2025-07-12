@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest';
-
-import { component } from '@/component.js';
 import type { RenderContext } from '@/directive.js';
+import { component } from '@/extensions/component.js';
 import { BrowserRenderHost } from '@/render-host/browser.js';
 import { createSyncRoot } from '@/root/sync.js';
 import { createElement, stripComments } from '../test-utils.js';

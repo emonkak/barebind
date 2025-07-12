@@ -1,3 +1,4 @@
+export { component } from './extensions/component.js';
 export {
   createElement,
   createFragment,

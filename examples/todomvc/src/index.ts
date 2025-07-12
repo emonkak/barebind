@@ -1,5 +1,5 @@
-import { BrowserRenderHost, component, createAsyncRoot } from '@emonkak/ebit';
-import { LogReporter, Profiler } from '@emonkak/ebit/extensions';
+import { BrowserRenderHost, createAsyncRoot } from '@emonkak/ebit';
+import { component, LogReporter, Profiler } from '@emonkak/ebit/extensions';
 
 import { App } from './App.js';
 import { TodoStore } from './store.js';

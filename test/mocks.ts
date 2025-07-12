@@ -1,6 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { ComponentBinding } from '@/component.js';
+import { ComponentBinding } from '@/extensions/component.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import {
   $toDirective,

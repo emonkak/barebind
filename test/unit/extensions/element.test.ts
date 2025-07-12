@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { FunctionComponent } from '@/component.js';
 import { $toDirective, DirectiveSpecifier } from '@/directive.js';
+import { FunctionComponent } from '@/extensions/component.js';
 import {
   createElement as createVElement,
   createFragment as createVFragment,

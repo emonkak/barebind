@@ -1,6 +1,5 @@
 import {
   BrowserRenderHost,
-  component,
   createAsyncRoot,
   Literal,
   type RenderContext,
@@ -8,6 +7,7 @@ import {
 } from '@emonkak/ebit';
 import {
   Atom,
+  component,
   LogReporter,
   Profiler,
   repeat,
