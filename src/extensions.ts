@@ -28,7 +28,6 @@ export {
 } from './extensions/signal.js';
 export {
   defineStore,
-  type Store,
   type StoreClass,
   type StoreExtensions,
 } from './extensions/store.js';

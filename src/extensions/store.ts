@@ -10,14 +10,32 @@ import {
 
 const $signalMap = Symbol('$signalMap');
 
-export type SignalKeys<T> = Exclude<
-  keyof T & string,
-  FunctionKeys<T> | PrivateKeys
->;
+export interface StoreClass<TClass extends Constructable>
+  extends CustomHook<UseStore<InstanceType<TClass>>> {
+  new (...args: unknown[]): UseStore<InstanceType<TClass>>;
+}
 
-export type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
+export interface StoreExtensions extends CustomHook<void> {
+  asSignal(): Signal<this>;
+  getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
+  getSignal(key: PropertyKey): Signal<unknown> | undefined;
+  getVersion(): number;
+  subscribe(subscriber: Subscriber): Subscription;
+  applySnapshot(state: Snapshot<this>): void;
+  toSnapshot(): Snapshot<this>;
+}
+
+type UseStore<T> = T & StoreExtensions;
+
+type Snapshot<T> = {
+  [K in AtomKeys<T>]: T[K] extends StoreExtensions ? Snapshot<T[K]> : T[K];
+};
 
 type Constructable<T = object> = new (...args: any[]) => T;
+
+type SignalKeys<T> = Exclude<keyof T & string, FunctionKeys<T> | PrivateKeys>;
+
+type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
 
 type FunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? K : never;
@@ -39,24 +57,6 @@ type StrictEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
 >() => T extends Y ? 1 : 2
   ? true
   : false;
-
-export type Store<T> = T & StoreExtensions;
-
-export interface StoreClass<TClass extends Constructable>
-  extends CustomHook<Store<InstanceType<TClass>>> {
-  new (...args: unknown[]): Store<InstanceType<TClass>>;
-  onCustomHook(context: HookContext): Store<InstanceType<TClass>>;
-}
-
-export interface StoreExtensions extends CustomHook<void> {
-  asSignal(): Signal<this>;
-  getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
-  getSignal(key: string): Signal<unknown> | undefined;
-  getVersion(): number;
-  restoreSnapshot(state: Pick<this, AtomKeys<this>>): void;
-  subscribe(subscriber: Subscriber): Subscription;
-  toSnapshot(): Pick<this, AtomKeys<this>>;
-}
 
 export function defineStore<TClass extends Constructable>(
   superclass: TClass,
@@ -87,6 +87,10 @@ export function defineStore<TClass extends Constructable>(
       Object.freeze(this[$signalMap]);
     }
 
+    onCustomHook(context: HookContext): void {
+      context.setContextValue(this.constructor, this);
+    }
+
     asSignal(): Signal<this> {
       return new StoreSignal(this);
     }
@@ -101,21 +105,11 @@ export function defineStore<TClass extends Constructable>(
       let version = 0;
       for (const key in signalMap) {
         const signal = signalMap[key]!;
-        if (signal instanceof Atom) {
+        if (signal instanceof Atom || signal instanceof StoreSignal) {
           version += signal.version;
         }
       }
       return version;
-    }
-
-    onCustomHook(context: HookContext): void {
-      context.setContextValue(this.constructor, this);
-    }
-
-    restoreSnapshot(state: Pick<this, AtomKeys<this>>): void {
-      for (const key in state) {
-        this[key as AtomKeys<this>] = state[key as AtomKeys<this>]!;
-      }
     }
 
     subscribe(subscriber: Subscriber): Subscription {
@@ -123,7 +117,7 @@ export function defineStore<TClass extends Constructable>(
       const subscriptions: Subscription[] = [];
       for (const key in signalMap) {
         const signal = signalMap[key]!;
-        if (signal instanceof Atom) {
+        if (signal instanceof Atom || signal instanceof StoreSignal) {
           const subscription = signal.subscribe(subscriber);
           subscriptions.push(subscription);
         }
@@ -135,16 +129,30 @@ export function defineStore<TClass extends Constructable>(
       };
     }
 
-    toSnapshot(): Pick<this, AtomKeys<this>> {
+    applySnapshot(snapshot: Snapshot<this>): void {
       const signalMap = this[$signalMap];
-      const state: Partial<this> = {};
       for (const key in signalMap) {
         const signal = signalMap[key]!;
         if (signal instanceof Atom) {
-          state[key as AtomKeys<this>] = signal.value as this[AtomKeys<this>];
+          signal.value = snapshot[key as keyof Snapshot<this>]!;
+        } else if (signal instanceof StoreSignal) {
+          signal.value.applySnapshot(snapshot[key as keyof Snapshot<this>]!);
         }
       }
-      return state as Pick<this, AtomKeys<this>>;
+    }
+
+    toSnapshot(): Snapshot<this> {
+      const signalMap = this[$signalMap];
+      const snapshot: Record<string, unknown> = {};
+      for (const key in signalMap) {
+        const signal = signalMap[key]!;
+        if (signal instanceof Atom) {
+          snapshot[key] = signal.value;
+        } else if (signal instanceof StoreSignal) {
+          snapshot[key] = signal.value.toSnapshot();
+        }
+      }
+      return snapshot as Snapshot<this>;
     }
   } as unknown as StoreClass<TClass>;
 }
@@ -180,18 +188,30 @@ function defineInstanceProperties<T extends object>(
     const { writable, enumerable, configurable, value } = descriptors[key]!;
 
     if (writable && configurable && !key.startsWith('_')) {
-      const signal = new Atom(value);
-      signalMap[key] = signal;
-      Object.defineProperty(instance, key, {
-        configurable,
-        enumerable,
-        get(): unknown {
-          return signal.value;
-        },
-        set(value: unknown): void {
-          signal.value = value;
-        },
-      } as PropertyDescriptor);
+      if (isStore(value)) {
+        const signal = new StoreSignal(Object.freeze(value));
+        signalMap[key] = signal;
+        Object.defineProperty(instance, key, {
+          configurable,
+          enumerable,
+          get(): unknown {
+            return signal.value;
+          },
+        } as PropertyDescriptor);
+      } else {
+        const signal = new Atom(Object.freeze(value));
+        signalMap[key] = signal;
+        Object.defineProperty(instance, key, {
+          configurable,
+          enumerable,
+          get(): unknown {
+            return signal.value;
+          },
+          set(value: unknown): void {
+            signal.value = Object.freeze(value);
+          },
+        } as PropertyDescriptor);
+      }
     }
   }
 }
@@ -240,6 +260,10 @@ function definePrototypeProperties<T extends object>(
       }
     }
   }
+}
+
+function isStore(value: unknown): value is StoreExtensions {
+  return typeof value === 'object' && value !== null && $signalMap in value;
 }
 
 function trackSignalAccesses<T extends object>(

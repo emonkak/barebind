@@ -4,6 +4,14 @@ import { Atom, Lazy } from '@/extensions/signal.js';
 import { defineStore } from '@/extensions/store.js';
 import type { HookContext } from '@/hook.js';
 
+class App {
+  readonly counter: CounterStore;
+
+  constructor(ounterStore: CounterStore) {
+    this.counter = ounterStore;
+  }
+}
+
 class Counter {
   count: number;
 
@@ -46,35 +54,15 @@ class Counter {
   }
 }
 
+const AppStore = defineStore(App);
+
 const CounterStore = defineStore(Counter);
 
+type AppStore = InstanceType<typeof AppStore>;
+
+type CounterStore = InstanceType<typeof CounterStore>;
+
 describe('Store', () => {
-  it('recalculates the computed property when any dependent properties are updated', () => {
-    const store = new CounterStore(100);
-
-    expect(store.count).toBe(100);
-    expect(store.doublyCount).toBe(200);
-    expect(store.quadruplyCount).toBe(400);
-    expect(store.getDoublyCountVersion()).toBe(1);
-    expect(store.getQuadruplyCountVersion()).toBe(1);
-
-    store.count++;
-
-    expect(store.count).toBe(101);
-    expect(store.doublyCount).toBe(202);
-    expect(store.quadruplyCount).toBe(404);
-    expect(store.getDoublyCountVersion()).toBe(2);
-    expect(store.getQuadruplyCountVersion()).toBe(2);
-
-    store.count++;
-
-    expect(store.count).toBe(102);
-    expect(store.doublyCount).toBe(204);
-    expect(store.quadruplyCount).toBe(408);
-    expect(store.getDoublyCountVersion()).toBe(3);
-    expect(store.getQuadruplyCountVersion()).toBe(3);
-  });
-
   describe('static onCustomHook()', () => {
     it('returns the store in the context', () => {
       const store = new CounterStore();
@@ -212,12 +200,12 @@ describe('Store', () => {
     });
   });
 
-  describe('restoreSnapshot()', () => {
-    it('restores the state from the snapshot', () => {
+  describe('applySnapshot()', () => {
+    it('applies the state from the snapshot', () => {
       const store = new CounterStore();
       const count$ = store.getSignal('count');
 
-      store.restoreSnapshot({
+      store.applySnapshot({
         count: 123,
       });
 
@@ -225,5 +213,71 @@ describe('Store', () => {
       expect(count$.value).toBe(123);
       expect(count$.version).toBe(1);
     });
+  });
+
+  it('recalculates the computed property when any dependent properties are updated', () => {
+    const store = new CounterStore(100);
+
+    expect(store.count).toBe(100);
+    expect(store.doublyCount).toBe(200);
+    expect(store.quadruplyCount).toBe(400);
+    expect(store.getDoublyCountVersion()).toBe(1);
+    expect(store.getQuadruplyCountVersion()).toBe(1);
+
+    store.count++;
+
+    expect(store.count).toBe(101);
+    expect(store.doublyCount).toBe(202);
+    expect(store.quadruplyCount).toBe(404);
+    expect(store.getDoublyCountVersion()).toBe(2);
+    expect(store.getQuadruplyCountVersion()).toBe(2);
+
+    store.count++;
+
+    expect(store.count).toBe(102);
+    expect(store.doublyCount).toBe(204);
+    expect(store.quadruplyCount).toBe(408);
+    expect(store.getDoublyCountVersion()).toBe(3);
+    expect(store.getQuadruplyCountVersion()).toBe(3);
+  });
+
+  it('should handle nested store', () => {
+    const counterStore = new CounterStore(100);
+    const appStore = new AppStore(counterStore);
+    const subscriber = vi.fn();
+
+    appStore.subscribe(subscriber);
+
+    expect(appStore.counter).toBe(counterStore);
+    expect(appStore.getVersion()).toBe(0);
+    expect(appStore.toSnapshot()).toStrictEqual({
+      counter: {
+        count: 100,
+      },
+    });
+    expect(counterStore.count).toBe(100);
+
+    appStore.applySnapshot({ counter: { count: 200 } });
+
+    expect(appStore.counter).toBe(counterStore);
+    expect(appStore.getVersion()).toBe(1);
+    expect(appStore.toSnapshot()).toStrictEqual({
+      counter: {
+        count: 200,
+      },
+    });
+    expect(counterStore.count).toBe(200);
+
+    counterStore.count++;
+
+    expect(appStore.counter).toBe(counterStore);
+    expect(appStore.getVersion()).toBe(2);
+    expect(appStore.toSnapshot()).toStrictEqual({
+      counter: {
+        count: 201,
+      },
+    });
+    expect(counterStore.count).toBe(201);
+    expect(subscriber).toHaveBeenCalledTimes(2);
   });
 });
