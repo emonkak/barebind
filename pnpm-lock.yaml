@@ -33,6 +33,15 @@ importers:
         specifier: workspace:*
         version: link:../..
 
+  examples/todomvc:
+    dependencies:
+      '@emonkak/ebit':
+        specifier: workspace:*
+        version: link:../..
+      todomvc-app-css:
+        specifier: ^2.4.3
+        version: 2.4.3
+
 packages:
 
   '@ampproject/remapping@2.3.0':
@@ -1519,6 +1528,10 @@ packages:
   tinyspy@4.0.3:
     resolution: {integrity: sha512-t2T/WLB2WRgZ9EpE4jgPJ9w+i66UZfDc8wHh0xrwiRNN+UwH98GIJkTeZqX9rg0i0ptwzqW+uYeIF0T4F8LR7A==}
     engines: {node: '>=14.0.0'}
+
+  todomvc-app-css@2.4.3:
+    resolution: {integrity: sha512-mSnWZaKBWj9aQcFRsGguY/a8O8NR8GmecD48yU1rzwNemgZa/INLpIsxxMiToFGVth+uEKBrQ7IhWkaXZxwq5Q==}
+    engines: {node: '>=4'}
 
   totalist@3.0.1:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
@@ -3392,6 +3405,8 @@ snapshots:
   tinyrainbow@2.0.0: {}
 
   tinyspy@4.0.3: {}
+
+  todomvc-app-css@2.4.3: {}
 
   totalist@3.0.1: {}
 
