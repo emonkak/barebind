@@ -334,7 +334,7 @@ describe('inspectValue()', () => {
     ],
     [
       { foo: { bar: { baz: { qux: 123 } } } },
-      '{ foo: { bar: { baz: { qux: ... } } } }',
+      '{ foo: { bar: { baz: {...} } } }',
     ],
     [circlerValue, '{ x: [Circular] }'],
   ])(

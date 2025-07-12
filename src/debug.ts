@@ -16,9 +16,6 @@ export function inspectValue(
   maxDepth: number = 3,
   seenObjects: object[] = [],
 ): string {
-  if (maxDepth < seenObjects.length) {
-    return '...';
-  }
   switch (typeof value) {
     case 'string':
       return JSON.stringify(value);
@@ -41,6 +38,9 @@ export function inspectValue(
       try {
         switch (value.constructor) {
           case Array:
+            if (maxDepth < seenObjects.length) {
+              return '[...]';
+            }
             return (
               '[' +
               (value as unknown[])
@@ -51,6 +51,9 @@ export function inspectValue(
           case Object:
           case null:
           case undefined: {
+            if (maxDepth < seenObjects.length) {
+              return '{...}';
+            }
             const entries = Object.entries(value);
             return entries.length > 0
               ? '{ ' +
