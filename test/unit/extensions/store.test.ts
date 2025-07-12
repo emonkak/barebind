@@ -154,22 +154,6 @@ describe('Store', () => {
     });
   });
 
-  describe('toSnapshot()', () => {
-    it('returns a snapshot of the current state', () => {
-      const store = new CounterStore();
-
-      expect(store.toSnapshot()).toStrictEqual({
-        count: 0,
-      });
-
-      store.count++;
-
-      expect(store.toSnapshot()).toStrictEqual({
-        count: 1,
-      });
-    });
-  });
-
   describe('subscribe()', () => {
     it('invokes the subscriber on update', () => {
       const store = new CounterStore();
@@ -197,21 +181,6 @@ describe('Store', () => {
 
       store.count++;
       expect(subscriber).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('applySnapshot()', () => {
-    it('applies the state from the snapshot', () => {
-      const store = new CounterStore();
-      const count$ = store.getSignal('count');
-
-      store.applySnapshot({
-        count: 123,
-      });
-
-      expect(store.count).toBe(123);
-      expect(count$.value).toBe(123);
-      expect(count$.version).toBe(1);
     });
   });
 
@@ -250,34 +219,14 @@ describe('Store', () => {
 
     expect(appStore.counter).toBe(counterStore);
     expect(appStore.getVersion()).toBe(0);
-    expect(appStore.toSnapshot()).toStrictEqual({
-      counter: {
-        count: 100,
-      },
-    });
     expect(counterStore.count).toBe(100);
-
-    appStore.applySnapshot({ counter: { count: 200 } });
-
-    expect(appStore.counter).toBe(counterStore);
-    expect(appStore.getVersion()).toBe(1);
-    expect(appStore.toSnapshot()).toStrictEqual({
-      counter: {
-        count: 200,
-      },
-    });
-    expect(counterStore.count).toBe(200);
+    expect(subscriber).toHaveBeenCalledTimes(0);
 
     counterStore.count++;
 
     expect(appStore.counter).toBe(counterStore);
-    expect(appStore.getVersion()).toBe(2);
-    expect(appStore.toSnapshot()).toStrictEqual({
-      counter: {
-        count: 201,
-      },
-    });
-    expect(counterStore.count).toBe(201);
-    expect(subscriber).toHaveBeenCalledTimes(2);
+    expect(appStore.getVersion()).toBe(1);
+    expect(counterStore.count).toBe(101);
+    expect(subscriber).toHaveBeenCalledTimes(1);
   });
 });

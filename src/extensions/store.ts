@@ -21,42 +21,19 @@ export interface StoreExtensions extends CustomHook<void> {
   getSignal(key: PropertyKey): Signal<unknown> | undefined;
   getVersion(): number;
   subscribe(subscriber: Subscriber): Subscription;
-  applySnapshot(state: Snapshot<this>): void;
-  toSnapshot(): Snapshot<this>;
 }
 
 type UseStore<T> = T & StoreExtensions;
 
-type Snapshot<T> = {
-  [K in AtomKeys<T>]: T[K] extends StoreExtensions ? Snapshot<T[K]> : T[K];
-};
-
 type Constructable<T = object> = new (...args: any[]) => T;
 
-type SignalKeys<T> = Exclude<keyof T & string, FunctionKeys<T> | PrivateKeys>;
+type SignalKeys<T> = Exclude<keyof T & string, PrivateKeys | FunctionKeys<T>>;
 
-type AtomKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
+type PrivateKeys = `_${string}`;
 
 type FunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? K : never;
 }[keyof T];
-
-type PrivateKeys = `_${string}`;
-
-type WritableKeys<T> = {
-  [K in keyof T]: StrictEqual<
-    { -readonly [P in K]-?: T[P] },
-    Pick<T, K>
-  > extends true
-    ? K
-    : never;
-}[keyof T];
-
-type StrictEqual<X, Y> = (<T>() => T extends X ? 1 : 2) extends <
-  T,
->() => T extends Y ? 1 : 2
-  ? true
-  : false;
 
 export function defineStore<TClass extends Constructable>(
   superclass: TClass,
@@ -127,32 +104,6 @@ export function defineStore<TClass extends Constructable>(
           subscriptions[i]!();
         }
       };
-    }
-
-    applySnapshot(snapshot: Snapshot<this>): void {
-      const signalMap = this[$signalMap];
-      for (const key in signalMap) {
-        const signal = signalMap[key]!;
-        if (signal instanceof Atom) {
-          signal.value = snapshot[key as keyof Snapshot<this>]!;
-        } else if (signal instanceof StoreSignal) {
-          signal.value.applySnapshot(snapshot[key as keyof Snapshot<this>]!);
-        }
-      }
-    }
-
-    toSnapshot(): Snapshot<this> {
-      const signalMap = this[$signalMap];
-      const snapshot: Record<string, unknown> = {};
-      for (const key in signalMap) {
-        const signal = signalMap[key]!;
-        if (signal instanceof Atom) {
-          snapshot[key] = signal.value;
-        } else if (signal instanceof StoreSignal) {
-          snapshot[key] = signal.value.toSnapshot();
-        }
-      }
-      return snapshot as Snapshot<this>;
     }
   } as unknown as StoreClass<TClass>;
 }
