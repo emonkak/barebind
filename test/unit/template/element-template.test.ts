@@ -20,11 +20,11 @@ describe('element()', () => {
 });
 
 describe('ElementTemplate', () => {
-  describe('displayName', () => {
-    it('is a string that represents the template itself', () => {
+  describe('arity', () => {
+    it('returns the number of binds', () => {
       const template = new ElementTemplate('div');
 
-      expect(template.displayName, 'ElementTemplate');
+      expect(template.arity).toBe(2);
     });
   });
 
@@ -170,39 +170,6 @@ describe('ElementTemplate', () => {
       ]);
       expect((slots[0]!.part.node as Element).namespaceURI).toBe(
         SVG_NAMESPACE_URI,
-      );
-    });
-  });
-
-  describe('resolveBinding()', () => {
-    it('constructs a new TemplateBinding', () => {
-      const binds = [{ class: 'foo' }, 'bar'] as const;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = new Runtime(new MockRenderHost());
-      const template = new ElementTemplate('div');
-      const binding = template.resolveBinding(binds, part, runtime);
-
-      expect(binding.type).toBe(template);
-      expect(binding.value).toBe(binds);
-      expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not child part', () => {
-      const binds = [{ class: 'foo' }, 'bar'] as const;
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      };
-      const template = new ElementTemplate('div');
-      const runtime = new Runtime(new MockRenderHost());
-
-      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
-        'ElementTemplate must be used in a child node part,',
       );
     });
   });

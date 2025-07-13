@@ -32,6 +32,9 @@ import { EmptyTemplate } from '../template/empty-template.js';
 import { TaggedTemplate } from '../template/tagged-template.js';
 import { TextTemplate } from '../template/text-template.js';
 
+const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
+const EMPTY_TEMPLATE = new EmptyTemplate();
+
 export class BrowserRenderHost implements RenderHost {
   commitEffects(
     effects: Effect[],
@@ -52,7 +55,7 @@ export class BrowserRenderHost implements RenderHost {
     if (binds.length === 0) {
       // Assert: strings.length === 1
       if (strings[0]!.trim() === '') {
-        return EmptyTemplate;
+        return EMPTY_TEMPLATE;
       }
     } else if (binds.length === 1) {
       // Assert: strings.length === 2
@@ -66,7 +69,7 @@ export class BrowserRenderHost implements RenderHost {
           followingString === '-->')
       ) {
         // There is only one tag.
-        return ChildNodeTemplate;
+        return CHILD_NODE_TEMPLATE;
       }
 
       if (!precedingString.includes('<') && !followingString.includes('<')) {

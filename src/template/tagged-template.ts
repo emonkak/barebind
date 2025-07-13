@@ -1,15 +1,13 @@
-import { inspectNode, inspectPart, markUsedValue } from '../debug.js';
+import { inspectNode, inspectPart } from '../debug.js';
 import type {
-  DirectiveContext,
   Slot,
-  Template,
   TemplateMode,
   TemplateResult,
   UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { getNamespaceURIByTagName, TemplateBinding } from './template.js';
+import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
 
 export type Hole =
   | AttributeHole
@@ -78,9 +76,9 @@ const ATTRIBUTE_NAME_REGEXP = new RegExp(
 
 const ERROR_MAKER = '[[ERROR IN HERE!]]';
 
-export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
-  implements Template<TBinds>
-{
+export class TaggedTemplate<
+  TBinds extends readonly unknown[] = unknown[],
+> extends AbstractTemplate<TBinds> {
   static parse<TBinds extends readonly unknown[]>(
     strings: readonly string[],
     binds: TBinds,
@@ -120,13 +118,14 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     holes: Hole[],
     mode: TemplateMode,
   ) {
+    super();
     this._template = template;
     this._holes = holes;
     this._mode = mode;
   }
 
-  get displayName(): string {
-    return 'TaggedTemplate';
+  get arity(): number {
+    return this._holes.length;
   }
 
   hydrate(
@@ -383,20 +382,6 @@ export class TaggedTemplate<TBinds extends readonly unknown[] = unknown[]>
     fragment.replaceChildren();
 
     return { childNodes, slots };
-  }
-
-  resolveBinding(
-    binds: TBinds,
-    part: Part,
-    _context: DirectiveContext,
-  ): TemplateBinding<TBinds> {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'TaggedTemplate must be used in a child node part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(binds)),
-      );
-    }
-    return new TemplateBinding(this, binds, part);
   }
 }
 

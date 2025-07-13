@@ -118,7 +118,7 @@ describe('BrowserRenderHost', () => {
           'html',
         );
 
-        expect(template).toBe(EmptyTemplate);
+        expect(template).toBeInstanceOf(EmptyTemplate);
       },
     );
 
@@ -139,7 +139,7 @@ describe('BrowserRenderHost', () => {
           'html',
         );
 
-        expect(template).toBe(ChildNodeTemplate);
+        expect(template).toBeInstanceOf(ChildNodeTemplate);
       },
     );
 

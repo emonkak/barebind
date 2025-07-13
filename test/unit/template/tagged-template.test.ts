@@ -14,10 +14,11 @@ import { createElement, serializeNode } from '../../test-utils.js';
 const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('TaggedTemplate', () => {
-  describe('displayName', () => {
-    it('is a string that represents the template itself', () => {
-      const { template } = html`<div>foo</div>`;
-      expect(template.displayName, 'TaggedTemplate');
+  describe('arity', () => {
+    it('returns the number of binds', () => {
+      expect(html``.template.arity).toBe(0);
+      expect(html`${'foo'}`.template.arity).toBe(1);
+      expect(html`${'foo'} ${'bar'}`.template.arity).toBe(2);
     });
   });
 
@@ -968,37 +969,6 @@ describe('TaggedTemplate', () => {
       expect(() => {
         template.render(['foo'], part, runtime);
       }).toThrow('There is no node that the hole indicates.');
-    });
-  });
-
-  describe('resolveBinding()', () => {
-    it('constructs a new TemplateBinding', () => {
-      const { template, binds } = html`<div>${'foo'}</div>`;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = new Runtime(new MockRenderHost());
-      const binding = template.resolveBinding(binds, part, runtime);
-
-      expect(binding.type).toBe(template);
-      expect(binding.value).toBe(binds);
-      expect(binding.part).toBe(part);
-    });
-
-    it('throws an error if the part is not child part', () => {
-      const { template, binds } = html`<div>${'foo'}</div>`;
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      };
-      const runtime = new Runtime(new MockRenderHost());
-
-      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
-        'TaggedTemplate must be used in a child node part,',
-      );
     });
   });
 });

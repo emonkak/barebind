@@ -5,13 +5,24 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockRenderHost, MockSlot } from '../../mocks.js';
+import { MockRenderHost, MockSlot, MockTemplate } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('ChildNodeTemplate', () => {
-  describe('displayName', () => {
-    it('is a string that represents the template itself', () => {
-      expect(ChildNodeTemplate.displayName, 'ChildNodeTemplate');
+  describe('arity', () => {
+    it('is the number of binds', () => {
+      const template = new ChildNodeTemplate();
+
+      expect(template.arity).toBe(1);
+    });
+  });
+
+  describe('equals()', () => {
+    it('returns true if the value is instance of ChildNodeTemplate', () => {
+      const template = new ChildNodeTemplate();
+
+      expect(template.equals(template)).toBe(true);
+      expect(template.equals(new MockTemplate())).toBe(false);
     });
   });
 
@@ -31,7 +42,8 @@ describe('ChildNodeTemplate', () => {
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
-      const { childNodes, slots } = ChildNodeTemplate.hydrate(
+      const template = new ChildNodeTemplate();
+      const { childNodes, slots } = template.hydrate(
         binds,
         part,
         hydrationTree,
@@ -68,9 +80,10 @@ describe('ChildNodeTemplate', () => {
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
       const runtime = new Runtime(new MockRenderHost());
+      const template = new ChildNodeTemplate();
 
       expect(() => {
-        ChildNodeTemplate.hydrate(binds, part, hydrationTree, runtime);
+        template.hydrate(binds, part, hydrationTree, runtime);
       }).toThrow(HydrationError);
     });
   });
@@ -85,11 +98,8 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = new Runtime(new MockRenderHost());
-      const { childNodes, slots } = ChildNodeTemplate.render(
-        binds,
-        part,
-        runtime,
-      );
+      const template = new ChildNodeTemplate();
+      const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes).toStrictEqual([expect.any(Comment)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
@@ -106,37 +116,6 @@ describe('ChildNodeTemplate', () => {
           isCommitted: false,
         }),
       ]);
-    });
-  });
-
-  describe('resolveBinding()', () => {
-    it('constructs a new TemplateBinding', () => {
-      const binds = ['foo'] as const;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = new Runtime(new MockRenderHost());
-      const binding = ChildNodeTemplate.resolveBinding(binds, part, runtime);
-
-      expect(binding.type).toBe(ChildNodeTemplate);
-      expect(binding.value).toBe(binds);
-      expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not child part', () => {
-      const binds = ['foo'] as const;
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      };
-      const runtime = new Runtime(new MockRenderHost());
-
-      expect(() =>
-        ChildNodeTemplate.resolveBinding(binds, part, runtime),
-      ).toThrow('ChildNodeTemplate must be used in a child node part,');
     });
   });
 });

@@ -4,7 +4,8 @@ import {
   type VElementType,
   VFragment,
   type VNode,
-} from './element.js';
+  VStaticElement,
+} from './vdom.js';
 
 export function jsx<const TProps extends ElementProps>(
   type: VElementType<TProps>,
@@ -14,11 +15,17 @@ export function jsx<const TProps extends ElementProps>(
   return new VElement(type, props, key);
 }
 
-export const jsxs: typeof jsx = jsx;
+export function jsxs<const TProps extends ElementProps>(
+  type: VElementType<TProps>,
+  props: TProps,
+  key?: unknown,
+): VElement<TProps> {
+  return new VStaticElement(type, props, key);
+}
 
 export const jsxDEV: typeof jsx = jsx;
 
-export const jsxsDEV: typeof jsx = jsx;
+export const jsxsDEV: typeof jsx = jsxs;
 
 export function Fragment(props: { children: VNode[] }): VFragment {
   return new VFragment(props.children);

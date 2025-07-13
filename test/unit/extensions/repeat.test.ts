@@ -19,7 +19,7 @@ import {
   permutations,
 } from '../../test-utils.js';
 
-const TEXT_TEMPLATE = new TextTemplate<string>('', '');
+const TEXT_TEMPLATE = new TextTemplate<string>();
 
 const EMPTY_COMMENT = '<!---->';
 

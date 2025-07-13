@@ -5,6 +5,7 @@ import type {
   CommitContext,
   DirectiveContext,
   DirectiveType,
+  Template,
   UpdateContext,
 } from '../directive.js';
 import {
@@ -25,16 +26,20 @@ import {
 } from '../primitive/style.js';
 import { ChildNodeTemplate } from '../template/child-node-template.js';
 import { ElementTemplate } from '../template/element-template.js';
+import { EmptyTemplate } from '../template/empty-template.js';
+import { FragmentTemplate } from '../template/fragment-template.js';
 import { TextTemplate } from '../template/text-template.js';
 import { FunctionComponent } from './component.js';
 import { RepeatDirective, type RepeatProps } from './repeat.js';
 
 const $cleanup = Symbol('$cleanup');
 
-const TEXT_TEMPLATE = new TextTemplate('', '');
+const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
+const EMPTY_TEMPLATE = new EmptyTemplate();
+const TEXT_TEMPLATE = new TextTemplate();
 
 export type VNode =
-  | VNode[]
+  | readonly VNode[]
   | VElement
   | Bindable
   | bigint
@@ -132,9 +137,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
       const element = new DirectiveSpecifier(ElementDirective, this.props);
       const children = Array.isArray(this.props.children)
         ? new VFragment(this.props.children)
-        : new DirectiveSpecifier(ChildNodeTemplate, [
-            resolveValue(this.props.children as VNode),
-          ]);
+        : resolveChild(this.props.children as VNode);
       return {
         type: new ElementTemplate(this.type),
         value: [element, children],
@@ -144,9 +147,9 @@ export class VElement<TProps extends ElementProps = ElementProps>
 }
 
 export class VFragment implements Bindable<RepeatProps<VNode>> {
-  readonly children: VNode[];
+  readonly children: readonly VNode[];
 
-  constructor(children: VNode[]) {
+  constructor(children: readonly VNode[]) {
     this.children = children;
   }
 
@@ -156,9 +159,87 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
       value: {
         source: this.children,
         keySelector: resolveKey,
-        valueSelector: resolveValue,
+        valueSelector: resolveChild,
       },
     };
+  }
+}
+
+export class VStaticElement<TProps extends ElementProps = ElementProps>
+  implements Bindable<unknown>
+{
+  readonly type: VElementType<TProps>;
+
+  readonly props: TProps;
+
+  readonly key: unknown;
+
+  constructor(type: VElementType<TProps>, props: TProps, key?: unknown) {
+    this.type = type;
+    this.props = props;
+    this.key = key;
+  }
+
+  [$toDirective](): Directive<unknown> {
+    if (typeof this.type === 'function') {
+      return {
+        type: new FunctionComponent(this.type),
+        value: this.props,
+      };
+    } else {
+      const element = new DirectiveSpecifier(ElementDirective, this.props);
+      const children = Array.isArray(this.props.children)
+        ? new VStaticFragment(this.props.children)
+        : resolveChild(this.props.children as VNode);
+      return {
+        type: new ElementTemplate(this.type),
+        value: [element, children],
+      };
+    }
+  }
+}
+
+export class VStaticFragment implements Bindable<unknown> {
+  readonly children: readonly VNode[];
+
+  constructor(children: readonly VNode[]) {
+    this.children = children;
+  }
+
+  [$toDirective](): Directive<unknown> {
+    const templates: Template<readonly unknown[]>[] = [];
+    const binds: unknown[] = [];
+
+    for (let i = 0, l = this.children.length; i < l; i++) {
+      const child = this.children[i]!;
+      if (child instanceof VElement) {
+        if (typeof child.type === 'function') {
+          templates.push(CHILD_NODE_TEMPLATE);
+          binds.push(child);
+        } else {
+          templates.push(new ElementTemplate(child.type));
+          binds.push(
+            new DirectiveSpecifier(ElementDirective, child.props),
+            Array.isArray(child.props.children)
+              ? new VFragment(child.props.children)
+              : resolveChild(child.props.children as VNode),
+          );
+        }
+      } else if (isBindable(child)) {
+        templates.push(CHILD_NODE_TEMPLATE);
+        binds.push(child);
+      } else if (Array.isArray(child)) {
+        templates.push(CHILD_NODE_TEMPLATE);
+        binds.push(new VFragment(child));
+      } else if (child == null || typeof child === 'boolean') {
+        templates.push(EMPTY_TEMPLATE);
+      } else {
+        templates.push(TEXT_TEMPLATE);
+        binds.push(child);
+      }
+    }
+
+    return { type: new FragmentTemplate(templates), value: binds };
   }
 }
 
@@ -501,7 +582,7 @@ function resolveKey(child: VNode, index: number): unknown {
   return child instanceof VElement ? (child.key ?? index) : index;
 }
 
-function resolveValue(child: VNode): Bindable<unknown> {
+function resolveChild(child: VNode): Bindable<unknown> {
   if (isBindable(child)) {
     return child;
   } else if (Array.isArray(child)) {

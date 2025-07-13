@@ -67,6 +67,7 @@ export interface Primitive<T> extends DirectiveType<T> {
 
 export interface Template<TBinds extends readonly unknown[]>
   extends DirectiveType<TBinds> {
+  readonly arity: TBinds['length'];
   render(
     binds: TBinds,
     part: ChildNodePart,
@@ -228,13 +229,10 @@ export class SlotSpecifier<T> implements Bindable {
 }
 
 export function areDirectiveTypesEqual(
-  firstDirectiveType: DirectiveType<unknown>,
-  secondDirectiveType: DirectiveType<unknown>,
+  x: DirectiveType<unknown>,
+  y: DirectiveType<unknown>,
 ): boolean {
-  return (
-    firstDirectiveType.equals?.(secondDirectiveType) ??
-    firstDirectiveType === secondDirectiveType
-  );
+  return x.equals?.(y) ?? x === y;
 }
 
 export function isBindable(value: unknown): value is Bindable {

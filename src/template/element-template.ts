@@ -1,18 +1,14 @@
-import { inspectPart, markUsedValue } from '../debug.js';
 import {
-  type Binding,
-  type DirectiveContext,
   DirectiveSpecifier,
   type DirectiveType,
-  type Template,
   type TemplateResult,
   type UpdateContext,
 } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../part.js';
+import { type ChildNodePart, PartType } from '../part.js';
 import {
+  AbstractTemplate,
   getNamespaceURIByTagName,
-  TemplateBinding,
 } from '../template/template.js';
 
 export function element<TProps, TChildren>(
@@ -23,17 +19,19 @@ export function element<TProps, TChildren>(
   return new DirectiveSpecifier(new ElementTemplate(name), [props, children]);
 }
 
-export class ElementTemplate<TProps = unknown, TChildren = unknown>
-  implements Template<readonly [TProps, TChildren]>
-{
+export class ElementTemplate<
+  TProps = unknown,
+  TChildren = unknown,
+> extends AbstractTemplate<readonly [TProps, TChildren]> {
   private readonly _name: string;
 
   constructor(name: string) {
+    super();
     this._name = name;
   }
 
-  get displayName(): string {
-    return ElementTemplate.name;
+  get arity(): 2 {
+    return 2;
   }
 
   equals(other: DirectiveType<unknown>): boolean {
@@ -105,20 +103,5 @@ export class ElementTemplate<TProps = unknown, TChildren = unknown>
       childNodes: [elementPart.node],
       slots: [elementSlot, childrenSlot],
     };
-  }
-
-  resolveBinding(
-    binds: readonly [TProps, TChildren],
-    part: Part,
-    _context: DirectiveContext,
-  ): Binding<readonly [TProps, TChildren]> {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'ElementTemplate must be used in a child node part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(binds)),
-      );
-    }
-
-    return new TemplateBinding(this, binds, part);
   }
 }

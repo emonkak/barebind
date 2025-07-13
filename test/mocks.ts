@@ -32,7 +32,7 @@ import type {
   RenderHost,
   RequestCallbackOptions,
 } from '../src/render-host.js';
-import { TemplateBinding } from '../src/template/template.js';
+import { AbstractTemplate } from '../src/template/template.js';
 
 export class MockBindable<T> implements Bindable<T> {
   directive: Directive<T>;
@@ -353,7 +353,7 @@ export class MockSlot<T> implements Slot<T> {
   }
 }
 
-export class MockTemplate implements Template<readonly unknown[]> {
+export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   readonly strings: readonly string[];
 
   readonly binds: readonly unknown[];
@@ -368,14 +368,15 @@ export class MockTemplate implements Template<readonly unknown[]> {
     placeholder = '',
     mode: TemplateMode = 'html',
   ) {
+    super();
     this.strings = strings;
     this.binds = binds;
     this.placeholder = placeholder;
     this.mode = mode;
   }
 
-  get displayName(): string {
-    return this.constructor.name;
+  get arity(): number {
+    return this.binds.length;
   }
 
   render(
@@ -399,16 +400,5 @@ export class MockTemplate implements Template<readonly unknown[]> {
       childNodes: [],
       slots: [],
     };
-  }
-
-  resolveBinding(
-    binds: readonly unknown[],
-    part: Part,
-    _context: DirectiveContext,
-  ): Binding<readonly unknown[]> {
-    if (part.type !== PartType.ChildNode) {
-      throw new Error('MockTemplate must be used in a child node.');
-    }
-    return new TemplateBinding(this, binds, part);
   }
 }

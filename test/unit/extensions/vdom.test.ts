@@ -1,27 +1,32 @@
 import { describe, expect, it, vi } from 'vitest';
 import { $toDirective, DirectiveSpecifier } from '@/directive.js';
 import { FunctionComponent } from '@/extensions/component.js';
+import { RepeatDirective } from '@/extensions/repeat.js';
 import {
-  createElement as createVElement,
-  createFragment as createVFragment,
+  createElement,
+  createFragment,
   ElementBinding,
   ElementDirective,
   VElement,
   VFragment,
-} from '@/extensions/element.js';
-import { RepeatDirective } from '@/extensions/repeat.js';
+  VStaticElement,
+  VStaticFragment,
+} from '@/extensions/vdom.js';
 import { PartType } from '@/part.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
 import { ElementTemplate } from '@/template/element-template.js';
+import { EmptyTemplate } from '@/template/empty-template.js';
+import { FragmentTemplate } from '@/template/fragment-template.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockRenderHost } from '../../mocks.js';
-import { createElement } from '../../test-utils.js';
+import { TextTemplate } from '@/template/text-template.js';
+import { MockBindable, MockPrimitive, MockRenderHost } from '../../mocks.js';
+import { createElement as createDOMElement } from '../../test-utils.js';
 
 describe('createElement()', () => {
   it('constructs the new VElement with normalized properties', () => {
-    const element = createVElement(
+    const element = createElement(
       'div',
       { className: 'foo', key: 'bar' },
       'baz',
@@ -38,8 +43,8 @@ describe('createElement()', () => {
 
 describe('createFragment()', () => {
   it('constructs the new VFragment', () => {
-    const children = [createVElement('div'), 'foo'];
-    const element = createVFragment(children);
+    const children = [createElement('div'), 'foo'];
+    const element = createFragment(children);
 
     expect(element.children).toBe(children);
   });
@@ -47,7 +52,7 @@ describe('createFragment()', () => {
 
 describe('VElement', () => {
   describe('[$toDirective]()', () => {
-    it('returns a directive with the component', () => {
+    it('returns a directive with the function component', () => {
       const type = () => {};
       const props = {};
       const element = new VElement(type, props);
@@ -79,9 +84,7 @@ describe('VElement', () => {
       expect(directive.type).toStrictEqual(new ElementTemplate(type));
       expect(directive.value).toStrictEqual([
         new DirectiveSpecifier(ElementDirective, props),
-        new DirectiveSpecifier(ChildNodeTemplate, [
-          new DirectiveSpecifier(BlackholePrimitive, undefined),
-        ]),
+        new DirectiveSpecifier(BlackholePrimitive, undefined),
       ]);
     });
   });
@@ -100,6 +103,91 @@ describe('VFragment', () => {
           source: children,
         }),
       );
+    });
+  });
+});
+
+describe('VStaticElement', () => {
+  describe('[$toDirective]()', () => {
+    it('returns a directive with the function component', () => {
+      const type = () => {};
+      const props = {};
+      const element = new VStaticElement(type, props);
+      const directive = element[$toDirective]();
+
+      expect(directive.type).toStrictEqual(new FunctionComponent(type));
+      expect(directive.value).toBe(props);
+    });
+
+    it('returns a directive with the element template with children', () => {
+      const type = 'div';
+      const props = { children: [] };
+      const element = new VStaticElement(type, props);
+      const directive = element[$toDirective]();
+
+      expect(directive.type).toStrictEqual(new ElementTemplate(type));
+      expect(directive.value).toStrictEqual([
+        new DirectiveSpecifier(ElementDirective, props),
+        new VStaticFragment(props.children),
+      ]);
+    });
+
+    it('returns a directive with the element template without children', () => {
+      const type = 'div';
+      const props = {};
+      const element = new VStaticElement(type, props);
+      const directive = element[$toDirective]();
+
+      expect(directive.type).toStrictEqual(new ElementTemplate(type));
+      expect(directive.value).toStrictEqual([
+        new DirectiveSpecifier(ElementDirective, props),
+        new DirectiveSpecifier(BlackholePrimitive, undefined),
+      ]);
+    });
+  });
+});
+
+describe('VStaticFragment', () => {
+  describe('[$toDirective]()', () => {
+    it('returns a directive with the fragment template', () => {
+      const component = () => {};
+      const children = [
+        new VElement(component, {}),
+        new VElement('div', { children: 'foo' }),
+        new VElement('div', { children: ['foo'] }),
+        new MockBindable({ type: MockPrimitive, value: 'foo' }),
+        ['foo', 'bar'],
+        null,
+        false,
+        'foo',
+      ] as const;
+      const element = new VStaticFragment(children);
+      const directive = element[$toDirective]();
+
+      expect(directive.type).toStrictEqual(
+        new FragmentTemplate([
+          new ChildNodeTemplate(),
+          new ElementTemplate('div'),
+          new ElementTemplate('div'),
+          new ChildNodeTemplate(),
+          new ChildNodeTemplate(),
+          new EmptyTemplate(),
+          new EmptyTemplate(),
+          new TextTemplate(),
+        ]),
+      );
+      expect(directive.value).toStrictEqual([
+        children[0],
+        new DirectiveSpecifier(ElementDirective, children[1].props),
+        new DirectiveSpecifier(new TextTemplate(), [
+          children[1].props.children,
+        ]),
+        new DirectiveSpecifier(ElementDirective, children[2].props),
+        new VFragment(children[2].props.children),
+        children[3],
+        new VFragment(children[4]),
+        children[7],
+      ]);
     });
   });
 });
@@ -346,10 +434,10 @@ describe('ElementBinding', () => {
       const props2 = { value: null };
       const part = {
         type: PartType.Element,
-        node: createElement(
+        node: createDOMElement(
           'select',
           {},
-          createElement('option', { value: 'foo' }, 'foo'),
+          createDOMElement('option', { value: 'foo' }, 'foo'),
         ),
       };
       const binding = new ElementBinding(props1, part);

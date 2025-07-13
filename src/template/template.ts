@@ -1,17 +1,62 @@
+import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
   CommitContext,
+  DirectiveContext,
   Effect,
   Template,
   TemplateResult,
   UpdateContext,
 } from '../directive.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
-import { type ChildNodePart, getStartNode, PartType } from '../part.js';
+import {
+  type ChildNodePart,
+  getStartNode,
+  type Part,
+  PartType,
+} from '../part.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
 export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
+
+export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
+  implements Template<TBinds>
+{
+  abstract get arity(): TBinds['length'];
+
+  get displayName(): string {
+    return this.constructor.name;
+  }
+
+  abstract render(
+    binds: TBinds,
+    part: ChildNodePart,
+    context: UpdateContext,
+  ): TemplateResult;
+
+  abstract hydrate(
+    binds: TBinds,
+    part: ChildNodePart,
+    hydrationTree: HydrationTree,
+    context: UpdateContext,
+  ): TemplateResult;
+
+  resolveBinding(
+    binds: TBinds,
+    part: Part,
+    _context: DirectiveContext,
+  ): Binding<TBinds> {
+    if (part.type !== PartType.ChildNode) {
+      throw new Error(
+        `${this.constructor.name} must be used in a child node part, but it is used here in:\n` +
+          inspectPart(part, markUsedValue(binds)),
+      );
+    }
+
+    return new TemplateBinding(this, binds, part);
+  }
+}
 
 export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect

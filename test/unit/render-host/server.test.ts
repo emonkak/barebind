@@ -101,7 +101,7 @@ describe('ServerRenderHost', () => {
           'html',
         );
 
-        expect(template).toBe(EmptyTemplate);
+        expect(template).toBeInstanceOf(EmptyTemplate);
       },
     );
 
@@ -122,7 +122,7 @@ describe('ServerRenderHost', () => {
           'html',
         );
 
-        expect(template).toBe(ChildNodeTemplate);
+        expect(template).toBeInstanceOf(ChildNodeTemplate);
       },
     );
 

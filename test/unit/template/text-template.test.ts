@@ -9,10 +9,11 @@ import { MockRenderHost } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('TextTemplate', () => {
-  describe('displayName', () => {
-    it('is a string that represents the template itself', () => {
-      const template = new TextTemplate('', '');
-      expect(template.displayName, 'TextTemplate');
+  describe('arity', () => {
+    it('returns the number of binds', () => {
+      const template = new TextTemplate();
+
+      expect(template.arity).toBe(1);
     });
   });
 
@@ -111,39 +112,6 @@ describe('TextTemplate', () => {
           isCommitted: false,
         }),
       ]);
-    });
-  });
-
-  describe('resolveBinding()', () => {
-    it('constructs a new TemplateBinding', () => {
-      const template = new TextTemplate('(', ')');
-      const binds = ['foo'] as const;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = new Runtime(new MockRenderHost());
-      const binding = template.resolveBinding(binds, part, runtime);
-
-      expect(binding.type).toBe(template);
-      expect(binding.value).toBe(binds);
-      expect(binding.part).toBe(part);
-    });
-
-    it('should throw the error if the part is not child part', () => {
-      const template = new TextTemplate('(', ')');
-      const binds = ['foo'] as const;
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      };
-      const runtime = new Runtime(new MockRenderHost());
-
-      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
-        'TextTemplate must be used in a child node part,',
-      );
     });
   });
 });
