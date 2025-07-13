@@ -28,7 +28,21 @@ describe('inspectNode()', () => {
     );
 
     expect(inspectNode(node, NODE_MAKRER)).toBe(
-      '<div><span>foo</span><p>bar[[NODE IN HERE!]]foo<!----></p><span>qux</span></div>',
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    [[NODE IN HERE!]]foo
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -46,7 +60,21 @@ describe('inspectNode()', () => {
     );
 
     expect(inspectNode(node, NODE_MAKRER)).toBe(
-      '<div><span>foo</span><p>bar[[NODE IN HERE!]]<!--foo--><!----></p><span>qux</span></div>',
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    [[NODE IN HERE!]]<!--foo-->
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -54,7 +82,7 @@ describe('inspectNode()', () => {
     const node = createElement('mark', {}, 'foo');
 
     expect(inspectNode(node, NODE_MAKRER)).toBe(
-      '[[NODE IN HERE!]]<mark>foo</mark>',
+      `<mark [[NODE IN HERE!]]>...</mark>`.trim(),
     );
 
     createElement(
@@ -66,7 +94,21 @@ describe('inspectNode()', () => {
     );
 
     expect(inspectNode(node, NODE_MAKRER)).toBe(
-      '<div><span>foo</span><p>bar[[NODE IN HERE!]]<mark>foo</mark><!----></p><span>qux</span></div>',
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <mark [[NODE IN HERE!]]>...</mark>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 });
@@ -93,7 +135,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <input type="text" class=[["my value" IS USED IN HERE!]]>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -117,7 +173,28 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<!DOCTYPE html><html><head></head><body><div><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div></body></html>`,
+      `
+<!DOCTYPE html>
+<html>
+  <head>
+  </head>
+  <body>
+    <div>
+      <span>
+        foo
+      </span>
+      <p>
+        bar
+        <input type="text" class=[["my value" IS USED IN HERE!]]>
+        <!---->
+      </p>
+      <span>
+        qux
+      </span>
+    </div>
+  </body>
+</html>
+`.trim(),
     );
 
     myDocument.body.replaceChildren(
@@ -131,7 +208,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div id="foo"><span>foo</span><p>bar<input type="text" class=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
+      `
+<div id="foo">
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <input type="text" class=[["my value" IS USED IN HERE!]]>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -146,7 +237,7 @@ describe('inspectPart()', () => {
     const value = 'my value';
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `[["my value" IS USED IN HERE!]]<!---->`,
+      `[["my value" IS USED IN HERE!]]`,
     );
 
     createElement(
@@ -158,7 +249,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar[["my value" IS USED IN HERE!]]<!----><!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    [["my value" IS USED IN HERE!]]
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -182,7 +287,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar<div [["my value" IS USED IN HERE!]]></div><!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <div [["my value" IS USED IN HERE!]]></div>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -207,7 +326,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar<button type="button" @click=[["my value" IS USED IN HERE!]]></button><!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <button type="button" @click=[["my value" IS USED IN HERE!]]></button>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -233,7 +366,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar<input type="text" $value=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <input type="text" $value=[["my value" IS USED IN HERE!]]>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -259,7 +406,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar<input type="text" .value=[["my value" IS USED IN HERE!]]><!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    <input type="text" .value=[["my value" IS USED IN HERE!]]>
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 
@@ -292,7 +453,21 @@ describe('inspectPart()', () => {
     );
 
     expect(inspectPart(part, markUsedValue(value))).toBe(
-      `<div><span>foo</span><p>bar[["my value" IS USED IN HERE!]]<!----></p><span>qux</span></div>`,
+      `
+<div>
+  <span>
+    foo
+  </span>
+  <p>
+    bar
+    [["my value" IS USED IN HERE!]]
+    <!---->
+  </p>
+  <span>
+    qux
+  </span>
+</div>
+`.trim(),
     );
   });
 });
@@ -332,10 +507,13 @@ describe('inspectValue()', () => {
       { foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } },
       '{ foo: 1, bar: [2], baz: { $qux: 3, "foo-bar": 4 } }',
     ],
+    [{ foo: { bar: { baz: {} } } }, '{ foo: { bar: { baz: {} } } }'],
+    [{ foo: { bar: { baz: [] } } }, '{ foo: { bar: { baz: [] } } }'],
     [
       { foo: { bar: { baz: { qux: 123 } } } },
       '{ foo: { bar: { baz: {...} } } }',
     ],
+    [{ foo: { bar: { baz: [123] } } }, '{ foo: { bar: { baz: [...] } } }'],
     [circlerValue, '{ x: [Circular] }'],
   ])(
     'returns a string representation of the value',

@@ -3,6 +3,11 @@ import { type Part, PartType } from './part.js';
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
+const INDENT_STRING = '  ';
+
+// Minimum complexity score required to make a node identifiable.
+const COMPLEXITY_THRESHOLD = 10;
+
 export function inspectNode(node: Node, marker: string): string {
   return inspectAround(node, annotateNode(node, marker));
 }
@@ -38,7 +43,10 @@ export function inspectValue(
       try {
         switch (value.constructor) {
           case Array:
-            if (maxDepth < seenObjects.length) {
+            if (
+              maxDepth < seenObjects.length &&
+              (value as unknown[]).length > 0
+            ) {
               return '[...]';
             }
             return (
@@ -51,7 +59,10 @@ export function inspectValue(
           case Object:
           case null:
           case undefined: {
-            if (maxDepth < seenObjects.length) {
+            if (
+              maxDepth < seenObjects.length &&
+              Object.keys(value).length > 0
+            ) {
               return '{...}';
             }
             const entries = Object.entries(value);
@@ -97,39 +108,7 @@ export function markUsedValue(value: unknown): string {
   return `[[${inspectValue(value)} IS USED IN HERE!]]`;
 }
 
-function annotateNode(node: Node, marker: string): string {
-  return marker + toHTML(node);
-}
-
-function annotatePart(part: Part, marker: string): string {
-  switch (part.type) {
-    case PartType.Attribute:
-      return appendInsideTag(part.node, unquotedAttribute(part.name, marker));
-    case PartType.ChildNode:
-      return marker + toHTML(part.node);
-    case PartType.Element:
-      return appendInsideTag(part.node, marker);
-    case PartType.Event:
-      return appendInsideTag(
-        part.node,
-        unquotedAttribute('@' + part.name, marker),
-      );
-    case PartType.Live:
-      return appendInsideTag(
-        part.node,
-        unquotedAttribute('$' + part.name, marker),
-      );
-    case PartType.Property:
-      return appendInsideTag(
-        part.node,
-        unquotedAttribute('.' + part.name, marker),
-      );
-    case PartType.Text:
-      return marker;
-  }
-}
-
-function appendInsideTag(element: Element, contentToAppend: string): string {
+function annotateInsideTag(element: Element, contentToAppend: string): string {
   const isSelfClosing = isSelfClosingTag(element);
   const offset = isSelfClosing ? 1 : element.tagName.length + 4;
   const unclosedOpenTag = element.outerHTML.slice(
@@ -138,9 +117,45 @@ function appendInsideTag(element: Element, contentToAppend: string): string {
   );
   let output = unclosedOpenTag + ' ' + contentToAppend + '>';
   if (!isSelfClosing) {
-    output += element.innerHTML + closeTag(element);
+    const children = element.firstChild !== null ? '...' : '';
+    output += children + closeTag(element);
   }
   return output;
+}
+
+function annotateNode(node: Node, marker: string): string {
+  if (node instanceof Element) {
+    return annotateInsideTag(node, marker);
+  } else {
+    return marker + serializeNode(node);
+  }
+}
+
+function annotatePart(part: Part, marker: string): string {
+  switch (part.type) {
+    case PartType.Attribute:
+      return annotateInsideTag(part.node, unquotedAttribute(part.name, marker));
+    case PartType.Element:
+      return annotateInsideTag(part.node, marker);
+    case PartType.Event:
+      return annotateInsideTag(
+        part.node,
+        unquotedAttribute('@' + part.name, marker),
+      );
+    case PartType.Live:
+      return annotateInsideTag(
+        part.node,
+        unquotedAttribute('$' + part.name, marker),
+      );
+    case PartType.Property:
+      return annotateInsideTag(
+        part.node,
+        unquotedAttribute('.' + part.name, marker),
+      );
+    case PartType.ChildNode:
+    case PartType.Text:
+      return marker;
+  }
 }
 
 function closeTag(element: Element): string {
@@ -154,15 +169,15 @@ function escapeHTML(s: string): string {
 function getComplexity(node: Node): number {
   // Complexity is calculated as follows:
   //   - increment by 1 when any element is found.
-  //   - increment by 2 when an element has "class".
-  //   - increment by 10 when an element has "id".
-  //   - increment by 1 when an element has any attribute other than "class" or "id".
+  //   - increment by 8 when an element has the ID.
+  //   - increment by 1 when an element has any class.
+  //   - increment by 1 when an element has any attribute.
   //   - increment by 1 when a non-empty comment or text node is found.
   let complexity = 0;
   switch (node.nodeType) {
     case Node.ELEMENT_NODE:
       if ((node as Element).hasAttribute('id')) {
-        complexity += 9;
+        complexity += 8;
       }
       complexity +=
         (node as Element).classList.length +
@@ -180,36 +195,52 @@ function getComplexity(node: Node): number {
 }
 
 function inspectAround(node: Node, marker: string): string {
+  const precedingLines: string[] = [];
+  const followingLines: string[] = [];
   let currentNode: Node | null = node;
-  let before = '';
-  let after = '';
   let complexity = 0;
+  let level = 0;
+
   do {
     for (
-      let previousNode: Node | null = currentNode.previousSibling;
+      let previousNode = currentNode.previousSibling;
       previousNode !== null;
       previousNode = previousNode.previousSibling
     ) {
-      before = toHTML(previousNode) + before;
+      precedingLines.push(...prettyPrintNode(previousNode).reverse());
       complexity += getComplexity(previousNode);
     }
+
     for (
-      let nextNode: Node | null = currentNode.nextSibling;
+      let nextNode = currentNode.nextSibling;
       nextNode !== null;
       nextNode = nextNode.nextSibling
     ) {
-      after += toHTML(nextNode);
+      followingLines.push(...prettyPrintNode(nextNode));
       complexity += getComplexity(nextNode);
     }
+
     currentNode = currentNode.parentNode;
     if (!(currentNode instanceof Element)) {
       break;
     }
-    before = openTag(currentNode) + before;
-    after += closeTag(currentNode);
+
+    shiftLines(precedingLines);
+    shiftLines(followingLines);
+
+    precedingLines.push(openTag(currentNode));
+    followingLines.push(closeTag(currentNode));
     complexity += getComplexity(currentNode);
-  } while (complexity < 10);
-  return before + marker + after;
+    level++;
+  } while (complexity < COMPLEXITY_THRESHOLD);
+
+  const precedingString =
+    precedingLines.length > 0 ? precedingLines.reverse().join('\n') + '\n' : '';
+  const followingString =
+    followingLines.length > 0 ? '\n' + followingLines.join('\n') : '';
+  const middleString = INDENT_STRING.repeat(level) + marker;
+
+  return precedingString + middleString + followingString;
 }
 
 function isSelfClosingTag(element: Element): boolean {
@@ -222,10 +253,41 @@ function openTag(element: Element): string {
   return element.outerHTML.slice(0, -(element.innerHTML.length + offset));
 }
 
-function toHTML(node: Node): string {
-  return node instanceof Element
-    ? (node as Element).outerHTML
-    : new XMLSerializer().serializeToString(node);
+function prettyPrintNode(node: Node, level: number = 0): string[] {
+  const lines: string[] = [];
+  const indentString = INDENT_STRING.repeat(level);
+
+  if (node instanceof Element) {
+    lines.push(indentString + openTag(node));
+
+    for (
+      let currentNode = node.firstChild;
+      currentNode !== null;
+      currentNode = currentNode.nextSibling
+    ) {
+      lines.push(...prettyPrintNode(currentNode, level + 1));
+    }
+
+    if (!isSelfClosingTag(node)) {
+      lines.push(indentString + closeTag(node));
+    }
+  } else {
+    lines.push(indentString + serializeNode(node));
+  }
+
+  return lines;
+}
+
+function serializeNode(node: Node): string {
+  return new XMLSerializer().serializeToString(node);
+}
+
+function shiftLines(lines: string[]): void {
+  for (let i = 0, l = lines.length; i < l; i++) {
+    if (lines[i] !== '') {
+      lines[i] = INDENT_STRING + lines[i];
+    }
+  }
 }
 
 function unquotedAttribute(name: string, value: string): string {
