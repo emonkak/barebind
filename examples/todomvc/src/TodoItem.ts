@@ -1,5 +1,5 @@
 import { type RenderContext, shallowEqual } from '@emonkak/ebit';
-import type { Atom, component } from '@emonkak/ebit/extensions';
+import { type Atom, component } from '@emonkak/ebit/extensions';
 
 import { type Todo, TodoStore } from './store.js';
 import { TodoInput } from './TodoInput.js';

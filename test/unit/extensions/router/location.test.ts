@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-
+import { CurrentLocation } from '@/extensions/router/location.js';
 import { ALL_LANES } from '@/hook.js';
 import { RenderSession } from '@/render-session.js';
-import { CurrentLocation } from '@/router/location.js';
 import { Runtime } from '@/runtime.js';
-import { MockCoroutine, MockRenderHost } from '../../mocks.js';
+import { MockCoroutine, MockRenderHost } from '../../../mocks.js';
 
 describe('CurrentLocation', () => {
   it('should throw an error if the current location is not registered', () => {

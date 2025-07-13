@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { RelativeURL } from '@/router/url.js';
+import { RelativeURL } from '@/extensions/router/url.js';
 
 describe('RelativeURL', () => {
   describe('.from()', () => {

@@ -37,7 +37,11 @@
   },
   "overrides": [
     {
-      "includes": ["src/**", "!src/render-host/browser.ts", "!src/router/*.ts"],
+      "includes": [
+        "src/**",
+        "!src/extensions/router/*.ts",
+        "!src/render-host/browser.ts"
+      ],
       "linter": {
         "rules": {
           "style": {

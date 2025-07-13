@@ -6,7 +6,7 @@
       "import": "./src/index.ts"
     },
     "./extensions": {
-      "import": "./src/extensions.ts"
+      "import": "./src/extensions/index.ts"
     },
     "./extensions/jsx-dev-runtime": {
       "import": "./src/extensions/jsx-runtime.ts"
@@ -14,8 +14,8 @@
     "./extensions/jsx-runtime": {
       "import": "./src/extensions/jsx-runtime.ts"
     },
-    "./router": {
-      "import": "./src/router.ts"
+    "./extensions/router": {
+      "import": "./src/extensions/router/index.ts"
     }
   },
   "publishConfig": {
@@ -25,8 +25,8 @@
         "types": "./lib/index.d.ts"
       },
       "./extensions": {
-        "import": "./lib/extensions.js",
-        "types": "./lib/extensions.d.ts"
+        "import": "./lib/extensions/index.js",
+        "types": "./lib/extensions/index.d.ts"
       },
       "./extensions/jsx-dev-runtime": {
         "import": "./lib/extensions/jsx-runtime.js",
@@ -36,9 +36,9 @@
         "import": "./lib/extensions/jsx-runtime.js",
         "types": "./lib/extensions/jsx-runtime.d.ts"
       },
-      "./router": {
-        "import": "./lib/router.js",
-        "types": "./lib/router.d.ts"
+      "./extensions/router": {
+        "import": "./lib/extensions/router/index.js",
+        "types": "./lib/extensions/router/index.d.ts"
       }
     }
   },

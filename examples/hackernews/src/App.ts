@@ -1,6 +1,9 @@
 import type { RenderContext } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/extensions';
-import { HashLocation, resetScrollPosition } from '@emonkak/ebit/router';
+import {
+  HashLocation,
+  resetScrollPosition,
+} from '@emonkak/ebit/extensions/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';

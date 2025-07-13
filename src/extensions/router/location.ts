@@ -1,4 +1,4 @@
-import type { CustomHook, HookContext } from '../hook.js';
+import type { CustomHook, HookContext } from '../../hook.js';
 import type { RelativeURL } from './url.js';
 
 export interface LocationState {

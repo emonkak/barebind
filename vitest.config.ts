@@ -18,7 +18,11 @@ export default defineConfig({
     },
     coverage: {
       include: ['src/**'],
-      exclude: ['src/extensions.ts', 'src/index.ts', 'src/router.ts'],
+      exclude: [
+        'src/extensions/index.ts',
+        'src/extensions/router/index.ts',
+        'src/index.ts',
+      ],
     },
   },
 });

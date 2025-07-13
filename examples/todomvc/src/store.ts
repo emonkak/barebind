@@ -26,6 +26,8 @@ export const TodoStore = defineStore(
           return this.todos.filter((todo$) => !todo$.value.completed);
         case 'completed':
           return this.todos.filter((todo$) => todo$.value.completed);
+        default:
+          return [];
       }
     }
 

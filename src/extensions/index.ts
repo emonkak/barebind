@@ -1,4 +1,4 @@
-export { component } from './extensions/component.js';
+export { component } from './component.js';
 export {
   type CommitMeasurement,
   type ComponentMeasurement,
@@ -8,27 +8,27 @@ export {
   type RenderMeasurement,
   type Reporter,
   type UpdateMeasurement,
-} from './extensions/profiler.js';
+} from './profiler.js';
 export {
   type RepeatProps,
   repeat,
-} from './extensions/repeat.js';
+} from './repeat.js';
 export {
   Atom,
   Computed,
   Lazy,
   Projected,
   Signal,
-} from './extensions/signal.js';
+} from './signal.js';
 export {
   defineStore,
   type StoreClass,
   type StoreExtensions,
-} from './extensions/store.js';
+} from './store.js';
 export {
   createElement,
   createFragment,
   type VElement,
   type VFragment,
   type VNode,
-} from './extensions/vdom.js';
+} from './vdom.js';

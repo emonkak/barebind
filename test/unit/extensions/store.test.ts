@@ -58,8 +58,6 @@ const AppStore = defineStore(App);
 
 const CounterStore = defineStore(Counter);
 
-type AppStore = InstanceType<typeof AppStore>;
-
 type CounterStore = InstanceType<typeof CounterStore>;
 
 describe('Store', () => {

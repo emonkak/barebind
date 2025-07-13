@@ -1,5 +1,10 @@
 import { component } from '@emonkak/ebit/extensions';
-import { integer, Router, route, wildcard } from '@emonkak/ebit/router';
+import {
+  integer,
+  Router,
+  route,
+  wildcard,
+} from '@emonkak/ebit/extensions/router';
 
 import { ItemPage } from './item/ItemPage.js';
 import { StoriesPage } from './story/StoriesPage.js';

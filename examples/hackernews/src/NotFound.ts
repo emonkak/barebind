@@ -1,5 +1,5 @@
 import type { RenderContext } from '@emonkak/ebit';
-import type { RelativeURL } from '@emonkak/ebit/router';
+import type { RelativeURL } from '@emonkak/ebit/extensions/router';
 
 export interface NotFoundProps {
   url: RelativeURL;

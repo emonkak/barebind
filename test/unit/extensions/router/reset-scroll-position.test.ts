@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { resetScrollPosition } from '@/router/reset-scroll-position.js';
-import { RelativeURL } from '@/router/url.js';
-import { createElement } from '../../test-utils.js';
+import { resetScrollPosition } from '@/extensions/router/reset-scroll-position.js';
+import { RelativeURL } from '@/extensions/router/url.js';
+import { createElement } from '../../../test-utils.js';
 
 describe('resetScrollPosition', () => {
   const originalScrollRestoration = history.scrollRestoration;
