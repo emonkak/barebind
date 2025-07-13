@@ -9,7 +9,6 @@ import {
   ElementDirective,
   VElement,
   VFragment,
-  VStaticElement,
   VStaticFragment,
 } from '@/extensions/vdom.js';
 import { PartType } from '@/part.js';
@@ -38,11 +37,12 @@ describe('createElement()', () => {
       children: ['baz'],
     });
     expect(element.key).toBe('bar');
+    expect(element.hasStaticChildren).toBe(true);
   });
 });
 
 describe('createFragment()', () => {
-  it('constructs the new VFragment', () => {
+  it('constructs the new VStaticFragment', () => {
     const children = [createElement('div'), 'foo'];
     const element = createFragment(children);
 
@@ -62,7 +62,7 @@ describe('VElement', () => {
       expect(directive.value).toBe(props);
     });
 
-    it('returns a directive with the element template with children', () => {
+    it('returns a directive with the element template with dunamic children', () => {
       const type = 'div';
       const props = { children: [] };
       const element = new VElement(type, props);
@@ -72,6 +72,19 @@ describe('VElement', () => {
       expect(directive.value).toStrictEqual([
         new DirectiveSpecifier(ElementDirective, props),
         new VFragment(props.children),
+      ]);
+    });
+
+    it('returns a directive with the element template with static children', () => {
+      const type = 'div';
+      const props = { children: [] };
+      const element = new VElement(type, props, undefined, true);
+      const directive = element[$toDirective]();
+
+      expect(directive.type).toStrictEqual(new ElementTemplate(type));
+      expect(directive.value).toStrictEqual([
+        new DirectiveSpecifier(ElementDirective, props),
+        new VStaticFragment(props.children),
       ]);
     });
 
@@ -103,46 +116,6 @@ describe('VFragment', () => {
           source: children,
         }),
       );
-    });
-  });
-});
-
-describe('VStaticElement', () => {
-  describe('[$toDirective]()', () => {
-    it('returns a directive with the function component', () => {
-      const type = () => {};
-      const props = {};
-      const element = new VStaticElement(type, props);
-      const directive = element[$toDirective]();
-
-      expect(directive.type).toStrictEqual(new FunctionComponent(type));
-      expect(directive.value).toBe(props);
-    });
-
-    it('returns a directive with the element template with children', () => {
-      const type = 'div';
-      const props = { children: [] };
-      const element = new VStaticElement(type, props);
-      const directive = element[$toDirective]();
-
-      expect(directive.type).toStrictEqual(new ElementTemplate(type));
-      expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective, props),
-        new VStaticFragment(props.children),
-      ]);
-    });
-
-    it('returns a directive with the element template without children', () => {
-      const type = 'div';
-      const props = {};
-      const element = new VStaticElement(type, props);
-      const directive = element[$toDirective]();
-
-      expect(directive.type).toStrictEqual(new ElementTemplate(type));
-      expect(directive.value).toStrictEqual([
-        new DirectiveSpecifier(ElementDirective, props),
-        new DirectiveSpecifier(BlackholePrimitive, undefined),
-      ]);
     });
   });
 });

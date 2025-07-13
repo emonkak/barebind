@@ -72,6 +72,11 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
+interface TemplateDirective<TBinds extends readonly unknown[]> {
+  type: Template<TBinds>;
+  value: TBinds;
+}
+
 export const ElementDirective: DirectiveType<ElementProps> = {
   displayName: 'ElementDirective',
   resolveBinding(
@@ -105,11 +110,11 @@ export function createElement<const TProps extends ElementProps>(
   ...children: VNode[]
 ): VElement<NormalizeProps<TProps>> {
   const { key, ...restProps } = props;
-  return new VElement(type, { children, ...restProps }, key);
+  return new VElement(type, { children, ...restProps }, key, true);
 }
 
-export function createFragment(children: VNode[]): VFragment {
-  return new VFragment(children);
+export function createFragment(children: VNode[]): VStaticFragment {
+  return new VStaticFragment(children);
 }
 
 export class VElement<TProps extends ElementProps = ElementProps>
@@ -121,10 +126,18 @@ export class VElement<TProps extends ElementProps = ElementProps>
 
   readonly key: unknown;
 
-  constructor(type: VElementType<TProps>, props: TProps, key?: unknown) {
+  readonly hasStaticChildren: boolean;
+
+  constructor(
+    type: VElementType<TProps>,
+    props: TProps,
+    key?: unknown,
+    hasStaticChildren = false,
+  ) {
     this.type = type;
     this.props = props;
     this.key = key;
+    this.hasStaticChildren = hasStaticChildren;
   }
 
   [$toDirective](): Directive<unknown> {
@@ -134,14 +147,7 @@ export class VElement<TProps extends ElementProps = ElementProps>
         value: this.props,
       };
     } else {
-      const element = new DirectiveSpecifier(ElementDirective, this.props);
-      const children = Array.isArray(this.props.children)
-        ? new VFragment(this.props.children)
-        : resolveChild(this.props.children as VNode);
-      return {
-        type: new ElementTemplate(this.type),
-        value: [element, children],
-      };
+      return resolveElement(this.type, this.props, this.hasStaticChildren);
     }
   }
 }
@@ -165,40 +171,6 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
   }
 }
 
-export class VStaticElement<TProps extends ElementProps = ElementProps>
-  implements Bindable<unknown>
-{
-  readonly type: VElementType<TProps>;
-
-  readonly props: TProps;
-
-  readonly key: unknown;
-
-  constructor(type: VElementType<TProps>, props: TProps, key?: unknown) {
-    this.type = type;
-    this.props = props;
-    this.key = key;
-  }
-
-  [$toDirective](): Directive<unknown> {
-    if (typeof this.type === 'function') {
-      return {
-        type: new FunctionComponent(this.type),
-        value: this.props,
-      };
-    } else {
-      const element = new DirectiveSpecifier(ElementDirective, this.props);
-      const children = Array.isArray(this.props.children)
-        ? new VStaticFragment(this.props.children)
-        : resolveChild(this.props.children as VNode);
-      return {
-        type: new ElementTemplate(this.type),
-        value: [element, children],
-      };
-    }
-  }
-}
-
 export class VStaticFragment implements Bindable<unknown> {
   readonly children: readonly VNode[];
 
@@ -217,13 +189,13 @@ export class VStaticFragment implements Bindable<unknown> {
           templates.push(CHILD_NODE_TEMPLATE);
           binds.push(child);
         } else {
-          templates.push(new ElementTemplate(child.type));
-          binds.push(
-            new DirectiveSpecifier(ElementDirective, child.props),
-            Array.isArray(child.props.children)
-              ? new VFragment(child.props.children)
-              : resolveChild(child.props.children as VNode),
+          const { type, value } = resolveElement(
+            child.type,
+            child.props,
+            child.hasStaticChildren,
           );
+          templates.push(type);
+          binds.push(value[0], value[1]);
         }
       } else if (isBindable(child)) {
         templates.push(CHILD_NODE_TEMPLATE);
@@ -578,10 +550,6 @@ function narrowElement<
   return (expectedNames as string[]).includes(element.tagName);
 }
 
-function resolveKey(child: VNode, index: number): unknown {
-  return child instanceof VElement ? (child.key ?? index) : index;
-}
-
 function resolveChild(child: VNode): Bindable<unknown> {
   if (isBindable(child)) {
     return child;
@@ -592,6 +560,27 @@ function resolveChild(child: VNode): Bindable<unknown> {
   } else {
     return new DirectiveSpecifier(TEXT_TEMPLATE, [child]);
   }
+}
+
+function resolveElement(
+  type: string,
+  props: ElementProps,
+  hasStaticChildren: boolean,
+): TemplateDirective<readonly [unknown, unknown]> {
+  const element = new DirectiveSpecifier(ElementDirective, props);
+  const children = Array.isArray(props.children)
+    ? hasStaticChildren
+      ? new VStaticFragment(props.children)
+      : new VFragment(props.children)
+    : resolveChild(props.children as VNode);
+  return {
+    type: new ElementTemplate(type),
+    value: [element, children],
+  };
+}
+
+function resolveKey(child: VNode, index: number): unknown {
+  return child instanceof VElement ? (child.key ?? index) : index;
 }
 
 function safeToString(value: unknown): string {
