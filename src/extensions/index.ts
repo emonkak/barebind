@@ -31,4 +31,5 @@ export {
   type VElement,
   type VFragment,
   type VNode,
+  type VStaticFragment,
 } from './vdom.js';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Fragment, jsx, jsxs } from '@/extensions/jsx-runtime.js';
-import { VElement } from '@/extensions/vdom.js';
+import { VElement, VFragment, VStaticFragment } from '@/extensions/vdom.js';
 
 describe('jsx()', () => {
   it('returns a new VElement', () => {
@@ -9,9 +9,25 @@ describe('jsx()', () => {
     const element = jsx(type, props);
 
     expect(element).toBeInstanceOf(VElement);
-    expect(element.type).toBe(type);
-    expect(element.props).toBe(props);
-    expect(element.hasStaticChildren).toBe(false);
+    expect(element).toStrictEqual(
+      expect.objectContaining({
+        type,
+        props,
+        hasStaticChildren: false,
+      }),
+    );
+  });
+
+  it('returns a new VFragment', () => {
+    const props = { children: ['foo', 'bar'] };
+    const element = jsx(Fragment, props);
+
+    expect(element).toBeInstanceOf(VFragment);
+    expect(element).toStrictEqual(
+      expect.objectContaining({
+        children: props.children,
+      }),
+    );
   });
 });
 
@@ -22,17 +38,24 @@ describe('jsxs()', () => {
     const element = jsxs(type, props);
 
     expect(element).toBeInstanceOf(VElement);
-    expect(element.type).toBe(type);
-    expect(element.props).toBe(props);
-    expect(element.hasStaticChildren).toBe(true);
+    expect(element).toStrictEqual(
+      expect.objectContaining({
+        type,
+        props,
+        hasStaticChildren: true,
+      }),
+    );
   });
-});
 
-describe('Fragment()', () => {
-  it('returns a new VFragment with the children', () => {
-    const props = { children: [] };
-    const fragment = Fragment(props);
+  it('returns a new VStaticFragment', () => {
+    const props = { children: ['foo', 'bar'] };
+    const element = jsxs(Fragment, props);
 
-    expect(fragment.children).toBe(props.children);
+    expect(element).toBeInstanceOf(VStaticFragment);
+    expect(element).toStrictEqual(
+      expect.objectContaining({
+        children: props.children,
+      }),
+    );
   });
 });

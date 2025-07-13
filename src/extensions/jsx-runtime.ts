@@ -4,31 +4,34 @@ import {
   type VElementType,
   VFragment,
   type VNode,
+  VStaticFragment,
 } from './vdom.js';
 
+export const Fragment: unique symbol = Symbol('Fragment');
+
 export function jsx<const TProps extends ElementProps>(
-  type: VElementType<TProps>,
+  type: VElementType<TProps> | typeof Fragment,
   props: TProps,
   key?: unknown,
-): VElement<TProps> {
-  return new VElement(type, props, key);
+): VElement<TProps> | VFragment {
+  return type === Fragment
+    ? new VFragment(props.children as VNode[])
+    : new VElement(type, props, key);
 }
 
 export function jsxs<const TProps extends ElementProps>(
-  type: VElementType<TProps>,
+  type: VElementType<TProps> | typeof Fragment,
   props: TProps,
   key?: unknown,
-): VElement<TProps> {
-  return new VElement(type, props, key, true);
+): VElement<TProps> | VStaticFragment {
+  return type === Fragment
+    ? new VStaticFragment(props.children as VNode[])
+    : new VElement(type, props, key, true);
 }
 
 export const jsxDEV: typeof jsx = jsx;
 
-export const jsxsDEV: typeof jsx = jsxs;
-
-export function Fragment(props: { children: VNode[] }): VFragment {
-  return new VFragment(props.children);
-}
+export const jsxsDEV: typeof jsxs = jsxs;
 
 declare global {
   namespace JSX {
