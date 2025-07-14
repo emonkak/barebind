@@ -22,6 +22,7 @@ a {
   inset: 0;
 
   .inner {
+    box-sizing: border-box;
     max-inline-size: 800px;
     margin-inline: auto;
     padding-block: 15px;
