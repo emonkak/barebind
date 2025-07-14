@@ -71,13 +71,13 @@ interface CoroutineState {
   pendingLanes: Lanes;
 }
 
-interface SharedState {
+interface RuntimeState {
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   observers: LinkedList<RuntimeObserver>;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
-  uniqueIdentifier: string;
+  templatePlaceholder: string;
   updateCount: number;
 }
 
@@ -96,22 +96,22 @@ export class Runtime implements CommitContext, UpdateContext {
 
   private readonly _scope: Scope;
 
-  private readonly _sharedState: SharedState;
+  private readonly _state: RuntimeState;
 
   constructor(
     host: HostEnvironment,
-    updateFrame: UpdateFrame = createInitialRenderFrame(),
+    updateFrame: UpdateFrame = createEmptyUpdateFrame(0),
     scope: Scope = new Scope(null),
-    sharedState: SharedState = createSharedState(),
+    state: RuntimeState = createRuntimeState(),
   ) {
     this._host = host;
     this._updateFrame = updateFrame;
     this._scope = scope;
-    this._sharedState = sharedState;
+    this._state = state;
   }
 
   observe(observer: RuntimeObserver): () => void {
-    const observers = this._sharedState.observers;
+    const observers = this._state.observers;
     const node = observers.pushBack(observer);
     return () => {
       observers.remove(node);
@@ -145,21 +145,18 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   enterScope(scope: Scope): Runtime {
-    return new Runtime(this._host, this._updateFrame, scope, this._sharedState);
+    return new Runtime(this._host, this._updateFrame, scope, this._state);
   }
 
   expandLiterals<T>(
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T> {
-    return this._sharedState.templateLiteralPreprocessor.process(
-      strings,
-      values,
-    );
+    return this._state.templateLiteralPreprocessor.process(strings, values);
   }
 
   async flushAsync(options: Required<UpdateOptions>): Promise<void> {
-    const { coroutineStates, observers } = this._sharedState;
+    const { coroutineStates, observers } = this._state;
     const lanes = getFlushLanesFromOptions(options);
 
     if (!observers.isEmpty()) {
@@ -243,7 +240,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   flushSync(): void {
-    const { observers } = this._sharedState;
+    const { observers } = this._state;
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -302,10 +299,10 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   nextIdentifier(): string {
-    const prefix = this._sharedState.uniqueIdentifier;
-    const nextId = incrementId(this._sharedState.identifierCount);
-    this._sharedState.identifierCount = nextId;
-    return prefix + '-' + nextId;
+    const prefix = this._state.templatePlaceholder;
+    const id = incrementIdentifier(this._state.identifierCount);
+    this._state.identifierCount = id;
+    return prefix + '-' + id;
   }
 
   renderComponent<TProps, TResult>(
@@ -315,7 +312,7 @@ export class Runtime implements CommitContext, UpdateContext {
     lanes: Lanes,
     coroutine: Coroutine,
   ): ComponentResult<TResult> {
-    const { observers } = this._sharedState;
+    const { observers } = this._state;
     const context = new RenderSession(hooks, lanes, coroutine, this);
 
     if (!observers.isEmpty()) {
@@ -365,14 +362,14 @@ export class Runtime implements CommitContext, UpdateContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
-    const { uniqueIdentifier, cachedTemplates } = this._sharedState;
+    const { templatePlaceholder, cachedTemplates } = this._state;
     let template = cachedTemplates.get(strings);
 
     if (template === undefined) {
       template = this._host.createTemplate(
         strings,
         binds,
-        uniqueIdentifier,
+        templatePlaceholder,
         mode,
       );
       cachedTemplates.set(strings, template);
@@ -382,7 +379,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
-    const { coroutineStates } = this._sharedState;
+    const { coroutineStates } = this._state;
     const completeOptions = {
       priority: options?.priority ?? this._host.getCurrentPriority(),
       transition: options?.transition ?? false,
@@ -436,7 +433,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   async waitForUpdate(coroutine: Coroutine): Promise<number> {
-    const { coroutineStates } = this._sharedState;
+    const { coroutineStates } = this._state;
     const coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState !== undefined) {
@@ -451,7 +448,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   private _commitEffects(effects: Effect[], phase: CommitPhase): void {
-    const { observers } = this._sharedState;
+    const { observers } = this._state;
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -475,23 +472,23 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   private _createSubcontext(coroutine: Coroutine): Runtime {
-    const nextId = incrementId(this._sharedState.updateCount);
+    const id = incrementIdentifier(this._state.updateCount);
     const updateFrame = {
-      id: nextId,
+      id,
       pendingCoroutines: [coroutine],
       mutationEffects: [coroutine],
       layoutEffects: [],
       passiveEffects: [],
     };
 
-    this._sharedState.updateCount = nextId;
+    this._state.updateCount = id;
 
-    return new Runtime(this._host, updateFrame, this._scope, this._sharedState);
+    return new Runtime(this._host, updateFrame, this._scope, this._state);
   }
 
   private _notifyObservers(event: RuntimeEvent): void {
     for (
-      let node = this._sharedState.observers.front();
+      let node = this._state.observers.front();
       node !== null;
       node = node.next
     ) {
@@ -520,9 +517,9 @@ function consumeEffects(
   };
 }
 
-function createInitialRenderFrame(): UpdateFrame {
+function createEmptyUpdateFrame(id: number): UpdateFrame {
   return {
-    id: 0,
+    id,
     pendingCoroutines: [],
     mutationEffects: [],
     layoutEffects: [],
@@ -530,24 +527,24 @@ function createInitialRenderFrame(): UpdateFrame {
   };
 }
 
-function createSharedState(): SharedState {
+function createRuntimeState(): RuntimeState {
   return {
     cachedTemplates: new WeakMap(),
     coroutineStates: new WeakMap(),
     identifierCount: 0,
     observers: new LinkedList(),
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
-    uniqueIdentifier: generateUniqueIdentifier(8),
+    templatePlaceholder: generateRandomString(8),
     updateCount: 0,
   };
 }
 
-function generateUniqueIdentifier(length: number): string {
+function generateRandomString(length: number): string {
   return Array.from(crypto.getRandomValues(new Uint8Array(length)), (byte) =>
     (byte % 36).toString(36),
   ).join('');
 }
 
-function incrementId(id: number): number {
+function incrementIdentifier(id: number): number {
   return (id % Number.MAX_SAFE_INTEGER) + 1;
 }
