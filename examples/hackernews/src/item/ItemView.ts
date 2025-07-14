@@ -15,7 +15,7 @@ export function ItemView({ item }: ItemProps, context: RenderContext): unknown {
         <a href=${item.url} target="_blank">
           <h1>${item.title}</h1>
         </a>
-        <${item.domain ? () => context.html`<span class="host">(${item.domain})</span>` : null}>
+        <${item.domain ? context.html`<span class="host">(${item.domain})</span>` : null}>
         <div class="meta">
           ${item.points} points | by
           ${' '}<a href=${`#/users/${item.user}`}>${item.user}</a>
