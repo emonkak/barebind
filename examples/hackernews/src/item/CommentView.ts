@@ -50,14 +50,14 @@ export function CommentList(
     <${
       isOpened
         ? context.html`
-        <ul class="comment-children">
-          <${repeat({
-            source: comments,
-            keySelector: (comment) => comment.id,
-            valueSelector: (comment) => component(CommentView, { comment }),
-          })}>
-        </ul>
-      `
+          <ul class="comment-children">
+            <${repeat({
+              source: comments,
+              keySelector: (comment) => comment.id,
+              valueSelector: (comment) => component(CommentView, { comment }),
+            })}>
+          </ul>
+        `
         : null
     }>
   `;

@@ -30,12 +30,12 @@ export function StoryView(
           story.type === 'job'
             ? context.html`<a href=${`#/items/${story.id}`}>${story.time_ago}</a>`
             : context.html`
-                by <a href=${`#/users/${story.user}`}>${story.user}</a>${' '}
-                ${story.time_ago}${' | '}
-                <a href=${`#/items/${story.id}`}>
-                  ${story.comments_count ? `${story.comments_count} comments` : 'discuss'}
-                </a>
-              `
+              by <a href=${`#/users/${story.user}`}>${story.user}</a>${' '}
+              ${story.time_ago}${' | '}
+              <a href=${`#/items/${story.id}`}>
+                ${story.comments_count ? `${story.comments_count} comments` : 'discuss'}
+              </a>
+            `
         }>
         <${
           story.type !== 'link'

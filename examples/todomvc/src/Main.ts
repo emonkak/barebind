@@ -19,19 +19,19 @@ export function Main(_props: MainProps, context: RenderContext): unknown {
       <${
         visibleTodos.length > 0
           ? context.html`
-          <div class="toggle-all-container">
-            <input
-              class="toggle-all"
-              type="checkbox"
-              data-testid="toggle-all"
-              .checked=${visibleTodos.every((todo$) => todo$.value.completed)}
-              @change=${handleToggleAll}
-            >
-            <label class="toggle-all-label" for="toggle-all">
-              Toggle All Input
-            </label>
-          </div>
-        `
+            <div class="toggle-all-container">
+              <input
+                class="toggle-all"
+                type="checkbox"
+                data-testid="toggle-all"
+                .checked=${visibleTodos.every((todo$) => todo$.value.completed)}
+                @change=${handleToggleAll}
+              >
+              <label class="toggle-all-label" for="toggle-all">
+                Toggle All Input
+              </label>
+            </div>
+          `
           : null
       }>
       <ul class="todo-list" data-testid="todo-list">
