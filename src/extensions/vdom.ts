@@ -21,7 +21,7 @@ import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import {
   deleteStyles,
-  type StyleProps,
+  type StyleProperties,
   updateStyles,
 } from '../primitive/style.js';
 import { ChildNodeTemplate } from '../template/child-node-template.js';
@@ -54,17 +54,17 @@ export type VElementType<TProps> = ComponentType<TProps> | string;
 
 export type ElementProps = Record<string, unknown> & { children?: unknown };
 
+export type Ref<T> =
+  | { current: T }
+  | ((current: T) => Cleanup | void)
+  | null
+  | undefined;
+
 type NormalizeProps<TProps> = { children: VNode[] } & Omit<TProps, 'key'>;
 
 type EventListenerWithOptions =
   | EventListener
   | (EventListenerObject & AddEventListenerOptions);
-
-type Ref<T> =
-  | { current: T }
-  | ((current: T) => Cleanup | void)
-  | null
-  | undefined;
 
 type Cleanup = () => void;
 
@@ -362,7 +362,7 @@ export class ElementBinding implements Binding<ElementProps> {
       case 'style':
         deleteStyles(
           (element as HTMLElement).style,
-          (value ?? {}) as StyleProps,
+          (value ?? {}) as StyleProperties,
         );
         return;
       case 'value':
@@ -463,8 +463,8 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         updateStyles(
           (element as HTMLElement).style,
-          (newValue ?? {}) as StyleProps,
-          (oldValue ?? {}) as StyleProps,
+          (newValue ?? {}) as StyleProperties,
+          (oldValue ?? {}) as StyleProperties,
         );
         return;
       case 'value':
@@ -505,10 +505,19 @@ export class ElementBinding implements Binding<ElementProps> {
     }
 
     if (!Object.is(newValue, oldValue)) {
-      if (newValue == null) {
-        element.removeAttribute(key);
-      } else {
-        element.setAttribute(key, newValue.toString());
+      switch (typeof newValue) {
+        case 'string':
+          element.setAttribute(key, newValue);
+          break;
+        case 'boolean':
+          element.toggleAttribute(key, newValue);
+          break;
+        default:
+          if (newValue == null) {
+            element.removeAttribute(key);
+          } else {
+            element.setAttribute(key, newValue.toString());
+          }
       }
     }
   }

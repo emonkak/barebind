@@ -256,6 +256,62 @@ describe('ElementBinding', () => {
       expect(part.node.outerHTML).toBe('<div></div>');
     });
 
+    it('updates a boolean property', () => {
+      const props1 = { type: 'button', disabled: true };
+      const props2 = { type: 'button', disabled: false };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('button'),
+      };
+      const binding = new ElementBinding(props1, part);
+      const runtime = new Runtime(new MockRenderHost());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(part.node.outerHTML).toBe(
+        '<button type="button" disabled=""></button>',
+      );
+
+      binding.bind(props2);
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(part.node.outerHTML).toBe('<button type="button"></button>');
+
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
+
+      expect(part.node.outerHTML).toBe('<button></button>');
+    });
+
+    it('updates a number property', () => {
+      const props1 = { tabIndex: -1 };
+      const props2 = { tabIndex: 0 };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      };
+      const binding = new ElementBinding(props1, part);
+      const runtime = new Runtime(new MockRenderHost());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(part.node.outerHTML).toBe('<div tabindex="-1"></div>');
+
+      binding.bind(props2);
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(part.node.outerHTML).toBe('<div tabindex="0"></div>');
+
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
+
+      expect(part.node.outerHTML).toBe('<div></div>');
+    });
+
     it('updates "className" property', () => {
       const props1 = { className: 'foo' };
       const props2 = { className: null };

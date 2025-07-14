@@ -10,11 +10,11 @@ import type {
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 
-export type SpreadProps = { [key: string]: unknown };
+export type SpreadProperties = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadProps> = {
+export const SpreadPrimitive: Primitive<SpreadProperties> = {
   displayName: 'SpreadPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
+  ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
     if (!isSpreadProps(value)) {
       throw new Error(
         `The value of SpreadPrimitive must be object, but got ${inspectValue(value)}.\n` +
@@ -23,7 +23,7 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
     }
   },
   resolveBinding(
-    props: SpreadProps,
+    props: SpreadProperties,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
@@ -37,8 +37,8 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
   },
 };
 
-export class SpreadBinding implements Binding<SpreadProps> {
-  private _props: SpreadProps;
+export class SpreadBinding implements Binding<SpreadProperties> {
+  private _props: SpreadProperties;
 
   private readonly _part: ElementPart;
 
@@ -46,16 +46,16 @@ export class SpreadBinding implements Binding<SpreadProps> {
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
-  constructor(props: SpreadProps, part: ElementPart) {
+  constructor(props: SpreadProperties, part: ElementPart) {
     this._props = props;
     this._part = part;
   }
 
-  get type(): Primitive<SpreadProps> {
+  get type(): Primitive<SpreadProperties> {
     return SpreadPrimitive;
   }
 
-  get value(): SpreadProps {
+  get value(): SpreadProperties {
     return this._props;
   }
 
@@ -63,11 +63,11 @@ export class SpreadBinding implements Binding<SpreadProps> {
     return this._part;
   }
 
-  shouldBind(props: SpreadProps): boolean {
+  shouldBind(props: SpreadProperties): boolean {
     return this._memoizedSlots === null || props !== this._props;
   }
 
-  bind(props: SpreadProps): void {
+  bind(props: SpreadProperties): void {
     this._props = props;
   }
 
@@ -137,7 +137,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
   }
 }
 
-function isSpreadProps(value: unknown): value is SpreadProps {
+function isSpreadProps(value: unknown): value is SpreadProperties {
   return value !== null && typeof value === 'object';
 }
 
