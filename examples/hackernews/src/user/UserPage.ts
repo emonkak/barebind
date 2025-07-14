@@ -29,5 +29,5 @@ export function UserPage(
     `;
   }
 
-  return !isLoading && user !== null ? component(UserView, { user }) : null;
+  return !isLoading && user?.id === id ? component(UserView, { user }) : null;
 }

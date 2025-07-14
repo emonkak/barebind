@@ -29,5 +29,5 @@ export function ItemPage(
     `;
   }
 
-  return !isLoading && item !== null ? component(ItemView, { item }) : null;
+  return !isLoading && item?.id === id ? component(ItemView, { item }) : null;
 }
