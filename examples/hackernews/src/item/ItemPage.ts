@@ -13,9 +13,7 @@ export function ItemPage(
   context: RenderContext,
 ): unknown {
   const store = context.use(ItemStore);
-  const { item, isLoading, error } = store;
-
-  context.use(store.asSignal());
+  const { item, isLoading, error } = context.use(store.asSignal());
 
   context.useEffect(() => {
     if (store.item === null || store.item.id !== id) {

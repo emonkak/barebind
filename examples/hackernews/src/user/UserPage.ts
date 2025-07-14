@@ -13,9 +13,7 @@ export function UserPage(
   context: RenderContext,
 ): unknown {
   const store = context.use(UserStore);
-  const { user, error, isLoading } = store;
-
-  context.use(store.asSignal());
+  const { user, error, isLoading } = context.use(store.asSignal());
 
   context.useEffect(() => {
     if (store.user === null || store.user.id !== id) {
@@ -31,7 +29,5 @@ export function UserPage(
     `;
   }
 
-  return !isLoading && user !== null
-    ? component(UserView, { user: user! })
-    : null;
+  return !isLoading && user !== null ? component(UserView, { user }) : null;
 }

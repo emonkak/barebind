@@ -16,9 +16,7 @@ export function StoriesPage(
   context: RenderContext,
 ): unknown {
   const store = context.use(StoryStore);
-  const { stories, isLoading } = store;
-
-  context.use(store.asSignal());
+  const { stories, isLoading } = context.use(store.asSignal());
 
   context.useEffect(() => {
     if (store.type !== type || store.page !== page) {
