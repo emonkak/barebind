@@ -6,7 +6,6 @@ import {
   type LocationNavigator,
   type LocationState,
   type NavigateOptions,
-  type NavigationType,
 } from './location.js';
 import { RelativeURL } from './url.js';
 
@@ -20,7 +19,7 @@ export const BrowserLocation: CustomHook<
       () => ({
         url: RelativeURL.fromLocation(location),
         state: history.state,
-        navigationType: 'initial',
+        navigationType: null,
       }),
     );
     const locationNavigator = context.useMemo<LocationNavigator>(

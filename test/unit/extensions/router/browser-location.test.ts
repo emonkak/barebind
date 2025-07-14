@@ -44,7 +44,7 @@ describe('BrowserLocation', () => {
     expect(history.state).toStrictEqual(state);
     expect(locationState.url.toString()).toBe('/articles/123');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.navigationType).toBe('initial');
+    expect(locationState.navigationType).toBe(null);
   });
 
   it('registers the current location', () => {

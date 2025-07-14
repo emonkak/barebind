@@ -4,7 +4,7 @@ export function resetScrollPosition(locationState: LocationState): void {
   const { url, navigationType } = locationState;
 
   if (
-    navigationType === 'initial' ||
+    navigationType === null ||
     ((navigationType === 'reload' || navigationType === 'traverse') &&
       history.scrollRestoration === 'auto')
   ) {

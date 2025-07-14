@@ -4,7 +4,6 @@ export {
   CurrentLocation,
   type LocationNavigator,
   type LocationState,
-  type NavigationType,
 } from './location.js';
 export { resetScrollPosition } from './reset-scroll-position.js';
 export {

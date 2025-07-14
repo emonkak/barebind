@@ -94,7 +94,7 @@ describe('resetScrollPosition', () => {
     resetScrollPosition({
       url: new RelativeURL('/foo'),
       state: null,
-      navigationType: 'initial',
+      navigationType: null,
     });
 
     expect(scrollToSpy).not.toHaveBeenCalled();

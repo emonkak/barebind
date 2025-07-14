@@ -43,7 +43,7 @@ describe('HashLocation', () => {
     expect(history.state).toStrictEqual(state);
     expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
     expect(locationState.state).toStrictEqual(state);
-    expect(locationState.navigationType).toBe('initial');
+    expect(locationState.navigationType).toBe(null);
   });
 
   it('registers the current location', () => {

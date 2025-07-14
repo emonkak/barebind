@@ -4,20 +4,13 @@ import type { RelativeURL } from './url.js';
 export interface LocationState {
   readonly url: RelativeURL;
   readonly state: unknown;
-  readonly navigationType: NavigationType;
+  readonly navigationType: NavigationType | null;
 }
 
 export interface LocationNavigator {
   getCurrentURL(): RelativeURL;
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
 }
-
-export type NavigationType =
-  | 'initial'
-  | 'push'
-  | 'reload'
-  | 'replace'
-  | 'traverse';
 
 export interface NavigateOptions {
   replace?: boolean;
