@@ -61,8 +61,8 @@ export interface TextHole {
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
 
-const LEADING_SPACES_REGEXP = /^\n\s*/;
-const TAILING_SPACES_REGEXP = /\n\s*$/;
+const LEADING_NEWLINE_REGEXP = /^\s*\n/;
+const TAILING_NEWLINE_REGEXP = /\n\s*$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
@@ -99,10 +99,7 @@ export class TaggedTemplate<
       );
     }
 
-    const holes =
-      binds.length > 0
-        ? parseChildren(strings, binds, marker, template.content)
-        : [];
+    const holes = parseChildren(strings, binds, marker, template.content);
 
     return new TaggedTemplate(template, holes, mode);
   }
@@ -432,14 +429,12 @@ function getNamespaceURI(node: Node, mode: TemplateMode): string | null {
 }
 
 function normalizeText(text: string): string {
-  if (LEADING_SPACES_REGEXP.test(text)) {
+  if (LEADING_NEWLINE_REGEXP.test(text)) {
     text = text.trimStart();
   }
-
-  if (TAILING_SPACES_REGEXP.test(text)) {
+  if (TAILING_NEWLINE_REGEXP.test(text)) {
     text = text.trimEnd();
   }
-
   return text;
 }
 
@@ -615,7 +610,7 @@ function parseChildren(
             holes.push({
               type: PartType.Text,
               index,
-              precedingText: lastComponent,
+              precedingText: normalizeText(lastComponent),
               followingText: '',
             });
             currentNode.before(document.createTextNode(''));
@@ -626,8 +621,8 @@ function parseChildren(
           holes.push({
             type: PartType.Text,
             index,
-            precedingText: lastComponent,
-            followingText: components[tail]!,
+            precedingText: normalizeText(lastComponent),
+            followingText: normalizeText(components[tail]!),
           });
           (currentNode as Text).data = '';
         } else {

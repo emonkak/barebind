@@ -158,6 +158,7 @@ describe('TaggedTemplate', () => {
         <div>${4} ${5}</div>
         <div>
           ${6}
+          ${7}
         </div>
       `;
 
@@ -204,6 +205,12 @@ describe('TaggedTemplate', () => {
         {
           type: PartType.Text,
           index: 12,
+          precedingText: '',
+          followingText: '',
+        },
+        {
+          type: PartType.Text,
+          index: 13,
           precedingText: '',
           followingText: '',
         },
