@@ -7,7 +7,7 @@ import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBinding,
   MockDirective,
-  MockRenderHost,
+  MockHostEnvironment,
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
@@ -71,7 +71,7 @@ describe('FragmentTemplate', () => {
       };
       const hydrationRoot = document.createElement('div');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const template = new FragmentTemplate(internalTemplates);
 
       const hydrationSpys = internalTemplates.map((template) =>
@@ -154,7 +154,7 @@ describe('FragmentTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const template = new FragmentTemplate(internalTemplates);
 
       const renderSpys = internalTemplates.map((template) =>

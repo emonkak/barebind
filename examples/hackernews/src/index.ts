@@ -1,4 +1,4 @@
-import { BrowserRenderHost, createAsyncRoot } from '@emonkak/ebit';
+import { BrowserHostEnvironment, createAsyncRoot } from '@emonkak/ebit';
 import { component, LogReporter, Profiler } from '@emonkak/ebit/extensions';
 
 import { App } from './App.js';
@@ -11,7 +11,7 @@ const root = createAsyncRoot(
     userStore: new UserStore(),
   }),
   document.body,
-  new BrowserRenderHost(),
+  new BrowserHostEnvironment(),
 );
 
 root.observe(new Profiler(new LogReporter()));

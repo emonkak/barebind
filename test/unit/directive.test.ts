@@ -12,8 +12,8 @@ import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockDirective,
+  MockHostEnvironment,
   MockPrimitive,
-  MockRenderHost,
   MockSlot,
 } from '../mocks.js';
 
@@ -27,7 +27,7 @@ describe('PrimitiveDirective', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const binding = PrimitiveDirective.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(MockPrimitive);

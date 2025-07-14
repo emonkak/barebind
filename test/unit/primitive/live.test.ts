@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/part.js';
 import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
 import { Runtime } from '@/runtime.js';
-import { MockRenderHost } from '../../mocks.js';
+import { MockHostEnvironment } from '../../mocks.js';
 
 describe('LivePrimitive', () => {
   describe('displayName', () => {
@@ -21,7 +21,7 @@ describe('LivePrimitive', () => {
         name: 'value',
         defaultValue: '',
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(LivePrimitive);
@@ -35,7 +35,7 @@ describe('LivePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('textarea'),
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
         'LivePrimitive must be used in a live part,',
@@ -70,7 +70,7 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
@@ -98,7 +98,7 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);

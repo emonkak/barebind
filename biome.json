@@ -40,7 +40,7 @@
       "includes": [
         "src/**",
         "!src/extensions/router/*.ts",
-        "!src/render-host/browser.ts"
+        "!src/host-environment/browser.ts"
       ],
       "linter": {
         "rules": {

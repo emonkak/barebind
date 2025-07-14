@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createAsyncRoot } from '@/root/async.js';
-import { MockRenderHost } from '../../mocks.js';
+import { MockHostEnvironment } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('AsyncRoot', () => {
@@ -9,8 +9,8 @@ describe('AsyncRoot', () => {
     it('adds the observer to the runtime', async () => {
       const value = 'foo';
       const container = document.createElement('div');
-      const renderHost = new MockRenderHost();
-      const root = createAsyncRoot(value, container, renderHost);
+      const host = new MockHostEnvironment();
+      const root = createAsyncRoot(value, container, host);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -45,14 +45,11 @@ describe('AsyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = document.createElement('div');
-      const renderHost = new MockRenderHost();
-      const root = createAsyncRoot(value1, container, renderHost);
+      const host = new MockHostEnvironment();
+      const root = createAsyncRoot(value1, container, host);
 
-      const requestCallbackSpy = vi.spyOn(renderHost, 'requestCallback');
-      const startViewTransitionSpy = vi.spyOn(
-        renderHost,
-        'startViewTransition',
-      );
+      const requestCallbackSpy = vi.spyOn(host, 'requestCallback');
+      const startViewTransitionSpy = vi.spyOn(host, 'startViewTransition');
 
       await root.mount();
 
@@ -103,8 +100,8 @@ describe('AsyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
-      const renderHost = new MockRenderHost();
-      const root = createAsyncRoot(value1, container, renderHost);
+      const host = new MockHostEnvironment();
+      const root = createAsyncRoot(value1, container, host);
 
       await root.hydrate();
 

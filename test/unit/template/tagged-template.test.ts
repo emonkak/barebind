@@ -8,7 +8,7 @@ import {
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/template/template.js';
-import { MockRenderHost, MockSlot } from '../../mocks.js';
+import { MockHostEnvironment, MockSlot } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
@@ -439,7 +439,7 @@ describe('TaggedTemplate', () => {
         ),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -543,7 +543,7 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, 'foo'),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -569,7 +569,7 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, 'Hello, World!'),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -622,7 +622,7 @@ describe('TaggedTemplate', () => {
       };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -644,7 +644,7 @@ describe('TaggedTemplate', () => {
       };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() => {
         template.hydrate([] as any, part, hydrationTree, runtime);
@@ -670,7 +670,7 @@ describe('TaggedTemplate', () => {
       };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() => {
         template.hydrate(['foo'], part, hydrationTree, runtime);
@@ -701,7 +701,7 @@ describe('TaggedTemplate', () => {
           namespaceURI: HTML_NAMESPACE_URI,
         };
         const hydrationTree = new HydrationTree(hydrationRoot);
-        const runtime = new Runtime(new MockRenderHost());
+        const runtime = new Runtime(new MockHostEnvironment());
 
         expect(() => {
           template.hydrate([], part, hydrationTree, runtime);
@@ -724,7 +724,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -816,7 +816,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -831,7 +831,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['', '']);
@@ -871,7 +871,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -925,7 +925,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
@@ -940,7 +940,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() => {
         template.render([] as any, part, runtime);
@@ -964,7 +964,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() => {
         template.render(['foo'], part, runtime);

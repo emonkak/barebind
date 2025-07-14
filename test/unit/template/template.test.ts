@@ -12,8 +12,8 @@ import {
 } from '@/template/template.js';
 import {
   MockBinding,
+  MockHostEnvironment,
   MockPrimitive,
-  MockRenderHost,
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
@@ -37,7 +37,7 @@ describe('AbstractTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const template = new MockTemplate();
       const binding = template.resolveBinding(binds, part, runtime);
 
@@ -52,7 +52,7 @@ describe('AbstractTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const template = new MockTemplate();
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
@@ -89,7 +89,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -112,7 +112,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const hydrationRoot = createElement('div', {}, 'foo', part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         childNodes: [hydrationRoot.firstChild!],
@@ -148,7 +148,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const hydrationRoot = document.createElement('div');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -171,7 +171,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const container = createElement('div', {}, part.node);
       const renderRoot = createElement(
@@ -318,7 +318,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const container = createElement('div', {}, part.node);
       const childNodes = [

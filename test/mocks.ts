@@ -25,13 +25,13 @@ import {
   type UpdateContext,
 } from '../src/directive.js';
 import { type Lanes, NO_LANES } from '../src/hook.js';
-import type { HydrationTree } from '../src/hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../src/part.js';
 import type {
   CommitPhase,
-  RenderHost,
+  HostEnvironment,
   RequestCallbackOptions,
-} from '../src/render-host.js';
+} from '../src/host-environment.js';
+import type { HydrationTree } from '../src/hydration.js';
+import { type ChildNodePart, type Part, PartType } from '../src/part.js';
 import { AbstractTemplate } from '../src/template/template.js';
 
 export class MockBindable<T> implements Bindable<T> {
@@ -226,7 +226,7 @@ export class MockCommitContext implements CommitContext {
   ): void {}
 }
 
-export class MockRenderHost implements RenderHost {
+export class MockHostEnvironment implements HostEnvironment {
   commitEffects(
     effects: Effect[],
     _phase: CommitPhase,

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { component } from '@/extensions/component.js';
-import { BrowserRenderHost } from '@/render-host/browser.js';
+import { BrowserHostEnvironment } from '@/host-environment/browser.js';
 import { createSyncRoot } from '@/root/sync.js';
 import { filterComments, stripComments } from '../test-utils.js';
 
@@ -31,7 +31,7 @@ test('render a component returning virtual DOM', () => {
     name: 'Alternative world',
   });
   const container = document.createElement('div');
-  const root = createSyncRoot(value1, container, new BrowserRenderHost());
+  const root = createSyncRoot(value1, container, new BrowserHostEnvironment());
 
   root.mount();
 

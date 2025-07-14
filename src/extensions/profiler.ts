@@ -1,6 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import { CommitPhase } from '../render-host.js';
+import { CommitPhase } from '../host-environment.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface Profile {

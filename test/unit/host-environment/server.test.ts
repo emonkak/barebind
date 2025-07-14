@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { Effect } from '@/directive.js';
+import { ServerHostEnvironment } from '@/host-environment/server.js';
+import { CommitPhase } from '@/host-environment.js';
 import { PartType } from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
@@ -11,8 +13,6 @@ import { PropertyPrimitive } from '@/primitive/property.js';
 import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
-import { ServerRenderHost } from '@/render-host/server.js';
-import { CommitPhase } from '@/render-host.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
@@ -25,7 +25,7 @@ import { templateLiteral } from '../../test-utils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
-describe('ServerRenderHost', () => {
+describe('ServerHostEnvironment', () => {
   describe('commitEffects()', () => {
     it('commits only mutation effects', () => {
       const mutationEffects: [Effect] = [
@@ -43,12 +43,12 @@ describe('ServerRenderHost', () => {
           commit: vi.fn(),
         },
       ];
-      const renderHost = new ServerRenderHost(document);
+      const host = new ServerHostEnvironment(document);
       const context = new MockCommitContext();
 
-      renderHost.commitEffects(mutationEffects, CommitPhase.Mutation, context);
-      renderHost.commitEffects(layoutEffects, CommitPhase.Layout, context);
-      renderHost.commitEffects(passiveEffects, CommitPhase.Layout, context);
+      host.commitEffects(mutationEffects, CommitPhase.Mutation, context);
+      host.commitEffects(layoutEffects, CommitPhase.Layout, context);
+      host.commitEffects(passiveEffects, CommitPhase.Layout, context);
 
       expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
       expect(mutationEffects[0].commit).toHaveBeenCalledWith(context);
@@ -60,10 +60,10 @@ describe('ServerRenderHost', () => {
 
   describe('createTemplate()', () => {
     it('creates a TaggedTemplate', () => {
-      const renderHost = new ServerRenderHost(document);
+      const host = new ServerHostEnvironment(document);
       const { strings, values } =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
-      const template = renderHost.createTemplate(
+      const template = host.createTemplate(
         strings,
         values,
         TEMPLATE_PLACEHOLDER,
@@ -93,8 +93,8 @@ describe('ServerRenderHost', () => {
     it.each([[templateLiteral``], [templateLiteral` `]])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
-        const renderHost = new ServerRenderHost(document);
-        const template = renderHost.createTemplate(
+        const host = new ServerHostEnvironment(document);
+        const template = host.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -114,8 +114,8 @@ describe('ServerRenderHost', () => {
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
-        const renderHost = new ServerRenderHost(document);
-        const template = renderHost.createTemplate(
+        const host = new ServerHostEnvironment(document);
+        const template = host.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -133,8 +133,8 @@ describe('ServerRenderHost', () => {
     ])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
-        const renderHost = new ServerRenderHost(document);
-        const template = renderHost.createTemplate(
+        const host = new ServerHostEnvironment(document);
+        const template = host.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -150,8 +150,8 @@ describe('ServerRenderHost', () => {
 
   describe('getCurrentPriority()', () => {
     it('always returns "user-blocking"', () => {
-      const renderHost = new ServerRenderHost(document);
-      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
+      const host = new ServerHostEnvironment(document);
+      expect(host.getCurrentPriority()).toBe('user-blocking');
     });
   });
 
@@ -161,11 +161,11 @@ describe('ServerRenderHost', () => {
     });
 
     it('schedules a callback using setTimeout()', async () => {
-      const renderHost = new ServerRenderHost(document);
+      const host = new ServerHostEnvironment(document);
       const callback = vi.fn();
       const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-      await renderHost.requestCallback(callback);
+      await host.requestCallback(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith();
@@ -176,11 +176,11 @@ describe('ServerRenderHost', () => {
     it.each([['user-blocking'], ['user-visible'], ['background']] as const)(
       'schedules a callback with an arbitrary priority using setTimeout()',
       async (priority) => {
-        const renderHost = new ServerRenderHost(document);
+        const host = new ServerHostEnvironment(document);
         const callback = vi.fn();
         const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-        await renderHost.requestCallback(callback, { priority });
+        await host.requestCallback(callback, { priority });
 
         expect(callback).toHaveBeenCalledOnce();
         expect(callback).toHaveBeenCalledWith();
@@ -281,11 +281,9 @@ describe('ServerRenderHost', () => {
     ] as const)(
       'resolves the Primitive from an arbitrary part',
       (value, part, expectedPrimitive) => {
-        const renderHost = new ServerRenderHost(document);
+        const host = new ServerHostEnvironment(document);
 
-        expect(renderHost.resolvePrimitive(value, part)).toBe(
-          expectedPrimitive,
-        );
+        expect(host.resolvePrimitive(value, part)).toBe(expectedPrimitive);
       },
     );
 
@@ -329,13 +327,11 @@ describe('ServerRenderHost', () => {
     ] as const)(
       'resolves the Primitive from special attribute parts',
       (value, part, expectedPrimitive) => {
-        const renderHost = new ServerRenderHost(document);
+        const host = new ServerHostEnvironment(document);
 
-        expect(renderHost.resolvePrimitive(value, part)).toBe(
-          expectedPrimitive,
-        );
+        expect(host.resolvePrimitive(value, part)).toBe(expectedPrimitive);
         expect(
-          renderHost.resolvePrimitive(value, {
+          host.resolvePrimitive(value, {
             ...part,
             name: part.name.toUpperCase(),
           }),
@@ -415,19 +411,19 @@ describe('ServerRenderHost', () => {
     ] as const)(
       'resolves the SlotType from an arbitrary part',
       (value, part, expectedSlotType) => {
-        const renderHost = new ServerRenderHost(document);
+        const host = new ServerHostEnvironment(document);
 
-        expect(renderHost.resolveSlotType(value, part)).toBe(expectedSlotType);
+        expect(host.resolveSlotType(value, part)).toBe(expectedSlotType);
       },
     );
   });
 
   describe('startViewTransition()', () => {
     it('invokes the callback as a microtask', async () => {
-      const renderHost = new ServerRenderHost(document);
+      const host = new ServerHostEnvironment(document);
       const callback = vi.fn();
 
-      await renderHost.startViewTransition(callback);
+      await host.startViewTransition(callback);
 
       expect(callback).toHaveBeenCalledOnce();
     });
@@ -439,10 +435,10 @@ describe('ServerRenderHost', () => {
     });
 
     it('waits until the timer to be executed', async () => {
-      const renderHost = new ServerRenderHost(document);
+      const host = new ServerHostEnvironment(document);
       const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-      await renderHost.yieldToMain();
+      await host.yieldToMain();
 
       expect(setTimeoutSpy).toHaveBeenCalledOnce();
       expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));

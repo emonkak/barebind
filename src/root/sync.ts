@@ -1,6 +1,6 @@
+import type { HostEnvironment } from '../host-environment.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
-import type { RenderHost } from '../render-host.js';
 import type { RuntimeObserver } from '../runtime.js';
 import { Runtime } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
@@ -16,9 +16,9 @@ export interface SyncRoot<T> {
 export function createSyncRoot<T>(
   value: T,
   container: Element,
-  renderHost: RenderHost,
+  host: HostEnvironment,
 ): SyncRoot<T> {
-  const runtime = new Runtime(renderHost);
+  const runtime = new Runtime(host);
   const part = {
     type: PartType.ChildNode,
     node: container.ownerDocument.createComment(''),

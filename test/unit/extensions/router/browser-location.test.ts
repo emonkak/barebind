@@ -9,7 +9,7 @@ import { RelativeURL } from '@/extensions/router/url.js';
 import { ALL_LANES } from '@/hook.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { MockCoroutine, MockRenderHost } from '../../../mocks.js';
+import { MockCoroutine, MockHostEnvironment } from '../../../mocks.js';
 import { cleanupHooks, createElement } from '../../../test-utils.js';
 
 describe('BrowserLocation', () => {
@@ -22,7 +22,7 @@ describe('BrowserLocation', () => {
       [],
       ALL_LANES,
       new MockCoroutine(),
-      new Runtime(new MockRenderHost()),
+      new Runtime(new MockHostEnvironment()),
     );
   });
 

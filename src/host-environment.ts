@@ -22,7 +22,7 @@ export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
 
-export interface RenderHost {
+export interface HostEnvironment {
   commitEffects(
     effects: Effect[],
     phase: CommitPhase,

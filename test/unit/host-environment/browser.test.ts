@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { BrowserHostEnvironment } from '@/host-environment/browser.js';
+import { CommitPhase } from '@/host-environment.js';
 import { PartType } from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
@@ -11,8 +13,6 @@ import { RefPrimitive } from '@/primitive/ref.js';
 import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
-import { BrowserRenderHost } from '@/render-host/browser.js';
-import { CommitPhase } from '@/render-host.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { ChildNodeTemplate } from '@/template/child-node-template.js';
@@ -45,7 +45,7 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'wheel',
 ];
 
-describe('BrowserRenderHost', () => {
+describe('BrowserHostEnvironment', () => {
   describe('commitEffects()', () => {
     it.each([
       [CommitPhase.Mutation],
@@ -63,10 +63,10 @@ describe('BrowserRenderHost', () => {
           commit: vi.fn(),
         },
       ];
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const context = new MockCommitContext();
 
-      renderHost.commitEffects(effects, phase, context);
+      host.commitEffects(effects, phase, context);
 
       for (const effect of effects) {
         expect(effect.commit).toHaveBeenCalledOnce();
@@ -77,10 +77,10 @@ describe('BrowserRenderHost', () => {
 
   describe('createTemplate()', () => {
     it('creates a TaggedTemplate', () => {
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const { strings, values } =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
-      const template = renderHost.createTemplate(
+      const template = host.createTemplate(
         strings,
         values,
         TEMPLATE_PLACEHOLDER,
@@ -110,8 +110,8 @@ describe('BrowserRenderHost', () => {
     it.each([[templateLiteral``], [templateLiteral` `]])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
-        const renderHost = new BrowserRenderHost();
-        const template = renderHost.createTemplate(
+        const host = new BrowserHostEnvironment();
+        const template = host.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -131,8 +131,8 @@ describe('BrowserRenderHost', () => {
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
-        const renderHost = new BrowserRenderHost();
-        const template = renderHost.createTemplate(
+        const host = new BrowserHostEnvironment();
+        const template = host.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -150,8 +150,8 @@ describe('BrowserRenderHost', () => {
     ])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
-        const renderHost = new BrowserRenderHost();
-        const template = renderHost.createTemplate(
+        const host = new BrowserHostEnvironment();
+        const template = host.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -173,28 +173,28 @@ describe('BrowserRenderHost', () => {
     it.each(CONTINUOUS_EVENT_TYPES)(
       'returns "user-visible" if the current event is continuous',
       (eventType) => {
-        const renderHost = new BrowserRenderHost();
+        const host = new BrowserHostEnvironment();
         const getEventSpy = vi
           .spyOn(window, 'event', 'get')
           .mockReturnValue(new CustomEvent(eventType));
 
-        expect(renderHost.getCurrentPriority()).toBe('user-visible');
+        expect(host.getCurrentPriority()).toBe('user-visible');
         expect(getEventSpy).toHaveBeenCalled();
       },
     );
 
     it('returns "user-blocking" if the current event is not continuous', () => {
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const getEventSpy = vi
         .spyOn(window, 'event', 'get')
         .mockReturnValue(new MouseEvent('click'));
 
-      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
+      expect(host.getCurrentPriority()).toBe('user-blocking');
       expect(getEventSpy).toHaveBeenCalled();
     });
 
     it('returns "background" if the document loading state is "complete"', () => {
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
 
       const getEventSpy = vi
         .spyOn(window, 'event', 'get')
@@ -203,13 +203,13 @@ describe('BrowserRenderHost', () => {
         .spyOn(document, 'readyState', 'get')
         .mockReturnValue('complete');
 
-      expect(renderHost.getCurrentPriority()).toBe('background');
+      expect(host.getCurrentPriority()).toBe('background');
       expect(getEventSpy).toHaveBeenCalledOnce();
       expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
 
     it('otherwise returns "user-blocking"', () => {
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
 
       const getEventSpy = vi
         .spyOn(window, 'event', 'get')
@@ -218,7 +218,7 @@ describe('BrowserRenderHost', () => {
         .spyOn(document, 'readyState', 'get')
         .mockReturnValue('interactive');
 
-      expect(renderHost.getCurrentPriority()).toBe('user-blocking');
+      expect(host.getCurrentPriority()).toBe('user-blocking');
       expect(getEventSpy).toHaveBeenCalledOnce();
       expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
@@ -237,12 +237,12 @@ describe('BrowserRenderHost', () => {
         },
       } as Partial<Scheduler>);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const callback = vi.fn();
       const options = { priority: 'user-blocking' } as const;
       const postTaskSpy = vi.spyOn(window.scheduler, 'postTask');
 
-      renderHost.requestCallback(callback, options);
+      host.requestCallback(callback, options);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith();
@@ -253,7 +253,7 @@ describe('BrowserRenderHost', () => {
     it('should schedule a callback with "user-blocking" priority using MessageChannel', async () => {
       vi.stubGlobal('scheduler', undefined);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const callback = vi.fn();
       const setOnmessageSpy = vi.spyOn(
         MessagePort.prototype,
@@ -262,7 +262,7 @@ describe('BrowserRenderHost', () => {
       );
       const postMessageSpy = vi.spyOn(MessagePort.prototype, 'postMessage');
 
-      renderHost.requestCallback(callback, { priority: 'user-blocking' });
+      host.requestCallback(callback, { priority: 'user-blocking' });
 
       await new Promise((resolve) => setTimeout(resolve));
 
@@ -277,12 +277,14 @@ describe('BrowserRenderHost', () => {
     it('schedules a callback with "user-visible" priority using setTimeout()', async () => {
       vi.stubGlobal('scheduler', undefined);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const callback = vi.fn();
       const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
-      await renderHost.requestCallback(callback);
-      await renderHost.requestCallback(callback, { priority: 'user-visible' });
+      await host.requestCallback(callback);
+      await host.requestCallback(callback, {
+        priority: 'user-visible',
+      });
 
       expect(callback).toHaveBeenCalledTimes(2);
       expect(callback).toHaveBeenCalledWith();
@@ -294,12 +296,14 @@ describe('BrowserRenderHost', () => {
       vi.stubGlobal('scheduler', undefined);
       vi.stubGlobal('requestIdleCallback', undefined);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const callback = vi.fn();
       const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
-      await renderHost.requestCallback(callback);
-      await renderHost.requestCallback(callback, { priority: 'background' });
+      await host.requestCallback(callback);
+      await host.requestCallback(callback, {
+        priority: 'background',
+      });
 
       expect(callback).toHaveBeenCalledTimes(2);
       expect(callback).toHaveBeenCalledWith();
@@ -314,11 +318,13 @@ describe('BrowserRenderHost', () => {
         return 0;
       }) as typeof requestIdleCallback);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const callback = vi.fn();
       const requestIdleCallbackSpy = vi.spyOn(window, 'requestIdleCallback');
 
-      await renderHost.requestCallback(callback, { priority: 'background' });
+      await host.requestCallback(callback, {
+        priority: 'background',
+      });
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith();
@@ -418,11 +424,9 @@ describe('BrowserRenderHost', () => {
     ] as const)(
       'resolves the Primitive from an arbitrary part',
       (value, part, expectedPrimitive) => {
-        const renderHost = new BrowserRenderHost();
+        const host = new BrowserHostEnvironment();
 
-        expect(renderHost.resolvePrimitive(value, part)).toBe(
-          expectedPrimitive,
-        );
+        expect(host.resolvePrimitive(value, part)).toBe(expectedPrimitive);
       },
     );
 
@@ -466,13 +470,11 @@ describe('BrowserRenderHost', () => {
     ] as const)(
       'resolves the Primitive from special attribute parts',
       (value, part, expectedPrimitive) => {
-        const renderHost = new BrowserRenderHost();
+        const host = new BrowserHostEnvironment();
 
-        expect(renderHost.resolvePrimitive(value, part)).toBe(
-          expectedPrimitive,
-        );
+        expect(host.resolvePrimitive(value, part)).toBe(expectedPrimitive);
         expect(
-          renderHost.resolvePrimitive(value, {
+          host.resolvePrimitive(value, {
             ...part,
             name: part.name.toUpperCase(),
           }),
@@ -552,9 +554,9 @@ describe('BrowserRenderHost', () => {
     ] as const)(
       'resolves the SlotType from an arbitrary part',
       (value, part, expectedSlotType) => {
-        const renderHost = new BrowserRenderHost();
+        const host = new BrowserHostEnvironment();
 
-        expect(renderHost.resolveSlotType(value, part)).toBe(expectedSlotType);
+        expect(host.resolveSlotType(value, part)).toBe(expectedSlotType);
       },
     );
   });
@@ -567,14 +569,14 @@ describe('BrowserRenderHost', () => {
     it.runIf(typeof document.startViewTransition === 'function')(
       'invokes the callback using document.startViewTransition()',
       async () => {
-        const renderHost = new BrowserRenderHost();
+        const host = new BrowserHostEnvironment();
         const callback = vi.fn();
         const startViewTransitionSpy = vi.spyOn(
           document,
           'startViewTransition',
         );
 
-        await renderHost.startViewTransition(callback);
+        await host.startViewTransition(callback);
 
         expect(startViewTransitionSpy).toHaveBeenCalledOnce();
         expect(startViewTransitionSpy).toHaveBeenCalledWith(callback);
@@ -583,7 +585,7 @@ describe('BrowserRenderHost', () => {
     );
 
     it('invokes the callback as a microtask', async () => {
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const callback = vi.fn();
 
       vi.spyOn(
@@ -592,7 +594,7 @@ describe('BrowserRenderHost', () => {
         'get',
       ).mockReturnValue(undefined);
 
-      await renderHost.startViewTransition(callback);
+      await host.startViewTransition(callback);
 
       expect(callback).toHaveBeenCalledOnce();
     });
@@ -611,20 +613,20 @@ describe('BrowserRenderHost', () => {
         },
       } as Partial<Scheduler>);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const yieldSpy = vi.spyOn(window.scheduler, 'yield');
 
-      expect(await renderHost.yieldToMain()).toBe(undefined);
+      expect(await host.yieldToMain()).toBe(undefined);
       expect(yieldSpy).toHaveBeenCalledOnce();
     });
 
     it('waits until the timer to be executed', async () => {
       vi.stubGlobal('scheduler', undefined);
 
-      const renderHost = new BrowserRenderHost();
+      const host = new BrowserHostEnvironment();
       const setTimeoutSpy = vi.spyOn(window, 'setTimeout');
 
-      expect(await renderHost.yieldToMain()).toBe(undefined);
+      expect(await host.yieldToMain()).toBe(undefined);
       expect(setTimeoutSpy).toHaveBeenCalledOnce();
     });
   });

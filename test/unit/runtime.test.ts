@@ -2,8 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { $toDirective, type Coroutine } from '@/directive.js';
 import { ALL_LANES, type Hook, Lane, NO_LANES } from '@/hook.js';
+import { CommitPhase } from '@/host-environment.js';
 import { PartType } from '@/part.js';
-import { CommitPhase } from '@/render-host.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { Scope } from '@/scope.js';
@@ -13,8 +13,8 @@ import {
   MockComponent,
   MockCoroutine,
   MockDirective,
+  MockHostEnvironment,
   MockPrimitive,
-  MockRenderHost,
   MockRuntimeObserver,
   MockSlot,
   MockTemplate,
@@ -30,7 +30,7 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       runtime.debugValue(new MockDirective('FirstDirective'), 'foo', part);
       expect(part.node.data).toBe('/FirstDirective("foo")');
@@ -55,7 +55,7 @@ describe('Runtime', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       runtime.debugValue(new MockDirective('FirstDirective'), 'foo', part);
 
@@ -70,7 +70,7 @@ describe('Runtime', () => {
   describe('enterScope()', () => {
     it('returns a new Runtime with the new scope', () => {
       const scope = new Scope(null);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const newRuntime = runtime.enterScope(scope);
 
       expect(newRuntime).not.toBe(runtime);
@@ -83,7 +83,7 @@ describe('Runtime', () => {
     it('expands literals in template values', () => {
       const { strings, values } =
         templateLiteral`<${new Literal('div')}>${'foo'}</${new Literal('div')}>`;
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const templateLiteral1 = runtime.expandLiterals(strings, values);
       const templateLiteral2 = runtime.expandLiterals(strings, values);
@@ -123,15 +123,12 @@ describe('Runtime', () => {
         commit: vi.fn(),
       };
       const observer = new MockRuntimeObserver();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const unobserve = runtime.observe(observer);
 
-      const requestCallbackSpy = vi.spyOn(
-        runtime['_renderHost'],
-        'requestCallback',
-      );
+      const requestCallbackSpy = vi.spyOn(runtime['_host'], 'requestCallback');
       const startViewTransitionSpy = vi.spyOn(
-        runtime['_renderHost'],
+        runtime['_host'],
         'startViewTransition',
       );
 
@@ -339,7 +336,7 @@ describe('Runtime', () => {
         commit: vi.fn(),
       };
       const observer = new MockRuntimeObserver();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const unobserve = runtime.observe(observer);
 
       runtime.enqueueCoroutine(coroutine);
@@ -500,7 +497,7 @@ describe('Runtime', () => {
 
   describe('nextIdentifier()', () => {
     it('generates a new identifier', () => {
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(runtime.nextIdentifier()).toMatch(/[0-9a-z]+-1/);
       expect(runtime.nextIdentifier()).toMatch(/[0-9a-z]+-2/);
@@ -515,7 +512,7 @@ describe('Runtime', () => {
       const lanes = ALL_LANES;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const renderSpy = vi.spyOn(component, 'render');
 
@@ -569,10 +566,10 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_renderHost'],
+        runtime['_host'],
         'resolvePrimitive',
       );
 
@@ -598,12 +595,9 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
-      const resolveSlotSpy = vi.spyOn(
-        runtime['_renderHost'],
-        'resolveSlotType',
-      );
+      const resolveSlotSpy = vi.spyOn(runtime['_host'], 'resolveSlotType');
 
       const slot = runtime.resolveSlot(value, part);
 
@@ -623,10 +617,10 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_renderHost'],
+        runtime['_host'],
         'resolvePrimitive',
       );
 
@@ -646,7 +640,7 @@ describe('Runtime', () => {
       const strings = ['<div>', '</div>'];
       const binds = ['foo'];
       const mode = 'html';
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const template = runtime.resolveTemplate(strings, binds, mode);
 
@@ -666,7 +660,7 @@ describe('Runtime', () => {
   describe('scheduleUpdate()', () => {
     it('schedules the update with the current priority of the host', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -686,7 +680,7 @@ describe('Runtime', () => {
 
     it('schedules as a different update if the lanes are different', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -719,7 +713,7 @@ describe('Runtime', () => {
 
     it('returns the pending task scheduled in the same lane', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -747,7 +741,7 @@ describe('Runtime', () => {
   describe('waitForUpdate()', () => {
     it('returns 0 if pending tasks do not exist', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 

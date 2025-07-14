@@ -20,7 +20,11 @@ import { EmptyTemplate } from '@/template/empty-template.js';
 import { FragmentTemplate } from '@/template/fragment-template.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text-template.js';
-import { MockBindable, MockPrimitive, MockRenderHost } from '../../mocks.js';
+import {
+  MockBindable,
+  MockHostEnvironment,
+  MockPrimitive,
+} from '../../mocks.js';
 import { createElement as createDOMElement } from '../../test-utils.js';
 
 describe('createElement()', () => {
@@ -179,7 +183,7 @@ describe('ElementDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const binding = ElementDirective.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(ElementDirective);
@@ -195,7 +199,7 @@ describe('ElementDirective', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() =>
         ElementDirective.resolveBinding(props, part, runtime),
@@ -225,7 +229,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -243,7 +247,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(value, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -264,7 +268,7 @@ describe('ElementBinding', () => {
         node: document.createElement('button'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -293,7 +297,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -320,7 +324,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -347,7 +351,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -374,7 +378,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -403,7 +407,7 @@ describe('ElementBinding', () => {
         node: document.createElement('input'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -435,7 +439,7 @@ describe('ElementBinding', () => {
           node: document.createElement(name),
         };
         const binding = new ElementBinding(props1, part);
-        const runtime = new Runtime(new MockRenderHost());
+        const runtime = new Runtime(new MockHostEnvironment());
 
         binding.connect(runtime);
         binding.commit(runtime);
@@ -470,7 +474,7 @@ describe('ElementBinding', () => {
         ),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -497,7 +501,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -526,7 +530,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -565,7 +569,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -596,7 +600,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -632,7 +636,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() => {
         binding.connect(runtime);
@@ -650,7 +654,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
@@ -693,7 +697,7 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
@@ -763,7 +767,7 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);

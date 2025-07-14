@@ -1,7 +1,7 @@
 import type { UpdateOptions } from '../hook.js';
+import type { HostEnvironment } from '../host-environment.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
-import type { RenderHost } from '../render-host.js';
 import type { RuntimeObserver } from '../runtime.js';
 import { Runtime } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
@@ -17,9 +17,9 @@ export interface AsyncRoot<T> {
 export function createAsyncRoot<T>(
   value: T,
   container: Element,
-  renderHost: RenderHost,
+  host: HostEnvironment,
 ): AsyncRoot<T> {
-  const runtime = new Runtime(renderHost);
+  const runtime = new Runtime(host);
   const part = {
     type: PartType.ChildNode,
     node: container.ownerDocument.createComment(''),
@@ -32,7 +32,7 @@ export function createAsyncRoot<T>(
     options: UpdateOptions | undefined,
   ): Required<UpdateOptions> {
     return {
-      priority: renderHost.getCurrentPriority(),
+      priority: host.getCurrentPriority(),
       transition: false,
       ...options,
     };
@@ -53,7 +53,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return renderHost.requestCallback(() => {
+      return host.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
@@ -63,7 +63,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return renderHost.requestCallback(() => {
+      return host.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
@@ -73,7 +73,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return renderHost.requestCallback(() => {
+      return host.requestCallback(() => {
         runtime.enqueueMutationEffect(slot);
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
@@ -83,7 +83,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return renderHost.requestCallback(() => {
+      return host.requestCallback(() => {
         runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
         return runtime.flushAsync(completedOptions);
       }, completedOptions);

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PartType } from '@/part.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
 import { Runtime } from '@/runtime.js';
-import { MockRenderHost } from '../../mocks.js';
+import { MockHostEnvironment } from '../../mocks.js';
 
 describe('BlackholePrimitive', () => {
   describe('displayName', () => {
@@ -19,7 +19,7 @@ describe('BlackholePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(BlackholePrimitive);
@@ -53,7 +53,7 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -68,7 +68,7 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.disconnect(runtime);
       binding.rollback(runtime);

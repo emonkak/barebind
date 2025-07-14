@@ -3,7 +3,7 @@ import { CurrentLocation } from '@/extensions/router/location.js';
 import { ALL_LANES } from '@/hook.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { MockCoroutine, MockRenderHost } from '../../../mocks.js';
+import { MockCoroutine, MockHostEnvironment } from '../../../mocks.js';
 
 describe('CurrentLocation', () => {
   it('should throw an error if the current location is not registered', () => {
@@ -11,7 +11,7 @@ describe('CurrentLocation', () => {
       [],
       ALL_LANES,
       new MockCoroutine(),
-      new Runtime(new MockRenderHost()),
+      new Runtime(new MockHostEnvironment()),
     );
 
     expect(() => session.use(CurrentLocation)).toThrow(

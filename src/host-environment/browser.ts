@@ -1,5 +1,5 @@
 /// <reference path="../../typings/scheduler.d.ts" />
-//
+
 import type {
   CommitContext,
   Effect,
@@ -8,21 +8,23 @@ import type {
   Template,
   TemplateMode,
 } from '../directive.js';
+import type {
+  CommitPhase,
+  HostEnvironment,
+  RequestCallbackOptions,
+} from '../host-environment.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { ClassListPrimitive } from '../primitive/class-list.js';
+import { EventPrimitive } from '../primitive/event.js';
 import { LivePrimitive } from '../primitive/live.js';
 import { NodePrimitive } from '../primitive/node.js';
 import { PropertyPrimitive } from '../primitive/property.js';
+import { RefPrimitive } from '../primitive/ref.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
-import {
-  CommitPhase,
-  type RenderHost,
-  type RequestCallbackOptions,
-} from '../render-host.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
 import { ChildNodeTemplate } from '../template/child-node-template.js';
@@ -33,21 +35,12 @@ import { TextTemplate } from '../template/text-template.js';
 const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
 const EMPTY_TEMPLATE = new EmptyTemplate();
 
-export class ServerRenderHost implements RenderHost {
-  private readonly _document: Document;
-
-  constructor(document: Document) {
-    this._document = document;
-  }
-
+export class BrowserHostEnvironment implements HostEnvironment {
   commitEffects(
     effects: Effect[],
-    phase: CommitPhase,
+    _phase: CommitPhase,
     context: CommitContext,
   ): void {
-    if (phase !== CommitPhase.Mutation) {
-      return;
-    }
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit(context);
     }
@@ -85,26 +78,48 @@ export class ServerRenderHost implements RenderHost {
       }
     }
 
-    return TaggedTemplate.parse(
-      strings,
-      binds,
-      placeholder,
-      mode,
-      this._document,
-    );
+    return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
   }
 
   getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
+    const currentEvent = window.event;
+    if (currentEvent !== undefined) {
+      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
+    } else {
+      return document.readyState === 'complete'
+        ? 'background'
+        : 'user-blocking';
+    }
   }
 
   requestCallback(
     callback: () => Promise<void> | void,
-    _options?: RequestCallbackOptions,
+    options?: RequestCallbackOptions,
   ): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve);
-    }).then(() => callback());
+    if (typeof window.scheduler?.postTask === 'function') {
+      return scheduler.postTask(callback, options);
+    } else {
+      return new Promise((resolve) => {
+        switch (options?.priority) {
+          case 'user-blocking': {
+            const channel = new MessageChannel();
+            channel.port1.onmessage = resolve;
+            channel.port2.postMessage(null);
+            break;
+          }
+          case 'background': {
+            if (typeof window.requestIdleCallback === 'function') {
+              requestIdleCallback(resolve);
+            } else {
+              setTimeout(resolve);
+            }
+            break;
+          }
+          default:
+            setTimeout(resolve);
+        }
+      }).then(() => callback());
+    }
   }
 
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
@@ -114,6 +129,8 @@ export class ServerRenderHost implements RenderHost {
           switch (part.name.slice(1).toLowerCase()) {
             case 'classlist':
               return ClassListPrimitive;
+            case 'ref':
+              return RefPrimitive;
             case 'style':
               return StylePrimitive;
             default:
@@ -126,7 +143,7 @@ export class ServerRenderHost implements RenderHost {
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:
-        return BlackholePrimitive;
+        return EventPrimitive;
       case PartType.Live:
         return LivePrimitive;
       case PartType.Property:
@@ -146,12 +163,45 @@ export class ServerRenderHost implements RenderHost {
   }
 
   startViewTransition(callback: () => void | Promise<void>): Promise<void> {
-    return Promise.resolve().then(callback);
+    if (typeof document.startViewTransition === 'function') {
+      return document.startViewTransition(callback).finished;
+    } else {
+      return Promise.resolve().then(callback);
+    }
   }
 
   yieldToMain(): Promise<void> {
-    return new Promise((resolve) => {
-      setTimeout(resolve);
-    });
+    if (typeof window.scheduler?.yield === 'function') {
+      return scheduler.yield();
+    } else {
+      return new Promise((resolve) => {
+        setTimeout(resolve);
+      });
+    }
+  }
+}
+
+function isContinuousEvent(event: Event): boolean {
+  switch (event.type as keyof DocumentEventMap) {
+    case 'drag':
+    case 'dragenter':
+    case 'dragleave':
+    case 'dragover':
+    case 'mouseenter':
+    case 'mouseleave':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointerenter':
+    case 'pointerleave':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'touchmove':
+    case 'wheel':
+      return true;
+    default:
+      return false;
   }
 }

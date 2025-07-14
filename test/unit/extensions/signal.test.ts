@@ -13,7 +13,7 @@ import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { MockCoroutine, MockRenderHost } from '../../mocks.js';
+import { MockCoroutine, MockHostEnvironment } from '../../mocks.js';
 import { cleanupHooks, createElement } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
@@ -32,7 +32,7 @@ describe('SignalDirective', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.type).toBe(SignalDirective);
@@ -60,7 +60,7 @@ describe('Signal', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockRenderHost()),
+        new Runtime(new MockHostEnvironment()),
       );
       const signal = new Atom('foo');
       const value = session.use(signal);
@@ -429,7 +429,7 @@ describe('SiganlBinding', () => {
         followingText: '',
       };
       const binding = new SignalBinding(signal1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -451,7 +451,7 @@ describe('SiganlBinding', () => {
       const binding = new SignalBinding(signal, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.hydrate(hydrationTree, runtime);
       binding.commit(runtime);
@@ -476,7 +476,7 @@ describe('SiganlBinding', () => {
       const binding = new SignalBinding(signal, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -497,7 +497,7 @@ describe('SiganlBinding', () => {
         followingText: '',
       };
       const binding = new SignalBinding(signal, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -521,7 +521,7 @@ describe('SiganlBinding', () => {
         followingText: '',
       };
       const binding = new SignalBinding(signal1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -551,7 +551,7 @@ describe('SiganlBinding', () => {
         followingText: '',
       };
       const binding = new SignalBinding(signal, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);

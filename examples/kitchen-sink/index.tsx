@@ -1,5 +1,5 @@
 import {
-  BrowserRenderHost,
+  BrowserHostEnvironment,
   createAsyncRoot,
   Literal,
   type RenderContext,
@@ -343,7 +343,7 @@ function shuffle<T>(elements: T[]): T[] {
 const root = createAsyncRoot(
   component(App, {}),
   document.body,
-  new BrowserRenderHost(),
+  new BrowserHostEnvironment(),
 );
 
 root.observe(new Profiler(new LogReporter()));

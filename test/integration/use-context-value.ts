@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import type { RenderContext } from '@/directive.js';
 import { component } from '@/extensions/component.js';
-import { BrowserRenderHost } from '@/render-host/browser.js';
+import { BrowserHostEnvironment } from '@/host-environment/browser.js';
 import { createSyncRoot } from '@/root/sync.js';
 import { createElement, stripComments } from '../test-utils.js';
 
@@ -23,7 +23,7 @@ test('hydrate a component using a context value', () => {
     ),
     document.createComment(''),
   );
-  const root = createSyncRoot(value, container, new BrowserRenderHost());
+  const root = createSyncRoot(value, container, new BrowserHostEnvironment());
 
   root.hydrate();
 
@@ -46,7 +46,7 @@ test('render a component using a context value', () => {
     name: 'bar',
   });
   const container = document.createElement('div');
-  const root = createSyncRoot(value1, container, new BrowserRenderHost());
+  const root = createSyncRoot(value1, container, new BrowserHostEnvironment());
 
   root.mount();
 

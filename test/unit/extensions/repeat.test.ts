@@ -12,7 +12,7 @@ import { type ChildNodePart, PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text-template.js';
-import { MockRenderHost } from '../../mocks.js';
+import { MockHostEnvironment } from '../../mocks.js';
 import {
   allCombinations,
   createElement,
@@ -51,7 +51,7 @@ describe('RepeatDirective', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(RepeatDirective);
@@ -65,7 +65,7 @@ describe('RepeatDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       expect(() =>
         RepeatDirective.resolveBinding(props, part, runtime),
@@ -99,7 +99,7 @@ describe('RepeatBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new RepeatBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -136,7 +136,7 @@ describe('RepeatBinding', () => {
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.hydrate(hydrationTree, runtime);
       binding.commit(runtime);
@@ -171,7 +171,7 @@ describe('RepeatBinding', () => {
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
       const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -206,7 +206,7 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = new Runtime(new MockRenderHost());
+          const runtime = new Runtime(new MockHostEnvironment());
 
           binding.connect(runtime);
           binding.commit(runtime);
@@ -254,7 +254,7 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = new Runtime(new MockRenderHost());
+          const runtime = new Runtime(new MockHostEnvironment());
 
           binding.connect(runtime);
           binding.commit(runtime);
@@ -311,7 +311,7 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = new Runtime(new MockRenderHost());
+          const runtime = new Runtime(new MockHostEnvironment());
 
           binding.connect(runtime);
           binding.commit(runtime);
@@ -370,7 +370,7 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -414,7 +414,7 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockRenderHost());
+      const runtime = new Runtime(new MockHostEnvironment());
 
       binding.connect(runtime);
       binding.commit(runtime);
