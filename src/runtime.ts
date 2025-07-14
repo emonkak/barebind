@@ -350,7 +350,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   resolveDirective<T>(value: T, part: Part): Directive<T> {
-    const type = this._renderHost.resolvePrimitive(part);
+    const type = this._renderHost.resolvePrimitive(value, part);
     type.ensureValue?.(value, part);
     return { type: type as Primitive<T>, value };
   }
@@ -361,7 +361,7 @@ export class Runtime implements CommitContext, UpdateContext {
       : this.resolveDirective(value, part);
     const binding = directive.type.resolveBinding(directive.value, part, this);
     const slotType =
-      directive.slotType ?? this._renderHost.resolveSlotType(part);
+      directive.slotType ?? this._renderHost.resolveSlotType(value, part);
     return new slotType(binding);
   }
 

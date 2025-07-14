@@ -579,7 +579,7 @@ describe('Runtime', () => {
       const directive = runtime.resolveDirective(value, part);
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
-      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(part);
+      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
       expect(directive.slotType).toBe(undefined);
@@ -608,7 +608,7 @@ describe('Runtime', () => {
       const slot = runtime.resolveSlot(value, part);
 
       expect(resolveSlotSpy).toHaveBeenCalledOnce();
-      expect(resolveSlotSpy).toHaveBeenCalledWith(part);
+      expect(resolveSlotSpy).toHaveBeenCalledWith(value, part);
       expect(slot).toBeInstanceOf(MockSlot);
       expect(slot.type).toBe(directive.type);
       expect(slot.value).toBe(directive.value);
@@ -633,7 +633,7 @@ describe('Runtime', () => {
       const slot = runtime.resolveSlot(value, part);
 
       expect(resolvePrimitiveSpy).toHaveBeenCalledOnce();
-      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(part);
+      expect(resolvePrimitiveSpy).toHaveBeenCalledWith(value, part);
       expect(slot).toBeInstanceOf(MockSlot);
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);

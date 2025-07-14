@@ -257,11 +257,11 @@ export class MockRenderHost implements RenderHost {
     return Promise.resolve().then(callback);
   }
 
-  resolvePrimitive(_part: Part): Primitive<unknown> {
+  resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
     return MockPrimitive;
   }
 
-  resolveSlotType(_part: Part): SlotType {
+  resolveSlotType(_value: unknown, _part: Part): SlotType {
     return MockSlot;
   }
 

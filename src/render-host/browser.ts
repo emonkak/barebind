@@ -122,7 +122,7 @@ export class BrowserRenderHost implements RenderHost {
     }
   }
 
-  resolvePrimitive(part: Part): Primitive<unknown> {
+  resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
     switch (part.type) {
       case PartType.Attribute:
         if (part.name[0] === ':') {
@@ -139,7 +139,7 @@ export class BrowserRenderHost implements RenderHost {
         }
         return AttributePrimitive;
       case PartType.ChildNode:
-        return NodePrimitive;
+        return value != null ? NodePrimitive : BlackholePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:
@@ -153,7 +153,7 @@ export class BrowserRenderHost implements RenderHost {
     }
   }
 
-  resolveSlotType(part: Part): SlotType {
+  resolveSlotType(_value: unknown, part: Part): SlotType {
     switch (part.type) {
       case PartType.ChildNode:
         return LooseSlot;

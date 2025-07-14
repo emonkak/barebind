@@ -39,8 +39,8 @@ export interface RenderHost {
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
   ): Promise<void>;
-  resolvePrimitive(part: Part): Primitive<unknown>;
-  resolveSlotType(part: Part): SlotType;
+  resolvePrimitive(value: unknown, part: Part): Primitive<unknown>;
+  resolveSlotType(value: unknown, part: Part): SlotType;
   startViewTransition(callback: () => void | Promise<void>): Promise<void>;
   yieldToMain(): Promise<void>;
 }

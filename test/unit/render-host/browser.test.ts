@@ -330,6 +330,7 @@ describe('BrowserRenderHost', () => {
   describe('resolvePrimitive()', () => {
     it.each([
       [
+        'foo',
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
@@ -338,6 +339,7 @@ describe('BrowserRenderHost', () => {
         AttributePrimitive,
       ],
       [
+        'foo',
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
@@ -347,6 +349,27 @@ describe('BrowserRenderHost', () => {
         NodePrimitive,
       ],
       [
+        null,
+        {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+          childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
+        },
+        BlackholePrimitive,
+      ],
+      [
+        undefined,
+        {
+          type: PartType.ChildNode,
+          node: document.createComment(''),
+          childNode: null,
+          namespaceURI: HTML_NAMESPACE_URI,
+        },
+        BlackholePrimitive,
+      ],
+      [
+        () => {},
         {
           type: PartType.Element,
           node: document.createElement('div'),
@@ -354,6 +377,7 @@ describe('BrowserRenderHost', () => {
         SpreadPrimitive,
       ],
       [
+        'foo',
         {
           type: PartType.Event,
           node: document.createElement('div'),
@@ -362,6 +386,7 @@ describe('BrowserRenderHost', () => {
         EventPrimitive,
       ],
       [
+        'foo',
         {
           type: PartType.Live,
           node: document.createElement('textarea'),
@@ -371,6 +396,7 @@ describe('BrowserRenderHost', () => {
         LivePrimitive,
       ],
       [
+        'foo',
         {
           type: PartType.Property,
           node: document.createElement('textarea'),
@@ -380,6 +406,7 @@ describe('BrowserRenderHost', () => {
         PropertyPrimitive,
       ],
       [
+        'foo',
         {
           type: PartType.Text,
           node: document.createTextNode(''),
@@ -390,15 +417,18 @@ describe('BrowserRenderHost', () => {
       ],
     ] as const)(
       'resolves the Primitive from an arbitrary part',
-      (part, expectedPrimitive) => {
+      (value, part, expectedPrimitive) => {
         const renderHost = new BrowserRenderHost();
 
-        expect(renderHost.resolvePrimitive(part)).toBe(expectedPrimitive);
+        expect(renderHost.resolvePrimitive(value, part)).toBe(
+          expectedPrimitive,
+        );
       },
     );
 
     it.each([
       [
+        [],
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
@@ -407,6 +437,7 @@ describe('BrowserRenderHost', () => {
         ClassListPrimitive,
       ],
       [
+        { current: null },
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
@@ -415,6 +446,7 @@ describe('BrowserRenderHost', () => {
         RefPrimitive,
       ],
       [
+        {},
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
@@ -423,6 +455,7 @@ describe('BrowserRenderHost', () => {
         StylePrimitive,
       ],
       [
+        null,
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
@@ -432,12 +465,14 @@ describe('BrowserRenderHost', () => {
       ],
     ] as const)(
       'resolves the Primitive from special attribute parts',
-      (part, expectedPrimitive) => {
+      (value, part, expectedPrimitive) => {
         const renderHost = new BrowserRenderHost();
 
-        expect(renderHost.resolvePrimitive(part)).toBe(expectedPrimitive);
+        expect(renderHost.resolvePrimitive(value, part)).toBe(
+          expectedPrimitive,
+        );
         expect(
-          renderHost.resolvePrimitive({
+          renderHost.resolvePrimitive(value, {
             ...part,
             name: part.name.toUpperCase(),
           }),
@@ -449,6 +484,7 @@ describe('BrowserRenderHost', () => {
   describe('resolveSlotType()', () => {
     it.each([
       [
+        'foo',
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
@@ -457,6 +493,7 @@ describe('BrowserRenderHost', () => {
         StrictSlot,
       ],
       [
+        'foo',
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
@@ -466,6 +503,7 @@ describe('BrowserRenderHost', () => {
         LooseSlot,
       ],
       [
+        'foo',
         {
           type: PartType.Element,
           node: document.createElement('div'),
@@ -473,6 +511,7 @@ describe('BrowserRenderHost', () => {
         StrictSlot,
       ],
       [
+        'foo',
         {
           type: PartType.Event,
           node: document.createElement('div'),
@@ -481,6 +520,7 @@ describe('BrowserRenderHost', () => {
         StrictSlot,
       ],
       [
+        'foo',
         {
           type: PartType.Live,
           node: document.createElement('textarea'),
@@ -490,6 +530,7 @@ describe('BrowserRenderHost', () => {
         StrictSlot,
       ],
       [
+        'foo',
         {
           type: PartType.Property,
           node: document.createElement('textarea'),
@@ -499,6 +540,7 @@ describe('BrowserRenderHost', () => {
         StrictSlot,
       ],
       [
+        'foo',
         {
           type: PartType.Text,
           node: document.createTextNode(''),
@@ -509,10 +551,10 @@ describe('BrowserRenderHost', () => {
       ],
     ] as const)(
       'resolves the SlotType from an arbitrary part',
-      (part, expectedSlotType) => {
+      (value, part, expectedSlotType) => {
         const renderHost = new BrowserRenderHost();
 
-        expect(renderHost.resolveSlotType(part)).toBe(expectedSlotType);
+        expect(renderHost.resolveSlotType(value, part)).toBe(expectedSlotType);
       },
     );
   });
