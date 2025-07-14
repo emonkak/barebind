@@ -21,7 +21,7 @@ export function Nav(_props: NavProps, context: RenderContext): unknown {
         <a href="#/jobs">
           <strong>Jobs</strong>
         </a>
-        <a class="github" href="http://github.com/emonkak/ebit" target="_blank">
+        <a class="github" href="https://github.com/emonkak/ebit" target="_blank">
           Built with Ebit
         </a>
       </nav>
