@@ -10,6 +10,7 @@ import { Scope } from '@/scope.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { Literal } from '@/template-literal.js';
 import {
+  MockBindable,
   MockComponent,
   MockCoroutine,
   MockDirective,
@@ -584,10 +585,34 @@ describe('Runtime', () => {
       expect(directive.value).toBe(value);
       expect(directive.slotType).toBe(undefined);
     });
+
+    it('resolves the directive from the bindable value', () => {
+      const value = new MockBindable({
+        type: new MockDirective(),
+        value: 'foo',
+      });
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const runtime = new Runtime(new MockHostEnvironment());
+
+      const $toDirectiveSpy = vi.spyOn(value, $toDirective);
+
+      const directive = runtime.resolveDirective(value, part);
+
+      expect($toDirectiveSpy).toHaveBeenCalledOnce();
+      expect($toDirectiveSpy).toHaveBeenCalledWith(part, runtime);
+      expect(directive.type).toBe(value.directive.type);
+      expect(directive.value).toBe(value.directive.value);
+      expect(directive.slotType).toBe(undefined);
+    });
   });
 
   describe('resolveSlot()', () => {
-    it('resolves the slot from the bindable object', () => {
+    it('resolves the slot from the bindable value', () => {
       const directive = { type: MockPrimitive, value: 'foo' };
       const value = {
         [$toDirective]: vi.fn(() => directive),

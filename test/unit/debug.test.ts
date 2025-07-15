@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  $inspect,
+  type Inspectable,
   inspectNode,
   inspectPart,
   inspectValue,
@@ -8,7 +10,6 @@ import {
 } from '@/debug.js';
 import { PartType } from '@/part.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBindable, MockDirective } from '../mocks.js';
 import { createElement } from '../test-utils.js';
 
 const NODE_MAKRER = '[[NODE IN HERE!]]';
@@ -490,8 +491,10 @@ describe('inspectValue()', () => {
     [new Set(), 'Set'],
     [new (class Foo {})(), 'Foo'],
     [
-      new MockBindable({ type: new MockDirective(), value: 'foo' }),
-      'MockDirective("foo")',
+      {
+        [$inspect]: (inspect) => `MyInspectable(${inspect('foo')})`,
+      } as Inspectable,
+      'MyInspectable("foo")',
     ],
     [function foo() {}, 'Function(foo)'],
     [() => {}, 'Function'],

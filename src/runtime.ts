@@ -346,16 +346,18 @@ export class Runtime implements CommitContext, UpdateContext {
     return { value, pendingLanes };
   }
 
-  resolveDirective<T>(value: T, part: Part): Directive<T> {
-    const type = this._hostEnvironment.resolvePrimitive(value, part);
-    type.ensureValue?.(value, part);
-    return { type: type as Primitive<T>, value };
+  resolveDirective<T>(value: T, part: Part): Directive<unknown> {
+    if (isBindable(value)) {
+      return value[$toDirective](part, this);
+    } else {
+      const type = this._hostEnvironment.resolvePrimitive(value, part);
+      type.ensureValue?.(value, part);
+      return { type: type as Primitive<T>, value };
+    }
   }
 
   resolveSlot<T>(value: T, part: Part): Slot<T> {
-    const directive = isBindable(value)
-      ? value[$toDirective]()
-      : this.resolveDirective(value, part);
+    const directive = this.resolveDirective(value, part);
     const binding = directive.type.resolveBinding(directive.value, part, this);
     const slotType =
       directive.slotType ?? this._hostEnvironment.resolveSlotType(value, part);

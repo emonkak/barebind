@@ -1,3 +1,4 @@
+import { $inspect, type Inspectable } from './debug.js';
 import type {
   Hook,
   HookContext,
@@ -25,7 +26,7 @@ export interface DirectiveType<T> {
 }
 
 export interface Bindable<T = unknown> {
-  [$toDirective](): Directive<T>;
+  [$toDirective](part: Part, context: DirectiveContext): Directive<T>;
 }
 
 export interface Effect {
@@ -103,7 +104,7 @@ export interface Coroutine extends Effect {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: T, part: Part): Directive<T>;
+  resolveDirective<T>(value: T, part: Part): Directive<unknown>;
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
@@ -176,19 +177,7 @@ export interface ComponentResult<T> {
   pendingLanes: Lanes;
 }
 
-export const PrimitiveDirective: DirectiveType<any> = {
-  displayName: 'PrimitiveDirective',
-  resolveBinding<T>(
-    value: T,
-    part: Part,
-    context: DirectiveContext,
-  ): Binding<T> {
-    const directive = context.resolveDirective(value, part);
-    return directive.type.resolveBinding(directive.value, part, context);
-  },
-};
-
-export class DirectiveSpecifier<T> implements Bindable<T> {
+export class DirectiveSpecifier<T> implements Bindable<T>, Inspectable {
   readonly type: DirectiveType<T>;
 
   readonly value: T;
@@ -200,6 +189,10 @@ export class DirectiveSpecifier<T> implements Bindable<T> {
 
   [$toDirective](): Directive<T> {
     return this;
+  }
+
+  [$inspect](inspect: (value: unknown) => string): string {
+    return this.type.displayName + '(' + inspect(this.value) + ')';
   }
 }
 
@@ -213,18 +206,14 @@ export class SlotSpecifier<T> implements Bindable {
     this.value = value;
   }
 
-  [$toDirective](): Directive<unknown> {
+  [$toDirective](part: Part, context: DirectiveContext): Directive<unknown> {
     const { value, slotType } = this;
+    const directive = context.resolveDirective(value, part);
+    return { ...directive, slotType };
+  }
 
-    if (isBindable(value)) {
-      return { ...value[$toDirective](), slotType };
-    } else {
-      return {
-        type: PrimitiveDirective,
-        value,
-        slotType,
-      };
-    }
+  [$inspect](inspect: (value: unknown) => string): string {
+    return this.slotType.name + '(' + inspect(this.value) + ')';
   }
 }
 

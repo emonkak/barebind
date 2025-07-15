@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
-
+import { inspectValue } from '@/debug.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
   DirectiveSpecifier,
-  PrimitiveDirective,
   SlotSpecifier,
 } from '@/directive.js';
 import { PartType } from '@/part.js';
@@ -16,26 +15,6 @@ import {
   MockPrimitive,
   MockSlot,
 } from '../mocks.js';
-
-describe('PrimitiveDirective', () => {
-  describe('resolveBinding()', () => {
-    it('resolve the directive from the primitive value', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = new Runtime(new MockHostEnvironment());
-      const binding = PrimitiveDirective.resolveBinding(value, part, runtime);
-
-      expect(binding.type).toBe(MockPrimitive);
-      expect(binding.value).toBe(value);
-      expect(binding.part).toBe(part);
-    });
-  });
-});
 
 describe('DirectiveSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
@@ -49,6 +28,16 @@ describe('DirectiveSpecifier', () => {
       expect(bindable[$toDirective]()).toBe(bindable);
     });
   });
+
+  describe('[$inspect]()', () => {
+    it('returns a string representation for debugging', () => {
+      const type = new MockDirective();
+      const value = 'foo';
+      const bindable = new DirectiveSpecifier(type, value);
+
+      expect(inspectValue(bindable)).toBe('MockDirective("foo")');
+    });
+  });
 });
 
 describe('SlotSpecifier', () => {
@@ -56,10 +45,17 @@ describe('SlotSpecifier', () => {
     it('returns a directive element with the primitive value', () => {
       const slotType = MockSlot;
       const value = 'foo';
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const runtime = new Runtime(new MockHostEnvironment());
       const bindable = new SlotSpecifier(slotType, value);
-      const directive = bindable[$toDirective]();
+      const directive = bindable[$toDirective](part, runtime);
 
-      expect(directive.type).toBe(PrimitiveDirective);
+      expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
       expect(directive.slotType).toBe(slotType);
     });
@@ -67,12 +63,29 @@ describe('SlotSpecifier', () => {
     it('returns a directive element with the bindable value', () => {
       const slotType = MockSlot;
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const runtime = new Runtime(new MockHostEnvironment());
       const bindable = new SlotSpecifier(slotType, value);
-      const directive = bindable[$toDirective]();
+      const directive = bindable[$toDirective](part, runtime);
 
       expect(directive.type).toBe(value.type);
       expect(directive.value).toBe(value.value);
       expect(directive.slotType).toBe(slotType);
+    });
+  });
+
+  describe('[$inspect]()', () => {
+    it('returns a string representation of the value', () => {
+      const slotType = MockSlot;
+      const value = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const bindable = new SlotSpecifier(slotType, value);
+
+      expect(inspectValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
     });
   });
 });

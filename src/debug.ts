@@ -1,5 +1,6 @@
-import { $toDirective, isBindable } from './directive.js';
 import { type Part, PartType } from './part.js';
+
+export const $inspect: unique symbol = Symbol('$inspect');
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
@@ -7,6 +8,10 @@ const INDENT_STRING = '  ';
 
 // Minimum complexity score required to make a node identifiable.
 const COMPLEXITY_THRESHOLD = 10;
+
+export interface Inspectable {
+  [$inspect](inspect: (value: unknown) => string): string;
+}
 
 export function inspectNode(node: Node, marker: string): string {
   return inspectAround(node, annotateNode(node, marker));
@@ -41,6 +46,9 @@ export function inspectValue(
       }
       seenObjects.push(value);
       try {
+        if (isInspectable(value)) {
+          return value[$inspect]((v) => inspectValue(v, maxDepth, seenObjects));
+        }
         switch (value.constructor) {
           case Array:
             if (
@@ -82,18 +90,6 @@ export function inspectValue(
               : '{}';
           }
           default:
-            if (isBindable(value)) {
-              const directive = value[$toDirective]();
-              return (
-                directive.type.displayName +
-                '(' +
-                inspectValue(directive.value, maxDepth, seenObjects) +
-                ')'
-              );
-            }
-            if (Symbol.toStringTag in value) {
-              return value[Symbol.toStringTag] as string;
-            }
             return value.constructor.name;
         }
       } finally {
@@ -241,6 +237,10 @@ function inspectAround(node: Node, marker: string): string {
   const middleString = INDENT_STRING.repeat(level) + marker;
 
   return precedingString + middleString + followingString;
+}
+
+function isInspectable(value: {}): value is Inspectable {
+  return $inspect in value;
 }
 
 function isSelfClosingTag(element: Element): boolean {
