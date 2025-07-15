@@ -14,12 +14,12 @@ import {
 import { PartType } from '@/part.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { Runtime } from '@/runtime.js';
-import { ChildNodeTemplate } from '@/template/child-node-template.js';
-import { ElementTemplate } from '@/template/element-template.js';
-import { EmptyTemplate } from '@/template/empty-template.js';
-import { FragmentTemplate } from '@/template/fragment-template.js';
+import { ChildNodeTemplate } from '@/template/child-node.js';
+import { ElementTemplate } from '@/template/element.js';
+import { EmptyTemplate } from '@/template/empty.js';
+import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { TextTemplate } from '@/template/text-template.js';
+import { TextTemplate } from '@/template/text.js';
 import {
   MockBindable,
   MockHostEnvironment,

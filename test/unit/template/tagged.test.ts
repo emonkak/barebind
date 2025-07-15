@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { TaggedTemplate } from '@/template/tagged-template.js';
+import { TaggedTemplate } from '@/template/tagged.js';
 import {
   HTML_NAMESPACE_URI,
   MATH_NAMESPACE_URI,

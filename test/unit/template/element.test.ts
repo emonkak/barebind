@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { ElementTemplate, element } from '@/template/element-template.js';
+import { ElementTemplate, element } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import { MockHostEnvironment } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';

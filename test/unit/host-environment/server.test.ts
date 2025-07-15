@@ -15,11 +15,11 @@ import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
-import { ChildNodeTemplate } from '@/template/child-node-template.js';
-import { EmptyTemplate } from '@/template/empty-template.js';
-import { TaggedTemplate } from '@/template/tagged-template.js';
+import { ChildNodeTemplate } from '@/template/child-node.js';
+import { EmptyTemplate } from '@/template/empty.js';
+import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { TextTemplate } from '@/template/text-template.js';
+import { TextTemplate } from '@/template/text.js';
 import { MockCommitContext } from '../../mocks.js';
 import { templateLiteral } from '../../test-utils.js';
 

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
-import { EmptyTemplate } from '@/template/empty-template.js';
+import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockHostEnvironment, MockTemplate } from '../../mocks.js';
 
