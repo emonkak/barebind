@@ -183,12 +183,14 @@ export class MockCoroutine implements Coroutine {
 export class MockDirective<T> implements DirectiveType<T> {
   readonly displayName: string;
 
-  constructor(name: string = this.constructor.name) {
-    this.displayName = name;
+  constructor(displayName: string = this.constructor.name) {
+    this.displayName = displayName;
   }
 
   equals(other: unknown) {
-    return other instanceof MockDirective;
+    return (
+      other instanceof MockDirective && other.displayName === this.displayName
+    );
   }
 
   resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {

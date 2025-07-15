@@ -21,10 +21,7 @@ export class MemoSlot<T> implements Slot<T> {
 
   private _memoizedBinding: Binding<unknown> | null = null;
 
-  private readonly _cachedBindings: Map<
-    DirectiveType<unknown>,
-    Binding<unknown>
-  > = new Map();
+  private _reservedBinding: Binding<unknown> | null = null;
 
   private _dirty = false;
 
@@ -48,6 +45,7 @@ export class MemoSlot<T> implements Slot<T> {
     const directive = isBindable(value)
       ? value[$toDirective]()
       : context.resolveDirective(value, this._pendingBinding.part);
+
     if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
       if (this._dirty || this._pendingBinding.shouldBind(directive.value)) {
         this._pendingBinding.bind(directive.value);
@@ -55,16 +53,21 @@ export class MemoSlot<T> implements Slot<T> {
         this._dirty = true;
       }
     } else {
+      const reservedBinding = this._reservedBinding;
+
       this._pendingBinding.disconnect(context);
-      this._cachedBindings.set(this._pendingBinding.type, this._pendingBinding);
-      const cachedBinding = this._cachedBindings.get(directive.type);
-      if (cachedBinding !== undefined) {
-        if (cachedBinding.shouldBind(directive.value)) {
-          cachedBinding.bind(directive.value);
-          cachedBinding.connect(context);
+      this._reservedBinding = this._pendingBinding;
+
+      if (
+        reservedBinding !== null &&
+        areDirectiveTypesEqual(reservedBinding.type, directive.type)
+      ) {
+        if (reservedBinding.shouldBind(directive.value)) {
+          reservedBinding.bind(directive.value);
+          reservedBinding.connect(context);
           this._dirty = true;
         }
-        this._pendingBinding = cachedBinding;
+        this._pendingBinding = reservedBinding;
       } else {
         this._pendingBinding = directive.type.resolveBinding(
           directive.value,

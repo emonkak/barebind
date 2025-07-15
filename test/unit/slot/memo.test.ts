@@ -44,15 +44,15 @@ describe('MemoSlot', () => {
 
   describe('reconcile()', () => {
     it('updates the binding with a same directive value', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const value1 = new DirectiveSpecifier(new MockDirective(), 'foo');
+      const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(MockPrimitive, value1, part);
+      const binding = new MockBinding(value1.type, value1.value, part);
       const slot = new MemoSlot(binding);
       const runtime = new Runtime(new MockHostEnvironment());
 
@@ -67,14 +67,18 @@ describe('MemoSlot', () => {
 
       expect(shouldBindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value2);
+      expect(bindSpy).toHaveBeenCalledWith(value2.value);
       expect(connectSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledWith(runtime);
       expect(commitSpy).toHaveBeenCalledOnce();
       expect(commitSpy).toHaveBeenCalledWith(runtime);
       expect(debugValueSpy).toHaveBeenCalledOnce();
-      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value2, part);
-      expect(part.node.data).toBe(value2);
+      expect(debugValueSpy).toHaveBeenCalledWith(
+        value2.type,
+        value2.value,
+        part,
+      );
+      expect(part.node.data).toBe(value2.value);
     });
 
     it('updates the binding with a different directive value', () => {
