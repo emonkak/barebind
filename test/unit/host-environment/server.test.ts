@@ -43,12 +43,20 @@ describe('ServerHostEnvironment', () => {
           commit: vi.fn(),
         },
       ];
-      const host = new ServerHostEnvironment(document);
+      const hostEnvironment = new ServerHostEnvironment(document);
       const context = new MockCommitContext();
 
-      host.commitEffects(mutationEffects, CommitPhase.Mutation, context);
-      host.commitEffects(layoutEffects, CommitPhase.Layout, context);
-      host.commitEffects(passiveEffects, CommitPhase.Layout, context);
+      hostEnvironment.commitEffects(
+        mutationEffects,
+        CommitPhase.Mutation,
+        context,
+      );
+      hostEnvironment.commitEffects(layoutEffects, CommitPhase.Layout, context);
+      hostEnvironment.commitEffects(
+        passiveEffects,
+        CommitPhase.Layout,
+        context,
+      );
 
       expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
       expect(mutationEffects[0].commit).toHaveBeenCalledWith(context);
@@ -60,10 +68,10 @@ describe('ServerHostEnvironment', () => {
 
   describe('createTemplate()', () => {
     it('creates a TaggedTemplate', () => {
-      const host = new ServerHostEnvironment(document);
+      const hostEnvironment = new ServerHostEnvironment(document);
       const { strings, values } =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
-      const template = host.createTemplate(
+      const template = hostEnvironment.createTemplate(
         strings,
         values,
         TEMPLATE_PLACEHOLDER,
@@ -93,8 +101,8 @@ describe('ServerHostEnvironment', () => {
     it.each([[templateLiteral``], [templateLiteral` `]])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
-        const host = new ServerHostEnvironment(document);
-        const template = host.createTemplate(
+        const hostEnvironment = new ServerHostEnvironment(document);
+        const template = hostEnvironment.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -114,8 +122,8 @@ describe('ServerHostEnvironment', () => {
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
-        const host = new ServerHostEnvironment(document);
-        const template = host.createTemplate(
+        const hostEnvironment = new ServerHostEnvironment(document);
+        const template = hostEnvironment.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -133,8 +141,8 @@ describe('ServerHostEnvironment', () => {
     ])(
       'should create a TextTemplate if there is a only text value',
       ({ strings, values }) => {
-        const host = new ServerHostEnvironment(document);
-        const template = host.createTemplate(
+        const hostEnvironment = new ServerHostEnvironment(document);
+        const template = hostEnvironment.createTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -150,8 +158,8 @@ describe('ServerHostEnvironment', () => {
 
   describe('getCurrentPriority()', () => {
     it('always returns "user-blocking"', () => {
-      const host = new ServerHostEnvironment(document);
-      expect(host.getCurrentPriority()).toBe('user-blocking');
+      const hostEnvironment = new ServerHostEnvironment(document);
+      expect(hostEnvironment.getCurrentPriority()).toBe('user-blocking');
     });
   });
 
@@ -161,11 +169,11 @@ describe('ServerHostEnvironment', () => {
     });
 
     it('schedules a callback using setTimeout()', async () => {
-      const host = new ServerHostEnvironment(document);
+      const hostEnvironment = new ServerHostEnvironment(document);
       const callback = vi.fn();
       const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-      await host.requestCallback(callback);
+      await hostEnvironment.requestCallback(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveBeenCalledWith();
@@ -176,11 +184,11 @@ describe('ServerHostEnvironment', () => {
     it.each([['user-blocking'], ['user-visible'], ['background']] as const)(
       'schedules a callback with an arbitrary priority using setTimeout()',
       async (priority) => {
-        const host = new ServerHostEnvironment(document);
+        const hostEnvironment = new ServerHostEnvironment(document);
         const callback = vi.fn();
         const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-        await host.requestCallback(callback, { priority });
+        await hostEnvironment.requestCallback(callback, { priority });
 
         expect(callback).toHaveBeenCalledOnce();
         expect(callback).toHaveBeenCalledWith();
@@ -281,9 +289,11 @@ describe('ServerHostEnvironment', () => {
     ] as const)(
       'resolves the Primitive from an arbitrary part',
       (value, part, expectedPrimitive) => {
-        const host = new ServerHostEnvironment(document);
+        const hostEnvironment = new ServerHostEnvironment(document);
 
-        expect(host.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+        expect(hostEnvironment.resolvePrimitive(value, part)).toBe(
+          expectedPrimitive,
+        );
       },
     );
 
@@ -327,11 +337,13 @@ describe('ServerHostEnvironment', () => {
     ] as const)(
       'resolves the Primitive from special attribute parts',
       (value, part, expectedPrimitive) => {
-        const host = new ServerHostEnvironment(document);
+        const hostEnvironment = new ServerHostEnvironment(document);
 
-        expect(host.resolvePrimitive(value, part)).toBe(expectedPrimitive);
+        expect(hostEnvironment.resolvePrimitive(value, part)).toBe(
+          expectedPrimitive,
+        );
         expect(
-          host.resolvePrimitive(value, {
+          hostEnvironment.resolvePrimitive(value, {
             ...part,
             name: part.name.toUpperCase(),
           }),
@@ -411,19 +423,21 @@ describe('ServerHostEnvironment', () => {
     ] as const)(
       'resolves the SlotType from an arbitrary part',
       (value, part, expectedSlotType) => {
-        const host = new ServerHostEnvironment(document);
+        const hostEnvironment = new ServerHostEnvironment(document);
 
-        expect(host.resolveSlotType(value, part)).toBe(expectedSlotType);
+        expect(hostEnvironment.resolveSlotType(value, part)).toBe(
+          expectedSlotType,
+        );
       },
     );
   });
 
   describe('startViewTransition()', () => {
     it('invokes the callback as a microtask', async () => {
-      const host = new ServerHostEnvironment(document);
+      const hostEnvironment = new ServerHostEnvironment(document);
       const callback = vi.fn();
 
-      await host.startViewTransition(callback);
+      await hostEnvironment.startViewTransition(callback);
 
       expect(callback).toHaveBeenCalledOnce();
     });
@@ -435,10 +449,10 @@ describe('ServerHostEnvironment', () => {
     });
 
     it('waits until the timer to be executed', async () => {
-      const host = new ServerHostEnvironment(document);
+      const hostEnvironment = new ServerHostEnvironment(document);
       const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
 
-      await host.yieldToMain();
+      await hostEnvironment.yieldToMain();
 
       expect(setTimeoutSpy).toHaveBeenCalledOnce();
       expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));

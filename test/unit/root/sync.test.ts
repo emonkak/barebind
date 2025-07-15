@@ -9,8 +9,8 @@ describe('SyncRoot', () => {
     it('adds the observer to the runtime', () => {
       const value = 'foo';
       const container = document.createElement('div');
-      const host = new MockHostEnvironment();
-      const root = createSyncRoot(value, container, host);
+      const hostEnvironment = new MockHostEnvironment();
+      const root = createSyncRoot(value, container, hostEnvironment);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -45,8 +45,8 @@ describe('SyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = document.createElement('div');
-      const host = new MockHostEnvironment();
-      const root = createSyncRoot(value1, container, host);
+      const hostEnvironment = new MockHostEnvironment();
+      const root = createSyncRoot(value1, container, hostEnvironment);
 
       root.mount();
 
@@ -67,8 +67,8 @@ describe('SyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
-      const host = new MockHostEnvironment();
-      const root = createSyncRoot(value1, container, host);
+      const hostEnvironment = new MockHostEnvironment();
+      const root = createSyncRoot(value1, container, hostEnvironment);
 
       root.hydrate();
 

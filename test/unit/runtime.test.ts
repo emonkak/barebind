@@ -126,9 +126,12 @@ describe('Runtime', () => {
       const runtime = new Runtime(new MockHostEnvironment());
       const unobserve = runtime.observe(observer);
 
-      const requestCallbackSpy = vi.spyOn(runtime['_host'], 'requestCallback');
+      const requestCallbackSpy = vi.spyOn(
+        runtime['_hostEnvironment'],
+        'requestCallback',
+      );
       const startViewTransitionSpy = vi.spyOn(
-        runtime['_host'],
+        runtime['_hostEnvironment'],
         'startViewTransition',
       );
 
@@ -569,7 +572,7 @@ describe('Runtime', () => {
       const runtime = new Runtime(new MockHostEnvironment());
 
       const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_host'],
+        runtime['_hostEnvironment'],
         'resolvePrimitive',
       );
 
@@ -597,7 +600,10 @@ describe('Runtime', () => {
       };
       const runtime = new Runtime(new MockHostEnvironment());
 
-      const resolveSlotSpy = vi.spyOn(runtime['_host'], 'resolveSlotType');
+      const resolveSlotSpy = vi.spyOn(
+        runtime['_hostEnvironment'],
+        'resolveSlotType',
+      );
 
       const slot = runtime.resolveSlot(value, part);
 
@@ -620,7 +626,7 @@ describe('Runtime', () => {
       const runtime = new Runtime(new MockHostEnvironment());
 
       const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_host'],
+        runtime['_hostEnvironment'],
         'resolvePrimitive',
       );
 

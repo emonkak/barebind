@@ -90,7 +90,7 @@ interface UpdateFrame {
 }
 
 export class Runtime implements CommitContext, UpdateContext {
-  private readonly _host: HostEnvironment;
+  private readonly _hostEnvironment: HostEnvironment;
 
   private readonly _updateFrame: UpdateFrame;
 
@@ -104,7 +104,7 @@ export class Runtime implements CommitContext, UpdateContext {
     scope: Scope = new Scope(null),
     state: RuntimeState = createRuntimeState(),
   ) {
-    this._host = host;
+    this._hostEnvironment = host;
     this._updateFrame = updateFrame;
     this._scope = scope;
     this._state = state;
@@ -145,7 +145,12 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   enterScope(scope: Scope): Runtime {
-    return new Runtime(this._host, this._updateFrame, scope, this._state);
+    return new Runtime(
+      this._hostEnvironment,
+      this._updateFrame,
+      scope,
+      this._state,
+    );
   }
 
   expandLiterals<T>(
@@ -193,7 +198,7 @@ export class Runtime implements CommitContext, UpdateContext {
           break;
         }
 
-        await this._host.yieldToMain();
+        await this._hostEnvironment.yieldToMain();
       }
 
       if (!observers.isEmpty()) {
@@ -212,15 +217,15 @@ export class Runtime implements CommitContext, UpdateContext {
       };
 
       if (options.transition) {
-        await this._host.startViewTransition(callback);
+        await this._hostEnvironment.startViewTransition(callback);
       } else {
-        await this._host.requestCallback(callback, {
+        await this._hostEnvironment.requestCallback(callback, {
           priority: 'user-blocking',
         });
       }
 
       if (passiveEffects.length > 0) {
-        await this._host.requestCallback(
+        await this._hostEnvironment.requestCallback(
           () => {
             this._commitEffects(passiveEffects, CommitPhase.Passive);
           },
@@ -342,7 +347,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   resolveDirective<T>(value: T, part: Part): Directive<T> {
-    const type = this._host.resolvePrimitive(value, part);
+    const type = this._hostEnvironment.resolvePrimitive(value, part);
     type.ensureValue?.(value, part);
     return { type: type as Primitive<T>, value };
   }
@@ -353,7 +358,7 @@ export class Runtime implements CommitContext, UpdateContext {
       : this.resolveDirective(value, part);
     const binding = directive.type.resolveBinding(directive.value, part, this);
     const slotType =
-      directive.slotType ?? this._host.resolveSlotType(value, part);
+      directive.slotType ?? this._hostEnvironment.resolveSlotType(value, part);
     return new slotType(binding);
   }
 
@@ -366,7 +371,7 @@ export class Runtime implements CommitContext, UpdateContext {
     let template = cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._host.createTemplate(
+      template = this._hostEnvironment.createTemplate(
         strings,
         binds,
         templatePlaceholder,
@@ -381,7 +386,7 @@ export class Runtime implements CommitContext, UpdateContext {
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
     const { coroutineStates } = this._state;
     const completeOptions = {
-      priority: options?.priority ?? this._host.getCurrentPriority(),
+      priority: options?.priority ?? this._hostEnvironment.getCurrentPriority(),
       transition: options?.transition ?? false,
     };
     const lanes = getScheduleLanesFromOptions(completeOptions);
@@ -405,7 +410,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
     const taskNode = coroutineState.pendingTasks.pushBack({
       lanes,
-      promise: this._host.requestCallback(() => {
+      promise: this._hostEnvironment.requestCallback(() => {
         coroutineState.pendingTasks.remove(taskNode);
 
         if ((coroutineState.pendingLanes & lanes) === NO_LANES) {
@@ -459,7 +464,7 @@ export class Runtime implements CommitContext, UpdateContext {
       });
     }
 
-    this._host.commitEffects(effects, phase, this);
+    this._hostEnvironment.commitEffects(effects, phase, this);
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -483,7 +488,12 @@ export class Runtime implements CommitContext, UpdateContext {
 
     this._state.updateCount = id;
 
-    return new Runtime(this._host, updateFrame, this._scope, this._state);
+    return new Runtime(
+      this._hostEnvironment,
+      updateFrame,
+      this._scope,
+      this._state,
+    );
   }
 
   private _notifyObservers(event: RuntimeEvent): void {
