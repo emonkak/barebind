@@ -52,13 +52,13 @@ export type VNode =
 
 export type VElementType<TProps> = ComponentType<TProps> | string;
 
-export type ElementProps = Record<string, unknown> & { children?: unknown };
-
 export type Ref<T> =
   | { current: T }
   | ((current: T) => Cleanup | void)
   | null
   | undefined;
+
+type ElementProps = Record<string, unknown>;
 
 type NormalizeProps<TProps> = { children: VNode[] } & Omit<TProps, 'key'>;
 
@@ -72,7 +72,7 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateDirective<TBinds extends readonly unknown[]> {
+interface TemplateSpecifier<TBinds extends readonly unknown[]> {
   type: Template<TBinds>;
   value: TBinds;
 }
@@ -80,7 +80,7 @@ interface TemplateDirective<TBinds extends readonly unknown[]> {
 export const ElementDirective: DirectiveType<ElementProps> = {
   displayName: 'ElementDirective',
   resolveBinding(
-    props: ElementProps,
+    props: {},
     part: Part,
     _context: DirectiveContext,
   ): ElementBinding {
@@ -94,19 +94,19 @@ export const ElementDirective: DirectiveType<ElementProps> = {
   },
 };
 
-export function createElement(
+export function createElement<TProps extends {}>(
   type: string,
-  props?: ElementProps,
+  props?: TProps,
   ...children: VNode[]
-): VElement<NormalizeProps<ElementProps>>;
-export function createElement<const TProps extends ElementProps>(
+): VElement<NormalizeProps<TProps>>;
+export function createElement<TProps extends {}>(
   type: ComponentType<NormalizeProps<TProps>>,
   props: TProps,
   ...children: VNode[]
 ): VElement<NormalizeProps<TProps>>;
-export function createElement<const TProps extends ElementProps>(
+export function createElement<TProps extends {}>(
   type: VElementType<NormalizeProps<TProps>>,
-  props: TProps = {} as TProps,
+  props: TProps & { key?: unknown } = {} as TProps,
   ...children: VNode[]
 ): VElement<NormalizeProps<TProps>> {
   const { key, ...restProps } = props;
@@ -117,9 +117,7 @@ export function createFragment(children: VNode[]): VStaticFragment {
   return new VStaticFragment(children);
 }
 
-export class VElement<TProps extends ElementProps = ElementProps>
-  implements Bindable<unknown>
-{
+export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
   readonly type: VElementType<TProps>;
 
   readonly props: TProps;
@@ -573,9 +571,9 @@ function resolveChild(child: VNode): Bindable<unknown> {
 
 function resolveElement(
   type: string,
-  props: ElementProps,
+  props: { children?: unknown },
   hasStaticChildren: boolean,
-): TemplateDirective<readonly [unknown, unknown]> {
+): TemplateSpecifier<readonly [unknown, unknown]> {
   const element = new DirectiveSpecifier(ElementDirective, props);
   const children = Array.isArray(props.children)
     ? hasStaticChildren

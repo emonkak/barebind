@@ -1,6 +1,5 @@
 import type { StyleProperties } from '../primitive/style.js';
 import {
-  type ElementProps,
   type Ref,
   VElement,
   type VElementType,
@@ -11,9 +10,9 @@ import {
 
 export const Fragment: unique symbol = Symbol('Fragment');
 
-export function jsx<const TProps extends ElementProps>(
+export function jsx<TProps extends {}>(
   type: VElementType<TProps> | typeof Fragment,
-  props: TProps,
+  props: TProps & { children?: unknown },
   key?: unknown,
 ): VElement<TProps> | VFragment {
   return type === Fragment
@@ -21,9 +20,9 @@ export function jsx<const TProps extends ElementProps>(
     : new VElement(type, props, key);
 }
 
-export function jsxs<const TProps extends ElementProps>(
+export function jsxs<TProps extends {}>(
   type: VElementType<TProps> | typeof Fragment,
-  props: TProps,
+  props: TProps & { children?: unknown },
   key?: unknown,
 ): VElement<TProps> | VStaticFragment {
   return type === Fragment
