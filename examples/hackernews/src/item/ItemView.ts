@@ -17,7 +17,7 @@ export function ItemView({ item }: ItemProps, context: RenderContext): unknown {
         </a>
         <${item.domain ? context.html`<span class="host">(${item.domain})</span>` : null}>
         <div class="meta">
-          ${item.points} points | by <a href=${`#/users/${item.user}`}>${item.user}</a> ${item.time_ago} ago
+          ${item.points} points | by <a href=${`#/users/${item.user}`}>${item.user}</a> ${item.time_ago}
         </div>
       </div>
       <div class="item-view-comments">

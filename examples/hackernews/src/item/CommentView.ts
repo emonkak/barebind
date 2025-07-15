@@ -14,7 +14,7 @@ export function CommentView(
   return context.html`
     <li class="comment">
       <div class="by">
-        <a href=${`#/users/${comment.user}`}>${comment.user}</a> ${comment.time_ago} ago
+        <a href=${`#/users/${comment.user}`}>${comment.user}</a> ${comment.time_ago}
       </div>
       <div class="text" .innerHTML=${comment.content}></div>
       <${
