@@ -61,10 +61,6 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
     return this.value;
   }
 
-  toJSON(): T {
-    return this.value;
-  }
-
   valueOf(): T {
     return this.value;
   }

@@ -83,15 +83,6 @@ describe('Signal', () => {
     });
   });
 
-  describe('toJSON()', () => {
-    it('returns the signal value', () => {
-      const value = 'foo';
-      const signal = new Atom(value);
-
-      expect(signal.toJSON()).toBe(value);
-    });
-  });
-
   describe('valueOf()', () => {
     it('returns the signal value', () => {
       const value = 'foo';
