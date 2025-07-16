@@ -127,12 +127,14 @@ export class ComponentBinding<TProps, TResult>
       lanes,
       this,
     );
+
     if (this._slot !== null) {
       this._slot.reconcile(value, subcontext);
     } else {
       this._slot = subcontext.resolveSlot(value, this._part);
       this._slot.connect(subcontext);
     }
+
     return pendingLanes;
   }
 
@@ -153,9 +155,10 @@ export class ComponentBinding<TProps, TResult>
       ALL_LANES,
       this,
     );
-    this._parentScope = parentScope;
+
     this._slot = subcontext.resolveSlot(value, this._part);
     this._slot.hydrate(hydrationTree, subcontext);
+    this._parentScope = scope;
   }
 
   connect(context: UpdateContext): void {
