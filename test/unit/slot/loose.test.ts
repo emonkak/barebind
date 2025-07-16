@@ -7,9 +7,9 @@ import { Runtime } from '@/runtime.js';
 import { LooseSlot, loose } from '@/slot/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
+  MockBackend,
   MockBinding,
   MockDirective,
-  MockHostEnvironment,
   MockPrimitive,
 } from '../../mocks.js';
 
@@ -54,7 +54,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -88,7 +88,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -145,7 +145,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -184,7 +184,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -218,7 +218,7 @@ describe('LooseSlot', () => {
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const hydrationTree = new HydrationTree(document.createElement('div'));
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -253,7 +253,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -287,7 +287,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
@@ -322,7 +322,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');

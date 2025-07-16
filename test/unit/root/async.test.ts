@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createAsyncRoot } from '@/root/async.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('AsyncRoot', () => {
@@ -9,8 +9,8 @@ describe('AsyncRoot', () => {
     it('adds the observer to the runtime', async () => {
       const value = 'foo';
       const container = document.createElement('div');
-      const hostEnvironment = new MockHostEnvironment();
-      const root = createAsyncRoot(value, container, hostEnvironment);
+      const backend = new MockBackend();
+      const root = createAsyncRoot(value, container, backend);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -45,14 +45,11 @@ describe('AsyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = document.createElement('div');
-      const hostEnvironment = new MockHostEnvironment();
-      const root = createAsyncRoot(value1, container, hostEnvironment);
+      const backend = new MockBackend();
+      const root = createAsyncRoot(value1, container, backend);
 
-      const requestCallbackSpy = vi.spyOn(hostEnvironment, 'requestCallback');
-      const startViewTransitionSpy = vi.spyOn(
-        hostEnvironment,
-        'startViewTransition',
-      );
+      const requestCallbackSpy = vi.spyOn(backend, 'requestCallback');
+      const startViewTransitionSpy = vi.spyOn(backend, 'startViewTransition');
 
       await root.mount();
 
@@ -103,8 +100,8 @@ describe('AsyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
-      const hostEnvironment = new MockHostEnvironment();
-      const root = createAsyncRoot(value1, container, hostEnvironment);
+      const backend = new MockBackend();
+      const root = createAsyncRoot(value1, container, backend);
 
       await root.hydrate();
 

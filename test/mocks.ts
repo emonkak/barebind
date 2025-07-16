@@ -3,6 +3,7 @@
 import {
   $toDirective,
   areDirectiveTypesEqual,
+  type Backend,
   type Bindable,
   type Binding,
   type CommitContext,
@@ -13,7 +14,6 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type HostEnvironment,
   type Lanes,
   NO_LANES,
   type Primitive,
@@ -224,7 +224,7 @@ export class MockCommitContext implements CommitContext {
   ): void {}
 }
 
-export class MockHostEnvironment implements HostEnvironment {
+export class MockBackend implements Backend {
   commitEffects(
     effects: Effect[],
     _phase: CommitPhase,

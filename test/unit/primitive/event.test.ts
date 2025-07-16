@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/part.js';
 import { EventBinding, EventPrimitive } from '@/primitive/event.js';
 import { Runtime } from '@/runtime.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 
 describe('EventPrimitive', () => {
   describe('name', () => {
@@ -55,7 +55,7 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const binding = EventPrimitive.resolveBinding(listener, part, runtime);
 
       expect(binding.type).toBe(EventPrimitive);
@@ -69,7 +69,7 @@ describe('EventPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       expect(() =>
         EventPrimitive.resolveBinding(listener, part, runtime),
@@ -101,7 +101,7 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(listener1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -121,7 +121,7 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(listener1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
@@ -160,7 +160,7 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(listener1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
@@ -213,7 +213,7 @@ describe('EventBinding', () => {
           name: 'click',
         };
         const binding = new EventBinding(listener1, part);
-        const runtime = new Runtime(new MockHostEnvironment());
+        const runtime = new Runtime(new MockBackend());
 
         const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
         const removeEventListenerSpy = vi.spyOn(
@@ -256,7 +256,7 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(listener, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
@@ -276,7 +276,7 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(listener, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');

@@ -5,7 +5,7 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockHostEnvironment, MockSlot, MockTemplate } from '../../mocks.js';
+import { MockBackend, MockSlot, MockTemplate } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('ChildNodeTemplate', () => {
@@ -41,7 +41,7 @@ describe('ChildNodeTemplate', () => {
         document.createComment(''),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -79,7 +79,7 @@ describe('ChildNodeTemplate', () => {
       };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
 
       expect(() => {
@@ -97,7 +97,7 @@ describe('ChildNodeTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.render(binds, part, runtime);
 

@@ -8,7 +8,7 @@ import { CurrentLocation } from '@/extensions/router/location.js';
 import { RelativeURL } from '@/extensions/router/url.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { MockCoroutine, MockHostEnvironment } from '../../../mocks.js';
+import { MockBackend, MockCoroutine } from '../../../mocks.js';
 import { cleanupHooks, createElement } from '../../../test-utils.js';
 
 describe('HashLocation', () => {
@@ -21,7 +21,7 @@ describe('HashLocation', () => {
       [],
       ALL_LANES,
       new MockCoroutine(),
-      new Runtime(new MockHostEnvironment()),
+      new Runtime(new MockBackend()),
     );
   });
 

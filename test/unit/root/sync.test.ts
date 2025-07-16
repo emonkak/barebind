@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createSyncRoot } from '@/root/sync.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('SyncRoot', () => {
@@ -9,8 +9,8 @@ describe('SyncRoot', () => {
     it('adds the observer to the runtime', () => {
       const value = 'foo';
       const container = document.createElement('div');
-      const hostEnvironment = new MockHostEnvironment();
-      const root = createSyncRoot(value, container, hostEnvironment);
+      const backend = new MockBackend();
+      const root = createSyncRoot(value, container, backend);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -45,8 +45,8 @@ describe('SyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = document.createElement('div');
-      const hostEnvironment = new MockHostEnvironment();
-      const root = createSyncRoot(value1, container, hostEnvironment);
+      const backend = new MockBackend();
+      const root = createSyncRoot(value1, container, backend);
 
       root.mount();
 
@@ -67,8 +67,8 @@ describe('SyncRoot', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
-      const hostEnvironment = new MockHostEnvironment();
-      const root = createSyncRoot(value1, container, hostEnvironment);
+      const backend = new MockBackend();
+      const root = createSyncRoot(value1, container, backend);
 
       root.hydrate();
 

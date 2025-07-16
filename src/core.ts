@@ -207,7 +207,7 @@ export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
 
-export interface HostEnvironment {
+export interface Backend {
   commitEffects(
     effects: Effect[],
     phase: CommitPhase,

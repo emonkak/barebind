@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/part.js';
 import { TextBinding, TextPrimitive } from '@/primitive/text.js';
 import { Runtime } from '@/runtime.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 
 describe('TextPrimitive', () => {
   describe('name', () => {
@@ -21,7 +21,7 @@ describe('TextPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const binding = TextPrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(TextPrimitive);
@@ -35,7 +35,7 @@ describe('TextPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
         'TextPrimitive must be used in a text part,',
@@ -69,7 +69,7 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -90,7 +90,7 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<string | null>(value1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -114,7 +114,7 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<number | null>(value1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -139,7 +139,7 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -161,7 +161,7 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 

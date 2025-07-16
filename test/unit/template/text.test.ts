@@ -5,7 +5,7 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('TextTemplate', () => {
@@ -40,7 +40,7 @@ describe('TextTemplate', () => {
       };
       const hydrationRoot = createElement('div', {}, 'foo');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -77,7 +77,7 @@ describe('TextTemplate', () => {
       };
       const hydrationRoot = createElement('div', {});
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       expect(() => {
         template.hydrate(binds, part, hydrationTree, runtime);
@@ -95,7 +95,7 @@ describe('TextTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);

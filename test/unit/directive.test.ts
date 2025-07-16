@@ -6,8 +6,8 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
+  MockBackend,
   MockDirective,
-  MockHostEnvironment,
   MockPrimitive,
   MockSlot,
 } from '../mocks.js';
@@ -47,7 +47,7 @@ describe('SlotSpecifier', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective](part, runtime);
 
@@ -65,7 +65,7 @@ describe('SlotSpecifier', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective](part, runtime);
 

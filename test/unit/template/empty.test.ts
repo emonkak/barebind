@@ -5,7 +5,7 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockHostEnvironment, MockTemplate } from '../../mocks.js';
+import { MockBackend, MockTemplate } from '../../mocks.js';
 
 describe('EmptyTemplate', () => {
   describe('arity', () => {
@@ -35,7 +35,7 @@ describe('EmptyTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationTree = new HydrationTree(document.createElement('div'));
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new EmptyTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -58,7 +58,7 @@ describe('EmptyTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new EmptyTemplate();
       const { childNodes, slots } = template.render(binds, part, runtime);
 

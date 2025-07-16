@@ -1,10 +1,10 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import type {
+  Backend,
   CommitContext,
   CommitPhase,
   Effect,
-  HostEnvironment,
   Primitive,
   RequestCallbackOptions,
   SlotType,
@@ -33,7 +33,7 @@ import { TextTemplate } from '../template/text.js';
 const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
 const EMPTY_TEMPLATE = new EmptyTemplate();
 
-export class BrowserHostEnvironment implements HostEnvironment {
+export class BrowserBackend implements Backend {
   commitEffects(
     effects: Effect[],
     _phase: CommitPhase,

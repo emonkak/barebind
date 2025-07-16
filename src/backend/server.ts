@@ -1,10 +1,10 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import {
+  type Backend,
   type CommitContext,
   CommitPhase,
   type Effect,
-  type HostEnvironment,
   type Primitive,
   type RequestCallbackOptions,
   type SlotType,
@@ -31,7 +31,7 @@ import { TextTemplate } from '../template/text.js';
 const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
 const EMPTY_TEMPLATE = new EmptyTemplate();
 
-export class ServerHostEnvironment implements HostEnvironment {
+export class ServerBackend implements Backend {
   private readonly _document: Document;
 
   constructor(document: Document) {

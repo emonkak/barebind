@@ -10,7 +10,7 @@ import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockCoroutine, MockHostEnvironment, MockSlot } from '../../mocks.js';
+import { MockBackend, MockCoroutine, MockSlot } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('component()', () => {
@@ -54,7 +54,7 @@ describe('FunctionComponent', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       component.render(props, session);
@@ -102,7 +102,7 @@ describe('FunctionComponent', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const binding = component.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(component);
@@ -139,7 +139,7 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
@@ -166,7 +166,7 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = createElement('div', {}, part.node);
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.hydrate(hydrationTree, runtime);
       runtime.enqueueMutationEffect(binding);
@@ -211,7 +211,7 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = document.createElement('div');
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       runtime.enqueueCoroutine(binding);
       runtime.enqueueMutationEffect(binding);
@@ -241,7 +241,7 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
@@ -287,7 +287,7 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);

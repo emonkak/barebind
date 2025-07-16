@@ -7,9 +7,9 @@ import { Runtime } from '@/runtime.js';
 import { StrictSlot, strict } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
+  MockBackend,
   MockBinding,
   MockDirective,
-  MockHostEnvironment,
   MockPrimitive,
 } from '../../mocks.js';
 
@@ -54,7 +54,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -87,7 +87,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -126,7 +126,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -158,7 +158,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       expect(() => {
         slot.reconcile(value2, runtime);
@@ -179,7 +179,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const hydrationTree = new HydrationTree(document.createElement('div'));
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
@@ -215,7 +215,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -249,7 +249,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');

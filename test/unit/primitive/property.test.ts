@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/part.js';
 import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
 import { Runtime } from '@/runtime.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 
 describe('PropertyPrimitive', () => {
   describe('name', () => {
@@ -21,7 +21,7 @@ describe('PropertyPrimitive', () => {
         name: 'innerHTML',
         defaultValue: '',
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(PropertyPrimitive);
@@ -35,7 +35,7 @@ describe('PropertyPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       expect(() =>
         PropertyPrimitive.resolveBinding(value, part, runtime),
@@ -69,7 +69,7 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -90,7 +90,7 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -115,7 +115,7 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -135,7 +135,7 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       const setInnerHTMLSpy = vi.spyOn(part.node, 'innerHTML', 'set');
 

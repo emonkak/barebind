@@ -3,6 +3,7 @@
 import {
   $toDirective,
   ALL_LANES,
+  type Backend,
   type CommitContext,
   CommitPhase,
   type Component,
@@ -14,7 +15,6 @@ import {
   getFlushLanesFromOptions,
   getScheduleLanesFromOptions,
   type Hook,
-  type HostEnvironment,
   isBindable,
   type Lanes,
   NO_LANES,
@@ -91,7 +91,7 @@ interface UpdateFrame {
 }
 
 export class Runtime implements CommitContext, UpdateContext {
-  private readonly _hostEnvironment: HostEnvironment;
+  private readonly _backend: Backend;
 
   private readonly _updateFrame: UpdateFrame;
 
@@ -100,12 +100,12 @@ export class Runtime implements CommitContext, UpdateContext {
   private readonly _state: RuntimeState;
 
   constructor(
-    host: HostEnvironment,
+    backend: Backend,
     updateFrame: UpdateFrame = createEmptyUpdateFrame(0),
     scope: Scope = new Scope(null),
     state: RuntimeState = createRuntimeState(),
   ) {
-    this._hostEnvironment = host;
+    this._backend = backend;
     this._updateFrame = updateFrame;
     this._scope = scope;
     this._state = state;
@@ -146,12 +146,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   enterScope(scope: Scope): Runtime {
-    return new Runtime(
-      this._hostEnvironment,
-      this._updateFrame,
-      scope,
-      this._state,
-    );
+    return new Runtime(this._backend, this._updateFrame, scope, this._state);
   }
 
   expandLiterals<T>(
@@ -199,7 +194,7 @@ export class Runtime implements CommitContext, UpdateContext {
           break;
         }
 
-        await this._hostEnvironment.yieldToMain();
+        await this._backend.yieldToMain();
       }
 
       if (!observers.isEmpty()) {
@@ -218,15 +213,15 @@ export class Runtime implements CommitContext, UpdateContext {
       };
 
       if (options.transition) {
-        await this._hostEnvironment.startViewTransition(callback);
+        await this._backend.startViewTransition(callback);
       } else {
-        await this._hostEnvironment.requestCallback(callback, {
+        await this._backend.requestCallback(callback, {
           priority: 'user-blocking',
         });
       }
 
       if (passiveEffects.length > 0) {
-        await this._hostEnvironment.requestCallback(
+        await this._backend.requestCallback(
           () => {
             this._commitEffects(passiveEffects, CommitPhase.Passive);
           },
@@ -351,7 +346,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (isBindable(value)) {
       return value[$toDirective](part, this);
     } else {
-      const type = this._hostEnvironment.resolvePrimitive(value, part);
+      const type = this._backend.resolvePrimitive(value, part);
       type.ensureValue?.(value, part);
       return { type: type as Primitive<T>, value };
     }
@@ -361,7 +356,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const directive = this.resolveDirective(value, part);
     const binding = directive.type.resolveBinding(directive.value, part, this);
     const slotType =
-      directive.slotType ?? this._hostEnvironment.resolveSlotType(value, part);
+      directive.slotType ?? this._backend.resolveSlotType(value, part);
     return new slotType(binding);
   }
 
@@ -374,7 +369,7 @@ export class Runtime implements CommitContext, UpdateContext {
     let template = cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._hostEnvironment.createTemplate(
+      template = this._backend.createTemplate(
         strings,
         binds,
         templatePlaceholder,
@@ -389,7 +384,7 @@ export class Runtime implements CommitContext, UpdateContext {
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
     const { coroutineStates } = this._state;
     const completeOptions = {
-      priority: options?.priority ?? this._hostEnvironment.getCurrentPriority(),
+      priority: options?.priority ?? this._backend.getCurrentPriority(),
       transition: options?.transition ?? false,
     };
     const lanes = getScheduleLanesFromOptions(completeOptions);
@@ -413,7 +408,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
     const taskNode = coroutineState.pendingTasks.pushBack({
       lanes,
-      promise: this._hostEnvironment.requestCallback(() => {
+      promise: this._backend.requestCallback(() => {
         coroutineState.pendingTasks.remove(taskNode);
 
         if ((coroutineState.pendingLanes & lanes) === NO_LANES) {
@@ -467,7 +462,7 @@ export class Runtime implements CommitContext, UpdateContext {
       });
     }
 
-    this._hostEnvironment.commitEffects(effects, phase, this);
+    this._backend.commitEffects(effects, phase, this);
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
@@ -491,12 +486,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
     this._state.updateCount = id;
 
-    return new Runtime(
-      this._hostEnvironment,
-      updateFrame,
-      this._scope,
-      this._state,
-    );
+    return new Runtime(this._backend, updateFrame, this._scope, this._state);
   }
 
   private _notifyObservers(event: RuntimeEvent): void {

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { PartType } from '@/part.js';
 import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
 import { Runtime } from '@/runtime.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('StylePrimitive', () => {
@@ -56,7 +56,7 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const runtime = new Runtime(new MockHostEnvironment());
+        const runtime = new Runtime(new MockBackend());
         const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
         expect(binding.type).toBe(StylePrimitive);
@@ -72,7 +72,7 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: 'style',
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
         'StylePrimitive must be used in a ":style" attribute part,',
@@ -104,7 +104,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -133,7 +133,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -159,7 +159,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -180,7 +180,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -209,7 +209,7 @@ describe('StyleBinding', () => {
         name: ':classlist',
       };
       const binding = new StyleBinding(style, part);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

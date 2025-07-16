@@ -4,7 +4,7 @@ import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { ElementTemplate, element } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
-import { MockHostEnvironment } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 
 describe('element()', () => {
@@ -53,7 +53,7 @@ describe('ElementTemplate', () => {
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
       const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new ElementTemplate('div');
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -97,7 +97,7 @@ describe('ElementTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new ElementTemplate('div');
       const { childNodes, slots } = template.render(binds, part, runtime);
 
@@ -139,7 +139,7 @@ describe('ElementTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockHostEnvironment());
+      const runtime = new Runtime(new MockBackend());
       const template = new ElementTemplate('svg');
       const { childNodes, slots } = template.render(binds, part, runtime);
 

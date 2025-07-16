@@ -39,8 +39,8 @@
     {
       "includes": [
         "src/**",
-        "!src/extensions/router/*.ts",
-        "!src/host-environment/browser.ts"
+        "!src/backend/browser.ts",
+        "!src/extensions/router/*.ts"
       ],
       "linter": {
         "rules": {

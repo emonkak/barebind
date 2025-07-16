@@ -3,7 +3,7 @@ import { ALL_LANES, Lane, NO_LANES } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { Literal } from '@/template-literal.js';
-import { MockCoroutine, MockHostEnvironment, MockTemplate } from '../mocks.js';
+import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
 import { cleanupHooks } from '../test-utils.js';
 
 describe('RenderSession', () => {
@@ -13,7 +13,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const bindable = session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`;
 
@@ -35,7 +35,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const bindable = session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`;
 
@@ -57,7 +57,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const bindable = session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`;
 
@@ -81,7 +81,7 @@ describe('RenderSession', () => {
           [],
           ALL_LANES,
           new MockCoroutine(),
-          new Runtime(new MockHostEnvironment()),
+          new Runtime(new MockBackend()),
         );
 
         expect(session.getContextValue(key)).toBe(undefined);
@@ -103,7 +103,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       session.finalize();
@@ -116,7 +116,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       session.useEffect(() => {});
@@ -133,7 +133,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const options = { priority: 'background' } as const;
 
@@ -160,7 +160,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const bindable = session.html`<div>Hello, ${'World'}!</div>`;
 
@@ -182,7 +182,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const bindable = session.math`<mi>${'x'}</mi>`;
 
@@ -204,7 +204,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const bindable = session.svg`<text>Hello, ${'World'}!</text>`;
 
@@ -226,7 +226,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const result = 'foo';
       const hook = {
@@ -245,7 +245,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const callback1 = () => {};
       const callback2 = () => {};
@@ -270,7 +270,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const value1 = 'foo';
       const value2 = 'bar';
@@ -309,7 +309,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const value1 = 'foo';
       const value2 = 'bar';
@@ -345,7 +345,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       const cleanup = vi.fn();
@@ -375,7 +375,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       const callback = vi.fn();
@@ -411,7 +411,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       session.finalize();
@@ -429,7 +429,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       const id1 = session.useId();
@@ -450,7 +450,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       session.finalize();
@@ -466,7 +466,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const value1 = 'foo';
       const value2 = 'bar';
@@ -489,7 +489,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       session.finalize();
@@ -507,7 +507,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const reducer = (count: number, n: number) => count + n;
 
@@ -537,7 +537,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const reducer = (count: number, n: number) => count + n;
 
@@ -567,7 +567,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const reducer = (count: number, n: number) => count + n;
 
@@ -584,7 +584,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       session.finalize();
@@ -602,7 +602,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       const ref = session.useRef('foo');
@@ -625,7 +625,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       let [count, setCount] = session.useState(0);
@@ -654,7 +654,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       let [count, setCount] = session.useState(0);
@@ -683,7 +683,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       let [count, setCount] = session.useState(() => 0);
@@ -712,7 +712,7 @@ describe('RenderSession', () => {
         [],
         Lane.UserBlocking,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       let [count, setCount, isPending] = session.useState(() => 0);
@@ -743,7 +743,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       const subscribers = new Set<() => void>();
       let snapshot = 0;
@@ -789,7 +789,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
       let count = 0;
 
@@ -838,7 +838,7 @@ describe('RenderSession', () => {
         [],
         ALL_LANES,
         new MockCoroutine(),
-        new Runtime(new MockHostEnvironment()),
+        new Runtime(new MockBackend()),
       );
 
       const unsubscribe1 = vi.fn();

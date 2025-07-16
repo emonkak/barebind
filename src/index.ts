@@ -1,7 +1,7 @@
+export { BrowserBackend } from './backend/browser.js';
+export { ServerBackend } from './backend/server.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export * from './core.js';
-export { BrowserHostEnvironment } from './host-environment/browser.js';
-export { ServerHostEnvironment } from './host-environment/server.js';
 export { HydrationError, type HydrationTree } from './hydration.js';
 export {
   type AttributePart,

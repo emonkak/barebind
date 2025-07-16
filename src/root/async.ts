@@ -1,4 +1,4 @@
-import type { HostEnvironment, UpdateOptions } from '../core.js';
+import type { Backend, UpdateOptions } from '../core.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
 import type { RuntimeObserver } from '../runtime.js';
@@ -16,9 +16,9 @@ export interface AsyncRoot<T> {
 export function createAsyncRoot<T>(
   value: T,
   container: Element,
-  host: HostEnvironment,
+  backend: Backend,
 ): AsyncRoot<T> {
-  const runtime = new Runtime(host);
+  const runtime = new Runtime(backend);
   const part = {
     type: PartType.ChildNode,
     node: container.ownerDocument.createComment(''),
@@ -31,7 +31,7 @@ export function createAsyncRoot<T>(
     options: UpdateOptions | undefined,
   ): Required<UpdateOptions> {
     return {
-      priority: host.getCurrentPriority(),
+      priority: backend.getCurrentPriority(),
       transition: false,
       ...options,
     };
@@ -52,7 +52,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return host.requestCallback(() => {
+      return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
@@ -62,7 +62,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return host.requestCallback(() => {
+      return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
@@ -72,7 +72,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return host.requestCallback(() => {
+      return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(slot);
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
@@ -82,7 +82,7 @@ export function createAsyncRoot<T>(
 
       const completedOptions = completeOptions(options);
 
-      return host.requestCallback(() => {
+      return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
         return runtime.flushAsync(completedOptions);
       }, completedOptions);
