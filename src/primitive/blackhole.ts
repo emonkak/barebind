@@ -1,13 +1,9 @@
-import type {
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-} from '../directive.js';
+import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import type { Part } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {
-  displayName: 'BlackholePrimitive',
+  name: 'BlackholePrimitive',
   resolveBinding<T>(
     value: T,
     part: Part,

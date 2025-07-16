@@ -1,4 +1,4 @@
-import { type Hook, HookType } from '../src/hook.js';
+import { type Hook, HookType } from '@/core.js';
 
 export function* allCombinations<T>(xs: T[]): Generator<T[]> {
   for (let i = 1; i <= xs.length; i++) {

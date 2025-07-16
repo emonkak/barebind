@@ -3,7 +3,7 @@ import type {
   CommitContext,
   Primitive,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 

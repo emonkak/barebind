@@ -1,4 +1,3 @@
-import { inspectPart, markUsedValue } from '../debug.js';
 import type {
   Binding,
   CommitContext,
@@ -7,7 +6,8 @@ import type {
   Template,
   TemplateResult,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { inspectPart, markUsedValue } from '../debug.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import {
   type ChildNodePart,
@@ -25,7 +25,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
 {
   abstract get arity(): TBinds['length'];
 
-  get displayName(): string {
+  get name(): string {
     return this.constructor.name;
   }
 

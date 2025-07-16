@@ -1,10 +1,6 @@
 import { sequentialEqual, shallowEqual } from '../compare.js';
+import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type {
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-} from '../directive.js';
 import type { AttributePart, Part } from '../part.js';
 import { PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
@@ -14,7 +10,7 @@ export type ClassSpecifier = ClassMap | string | null | undefined;
 export type ClassMap = { [key: string]: boolean };
 
 export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
-  displayName: 'ClassListPrimitive',
+  name: 'ClassListPrimitive',
   ensureValue: (
     value: unknown,
     part: Part,

@@ -1,5 +1,4 @@
-import type { UpdateOptions } from '../hook.js';
-import type { HostEnvironment } from '../host-environment.js';
+import type { HostEnvironment, UpdateOptions } from '../core.js';
 import { HydrationTree } from '../hydration.js';
 import { PartType } from '../part.js';
 import type { RuntimeObserver } from '../runtime.js';

@@ -1,9 +1,5 @@
-import {
-  DirectiveSpecifier,
-  type DirectiveType,
-  type TemplateResult,
-  type UpdateContext,
-} from '../directive.js';
+import type { DirectiveType, TemplateResult, UpdateContext } from '../core.js';
+import { DirectiveSpecifier } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, PartType } from '../part.js';
 import {

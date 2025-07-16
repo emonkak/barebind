@@ -1,32 +1,33 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { inspectValue } from './debug.js';
 import {
   $toDirective,
+  ALL_LANES,
   type CommitContext,
+  CommitPhase,
   type Component,
   type ComponentResult,
   type Coroutine,
   type Directive,
   type DirectiveType,
   type Effect,
+  getFlushLanesFromOptions,
+  getScheduleLanesFromOptions,
+  type Hook,
+  type HostEnvironment,
   isBindable,
+  type Lanes,
+  NO_LANES,
   type Primitive,
   type RenderContext,
   type Slot,
   type Template,
   type TemplateMode,
   type UpdateContext,
-} from './directive.js';
-import type { Hook, Lanes, UpdateTask } from './hook.js';
-import {
-  ALL_LANES,
-  getFlushLanesFromOptions,
-  getScheduleLanesFromOptions,
-  NO_LANES,
   type UpdateOptions,
-} from './hook.js';
-import { CommitPhase, type HostEnvironment } from './host-environment.js';
+  type UpdateTask,
+} from './core.js';
+import { inspectValue } from './debug.js';
 import { LinkedList } from './linked-list.js';
 import { type Part, PartType } from './part.js';
 import { RenderSession } from './render-session.js';
@@ -122,9 +123,9 @@ export class Runtime implements CommitContext, UpdateContext {
     if (
       part.type === PartType.ChildNode &&
       (part.node.data === '' ||
-        part.node.data.startsWith('/' + type.displayName + '('))
+        part.node.data.startsWith('/' + type.name + '('))
     ) {
-      part.node.data = `/${type.displayName}(${inspectValue(value)})`;
+      part.node.data = `/${type.name}(${inspectValue(value)})`;
     }
   }
 
@@ -433,7 +434,7 @@ export class Runtime implements CommitContext, UpdateContext {
   ): void {
     if (
       part.type === PartType.ChildNode &&
-      part.node.data.startsWith('/' + type.displayName + '(')
+      part.node.data.startsWith('/' + type.name + '(')
     ) {
       part.node.data = '';
     }

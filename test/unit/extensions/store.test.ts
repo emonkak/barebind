@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-
+import type { HookContext } from '@/core.js';
 import { Atom, Lazy } from '@/extensions/signal.js';
 import { defineStore } from '@/extensions/store.js';
-import type { HookContext } from '@/hook.js';
 
 class App {
   readonly counter: CounterStore;

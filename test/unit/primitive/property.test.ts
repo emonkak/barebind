@@ -6,9 +6,9 @@ import { Runtime } from '@/runtime.js';
 import { MockHostEnvironment } from '../../mocks.js';
 
 describe('PropertyPrimitive', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(PropertyPrimitive.displayName, 'PropertyPrimitive');
+      expect(PropertyPrimitive.name, 'PropertyPrimitive');
     });
   });
 

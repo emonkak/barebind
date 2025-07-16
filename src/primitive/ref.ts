@@ -1,10 +1,10 @@
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
   CommitContext,
   DirectiveContext,
   Primitive,
-} from '../directive.js';
-import type { RefObject } from '../hook.js';
+  RefObject,
+} from '../core.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -19,7 +19,7 @@ export type RefCallback<T> = (value: T) => Cleanup | void;
 export type Cleanup = () => void;
 
 export const RefPrimitive: Primitive<Ref> = {
-  displayName: 'RefPrimitive',
+  name: 'RefPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is Ref {
     if (!isRef(value)) {
       throw new Error(

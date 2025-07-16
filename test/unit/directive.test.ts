@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { $toDirective } from '@/core.js';
 import { inspectValue } from '@/debug.js';
-import {
-  $toDirective,
-  areDirectiveTypesEqual,
-  DirectiveSpecifier,
-  SlotSpecifier,
-} from '@/directive.js';
+import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -87,17 +83,5 @@ describe('SlotSpecifier', () => {
 
       expect(inspectValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
     });
-  });
-});
-
-describe('areDirectiveTypesEqual', () => {
-  it('returns the result from Directive.equals() if it is definied', () => {
-    const directiveType1 = new MockDirective();
-    const directiveType2 = MockPrimitive;
-
-    expect(areDirectiveTypesEqual(directiveType1, directiveType1)).toBe(true);
-    expect(areDirectiveTypesEqual(directiveType1, directiveType2)).toBe(false);
-    expect(areDirectiveTypesEqual(directiveType2, directiveType1)).toBe(false);
-    expect(areDirectiveTypesEqual(directiveType2, directiveType2)).toBe(true);
   });
 });

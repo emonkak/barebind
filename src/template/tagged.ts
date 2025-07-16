@@ -1,10 +1,10 @@
-import { inspectNode, inspectPart } from '../debug.js';
 import type {
   Slot,
   TemplateMode,
   TemplateResult,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { inspectNode, inspectPart } from '../debug.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';

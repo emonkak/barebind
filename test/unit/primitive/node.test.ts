@@ -7,9 +7,9 @@ import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockHostEnvironment } from '../../mocks.js';
 
 describe('NodePrimitive', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(NodePrimitive.displayName, 'NodePrimitive');
+      expect(NodePrimitive.name, 'NodePrimitive');
     });
   });
 

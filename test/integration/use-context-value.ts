@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import type { RenderContext } from '@/directive.js';
+import type { RenderContext } from '@/core.js';
 import { component } from '@/extensions/component.js';
 import { BrowserHostEnvironment } from '@/host-environment/browser.js';
 import { createSyncRoot } from '@/root/sync.js';

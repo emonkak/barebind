@@ -1,4 +1,4 @@
-import type { CustomHook, HookContext } from '../hook.js';
+import type { CustomHook, HookContext } from '../core.js';
 import {
   Atom,
   Computed,

@@ -1,21 +1,19 @@
 import { shallowEqual } from '../compare.js';
-import { inspectPart, markUsedValue } from '../debug.js';
-import type {
-  Binding,
-  CommitContext,
-  DirectiveContext,
-  DirectiveType,
-  Template,
-  UpdateContext,
-} from '../directive.js';
 import {
   $toDirective,
   type Bindable,
-  type ComponentType,
+  type Binding,
+  type CommitContext,
+  type ComponentFunction,
   type Directive,
-  DirectiveSpecifier,
+  type DirectiveContext,
+  type DirectiveType,
   isBindable,
-} from '../directive.js';
+  type Template,
+  type UpdateContext,
+} from '../core.js';
+import { inspectPart, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
@@ -50,7 +48,7 @@ export type VNode =
   | null
   | undefined;
 
-export type VElementType<TProps> = ComponentType<TProps> | string;
+export type VElementType<TProps> = ComponentFunction<TProps> | string;
 
 export type Ref<T> =
   | { current: T }
@@ -78,7 +76,7 @@ interface TemplateSpecifier<TBinds extends readonly unknown[]> {
 }
 
 export const ElementDirective: DirectiveType<ElementProps> = {
-  displayName: 'ElementDirective',
+  name: 'ElementDirective',
   resolveBinding(
     props: {},
     part: Part,
@@ -100,7 +98,7 @@ export function createElement<TProps extends {}>(
   ...children: VNode[]
 ): VElement<NormalizeProps<TProps>>;
 export function createElement<TProps extends {}>(
-  type: ComponentType<NormalizeProps<TProps>>,
+  type: ComponentFunction<NormalizeProps<TProps>>,
   props: TProps,
   ...children: VNode[]
 ): VElement<NormalizeProps<TProps>>;

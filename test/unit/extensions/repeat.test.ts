@@ -36,9 +36,9 @@ describe('repeat()', () => {
 });
 
 describe('RepeatDirective', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(RepeatDirective.displayName, 'RepeatDirective');
+      expect(RepeatDirective.name, 'RepeatDirective');
     });
   });
 

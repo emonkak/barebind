@@ -1,12 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Effect, RenderContext } from '@/directive.js';
+import { CommitPhase, type Effect, type RenderContext } from '@/core.js';
 import {
   type Logger,
   LogReporter,
   type Profile,
   Profiler,
 } from '@/extensions/profiler.js';
-import { CommitPhase } from '@/host-environment.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { MockComponent, MockEffect } from '../../mocks.js';
 

@@ -1,37 +1,36 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { ComponentBinding } from '@/extensions/component.js';
-import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
   type Bindable,
   type Binding,
   type CommitContext,
+  type CommitPhase,
   type Component,
   type Coroutine,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
   type Effect,
+  type HostEnvironment,
+  type Lanes,
+  NO_LANES,
   type Primitive,
   type RenderContext,
+  type RequestCallbackOptions,
   type Slot,
   type SlotType,
   type Template,
   type TemplateMode,
   type TemplateResult,
   type UpdateContext,
-} from '../src/directive.js';
-import { type Lanes, NO_LANES } from '../src/hook.js';
-import type {
-  CommitPhase,
-  HostEnvironment,
-  RequestCallbackOptions,
-} from '../src/host-environment.js';
-import type { HydrationTree } from '../src/hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../src/part.js';
-import { AbstractTemplate } from '../src/template/template.js';
+} from '@/core.js';
+import { ComponentBinding } from '@/extensions/component.js';
+import type { HydrationTree } from '@/hydration.js';
+import { type ChildNodePart, type Part, PartType } from '@/part.js';
+import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
+import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBindable<T> implements Bindable<T> {
   directive: Directive<T>;
@@ -150,7 +149,7 @@ export class MockBinding<T> implements Binding<T> {
 }
 
 export class MockComponent implements Component<unknown, unknown> {
-  get displayName(): string {
+  get name(): string {
     return MockComponent.name;
   }
 
@@ -180,16 +179,14 @@ export class MockCoroutine implements Coroutine {
 }
 
 export class MockDirective<T> implements DirectiveType<T> {
-  readonly displayName: string;
+  readonly name: string;
 
-  constructor(displayName: string = this.constructor.name) {
-    this.displayName = displayName;
+  constructor(name: string = this.constructor.name) {
+    this.name = name;
   }
 
   equals(other: unknown) {
-    return (
-      other instanceof MockDirective && other.displayName === this.displayName
-    );
+    return other instanceof MockDirective && other.name === this.name;
   }
 
   resolveBinding(value: T, part: Part, _context: DirectiveContext): Binding<T> {
@@ -198,7 +195,7 @@ export class MockDirective<T> implements DirectiveType<T> {
 }
 
 export const MockPrimitive = {
-  displayName: 'MockPrimitive',
+  name: 'MockPrimitive',
   ensureValue(_value: unknown): asserts _value is unknown {},
   resolveBinding(
     value: unknown,
@@ -317,7 +314,7 @@ export class MockSlot<T> implements Slot<T> {
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
-        `The directive must be ${this.binding.type.displayName} in this slot, but got ${directive.type.displayName}.`,
+        `The directive must be ${this.binding.type.name} in this slot, but got ${directive.type.name}.`,
       );
     }
 

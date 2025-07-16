@@ -1,18 +1,16 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import type {
-  CommitContext,
-  Effect,
-  Primitive,
-  SlotType,
-  Template,
-  TemplateMode,
-} from '../directive.js';
 import {
+  type CommitContext,
   CommitPhase,
+  type Effect,
   type HostEnvironment,
+  type Primitive,
   type RequestCallbackOptions,
-} from '../host-environment.js';
+  type SlotType,
+  type Template,
+  type TemplateMode,
+} from '../core.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';

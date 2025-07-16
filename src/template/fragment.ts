@@ -4,7 +4,7 @@ import {
   type Template,
   type TemplateResult,
   type UpdateContext,
-} from '../directive.js';
+} from '../core.js';
 import type { HydrationTree } from '../hydration.js';
 import type { ChildNodePart } from '../part.js';
 import { AbstractTemplate } from './template.js';

@@ -1,12 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { RenderContext } from '@/directive.js';
+import { ALL_LANES, CommitPhase, type RenderContext } from '@/core.js';
 import {
   ComponentBinding,
   component,
   FunctionComponent,
 } from '@/extensions/component.js';
-import { ALL_LANES } from '@/hook.js';
-import { CommitPhase } from '@/host-environment.js';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
@@ -26,11 +24,11 @@ describe('component()', () => {
 });
 
 describe('FunctionComponent', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('returns the component function name', () => {
       const component = new FunctionComponent(Greet);
 
-      expect(component.displayName).toBe(Greet.name);
+      expect(component.name).toBe(Greet.name);
     });
   });
 

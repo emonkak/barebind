@@ -1,10 +1,6 @@
 import { shallowEqual } from '../compare.js';
+import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type {
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-} from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -26,7 +22,7 @@ const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
 export const StylePrimitive: Primitive<StyleProperties> = {
-  displayName: 'StylePrimitive',
+  name: 'StylePrimitive',
   ensureValue(value: unknown, part: Part): asserts value is StyleProperties {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(

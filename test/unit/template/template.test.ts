@@ -20,11 +20,11 @@ import {
 import { createElement } from '../../test-utils.js';
 
 describe('AbstractTemplate', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('return the constructor name', () => {
       const template = new MockTemplate();
 
-      expect(template.displayName, 'MockTemplate');
+      expect(template.name, 'MockTemplate');
     });
   });
 

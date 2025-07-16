@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { $toDirective } from '@/directive.js';
+import { $toDirective, ALL_LANES } from '@/core.js';
 import {
   Atom,
   Computed,
@@ -8,7 +7,6 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
-import { ALL_LANES } from '@/hook.js';
 import { HydrationError, HydrationTree } from '@/hydration.js';
 import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
@@ -17,9 +15,9 @@ import { MockCoroutine, MockHostEnvironment } from '../../mocks.js';
 import { cleanupHooks, createElement } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('is a string that represents the directive itself', () => {
-      expect(SignalDirective.displayName, 'SignalDirective');
+      expect(SignalDirective.name, 'SignalDirective');
     });
   });
 

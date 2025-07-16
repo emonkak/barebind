@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ALL_LANES, Lane, NO_LANES } from '@/hook.js';
+import { ALL_LANES, Lane, NO_LANES } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { Literal } from '@/template-literal.js';
@@ -109,6 +109,21 @@ describe('RenderSession', () => {
       session.finalize();
 
       expect(() => session.useState(0)).toThrow();
+    });
+
+    it('throws an error if given a different type of hook', () => {
+      const session = new RenderSession(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new Runtime(new MockHostEnvironment()),
+      );
+
+      session.useEffect(() => {});
+      session.finalize();
+      session.flush();
+
+      expect(() => session.finalize()).toThrow('Unexpected hook type.');
     });
   });
 
@@ -390,6 +405,22 @@ describe('RenderSession', () => {
       expect(callback).toHaveBeenCalledTimes(2);
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
     });
+
+    it('throws an error if given a different type of hook', () => {
+      const session = new RenderSession(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new Runtime(new MockHostEnvironment()),
+      );
+
+      session.finalize();
+      session.flush();
+
+      expect(() => session[hookMethod](() => {})).toThrow(
+        'Unexpected hook type.',
+      );
+    });
   });
 
   describe('useId()', () => {
@@ -412,6 +443,20 @@ describe('RenderSession', () => {
 
       expect(session.useId()).toBe(id1);
       expect(session.useId()).toBe(id2);
+    });
+
+    it('throws an error if given a different type of hook', () => {
+      const session = new RenderSession(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new Runtime(new MockHostEnvironment()),
+      );
+
+      session.finalize();
+      session.flush();
+
+      expect(() => session.useId()).toThrow('Unexpected hook type.');
     });
   });
 
@@ -437,6 +482,22 @@ describe('RenderSession', () => {
       session.flush();
 
       expect(session.useMemo(() => value2, ['bar'])).toBe(value2);
+    });
+
+    it('throws an error if given a different type of hook', () => {
+      const session = new RenderSession(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new Runtime(new MockHostEnvironment()),
+      );
+
+      session.finalize();
+      session.flush();
+
+      expect(() => session.useMemo(() => null, [])).toThrow(
+        'Unexpected hook type.',
+      );
     });
   });
 
@@ -516,6 +577,22 @@ describe('RenderSession', () => {
       session.flush();
 
       expect(count).toBe(0);
+    });
+
+    it('throws an error if given a different type of hook', () => {
+      const session = new RenderSession(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new Runtime(new MockHostEnvironment()),
+      );
+
+      session.finalize();
+      session.flush();
+
+      expect(() =>
+        session.useReducer<number, number>((count, n) => count + n, 0),
+      ).toThrow('Unexpected hook type.');
     });
   });
 

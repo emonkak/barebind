@@ -1,27 +1,24 @@
 import { describe, expect, it } from 'vitest';
-
 import {
+  areDirectiveTypesEqual,
   DEFAULT_LANES,
-  ensureHookType,
   getFlushLanesFromOptions,
   getScheduleLanesFromOptions,
-  HookType,
+  isBindable,
   Lane,
   type UpdateOptions,
-} from '@/hook.js';
+} from '@/core.js';
+import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
 
-describe('ensureHookType()', () => {
-  it('throws error if the hook has a different type than expected', () => {
-    expect(() =>
-      ensureHookType(HookType.Id, {
-        type: HookType.Finalizer,
-      }),
-    ).toThrow('Unexpected hook type.');
-    expect(() =>
-      ensureHookType(HookType.Finalizer, {
-        type: HookType.Finalizer,
-      }),
-    ).not.toThrow();
+describe('areDirectiveTypesEqual()', () => {
+  it('returns the result from Directive.equals() if it is definied', () => {
+    const type1 = new MockDirective();
+    const type2 = MockPrimitive;
+
+    expect(areDirectiveTypesEqual(type1, type1)).toBe(true);
+    expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
+    expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
+    expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
   });
 });
 
@@ -80,4 +77,13 @@ describe('getScheduleLanesFromOptions()', () => {
       expect(getScheduleLanesFromOptions(options)).toBe(lanes);
     },
   );
+});
+
+describe('isBindable()', () => {
+  it('returns true if the value is a bindable', () => {
+    expect(
+      isBindable(new MockBindable({ type: MockPrimitive, value: 'foo' })),
+    ).toBe(true);
+    expect(isBindable('foo')).toBe(false);
+  });
 });

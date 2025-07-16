@@ -2,17 +2,15 @@
 
 import type {
   CommitContext,
+  CommitPhase,
   Effect,
+  HostEnvironment,
   Primitive,
+  RequestCallbackOptions,
   SlotType,
   Template,
   TemplateMode,
-} from '../directive.js';
-import type {
-  CommitPhase,
-  HostEnvironment,
-  RequestCallbackOptions,
-} from '../host-environment.js';
+} from '../core.js';
 import { type Part, PartType } from '../part.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';

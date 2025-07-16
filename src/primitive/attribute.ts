@@ -1,14 +1,10 @@
+import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import type {
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-} from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const AttributePrimitive: Primitive<any> = {
-  displayName: 'AttributePrimitive',
+  name: 'AttributePrimitive',
   resolveBinding<T>(
     value: T,
     part: Part,

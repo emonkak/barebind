@@ -3,7 +3,7 @@ export { HashLocation } from './hash-location.js';
 export {
   CurrentLocation,
   type LocationNavigator,
-  type LocationState,
+  type LocationSnapshot,
 } from './location.js';
 export { resetScrollPosition } from './reset-scroll-position.js';
 export {

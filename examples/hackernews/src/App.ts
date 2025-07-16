@@ -20,18 +20,18 @@ export function App(
   { userStore, itemStore, storyStore }: AppProps,
   context: RenderContext,
 ): unknown {
-  const [locationState] = context.use(HashLocation);
+  const [locationSnapshot] = context.use(HashLocation);
   const page =
-    router.handle(locationState.url, locationState.state) ??
-    component(NotFound, { url: locationState.url });
+    router.handle(locationSnapshot.url, locationSnapshot.state) ??
+    component(NotFound, { url: locationSnapshot.url });
 
   context.use(itemStore);
   context.use(storyStore);
   context.use(userStore);
 
   context.useLayoutEffect(() => {
-    resetScrollPosition(locationState);
-  }, [locationState]);
+    resetScrollPosition(locationSnapshot);
+  }, [locationSnapshot]);
 
   return context.html`
     <div>

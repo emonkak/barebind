@@ -1,7 +1,7 @@
-import type { CustomHook, HookContext } from '../../hook.js';
+import type { CustomHook } from '../../core.js';
 import type { RelativeURL } from './url.js';
 
-export interface LocationState {
+export interface LocationSnapshot {
   readonly url: RelativeURL;
   readonly state: unknown;
   readonly navigationType: NavigationType | null;
@@ -18,11 +18,9 @@ export interface NavigateOptions {
 }
 
 export const CurrentLocation: CustomHook<
-  readonly [LocationState, LocationNavigator]
+  readonly [LocationSnapshot, LocationNavigator]
 > = {
-  onCustomHook(
-    context: HookContext,
-  ): readonly [LocationState, LocationNavigator] {
+  onCustomHook(context) {
     const value = context.getContextValue(CurrentLocation);
 
     if (value === undefined) {
@@ -31,7 +29,7 @@ export const CurrentLocation: CustomHook<
       );
     }
 
-    return value as [LocationState, LocationNavigator];
+    return value as [LocationSnapshot, LocationNavigator];
   },
 };
 

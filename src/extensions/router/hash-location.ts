@@ -1,28 +1,27 @@
-import type { CustomHook, HookContext } from '../../hook.js';
+import type { CustomHook, HookContext } from '../../core.js';
 import {
   anyModifiersArePressed,
   CurrentLocation,
   isInternalLink,
   type LocationNavigator,
-  type LocationState,
+  type LocationSnapshot,
   type NavigateOptions,
   trimHash,
 } from './location.js';
 import { RelativeURL } from './url.js';
 
 export const HashLocation: CustomHook<
-  readonly [LocationState, LocationNavigator]
+  readonly [LocationSnapshot, LocationNavigator]
 > = {
   onCustomHook(
     context: HookContext,
-  ): readonly [LocationState, LocationNavigator] {
-    const [locationState, setLocationState] = context.useState<LocationState>(
-      () => ({
+  ): readonly [LocationSnapshot, LocationNavigator] {
+    const [locationSnapshot, setLocationSnapshot] =
+      context.useState<LocationSnapshot>(() => ({
         url: RelativeURL.fromString(trimHash(location.hash)),
         state: history.state,
         navigationType: null,
-      }),
-    );
+      }));
     const locationNavigator = context.useMemo<LocationNavigator>(
       () => ({
         getCurrentURL: () => RelativeURL.fromString(trimHash(location.hash)),
@@ -38,7 +37,7 @@ export const HashLocation: CustomHook<
             history.pushState(state, '', '#' + url);
             navigationType = 'push';
           }
-          setLocationState({
+          setLocationSnapshot({
             url: RelativeURL.from(url),
             state,
             navigationType,
@@ -57,7 +56,7 @@ export const HashLocation: CustomHook<
       // clicked or a new URL is entered in the address bar. Therefore the
       // location type cannot be detected completely correctly.
       const handleHashChange = (event: HashChangeEvent) => {
-        setLocationState({
+        setLocationSnapshot({
           url: RelativeURL.fromString(trimHash(new URL(event.newURL).hash)),
           state: history.state,
           navigationType: 'traverse',
@@ -71,7 +70,7 @@ export const HashLocation: CustomHook<
       };
     }, []);
 
-    const currentLocation = [locationState, locationNavigator] as const;
+    const currentLocation = [locationSnapshot, locationNavigator] as const;
 
     context.setContextValue(CurrentLocation, currentLocation);
 

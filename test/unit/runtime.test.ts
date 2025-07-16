@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { $toDirective, type Coroutine } from '@/directive.js';
-import { ALL_LANES, type Hook, Lane, NO_LANES } from '@/hook.js';
-import { CommitPhase } from '@/host-environment.js';
+import {
+  $toDirective,
+  ALL_LANES,
+  CommitPhase,
+  type Coroutine,
+  type Hook,
+  Lane,
+  NO_LANES,
+} from '@/core.js';
 import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';

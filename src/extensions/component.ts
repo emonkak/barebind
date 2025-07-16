@@ -1,29 +1,27 @@
 import {
+  ALL_LANES,
   type Binding,
   type CommitContext,
   type Component,
-  type ComponentType,
+  type ComponentFunction,
   type Coroutine,
   type DirectiveContext,
-  DirectiveSpecifier,
   type Effect,
-  type RenderContext,
-  type Slot,
-  type UpdateContext,
-} from '../directive.js';
-import {
-  ALL_LANES,
   type EffectHook,
   type Hook,
   HookType,
   type Lanes,
-} from '../hook.js';
+  type RenderContext,
+  type Slot,
+  type UpdateContext,
+} from '../core.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 import { Scope } from '../scope.js';
 
 export function component<TProps, TResult>(
-  component: ComponentType<TProps, TResult>,
+  component: ComponentFunction<TProps, TResult>,
   props: NoInfer<TProps>,
 ): DirectiveSpecifier<TProps> {
   const directive = new FunctionComponent(component);
@@ -33,28 +31,31 @@ export function component<TProps, TResult>(
 export class FunctionComponent<TProps, TResult>
   implements Component<TProps, TResult>
 {
-  private readonly _type: ComponentType<TProps, TResult>;
+  private readonly _componentFunction: ComponentFunction<TProps, TResult>;
 
-  constructor(type: ComponentType<TProps, TResult>) {
-    this._type = type;
+  constructor(componentFunction: ComponentFunction<TProps, TResult>) {
+    this._componentFunction = componentFunction;
   }
 
-  get displayName(): string {
-    return this._type.name;
+  get name(): string {
+    return this._componentFunction.name;
   }
 
   equals(other: unknown): boolean {
-    return other instanceof FunctionComponent && other._type === this._type;
+    return (
+      other instanceof FunctionComponent &&
+      other._componentFunction === this._componentFunction
+    );
   }
 
   render(props: TProps, context: RenderContext): TResult {
-    const type = this._type;
+    const type = this._componentFunction;
     return type(props, context);
   }
 
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean {
     return (
-      this._type.shouldSkipUpdate?.(nextProps, prevProps) ??
+      this._componentFunction.shouldSkipUpdate?.(nextProps, prevProps) ??
       nextProps === prevProps
     );
   }

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $toDirective, DirectiveSpecifier } from '@/directive.js';
+import { $toDirective } from '@/core.js';
+import { DirectiveSpecifier } from '@/directive.js';
 import { FunctionComponent } from '@/extensions/component.js';
 import { RepeatDirective } from '@/extensions/repeat.js';
 import {
@@ -170,9 +171,9 @@ describe('VStaticFragment', () => {
 });
 
 describe('ElementDirective', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(ElementDirective.displayName, 'ElementDirective');
+      expect(ElementDirective.name, 'ElementDirective');
     });
   });
 

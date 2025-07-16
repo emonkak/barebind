@@ -1,4 +1,3 @@
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type {
   Binding,
   CommitContext,
@@ -6,14 +5,15 @@ import type {
   Primitive,
   Slot,
   UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 
 export type SpreadProperties = { [key: string]: unknown };
 
 export const SpreadPrimitive: Primitive<SpreadProperties> = {
-  displayName: 'SpreadPrimitive',
+  name: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
     if (!isSpreadProps(value)) {
       throw new Error(

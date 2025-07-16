@@ -1,6 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import { CommitPhase } from '../host-environment.js';
+import { CommitPhase } from '../core.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface Profile {
@@ -109,7 +109,7 @@ export class Profiler implements RuntimeObserver {
       }
       case 'COMPONENT_RENDER_START': {
         profile.componentMeasurements.push({
-          name: event.component.displayName,
+          name: event.component.name,
           startTime: performance.now(),
           duration: 0,
         });

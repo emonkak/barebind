@@ -1,13 +1,13 @@
+import type {
+  Binding,
+  CommitContext,
+  DirectiveContext,
+  DirectiveType,
+  Slot,
+  UpdateContext,
+} from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import {
-  type Binding,
-  type CommitContext,
-  type DirectiveContext,
-  DirectiveSpecifier,
-  type DirectiveType,
-  type Slot,
-  type UpdateContext,
-} from '../directive.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import {
   type ChildNodePart,
@@ -72,7 +72,7 @@ export function repeat<TSource, TKey, TValue>(
 }
 
 export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
-  displayName: 'RepeatDirective',
+  name: 'RepeatDirective',
   resolveBinding<TSource, TKey, TValue>(
     props: RepeatProps<TSource, TKey, TValue>,
     part: Part,

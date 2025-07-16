@@ -4,9 +4,9 @@ import {
   type CommitContext,
   type DirectiveType,
   type Slot,
-  SlotSpecifier,
   type UpdateContext,
-} from '../directive.js';
+} from '../core.js';
+import { SlotSpecifier } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 

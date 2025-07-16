@@ -1,27 +1,26 @@
-import type { CustomHook, HookContext } from '../../hook.js';
+import type { CustomHook, HookContext } from '../../core.js';
 import {
   anyModifiersArePressed,
   CurrentLocation,
   isInternalLink,
   type LocationNavigator,
-  type LocationState,
+  type LocationSnapshot,
   type NavigateOptions,
 } from './location.js';
 import { RelativeURL } from './url.js';
 
 export const BrowserLocation: CustomHook<
-  readonly [LocationState, LocationNavigator]
+  readonly [LocationSnapshot, LocationNavigator]
 > = {
   onCustomHook(
     context: HookContext,
-  ): readonly [LocationState, LocationNavigator] {
-    const [locationState, setLocationState] = context.useState<LocationState>(
-      () => ({
+  ): readonly [LocationSnapshot, LocationNavigator] {
+    const [locationSnapshot, setLocationSnapshot] =
+      context.useState<LocationSnapshot>(() => ({
         url: RelativeURL.fromLocation(location),
         state: history.state,
         navigationType: null,
-      }),
-    );
+      }));
     const locationNavigator = context.useMemo<LocationNavigator>(
       () => ({
         getCurrentURL: () => RelativeURL.fromLocation(location),
@@ -37,7 +36,7 @@ export const BrowserLocation: CustomHook<
             history.pushState(state, '', url.toString());
             navigationType = 'push';
           }
-          setLocationState({
+          setLocationSnapshot({
             url: RelativeURL.from(url),
             state,
             navigationType,
@@ -49,7 +48,7 @@ export const BrowserLocation: CustomHook<
 
     context.useLayoutEffect(() => {
       const handlePopState = (event: PopStateEvent) => {
-        setLocationState((prevState) => {
+        setLocationSnapshot((prevState) => {
           if (
             prevState.url.pathname === location.pathname &&
             prevState.url.search === location.search
@@ -76,7 +75,7 @@ export const BrowserLocation: CustomHook<
       };
     }, []);
 
-    const currentLocation = [locationState, locationNavigator] as const;
+    const currentLocation = [locationSnapshot, locationNavigator] as const;
 
     context.setContextValue(CurrentLocation, currentLocation);
 

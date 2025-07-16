@@ -1,9 +1,5 @@
+import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
-import type {
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-} from '../directive.js';
 import { type EventPart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -14,7 +10,7 @@ export type EventListenerValue =
   | undefined;
 
 export const EventPrimitive: Primitive<EventListenerValue> = {
-  displayName: 'EventPrimitive',
+  name: 'EventPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is EventListenerValue {
     if (!isEventListenerValue(value)) {
       throw new Error(

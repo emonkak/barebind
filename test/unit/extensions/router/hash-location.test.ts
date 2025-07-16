@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ALL_LANES } from '@/core.js';
 import {
   createHashClickHandler,
   HashLocation,
 } from '@/extensions/router/hash-location.js';
 import { CurrentLocation } from '@/extensions/router/location.js';
 import { RelativeURL } from '@/extensions/router/url.js';
-import { ALL_LANES } from '@/hook.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockHostEnvironment } from '../../../mocks.js';
@@ -36,20 +36,20 @@ describe('HashLocation', () => {
 
     history.replaceState(state, '', '#/articles/foo%2Fbar');
 
-    const [locationState, { getCurrentURL }] = session.use(HashLocation);
+    const [locationSnapshot, { getCurrentURL }] = session.use(HashLocation);
 
     expect(getCurrentURL().toString()).toBe('/articles/foo%2Fbar');
     expect(location.hash).toBe('#/articles/foo%2Fbar');
     expect(history.state).toStrictEqual(state);
-    expect(locationState.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationState.state).toStrictEqual(state);
-    expect(locationState.navigationType).toBe(null);
+    expect(locationSnapshot.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(locationSnapshot.state).toStrictEqual(state);
+    expect(locationSnapshot.navigationType).toBe(null);
   });
 
   it('registers the current location', () => {
-    const locationState = session.use(HashLocation);
+    const locationSnapshot = session.use(HashLocation);
 
-    expect(session.use(CurrentLocation)).toBe(locationState);
+    expect(session.use(CurrentLocation)).toBe(locationSnapshot);
   });
 
   it('adds event listeners', () => {
@@ -86,21 +86,21 @@ describe('HashLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationState1, locationNavigator1] = session.use(HashLocation);
+    const [locationSnapshot1, locationNavigator1] = session.use(HashLocation);
 
     session.finalize();
     session.flush();
 
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'));
 
-    const [locationState2] = session.use(HashLocation);
+    const [locationSnapshot2] = session.use(HashLocation);
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
-    expect(locationState2).not.toBe(locationState1);
-    expect(locationState2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationState2.state).toBe(history.state);
-    expect(locationState2.navigationType).toBe('push');
+    expect(locationSnapshot2).not.toBe(locationSnapshot1);
+    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(locationSnapshot2.state).toBe(history.state);
+    expect(locationSnapshot2.navigationType).toBe('push');
   });
 
   it('should replace a hash with the new location', () => {
@@ -109,7 +109,7 @@ describe('HashLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationState1, locationNavigator1] = session.use(HashLocation);
+    const [locationSnapshot1, locationNavigator1] = session.use(HashLocation);
 
     session.finalize();
     session.flush();
@@ -119,21 +119,21 @@ describe('HashLocation', () => {
       state,
     });
 
-    const [locationState2] = session.use(HashLocation);
+    const [locationSnapshot2] = session.use(HashLocation);
 
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
-    expect(locationState2).not.toBe(locationState1);
-    expect(locationState2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationState2.state).toBe(state);
-    expect(locationState2.navigationType).toBe('replace');
+    expect(locationSnapshot2).not.toBe(locationSnapshot1);
+    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(locationSnapshot2.state).toBe(state);
+    expect(locationSnapshot2.navigationType).toBe('replace');
   });
 
   it('should update the state when the link is clicked', () => {
     const element = createElement('a', { href: '#/articles/foo%2Fbar' });
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-    const [locationState1] = session.use(HashLocation);
+    const [locationSnapshot1] = session.use(HashLocation);
 
     session.finalize();
     session.flush();
@@ -142,12 +142,12 @@ describe('HashLocation', () => {
     element.dispatchEvent(event);
     document.body.removeChild(element);
 
-    const [locationState2] = session.use(HashLocation);
+    const [locationSnapshot2] = session.use(HashLocation);
 
-    expect(locationState2).not.toBe(locationState1);
-    expect(locationState2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationState2.state).toBe(null);
-    expect(locationState2.navigationType).toBe('push');
+    expect(locationSnapshot2).not.toBe(locationSnapshot1);
+    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(locationSnapshot2.state).toBe(null);
+    expect(locationSnapshot2.navigationType).toBe('push');
   });
 
   it('should update the location when the hash has been changed', () => {
@@ -156,19 +156,19 @@ describe('HashLocation', () => {
       newURL: getURLWithoutHash(location) + '#/articles/foo%2Fbar',
     });
 
-    const [locationState1] = session.use(HashLocation);
+    const [locationSnapshot1] = session.use(HashLocation);
 
     session.finalize();
     session.flush();
 
     dispatchEvent(event);
 
-    const [locationState2] = session.use(HashLocation);
+    const [locationSnapshot2] = session.use(HashLocation);
 
-    expect(locationState2).not.toBe(locationState1);
-    expect(locationState2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationState2.state).toBe(null);
-    expect(locationState2.navigationType).toBe('traverse');
+    expect(locationSnapshot2).not.toBe(locationSnapshot1);
+    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(locationSnapshot2.state).toBe(null);
+    expect(locationSnapshot2.navigationType).toBe('traverse');
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { ALL_LANES } from '@/core.js';
 import { CurrentLocation } from '@/extensions/router/location.js';
-import { ALL_LANES } from '@/hook.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockCoroutine, MockHostEnvironment } from '../../../mocks.js';

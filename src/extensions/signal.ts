@@ -4,18 +4,16 @@ import {
   type Binding,
   type CommitContext,
   type Coroutine,
+  type CustomHook,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  type Slot,
-  type UpdateContext,
-} from '../directive.js';
-import {
-  type CustomHook,
   type HookContext,
   type Lanes,
   NO_LANES,
-} from '../hook.js';
+  type Slot,
+  type UpdateContext,
+} from '../core.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import { LinkedList } from '../linked-list.js';
 import type { Part } from '../part.js';
@@ -25,7 +23,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 export const SignalDirective: DirectiveType<Signal<any>> = {
-  displayName: 'SignalDirective',
+  name: 'SignalDirective',
   resolveBinding<T>(
     signal: Signal<T>,
     part: Part,

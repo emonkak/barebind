@@ -6,9 +6,9 @@ import { Runtime } from '@/runtime.js';
 import { MockHostEnvironment } from '../../mocks.js';
 
 describe('EventPrimitive', () => {
-  describe('displayName', () => {
+  describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(EventPrimitive.displayName, 'EventPrimitive');
+      expect(EventPrimitive.name, 'EventPrimitive');
     });
   });
 

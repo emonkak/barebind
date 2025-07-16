@@ -1,8 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { Effect } from '@/directive.js';
+import { CommitPhase, type Effect } from '@/core.js';
 import { ServerHostEnvironment } from '@/host-environment/server.js';
-import { CommitPhase } from '@/host-environment.js';
 import { PartType } from '@/part.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';

@@ -1,16 +1,9 @@
 import { sequentialEqual } from './compare.js';
 import {
   type Coroutine,
-  DirectiveSpecifier,
-  type Effect,
-  type RenderContext,
-  type RenderSessionContext,
-  type TemplateMode,
-} from './directive.js';
-import {
   type CustomHook,
+  type Effect,
   type EffectHook,
-  ensureHookType,
   type FinalizerHook,
   type Hook,
   HookType,
@@ -22,9 +15,13 @@ import {
   NO_LANES,
   type ReducerHook,
   type RefObject,
+  type RenderContext,
+  type RenderSessionContext,
+  type TemplateMode,
   type UpdateOptions,
   type UpdateTask,
-} from './hook.js';
+} from './core.js';
+import { DirectiveSpecifier } from './directive.js';
 
 export class RenderSession implements RenderContext {
   private readonly _hooks: Hook[];
@@ -407,5 +404,16 @@ function enqueueEffect(hook: EffectHook, context: RenderSessionContext): void {
     case HookType.InsertionEffect:
       context.enqueueMutationEffect(effect);
       break;
+  }
+}
+
+function ensureHookType<TExpectedHook extends Hook>(
+  expectedType: TExpectedHook['type'],
+  hook: Hook,
+): asserts hook is TExpectedHook {
+  if (hook.type !== expectedType) {
+    throw new Error(
+      `Unexpected hook type. Expected "${expectedType}" but got "${hook.type}".`,
+    );
   }
 }
