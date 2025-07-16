@@ -140,7 +140,7 @@ function defineInstanceProperties<T extends object>(
 
     if (writable && configurable && !key.startsWith('_')) {
       if (isStore(value)) {
-        const signal = new StoreSignal(Object.freeze(value));
+        const signal = new StoreSignal(value);
         signalMap[key] = signal;
         Object.defineProperty(instance, key, {
           configurable,
@@ -150,7 +150,7 @@ function defineInstanceProperties<T extends object>(
           },
         } as PropertyDescriptor);
       } else {
-        const signal = new Atom(Object.freeze(value));
+        const signal = new Atom(value);
         signalMap[key] = signal;
         Object.defineProperty(instance, key, {
           configurable,
@@ -159,7 +159,7 @@ function defineInstanceProperties<T extends object>(
             return signal.value;
           },
           set(value: unknown): void {
-            signal.value = Object.freeze(value);
+            signal.value = value;
           },
         } as PropertyDescriptor);
       }
