@@ -435,8 +435,8 @@ describe('RenderSession', () => {
       const id1 = session.useId();
       const id2 = session.useId();
 
-      expect(id1).toMatch(/[0-9a-z]+-1/);
-      expect(id2).toMatch(/[0-9a-z]+-2/);
+      expect(id1).toMatch(/[0-9a-z]+:1/);
+      expect(id2).toMatch(/[0-9a-z]+:2/);
 
       session.finalize();
       session.flush();

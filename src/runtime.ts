@@ -303,7 +303,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const prefix = this._state.templatePlaceholder;
     const id = incrementIdentifier(this._state.identifierCount);
     this._state.identifierCount = id;
-    return prefix + '-' + id;
+    return prefix + ':' + id;
   }
 
   renderComponent<TProps, TResult>(
