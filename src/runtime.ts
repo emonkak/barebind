@@ -47,7 +47,7 @@ export type RuntimeEvent =
       type: 'UPDATE_START' | 'UPDATE_END';
       id: number;
       priority: TaskPriority | null;
-      transition: boolean;
+      viewTransition: boolean;
     }
   | {
       type: 'RENDER_START' | 'RENDER_END';
@@ -165,7 +165,7 @@ export class Runtime implements CommitContext, UpdateContext {
         type: 'UPDATE_START',
         id: this._updateFrame.id,
         priority: options.priority,
-        transition: options.transition,
+        viewTransition: options.viewTransition,
       });
     }
 
@@ -212,7 +212,7 @@ export class Runtime implements CommitContext, UpdateContext {
         this._commitEffects(layoutEffects, CommitPhase.Layout);
       };
 
-      if (options.transition) {
+      if (options.viewTransition) {
         await this._backend.startViewTransition(callback);
       } else {
         await this._backend.requestCallback(callback, {
@@ -234,7 +234,7 @@ export class Runtime implements CommitContext, UpdateContext {
           type: 'UPDATE_END',
           id: this._updateFrame.id,
           priority: options.priority,
-          transition: options.transition,
+          viewTransition: options.viewTransition,
         });
       }
     }
@@ -248,7 +248,7 @@ export class Runtime implements CommitContext, UpdateContext {
         type: 'UPDATE_START',
         id: this._updateFrame.id,
         priority: null,
-        transition: false,
+        viewTransition: false,
       });
     }
 
@@ -289,7 +289,7 @@ export class Runtime implements CommitContext, UpdateContext {
           type: 'UPDATE_END',
           id: this._updateFrame.id,
           priority: null,
-          transition: false,
+          viewTransition: false,
         });
       }
     }
@@ -383,9 +383,9 @@ export class Runtime implements CommitContext, UpdateContext {
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
     const { coroutineStates } = this._state;
-    const completeOptions = {
+    const completeOptions: Required<UpdateOptions> = {
       priority: options?.priority ?? this._backend.getCurrentPriority(),
-      transition: options?.transition ?? false,
+      viewTransition: options?.viewTransition ?? false,
     };
     const lanes = getScheduleLanesFromOptions(completeOptions);
     let coroutineState = coroutineStates.get(coroutine);

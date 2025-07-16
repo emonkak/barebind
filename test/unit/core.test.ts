@@ -31,18 +31,21 @@ describe('getFlushLanesFromOptions()', () => {
       { priority: 'background' },
       Lane.UserBlocking | Lane.UserVisible | Lane.Background,
     ],
-    [{ transition: true }, DEFAULT_LANES | Lane.Transition],
+    [{ viewTransition: true }, DEFAULT_LANES | Lane.ViewTransition],
     [
-      { priority: 'user-blocking', transition: true },
-      Lane.UserBlocking | Lane.Transition,
+      { priority: 'user-blocking', viewTransition: true },
+      Lane.UserBlocking | Lane.ViewTransition,
     ],
     [
-      { priority: 'user-visible', transition: true },
-      Lane.UserBlocking | Lane.UserVisible | Lane.Transition,
+      { priority: 'user-visible', viewTransition: true },
+      Lane.UserBlocking | Lane.UserVisible | Lane.ViewTransition,
     ],
     [
-      { priority: 'background', transition: true },
-      Lane.UserBlocking | Lane.UserVisible | Lane.Background | Lane.Transition,
+      { priority: 'background', viewTransition: true },
+      Lane.UserBlocking |
+        Lane.UserVisible |
+        Lane.Background |
+        Lane.ViewTransition,
     ],
   ] as [UpdateOptions, Lane][])(
     'returns the lanes for flush',
@@ -58,18 +61,18 @@ describe('getScheduleLanesFromOptions()', () => {
     [{ priority: 'user-blocking' }, Lane.UserBlocking],
     [{ priority: 'user-visible' }, Lane.UserVisible],
     [{ priority: 'background' }, Lane.Background],
-    [{ transition: true }, DEFAULT_LANES | Lane.Transition],
+    [{ viewTransition: true }, DEFAULT_LANES | Lane.ViewTransition],
     [
-      { priority: 'user-blocking', transition: true },
-      Lane.UserBlocking | Lane.Transition,
+      { priority: 'user-blocking', viewTransition: true },
+      Lane.UserBlocking | Lane.ViewTransition,
     ],
     [
-      { priority: 'user-visible', transition: true },
-      Lane.UserVisible | Lane.Transition,
+      { priority: 'user-visible', viewTransition: true },
+      Lane.UserVisible | Lane.ViewTransition,
     ],
     [
-      { priority: 'background', transition: true },
-      Lane.Background | Lane.Transition,
+      { priority: 'background', viewTransition: true },
+      Lane.Background | Lane.ViewTransition,
     ],
   ] as [UpdateOptions, Lane][])(
     'returns lanes for schedule',

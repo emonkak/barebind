@@ -32,7 +32,7 @@ export function createAsyncRoot<T>(
   ): Required<UpdateOptions> {
     return {
       priority: backend.getCurrentPriority(),
-      transition: false,
+      viewTransition: false,
       ...options,
     };
   }

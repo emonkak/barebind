@@ -106,7 +106,7 @@ export const Lane = {
   UserBlocking: 0b1,
   UserVisible: 0b10,
   Background: 0b100,
-  Transition: 0b1000,
+  ViewTransition: 0b1000,
 } as const;
 
 export type Lane = (typeof Lane)[keyof typeof Lane];
@@ -120,7 +120,7 @@ export const DEFAULT_LANES: Lanes =
 
 export interface UpdateOptions {
   priority?: TaskPriority;
-  transition?: boolean;
+  viewTransition?: boolean;
 }
 
 export type Hook =
@@ -373,8 +373,8 @@ export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
       break;
   }
 
-  if (options.transition) {
-    lanes |= Lane.Transition;
+  if (options.viewTransition) {
+    lanes |= Lane.ViewTransition;
   }
 
   return lanes;
@@ -401,8 +401,8 @@ export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
       break;
   }
 
-  if (options.transition) {
-    lanes |= Lane.Transition;
+  if (options.viewTransition) {
+    lanes |= Lane.ViewTransition;
   }
 
   return lanes;

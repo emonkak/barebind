@@ -146,7 +146,7 @@ describe('Runtime', () => {
 
       await runtime.flushAsync({
         priority: 'user-blocking',
-        transition: false,
+        viewTransition: false,
       });
 
       expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
@@ -169,7 +169,7 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           priority: 'user-blocking',
-          transition: false,
+          viewTransition: false,
         },
         {
           type: 'RENDER_START',
@@ -219,7 +219,7 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           priority: 'user-blocking',
-          transition: false,
+          viewTransition: false,
         },
       ]);
 
@@ -227,7 +227,7 @@ describe('Runtime', () => {
       runtime.enqueueMutationEffect(subcoroutine);
       await runtime.flushAsync({
         priority: 'background',
-        transition: true,
+        viewTransition: true,
       });
 
       expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
@@ -249,7 +249,7 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           priority: 'background',
-          transition: true,
+          viewTransition: true,
         },
         {
           type: 'RENDER_START',
@@ -299,12 +299,15 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           priority: 'background',
-          transition: true,
+          viewTransition: true,
         },
       ]);
 
       unobserve();
-      await runtime.flushAsync({ priority: 'background', transition: false });
+      await runtime.flushAsync({
+        priority: 'background',
+        viewTransition: false,
+      });
 
       expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
@@ -367,7 +370,7 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           priority: null,
-          transition: false,
+          viewTransition: false,
         },
         {
           type: 'RENDER_START',
@@ -417,7 +420,7 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           priority: null,
-          transition: false,
+          viewTransition: false,
         },
       ]);
 
@@ -439,7 +442,7 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           priority: null,
-          transition: false,
+          viewTransition: false,
         },
         {
           type: 'RENDER_START',
@@ -489,7 +492,7 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           priority: null,
-          transition: false,
+          viewTransition: false,
         },
       ]);
 
@@ -725,12 +728,12 @@ describe('Runtime', () => {
       });
       const task3 = runtime.scheduleUpdate(coroutine, {
         priority: 'background',
-        transition: true,
+        viewTransition: true,
       });
 
       expect(task1.lanes).toBe(Lane.UserBlocking);
       expect(task2.lanes).toBe(Lane.Background);
-      expect(task3.lanes).toBe(Lane.Background | Lane.Transition);
+      expect(task3.lanes).toBe(Lane.Background | Lane.ViewTransition);
 
       expect(await runtime.waitForUpdate(coroutine)).toBe(3);
       expect(await getPromiseState(task1.promise)).toBe('fulfilled');

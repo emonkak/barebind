@@ -22,13 +22,13 @@ describe('AsyncRoot', () => {
         type: 'UPDATE_START',
         id: 0,
         priority: 'user-blocking',
-        transition: false,
+        viewTransition: false,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
         id: 0,
         priority: 'user-blocking',
-        transition: false,
+        viewTransition: false,
       });
 
       const callCount = observer.onRuntimeEvent.mock.calls.length;
@@ -66,7 +66,7 @@ describe('AsyncRoot', () => {
 
       await root.update(value2, {
         priority: 'background',
-        transition: true,
+        viewTransition: true,
       });
 
       expect(container.innerHTML).toBe('<!--bar-->');
