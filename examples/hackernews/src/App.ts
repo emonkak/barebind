@@ -1,4 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
+import { memo, type RenderContext } from '@emonkak/ebit';
 import { component } from '@emonkak/ebit/extensions';
 import {
   HashLocation,
@@ -36,7 +36,7 @@ export function App(
   return context.html`
     <div>
       <${component(Nav, {})}>
-      <${page}>
+      <${memo(page)}>
     </div>
   `;
 }
