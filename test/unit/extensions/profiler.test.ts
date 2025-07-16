@@ -1,21 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
 import { CommitPhase, type Effect, type RenderContext } from '@/core.js';
 import {
-  type Logger,
-  LogReporter,
-  type Profile,
-  Profiler,
+  type ConsoleLogger,
+  ConsoleReporter,
+  type RuntimeProfile,
+  RuntimeProfiler,
 } from '@/extensions/profiler.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { MockComponent, MockEffect } from '../../mocks.js';
 
-describe('Profiler', () => {
+describe('RuntimeProfiler', () => {
   describe('onRuntimeEvent()', () => {
     it('collects profiles from runtime events', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new Profiler(reporter);
+      const profiler = new RuntimeProfiler(reporter);
 
       const component = new MockComponent();
       const mutationEffects = [new MockEffect(), new MockEffect()];
@@ -138,7 +138,7 @@ describe('Profiler', () => {
   });
 });
 
-describe('LogReporter', () => {
+describe('ConsoleReporter', () => {
   describe('reportProfile()', () => {
     it.each([
       [
@@ -230,11 +230,11 @@ describe('LogReporter', () => {
           ['groupEnd'],
         ],
       ],
-    ] as [Profile, [keyof Logger, ...unknown[]][]][])(
+    ] as [RuntimeProfile, [keyof ConsoleLogger, ...unknown[]][]][])(
       'logs the profile',
       (profile, expectedLogs) => {
         const logger = new MockLogger();
-        const reporter = new LogReporter(logger);
+        const reporter = new ConsoleReporter(logger);
 
         reporter.reportProfile(profile);
 
@@ -244,9 +244,9 @@ describe('LogReporter', () => {
   });
 });
 
-type Log = [keyof Logger, ...unknown[]];
+type Log = [keyof ConsoleLogger, ...unknown[]];
 
-class MockLogger implements Logger {
+class MockLogger implements ConsoleLogger {
   private _logs: Log[] = [];
 
   flush(): Log[] {

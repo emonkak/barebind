@@ -2,11 +2,11 @@ export { component } from './component.js';
 export {
   type CommitMeasurement,
   type ComponentMeasurement,
-  LogReporter,
-  type Profile,
-  Profiler,
+  ConsoleReporter,
   type RenderMeasurement,
-  type Reporter,
+  type RuntimeProfile,
+  RuntimeProfiler,
+  type RuntimeReporter,
   type UpdateMeasurement,
 } from './profiler.js';
 export {

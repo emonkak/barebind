@@ -3,7 +3,7 @@
 import { CommitPhase } from '../core.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
-export interface Profile {
+export interface RuntimeProfile {
   id: number;
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
@@ -37,11 +37,11 @@ export interface CommitMeasurement {
   totalEffects: number;
 }
 
-export interface Reporter {
-  reportProfile(profile: Profile): void;
+export interface RuntimeReporter {
+  reportProfile(profile: RuntimeProfile): void;
 }
 
-export type Logger = Pick<
+export type ConsoleLogger = Pick<
   Console,
   'group' | 'groupCollapsed' | 'groupEnd' | 'log' | 'table'
 >;
@@ -58,12 +58,12 @@ const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
 const DEFAULT_STYLE = 'font-weight: normal';
 
-export class Profiler implements RuntimeObserver {
-  private readonly _reporter: Reporter;
+export class RuntimeProfiler implements RuntimeObserver {
+  private readonly _reporter: RuntimeReporter;
 
-  private readonly _inProgressProfiles: Map<number, Profile> = new Map();
+  private readonly _inProgressProfiles: Map<number, RuntimeProfile> = new Map();
 
-  constructor(reporter: Reporter) {
+  constructor(reporter: RuntimeReporter) {
     this._reporter = reporter;
   }
 
@@ -168,14 +168,14 @@ export class Profiler implements RuntimeObserver {
   }
 }
 
-export class LogReporter implements Reporter {
-  private readonly _logger: Logger;
+export class ConsoleReporter implements RuntimeReporter {
+  private readonly _logger: ConsoleLogger;
 
-  constructor(logger: Logger = console) {
+  constructor(logger: ConsoleLogger = console) {
     this._logger = logger;
   }
 
-  reportProfile(profile: Profile): void {
+  reportProfile(profile: RuntimeProfile): void {
     const {
       updateMeasurement,
       renderMeasurement,
@@ -246,7 +246,7 @@ export class LogReporter implements Reporter {
   }
 }
 
-function createProfile(id: number): Profile {
+function createProfile(id: number): RuntimeProfile {
   return {
     id,
     updateMeasurement: null,

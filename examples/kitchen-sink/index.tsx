@@ -7,9 +7,9 @@ import {
 } from '@emonkak/ebit';
 import {
   Atom,
+  ConsoleReporter,
   component,
-  LogReporter,
-  Profiler,
+  RuntimeProfiler,
   repeat,
   type Signal,
   type VElement,
@@ -346,6 +346,6 @@ const root = createAsyncRoot(
   new BrowserBackend(),
 );
 
-root.observe(new Profiler(new LogReporter()));
+root.observe(new RuntimeProfiler(new ConsoleReporter()));
 
 root.mount();

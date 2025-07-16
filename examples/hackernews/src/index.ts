@@ -1,5 +1,9 @@
 import { BrowserBackend, createAsyncRoot } from '@emonkak/ebit';
-import { component, LogReporter, Profiler } from '@emonkak/ebit/extensions';
+import {
+  ConsoleReporter,
+  component,
+  RuntimeProfiler,
+} from '@emonkak/ebit/extensions';
 
 import { App } from './App.js';
 import { ItemStore, StoryStore, UserStore } from './store.js';
@@ -14,6 +18,6 @@ const root = createAsyncRoot(
   new BrowserBackend(),
 );
 
-root.observe(new Profiler(new LogReporter()));
+root.observe(new RuntimeProfiler(new ConsoleReporter()));
 
 root.mount();
