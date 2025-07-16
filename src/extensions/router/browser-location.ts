@@ -15,14 +15,16 @@ export const BrowserLocation: CustomHook<
   onCustomHook(
     context: HookContext,
   ): readonly [LocationSnapshot, LocationNavigator] {
-    const [locationSnapshot, setLocationSnapshot] =
-      context.useState<LocationSnapshot>(() => ({
+    const [locationState, setLocationState] = context.useState<{
+      snapshot: LocationSnapshot;
+      navigator: LocationNavigator;
+    }>(() => ({
+      snapshot: {
         url: RelativeURL.fromLocation(location),
         state: history.state,
         navigationType: null,
-      }));
-    const locationNavigator = context.useMemo<LocationNavigator>(
-      () => ({
+      },
+      navigator: {
         getCurrentURL: () => RelativeURL.fromLocation(location),
         navigate: (
           url: string | RelativeURL,
@@ -36,38 +38,48 @@ export const BrowserLocation: CustomHook<
             history.pushState(state, '', url.toString());
             navigationType = 'push';
           }
-          setLocationSnapshot({
-            url: RelativeURL.from(url),
-            state,
-            navigationType,
-          });
+          setLocationState(({ navigator }) => ({
+            snapshot: {
+              url: RelativeURL.from(url),
+              state,
+              navigationType,
+            },
+            navigator,
+          }));
         },
-      }),
-      [],
-    );
+      },
+    }));
+
+    const { snapshot, navigator } = locationState;
 
     context.useLayoutEffect(() => {
       const handlePopState = (event: PopStateEvent) => {
-        setLocationSnapshot((prevState) => {
+        setLocationState((locationState) => {
+          const { snapshot, navigator } = locationState;
           if (
-            prevState.url.pathname === location.pathname &&
-            prevState.url.search === location.search
+            snapshot.url.pathname === location.pathname &&
+            snapshot.url.search === location.search
           ) {
             // Ignore an event when the hash has only changed.
-            return prevState;
+            return locationState;
           }
           return {
-            url: RelativeURL.fromLocation(location),
-            state: event.state,
-            navigationType: 'traverse',
+            snapshot: {
+              url: RelativeURL.fromLocation(location),
+              state: event.state,
+              navigationType: 'traverse',
+            },
+            navigator,
           };
         });
       };
-      const handleClick = createLinkClickHandler(locationNavigator);
-      const handleSubmit = createFormSubmitHandler(locationNavigator);
+      const handleClick = createLinkClickHandler(navigator);
+      const handleSubmit = createFormSubmitHandler(navigator);
+
       addEventListener('click', handleClick);
       addEventListener('submit', handleSubmit);
       addEventListener('popstate', handlePopState);
+
       return () => {
         removeEventListener('click', handleClick);
         removeEventListener('submit', handleSubmit);
@@ -75,7 +87,7 @@ export const BrowserLocation: CustomHook<
       };
     }, []);
 
-    const currentLocation = [locationSnapshot, locationNavigator] as const;
+    const currentLocation = [snapshot, navigator] as const;
 
     context.setContextValue(CurrentLocation, currentLocation);
 

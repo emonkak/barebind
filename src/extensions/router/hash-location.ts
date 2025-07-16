@@ -16,14 +16,16 @@ export const HashLocation: CustomHook<
   onCustomHook(
     context: HookContext,
   ): readonly [LocationSnapshot, LocationNavigator] {
-    const [locationSnapshot, setLocationSnapshot] =
-      context.useState<LocationSnapshot>(() => ({
+    const [locationState, setLocationState] = context.useState<{
+      snapshot: LocationSnapshot;
+      navigator: LocationNavigator;
+    }>(() => ({
+      snapshot: {
         url: RelativeURL.fromString(trimHash(location.hash)),
         state: history.state,
         navigationType: null,
-      }));
-    const locationNavigator = context.useMemo<LocationNavigator>(
-      () => ({
+      },
+      navigator: {
         getCurrentURL: () => RelativeURL.fromString(trimHash(location.hash)),
         navigate: (
           url: string | RelativeURL,
@@ -37,40 +39,49 @@ export const HashLocation: CustomHook<
             history.pushState(state, '', '#' + url);
             navigationType = 'push';
           }
-          setLocationSnapshot({
-            url: RelativeURL.from(url),
-            state,
-            navigationType,
-          });
+          setLocationState(({ navigator }) => ({
+            snapshot: {
+              url: RelativeURL.from(url),
+              state,
+              navigationType,
+            },
+            navigator,
+          }));
         },
-      }),
-      [],
-    );
+      },
+    }));
+
+    const { snapshot, navigator } = locationState;
 
     context.useLayoutEffect(() => {
       // Prevent the default action when hash link is clicked. So, "hashchange"
       // event is canceled and the location type is detected correctly.
-      const handleClick = createHashClickHandler(locationNavigator);
+      const handleClick = createHashClickHandler(navigator);
       // BUGS: "hashchange" event is fired other than when navigating through
       // history entries by back/forward action. For instance, when a link is
       // clicked or a new URL is entered in the address bar. Therefore the
       // location type cannot be detected completely correctly.
       const handleHashChange = (event: HashChangeEvent) => {
-        setLocationSnapshot({
-          url: RelativeURL.fromString(trimHash(new URL(event.newURL).hash)),
-          state: history.state,
-          navigationType: 'traverse',
-        });
+        setLocationState(({ navigator }) => ({
+          snapshot: {
+            url: RelativeURL.fromString(trimHash(new URL(event.newURL).hash)),
+            state: history.state,
+            navigationType: 'traverse',
+          },
+          navigator,
+        }));
       };
+
       addEventListener('click', handleClick);
       addEventListener('hashchange', handleHashChange);
+
       return () => {
         removeEventListener('click', handleClick);
         removeEventListener('hashchange', handleHashChange);
       };
     }, []);
 
-    const currentLocation = [locationSnapshot, locationNavigator] as const;
+    const currentLocation = [snapshot, navigator] as const;
 
     context.setContextValue(CurrentLocation, currentLocation);
 
