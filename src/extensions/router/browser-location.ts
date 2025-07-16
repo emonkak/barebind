@@ -20,12 +20,12 @@ export const BrowserLocation: CustomHook<
       navigator: LocationNavigator;
     }>(() => ({
       snapshot: {
-        url: RelativeURL.fromLocation(location),
+        url: RelativeURL.fromURL(location),
         state: history.state,
         navigationType: null,
       },
       navigator: {
-        getCurrentURL: () => RelativeURL.fromLocation(location),
+        getCurrentURL: () => RelativeURL.fromURL(location),
         navigate: (
           url: string | RelativeURL,
           { replace = false, state = null }: NavigateOptions = {},
@@ -65,7 +65,7 @@ export const BrowserLocation: CustomHook<
           }
           return {
             snapshot: {
-              url: RelativeURL.fromLocation(location),
+              url: RelativeURL.fromURL(location),
               state: event.state,
               navigationType: 'traverse',
             },
@@ -118,7 +118,7 @@ export function createLinkClickHandler({
 
     event.preventDefault();
 
-    const url = RelativeURL.fromLocation(element);
+    const url = RelativeURL.fromURL(element);
     const replace =
       element.hasAttribute('data-link-replace') ||
       element.href === location.href;

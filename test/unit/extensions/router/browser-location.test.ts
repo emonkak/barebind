@@ -237,7 +237,7 @@ describe('createLinkClickHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const clickHandler = vi.fn(
       createLinkClickHandler({ getCurrentURL, navigate }),
@@ -273,7 +273,7 @@ describe('createLinkClickHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const clickHandler = vi.fn(
       createLinkClickHandler({ getCurrentURL, navigate }),
@@ -311,7 +311,7 @@ describe('createLinkClickHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const clickHandler = vi.fn(
       createLinkClickHandler({ getCurrentURL, navigate }),
@@ -347,7 +347,7 @@ describe('createLinkClickHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const clickHandler = vi.fn(
       createLinkClickHandler({ getCurrentURL, navigate }),
@@ -379,7 +379,7 @@ describe('createLinkClickHandler()', () => {
 
       const getCurrentURL = vi
         .fn()
-        .mockImplementation(() => RelativeURL.fromLocation(location));
+        .mockImplementation(() => RelativeURL.fromURL(location));
       const navigate = vi.fn();
       const clickHandler = vi.fn(
         createLinkClickHandler({ getCurrentURL, navigate }),
@@ -403,7 +403,7 @@ describe('createLinkClickHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const clickHandler = vi.fn(
       createLinkClickHandler({ getCurrentURL, navigate }),
@@ -440,7 +440,7 @@ describe('createLinkClickHandler()', () => {
 
       const getCurrentURL = vi
         .fn()
-        .mockImplementation(() => RelativeURL.fromLocation(location));
+        .mockImplementation(() => RelativeURL.fromURL(location));
       const navigate = vi.fn();
       const clickHandler = vi.fn(
         createLinkClickHandler({ getCurrentURL, navigate }),
@@ -481,7 +481,7 @@ describe('createFormSubmitHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
       createFormSubmitHandler({ getCurrentURL, navigate }),
@@ -527,7 +527,7 @@ describe('createFormSubmitHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
       createFormSubmitHandler({ getCurrentURL, navigate }),
@@ -571,7 +571,7 @@ describe('createFormSubmitHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
       createFormSubmitHandler({ getCurrentURL, navigate }),
@@ -605,7 +605,7 @@ describe('createFormSubmitHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
       createFormSubmitHandler({ getCurrentURL, navigate }),
@@ -632,7 +632,7 @@ describe('createFormSubmitHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
       createFormSubmitHandler({ getCurrentURL, navigate }),
@@ -658,7 +658,7 @@ describe('createFormSubmitHandler()', () => {
 
     const getCurrentURL = vi
       .fn()
-      .mockImplementation(() => RelativeURL.fromLocation(location));
+      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
     const formSubmitHandler = vi.fn(
       createFormSubmitHandler({ getCurrentURL, navigate }),

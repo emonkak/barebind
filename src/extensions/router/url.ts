@@ -1,4 +1,4 @@
-export interface LocationLike {
+export interface URLLike {
   pathname: string;
   search: string;
   hash: string;
@@ -13,27 +13,24 @@ export class RelativeURL {
 
   private readonly _hash: string;
 
-  static from(value: string | RelativeURL | URL | LocationLike): RelativeURL {
+  static from(value: string | RelativeURL | URLLike): RelativeURL {
     if (value instanceof RelativeURL) {
       return value;
     }
-    if (value instanceof URL) {
-      return RelativeURL.fromURL(value);
-    }
     if (typeof value === 'object') {
-      return RelativeURL.fromLocation(value);
+      return RelativeURL.fromURL(value);
     }
     return RelativeURL.fromString(value);
   }
 
-  static fromLocation(location: LocationLike): RelativeURL {
-    const { pathname, search, hash } = location;
+  static fromURL(url: URLLike): RelativeURL {
+    const { pathname, search, hash } = url;
     return new RelativeURL(pathname, search, hash);
   }
 
   static fromString(
     urlString: string,
-    base: string | LocationLike = '',
+    base: string | URLLike = '',
   ): RelativeURL {
     // SAFETY: Relative URLs can always be safely initialized.
     const baseURL = new URL(
@@ -42,11 +39,6 @@ export class RelativeURL {
     );
     const url = new URL(urlString, baseURL);
     return RelativeURL.fromURL(url);
-  }
-
-  static fromURL(url: URL): RelativeURL {
-    const { pathname, searchParams, hash } = url;
-    return new RelativeURL(pathname, searchParams, hash);
   }
 
   constructor(pathname: string, search: URLSearchParamsInput = '', hash = '') {
