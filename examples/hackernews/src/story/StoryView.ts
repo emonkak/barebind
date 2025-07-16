@@ -2,12 +2,12 @@ import type { RenderContext } from '@emonkak/ebit';
 
 import type { Story } from '../store.js';
 
-export interface StoryProps {
+export interface StoryViewProps {
   story: Story;
 }
 
 export function StoryView(
-  { story }: StoryProps,
+  { story }: StoryViewProps,
   context: RenderContext,
 ): unknown {
   return context.html`

@@ -4,11 +4,14 @@ import { component, repeat } from '@emonkak/ebit/extensions';
 import type { Item } from '../store.js';
 import { CommentView } from './CommentView.js';
 
-export interface ItemProps {
+export interface ItemViewProps {
   item: Item;
 }
 
-export function ItemView({ item }: ItemProps, context: RenderContext): unknown {
+export function ItemView(
+  { item }: ItemViewProps,
+  context: RenderContext,
+): unknown {
   return context.html`
     <div class="item-view">
       <div class="item-view-header">

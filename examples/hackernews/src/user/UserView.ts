@@ -2,11 +2,14 @@ import type { RenderContext } from '@emonkak/ebit';
 
 import type { User } from '../store.js';
 
-export interface UserProps {
+export interface UserViewProps {
   user: User;
 }
 
-export function UserView({ user }: UserProps, context: RenderContext): unknown {
+export function UserView(
+  { user }: UserViewProps,
+  context: RenderContext,
+): unknown {
   return context.html`
     <div class="user-view">
       <h1>User : ${user.id}</h1>
