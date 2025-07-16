@@ -21,41 +21,41 @@ import type { Part } from '../part.js';
 import { Scope } from '../scope.js';
 
 export function component<TProps, TResult>(
-  component: ComponentFunction<TProps, TResult>,
+  componentFn: ComponentFunction<TProps, TResult>,
   props: NoInfer<TProps>,
 ): DirectiveSpecifier<TProps> {
-  const directive = new FunctionComponent(component);
+  const directive = new FunctionComponent(componentFn);
   return new DirectiveSpecifier(directive, props);
 }
 
 export class FunctionComponent<TProps, TResult>
   implements Component<TProps, TResult>
 {
-  private readonly _componentFunction: ComponentFunction<TProps, TResult>;
+  private readonly _componentFn: ComponentFunction<TProps, TResult>;
 
-  constructor(componentFunction: ComponentFunction<TProps, TResult>) {
-    this._componentFunction = componentFunction;
+  constructor(componentFn: ComponentFunction<TProps, TResult>) {
+    this._componentFn = componentFn;
   }
 
   get name(): string {
-    return this._componentFunction.name;
+    return this._componentFn.name;
   }
 
   equals(other: unknown): boolean {
     return (
       other instanceof FunctionComponent &&
-      other._componentFunction === this._componentFunction
+      other._componentFn === this._componentFn
     );
   }
 
   render(props: TProps, context: RenderContext): TResult {
-    const type = this._componentFunction;
-    return type(props, context);
+    const componentFn = this._componentFn;
+    return componentFn(props, context);
   }
 
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean {
     return (
-      this._componentFunction.shouldSkipUpdate?.(nextProps, prevProps) ??
+      this._componentFn.shouldSkipUpdate?.(nextProps, prevProps) ??
       nextProps === prevProps
     );
   }
