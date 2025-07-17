@@ -440,7 +440,8 @@ export class Runtime implements CommitContext, UpdateContext {
     const coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState !== undefined) {
-      const pendingTasks = Iterator.from(coroutineState.pendingTasks).map(
+      const pendingTasks = Array.from(
+        coroutineState.pendingTasks,
         (task) => task.promise,
       );
       const results = await Promise.allSettled(pendingTasks);
