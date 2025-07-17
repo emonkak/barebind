@@ -1,5 +1,6 @@
 import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -13,7 +14,7 @@ export const NodePrimitive: Primitive<any> = {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'NodePrimitive must be used in a child node, but it is used here:\n' +
-          inspectPart(part, markUsedValue(value)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
       );
     }
     return new NodeBinding(value, part);

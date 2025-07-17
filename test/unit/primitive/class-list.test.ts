@@ -30,7 +30,7 @@ describe('ClassListPrimitive', () => {
           ClassListPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue(value, part);
+          ensureValue.call(ClassListPrimitive, value, part);
         }).not.toThrow();
       },
     );
@@ -47,9 +47,9 @@ describe('ClassListPrimitive', () => {
           ClassListPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue(value, part);
+          ensureValue.call(ClassListPrimitive, value, part);
         }).toThrow(
-          'The value of ClassListPrimitive must be array of class specifier,',
+          'The value of ClassListPrimitive must be an array of class specifier,',
         );
       },
     );

@@ -1,5 +1,6 @@
 import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { type LivePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -13,7 +14,7 @@ export const LivePrimitive: Primitive<any> = {
     if (part.type !== PartType.Live) {
       throw new Error(
         'LivePrimitive must be used in a live part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(value)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
       );
     }
     return new LiveBinding(value, part);

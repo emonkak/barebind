@@ -1,5 +1,6 @@
 import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { type Part, PartType, type TextPart } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -13,7 +14,7 @@ export const TextPrimitive: Primitive<any> = {
     if (part.type !== PartType.Text) {
       throw new Error(
         'TextPrimitive must be used in a text part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(value)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
       );
     }
     return new TextBinding(value, part);

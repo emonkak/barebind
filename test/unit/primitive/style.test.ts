@@ -24,7 +24,7 @@ describe('StylePrimitive', () => {
         StylePrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue({ color: 'red' }, part);
+        ensureValue.call(StylePrimitive, { color: 'red' }, part);
       }).not.toThrow();
     });
 
@@ -40,8 +40,8 @@ describe('StylePrimitive', () => {
           StylePrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue(value, part);
-        }).toThrow('The value of StylePrimitive must be object,');
+          ensureValue.call(StylePrimitive, value, part);
+        }).toThrow('The value of StylePrimitive must be an object,');
       },
     );
   });

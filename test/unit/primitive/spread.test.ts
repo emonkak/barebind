@@ -22,7 +22,7 @@ describe('SpreadPrimitive', () => {
         SpreadPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue({ class: 'foo' }, part);
+        ensureValue.call(SpreadPrimitive, { class: 'foo' }, part);
       }).not.toThrow();
     });
 
@@ -37,8 +37,8 @@ describe('SpreadPrimitive', () => {
           SpreadPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue(value, part);
-        }).toThrow('The value of SpreadPrimitive must be object,');
+          ensureValue.call(SpreadPrimitive, value, part);
+        }).toThrow('The value of SpreadPrimitive must be an object,');
       },
     );
   });

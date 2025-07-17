@@ -23,10 +23,10 @@ describe('EventPrimitive', () => {
         EventPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue(null, part);
-        ensureValue(undefined, part);
-        ensureValue(() => {}, part);
-        ensureValue({ handleEvent: () => {} }, part);
+        ensureValue.call(EventPrimitive, null, part);
+        ensureValue.call(EventPrimitive, undefined, part);
+        ensureValue.call(EventPrimitive, () => {}, part);
+        ensureValue.call(EventPrimitive, { handleEvent: () => {} }, part);
       }).not.toThrow();
     });
 
@@ -40,9 +40,9 @@ describe('EventPrimitive', () => {
         EventPrimitive.ensureValue!;
 
       expect(() => {
-        ensureValue({}, part);
+        ensureValue.call(EventPrimitive, {}, part);
       }).toThrow(
-        'The value of EventPrimitive must be EventListener, EventListenerObject, null or undefined,',
+        'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined,',
       );
     });
   });

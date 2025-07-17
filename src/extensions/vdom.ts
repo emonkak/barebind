@@ -85,7 +85,7 @@ export const ElementDirective: DirectiveType<ElementProps> = {
     if (part.type !== PartType.Element) {
       throw new Error(
         'ElementDirective must be used in an element part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(props)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new ElementBinding(props, part);

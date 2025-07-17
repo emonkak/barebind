@@ -7,6 +7,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ElementPart, type Part, PartType } from '../part.js';
 
@@ -17,7 +18,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
     if (!isSpreadProps(value)) {
       throw new Error(
-        `The value of SpreadPrimitive must be object, but got ${inspectValue(value)}.\n` +
+        `The value of SpreadPrimitive must be an object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }
@@ -30,7 +31,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
     if (part.type !== PartType.Element) {
       throw new Error(
         'SpreadPrimitive must be used in an element part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(props)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new SpreadBinding(props, part);

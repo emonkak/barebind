@@ -5,6 +5,7 @@ import type {
   RefObject,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -23,7 +24,7 @@ export const RefPrimitive: Primitive<Ref> = {
   ensureValue(value: unknown, part: Part): asserts value is Ref {
     if (!isRef(value)) {
       throw new Error(
-        `The value of RefPrimitive must be function, object, null or undefined, but got ${inspectValue(value)}.\n` +
+        `The value of RefPrimitive must be a function, object, null or undefined, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }
@@ -35,7 +36,7 @@ export const RefPrimitive: Primitive<Ref> = {
     ) {
       throw new Error(
         'RefPrimitive must be used in ":ref" attribute part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(ref)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, ref))),
       );
     }
     return new RefBinding(ref, part);

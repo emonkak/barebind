@@ -8,6 +8,7 @@ import type {
   UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { HydrationError, type HydrationTree } from '../hydration.js';
 import {
   type ChildNodePart,
@@ -56,7 +57,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         `${this.constructor.name} must be used in a child node part, but it is used here in:\n` +
-          inspectPart(part, markUsedValue(binds)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, binds))),
       );
     }
 

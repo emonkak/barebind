@@ -14,7 +14,7 @@ export class DirectiveSpecifier<T> implements Bindable<T>, Inspectable {
 
   readonly value: T;
 
-  constructor(type: DirectiveType<T>, value: T) {
+  constructor(type: DirectiveType<T>, value: NoInfer<T>) {
     this.type = type;
     this.value = value;
   }

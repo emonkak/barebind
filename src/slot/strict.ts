@@ -7,7 +7,7 @@ import {
   type UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
-import { SlotSpecifier } from '../directive.js';
+import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
 import type { HydrationTree } from '../hydration.js';
 import type { Part } from '../part.js';
 
@@ -42,7 +42,12 @@ export class StrictSlot<T> implements Slot<T> {
     if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
       throw new Error(
         `The directive must be ${this._binding.type.name} in this slot, but got ${directive.type.name}.\n` +
-          inspectPart(this._binding.part, markUsedValue(directive.value)),
+          inspectPart(
+            this._binding.part,
+            markUsedValue(
+              new DirectiveSpecifier(directive.type, directive.value),
+            ),
+          ),
       );
     }
 

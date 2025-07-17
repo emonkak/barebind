@@ -81,7 +81,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'RepeatDirective must be used in a child part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(props)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new RepeatBinding(props, part);

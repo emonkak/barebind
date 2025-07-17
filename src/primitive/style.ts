@@ -1,6 +1,7 @@
 import { shallowEqual } from '../compare.js';
 import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -26,7 +27,7 @@ export const StylePrimitive: Primitive<StyleProperties> = {
   ensureValue(value: unknown, part: Part): asserts value is StyleProperties {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of StylePrimitive must be object, but got ${inspectValue(value)}.\n` +
+        `The value of StylePrimitive must be an object, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }
@@ -42,7 +43,7 @@ export const StylePrimitive: Primitive<StyleProperties> = {
     ) {
       throw new Error(
         'StylePrimitive must be used in a ":style" attribute part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(props)),
+          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new StyleBinding(props, part);

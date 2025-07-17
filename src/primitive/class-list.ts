@@ -1,6 +1,7 @@
 import { sequentialEqual, shallowEqual } from '../compare.js';
 import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { DirectiveSpecifier } from '../directive.js';
 import type { AttributePart, Part } from '../part.js';
 import { PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
@@ -11,13 +12,10 @@ export type ClassMap = { [key: string]: boolean };
 
 export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
   name: 'ClassListPrimitive',
-  ensureValue: (
-    value: unknown,
-    part: Part,
-  ): asserts value is ClassSpecifier[] => {
+  ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier[] {
     if (!(Array.isArray(value) && value.every(isClassSpecifier))) {
       throw new Error(
-        `The value of ClassListPrimitive must be array of class specifier, but got ${inspectValue(value)}.\n` +
+        `The value of ClassListPrimitive must be an array of class specifier, but got ${inspectValue(value)}.\n` +
           inspectPart(part, markUsedValue(value)),
       );
     }
@@ -33,7 +31,10 @@ export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
     ) {
       throw new Error(
         'ClassListPrimitive must be used in a ":classlist" attribute part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(specifiers)),
+          inspectPart(
+            part,
+            markUsedValue(new DirectiveSpecifier(this, specifiers)),
+          ),
       );
     }
     return new ClassListBinding(specifiers, part);
