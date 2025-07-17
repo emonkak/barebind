@@ -23,7 +23,7 @@ describe('TaggedTemplate', () => {
   });
 
   describe('parse()', () => {
-    it('should parse a template with holes inside attributes', () => {
+    it('should parse a HTML template with holes inside attributes', () => {
       const { template } = html`
         <dialog class="dialog" id=${0} $open=${2} .innerHTML=${1} @click=${3}></dialog>
       `;
@@ -39,7 +39,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside double-quoted attributes', () => {
+    it('should parse a HTML template with holes inside double-quoted attributes', () => {
       const { template } = html`
         <dialog class="dialog" id="${0}" $open="${2}" .innerHTML="${1}" @click="${3}"></dialog>
       `;
@@ -55,7 +55,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside single-quoted attributes', () => {
+    it('should parse a HTML template with holes inside single-quoted attributes', () => {
       const { template } = html`
         <dialog class="dialog" id='${0}' $open='${2}' .innerHTML='${1}' @click='${3}'></dialog>
       `;
@@ -71,7 +71,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside attributes with whitespaces', () => {
+    it('should parse a HTML template with holes inside attributes with whitespaces', () => {
       const { template } = html`
         <dialog class="dialog" id="${0}" $open= "${2}" .innerHTML ="${1}" @click = "${3}"></dialog>
       `;
@@ -87,7 +87,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside tag names', () => {
+    it('should parse a HTML template with holes inside tag names', () => {
       const { template } = html`
         <${0}>
         <${1} >
@@ -106,7 +106,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside elements', () => {
+    it('should parse a HTML template with holes inside elements', () => {
       const { template } = html`
         <div id="foo" ${0}></div>
         <div ${1} id="foo"></div>
@@ -123,7 +123,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside descendants', () => {
+    it('should parse a HTML template with holes inside descendants', () => {
       const { template } = html`
         <ul>
           <li>${1}</li>
@@ -150,7 +150,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside children', () => {
+    it('should parse a HTML template with holes inside children', () => {
       const { template } = html`
         <div>  </div>
         <div> ${0} ${1} </div>
@@ -217,7 +217,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside comments', () => {
+    it('should parse a HTML template with holes inside comments', () => {
       const { template } = html`
         <!---->
         <!--${0}-->
@@ -237,7 +237,54 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside attributes as SVG fragment', () => {
+    it('should parse a HTML template with holes inside tags with leading spaces', () => {
+      const { template } = html` < ${0}>< ${1}/> `;
+
+      expect(template['_template'].innerHTML).toBe('');
+      expect(template['_holes']).toStrictEqual([
+        {
+          type: PartType.Text,
+          index: 0,
+          precedingText: ' < ',
+          followingText: '',
+        },
+        {
+          type: PartType.Text,
+          index: 1,
+          precedingText: '>< ',
+          followingText: '/> ',
+        },
+      ]);
+    });
+
+    it('should parse a HTML template with holes on the root', () => {
+      const { template } = html` ${0} ${1} `;
+
+      expect(template['_template'].innerHTML).toBe('');
+      expect(template['_holes']).toStrictEqual([
+        {
+          type: PartType.Text,
+          index: 0,
+          precedingText: ' ',
+          followingText: '',
+        },
+        {
+          type: PartType.Text,
+          index: 1,
+          precedingText: ' ',
+          followingText: ' ',
+        },
+      ]);
+    });
+
+    it('should parse a HTML template without holes', () => {
+      const { template } = html` foo `;
+
+      expect(template['_template'].innerHTML).toBe(' foo ');
+      expect(template['_holes']).toStrictEqual([]);
+    });
+
+    it('should parse a SVG template with holes inside attributes', () => {
       const { template } = svg`
         <circle fill="black" cx=${0} cy=${1} r=${2} />
       `;
@@ -255,7 +302,7 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside children as MathML fragment', () => {
+    it('should parse a MathML template with holes inside children', () => {
       const { template } = math`
         <msup><mi>${0}</mi><mn>${1}</mn></msup>
       `;
@@ -282,51 +329,20 @@ describe('TaggedTemplate', () => {
       ]);
     });
 
-    it('should parse a template with holes inside tags with leading spaces', () => {
-      const { template } = html` < ${0}>< ${1}/> `;
+    it('should parse a text template with holes inside children', () => {
+      const { template } = text`
+        <div><!--Hello-->, ${0}</div>
+      `;
 
       expect(template['_template'].innerHTML).toBe('');
       expect(template['_holes']).toStrictEqual([
         {
           type: PartType.Text,
           index: 0,
-          precedingText: ' < ',
-          followingText: '',
-        },
-        {
-          type: PartType.Text,
-          index: 1,
-          precedingText: '>< ',
-          followingText: '/> ',
+          precedingText: '<div><!--Hello-->, ',
+          followingText: '</div>',
         },
       ]);
-    });
-
-    it('should parse a template with holes on the root', () => {
-      const { template } = html` ${0} ${1} `;
-
-      expect(template['_template'].innerHTML).toBe('');
-      expect(template['_holes']).toStrictEqual([
-        {
-          type: PartType.Text,
-          index: 0,
-          precedingText: ' ',
-          followingText: '',
-        },
-        {
-          type: PartType.Text,
-          index: 1,
-          precedingText: ' ',
-          followingText: ' ',
-        },
-      ]);
-    });
-
-    it('should parse a template without holes', () => {
-      const { template } = html` foo `;
-
-      expect(template['_template'].innerHTML).toBe(' foo ');
-      expect(template['_holes']).toStrictEqual([]);
     });
 
     it('should throw an error if passed a placeholder in an invalid format', () => {
@@ -1049,6 +1065,22 @@ function svg<const TBinds extends readonly unknown[]>(
       binds,
       TEMPLATE_PLACEHOLDER,
       'svg',
+      document,
+    ),
+    binds,
+  };
+}
+
+function text<const TBinds extends readonly unknown[]>(
+  strings: TemplateStringsArray,
+  ...binds: TBinds
+): { template: TaggedTemplate<TBinds>; binds: TBinds } {
+  return {
+    template: TaggedTemplate.parse(
+      strings,
+      binds,
+      TEMPLATE_PLACEHOLDER,
+      'textarea',
       document,
     ),
     binds,

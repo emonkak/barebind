@@ -56,12 +56,12 @@ describe('ServerBackend', () => {
     });
   });
 
-  describe('createTemplate()', () => {
+  describe('parseTemplate()', () => {
     it('creates a TaggedTemplate', () => {
       const backend = new ServerBackend(document);
       const { strings, values } =
         templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
-      const template = backend.createTemplate(
+      const template = backend.parseTemplate(
         strings,
         values,
         TEMPLATE_PLACEHOLDER,
@@ -96,7 +96,7 @@ describe('ServerBackend', () => {
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const backend = new ServerBackend(document);
-        const template = backend.createTemplate(
+        const template = backend.parseTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -117,7 +117,7 @@ describe('ServerBackend', () => {
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
         const backend = new ServerBackend(document);
-        const template = backend.createTemplate(
+        const template = backend.parseTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
@@ -129,18 +129,20 @@ describe('ServerBackend', () => {
     );
 
     it.each([
-      [templateLiteral`${'foo'}`],
-      [templateLiteral` ${'foo'} `],
-      [templateLiteral`(${'foo'})`],
-    ])(
-      'should create a TextTemplate if there is a only text value',
-      ({ strings, values }) => {
+      [templateLiteral`${'foo'}`, 'html'],
+      [templateLiteral` ${'foo'} `, 'html'],
+      [templateLiteral`(${'foo'})`, 'html'],
+      [templateLiteral`<${'foo'}>`, 'textarea'],
+      [templateLiteral`<!--${'foo'}-->`, 'textarea'],
+    ] as const)(
+      'creates a TextTemplate if there is a only text value',
+      ({ strings, values }, mode) => {
         const backend = new ServerBackend(document);
-        const template = backend.createTemplate(
+        const template = backend.parseTemplate(
           strings,
           values,
           TEMPLATE_PLACEHOLDER,
-          'html',
+          mode,
         ) as TextTemplate;
 
         expect(template).toBeInstanceOf(TextTemplate);

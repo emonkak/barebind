@@ -124,6 +124,13 @@ export class RenderSession implements RenderContext {
     return this._template(strings, binds, 'svg');
   }
 
+  text(
+    strings: TemplateStringsArray,
+    ...binds: readonly unknown[]
+  ): DirectiveSpecifier<readonly unknown[]> {
+    return this._template(strings, binds, 'textarea');
+  }
+
   use<T>(hook: CustomHook<T>): T {
     return hook.onCustomHook(this);
   }

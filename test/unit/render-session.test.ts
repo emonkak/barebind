@@ -199,7 +199,7 @@ describe('RenderSession', () => {
   });
 
   describe('svg()', () => {
-    it('returns a bindable with dynamic the SVG template', () => {
+    it('returns a bindable with the SVG template', () => {
       const session = new RenderSession(
         [],
         ALL_LANES,
@@ -214,6 +214,28 @@ describe('RenderSession', () => {
           strings: ['<text>Hello, ', '!</text>'],
           binds: ['World'],
           mode: 'svg',
+        }),
+      );
+      expect(bindable.value).toStrictEqual(['World']);
+    });
+  });
+
+  describe('text()', () => {
+    it('returns a bindable with the text template', () => {
+      const session = new RenderSession(
+        [],
+        ALL_LANES,
+        new MockCoroutine(),
+        new Runtime(new MockBackend()),
+      );
+      const bindable = session.text`<div>Hello, ${'World'}!</div>`;
+
+      expect(bindable.type).toBeInstanceOf(MockTemplate);
+      expect(bindable.type).toStrictEqual(
+        expect.objectContaining({
+          strings: ['<div>Hello, ', '!</div>'],
+          binds: ['World'],
+          mode: 'textarea',
         }),
       );
       expect(bindable.value).toStrictEqual(['World']);

@@ -23,7 +23,7 @@ export const SVG_NAMESPACE_URI = 'http://www.w3.org/2000/svg';
 const LEADING_NEWLINE_REGEXP = /^\s*\n/;
 const TAILING_NEWLINE_REGEXP = /\n\s*$/;
 
-const START_TAG_PATTERN = /^<(?:!--)?\s*$/;
+const START_TAG_PATTERN = /^<(?:!--\s*)?$/;
 const END_TAG_PATTERN = /^\s*(?:\/|--)?>$/;
 
 export abstract class AbstractTemplate<TBinds extends readonly unknown[]>

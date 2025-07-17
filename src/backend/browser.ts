@@ -48,7 +48,18 @@ export class BrowserBackend implements Backend {
     }
   }
 
-  createTemplate(
+  getCurrentPriority(): TaskPriority {
+    const currentEvent = window.event;
+    if (currentEvent !== undefined) {
+      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
+    } else {
+      return document.readyState === 'complete'
+        ? 'background'
+        : 'user-blocking';
+    }
+  }
+
+  parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
     placeholder: string,
@@ -64,29 +75,21 @@ export class BrowserBackend implements Backend {
       const precedingText = normalizeText(strings[0]!);
       const followingText = normalizeText(strings[1]!);
 
+      if (
+        (!precedingText.includes('<') && !followingText.includes('<')) ||
+        mode === 'textarea'
+      ) {
+        // Tags are nowhere, so it is a plain text.
+        return new TextTemplate(precedingText, followingText);
+      }
+
       if (isIsolatedTagInterpolation(precedingText, followingText)) {
         // There is only one tag.
         return CHILD_NODE_TEMPLATE;
       }
-
-      if (!precedingText.includes('<') && !followingText.includes('<')) {
-        // Tags are nowhere, so it is a plain text.
-        return new TextTemplate(precedingText, followingText);
-      }
     }
 
     return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
-  }
-
-  getCurrentPriority(): TaskPriority {
-    const currentEvent = window.event;
-    if (currentEvent !== undefined) {
-      return isContinuousEvent(currentEvent) ? 'user-visible' : 'user-blocking';
-    } else {
-      return document.readyState === 'complete'
-        ? 'background'
-        : 'user-blocking';
-    }
   }
 
   requestCallback(

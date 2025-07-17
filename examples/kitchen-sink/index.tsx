@@ -128,6 +128,10 @@ function App(_props: {}, context: RenderContext) {
       <${component(TemplateCounter, {})}>
       <${component(VDOMCounter, {})}>
       <${component(VDOMSVG, {})}>
+      <div>
+        <h1>Text</h1>
+        <${context.text`This is a <plain> text.`}>
+      </div>
       <div class="SVGCounter">
         <h1>SVG Counter</h1>
         <svg width="100" height="100" viewBox="0 0 100 100">

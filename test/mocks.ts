@@ -235,17 +235,17 @@ export class MockBackend implements Backend {
     }
   }
 
-  createTemplate(
+  getCurrentPriority(): TaskPriority {
+    return 'user-blocking';
+  }
+
+  parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]> {
     return new MockTemplate(strings, binds, placeholder, mode);
-  }
-
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
   }
 
   requestCallback(

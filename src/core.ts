@@ -68,7 +68,7 @@ export interface Template<TBinds extends readonly unknown[]>
   ): TemplateResult;
 }
 
-export type TemplateMode = 'html' | 'math' | 'svg';
+export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
   readonly childNodes: readonly ChildNode[];
@@ -213,13 +213,13 @@ export interface Backend {
     phase: CommitPhase,
     context: CommitContext,
   ): void;
-  createTemplate(
+  getCurrentPriority(): TaskPriority;
+  parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
     placeholder: string,
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
-  getCurrentPriority(): TaskPriority;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
@@ -294,6 +294,10 @@ export interface RenderContext extends HookContext {
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   svg(
+    strings: TemplateStringsArray,
+    ...binds: readonly unknown[]
+  ): Bindable<readonly unknown[]>;
+  text(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;

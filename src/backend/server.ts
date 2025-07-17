@@ -54,7 +54,11 @@ export class ServerBackend implements Backend {
     }
   }
 
-  createTemplate(
+  getCurrentPriority(): TaskPriority {
+    return 'user-blocking';
+  }
+
+  parseTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
     placeholder: string,
@@ -70,14 +74,17 @@ export class ServerBackend implements Backend {
       const precedingText = normalizeText(strings[0]!);
       const followingText = normalizeText(strings[1]!);
 
+      if (
+        (!precedingText.includes('<') && !followingText.includes('<')) ||
+        mode === 'textarea'
+      ) {
+        // Tags are nowhere, so it is a plain text.
+        return new TextTemplate(precedingText, followingText);
+      }
+
       if (isIsolatedTagInterpolation(precedingText, followingText)) {
         // There is only one tag.
         return CHILD_NODE_TEMPLATE;
-      }
-
-      if (!precedingText.includes('<') && !followingText.includes('<')) {
-        // Tags are nowhere, so it is a plain text.
-        return new TextTemplate(precedingText, followingText);
       }
     }
 
@@ -88,10 +95,6 @@ export class ServerBackend implements Backend {
       mode,
       this._document,
     );
-  }
-
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
   }
 
   requestCallback(

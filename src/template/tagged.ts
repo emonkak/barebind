@@ -91,10 +91,16 @@ export class TaggedTemplate<
     const marker = createMarker(placeholder);
 
     if (mode === 'html') {
-      template.innerHTML = strings.join(marker);
+      template.innerHTML = normalizeText(strings.join(marker));
     } else {
       template.innerHTML =
-        '<' + mode + '>' + strings.join(marker) + '</' + mode + '>';
+        '<' +
+        mode +
+        '>' +
+        normalizeText(strings.join(marker)) +
+        '</' +
+        mode +
+        '>';
       template.content.replaceChildren(
         ...template.content.firstChild!.childNodes,
       );
