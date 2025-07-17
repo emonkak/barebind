@@ -116,7 +116,7 @@ export class BrowserBackend implements Backend {
           default:
             setTimeout(resolve);
         }
-      }).then(() => callback());
+      }).then(callback);
     }
   }
 

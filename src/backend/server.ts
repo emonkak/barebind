@@ -101,7 +101,7 @@ export class ServerBackend implements Backend {
   ): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(resolve);
-    }).then(() => callback());
+    }).then(callback);
   }
 
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {

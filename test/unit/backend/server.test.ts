@@ -166,7 +166,6 @@ describe('ServerBackend', () => {
       await backend.requestCallback(callback);
 
       expect(callback).toHaveBeenCalledOnce();
-      expect(callback).toHaveBeenCalledWith();
       expect(setTimeoutSpy).toHaveBeenCalledOnce();
       expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
     });
@@ -181,7 +180,6 @@ describe('ServerBackend', () => {
         await backend.requestCallback(callback, { priority });
 
         expect(callback).toHaveBeenCalledOnce();
-        expect(callback).toHaveBeenCalledWith();
         expect(setTimeoutSpy).toHaveBeenCalledOnce();
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
       },
