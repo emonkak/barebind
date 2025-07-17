@@ -7,7 +7,11 @@ import type {
 import { inspectNode, inspectPart } from '../debug.js';
 import type { HydrationTree } from '../hydration.js';
 import { type ChildNodePart, type Part, PartType } from '../part.js';
-import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
+import {
+  AbstractTemplate,
+  getNamespaceURIByTagName,
+  normalizeText,
+} from './template.js';
 
 export type Hole =
   | AttributeHole
@@ -61,9 +65,6 @@ export interface TextHole {
 
 const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
 
-const LEADING_NEWLINE_REGEXP = /^\s*\n/;
-const TAILING_NEWLINE_REGEXP = /\n\s*$/;
-
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
 // https://infra.spec.whatwg.org/#ascii-whitespace
@@ -90,10 +91,10 @@ export class TaggedTemplate<
     const marker = createMarker(placeholder);
 
     if (mode === 'html') {
-      template.innerHTML = strings.join(marker).trim();
+      template.innerHTML = strings.join(marker);
     } else {
       template.innerHTML =
-        '<' + mode + '>' + strings.join(marker).trim() + '</' + mode + '>';
+        '<' + mode + '>' + strings.join(marker) + '</' + mode + '>';
       template.content.replaceChildren(
         ...template.content.firstChild!.childNodes,
       );
@@ -426,16 +427,6 @@ function extractCaseSensitiveAttributeName(token: string): string | undefined {
 
 function getNamespaceURI(node: Node, mode: TemplateMode): string | null {
   return node.lookupNamespaceURI(null) ?? getNamespaceURIByTagName(mode);
-}
-
-function normalizeText(text: string): string {
-  if (LEADING_NEWLINE_REGEXP.test(text)) {
-    text = text.trimStart();
-  }
-  if (TAILING_NEWLINE_REGEXP.test(text)) {
-    text = text.trimEnd();
-  }
-  return text;
 }
 
 function parseAttribtues(

@@ -88,7 +88,11 @@ describe('ServerBackend', () => {
       ]);
     });
 
-    it.each([[templateLiteral``], [templateLiteral` `]])(
+    it.each([
+      [templateLiteral``],
+      [templateLiteral`\n`],
+      [templateLiteral`\n \n`],
+    ])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const backend = new ServerBackend(document);
@@ -106,9 +110,9 @@ describe('ServerBackend', () => {
     it.each([
       [templateLiteral`<${'foo'}>`],
       [templateLiteral`<${'foo'}/>`],
-      [templateLiteral` <${'foo'} /> `],
-      [templateLiteral` <!--${'foo'}--> `],
-      [templateLiteral` <!-- ${'foo'} --> `],
+      [templateLiteral`\n <${'foo'} /> \n`],
+      [templateLiteral`\n <!--${'foo'}--> \n`],
+      [templateLiteral`\n <!-- ${'foo'} --> \n`],
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
@@ -140,8 +144,8 @@ describe('ServerBackend', () => {
         ) as TextTemplate;
 
         expect(template).toBeInstanceOf(TextTemplate);
-        expect(template['_precedingText']).toBe(strings[0]?.trim());
-        expect(template['_followingText']).toBe(strings[1]?.trim());
+        expect(template['_precedingText']).toBe(strings[0]);
+        expect(template['_followingText']).toBe(strings[1]);
       },
     );
   });

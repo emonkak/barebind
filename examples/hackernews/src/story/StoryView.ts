@@ -39,7 +39,7 @@ export function StoryView(
         }>
         <${
           story.type !== 'link'
-            ? context.html`${' | '}<span class="label">${story.type}</span>`
+            ? context.html` | <span class="label">${story.type}</span>`
             : null
         }>
       </div>

@@ -28,6 +28,10 @@ import { StrictSlot } from '../slot/strict.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { EmptyTemplate } from '../template/empty.js';
 import { TaggedTemplate } from '../template/tagged.js';
+import {
+  isIsolatedTagInterpolation,
+  normalizeText,
+} from '../template/template.js';
 import { TextTemplate } from '../template/text.js';
 
 const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
@@ -52,27 +56,22 @@ export class BrowserBackend implements Backend {
   ): Template<readonly unknown[]> {
     if (binds.length === 0) {
       // Assert: strings.length === 1
-      if (strings[0]!.trim() === '') {
+      if (normalizeText(strings[0]!) === '') {
         return EMPTY_TEMPLATE;
       }
     } else if (binds.length === 1) {
       // Assert: strings.length === 2
-      const precedingString = strings[0]!.trim();
-      const followingString = strings[1]!.trim();
+      const precedingText = normalizeText(strings[0]!);
+      const followingText = normalizeText(strings[1]!);
 
-      if (
-        (precedingString === '<' || precedingString === '<!--') &&
-        (followingString === '>' ||
-          followingString === '/>' ||
-          followingString === '-->')
-      ) {
+      if (isIsolatedTagInterpolation(precedingText, followingText)) {
         // There is only one tag.
         return CHILD_NODE_TEMPLATE;
       }
 
-      if (!precedingString.includes('<') && !followingString.includes('<')) {
+      if (!precedingText.includes('<') && !followingText.includes('<')) {
         // Tags are nowhere, so it is a plain text.
-        return new TextTemplate(precedingString, followingString);
+        return new TextTemplate(precedingText, followingText);
       }
     }
 
