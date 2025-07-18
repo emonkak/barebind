@@ -1,9 +1,13 @@
 import { sequentialEqual, shallowEqual } from '../compare.js';
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+} from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import type { AttributePart, Part } from '../part.js';
-import { PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type ClassSpecifier = ClassMap | string | null | undefined;
@@ -43,7 +47,7 @@ export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
 
 export class ClassListBinding extends PrimitiveBinding<
   ClassSpecifier[],
-  AttributePart
+  Part.AttributePart
 > {
   private _memoizedValue: ClassSpecifier[] = [];
 

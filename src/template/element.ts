@@ -1,7 +1,12 @@
-import type { DirectiveType, TemplateResult, UpdateContext } from '../core.js';
+import {
+  type DirectiveType,
+  type HydrationTree,
+  type Part,
+  PartType,
+  type TemplateResult,
+  type UpdateContext,
+} from '../core.js';
 import { DirectiveSpecifier } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
-import { type ChildNodePart, PartType } from '../part.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,
@@ -36,7 +41,7 @@ export class ElementTemplate<
 
   hydrate(
     binds: readonly [TProps, TChildren],
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
@@ -71,7 +76,7 @@ export class ElementTemplate<
 
   render(
     binds: readonly [TProps, TChildren],
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;

@@ -1,19 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   $toDirective,
-  ALL_LANES,
   CommitPhase,
   type Coroutine,
   type Hook,
-  Lane,
-  NO_LANES,
+  Lanes,
+  Literal,
+  PartType,
+  Scope,
 } from '@/core.js';
-import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { Scope } from '@/scope.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { Literal } from '@/template-literal.js';
 import {
   MockBackend,
   MockBindable,
@@ -117,14 +115,14 @@ describe('Runtime', () => {
           context.enqueueMutationEffect(mutationEffect);
           context.enqueueLayoutEffect(layoutEffect);
           context.enqueuePassiveEffect(passiveEffect);
-          return NO_LANES;
+          return Lanes.NoLanes;
         }),
         commit: vi.fn(),
       };
       const coroutine: Coroutine = {
         resume: vi.fn((_lane, context) => {
           context.enqueueCoroutine(subcoroutine);
-          return NO_LANES;
+          return Lanes.NoLanes;
         }),
         commit: vi.fn(),
       };
@@ -153,11 +151,14 @@ describe('Runtime', () => {
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
       expect(subcoroutine.resume).toHaveBeenCalledTimes(1);
       expect(subcoroutine.resume).toHaveBeenCalledWith(
-        Lane.UserBlocking,
+        Lanes.UserBlockingLane,
         runtime,
       );
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
-      expect(coroutine.resume).toHaveBeenCalledWith(Lane.UserBlocking, runtime);
+      expect(coroutine.resume).toHaveBeenCalledWith(
+        Lanes.UserBlockingLane,
+        runtime,
+      );
       expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
@@ -234,7 +235,7 @@ describe('Runtime', () => {
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
       expect(subcoroutine.resume).toHaveBeenCalledWith(
-        Lane.UserBlocking,
+        Lanes.UserBlockingLane,
         runtime,
       );
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
@@ -336,14 +337,14 @@ describe('Runtime', () => {
           context.enqueueMutationEffect(mutationEffect);
           context.enqueueLayoutEffect(layoutEffect);
           context.enqueuePassiveEffect(passiveEffect);
-          return NO_LANES;
+          return Lanes.NoLanes;
         }),
         commit: vi.fn(),
       };
       const coroutine: Coroutine = {
         resume: vi.fn((_lane, context) => {
           context.enqueueCoroutine(subcoroutine);
-          return NO_LANES;
+          return Lanes.NoLanes;
         }),
         commit: vi.fn(),
       };
@@ -356,9 +357,9 @@ describe('Runtime', () => {
       runtime.flushSync();
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(1);
-      expect(subcoroutine.resume).toHaveBeenCalledWith(ALL_LANES, runtime);
+      expect(subcoroutine.resume).toHaveBeenCalledWith(Lanes.AllLanes, runtime);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
-      expect(coroutine.resume).toHaveBeenCalledWith(ALL_LANES, runtime);
+      expect(coroutine.resume).toHaveBeenCalledWith(Lanes.AllLanes, runtime);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
@@ -429,7 +430,7 @@ describe('Runtime', () => {
       runtime.flushSync();
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
-      expect(subcoroutine.resume).toHaveBeenCalledWith(ALL_LANES, runtime);
+      expect(subcoroutine.resume).toHaveBeenCalledWith(Lanes.AllLanes, runtime);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
@@ -521,7 +522,7 @@ describe('Runtime', () => {
       const component = new MockComponent();
       const props = {};
       const hooks: Hook[] = [];
-      const lanes = ALL_LANES;
+      const lanes = Lanes.AllLanes;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const runtime = new Runtime(new MockBackend());
@@ -565,7 +566,7 @@ describe('Runtime', () => {
         },
       ]);
       expect(result.value).toBe(null);
-      expect(result.pendingLanes).toBe(NO_LANES);
+      expect(result.pendingLanes).toBe(Lanes.NoLanes);
     });
   });
 
@@ -702,14 +703,14 @@ describe('Runtime', () => {
 
       const task = runtime.scheduleUpdate(coroutine);
 
-      expect(task.lanes).toBe(Lane.UserBlocking);
+      expect(task.lanes).toBe(Lanes.UserBlockingLane);
 
       expect(await runtime.waitForUpdate(coroutine)).toBe(1);
       expect(await getPromiseState(task.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lane.UserBlocking,
+        Lanes.UserBlockingLane,
         expect.not.exact(runtime),
       );
     });
@@ -731,9 +732,9 @@ describe('Runtime', () => {
         viewTransition: true,
       });
 
-      expect(task1.lanes).toBe(Lane.UserBlocking);
-      expect(task2.lanes).toBe(Lane.Background);
-      expect(task3.lanes).toBe(Lane.Background | Lane.ViewTransition);
+      expect(task1.lanes).toBe(Lanes.UserBlockingLane);
+      expect(task2.lanes).toBe(Lanes.BackgroundLane);
+      expect(task3.lanes).toBe(Lanes.BackgroundLane | Lanes.ViewTransitionLane);
 
       expect(await runtime.waitForUpdate(coroutine)).toBe(3);
       expect(await getPromiseState(task1.promise)).toBe('fulfilled');
@@ -742,7 +743,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lane.UserBlocking,
+        Lanes.UserBlockingLane,
         expect.not.exact(runtime),
       );
     });
@@ -757,7 +758,7 @@ describe('Runtime', () => {
         priority: 'user-blocking',
       });
 
-      expect(task.lanes).toBe(Lane.UserBlocking);
+      expect(task.lanes).toBe(Lanes.UserBlockingLane);
 
       expect(
         runtime.scheduleUpdate(coroutine, { priority: 'user-blocking' }),
@@ -768,7 +769,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lane.UserBlocking,
+        Lanes.UserBlockingLane,
         expect.not.exact(runtime),
       );
     });

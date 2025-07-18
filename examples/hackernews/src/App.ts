@@ -1,5 +1,4 @@
-import { memo, type RenderContext } from '@emonkak/ebit';
-import { component } from '@emonkak/ebit/extensions';
+import { component, memo, type RenderContext } from '@emonkak/ebit';
 import {
   HashLocation,
   resetScrollPosition,

@@ -9,19 +9,22 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type HookContext,
-  type Lanes,
-  NO_LANES,
+  HydrationError,
+  type HydrationTree,
+  Lanes,
+  type Part,
   type Slot,
   type UpdateContext,
 } from '../core.js';
-import { HydrationError, type HydrationTree } from '../hydration.js';
 import { LinkedList } from '../linked-list.js';
-import type { Part } from '../part.js';
 
 export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
+/**
+ * @internal
+ */
 export const SignalDirective: DirectiveType<Signal<any>> = {
   name: 'SignalDirective',
   resolveBinding<T>(
@@ -32,6 +35,93 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
     return new SignalBinding(signal, part);
   },
 };
+
+/**
+ * @internal
+ */
+export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
+  private _signal: Signal<T>;
+
+  private _part: Part;
+
+  private _slot: Slot<T> | null = null;
+
+  private _subscription: Subscription | null = null;
+
+  constructor(signal: Signal<T>, part: Part) {
+    this._signal = signal;
+    this._part = part;
+  }
+
+  get type(): DirectiveType<Signal<T>> {
+    return SignalDirective;
+  }
+
+  get value(): Signal<T> {
+    return this._signal;
+  }
+
+  get part(): Part {
+    return this._part;
+  }
+
+  shouldBind(signal: Signal<T>): boolean {
+    return this._subscription === null || signal !== this._signal;
+  }
+
+  bind(signal: Signal<T>): void {
+    this._subscription?.();
+    this._subscription = null;
+    this._signal = signal;
+  }
+
+  resume(_lanes: Lanes, context: UpdateContext): Lanes {
+    this._slot?.reconcile(this._signal.value, context);
+    return Lanes.NoLanes;
+  }
+
+  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
+    if (this._slot !== null) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initilized.',
+      );
+    }
+
+    this._slot = context.resolveSlot(this._signal.value, this._part);
+    this._slot.hydrate(hydrationTree, context);
+    this._subscription ??= this._subscribeSignal(context);
+  }
+
+  connect(context: UpdateContext): void {
+    if (this._slot !== null) {
+      this._slot.reconcile(this._signal.value, context);
+    } else {
+      this._slot ??= context.resolveSlot(this._signal.value, this._part);
+      this._slot.connect(context);
+    }
+    this._subscription ??= this._subscribeSignal(context);
+  }
+
+  disconnect(context: UpdateContext): void {
+    this._subscription?.();
+    this._slot?.disconnect(context);
+    this._subscription = null;
+  }
+
+  commit(context: CommitContext): void {
+    this._slot?.commit(context);
+  }
+
+  rollback(context: CommitContext): void {
+    this._slot?.rollback(context);
+  }
+
+  private _subscribeSignal(context: UpdateContext): Subscription {
+    return this._signal.subscribe(() => {
+      context.scheduleUpdate(this, { priority: 'background' });
+    });
+  }
+}
 
 export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   abstract get value(): T;
@@ -230,89 +320,5 @@ export class Projected<TValue, TResult> extends Signal<TResult> {
 
   subscribe(subscriber: Subscriber): Subscription {
     return this._signal.subscribe(subscriber);
-  }
-}
-
-export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
-  private _signal: Signal<T>;
-
-  private _part: Part;
-
-  private _slot: Slot<T> | null = null;
-
-  private _subscription: Subscription | null = null;
-
-  constructor(signal: Signal<T>, part: Part) {
-    this._signal = signal;
-    this._part = part;
-  }
-
-  get type(): DirectiveType<Signal<T>> {
-    return SignalDirective;
-  }
-
-  get value(): Signal<T> {
-    return this._signal;
-  }
-
-  get part(): Part {
-    return this._part;
-  }
-
-  shouldBind(signal: Signal<T>): boolean {
-    return this._subscription === null || signal !== this._signal;
-  }
-
-  bind(signal: Signal<T>): void {
-    this._subscription?.();
-    this._subscription = null;
-    this._signal = signal;
-  }
-
-  resume(_lanes: Lanes, context: UpdateContext): Lanes {
-    this._slot?.reconcile(this._signal.value, context);
-    return NO_LANES;
-  }
-
-  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    if (this._slot !== null) {
-      throw new HydrationError(
-        'Hydration is failed because the binding has already been initilized.',
-      );
-    }
-
-    this._slot = context.resolveSlot(this._signal.value, this._part);
-    this._slot.hydrate(hydrationTree, context);
-    this._subscription ??= this._subscribeSignal(context);
-  }
-
-  connect(context: UpdateContext): void {
-    if (this._slot !== null) {
-      this._slot.reconcile(this._signal.value, context);
-    } else {
-      this._slot ??= context.resolveSlot(this._signal.value, this._part);
-      this._slot.connect(context);
-    }
-    this._subscription ??= this._subscribeSignal(context);
-  }
-
-  disconnect(context: UpdateContext): void {
-    this._subscription?.();
-    this._slot?.disconnect(context);
-    this._subscription = null;
-  }
-
-  commit(context: CommitContext): void {
-    this._slot?.commit(context);
-  }
-
-  rollback(context: CommitContext): void {
-    this._slot?.rollback(context);
-  }
-
-  private _subscribeSignal(context: UpdateContext): Subscription {
-    return this._signal.subscribe(() => {
-      context.scheduleUpdate(this, { priority: 'background' });
-    });
   }
 }

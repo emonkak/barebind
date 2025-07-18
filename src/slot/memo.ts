@@ -3,12 +3,12 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveType,
+  type HydrationTree,
+  type Part,
   type Slot,
   type UpdateContext,
 } from '../core.js';
 import { SlotSpecifier } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
-import type { Part } from '../part.js';
 
 export function memo<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(MemoSlot, value);

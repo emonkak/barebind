@@ -1,6 +1,11 @@
-import type { DirectiveType, TemplateResult, UpdateContext } from '../core.js';
-import type { HydrationTree } from '../hydration.js';
-import { type ChildNodePart, PartType } from '../part.js';
+import {
+  type DirectiveType,
+  type HydrationTree,
+  type Part,
+  PartType,
+  type TemplateResult,
+  type UpdateContext,
+} from '../core.js';
 import { AbstractTemplate } from './template.js';
 
 export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
@@ -14,7 +19,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
   hydrate(
     binds: readonly [unknown],
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
@@ -38,7 +43,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
   render(
     binds: readonly [unknown],
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;

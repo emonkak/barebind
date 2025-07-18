@@ -1,4 +1,5 @@
-import { Atom, defineStore } from '@emonkak/ebit/extensions';
+import { Atom } from '@emonkak/ebit/extensions/signal';
+import { defineStore } from '@emonkak/ebit/extensions/store';
 
 export interface Todo {
   id: string;

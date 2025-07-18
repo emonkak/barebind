@@ -1,9 +1,5 @@
 import { sequentialEqual } from './compare.js';
-
-export interface TemplateLiteral<T> {
-  strings: readonly string[];
-  values: T[];
-}
+import { Literal, type TemplateLiteral } from './core.js';
 
 interface TemplateDescriptor {
   strings: readonly string[];
@@ -63,8 +59,6 @@ export class TemplateLiteralPreprocessor {
     };
   }
 }
-
-export class Literal extends String {}
 
 function expandLiterals(
   strings: readonly string[],

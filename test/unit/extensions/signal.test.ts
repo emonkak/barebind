@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $toDirective, ALL_LANES } from '@/core.js';
+import {
+  $toDirective,
+  HydrationError,
+  HydrationTree,
+  Lanes,
+  PartType,
+} from '@/core.js';
 import {
   Atom,
   Computed,
@@ -7,8 +13,6 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
-import { HydrationError, HydrationTree } from '@/hydration.js';
-import { PartType } from '@/part.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from '../../mocks.js';
@@ -40,6 +44,172 @@ describe('SignalDirective', () => {
   });
 });
 
+describe('SiganlBinding', () => {
+  describe('shouldBind()', () => {
+    it('returns true if the subscribed value does not exist', () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal, part);
+
+      expect(binding.shouldBind(signal)).toBe(true);
+    });
+
+    it('returns true if the signal is different from the new one', () => {
+      const signal1 = new Atom('foo');
+      const signal2 = new Atom('bar');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal1, part);
+      const runtime = new Runtime(new MockBackend());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(binding.shouldBind(signal1)).toBe(false);
+      expect(binding.shouldBind(signal2)).toBe(true);
+    });
+  });
+
+  describe('hydrate()', () => {
+    it('hydrates the tree by the signal value', async () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal, part);
+      const hydrationRoot = createElement('div', {}, part.node);
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const runtime = new Runtime(new MockBackend());
+
+      binding.hydrate(hydrationTree, runtime);
+      binding.commit(runtime);
+
+      expect(hydrationRoot.innerHTML).toBe(signal.value);
+
+      signal.value = 'bar';
+
+      expect(await runtime.waitForUpdate(binding)).toBe(1);
+
+      expect(hydrationRoot.innerHTML).toBe(signal.value);
+    });
+
+    it('should throw the error if the binding has already been initialized', async () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal, part);
+      const hydrationRoot = createElement('div', {}, part.node);
+      const hydrationTree = new HydrationTree(hydrationRoot);
+      const runtime = new Runtime(new MockBackend());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(() => {
+        binding.hydrate(hydrationTree, runtime);
+      }).toThrow(HydrationError);
+    });
+  });
+
+  describe('connect()', () => {
+    it('subscribes the signal', async () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal, part);
+      const runtime = new Runtime(new MockBackend());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(part.node.nodeValue).toBe(signal.value);
+
+      signal.value = 'bar';
+
+      expect(await runtime.waitForUpdate(binding)).toBe(1);
+
+      expect(part.node.nodeValue).toBe(signal.value);
+    });
+
+    it('subscribes the signal again if the signal has been changed', async () => {
+      const signal1 = new Atom('foo');
+      const signal2 = new Atom('bar');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal1, part);
+      const runtime = new Runtime(new MockBackend());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      binding.bind(signal2);
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(part.node.nodeValue).toBe(signal2.value);
+
+      signal1.value = 'baz';
+      signal2.value = 'qux';
+
+      expect(await runtime.waitForUpdate(binding)).toBe(1);
+
+      expect(part.node.nodeValue).toBe(signal2.value);
+    });
+  });
+
+  describe('disconnect()', () => {
+    it('unsubscribes the signal', async () => {
+      const signal = new Atom('foo');
+      const part = {
+        type: PartType.Text,
+        node: document.createTextNode(''),
+        precedingText: '',
+        followingText: '',
+      };
+      const binding = new SignalBinding(signal, part);
+      const runtime = new Runtime(new MockBackend());
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      binding.disconnect(runtime);
+      binding.rollback(runtime);
+
+      expect(await runtime.waitForUpdate(binding)).toBe(0);
+      expect(part.node.nodeValue).toBe('');
+
+      signal.value = 'bar';
+
+      expect(await runtime.waitForUpdate(binding)).toBe(0);
+      expect(part.node.nodeValue).toBe('');
+    });
+  });
+});
+
 describe('Signal', () => {
   describe('[$toDirectiveElement]()', () => {
     it('returns a DirectiveElement with the signal', () => {
@@ -56,7 +226,7 @@ describe('Signal', () => {
     it('subscribes the signal and return its value', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -390,171 +560,5 @@ describe('Projected', () => {
 
     signal.value++;
     expect(subscriber).not.toHaveBeenCalled();
-  });
-});
-
-describe('SiganlBinding', () => {
-  describe('shouldBind()', () => {
-    it('returns true if the subscribed value does not exist', () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal, part);
-
-      expect(binding.shouldBind(signal)).toBe(true);
-    });
-
-    it('returns true if the signal is different from the new one', () => {
-      const signal1 = new Atom('foo');
-      const signal2 = new Atom('bar');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal1, part);
-      const runtime = new Runtime(new MockBackend());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(binding.shouldBind(signal1)).toBe(false);
-      expect(binding.shouldBind(signal2)).toBe(true);
-    });
-  });
-
-  describe('hydrate()', () => {
-    it('hydrates the tree by the signal value', async () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal, part);
-      const hydrationRoot = createElement('div', {}, part.node);
-      const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockBackend());
-
-      binding.hydrate(hydrationTree, runtime);
-      binding.commit(runtime);
-
-      expect(hydrationRoot.innerHTML).toBe(signal.value);
-
-      signal.value = 'bar';
-
-      expect(await runtime.waitForUpdate(binding)).toBe(1);
-
-      expect(hydrationRoot.innerHTML).toBe(signal.value);
-    });
-
-    it('should throw the error if the binding has already been initialized', async () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal, part);
-      const hydrationRoot = createElement('div', {}, part.node);
-      const hydrationTree = new HydrationTree(hydrationRoot);
-      const runtime = new Runtime(new MockBackend());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(() => {
-        binding.hydrate(hydrationTree, runtime);
-      }).toThrow(HydrationError);
-    });
-  });
-
-  describe('connect()', () => {
-    it('subscribes the signal', async () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal, part);
-      const runtime = new Runtime(new MockBackend());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(part.node.nodeValue).toBe(signal.value);
-
-      signal.value = 'bar';
-
-      expect(await runtime.waitForUpdate(binding)).toBe(1);
-
-      expect(part.node.nodeValue).toBe(signal.value);
-    });
-
-    it('subscribes the signal again if the signal has been changed', async () => {
-      const signal1 = new Atom('foo');
-      const signal2 = new Atom('bar');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal1, part);
-      const runtime = new Runtime(new MockBackend());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      binding.bind(signal2);
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(part.node.nodeValue).toBe(signal2.value);
-
-      signal1.value = 'baz';
-      signal2.value = 'qux';
-
-      expect(await runtime.waitForUpdate(binding)).toBe(1);
-
-      expect(part.node.nodeValue).toBe(signal2.value);
-    });
-  });
-
-  describe('disconnect()', () => {
-    it('unsubscribes the signal', async () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const binding = new SignalBinding(signal, part);
-      const runtime = new Runtime(new MockBackend());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
-
-      expect(await runtime.waitForUpdate(binding)).toBe(0);
-      expect(part.node.nodeValue).toBe('');
-
-      signal.value = 'bar';
-
-      expect(await runtime.waitForUpdate(binding)).toBe(0);
-      expect(part.node.nodeValue).toBe('');
-    });
   });
 });

@@ -1,5 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
-import { component, repeat } from '@emonkak/ebit/extensions';
+import { component, type RenderContext, repeat } from '@emonkak/ebit';
 
 import { TodoStore } from './store.js';
 import { TodoItem } from './TodoItem.js';

@@ -4,10 +4,10 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
+  type Part,
   type SlotType,
 } from './core.js';
 import { $inspect, type Inspectable } from './debug.js';
-import type { Part } from './part.js';
 
 export class DirectiveSpecifier<T> implements Bindable<T>, Inspectable {
   readonly type: DirectiveType<T>;

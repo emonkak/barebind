@@ -1,8 +1,6 @@
-import type { Backend } from '../core.js';
-import { HydrationTree } from '../hydration.js';
-import { PartType } from '../part.js';
-import type { RuntimeObserver } from '../runtime.js';
-import { Runtime } from '../runtime.js';
+import type { Backend } from '../backend.js';
+import { HydrationTree, PartType } from '../core.js';
+import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
 export interface SyncRoot<T> {

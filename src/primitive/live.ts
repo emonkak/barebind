@@ -1,7 +1,12 @@
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+} from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { type LivePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const LivePrimitive: Primitive<any> = {
@@ -21,7 +26,7 @@ export const LivePrimitive: Primitive<any> = {
   },
 };
 
-export class LiveBinding<T> extends PrimitiveBinding<T, LivePart> {
+export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
   get type(): Primitive<T> {
     return LivePrimitive;
   }

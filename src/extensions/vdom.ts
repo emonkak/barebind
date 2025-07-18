@@ -1,4 +1,5 @@
 import { shallowEqual } from '../compare.js';
+import { FunctionComponent } from '../component.js';
 import {
   $toDirective,
   type Bindable,
@@ -8,27 +9,27 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
+  type HydrationTree,
   isBindable,
+  type Part,
+  PartType,
   type Template,
   type UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
-import { type ElementPart, type Part, PartType } from '../part.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import {
   deleteStyles,
   type StyleProperties,
   updateStyles,
 } from '../primitive/style.js';
+import { RepeatDirective, type RepeatProps } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
 import { EmptyTemplate } from '../template/empty.js';
 import { FragmentTemplate } from '../template/fragment.js';
 import { TextTemplate } from '../template/text.js';
-import { FunctionComponent } from './component.js';
-import { RepeatDirective, type RepeatProps } from './repeat.js';
 
 const $cleanup = Symbol('$cleanup');
 
@@ -75,6 +76,9 @@ interface TemplateSpecifier<TBinds extends readonly unknown[]> {
   value: TBinds;
 }
 
+/**
+ * @internal
+ */
 export const ElementDirective: DirectiveType<ElementProps> = {
   name: 'ElementDirective',
   resolveBinding(
@@ -211,17 +215,20 @@ export class VStaticFragment implements Bindable<unknown> {
   }
 }
 
+/**
+ * @internal
+ */
 export class ElementBinding implements Binding<ElementProps> {
   private _pendingProps: ElementProps;
 
   private _memoizedProps: ElementProps | null = null;
 
-  private readonly _part: ElementPart;
+  private readonly _part: Part.ElementPart;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
-  constructor(props: ElementProps, part: ElementPart) {
+  constructor(props: ElementProps, part: Part.ElementPart) {
     this._pendingProps = props;
     this._part = part;
   }
@@ -234,7 +241,7 @@ export class ElementBinding implements Binding<ElementProps> {
     return this._pendingProps;
   }
 
-  get part(): ElementPart {
+  get part(): Part.ElementPart {
     return this._part;
   }
 

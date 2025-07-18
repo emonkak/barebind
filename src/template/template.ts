@@ -1,21 +1,19 @@
-import type {
-  Binding,
-  CommitContext,
-  DirectiveContext,
-  Effect,
-  Template,
-  TemplateResult,
-  UpdateContext,
+import {
+  type Binding,
+  type CommitContext,
+  type DirectiveContext,
+  type Effect,
+  getStartNode,
+  HydrationError,
+  type HydrationTree,
+  type Part,
+  PartType,
+  type Template,
+  type TemplateResult,
+  type UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { HydrationError, type HydrationTree } from '../hydration.js';
-import {
-  type ChildNodePart,
-  getStartNode,
-  type Part,
-  PartType,
-} from '../part.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
@@ -38,13 +36,13 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
 
   abstract render(
     binds: TBinds,
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult;
 
   abstract hydrate(
     binds: TBinds,
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult;
@@ -72,13 +70,17 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
 
   private _binds: TBinds;
 
-  private readonly _part: ChildNodePart;
+  private readonly _part: Part.ChildNodePart;
 
   private _pendingResult: TemplateResult | null = null;
 
   private _memoizedResult: TemplateResult | null = null;
 
-  constructor(template: Template<TBinds>, binds: TBinds, part: ChildNodePart) {
+  constructor(
+    template: Template<TBinds>,
+    binds: TBinds,
+    part: Part.ChildNodePart,
+  ) {
     this._template = template;
     this._binds = binds;
     this._part = part;
@@ -92,7 +94,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._binds;
   }
 
-  get part(): ChildNodePart {
+  get part(): Part.ChildNodePart {
     return this._part;
   }
 

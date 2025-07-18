@@ -3,17 +3,11 @@ import {
   type Coroutine,
   type CustomHook,
   type Effect,
-  type EffectHook,
-  type FinalizerHook,
   type Hook,
   HookType,
-  type IdHook,
   type InitialState,
-  type Lanes,
-  type MemoHook,
+  Lanes,
   type NewState,
-  NO_LANES,
-  type ReducerHook,
   type RefObject,
   type RenderContext,
   type RenderSessionContext,
@@ -34,7 +28,7 @@ export class RenderSession implements RenderContext {
 
   private _hookIndex = 0;
 
-  private _pendingLanes = NO_LANES;
+  private _pendingLanes = Lanes.NoLanes;
 
   constructor(
     hooks: Hook[],
@@ -77,7 +71,7 @@ export class RenderSession implements RenderContext {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<FinalizerHook>(HookType.Finalizer, currentHook);
+      ensureHookType<Hook.FinalizerHook>(HookType.Finalizer, currentHook);
     } else {
       this._hooks.push({ type: HookType.Finalizer });
 
@@ -163,7 +157,7 @@ export class RenderSession implements RenderContext {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<IdHook>(HookType.Id, currentHook);
+      ensureHookType<Hook.IdHook>(HookType.Id, currentHook);
     } else {
       currentHook = {
         type: HookType.Id,
@@ -195,7 +189,7 @@ export class RenderSession implements RenderContext {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<MemoHook<T>>(HookType.Memo, currentHook);
+      ensureHookType<Hook.MemoHook<T>>(HookType.Memo, currentHook);
 
       if (areDependenciesChanged(currentHook.dependencies, dependencies)) {
         currentHook.value = factory();
@@ -226,12 +220,12 @@ export class RenderSession implements RenderContext {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<ReducerHook<TState, TAction>>(
+      ensureHookType<Hook.ReducerHook<TState, TAction>>(
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._lanes) !== NO_LANES) {
-        currentHook.lanes = NO_LANES;
+      if ((currentHook.lanes & this._lanes) !== Lanes.NoLanes) {
+        currentHook.lanes = Lanes.NoLanes;
         currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;
       } else {
@@ -240,9 +234,9 @@ export class RenderSession implements RenderContext {
     } else {
       const state =
         typeof initialState === 'function' ? initialState() : initialState;
-      const hook: ReducerHook<TState, TAction> = {
+      const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
-        lanes: NO_LANES,
+        lanes: Lanes.NoLanes,
         reducer,
         pendingState: state,
         memoizedState: state,
@@ -266,7 +260,7 @@ export class RenderSession implements RenderContext {
     return [
       currentHook.memoizedState,
       currentHook.dispatch,
-      currentHook.lanes !== NO_LANES,
+      currentHook.lanes !== Lanes.NoLanes,
     ];
   }
 
@@ -348,19 +342,19 @@ export class RenderSession implements RenderContext {
   private _useEffect(
     callback: () => (() => void) | void,
     dependencies: unknown[] | null,
-    type: EffectHook['type'],
+    type: Hook.EffectHook['type'],
   ): void {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
-      ensureHookType<EffectHook>(type, currentHook);
+      ensureHookType<Hook.EffectHook>(type, currentHook);
       if (areDependenciesChanged(currentHook.dependencies, dependencies)) {
         enqueueEffect(currentHook, this._context);
       }
       currentHook.callback = callback;
       currentHook.dependencies = dependencies;
     } else {
-      const hook: EffectHook = {
+      const hook: Hook.EffectHook = {
         type,
         callback,
         dependencies,
@@ -375,9 +369,9 @@ export class RenderSession implements RenderContext {
 }
 
 class InvokeEffectHook implements Effect {
-  private readonly _hook: EffectHook;
+  private readonly _hook: Hook.EffectHook;
 
-  constructor(hook: EffectHook) {
+  constructor(hook: Hook.EffectHook) {
     this._hook = hook;
   }
 
@@ -399,7 +393,10 @@ function areDependenciesChanged(
   );
 }
 
-function enqueueEffect(hook: EffectHook, context: RenderSessionContext): void {
+function enqueueEffect(
+  hook: Hook.EffectHook,
+  context: RenderSessionContext,
+): void {
   const effect = new InvokeEffectHook(hook);
   switch (hook.type) {
     case HookType.Effect:

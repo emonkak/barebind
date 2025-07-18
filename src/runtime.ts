@@ -1,9 +1,8 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import type { Backend } from './backend.js';
 import {
   $toDirective,
-  ALL_LANES,
-  type Backend,
   type CommitContext,
   CommitPhase,
   type Component,
@@ -16,12 +15,16 @@ import {
   getScheduleLanesFromOptions,
   type Hook,
   isBindable,
-  type Lanes,
-  NO_LANES,
+  Lanes,
+  type Literal,
+  type Part,
+  PartType,
   type Primitive,
   type RenderContext,
+  Scope,
   type Slot,
   type Template,
+  type TemplateLiteral,
   type TemplateMode,
   type UpdateContext,
   type UpdateOptions,
@@ -29,14 +32,8 @@ import {
 } from './core.js';
 import { inspectValue } from './debug.js';
 import { LinkedList } from './linked-list.js';
-import { type Part, PartType } from './part.js';
 import { RenderSession } from './render-session.js';
-import { Scope } from './scope.js';
-import {
-  type Literal,
-  type TemplateLiteral,
-  TemplateLiteralPreprocessor,
-} from './template-literal.js';
+import { TemplateLiteralPreprocessor } from './template-literal.js';
 
 export interface RuntimeObserver {
   onRuntimeEvent(event: RuntimeEvent): void;
@@ -265,7 +262,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          coroutine.resume(ALL_LANES, this);
+          coroutine.resume(Lanes.AllLanes, this);
         }
       } while (this._updateFrame.pendingCoroutines.length > 0);
 
@@ -411,7 +408,7 @@ export class Runtime implements CommitContext, UpdateContext {
       promise: this._backend.requestCallback(() => {
         coroutineState.pendingTasks.remove(taskNode);
 
-        if ((coroutineState.pendingLanes & lanes) === NO_LANES) {
+        if ((coroutineState.pendingLanes & lanes) === Lanes.NoLanes) {
           return;
         }
 

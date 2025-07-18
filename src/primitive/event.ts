@@ -1,7 +1,12 @@
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+} from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { type EventPart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type EventListenerValue =
@@ -40,7 +45,7 @@ export const EventPrimitive: Primitive<EventListenerValue> = {
 
 export class EventBinding extends PrimitiveBinding<
   EventListenerValue,
-  EventPart
+  Part.EventPart
 > {
   private _memoizedValue: EventListenerValue = null;
 
@@ -93,7 +98,7 @@ export class EventBinding extends PrimitiveBinding<
 }
 
 function attachEventListener(
-  part: EventPart,
+  part: Part.EventPart,
   listener: EventListenerObject,
   options: NonNullable<EventListenerValue>,
 ): void {
@@ -106,7 +111,7 @@ function attachEventListener(
 }
 
 function detachEventListener(
-  part: EventPart,
+  part: Part.EventPart,
   listener: EventListenerObject,
   options: NonNullable<EventListenerValue>,
 ): void {

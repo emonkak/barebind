@@ -1,4 +1,4 @@
-import { defineStore } from '@emonkak/ebit/extensions';
+import { defineStore } from '@emonkak/ebit/extensions/store';
 
 export interface Story {
   comments_count: number;

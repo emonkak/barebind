@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-
+import { PartType } from '@/core.js';
 import {
   $inspect,
   type Inspectable,
@@ -8,7 +8,6 @@ import {
   inspectValue,
   markUsedValue,
 } from '@/debug.js';
-import { PartType } from '@/part.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createElement } from '../test-utils.js';
 

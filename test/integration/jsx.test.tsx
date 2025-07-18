@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { component } from '@/extensions/component.js';
+import { component } from '@/component.js';
 import { createSyncRoot } from '@/root/sync.js';
 import { filterComments, stripComments } from '../test-utils.js';
 

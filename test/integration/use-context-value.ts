@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
+import { component } from '@/component.js';
 import type { RenderContext } from '@/core.js';
-import { component } from '@/extensions/component.js';
 import { createSyncRoot } from '@/root/sync.js';
 import { createElement, stripComments } from '../test-utils.js';
 

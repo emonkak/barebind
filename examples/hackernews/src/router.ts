@@ -1,4 +1,4 @@
-import { component } from '@emonkak/ebit/extensions';
+import { component } from '@emonkak/ebit';
 import {
   integer,
   Router,

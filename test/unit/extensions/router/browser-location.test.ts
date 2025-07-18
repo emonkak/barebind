@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ALL_LANES } from '@/core.js';
+import { Lanes } from '@/core.js';
 import {
   BrowserLocation,
   createFormSubmitHandler,
@@ -20,7 +20,7 @@ describe('BrowserLocation', () => {
   beforeEach(() => {
     session = new RenderSession(
       [],
-      ALL_LANES,
+      Lanes.AllLanes,
       new MockCoroutine(),
       new Runtime(new MockBackend()),
     );

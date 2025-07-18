@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { $toDirective } from '@/core.js';
+import { $toDirective, PartType } from '@/core.js';
 import { inspectValue } from '@/debug.js';
 import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
-import { PartType } from '@/part.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {

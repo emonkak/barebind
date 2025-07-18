@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ALL_LANES } from '@/core.js';
+import { Lanes } from '@/core.js';
 import {
   createHashClickHandler,
   HashLocation,
@@ -19,7 +19,7 @@ describe('HashLocation', () => {
   beforeEach(() => {
     session = new RenderSession(
       [],
-      ALL_LANES,
+      Lanes.AllLanes,
       new MockCoroutine(),
       new Runtime(new MockBackend()),
     );

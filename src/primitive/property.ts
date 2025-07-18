@@ -1,7 +1,12 @@
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+} from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { type Part, PartType, type PropertyPart } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 const noValue = Symbol('noValue');
@@ -12,7 +17,7 @@ export const PropertyPrimitive: Primitive<any> = {
     value: T,
     part: Part,
     _context: DirectiveContext,
-  ): PrimitiveBinding<T, PropertyPart> {
+  ): PropertyBinding<T> {
     if (part.type !== PartType.Property) {
       throw new Error(
         'PropertyPrimitive must be used in a property part, but it is used here:\n' +
@@ -23,7 +28,7 @@ export const PropertyPrimitive: Primitive<any> = {
   },
 };
 
-export class PropertyBinding<T> extends PrimitiveBinding<T, PropertyPart> {
+export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
   private _memoizedValue: T | typeof noValue = noValue;
 
   get type(): Primitive<T> {

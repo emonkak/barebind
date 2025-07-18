@@ -1,7 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { CommitPhase } from '@/core.js';
-import { PartType } from '@/part.js';
+import { CommitPhase, PartType } from '@/core.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { ClassListPrimitive } from '@/primitive/class-list.js';

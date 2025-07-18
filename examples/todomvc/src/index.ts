@@ -1,9 +1,8 @@
-import { BrowserBackend, createAsyncRoot } from '@emonkak/ebit';
+import { BrowserBackend, component, createAsyncRoot } from '@emonkak/ebit';
 import {
   ConsoleReporter,
-  component,
   RuntimeProfiler,
-} from '@emonkak/ebit/extensions';
+} from '@emonkak/ebit/extensions/profiler';
 
 import { App } from './App.js';
 import { TodoStore } from './store.js';

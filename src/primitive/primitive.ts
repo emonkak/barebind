@@ -1,11 +1,11 @@
 import type {
   Binding,
   CommitContext,
+  HydrationTree,
+  Part,
   Primitive,
   UpdateContext,
 } from '../core.js';
-import type { HydrationTree } from '../hydration.js';
-import type { Part } from '../part.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>

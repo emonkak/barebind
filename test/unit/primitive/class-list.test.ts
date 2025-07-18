@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PartType } from '@/part.js';
+import { PartType } from '@/core.js';
 import {
   ClassListBinding,
   ClassListPrimitive,

@@ -1,9 +1,10 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import type { Backend } from '@/backend.js';
+import { ComponentBinding } from '@/component.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
-  type Backend,
   type Bindable,
   type Binding,
   type CommitContext,
@@ -14,8 +15,10 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type Lanes,
-  NO_LANES,
+  type HydrationTree,
+  Lanes,
+  type Part,
+  PartType,
   type Primitive,
   type RenderContext,
   type RequestCallbackOptions,
@@ -26,9 +29,6 @@ import {
   type TemplateResult,
   type UpdateContext,
 } from '@/core.js';
-import { ComponentBinding } from '@/extensions/component.js';
-import type { HydrationTree } from '@/hydration.js';
-import { type ChildNodePart, type Part, PartType } from '@/part.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
@@ -172,7 +172,7 @@ export class MockComponent implements Component<unknown, unknown> {
 
 export class MockCoroutine implements Coroutine {
   resume(_lanes: Lanes, _context: UpdateContext): Lanes {
-    return NO_LANES;
+    return Lanes.NoLanes;
   }
 
   commit(): void {}
@@ -379,7 +379,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
 
   render(
     _binds: readonly unknown[],
-    _part: ChildNodePart,
+    _part: Part.ChildNodePart,
     _context: UpdateContext,
   ): TemplateResult {
     return {
@@ -390,7 +390,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
 
   hydrate(
     _binds: readonly unknown[],
-    _part: ChildNodePart,
+    _part: Part.ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
   ): TemplateResult {

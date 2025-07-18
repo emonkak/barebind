@@ -1,23 +1,17 @@
 import { describe, expect, it } from 'vitest';
-
+import { HydrationError, HydrationTree, type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import {
   RepeatBinding,
   RepeatDirective,
   type RepeatProps,
   repeat,
-} from '@/extensions/repeat.js';
-import { HydrationError, HydrationTree } from '@/hydration.js';
-import { type ChildNodePart, PartType } from '@/part.js';
+} from '@/repeat.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { MockBackend } from '../../mocks.js';
-import {
-  allCombinations,
-  createElement,
-  permutations,
-} from '../../test-utils.js';
+import { MockBackend } from '../mocks.js';
+import { allCombinations, createElement, permutations } from '../test-utils.js';
 
 const TEXT_TEMPLATE = new TextTemplate<string>();
 
@@ -117,7 +111,7 @@ describe('RepeatBinding', () => {
         source,
         valueSelector: textTemplate,
       };
-      const part: ChildNodePart = {
+      const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
@@ -152,7 +146,7 @@ describe('RepeatBinding', () => {
         source,
         valueSelector: textTemplate,
       };
-      const part: ChildNodePart = {
+      const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
@@ -198,7 +192,7 @@ describe('RepeatBinding', () => {
             keySelector: (item) => item,
             valueSelector: textTemplate,
           };
-          const part: ChildNodePart = {
+          const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
@@ -246,7 +240,7 @@ describe('RepeatBinding', () => {
             keySelector: (item) => item,
             valueSelector: textTemplate,
           };
-          const part: ChildNodePart = {
+          const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
@@ -303,7 +297,7 @@ describe('RepeatBinding', () => {
             keySelector: (item) => item,
             valueSelector: textTemplate,
           };
-          const part: ChildNodePart = {
+          const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
             node: document.createComment(''),
             childNode: null,
@@ -362,7 +356,7 @@ describe('RepeatBinding', () => {
       const props2: RepeatProps<string> = {
         source: source2,
       };
-      const part: ChildNodePart = {
+      const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,
@@ -406,7 +400,7 @@ describe('RepeatBinding', () => {
       const props: RepeatProps<string> = {
         source,
       };
-      const part: ChildNodePart = {
+      const part: Part.ChildNodePart = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         childNode: null,

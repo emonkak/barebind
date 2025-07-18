@@ -1,5 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
-import { component } from '@emonkak/ebit/extensions';
+import { component, type RenderContext } from '@emonkak/ebit';
 
 import { ItemStore } from '../store.js';
 import { ItemView } from './ItemView.js';

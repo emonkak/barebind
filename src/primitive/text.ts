@@ -1,7 +1,12 @@
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+} from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { type Part, PartType, type TextPart } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const TextPrimitive: Primitive<any> = {
@@ -21,7 +26,7 @@ export const TextPrimitive: Primitive<any> = {
   },
 };
 
-export class TextBinding<T> extends PrimitiveBinding<T, TextPart> {
+export class TextBinding<T> extends PrimitiveBinding<T, Part.TextPart> {
   private _memoizedValue: T | null = null;
 
   get type(): Primitive<T> {

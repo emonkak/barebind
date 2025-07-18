@@ -1,15 +1,16 @@
-import type {
-  Binding,
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-  Slot,
-  UpdateContext,
+import {
+  type Binding,
+  type CommitContext,
+  type DirectiveContext,
+  type HydrationTree,
+  type Part,
+  PartType,
+  type Primitive,
+  type Slot,
+  type UpdateContext,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
-import { type ElementPart, type Part, PartType } from '../part.js';
 
 export type SpreadProperties = { [key: string]: unknown };
 
@@ -41,13 +42,13 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
 export class SpreadBinding implements Binding<SpreadProperties> {
   private _props: SpreadProperties;
 
-  private readonly _part: ElementPart;
+  private readonly _part: Part.ElementPart;
 
   private _pendingSlots: Map<string, Slot<unknown>> = new Map();
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
-  constructor(props: SpreadProperties, part: ElementPart) {
+  constructor(props: SpreadProperties, part: Part.ElementPart) {
     this._props = props;
     this._part = part;
   }
@@ -60,7 +61,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     return this._props;
   }
 
-  get part(): ElementPart {
+  get part(): Part.ElementPart {
     return this._part;
   }
 

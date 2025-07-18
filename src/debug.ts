@@ -1,4 +1,4 @@
-import { type Part, PartType } from './part.js';
+import { type Part, PartType } from './core.js';
 
 export const $inspect: unique symbol = Symbol('$inspect');
 

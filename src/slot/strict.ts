@@ -3,13 +3,13 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveType,
+  type HydrationTree,
+  type Part,
   type Slot,
   type UpdateContext,
 } from '../core.js';
 import { inspectPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
-import type { HydrationTree } from '../hydration.js';
-import type { Part } from '../part.js';
 
 export function strict<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(StrictSlot, value);

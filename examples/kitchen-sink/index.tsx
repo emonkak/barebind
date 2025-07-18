@@ -1,19 +1,18 @@
 import {
   BrowserBackend,
+  component,
   createAsyncRoot,
   Literal,
   type RenderContext,
+  repeat,
   shallowEqual,
 } from '@emonkak/ebit';
 import {
-  Atom,
   ConsoleReporter,
-  component,
   RuntimeProfiler,
-  repeat,
-  type Signal,
-  type VElement,
-} from '@emonkak/ebit/extensions';
+} from '@emonkak/ebit/extensions/profiler';
+import { Atom, type Signal } from '@emonkak/ebit/extensions/signal';
+import type { VElement } from '@emonkak/ebit/extensions/vdom';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
 

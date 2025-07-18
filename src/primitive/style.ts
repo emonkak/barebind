@@ -1,8 +1,13 @@
 import { shallowEqual } from '../compare.js';
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+} from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type StyleProperties = CSSStyleProperties & UnknownStyleProperties;
@@ -52,7 +57,7 @@ export const StylePrimitive: Primitive<StyleProperties> = {
 
 export class StyleBinding extends PrimitiveBinding<
   StyleProperties,
-  AttributePart
+  Part.AttributePart
 > {
   private _memoizedValue: StyleProperties = {};
 

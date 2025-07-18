@@ -1,12 +1,13 @@
-import type {
-  Slot,
-  TemplateMode,
-  TemplateResult,
-  UpdateContext,
+import {
+  type HydrationTree,
+  type Part,
+  PartType,
+  type Slot,
+  type TemplateMode,
+  type TemplateResult,
+  type UpdateContext,
 } from '../core.js';
 import { inspectNode, inspectPart } from '../debug.js';
-import type { HydrationTree } from '../hydration.js';
-import { type ChildNodePart, type Part, PartType } from '../part.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,
@@ -134,7 +135,7 @@ export class TaggedTemplate<
 
   hydrate(
     binds: TBinds,
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     hydrationTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
@@ -275,7 +276,7 @@ export class TaggedTemplate<
 
   render(
     binds: TBinds,
-    part: ChildNodePart,
+    part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult {
     const holes = this._holes;

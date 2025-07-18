@@ -1,8 +1,6 @@
-import type { Backend, UpdateOptions } from '../core.js';
-import { HydrationTree } from '../hydration.js';
-import { PartType } from '../part.js';
-import type { RuntimeObserver } from '../runtime.js';
-import { Runtime } from '../runtime.js';
+import type { Backend } from '../backend.js';
+import { HydrationTree, PartType, type UpdateOptions } from '../core.js';
+import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
 export interface AsyncRoot<T> {

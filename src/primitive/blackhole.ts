@@ -1,5 +1,9 @@
-import type { CommitContext, DirectiveContext, Primitive } from '../core.js';
-import type { Part } from '../part.js';
+import type {
+  CommitContext,
+  DirectiveContext,
+  Part,
+  Primitive,
+} from '../core.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {

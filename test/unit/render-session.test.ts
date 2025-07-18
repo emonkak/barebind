@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ALL_LANES, Lane, NO_LANES } from '@/core.js';
+import { Lanes, Literal } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { Literal } from '@/template-literal.js';
 import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
 import { cleanupHooks } from '../test-utils.js';
 
@@ -11,7 +10,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the dynamic HTML template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -33,7 +32,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the dynamic MathML template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -55,7 +54,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the dynamic SVG template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -79,7 +78,7 @@ describe('RenderSession', () => {
       (key) => {
         const session = new RenderSession(
           [],
-          ALL_LANES,
+          Lanes.AllLanes,
           new MockCoroutine(),
           new Runtime(new MockBackend()),
         );
@@ -101,7 +100,7 @@ describe('RenderSession', () => {
     it('denies using a hook after finalize', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -114,7 +113,7 @@ describe('RenderSession', () => {
     it('throws an error if given a different type of hook', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -131,7 +130,7 @@ describe('RenderSession', () => {
     it('schedules the update with the current coroutine', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -140,7 +139,7 @@ describe('RenderSession', () => {
       const scheduleUpdateSpy = vi
         .spyOn(session['_context'], 'scheduleUpdate')
         .mockImplementation(() => ({
-          lanes: Lane.Background,
+          lanes: Lanes.BackgroundLane,
           promise: Promise.resolve(),
         }));
 
@@ -158,7 +157,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the HTML template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -180,7 +179,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the MathML template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -202,7 +201,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the SVG template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -224,7 +223,7 @@ describe('RenderSession', () => {
     it('returns a bindable with the text template', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -246,7 +245,7 @@ describe('RenderSession', () => {
     it('performs the custom hook', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -265,7 +264,7 @@ describe('RenderSession', () => {
     it('returns the memoized callback if dependencies are the same as the previous value', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -290,7 +289,7 @@ describe('RenderSession', () => {
     it('returns the value deferred until next rendering', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -329,7 +328,7 @@ describe('RenderSession', () => {
     it('returns the initial value if it is given', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -365,7 +364,7 @@ describe('RenderSession', () => {
     it('performs the cleanup function when the callback is changed', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -395,7 +394,7 @@ describe('RenderSession', () => {
     it('does not perform the callback function if dependencies are not changed', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -431,7 +430,7 @@ describe('RenderSession', () => {
     it('throws an error if given a different type of hook', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -449,7 +448,7 @@ describe('RenderSession', () => {
     it('returns a unique identifier', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -470,7 +469,7 @@ describe('RenderSession', () => {
     it('throws an error if given a different type of hook', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -486,7 +485,7 @@ describe('RenderSession', () => {
     it('returns the memoized value if dependencies are the same as the previous value', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -509,7 +508,7 @@ describe('RenderSession', () => {
     it('throws an error if given a different type of hook', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -527,7 +526,7 @@ describe('RenderSession', () => {
     it('schedules the update when the state is changed', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -557,7 +556,7 @@ describe('RenderSession', () => {
     it('should skip the update if the state does not changed', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -587,7 +586,7 @@ describe('RenderSession', () => {
     it('returns the initial state by the function', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -604,7 +603,7 @@ describe('RenderSession', () => {
     it('throws an error if given a different type of hook', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -622,7 +621,7 @@ describe('RenderSession', () => {
     it('returns a memoized ref object', () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -645,7 +644,7 @@ describe('RenderSession', () => {
     it('schedules the update when the state is changed', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -674,7 +673,7 @@ describe('RenderSession', () => {
     it('should skip the update if the state does not changed', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -703,7 +702,7 @@ describe('RenderSession', () => {
     it('can set the state by the function', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -732,14 +731,14 @@ describe('RenderSession', () => {
     it('should not return the pending state', async () => {
       const session = new RenderSession(
         [],
-        Lane.UserBlocking,
+        Lanes.UserBlockingLane,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
 
       let [count, setCount, isPending] = session.useState(() => 0);
 
-      expect(session.finalize()).toBe(NO_LANES);
+      expect(session.finalize()).toBe(Lanes.NoLanes);
       session.flush();
 
       expect(count).toBe(0);
@@ -754,7 +753,7 @@ describe('RenderSession', () => {
       expect(count).toBe(0);
       expect(isPending).toBe(true);
 
-      expect(session.finalize()).toBe(Lane.Background);
+      expect(session.finalize()).toBe(Lanes.BackgroundLane);
       session.flush();
     });
   });
@@ -763,7 +762,7 @@ describe('RenderSession', () => {
     it('forces the update if the snapshot is changed when the store is updated', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -809,7 +808,7 @@ describe('RenderSession', () => {
     it('forces the update if the snapshot have been changed during update', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );
@@ -858,7 +857,7 @@ describe('RenderSession', () => {
     it('should resubscribe the store if the subscribe function is changed', async () => {
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );

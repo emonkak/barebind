@@ -1,5 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
-import { component, repeat } from '@emonkak/ebit/extensions';
+import { component, type RenderContext, repeat } from '@emonkak/ebit';
 
 import type { Comment } from '../store.js';
 

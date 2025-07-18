@@ -1,17 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ALL_LANES, CommitPhase, type RenderContext } from '@/core.js';
+import { ComponentBinding, component, FunctionComponent } from '@/component.js';
 import {
-  ComponentBinding,
-  component,
-  FunctionComponent,
-} from '@/extensions/component.js';
-import { HydrationError, HydrationTree } from '@/hydration.js';
-import { PartType } from '@/part.js';
+  CommitPhase,
+  HydrationError,
+  HydrationTree,
+  Lanes,
+  PartType,
+  type RenderContext,
+} from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBackend, MockCoroutine, MockSlot } from '../../mocks.js';
-import { createElement } from '../../test-utils.js';
+import { MockBackend, MockCoroutine, MockSlot } from '../mocks.js';
+import { createElement } from '../test-utils.js';
 
 describe('component()', () => {
   it('returns a new DirectiveSpecifier with the component', () => {
@@ -52,7 +53,7 @@ describe('FunctionComponent', () => {
       };
       const session = new RenderSession(
         [],
-        ALL_LANES,
+        Lanes.AllLanes,
         new MockCoroutine(),
         new Runtime(new MockBackend()),
       );

@@ -1,12 +1,13 @@
-import type {
-  CommitContext,
-  DirectiveContext,
-  Primitive,
-  RefObject,
+import {
+  type CommitContext,
+  type DirectiveContext,
+  type Part,
+  PartType,
+  type Primitive,
+  type RefObject,
 } from '../core.js';
 import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { type AttributePart, type Part, PartType } from '../part.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type Ref =
@@ -43,7 +44,7 @@ export const RefPrimitive: Primitive<Ref> = {
   },
 };
 
-export class RefBinding extends PrimitiveBinding<Ref, AttributePart> {
+export class RefBinding extends PrimitiveBinding<Ref, Part.AttributePart> {
   private _memoizedValue: Ref = null;
 
   private _memoizedCleanup: Cleanup | void = undefined;

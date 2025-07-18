@@ -1,6 +1,10 @@
-import type { DirectiveType, TemplateResult, UpdateContext } from '../core.js';
-import type { HydrationTree } from '../hydration.js';
-import type { ChildNodePart } from '../part.js';
+import type {
+  DirectiveType,
+  HydrationTree,
+  Part,
+  TemplateResult,
+  UpdateContext,
+} from '../core.js';
 import { AbstractTemplate } from './template.js';
 
 export class EmptyTemplate extends AbstractTemplate<readonly []> {
@@ -14,7 +18,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
 
   hydrate(
     _binds: readonly [],
-    _part: ChildNodePart,
+    _part: Part.ChildNodePart,
     _hydrationTree: HydrationTree,
     _context: UpdateContext,
   ): TemplateResult {
@@ -23,7 +27,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
 
   render(
     _binds: readonly [],
-    _part: ChildNodePart,
+    _part: Part.ChildNodePart,
     _context: UpdateContext,
   ): TemplateResult {
     return { childNodes: [], slots: [] };

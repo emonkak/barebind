@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationTree } from '@/hydration.js';
-import { PartType } from '@/part.js';
+import { HydrationTree, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { ElementTemplate, element } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';

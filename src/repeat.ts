@@ -1,22 +1,20 @@
-import type {
-  Binding,
-  CommitContext,
-  DirectiveContext,
-  DirectiveType,
-  Slot,
-  UpdateContext,
-} from '../core.js';
-import { inspectPart, markUsedValue } from '../debug.js';
-import { DirectiveSpecifier } from '../directive.js';
-import { HydrationError, type HydrationTree } from '../hydration.js';
 import {
-  type ChildNodePart,
+  type Binding,
+  type CommitContext,
+  type DirectiveContext,
+  type DirectiveType,
   getChildNodes,
   getStartNode,
+  HydrationError,
+  type HydrationTree,
   moveChildNodes,
   type Part,
   PartType,
-} from '../part.js';
+  type Slot,
+  type UpdateContext,
+} from './core.js';
+import { inspectPart, markUsedValue } from './debug.js';
+import { DirectiveSpecifier } from './directive.js';
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   source: Iterable<TSource>;
@@ -93,7 +91,7 @@ export class RepeatBinding<TSource, TKey, TValue>
 {
   private _props: RepeatProps<TSource, TKey, TValue>;
 
-  private readonly _part: ChildNodePart;
+  private readonly _part: Part.ChildNodePart;
 
   private _pendingItems: Item<TKey, Slot<TValue>>[] = [];
 
@@ -101,7 +99,10 @@ export class RepeatBinding<TSource, TKey, TValue>
 
   private _pendingOperations: Operation<TKey, Slot<TValue>>[] = [];
 
-  constructor(props: RepeatProps<TSource, TKey, TValue>, part: ChildNodePart) {
+  constructor(
+    props: RepeatProps<TSource, TKey, TValue>,
+    part: Part.ChildNodePart,
+  ) {
     this._props = props;
     this._part = part;
   }
@@ -114,7 +115,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     return this._props;
   }
 
-  get part(): ChildNodePart {
+  get part(): Part.ChildNodePart {
     return this._part;
   }
 
@@ -277,7 +278,7 @@ export class RepeatBinding<TSource, TKey, TValue>
 function commitInsert<TKey, TValue>(
   { value }: Item<TKey, Slot<TValue>>,
   referenceItem: Item<TKey, Slot<TValue>> | undefined,
-  part: ChildNodePart,
+  part: Part.ChildNodePart,
 ): void {
   const referenceNode =
     referenceItem !== undefined
@@ -289,7 +290,7 @@ function commitInsert<TKey, TValue>(
 function commitMove<TKey, TValue>(
   { value }: Item<TKey, Slot<TValue>>,
   referenceItem: Item<TKey, Slot<TValue>> | undefined,
-  part: ChildNodePart,
+  part: Part.ChildNodePart,
 ): void {
   const startNode = getStartNode(value.part);
   const endNode = value.part.node;

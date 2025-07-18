@@ -1,5 +1,4 @@
 import {
-  ALL_LANES,
   type Binding,
   type CommitContext,
   type Component,
@@ -7,18 +6,18 @@ import {
   type Coroutine,
   type DirectiveContext,
   type Effect,
-  type EffectHook,
   type Hook,
   HookType,
-  type Lanes,
+  HydrationError,
+  type HydrationTree,
+  Lanes,
+  type Part,
   type RenderContext,
+  Scope,
   type Slot,
   type UpdateContext,
-} from '../core.js';
-import { DirectiveSpecifier } from '../directive.js';
-import { HydrationError, type HydrationTree } from '../hydration.js';
-import type { Part } from '../part.js';
-import { Scope } from '../scope.js';
+} from './core.js';
+import { DirectiveSpecifier } from './directive.js';
 
 export function component<TProps, TResult>(
   componentFn: ComponentFunction<TProps, TResult>,
@@ -152,7 +151,7 @@ export class ComponentBinding<TProps, TResult>
       this._component,
       this._props,
       this._hooks,
-      ALL_LANES,
+      Lanes.AllLanes,
       this,
     );
 
@@ -197,9 +196,9 @@ export class ComponentBinding<TProps, TResult>
 }
 
 class CleanEffectHook implements Effect {
-  private _hook: EffectHook;
+  private _hook: Hook.EffectHook;
 
-  constructor(hook: EffectHook) {
+  constructor(hook: Hook.EffectHook) {
     this._hook = hook;
   }
 

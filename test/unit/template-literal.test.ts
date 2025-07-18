@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { Literal, TemplateLiteralPreprocessor } from '@/template-literal.js';
+import { Literal } from '@/core.js';
+import { TemplateLiteralPreprocessor } from '@/template-literal.js';
 import { templateLiteral } from '../test-utils.js';
 
 describe('TemplateLiteralPreprocessor', () => {
@@ -116,21 +116,5 @@ describe('TemplateLiteralPreprocessor', () => {
     );
     expect(preprocessedTemplate1.values).toStrictEqual(['World']);
     expect(preprocessedTemplate2.values).toStrictEqual(['World']);
-  });
-});
-
-describe('Literal', () => {
-  describe('toString()', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(new Literal(s).toString()).toBe(s);
-    });
-  });
-
-  describe('valueOf()', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(new Literal(s).valueOf()).toBe(s);
-    });
   });
 });
