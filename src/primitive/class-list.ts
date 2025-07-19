@@ -6,7 +6,7 @@ import {
   PartType,
   type Primitive,
 } from '../core.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { debugPart, debugValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -19,8 +19,8 @@ export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
   ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier[] {
     if (!(Array.isArray(value) && value.every(isClassSpecifier))) {
       throw new Error(
-        `The value of ClassListPrimitive must be an array of class specifier, but got ${inspectValue(value)}.\n` +
-          inspectPart(part, markUsedValue(value)),
+        `The value of ClassListPrimitive must be an array of class specifier, but got ${debugValue(value)}.\n` +
+          debugPart(part, markUsedValue(value)),
       );
     }
   },
@@ -35,7 +35,7 @@ export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
     ) {
       throw new Error(
         'ClassListPrimitive must be used in a ":classlist" attribute part, but it is used here:\n' +
-          inspectPart(
+          debugPart(
             part,
             markUsedValue(new DirectiveSpecifier(this, specifiers)),
           ),

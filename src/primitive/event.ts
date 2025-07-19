@@ -5,7 +5,7 @@ import {
   PartType,
   type Primitive,
 } from '../core.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { debugPart, debugValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -20,8 +20,8 @@ export const EventPrimitive: Primitive<EventListenerValue> = {
   ensureValue(value: unknown, part: Part): asserts value is EventListenerValue {
     if (!isEventListenerValue(value)) {
       throw new Error(
-        `The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined, but got ${inspectValue(value)}.\n` +
-          inspectPart(part, markUsedValue(value)),
+        `The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined, but got ${debugValue(value)}.\n` +
+          debugPart(part, markUsedValue(value)),
       );
     }
   },
@@ -33,7 +33,7 @@ export const EventPrimitive: Primitive<EventListenerValue> = {
     if (part.type !== PartType.Event) {
       throw new Error(
         'EventPrimitive must be used in an event part, but it is used here:\n' +
-          inspectPart(
+          debugPart(
             part,
             markUsedValue(new DirectiveSpecifier(this, listener)),
           ),

@@ -7,9 +7,9 @@ import {
   type Part,
   type SlotType,
 } from './core.js';
-import { $inspect, type Inspectable } from './debug.js';
+import { $debug, type Debuggable } from './debug.js';
 
-export class DirectiveSpecifier<T> implements Bindable<T>, Inspectable {
+export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
   readonly type: DirectiveType<T>;
 
   readonly value: T;
@@ -19,16 +19,16 @@ export class DirectiveSpecifier<T> implements Bindable<T>, Inspectable {
     this.value = value;
   }
 
+  [$debug](format: (value: unknown) => string): string {
+    return this.type.name + '(' + format(this.value) + ')';
+  }
+
   [$toDirective](): Directive<T> {
     return this;
   }
-
-  [$inspect](inspect: (value: unknown) => string): string {
-    return this.type.name + '(' + inspect(this.value) + ')';
-  }
 }
 
-export class SlotSpecifier<T> implements Bindable {
+export class SlotSpecifier<T> implements Bindable, Debuggable {
   readonly slotType: SlotType;
 
   readonly value: T;
@@ -38,13 +38,13 @@ export class SlotSpecifier<T> implements Bindable {
     this.value = value;
   }
 
+  [$debug](format: (value: unknown) => string): string {
+    return this.slotType.name + '(' + format(this.value) + ')';
+  }
+
   [$toDirective](part: Part, context: DirectiveContext): Directive<unknown> {
     const { value, slotType } = this;
     const directive = context.resolveDirective(value, part);
     return { ...directive, slotType };
-  }
-
-  [$inspect](inspect: (value: unknown) => string): string {
-    return this.slotType.name + '(' + inspect(this.value) + ')';
   }
 }

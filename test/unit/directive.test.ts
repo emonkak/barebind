@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { $toDirective, PartType } from '@/core.js';
-import { inspectValue } from '@/debug.js';
+import { debugValue } from '@/debug.js';
 import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -30,7 +30,7 @@ describe('DirectiveSpecifier', () => {
       const value = 'foo';
       const bindable = new DirectiveSpecifier(type, value);
 
-      expect(inspectValue(bindable)).toBe('MockDirective("foo")');
+      expect(debugValue(bindable)).toBe('MockDirective("foo")');
     });
   });
 });
@@ -80,7 +80,7 @@ describe('SlotSpecifier', () => {
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const bindable = new SlotSpecifier(slotType, value);
 
-      expect(inspectValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
+      expect(debugValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
     });
   });
 });

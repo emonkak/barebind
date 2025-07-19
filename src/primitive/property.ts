@@ -5,7 +5,7 @@ import {
   PartType,
   type Primitive,
 } from '../core.js';
-import { inspectPart, markUsedValue } from '../debug.js';
+import { debugPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -21,7 +21,7 @@ export const PropertyPrimitive: Primitive<any> = {
     if (part.type !== PartType.Property) {
       throw new Error(
         'PropertyPrimitive must be used in a property part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
+          debugPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
       );
     }
     return new PropertyBinding(value, part);

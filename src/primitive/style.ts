@@ -6,7 +6,7 @@ import {
   PartType,
   type Primitive,
 } from '../core.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { debugPart, debugValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
@@ -32,8 +32,8 @@ export const StylePrimitive: Primitive<StyleProperties> = {
   ensureValue(value: unknown, part: Part): asserts value is StyleProperties {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of StylePrimitive must be an object, but got ${inspectValue(value)}.\n` +
-          inspectPart(part, markUsedValue(value)),
+        `The value of StylePrimitive must be an object, but got ${debugValue(value)}.\n` +
+          debugPart(part, markUsedValue(value)),
       );
     }
   },
@@ -48,7 +48,7 @@ export const StylePrimitive: Primitive<StyleProperties> = {
     ) {
       throw new Error(
         'StylePrimitive must be used in a ":style" attribute part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new StyleBinding(props, part);

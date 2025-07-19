@@ -8,7 +8,7 @@ import {
   type Slot,
   type UpdateContext,
 } from '../core.js';
-import { inspectPart, markUsedValue } from '../debug.js';
+import { debugPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
 
 export function strict<T>(value: T): SlotSpecifier<T> {
@@ -42,7 +42,7 @@ export class StrictSlot<T> implements Slot<T> {
     if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
       throw new Error(
         `The directive must be ${this._binding.type.name} in this slot, but got ${directive.type.name}.\n` +
-          inspectPart(
+          debugPart(
             this._binding.part,
             markUsedValue(
               new DirectiveSpecifier(directive.type, directive.value),

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { PartType } from '@/core.js';
 import {
-  $inspect,
-  type Inspectable,
-  inspectNode,
-  inspectPart,
-  inspectValue,
+  $debug,
+  type Debuggable,
+  debugNode,
+  debugPart,
+  debugValue,
   markUsedValue,
 } from '@/debug.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -13,11 +13,11 @@ import { createElement } from '../test-utils.js';
 
 const NODE_MAKRER = '[[NODE IN HERE!]]';
 
-describe('inspectNode()', () => {
+describe('debugNode()', () => {
   it('reports where a text node', () => {
     const node = document.createTextNode('foo');
 
-    expect(inspectNode(node, NODE_MAKRER)).toBe('[[NODE IN HERE!]]foo');
+    expect(debugNode(node, NODE_MAKRER)).toBe('[[NODE IN HERE!]]foo');
 
     createElement(
       'div',
@@ -27,7 +27,7 @@ describe('inspectNode()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectNode(node, NODE_MAKRER)).toBe(
+    expect(debugNode(node, NODE_MAKRER)).toBe(
       `
 <div>
   <span>
@@ -49,7 +49,7 @@ describe('inspectNode()', () => {
   it('reports where a comment node', () => {
     const node = document.createComment('foo');
 
-    expect(inspectNode(node, NODE_MAKRER)).toBe('[[NODE IN HERE!]]<!--foo-->');
+    expect(debugNode(node, NODE_MAKRER)).toBe('[[NODE IN HERE!]]<!--foo-->');
 
     createElement(
       'div',
@@ -59,7 +59,7 @@ describe('inspectNode()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectNode(node, NODE_MAKRER)).toBe(
+    expect(debugNode(node, NODE_MAKRER)).toBe(
       `
 <div>
   <span>
@@ -81,7 +81,7 @@ describe('inspectNode()', () => {
   it('reports where an element node', () => {
     const node = createElement('mark', {}, 'foo');
 
-    expect(inspectNode(node, NODE_MAKRER)).toBe(
+    expect(debugNode(node, NODE_MAKRER)).toBe(
       `<mark [[NODE IN HERE!]]>...</mark>`.trim(),
     );
 
@@ -93,7 +93,7 @@ describe('inspectNode()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectNode(node, NODE_MAKRER)).toBe(
+    expect(debugNode(node, NODE_MAKRER)).toBe(
       `
 <div>
   <span>
@@ -113,7 +113,7 @@ describe('inspectNode()', () => {
   });
 });
 
-describe('inspectPart()', () => {
+describe('debugPart()', () => {
   it('reports where an AttributePart is inserted', () => {
     const part = {
       type: PartType.Attribute,
@@ -122,7 +122,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `<input type="text" class=[["my value" IS USED IN HERE!]]>`,
     );
 
@@ -134,7 +134,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -172,7 +172,7 @@ describe('inspectPart()', () => {
       ),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <!DOCTYPE html>
 <html>
@@ -207,7 +207,7 @@ describe('inspectPart()', () => {
       ),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div id="foo">
   <span>
@@ -236,7 +236,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `[["my value" IS USED IN HERE!]]`,
     );
 
@@ -248,7 +248,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -274,7 +274,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `<div [["my value" IS USED IN HERE!]]></div>`,
     );
 
@@ -286,7 +286,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -313,7 +313,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `<button type="button" @click=[["my value" IS USED IN HERE!]]></button>`,
     );
 
@@ -325,7 +325,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -353,7 +353,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `<input type="text" $value=[["my value" IS USED IN HERE!]]>`,
     );
 
@@ -365,7 +365,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -393,7 +393,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `<input type="text" .value=[["my value" IS USED IN HERE!]]>`,
     );
 
@@ -405,7 +405,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -434,7 +434,7 @@ describe('inspectPart()', () => {
     };
     const value = 'my value';
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `[["my value" IS USED IN HERE!]]`,
     );
 
@@ -452,7 +452,7 @@ describe('inspectPart()', () => {
       createElement('span', {}, document.createTextNode('qux')),
     );
 
-    expect(inspectPart(part, markUsedValue(value))).toBe(
+    expect(debugPart(part, markUsedValue(value))).toBe(
       `
 <div>
   <span>
@@ -472,7 +472,7 @@ describe('inspectPart()', () => {
   });
 });
 
-describe('inspectValue()', () => {
+describe('debugValue()', () => {
   const x = {};
   const circlerValue = { x: {} };
   circlerValue.x = circlerValue;
@@ -491,9 +491,9 @@ describe('inspectValue()', () => {
     [new (class Foo {})(), 'Foo'],
     [
       {
-        [$inspect]: (inspect) => `MyInspectable(${inspect('foo')})`,
-      } as Inspectable,
-      'MyInspectable("foo")',
+        [$debug]: (format) => `MyDebuggable(${format('foo')})`,
+      } as Debuggable,
+      'MyDebuggable("foo")',
     ],
     [function foo() {}, 'Function(foo)'],
     [() => {}, 'Function'],
@@ -520,7 +520,7 @@ describe('inspectValue()', () => {
   ])(
     'returns a string representation of the value',
     (value, expectedString) => {
-      expect(inspectValue(value)).toBe(expectedString);
+      expect(debugValue(value)).toBe(expectedString);
     },
   );
 });

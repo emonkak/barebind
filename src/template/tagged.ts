@@ -7,7 +7,7 @@ import {
   type TemplateResult,
   type UpdateContext,
 } from '../core.js';
-import { inspectNode, inspectPart } from '../debug.js';
+import { debugNode, debugPart } from '../debug.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,
@@ -466,7 +466,7 @@ function parseAttribtues(
         if (caseSensitiveName?.toLowerCase() !== name) {
           throw new Error(
             `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute:\n` +
-              inspectPart(
+              debugPart(
                 { type: PartType.Attribute, name, node: element },
                 ERROR_MAKER,
               ),
@@ -504,7 +504,7 @@ function parseAttribtues(
         if (name.includes(marker)) {
           throw new Error(
             'Expressions are not allowed as an attribute name:\n' +
-              inspectPart(
+              debugPart(
                 {
                   type: PartType.Attribute,
                   name,
@@ -518,7 +518,7 @@ function parseAttribtues(
         if (value.includes(marker)) {
           throw new Error(
             'Expressions inside an attribute must make up the entire attribute value:\n' +
-              inspectPart(
+              debugPart(
                 {
                   type: PartType.Attribute,
                   name,
@@ -560,7 +560,7 @@ function parseChildren(
           if ((currentNode as Element).tagName.includes(marker.toUpperCase())) {
             throw new Error(
               'Expressions are not allowed as a tag name:\n' +
-                inspectPart(
+                debugPart(
                   { type: PartType.Element, node: currentNode as Element },
                   ERROR_MAKER,
                 ),
@@ -584,7 +584,7 @@ function parseChildren(
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
-                  inspectNode(currentNode, ERROR_MAKER),
+                  debugNode(currentNode, ERROR_MAKER),
               );
             }
           }

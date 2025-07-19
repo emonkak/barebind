@@ -1,6 +1,6 @@
 import { type Part, PartType } from './core.js';
 
-export const $inspect: unique symbol = Symbol('$inspect');
+export const $debug: unique symbol = Symbol('$debug');
 
 const UNQUOTED_PROPERTY_PATTERN = /^[A-Za-z$_][0-9A-Za-z$_]*$/;
 
@@ -9,19 +9,19 @@ const INDENT_STRING = '  ';
 // Minimum complexity score required to make a node identifiable.
 const COMPLEXITY_THRESHOLD = 10;
 
-export interface Inspectable {
-  [$inspect](inspect: (value: unknown) => string): string;
+export interface Debuggable {
+  [$debug](format: (value: unknown) => string): string;
 }
 
-export function inspectNode(node: Node, marker: string): string {
-  return inspectAround(node, annotateNode(node, marker));
+export function debugNode(node: Node, marker: string): string {
+  return inspectNode(node, annotateNode(node, marker));
 }
 
-export function inspectPart(part: Part, marker: string): string {
-  return inspectAround(part.node, annotatePart(part, marker));
+export function debugPart(part: Part, marker: string): string {
+  return inspectNode(part.node, annotatePart(part, marker));
 }
 
-export function inspectValue(
+export function debugValue(
   value: unknown,
   maxDepth: number = 3,
   seenObjects: object[] = [],
@@ -46,8 +46,8 @@ export function inspectValue(
       }
       seenObjects.push(value);
       try {
-        if (isInspectable(value)) {
-          return value[$inspect]((v) => inspectValue(v, maxDepth, seenObjects));
+        if (isDebuggable(value)) {
+          return value[$debug]((v) => debugValue(v, maxDepth, seenObjects));
         }
         switch (value.constructor) {
           case Array:
@@ -60,7 +60,7 @@ export function inspectValue(
             return (
               '[' +
               (value as unknown[])
-                .map((v) => inspectValue(v, maxDepth, seenObjects))
+                .map((v) => debugValue(v, maxDepth, seenObjects))
                 .join(', ') +
               ']'
             );
@@ -83,7 +83,7 @@ export function inspectValue(
                           ? k
                           : JSON.stringify(k)) +
                         ': ' +
-                        inspectValue(v, maxDepth, seenObjects),
+                        debugValue(v, maxDepth, seenObjects),
                     )
                     .join(', ') +
                   ' }'
@@ -101,7 +101,7 @@ export function inspectValue(
 }
 
 export function markUsedValue(value: unknown): string {
-  return `[[${inspectValue(value)} IS USED IN HERE!]]`;
+  return `[[${debugValue(value)} IS USED IN HERE!]]`;
 }
 
 function annotateInsideTag(element: Element, contentToAppend: string): string {
@@ -190,7 +190,7 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
-function inspectAround(node: Node, marker: string): string {
+function inspectNode(node: Node, marker: string): string {
   const precedingLines: string[] = [];
   const followingLines: string[] = [];
   let currentNode: Node | null = node;
@@ -239,8 +239,8 @@ function inspectAround(node: Node, marker: string): string {
   return precedingString + middleString + followingString;
 }
 
-function isInspectable(value: {}): value is Inspectable {
-  return $inspect in value;
+function isDebuggable(value: {}): value is Debuggable {
+  return $debug in value;
 }
 
 function isSelfClosingTag(element: Element): boolean {

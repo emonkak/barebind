@@ -12,7 +12,7 @@ import {
   type TemplateResult,
   type UpdateContext,
 } from '../core.js';
-import { inspectPart, markUsedValue } from '../debug.js';
+import { debugPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
@@ -55,7 +55,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         `${this.constructor.name} must be used in a child node part, but it is used here in:\n` +
-          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, binds))),
+          debugPart(part, markUsedValue(new DirectiveSpecifier(this, binds))),
       );
     }
 

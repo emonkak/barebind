@@ -30,7 +30,7 @@ import {
   type UpdateOptions,
   type UpdateTask,
 } from './core.js';
-import { inspectValue } from './debug.js';
+import { debugValue } from './debug.js';
 import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import { TemplateLiteralPreprocessor } from './template-literal.js';
@@ -122,7 +122,7 @@ export class Runtime implements CommitContext, UpdateContext {
       (part.node.data === '' ||
         part.node.data.startsWith('/' + type.name + '('))
     ) {
-      part.node.data = `/${type.name}(${inspectValue(value)})`;
+      part.node.data = `/${type.name}(${debugValue(value)})`;
     }
   }
 

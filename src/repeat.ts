@@ -13,7 +13,7 @@ import {
   type Slot,
   type UpdateContext,
 } from './core.js';
-import { inspectPart, markUsedValue } from './debug.js';
+import { debugPart, markUsedValue } from './debug.js';
 import { DirectiveSpecifier } from './directive.js';
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
@@ -79,7 +79,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'RepeatDirective must be used in a child part, but it is used here in:\n' +
-          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new RepeatBinding(props, part);

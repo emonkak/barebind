@@ -16,7 +16,7 @@ import {
   type Template,
   type UpdateContext,
 } from '../core.js';
-import { inspectPart, markUsedValue } from '../debug.js';
+import { debugPart, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import {
@@ -89,7 +89,7 @@ export const ElementDirective: DirectiveType<ElementProps> = {
     if (part.type !== PartType.Element) {
       throw new Error(
         'ElementDirective must be used in an element part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new ElementBinding(props, part);

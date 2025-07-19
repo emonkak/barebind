@@ -9,7 +9,7 @@ import {
   type Slot,
   type UpdateContext,
 } from '../core.js';
-import { inspectPart, inspectValue, markUsedValue } from '../debug.js';
+import { debugPart, debugValue, markUsedValue } from '../debug.js';
 import { DirectiveSpecifier } from '../directive.js';
 
 export type SpreadProperties = { [key: string]: unknown };
@@ -19,8 +19,8 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
     if (!isSpreadProps(value)) {
       throw new Error(
-        `The value of SpreadPrimitive must be an object, but got ${inspectValue(value)}.\n` +
-          inspectPart(part, markUsedValue(value)),
+        `The value of SpreadPrimitive must be an object, but got ${debugValue(value)}.\n` +
+          debugPart(part, markUsedValue(value)),
       );
     }
   },
@@ -32,7 +32,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
     if (part.type !== PartType.Element) {
       throw new Error(
         'SpreadPrimitive must be used in an element part, but it is used here:\n' +
-          inspectPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new SpreadBinding(props, part);
