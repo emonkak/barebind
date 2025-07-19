@@ -425,7 +425,12 @@ export class HydrationTree {
     expectedName: string,
   ): InferNode<T> {
     const lookaheadNode = this._lookaheadNode;
-    ensureNode(lookaheadNode, expectedType, expectedName);
+    ensureNode(
+      lookaheadNode,
+      this._treeWalker.currentNode,
+      expectedType,
+      expectedName,
+    );
     return lookaheadNode;
   }
 
@@ -434,7 +439,12 @@ export class HydrationTree {
     expectedName: string,
   ): InferNode<T> {
     const lookaheadNode = this._lookaheadNode;
-    ensureNode(lookaheadNode, expectedType, expectedName);
+    ensureNode(
+      lookaheadNode,
+      this._treeWalker.currentNode,
+      expectedType,
+      expectedName,
+    );
     this._lookaheadNode = this._treeWalker.nextNode();
     return lookaheadNode;
   }
@@ -601,22 +611,25 @@ export function moveChildNodes(
 }
 
 function ensureNode<T extends number>(
-  actualNode: Node | null,
+  lookaheadNode: Node | null,
+  currentNode: Node,
   expectedType: T,
   expectedName: string,
-): asserts actualNode is InferNode<T> {
-  if (actualNode === null) {
+): asserts lookaheadNode is InferNode<T> {
+  if (lookaheadNode === null) {
     throw new HydrationError(
-      `Hydration is failed because there is no node. ${expectedName} node is expected here.`,
+      `Hydration is failed because there is no node. ${expectedName} node is expected here, but the last node is as follows:\n` +
+        serializeNode(currentNode),
     );
   }
 
   if (
-    actualNode.nodeType !== expectedType ||
-    actualNode.nodeName !== expectedName
+    lookaheadNode.nodeType !== expectedType ||
+    lookaheadNode.nodeName !== expectedName
   ) {
     throw new HydrationError(
-      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here.`,
+      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here, but found the following instead:\n` +
+        serializeNode(lookaheadNode),
     );
   }
 }
@@ -626,4 +639,8 @@ function narrowNode<T extends number>(
   expectedType: T,
 ): actualNode is InferNode<T> {
   return actualNode.nodeType === expectedType;
+}
+
+function serializeNode(node: Node): string {
+  return new XMLSerializer().serializeToString(node);
 }
