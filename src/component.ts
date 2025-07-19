@@ -8,7 +8,6 @@ import {
   type Effect,
   type Hook,
   HookType,
-  HydrationError,
   type HydrationTree,
   Lanes,
   type Part,
@@ -18,6 +17,7 @@ import {
   type UpdateContext,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
+import { HydrationError } from './hydration.js';
 
 export function component<TProps, TResult>(
   componentFn: ComponentFunction<TProps, TResult>,

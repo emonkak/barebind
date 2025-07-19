@@ -9,13 +9,13 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type HookContext,
-  HydrationError,
   type HydrationTree,
   Lanes,
   type Part,
   type Slot,
   type UpdateContext,
 } from '../core.js';
+import { HydrationError } from '../hydration.js';
 import { LinkedList } from '../linked-list.js';
 
 export type Subscriber = () => void;

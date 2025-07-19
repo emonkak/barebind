@@ -5,7 +5,6 @@ import {
   type DirectiveType,
   getChildNodes,
   getStartNode,
-  HydrationError,
   type HydrationTree,
   moveChildNodes,
   type Part,
@@ -15,6 +14,7 @@ import {
 } from './core.js';
 import { debugPart, markUsedValue } from './debug.js';
 import { DirectiveSpecifier } from './directive.js';
+import { HydrationError } from './hydration.js';
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   source: Iterable<TSource>;

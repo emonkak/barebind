@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationTree, type Part, PartType } from '@/core.js';
+import { type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
+import { HydrationContainer, HydrationError } from '@/hydration.js';
 import {
   RepeatBinding,
   RepeatDirective,
@@ -128,7 +129,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const binding = new RepeatBinding(props, part);
       const runtime = new Runtime(new MockBackend());
 
@@ -163,7 +164,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const binding = new RepeatBinding(props, part);
       const runtime = new Runtime(new MockBackend());
 

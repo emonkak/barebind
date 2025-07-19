@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationTree, PartType } from '@/core.js';
+import { PartType } from '@/core.js';
+import { HydrationContainer, HydrationError } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
@@ -487,7 +488,7 @@ describe('TaggedTemplate', () => {
           createElement('span', {}, 'quux'),
         ),
       );
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
 
       const { childNodes, slots } = template.hydrate(
@@ -591,7 +592,7 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -617,7 +618,7 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'Hello, World!'),
       );
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -670,7 +671,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement('div', {});
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -692,7 +693,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement('div', {}, 'foo');
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
@@ -718,7 +719,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const hydrationRoot = createElement('div', {}, 'foo');
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
@@ -749,7 +750,7 @@ describe('TaggedTemplate', () => {
           childNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const hydrationTree = new HydrationTree(hydrationRoot);
+        const hydrationTree = new HydrationContainer(hydrationRoot);
         const runtime = new Runtime(new MockBackend());
 
         expect(() => {

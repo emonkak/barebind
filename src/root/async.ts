@@ -1,5 +1,6 @@
 import type { Backend } from '../backend.js';
-import { HydrationTree, PartType, type UpdateOptions } from '../core.js';
+import { PartType, type UpdateOptions } from '../core.js';
+import { HydrationContainer } from '../hydration.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
@@ -40,7 +41,7 @@ export function createAsyncRoot<T>(
       return runtime.observe(observer);
     },
     hydrate(options) {
-      const hydrationTree = new HydrationTree(container);
+      const hydrationTree = new HydrationContainer(container);
 
       slot.hydrate(hydrationTree, runtime);
 

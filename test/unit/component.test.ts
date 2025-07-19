@@ -1,13 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ComponentBinding, component, FunctionComponent } from '@/component.js';
-import {
-  CommitPhase,
-  HydrationError,
-  HydrationTree,
-  Lanes,
-  PartType,
-  type RenderContext,
-} from '@/core.js';
+import { CommitPhase, Lanes, PartType, type RenderContext } from '@/core.js';
+import { HydrationContainer, HydrationError } from '@/hydration.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -166,7 +160,7 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = createElement('div', {}, part.node);
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
 
       binding.hydrate(hydrationTree, runtime);
@@ -211,7 +205,7 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(component, props, part);
       const hydrationRoot = document.createElement('div');
-      const hydrationTree = new HydrationTree(hydrationRoot);
+      const hydrationTree = new HydrationContainer(hydrationRoot);
       const runtime = new Runtime(new MockBackend());
 
       runtime.enqueueCoroutine(binding);

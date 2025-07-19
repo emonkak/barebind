@@ -75,6 +75,23 @@ export interface Effect {
   commit(context: CommitContext): void;
 }
 
+export type HydrationNode<T extends number> =
+  T extends keyof HydrationNodeTypeMap
+    ? HydrationNodeTypeMap[T]
+    : HydrationNodeTypeMap[keyof HydrationNodeTypeMap];
+
+export interface HydrationTree {
+  peekNode<T extends number>(
+    expectedType: T,
+    expectedName: string,
+  ): HydrationNode<T>;
+  popNode<T extends number>(
+    expectedType: T,
+    expectedName: string,
+  ): HydrationNode<T>;
+  splitText(): this;
+}
+
 export type Hook =
   | Hook.FinalizerHook
   | Hook.EffectHook
@@ -340,8 +357,6 @@ export interface SlotType {
   new <T>(binding: Binding<unknown>): Slot<T>;
 }
 
-export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
-
 export interface Template<TBinds extends readonly unknown[]>
   extends DirectiveType<TBinds> {
   readonly arity: TBinds['length'];
@@ -362,6 +377,8 @@ export interface TemplateLiteral<T> {
   strings: readonly string[];
   values: T[];
 }
+
+export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
   readonly childNodes: readonly ChildNode[];
@@ -390,11 +407,7 @@ export interface UpdateTask {
   promise: Promise<void>;
 }
 
-type InferNode<T extends number> = T extends keyof NodeTypeMap
-  ? NodeTypeMap[T]
-  : NodeTypeMap[keyof NodeTypeMap];
-
-interface NodeTypeMap {
+interface HydrationNodeTypeMap {
   [Node.ELEMENT_NODE]: Element;
   [Node.TEXT_NODE]: Text;
   [Node.COMMENT_NODE]: Comment;
@@ -403,67 +416,6 @@ interface NodeTypeMap {
 interface ScopeEntry {
   key: unknown;
   value: unknown;
-}
-
-export class HydrationError extends Error {}
-
-export class HydrationTree {
-  private readonly _treeWalker: TreeWalker;
-
-  private _lookaheadNode: Node | null;
-
-  constructor(rootNode: Node) {
-    this._treeWalker = rootNode.ownerDocument!.createTreeWalker(
-      rootNode,
-      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-    );
-    this._lookaheadNode = this._treeWalker.nextNode();
-  }
-
-  peekNode<T extends number>(
-    expectedType: T,
-    expectedName: string,
-  ): InferNode<T> {
-    const lookaheadNode = this._lookaheadNode;
-    ensureNode(
-      lookaheadNode,
-      this._treeWalker.currentNode,
-      expectedType,
-      expectedName,
-    );
-    return lookaheadNode;
-  }
-
-  popNode<T extends number>(
-    expectedType: T,
-    expectedName: string,
-  ): InferNode<T> {
-    const lookaheadNode = this._lookaheadNode;
-    ensureNode(
-      lookaheadNode,
-      this._treeWalker.currentNode,
-      expectedType,
-      expectedName,
-    );
-    this._lookaheadNode = this._treeWalker.nextNode();
-    return lookaheadNode;
-  }
-
-  splitText(): this {
-    const currentNode = this._treeWalker.currentNode;
-    const lookaheadNode = this._lookaheadNode;
-
-    if (
-      narrowNode(currentNode, Node.TEXT_NODE) &&
-      (lookaheadNode === null || lookaheadNode.previousSibling === currentNode)
-    ) {
-      const splittedText = currentNode.ownerDocument.createTextNode('');
-      currentNode.after(splittedText);
-      this._lookaheadNode = splittedText;
-    }
-
-    return this;
-  }
 }
 
 export class Literal extends String {}
@@ -608,39 +560,4 @@ export function moveChildNodes(
       insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
     }
   }
-}
-
-function ensureNode<T extends number>(
-  lookaheadNode: Node | null,
-  currentNode: Node,
-  expectedType: T,
-  expectedName: string,
-): asserts lookaheadNode is InferNode<T> {
-  if (lookaheadNode === null) {
-    throw new HydrationError(
-      `Hydration is failed because there is no node. ${expectedName} node is expected here, but the last node is as follows:\n` +
-        serializeNode(currentNode),
-    );
-  }
-
-  if (
-    lookaheadNode.nodeType !== expectedType ||
-    lookaheadNode.nodeName !== expectedName
-  ) {
-    throw new HydrationError(
-      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here, but found the following instead:\n` +
-        serializeNode(lookaheadNode),
-    );
-  }
-}
-
-function narrowNode<T extends number>(
-  actualNode: Node,
-  expectedType: T,
-): actualNode is InferNode<T> {
-  return actualNode.nodeType === expectedType;
-}
-
-function serializeNode(node: Node): string {
-  return new XMLSerializer().serializeToString(node);
 }
