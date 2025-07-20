@@ -273,31 +273,6 @@ export class Computed<
   }
 }
 
-export class Lazy<T> extends Signal<T> {
-  private readonly _producer: () => Signal<T>;
-
-  private _memoizedSignal: Signal<T> | null = null;
-
-  constructor(producer: () => Signal<T>) {
-    super();
-    this._producer = producer;
-  }
-
-  get value(): T {
-    this._memoizedSignal ??= this._producer();
-    return this._memoizedSignal.value;
-  }
-
-  get version(): number {
-    return this._memoizedSignal?.version ?? -1;
-  }
-
-  subscribe(subscriber: Subscriber): Subscription {
-    this._memoizedSignal ??= this._producer();
-    return this._memoizedSignal.subscribe(subscriber);
-  }
-}
-
 export class Projected<TValue, TResult> extends Signal<TResult> {
   private readonly _signal: Signal<TValue>;
 

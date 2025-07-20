@@ -2,7 +2,6 @@ import type { CustomHook, HookContext } from '../core.js';
 import {
   Atom,
   Computed,
-  Lazy,
   Signal,
   type Subscriber,
   type Subscription,
@@ -183,28 +182,35 @@ function definePrototypeProperties<T extends object>(
       const { configurable, enumerable, get, set } = descriptors[key]!;
 
       if (get !== undefined && configurable && !key.startsWith('_')) {
-        const signal = new Lazy(() => {
-          const dependencies: Signal<unknown>[] = [];
-          const initialResult = get.call(
-            trackSignalAccesses(instance, signalMap, dependencies),
-          );
-          const initialVersion = dependencies.reduce(
-            (version, dependency) => version + dependency.version,
-            0,
-          );
-          return new Computed<unknown>(
-            () => get.call(instance),
-            dependencies,
-            initialResult,
-            initialVersion,
-          );
+        let signal: Signal<unknown>;
+        const getSignal = () => {
+          if (signal === undefined) {
+            const dependencies: Signal<unknown>[] = [];
+            const initialResult = get.call(
+              trackSignalAccesses(instance, signalMap, dependencies),
+            );
+            const initialVersion = dependencies.reduce(
+              (version, dependency) => version + dependency.version,
+              0,
+            );
+            signal = new Computed<unknown>(
+              () => get.call(instance),
+              dependencies,
+              initialResult,
+              initialVersion,
+            );
+          }
+          return signal;
+        };
+        Object.defineProperty(signalMap, key, {
+          enumerable: true,
+          get: getSignal,
         });
-        signalMap[key] = signal;
         Object.defineProperty(instance, key, {
           configurable,
           enumerable,
           get() {
-            return signal.value;
+            return getSignal().value;
           },
           set,
         } as PropertyDescriptor);

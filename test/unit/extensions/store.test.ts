@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { HookContext } from '@/core.js';
-import { Atom, Lazy } from '@/extensions/signal.js';
+import { Atom, Computed } from '@/extensions/signal.js';
 import { defineStore } from '@/extensions/store.js';
 
 class App {
@@ -130,7 +130,7 @@ describe('Store', () => {
       expect(count$).toBeInstanceOf(Atom);
       expect(count$.value).toBe(0);
       expect(count$.version).toBe(0);
-      expect(doublyCount$).toBeInstanceOf(Lazy);
+      expect(doublyCount$).toBeInstanceOf(Computed);
       expect(doublyCount$.value).toBe(0);
       expect(doublyCount$.version).toBe(0);
 

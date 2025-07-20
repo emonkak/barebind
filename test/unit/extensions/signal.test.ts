@@ -3,7 +3,6 @@ import { $toDirective, Lanes, PartType } from '@/core.js';
 import {
   Atom,
   Computed,
-  Lazy,
   SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
@@ -440,64 +439,6 @@ describe('Computed', () => {
     expect(subscriber).not.toHaveBeenCalled();
 
     baz.value++;
-    expect(subscriber).not.toHaveBeenCalled();
-  });
-});
-
-describe('Lazy', () => {
-  it('returns the value of the delayed generated signal', () => {
-    const signal = new Atom(1);
-    const lazySignal = new Lazy(() => signal.map((n) => n * 2));
-
-    expect(lazySignal.version).toBe(-1);
-
-    expect(lazySignal.value).toBe(2);
-    expect(lazySignal.version).toBe(0);
-
-    signal.value++;
-
-    expect(lazySignal.value).toBe(4);
-    expect(lazySignal.version).toBe(1);
-
-    signal.value++;
-
-    expect(lazySignal.value).toBe(6);
-    expect(lazySignal.version).toBe(2);
-  });
-
-  it('invokes the subscriber on update', () => {
-    const signal = new Atom(1);
-    const lazySignal = new Lazy(() => signal.map((n) => n * 2));
-    const subscriber = vi.fn();
-
-    lazySignal.subscribe(subscriber);
-    expect(subscriber).toHaveBeenCalledTimes(0);
-
-    signal.value++;
-    expect(subscriber).toHaveBeenCalledTimes(1);
-
-    signal.value++;
-    expect(subscriber).toHaveBeenCalledTimes(2);
-
-    signal.value++;
-    expect(subscriber).toHaveBeenCalledTimes(3);
-  });
-
-  it('does not invoke the invalidated subscriber', () => {
-    const signal = new Atom(1);
-    const lazySignal = new Lazy(() => signal.map((n) => n * 2));
-    const subscriber = vi.fn();
-
-    lazySignal.subscribe(subscriber)();
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value++;
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value++;
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value++;
     expect(subscriber).not.toHaveBeenCalled();
   });
 });
