@@ -1,7 +1,7 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import type { Backend } from '../backend.js';
 import {
+  type Backend,
   type CommitContext,
   CommitPhase,
   type Effect,

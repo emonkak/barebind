@@ -1,9 +1,12 @@
 export { BrowserBackend } from './backend/browser.js';
 export { ServerBackend } from './backend/server.js';
-export type { Backend } from './backend.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { component } from './component.js';
-export { type HookContext, Literal, type RenderContext } from './core.js';
+export {
+  type HookContext,
+  Literal,
+  type RenderContext,
+} from './core.js';
 export {
   type RepeatProps,
   repeat,

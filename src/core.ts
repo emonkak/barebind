@@ -3,6 +3,29 @@
 
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
+export interface Backend {
+  commitEffects(
+    effects: Effect[],
+    phase: CommitPhase,
+    context: CommitContext,
+  ): void;
+  getCurrentPriority(): TaskPriority;
+  parseTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    placeholder: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
+  requestCallback(
+    callback: () => Promise<void> | void,
+    options?: RequestCallbackOptions,
+  ): Promise<void>;
+  resolvePrimitive(value: unknown, part: Part): Primitive<unknown>;
+  resolveSlotType(value: unknown, part: Part): SlotType;
+  startViewTransition(callback: () => void | Promise<void>): Promise<void>;
+  yieldToMain(): Promise<void>;
+}
+
 export interface Bindable<T = unknown> {
   [$toDirective](part: Part, context: DirectiveContext): Directive<T>;
 }

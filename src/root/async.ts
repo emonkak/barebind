@@ -1,5 +1,4 @@
-import type { Backend } from '../backend.js';
-import { PartType, type UpdateOptions } from '../core.js';
+import { type Backend, PartType, type UpdateOptions } from '../core.js';
 import { HydrationContainer } from '../hydration.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';

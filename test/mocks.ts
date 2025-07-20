@@ -1,10 +1,10 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import type { Backend } from '@/backend.js';
 import { ComponentBinding } from '@/component.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
+  type Backend,
   type Bindable,
   type Binding,
   type CommitContext,

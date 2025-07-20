@@ -1,8 +1,8 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import type { Backend } from './backend.js';
 import {
   $toDirective,
+  type Backend,
   type CommitContext,
   CommitPhase,
   type Component,
