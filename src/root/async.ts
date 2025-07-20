@@ -25,7 +25,7 @@ export function createAsyncRoot<T>(
   };
   const slot = runtime.resolveSlot(value, part);
 
-  function completeOptions(
+  function toCompleteOptions(
     options: UpdateOptions | undefined,
   ): Required<UpdateOptions> {
     return {
@@ -48,42 +48,42 @@ export function createAsyncRoot<T>(
         .popNode(part.node.nodeType, part.node.nodeName)
         .replaceWith(part.node);
 
-      const completedOptions = completeOptions(options);
+      const completeOptions = toCompleteOptions(options);
 
       return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
-        return runtime.flushAsync(completedOptions);
-      }, completedOptions);
+        return runtime.flushAsync(completeOptions);
+      }, completeOptions);
     },
     mount(options) {
       slot.connect(runtime);
 
-      const completedOptions = completeOptions(options);
+      const completeOptions = toCompleteOptions(options);
 
       return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(new MountSlot(slot, container));
-        return runtime.flushAsync(completedOptions);
-      }, completedOptions);
+        return runtime.flushAsync(completeOptions);
+      }, completeOptions);
     },
     update(value, options) {
       slot.reconcile(value, runtime);
 
-      const completedOptions = completeOptions(options);
+      const completeOptions = toCompleteOptions(options);
 
       return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(slot);
-        return runtime.flushAsync(completedOptions);
-      }, completedOptions);
+        return runtime.flushAsync(completeOptions);
+      }, completeOptions);
     },
     unmount(options) {
       slot.disconnect(runtime);
 
-      const completedOptions = completeOptions(options);
+      const completeOptions = toCompleteOptions(options);
 
       return backend.requestCallback(() => {
         runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
-        return runtime.flushAsync(completedOptions);
-      }, completedOptions);
+        return runtime.flushAsync(completeOptions);
+      }, completeOptions);
     },
   };
 }
