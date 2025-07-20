@@ -8,9 +8,14 @@ import {
   Literal,
   PartType,
   Scope,
+  type UpdateOptions,
 } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
-import { Runtime } from '@/runtime.js';
+import {
+  getFlushLanesFromOptions,
+  getScheduleLanesFromOptions,
+  Runtime,
+} from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBackend,
@@ -787,4 +792,67 @@ describe('Runtime', () => {
       expect(resumeSpy).not.toHaveBeenCalled();
     });
   });
+});
+
+describe('getFlushLanesFromOptions()', () => {
+  it.each([
+    [{}, Lanes.DefaultLanes],
+    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
+    [
+      { priority: 'user-visible' },
+      Lanes.UserBlockingLane | Lanes.UserVisibleLane,
+    ],
+    [
+      { priority: 'background' },
+      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane,
+    ],
+    [{ viewTransition: true }, Lanes.DefaultLanes | Lanes.ViewTransitionLane],
+    [
+      { priority: 'user-blocking', viewTransition: true },
+      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
+    ],
+    [
+      { priority: 'user-visible', viewTransition: true },
+      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
+    ],
+    [
+      { priority: 'background', viewTransition: true },
+      Lanes.UserBlockingLane |
+        Lanes.UserVisibleLane |
+        Lanes.BackgroundLane |
+        Lanes.ViewTransitionLane,
+    ],
+  ] as [UpdateOptions, Lanes][])(
+    'returns the lanes for flush',
+    (options, lanes) => {
+      expect(getFlushLanesFromOptions(options)).toBe(lanes);
+    },
+  );
+});
+
+describe('getScheduleLanesFromOptions()', () => {
+  it.each([
+    [{}, Lanes.DefaultLanes],
+    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
+    [{ priority: 'user-visible' }, Lanes.UserVisibleLane],
+    [{ priority: 'background' }, Lanes.BackgroundLane],
+    [{ viewTransition: true }, Lanes.DefaultLanes | Lanes.ViewTransitionLane],
+    [
+      { priority: 'user-blocking', viewTransition: true },
+      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
+    ],
+    [
+      { priority: 'user-visible', viewTransition: true },
+      Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
+    ],
+    [
+      { priority: 'background', viewTransition: true },
+      Lanes.BackgroundLane | Lanes.ViewTransitionLane,
+    ],
+  ] as [UpdateOptions, Lanes][])(
+    'returns lanes for schedule',
+    (options, lanes) => {
+      expect(getScheduleLanesFromOptions(options)).toBe(lanes);
+    },
+  );
 });

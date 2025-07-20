@@ -11,8 +11,6 @@ import {
   type Directive,
   type DirectiveType,
   type Effect,
-  getFlushLanesFromOptions,
-  getScheduleLanesFromOptions,
   type Hook,
   isBindable,
   Lanes,
@@ -496,6 +494,63 @@ export class Runtime implements CommitContext, UpdateContext {
       node.value.onRuntimeEvent(event);
     }
   }
+}
+
+/**
+ * @internal
+ */
+export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
+  let lanes: Lanes;
+
+  switch (options.priority) {
+    case 'user-blocking':
+      lanes = Lanes.UserBlockingLane;
+      break;
+    case 'user-visible':
+      lanes = Lanes.UserBlockingLane | Lanes.UserVisibleLane;
+      break;
+    case 'background':
+      lanes =
+        Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane;
+      break;
+    default:
+      lanes = Lanes.DefaultLanes;
+      break;
+  }
+
+  if (options.viewTransition) {
+    lanes |= Lanes.ViewTransitionLane;
+  }
+
+  return lanes;
+}
+
+/**
+ * @internal
+ */
+export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
+  let lanes: Lanes;
+
+  switch (options.priority) {
+    case 'user-blocking':
+      lanes = Lanes.UserBlockingLane;
+      break;
+    case 'user-visible':
+      lanes = Lanes.UserVisibleLane;
+      break;
+    case 'background':
+      lanes = Lanes.BackgroundLane;
+      break;
+    default:
+      lanes = Lanes.DefaultLanes;
+      break;
+  }
+
+  if (options.viewTransition) {
+    lanes |= Lanes.ViewTransitionLane;
+  }
+
+  return lanes;
 }
 
 function consumeCoroutines(updateFrame: UpdateFrame): Coroutine[] {

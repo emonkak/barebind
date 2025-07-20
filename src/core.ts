@@ -1,4 +1,3 @@
-/// <reference path="../typings/moveBefore.d.ts" />
 /// <reference path="../typings/scheduler.d.ts" />
 
 export const $toDirective: unique symbol = Symbol('$toDirective');
@@ -481,81 +480,6 @@ export function areDirectiveTypesEqual(
 /**
  * @internal
  */
-export function getChildNodes(
-  startNode: ChildNode,
-  endNode: ChildNode,
-): ChildNode[] {
-  const childNodes = [startNode];
-  let currentNode: ChildNode | null = startNode;
-
-  while (currentNode !== endNode && currentNode.nextSibling !== null) {
-    currentNode = currentNode.nextSibling;
-    childNodes.push(currentNode);
-  }
-
-  return childNodes;
-}
-
-/**
- * @internal
- */
-export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes: Lanes;
-
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes = Lanes.UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes = Lanes.UserBlockingLane | Lanes.UserVisibleLane;
-      break;
-    case 'background':
-      lanes =
-        Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane;
-      break;
-    default:
-      lanes = Lanes.DefaultLanes;
-      break;
-  }
-
-  if (options.viewTransition) {
-    lanes |= Lanes.ViewTransitionLane;
-  }
-
-  return lanes;
-}
-
-/**
- * @internal
- */
-export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes: Lanes;
-
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes = Lanes.UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes = Lanes.UserVisibleLane;
-      break;
-    case 'background':
-      lanes = Lanes.BackgroundLane;
-      break;
-    default:
-      lanes = Lanes.DefaultLanes;
-      break;
-  }
-
-  if (options.viewTransition) {
-    lanes |= Lanes.ViewTransitionLane;
-  }
-
-  return lanes;
-}
-
-/**
- * @internal
- */
 export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.childNode ?? part.node)
@@ -564,23 +488,4 @@ export function getStartNode(part: Part): ChildNode {
 
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
-}
-
-/**
- * @internal
- */
-export function moveChildNodes(
-  childNodes: ChildNode[],
-  referenceNode: Node,
-): void {
-  const { parentNode } = referenceNode;
-
-  if (parentNode !== null) {
-    const insertOrMoveBefore =
-      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
-
-    for (let i = 0, l = childNodes.length; i < l; i++) {
-      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
-    }
-  }
 }

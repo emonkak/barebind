@@ -1,21 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   areDirectiveTypesEqual,
-  getChildNodes,
-  getFlushLanesFromOptions,
-  getScheduleLanesFromOptions,
   getStartNode,
   isBindable,
-  Lanes,
   Literal,
-  moveChildNodes,
   PartType,
   Scope,
-  type UpdateOptions,
 } from '@/core.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
-import { createElement } from '../test-utils.js';
 
 describe('Literal', () => {
   describe('toString()', () => {
@@ -67,93 +60,6 @@ describe('areDirectiveTypesEqual()', () => {
     expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
     expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
   });
-});
-
-describe('getChildNodes()', () => {
-  it('returns a single node when the start node and end node are the same', () => {
-    const node = document.createComment('');
-
-    expect(getChildNodes(node, node)).toStrictEqual([expect.exact(node)]);
-  });
-
-  it('returns children from the start node to the end node', () => {
-    const container = createElement(
-      'div',
-      {},
-      document.createElement('div'),
-      'foo',
-      document.createComment(''),
-    );
-
-    expect(
-      getChildNodes(container.firstChild!, container.lastChild!),
-    ).toStrictEqual(
-      Array.from(container.childNodes, (node) => expect.exact(node)),
-    );
-  });
-});
-
-describe('getFlushLanesFromOptions()', () => {
-  it.each([
-    [{}, Lanes.DefaultLanes],
-    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
-    [
-      { priority: 'user-visible' },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane,
-    ],
-    [
-      { priority: 'background' },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane,
-    ],
-    [{ viewTransition: true }, Lanes.DefaultLanes | Lanes.ViewTransitionLane],
-    [
-      { priority: 'user-blocking', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'background', viewTransition: true },
-      Lanes.UserBlockingLane |
-        Lanes.UserVisibleLane |
-        Lanes.BackgroundLane |
-        Lanes.ViewTransitionLane,
-    ],
-  ] as [UpdateOptions, Lanes][])(
-    'returns the lanes for flush',
-    (options, lanes) => {
-      expect(getFlushLanesFromOptions(options)).toBe(lanes);
-    },
-  );
-});
-
-describe('getScheduleLanesFromOptions()', () => {
-  it.each([
-    [{}, Lanes.DefaultLanes],
-    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
-    [{ priority: 'user-visible' }, Lanes.UserVisibleLane],
-    [{ priority: 'background' }, Lanes.BackgroundLane],
-    [{ viewTransition: true }, Lanes.DefaultLanes | Lanes.ViewTransitionLane],
-    [
-      { priority: 'user-blocking', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', viewTransition: true },
-      Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'background', viewTransition: true },
-      Lanes.BackgroundLane | Lanes.ViewTransitionLane,
-    ],
-  ] as [UpdateOptions, Lanes][])(
-    'returns lanes for schedule',
-    (options, lanes) => {
-      expect(getScheduleLanesFromOptions(options)).toBe(lanes);
-    },
-  );
 });
 
 describe('getStartNode()', () => {
@@ -232,41 +138,5 @@ describe('isBindable()', () => {
       isBindable(new MockBindable({ type: MockPrimitive, value: 'foo' })),
     ).toBe(true);
     expect(isBindable('foo')).toBe(false);
-  });
-});
-
-describe.each([[true], [false]])('moveChildNodes()', (useMoveBefore) => {
-  const originalMoveBefore = Element.prototype.moveBefore;
-
-  beforeEach(() => {
-    if (useMoveBefore) {
-      Element.prototype.moveBefore ??= Element.prototype.insertBefore;
-    } else {
-      Element.prototype.moveBefore = undefined as any;
-    }
-  });
-
-  afterEach(() => {
-    Element.prototype.moveBefore = originalMoveBefore;
-  });
-
-  it('moves child nodes to before reference node', () => {
-    const foo = createElement('div', {}, 'foo');
-    const bar = createElement('div', {}, 'bar');
-    const baz = createElement('div', {}, 'baz');
-    const qux = createElement('div', {}, 'qux');
-    const container = createElement('div', {}, foo, bar, baz, qux);
-
-    moveChildNodes([foo], qux);
-
-    expect(container.innerHTML).toBe(
-      '<div>bar</div><div>baz</div><div>foo</div><div>qux</div>',
-    );
-
-    moveChildNodes([foo, qux], bar);
-
-    expect(container.innerHTML).toBe(
-      '<div>foo</div><div>qux</div><div>bar</div><div>baz</div>',
-    );
   });
 });

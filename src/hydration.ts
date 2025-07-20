@@ -60,8 +60,6 @@ export class HydrationContainer implements HydrationTree {
   }
 }
 
-export class HydrationError extends Error {}
-
 function ensureNode<T extends number>(
   actualNode: Node | null,
   expectedType: T,
@@ -85,6 +83,8 @@ function ensureNode<T extends number>(
     );
   }
 }
+
+export class HydrationError extends Error {}
 
 function narrowNode<T extends number>(
   actualNode: Node,

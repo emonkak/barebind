@@ -1,12 +1,12 @@
+/// <reference path="../typings/moveBefore.d.ts" />
+
 import {
   type Binding,
   type CommitContext,
   type DirectiveContext,
   type DirectiveType,
-  getChildNodes,
   getStartNode,
   type HydrationTree,
-  moveChildNodes,
   type Part,
   PartType,
   type Slot,
@@ -275,6 +275,25 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 }
 
+/**
+ * @internal
+ */
+export function moveChildNodes(
+  childNodes: ChildNode[],
+  referenceNode: Node,
+): void {
+  const { parentNode } = referenceNode;
+
+  if (parentNode !== null) {
+    const insertOrMoveBefore =
+      Element.prototype.moveBefore ?? Element.prototype.insertBefore;
+
+    for (let i = 0, l = childNodes.length; i < l; i++) {
+      insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
+    }
+  }
+}
+
 function commitInsert<TKey, TValue>(
   { value }: Item<TKey, Slot<TValue>>,
   referenceItem: Item<TKey, Slot<TValue>> | undefined,
@@ -328,6 +347,18 @@ function generateItems<TSource, TKey, TValue>({
     const value = valueSelector(element, i);
     return { key, value };
   });
+}
+
+function getChildNodes(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
+  const childNodes = [startNode];
+  let currentNode: ChildNode | null = startNode;
+
+  while (currentNode !== endNode && currentNode.nextSibling !== null) {
+    currentNode = currentNode.nextSibling;
+    childNodes.push(currentNode);
+  }
+
+  return childNodes;
 }
 
 function matchesItem<TKey, TSource, TTarget>(
