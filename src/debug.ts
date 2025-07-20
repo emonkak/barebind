@@ -104,30 +104,43 @@ export function markUsedValue(value: unknown): string {
   return `[[${debugValue(value)} IS USED IN HERE!]]`;
 }
 
-function annotateInsideTag(element: Element, contentToAppend: string): string {
+function annotateInsideTag(element: Element, marker: string): string[] {
   const isSelfClosing = isSelfClosingTag(element);
   const offset = isSelfClosing ? 1 : element.tagName.length + 4;
   const unclosedOpenTag = element.outerHTML.slice(
     0,
     -(element.innerHTML.length + offset),
   );
-  let output = unclosedOpenTag + ' ' + contentToAppend + '>';
+  const lines = [unclosedOpenTag + ' ' + marker + '>'];
+
   if (!isSelfClosing) {
-    const children = element.firstChild !== null ? '...' : '';
-    output += children + closeTag(element);
+    for (
+      let child = element.firstChild;
+      child !== null;
+      child = child.nextSibling
+    ) {
+      lines.push(...prettyPrintNode(child, 1));
+    }
+
+    if (lines.length > 1) {
+      lines.push(closeTag(element));
+    } else {
+      lines[0] += closeTag(element);
+    }
   }
-  return output;
+
+  return lines;
 }
 
-function annotateNode(node: Node, marker: string): string {
+function annotateNode(node: Node, marker: string): string[] {
   if (node instanceof Element) {
     return annotateInsideTag(node, marker);
   } else {
-    return marker + serializeNode(node);
+    return [marker + serializeNode(node)];
   }
 }
 
-function annotatePart(part: Part, marker: string): string {
+function annotatePart(part: Part, marker: string): string[] {
   switch (part.type) {
     case PartType.Attribute:
       return annotateInsideTag(part.node, unquotedAttribute(part.name, marker));
@@ -150,7 +163,7 @@ function annotatePart(part: Part, marker: string): string {
       );
     case PartType.ChildNode:
     case PartType.Text:
-      return marker;
+      return [marker];
   }
 }
 
@@ -190,7 +203,7 @@ function getComplexity(node: Node): number {
   return complexity;
 }
 
-function inspectNode(node: Node, marker: string): string {
+function inspectNode(node: Node, annotatedLines: string[]): string {
   const precedingLines: string[] = [];
   const followingLines: string[] = [];
   let currentNode: Node | null = node;
@@ -226,6 +239,7 @@ function inspectNode(node: Node, marker: string): string {
 
     precedingLines.push(openTag(currentNode));
     followingLines.push(closeTag(currentNode));
+
     complexity += getComplexity(currentNode);
     level++;
   } while (complexity < COMPLEXITY_THRESHOLD);
@@ -234,7 +248,9 @@ function inspectNode(node: Node, marker: string): string {
     precedingLines.length > 0 ? precedingLines.reverse().join('\n') + '\n' : '';
   const followingString =
     followingLines.length > 0 ? '\n' + followingLines.join('\n') : '';
-  const middleString = INDENT_STRING.repeat(level) + marker;
+  const middleString = annotatedLines
+    .map((line) => INDENT_STRING.repeat(level) + line)
+    .join('\n');
 
   return precedingString + middleString + followingString;
 }
@@ -269,7 +285,11 @@ function prettyPrintNode(node: Node, level: number = 0): string[] {
     }
 
     if (!isSelfClosingTag(node)) {
-      lines.push(indentString + closeTag(node));
+      if (lines.length > 1) {
+        lines.push(indentString + closeTag(node));
+      } else {
+        lines[0] += closeTag(node);
+      }
     }
   } else {
     lines.push(indentString + serializeNode(node));

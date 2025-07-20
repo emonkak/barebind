@@ -82,7 +82,11 @@ describe('debugNode()', () => {
     const node = createElement('mark', {}, 'foo');
 
     expect(debugNode(node, NODE_MAKRER)).toBe(
-      `<mark [[NODE IN HERE!]]>...</mark>`.trim(),
+      `
+<mark [[NODE IN HERE!]]>
+  foo
+</mark>
+`.trim(),
     );
 
     createElement(
@@ -101,7 +105,9 @@ describe('debugNode()', () => {
   </span>
   <p>
     bar
-    <mark [[NODE IN HERE!]]>...</mark>
+    <mark [[NODE IN HERE!]]>
+      foo
+    </mark>
     <!---->
   </p>
   <span>
@@ -176,8 +182,7 @@ describe('debugPart()', () => {
       `
 <!DOCTYPE html>
 <html>
-  <head>
-  </head>
+  <head></head>
   <body>
     <div>
       <span>
