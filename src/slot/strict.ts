@@ -3,7 +3,7 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveType,
-  type HydrationTree,
+  type NodeScanner,
   type Part,
   type Slot,
   type UpdateContext,
@@ -58,8 +58,8 @@ export class StrictSlot<T> implements Slot<T> {
     }
   }
 
-  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void {
-    this._binding.hydrate(hydrationTree, context);
+  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+    this._binding.hydrate(nodeScanner, context);
     this._dirty = true;
   }
 

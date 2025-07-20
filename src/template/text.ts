@@ -1,5 +1,5 @@
 import {
-  type HydrationTree,
+  type NodeScanner,
   type Part,
   PartType,
   type TemplateResult,
@@ -33,18 +33,18 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   hydrate(
     binds: readonly [T],
     _part: Part.ChildNodePart,
-    hydrationTree: HydrationTree,
+    nodeScanner: NodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const textPart = {
       type: PartType.Text,
-      node: hydrationTree.splitText().popNode(Node.TEXT_NODE, '#text'),
+      node: nodeScanner.splitText().nextNode('#text') as Text,
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
-    textSlot.hydrate(hydrationTree, context);
+    textSlot.hydrate(nodeScanner, context);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }

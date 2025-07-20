@@ -1,5 +1,5 @@
 import { type Backend, PartType, type UpdateOptions } from '../core.js';
-import { HydrationContainer } from '../hydration.js';
+import { HydrationNodeScanner } from '../hydration.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
@@ -40,13 +40,11 @@ export function createAsyncRoot<T>(
       return runtime.observe(observer);
     },
     hydrate(options) {
-      const hydrationTree = new HydrationContainer(container);
+      const nodeScanner = new HydrationNodeScanner(container);
 
-      slot.hydrate(hydrationTree, runtime);
+      slot.hydrate(nodeScanner, runtime);
 
-      hydrationTree
-        .popNode(part.node.nodeType, part.node.nodeName)
-        .replaceWith(part.node);
+      nodeScanner.nextNode(part.node.nodeName).replaceWith(part.node);
 
       const completeOptions = toCompleteOptions(options);
 

@@ -1,7 +1,7 @@
-import type { HydrationNode, HydrationTree } from './core.js';
+import type { NodeScanner } from './core.js';
 import { debugNode } from './debug.js';
 
-export class HydrationContainer implements HydrationTree {
+export class HydrationNodeScanner implements NodeScanner {
   private readonly _treeWalker: TreeWalker;
 
   private _lookaheadNode: Node | null;
@@ -14,32 +14,16 @@ export class HydrationContainer implements HydrationTree {
     this._lookaheadNode = this._treeWalker.nextNode();
   }
 
-  peekNode<T extends number>(
-    expectedType: T,
-    expectedName: string,
-  ): HydrationNode<T> {
+  nextNode(expectedName: string): ChildNode {
     const lookaheadNode = this._lookaheadNode;
-    ensureNode(
-      lookaheadNode,
-      expectedType,
-      expectedName,
-      this._treeWalker.currentNode,
-    );
+    ensureNode(expectedName, lookaheadNode, this._treeWalker.currentNode);
+    this._lookaheadNode = this._treeWalker.nextNode();
     return lookaheadNode;
   }
 
-  popNode<T extends number>(
-    expectedType: T,
-    expectedName: string,
-  ): HydrationNode<T> {
+  peekNode(expectedName: string): ChildNode {
     const lookaheadNode = this._lookaheadNode;
-    ensureNode(
-      lookaheadNode,
-      expectedType,
-      expectedName,
-      this._treeWalker.currentNode,
-    );
-    this._lookaheadNode = this._treeWalker.nextNode();
+    ensureNode(expectedName, lookaheadNode, this._treeWalker.currentNode);
     return lookaheadNode;
   }
 
@@ -48,7 +32,7 @@ export class HydrationContainer implements HydrationTree {
     const lookaheadNode = this._lookaheadNode;
 
     if (
-      narrowNode(currentNode, Node.TEXT_NODE) &&
+      currentNode instanceof Text &&
       (lookaheadNode === null || lookaheadNode.previousSibling === currentNode)
     ) {
       const splittedText = currentNode.ownerDocument.createTextNode('');
@@ -60,35 +44,24 @@ export class HydrationContainer implements HydrationTree {
   }
 }
 
-function ensureNode<T extends number>(
+export class HydrationError extends Error {}
+
+function ensureNode<TName extends string>(
+  expectedName: TName,
   actualNode: Node | null,
-  expectedType: T,
-  expectedName: string,
-  currentNode: Node,
-): asserts actualNode is HydrationNode<T> {
+  lastNode: Node,
+): asserts actualNode is ChildNode {
   if (actualNode === null) {
     throw new HydrationError(
       `Hydration is failed because there is no node. ${expectedName} node is expected here:\n` +
-        debugNode(currentNode, '[[THIS IS THE LAST NODE!]]'),
+        debugNode(lastNode, '[[THIS IS THE LAST NODE!]]'),
     );
   }
 
-  if (
-    actualNode.nodeType !== expectedType ||
-    actualNode.nodeName !== expectedName
-  ) {
+  if (actualNode.nodeName !== expectedName) {
     throw new HydrationError(
       `Hydration is failed because the node is mismatched. ${expectedName} node is expected here:\n` +
-        debugNode(currentNode, '[[THIS IS MISMATCHED!]]'),
+        debugNode(lastNode, '[[THIS IS MISMATCHED!]]'),
     );
   }
-}
-
-export class HydrationError extends Error {}
-
-function narrowNode<T extends number>(
-  actualNode: Node,
-  expectedType: T,
-): actualNode is HydrationNode<T> {
-  return actualNode.nodeType === expectedType;
 }

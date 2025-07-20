@@ -1,5 +1,5 @@
 import {
-  type HydrationTree,
+  type NodeScanner,
   type Part,
   PartType,
   type Slot,
@@ -136,7 +136,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    hydrationTree: HydrationTree,
+    nodeScanner: NodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const holes = this._holes;
@@ -170,10 +170,7 @@ export class TaggedTemplate<
           case PartType.Attribute: {
             childPart = {
               type: PartType.Attribute,
-              node: hydrationTree.peekNode(
-                Node.ELEMENT_NODE,
-                currentNode.nodeName,
-              ),
+              node: nodeScanner.peekNode(currentNode.nodeName) as Element,
               name: hole.name,
             };
             break;
@@ -190,27 +187,18 @@ export class TaggedTemplate<
           case PartType.Element:
             childPart = {
               type: PartType.Element,
-              node: hydrationTree.peekNode(
-                Node.ELEMENT_NODE,
-                currentNode.nodeName,
-              ),
+              node: nodeScanner.peekNode(currentNode.nodeName) as Element,
             };
             break;
           case PartType.Event:
             childPart = {
               type: PartType.Event,
-              node: hydrationTree.peekNode(
-                Node.ELEMENT_NODE,
-                currentNode.nodeName,
-              ),
+              node: nodeScanner.peekNode(currentNode.nodeName) as Element,
               name: hole.name,
             };
             break;
           case PartType.Live: {
-            const node = hydrationTree.peekNode(
-              Node.ELEMENT_NODE,
-              currentNode.nodeName,
-            );
+            const node = nodeScanner.peekNode(currentNode.nodeName) as Element;
             childPart = {
               type: PartType.Live,
               node,
@@ -220,10 +208,7 @@ export class TaggedTemplate<
             break;
           }
           case PartType.Property: {
-            const node = hydrationTree.peekNode(
-              Node.ELEMENT_NODE,
-              currentNode.nodeName,
-            );
+            const node = nodeScanner.peekNode(currentNode.nodeName) as Element;
             childPart = {
               type: PartType.Property,
               node,
@@ -235,9 +220,9 @@ export class TaggedTemplate<
           case PartType.Text:
             childPart = {
               type: PartType.Text,
-              node: hydrationTree
+              node: nodeScanner
                 .splitText()
-                .peekNode(Node.TEXT_NODE, currentNode.nodeName),
+                .peekNode(currentNode.nodeName) as Text,
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
@@ -246,13 +231,10 @@ export class TaggedTemplate<
 
         const slot = context.resolveSlot(binds[holeIndex]!, childPart);
         slots[holeIndex] = slot;
-        slot.hydrate(hydrationTree, context);
+        slot.hydrate(nodeScanner, context);
       }
 
-      const actualNode = hydrationTree.popNode(
-        currentNode.nodeType,
-        currentNode.nodeName,
-      );
+      const actualNode = nodeScanner.nextNode(currentNode.nodeName);
 
       if (alternateNode !== null) {
         actualNode.replaceWith(alternateNode);

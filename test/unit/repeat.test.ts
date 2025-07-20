@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { HydrationContainer, HydrationError } from '@/hydration.js';
+import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
 import {
   moveChildNodes,
   RepeatBinding,
@@ -119,7 +119,7 @@ describe('RepeatBinding', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
+      const container = createElement(
         'div',
         {},
         'foo',
@@ -130,14 +130,14 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const nodeScanner = new HydrationNodeScanner(container);
       const binding = new RepeatBinding(props, part);
       const runtime = new Runtime(new MockBackend());
 
-      binding.hydrate(hydrationTree, runtime);
+      binding.hydrate(nodeScanner, runtime);
       binding.commit(runtime);
 
-      expect(hydrationRoot.innerHTML).toBe(
+      expect(container.innerHTML).toBe(
         source.map((item) => item + EMPTY_COMMENT).join('') + EMPTY_COMMENT,
       );
     });
@@ -154,7 +154,7 @@ describe('RepeatBinding', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
+      const container = createElement(
         'div',
         {},
         'foo',
@@ -165,7 +165,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const nodeScanner = new HydrationNodeScanner(container);
       const binding = new RepeatBinding(props, part);
       const runtime = new Runtime(new MockBackend());
 
@@ -173,7 +173,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(() => {
-        binding.hydrate(hydrationTree, runtime);
+        binding.hydrate(nodeScanner, runtime);
       }).toThrow(HydrationError);
     });
   });

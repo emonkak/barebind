@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/core.js';
-import { HydrationContainer, HydrationError } from '@/hydration.js';
+import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import {
   getNamespaceURIByTagName,
@@ -109,30 +109,30 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds, part);
-      const hydrationRoot = createElement('div', {}, 'foo', part.node);
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {}, 'foo', part.node);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
-        childNodes: [hydrationRoot.firstChild!],
+        childNodes: [container.firstChild!],
         slots: [],
       });
 
-      binding.hydrate(hydrationTree, runtime);
+      binding.hydrate(nodeScanner, runtime);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
-      expect(hydrationRoot.innerHTML).toBe('foo<!---->');
+      expect(container.innerHTML).toBe('foo<!---->');
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
 
-      expect(hydrationRoot.innerHTML).toBe('<!---->');
+      expect(container.innerHTML).toBe('<!---->');
     });
 
     it('should throw the error if the template has already been rendered', () => {
@@ -145,14 +145,14 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds, part);
-      const hydrationRoot = document.createElement('div');
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = document.createElement('div');
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(() => binding.hydrate(hydrationTree, runtime)).toThrow(
+      expect(() => binding.hydrate(nodeScanner, runtime)).toThrow(
         HydrationError,
       );
     });

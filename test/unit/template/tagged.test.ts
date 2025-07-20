@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PartType } from '@/core.js';
-import { HydrationContainer, HydrationError } from '@/hydration.js';
+import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
@@ -477,7 +477,7 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
+      const container = createElement(
         'div',
         {},
         createElement(
@@ -488,13 +488,13 @@ describe('TaggedTemplate', () => {
           createElement('span', {}, 'quux'),
         ),
       );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
 
@@ -506,7 +506,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Attribute,
-            node: expect.exact(hydrationRoot.querySelector('div')),
+            node: expect.exact(container.querySelector('div')),
             name: 'class',
           },
           value: binds[0],
@@ -527,7 +527,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Live,
-            node: expect.exact(hydrationRoot.querySelector('input')),
+            node: expect.exact(container.querySelector('input')),
             name: 'value',
             defaultValue: '',
           },
@@ -538,7 +538,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Property,
-            node: expect.exact(hydrationRoot.querySelector('input')),
+            node: expect.exact(container.querySelector('input')),
             name: 'disabled',
             defaultValue: false,
           },
@@ -549,7 +549,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Event,
-            node: expect.exact(hydrationRoot.querySelector('input')),
+            node: expect.exact(container.querySelector('input')),
             name: 'onchange',
           },
           value: binds[4],
@@ -559,7 +559,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Element,
-            node: expect.exact(hydrationRoot.querySelector('input')),
+            node: expect.exact(container.querySelector('input')),
           },
           value: binds[5],
           isConnected: true,
@@ -568,7 +568,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.exact(hydrationRoot.querySelector('span')!.firstChild),
+            node: expect.exact(container.querySelector('span')!.firstChild),
             followingText: '',
             precedingText: '',
           },
@@ -587,17 +587,17 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
+      const container = createElement(
         'div',
         {},
         createElement('div', {}, 'foo'),
       );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
 
@@ -613,17 +613,17 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
+      const container = createElement(
         'div',
         {},
         createElement('div', {}, 'Hello, World!'),
       );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
 
@@ -640,7 +640,7 @@ describe('TaggedTemplate', () => {
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.exact(hydrationRoot.firstChild!.firstChild),
+            node: expect.exact(container.firstChild!.firstChild),
             precedingText: '',
             followingText: '',
           },
@@ -670,13 +670,13 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement('div', {});
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {});
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
 
@@ -692,12 +692,12 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement('div', {}, 'foo');
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {}, 'foo');
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
-        template.hydrate([] as any, part, hydrationTree, runtime);
+        template.hydrate([] as any, part, nodeScanner, runtime);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
 
@@ -718,12 +718,12 @@ describe('TaggedTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement('div', {}, 'foo');
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {}, 'foo');
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
-        template.hydrate(['foo'], part, hydrationTree, runtime);
+        template.hydrate(['foo'], part, nodeScanner, runtime);
       }).toThrow('There is no node that the hole indicates.');
     });
 
@@ -743,18 +743,18 @@ describe('TaggedTemplate', () => {
       [html`foo`, createElement('div', {}, document.createComment('foo'))],
     ])(
       'should throw the error if there is a tree mismatch',
-      ({ template }, hydrationRoot) => {
+      ({ template }, container) => {
         const part = {
           type: PartType.ChildNode,
           node: document.createComment(''),
           childNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const hydrationTree = new HydrationContainer(hydrationRoot);
+        const nodeScanner = new HydrationNodeScanner(container);
         const runtime = new Runtime(new MockBackend());
 
         expect(() => {
-          template.hydrate([], part, hydrationTree, runtime);
+          template.hydrate([], part, nodeScanner, runtime);
         }).toThrow(HydrationError);
       },
     );

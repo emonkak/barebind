@@ -7,6 +7,7 @@ export {
   Literal,
   type RenderContext,
 } from './core.js';
+export { HydrationError } from './hydration.js';
 export {
   type RepeatProps,
   repeat,

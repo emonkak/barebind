@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PartType } from '@/core.js';
-import { HydrationContainer } from '@/hydration.js';
+import { HydrationNodeScanner } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { ElementTemplate, element } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
@@ -47,28 +47,28 @@ describe('ElementTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
+      const container = createElement(
         'div',
         {},
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
       const template = new ElementTemplate('div');
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
 
-      expect(childNodes).toStrictEqual([hydrationRoot.firstChild]);
+      expect(childNodes).toStrictEqual([container.firstChild]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: binds[0],
           part: {
             type: PartType.Element,
-            node: expect.exact(hydrationRoot.firstChild),
+            node: expect.exact(container.firstChild),
           },
           isConnected: true,
           isCommitted: false,
@@ -77,7 +77,7 @@ describe('ElementTemplate', () => {
           value: binds[1],
           part: {
             type: PartType.ChildNode,
-            node: expect.exact(hydrationRoot.firstChild!.firstChild),
+            node: expect.exact(container.firstChild!.firstChild),
             childNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },

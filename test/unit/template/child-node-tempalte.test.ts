@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PartType } from '@/core.js';
-import { HydrationContainer, HydrationError } from '@/hydration.js';
+import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -34,31 +34,25 @@ describe('ChildNodeTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement(
-        'div',
-        {},
-        document.createComment(''),
-      );
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {}, document.createComment(''));
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        hydrationTree,
+        nodeScanner,
         runtime,
       );
 
-      expect(childNodes).toStrictEqual([
-        expect.exact(hydrationRoot.firstChild),
-      ]);
+      expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
       expect(slots).toStrictEqual([
         expect.objectContaining({
           value: binds[0],
           part: {
             type: PartType.ChildNode,
-            node: expect.exact(hydrationRoot.firstChild),
+            node: expect.exact(container.firstChild),
             childNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
@@ -76,13 +70,13 @@ describe('ChildNodeTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const hydrationRoot = createElement('div', {});
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {});
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
 
       expect(() => {
-        template.hydrate(binds, part, hydrationTree, runtime);
+        template.hydrate(binds, part, nodeScanner, runtime);
       }).toThrow(HydrationError);
     });
   });

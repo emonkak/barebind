@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { HydrationContainer } from '@/hydration.js';
+import { HydrationNodeScanner } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { StrictSlot, strict } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -179,7 +179,7 @@ describe('StrictSlot', () => {
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
       const runtime = new Runtime(new MockBackend());
-      const hydrationTree = new HydrationContainer(
+      const nodeScanner = new HydrationNodeScanner(
         document.createElement('div'),
       );
 
@@ -187,11 +187,11 @@ describe('StrictSlot', () => {
       const commitSpy = vi.spyOn(binding, 'commit');
       const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.hydrate(hydrationTree, runtime);
+      slot.hydrate(nodeScanner, runtime);
       slot.commit(runtime);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(hydrationTree, runtime);
+      expect(hydrateSpy).toHaveBeenCalledWith(nodeScanner, runtime);
       expect(commitSpy).toHaveBeenCalledOnce();
       expect(commitSpy).toHaveBeenCalledWith(runtime);
       expect(debugValueSpy).toHaveBeenCalledOnce();

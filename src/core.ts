@@ -35,7 +35,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
-  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void;
+  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -95,23 +95,6 @@ export interface DirectiveType<T> {
 
 export interface Effect {
   commit(context: CommitContext): void;
-}
-
-export type HydrationNode<T extends number> =
-  T extends keyof HydrationNodeTypeMap
-    ? HydrationNodeTypeMap[T]
-    : HydrationNodeTypeMap[keyof HydrationNodeTypeMap];
-
-export interface HydrationTree {
-  peekNode<T extends number>(
-    expectedType: T,
-    expectedName: string,
-  ): HydrationNode<T>;
-  popNode<T extends number>(
-    expectedType: T,
-    expectedName: string,
-  ): HydrationNode<T>;
-  splitText(): this;
 }
 
 export type Hook =
@@ -229,6 +212,12 @@ export type Lanes = number;
 export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
   : ((prevState: T) => T) | T;
+
+export interface NodeScanner {
+  nextNode(expectedName: string): ChildNode;
+  peekNode(expectedName: string): ChildNode;
+  splitText(): this;
+}
 
 export type Part =
   | Part.AttributePart
@@ -370,7 +359,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: unknown;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): void;
-  hydrate(hydrationTree: HydrationTree, context: UpdateContext): void;
+  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -390,7 +379,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    hydrationTree: HydrationTree,
+    nodeScanner: NodeScanner,
     context: UpdateContext,
   ): TemplateResult;
 }
@@ -427,12 +416,6 @@ export interface UpdateOptions {
 export interface UpdateTask {
   lanes: Lanes;
   promise: Promise<void>;
-}
-
-interface HydrationNodeTypeMap {
-  [Node.ELEMENT_NODE]: Element;
-  [Node.TEXT_NODE]: Text;
-  [Node.COMMENT_NODE]: Comment;
 }
 
 interface ScopeEntry {

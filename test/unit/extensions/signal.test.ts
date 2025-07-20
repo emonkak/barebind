@@ -6,7 +6,7 @@ import {
   SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
-import { HydrationContainer, HydrationError } from '@/hydration.js';
+import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from '../../mocks.js';
@@ -83,20 +83,20 @@ describe('SiganlBinding', () => {
         followingText: '',
       };
       const binding = new SignalBinding(signal, part);
-      const hydrationRoot = createElement('div', {}, part.node);
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {}, part.node);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
-      binding.hydrate(hydrationTree, runtime);
+      binding.hydrate(nodeScanner, runtime);
       binding.commit(runtime);
 
-      expect(hydrationRoot.innerHTML).toBe(signal.value);
+      expect(container.innerHTML).toBe(signal.value);
 
       signal.value = 'bar';
 
       expect(await runtime.waitForUpdate(binding)).toBe(1);
 
-      expect(hydrationRoot.innerHTML).toBe(signal.value);
+      expect(container.innerHTML).toBe(signal.value);
     });
 
     it('should throw the error if the binding has already been initialized', async () => {
@@ -108,15 +108,15 @@ describe('SiganlBinding', () => {
         followingText: '',
       };
       const binding = new SignalBinding(signal, part);
-      const hydrationRoot = createElement('div', {}, part.node);
-      const hydrationTree = new HydrationContainer(hydrationRoot);
+      const container = createElement('div', {}, part.node);
+      const nodeScanner = new HydrationNodeScanner(container);
       const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
       expect(() => {
-        binding.hydrate(hydrationTree, runtime);
+        binding.hydrate(nodeScanner, runtime);
       }).toThrow(HydrationError);
     });
   });

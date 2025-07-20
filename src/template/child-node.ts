@@ -1,6 +1,6 @@
 import {
   type DirectiveType,
-  type HydrationTree,
+  type NodeScanner,
   type Part,
   PartType,
   type TemplateResult,
@@ -20,7 +20,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   hydrate(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    hydrationTree: HydrationTree,
+    nodeScanner: NodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -32,10 +32,10 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.hydrate(hydrationTree, context);
+    childNodeSlot.hydrate(nodeScanner, context);
 
-    hydrationTree
-      .popNode(childNodePart.node.nodeType, childNodePart.node.nodeName)
+    nodeScanner
+      .nextNode(childNodePart.node.nodeName)
       .replaceWith(childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
