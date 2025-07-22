@@ -141,18 +141,21 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   abstract subscribe(subscriber: Subscriber): Subscription;
 
   map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
-    return new Projected(this, selector);
+    return new Computed((dependency) => selector(dependency.value), [this]);
   }
 
   onCustomHook(context: HookContext): T {
+    const [state, setState] = context.useState(() => this.value);
+
     context.useLayoutEffect(
       () =>
         this.subscribe(() => {
-          context.forceUpdate();
+          setState(() => this.value);
         }),
       [this],
     );
-    return this.value;
+
+    return state;
   }
 
   valueOf(): T {
@@ -187,6 +190,7 @@ export class Atom<T> extends Signal<T> {
 
   notifySubscribers(): void {
     this._version += 1;
+
     for (
       let node = this._subscribers.front();
       node !== null;
@@ -202,9 +206,10 @@ export class Atom<T> extends Signal<T> {
   }
 
   subscribe(subscriber: Subscriber): Subscription {
-    const nodeRef = this._subscribers.pushBack(subscriber);
+    const node = this._subscribers.pushBack(subscriber);
+
     return () => {
-      this._subscribers.remove(nodeRef);
+      this._subscribers.remove(node);
     };
   }
 }
@@ -241,7 +246,6 @@ export class Computed<
     initialVersion = -1, // -1 is indicated an uninitialized signal.
   ) {
     super();
-
     this._producer = producer;
     this._dependencies = dependencies;
     this._memoizedResult = initialResult;
@@ -250,20 +254,23 @@ export class Computed<
 
   get value(): TResult {
     const { version } = this;
+
     if (this._memoizedVersion < version) {
       const producer = this._producer;
-      this._memoizedVersion = version;
       this._memoizedResult = producer(...this._dependencies);
+      this._memoizedVersion = version;
     }
+
     return this._memoizedResult!;
   }
 
   get version(): number {
-    const dependencies = this._dependencies;
     let version = 0;
-    for (let i = 0, l = dependencies.length; i < l; i++) {
-      version += dependencies[i]!.version;
+
+    for (let i = 0, l = this._dependencies.length; i < l; i++) {
+      version += this._dependencies[i]!.version;
     }
+
     return version;
   }
 
@@ -271,35 +278,11 @@ export class Computed<
     const subscriptions = this._dependencies.map((dependency) =>
       dependency.subscribe(subscriber),
     );
+
     return () => {
-      for (let i = 0, l = subscriptions.length; i < l; i++) {
+      for (let i = subscriptions.length - 1; i >= 0; i--) {
         subscriptions[i]!();
       }
     };
-  }
-}
-
-export class Projected<TValue, TResult> extends Signal<TResult> {
-  private readonly _signal: Signal<TValue>;
-
-  private readonly _selector: (value: TValue) => TResult;
-
-  constructor(signal: Signal<TValue>, selector: (value: TValue) => TResult) {
-    super();
-    this._signal = signal;
-    this._selector = selector;
-  }
-
-  get value(): TResult {
-    const selector = this._selector;
-    return selector(this._signal.value)!;
-  }
-
-  get version(): number {
-    return this._signal.version;
-  }
-
-  subscribe(subscriber: Subscriber): Subscription {
-    return this._signal.subscribe(subscriber);
   }
 }

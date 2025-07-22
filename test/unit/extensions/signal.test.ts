@@ -238,8 +238,21 @@ describe('Signal', () => {
     });
   });
 
+  describe('map()', () => {
+    it('returns a computed signal that depend on itself', () => {
+      const signal = new Atom(100);
+      const computedSignal = signal.map((count) => count * 2);
+
+      expect(computedSignal).toBeInstanceOf(Computed);
+      expect(computedSignal.value).toBe(200);
+      expect(
+        (computedSignal as Computed<number>)['_dependencies'],
+      ).toStrictEqual([signal]);
+    });
+  });
+
   describe('onCustomHook()', () => {
-    it('subscribes the signal and return its value', () => {
+    it('request an update if the signal value has been changed', () => {
       const session = new RenderSession(
         [],
         Lanes.AllLanes,
@@ -247,23 +260,29 @@ describe('Signal', () => {
         new Runtime(new MockBackend()),
       );
       const signal = new Atom('foo');
-      const value = session.use(signal);
 
       const forceUpdateSpy = vi.spyOn(session, 'forceUpdate');
 
-      expect(value).toBe(signal.value);
-      expect(forceUpdateSpy).not.toHaveBeenCalled();
+      expect(session.use(signal)).toBe('foo');
+      expect(forceUpdateSpy).toHaveBeenCalledTimes(0);
 
       session.finalize();
       session.flush();
       signal.value = 'bar';
 
-      expect(forceUpdateSpy).toHaveBeenCalledOnce();
+      expect(session.use(signal)).toBe('bar');
+      expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
+
+      session.finalize();
+      session.flush();
+      signal.value = 'bar';
+
+      expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
 
       cleanupHooks(session['_hooks']);
       signal.value = 'baz';
 
-      expect(forceUpdateSpy).toHaveBeenCalledOnce();
+      expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -278,51 +297,50 @@ describe('Signal', () => {
 });
 
 describe('Atom', () => {
-  it('returns 0 as the initial version', () => {
-    const value = 'foo';
-    const signal = new Atom('foo');
+  describe('version', () => {
+    it('increments the version on update', () => {
+      const value1 = 'foo';
+      const value2 = 'bar';
+      const signal = new Atom(value1);
 
-    expect(signal.value).toBe(value);
-    expect(signal.version).toBe(0);
+      expect(signal.value).toBe(value1);
+      expect(signal.version).toBe(0);
+
+      signal.value = value2;
+
+      expect(signal.value).toBe(value2);
+      expect(signal.version).toBe(1);
+    });
   });
 
-  it('increments the version on update', () => {
-    const value1 = 'foo';
-    const value2 = 'bar';
-    const signal = new Atom(value1);
+  describe('subscribe()', () => {
+    it('invokes the subscriber on update', () => {
+      const signal = new Atom('foo');
+      const subscriber = vi.fn();
 
-    signal.value = value2;
+      signal.subscribe(subscriber);
+      expect(subscriber).toHaveBeenCalledTimes(0);
 
-    expect(signal.value).toBe(value2);
-    expect(signal.version).toBe(1);
-  });
+      signal.value = 'bar';
+      expect(subscriber).toHaveBeenCalledTimes(1);
 
-  it('invokes the subscriber on update', () => {
-    const signal = new Atom('foo');
-    const subscriber = vi.fn();
+      signal.value = 'baz';
+      expect(subscriber).toHaveBeenCalledTimes(2);
+    });
 
-    signal.subscribe(subscriber);
-    expect(subscriber).toHaveBeenCalledTimes(0);
+    it('does not invoke the invalidated subscriber', () => {
+      const signal = new Atom('foo');
+      const subscriber = vi.fn();
 
-    signal.value = 'bar';
-    expect(subscriber).toHaveBeenCalledTimes(1);
+      signal.subscribe(subscriber)();
+      expect(subscriber).not.toHaveBeenCalled();
 
-    signal.value = 'baz';
-    expect(subscriber).toHaveBeenCalledTimes(2);
-  });
+      signal.value = 'bar';
+      expect(subscriber).not.toHaveBeenCalled();
 
-  it('does not invoke the invalidated subscriber', () => {
-    const signal = new Atom('foo');
-    const subscriber = vi.fn();
-
-    signal.subscribe(subscriber)();
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value = 'bar';
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value = 'baz';
-    expect(subscriber).not.toHaveBeenCalled();
+      signal.value = 'baz';
+      expect(subscriber).not.toHaveBeenCalled();
+    });
   });
 
   describe('notifySubscribers()', () => {
@@ -354,169 +372,107 @@ describe('Atom', () => {
 });
 
 describe('Computed', () => {
-  it('computes a memoized value by dependent signals', () => {
-    const foo = new Atom(1);
-    const bar = new Atom(2);
-    const baz = new Atom(3);
+  describe('value', () => {
+    it('computes a memoized value by dependent signals', () => {
+      const foo = new Atom(1);
+      const bar = new Atom(2);
+      const baz = new Atom(3);
 
-    const signal = new Computed(
-      (foo, bar, baz) => ({
-        foo: foo.value,
-        bar: bar.value,
-        baz: baz.value,
-      }),
-      [foo, bar, baz],
-    );
+      const signal = new Computed(
+        (foo, bar, baz) => ({
+          foo: foo.value,
+          bar: bar.value,
+          baz: baz.value,
+        }),
+        [foo, bar, baz],
+      );
 
-    expect(signal.value).toStrictEqual({ foo: 1, bar: 2, baz: 3 });
-    expect(signal.value).toBe(signal.value);
-    expect(signal.version).toBe(0);
+      expect(signal.value).toStrictEqual({ foo: 1, bar: 2, baz: 3 });
+      expect(signal.value).toBe(signal.value);
+      expect(signal.version).toBe(0);
+    });
   });
 
-  it('increments the version when any dependent signals have been updated', () => {
-    const foo = new Atom(1);
-    const bar = new Atom(2);
-    const baz = new Atom(3);
+  describe('version', () => {
+    it('increments the version when any dependent signals have been updated', () => {
+      const foo = new Atom(1);
+      const bar = new Atom(2);
+      const baz = new Atom(3);
 
-    const signal = new Computed(
-      (foo, bar, baz) => ({
-        foo: foo.value,
-        bar: bar.value,
-        baz: baz.value,
-      }),
-      [foo, bar, baz],
-    );
-    let oldValue: typeof signal.value;
+      const signal = new Computed(
+        (foo, bar, baz) => ({
+          foo: foo.value,
+          bar: bar.value,
+          baz: baz.value,
+        }),
+        [foo, bar, baz],
+      );
 
-    oldValue = signal.value;
-    foo.value = 10;
-    expect(signal.value).toStrictEqual({ foo: 10, bar: 2, baz: 3 });
-    expect(signal.value).not.toBe(oldValue);
-    expect(signal.version).toBe(1);
+      foo.value = 10;
+      expect(signal.value).toStrictEqual({ foo: 10, bar: 2, baz: 3 });
+      expect(signal.version).toBe(1);
 
-    oldValue = signal.value;
-    bar.value = 20;
-    expect(signal.value).toStrictEqual({ foo: 10, bar: 20, baz: 3 });
-    expect(signal.value).not.toBe(oldValue);
-    expect(signal.version).toBe(2);
+      bar.value = 20;
+      expect(signal.value).toStrictEqual({ foo: 10, bar: 20, baz: 3 });
+      expect(signal.version).toBe(2);
 
-    oldValue = signal.value;
-    baz.value = 30;
-    expect(signal.value).toStrictEqual({ foo: 10, bar: 20, baz: 30 });
-    expect(signal.value).not.toBe(oldValue);
-    expect(signal.version).toBe(3);
+      baz.value = 30;
+      expect(signal.value).toStrictEqual({ foo: 10, bar: 20, baz: 30 });
+      expect(signal.version).toBe(3);
+    });
   });
 
-  it('invokes the subscriber when any dependent signals have been updated', () => {
-    const foo = new Atom(1);
-    const bar = new Atom(2);
-    const baz = new Atom(3);
-    const subscriber = vi.fn();
+  describe('subscribe()', () => {
+    it('invokes the subscriber when any dependent signals have been updated', () => {
+      const foo = new Atom(1);
+      const bar = new Atom(2);
+      const baz = new Atom(3);
+      const subscriber = vi.fn();
 
-    const signal = new Computed(
-      (foo, bar, baz) => ({
-        foo: foo.value,
-        bar: bar.value,
-        baz: baz.value,
-      }),
-      [foo, bar, baz],
-    );
+      const signal = new Computed(
+        (foo, bar, baz) => foo.value + bar.value + baz.value,
+        [foo, bar, baz],
+      );
 
-    signal.subscribe(subscriber);
-    expect(subscriber).toHaveBeenCalledTimes(0);
+      signal.subscribe(subscriber);
+      expect(subscriber).toHaveBeenCalledTimes(0);
 
-    foo.value++;
-    expect(subscriber).toHaveBeenCalledTimes(1);
+      foo.value++;
+      expect(subscriber).toHaveBeenCalledTimes(1);
 
-    bar.value++;
-    expect(subscriber).toHaveBeenCalledTimes(2);
+      bar.value++;
+      expect(subscriber).toHaveBeenCalledTimes(2);
 
-    baz.value++;
-    expect(subscriber).toHaveBeenCalledTimes(3);
-  });
+      baz.value++;
+      expect(subscriber).toHaveBeenCalledTimes(3);
 
-  it('does not invoke the invalidated subscriber', () => {
-    const foo = new Atom(1);
-    const bar = new Atom(2);
-    const baz = new Atom(3);
-    const subscriber = vi.fn();
+      foo.value = foo.value;
+      expect(subscriber).toHaveBeenCalledTimes(4);
+    });
 
-    const signal = new Computed(
-      (foo, bar, baz) => ({
-        foo: foo.value,
-        bar: bar.value,
-        baz: baz.value,
-      }),
+    it('does not invoke the invalidated subscriber', () => {
+      const foo = new Atom(1);
+      const bar = new Atom(2);
+      const baz = new Atom(3);
+      const subscriber = vi.fn();
 
-      [foo, bar, baz],
-    );
+      const signal = new Computed(
+        (foo, bar, baz) => ({
+          foo: foo.value,
+          bar: bar.value,
+          baz: baz.value,
+        }),
 
-    signal.subscribe(subscriber)();
-    expect(subscriber).not.toHaveBeenCalled();
+        [foo, bar, baz],
+      );
 
-    foo.value++;
-    expect(subscriber).not.toHaveBeenCalled();
+      signal.subscribe(subscriber)();
 
-    bar.value++;
-    expect(subscriber).not.toHaveBeenCalled();
+      foo.value++;
+      bar.value++;
+      baz.value++;
 
-    baz.value++;
-    expect(subscriber).not.toHaveBeenCalled();
-  });
-});
-
-describe('Projected', () => {
-  it('projects the signal value by the selector function', () => {
-    const signal = new Atom(1);
-    const projectedSignal = signal.map((n) => n * 2);
-
-    expect(projectedSignal.value).toBe(2);
-    expect(projectedSignal.version).toBe(0);
-
-    signal.value++;
-
-    expect(projectedSignal.value).toBe(4);
-    expect(projectedSignal.version).toBe(1);
-
-    signal.value++;
-
-    expect(projectedSignal.value).toBe(6);
-    expect(projectedSignal.version).toBe(2);
-  });
-
-  it('invokes the subscriber on update', () => {
-    const signal = new Atom(1);
-    const projectedSignal = signal.map((n) => n * 2);
-    const subscriber = vi.fn();
-
-    projectedSignal.subscribe(subscriber);
-    expect(subscriber).toHaveBeenCalledTimes(0);
-
-    signal.value++;
-    expect(subscriber).toHaveBeenCalledTimes(1);
-
-    signal.value++;
-    expect(subscriber).toHaveBeenCalledTimes(2);
-
-    signal.value++;
-    expect(subscriber).toHaveBeenCalledTimes(3);
-  });
-
-  it('does not invoke the invalidated subscriber', () => {
-    const signal = new Atom(1);
-    const projectedSignal = signal.map((n) => n * 2);
-    const subscriber = vi.fn();
-
-    projectedSignal.subscribe(subscriber)();
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value++;
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value++;
-    expect(subscriber).not.toHaveBeenCalled();
-
-    signal.value++;
-    expect(subscriber).not.toHaveBeenCalled();
+      expect(subscriber).not.toHaveBeenCalled();
+    });
   });
 });
