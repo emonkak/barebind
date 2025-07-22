@@ -34,10 +34,10 @@
   "scripts": {
     "build": "tsc --build",
     "build:all": "pnpm run build && pnpm run --recursive --parallel build",
-    "clean": "tsc --build --clean",
+    "clean": "rm -fr coverage lib",
     "clean:all": "pnpm run --include-workspace-root --recursive --parallel clean",
     "lint": "biome ci",
-    "ci": "pnpm run build:all && pnpm run lint && pnpm test --coverage",
+    "ci": "pnpm run clean:all && pnpm run build:all && pnpm run lint && pnpm test --coverage",
     "test": "vitest run",
     "watch": "tsc --build --watch --preserveWatchOutput",
     "watch:all": "pnpm run --include-workspace-root --recursive --parallel watch"

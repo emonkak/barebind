@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc --build",
     "watch": "tsc --build --watch --preserveWatchOutput",
-    "clean": "tsc --build --clean"
+    "clean": "rm -fr lib"
   },
   "dependencies": {
     "@emonkak/ebit": "workspace:*"
