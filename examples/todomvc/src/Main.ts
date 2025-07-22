@@ -23,7 +23,7 @@ export function Main(_props: MainProps, context: RenderContext): unknown {
                 class="toggle-all"
                 type="checkbox"
                 data-testid="toggle-all"
-                .checked=${visibleTodos.every((todo$) => todo$.value.completed)}
+                .checked=${visibleTodos.every((todo) => todo.completed)}
                 @change=${handleToggleAll}
               >
               <label class="toggle-all-label" for="toggle-all">
@@ -36,8 +36,8 @@ export function Main(_props: MainProps, context: RenderContext): unknown {
       <ul class="todo-list" data-testid="todo-list">
         <${repeat({
           source: visibleTodos,
-          keySelector: (todo$) => todo$.value.id,
-          valueSelector: (todo$) => component(TodoItem, { todo$ }),
+          keySelector: (todo) => todo.id,
+          valueSelector: (todo) => component(TodoItem, { todo }),
         })}>
       </ul>
     </main>

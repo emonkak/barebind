@@ -1,4 +1,3 @@
-import { Atom } from '@emonkak/ebit/extensions/signal';
 import { defineStore } from '@emonkak/ebit/extensions/store';
 
 export interface Todo {
@@ -9,74 +8,71 @@ export interface Todo {
 
 export type TodoFilter = 'all' | 'active' | 'completed';
 
-export const TodoStore = defineStore(
-  class TodoStore {
-    todos: readonly Atom<Todo>[] = [];
+class TodoState {
+  todos: readonly Todo[] = [];
 
-    filter: TodoFilter = 'all';
+  filter: TodoFilter = 'all';
 
-    get activeTodos(): readonly Atom<Todo>[] {
-      return this.todos.filter((todo$) => !todo$.value.completed);
+  get activeTodos(): readonly Todo[] {
+    return this.todos.filter((todo) => !todo.completed);
+  }
+
+  get visibleTodos(): readonly Todo[] {
+    switch (this.filter) {
+      case 'all':
+        return this.todos;
+      case 'active':
+        return this.todos.filter((todo) => !todo.completed);
+      case 'completed':
+        return this.todos.filter((todo) => todo.completed);
+      default:
+        return [];
     }
+  }
 
-    get visibleTodos(): readonly Atom<Todo>[] {
-      switch (this.filter) {
-        case 'all':
-          return this.todos;
-        case 'active':
-          return this.todos.filter((todo$) => !todo$.value.completed);
-        case 'completed':
-          return this.todos.filter((todo$) => todo$.value.completed);
-        default:
-          return [];
+  addTodo(title: string): void {
+    this.todos = this.todos.concat({
+      id: getUUID(),
+      title,
+      completed: false,
+    });
+  }
+
+  clearCompletedTodos(): void {
+    this.todos = this.todos.filter((todo) => !todo.completed);
+  }
+
+  removeTodo(id: string): void {
+    this.todos = this.todos.filter((todo) => todo.id !== id);
+  }
+
+  toggleTodo(id: string): void {
+    this.todos = this.todos.map((todo) => {
+      if (todo.id !== id) {
+        return todo;
       }
-    }
+      return { ...todo, completed: !todo.completed };
+    });
+  }
 
-    addTodo(title: string): void {
-      this.todos = this.todos.concat(
-        new Atom<Todo>({
-          id: getUUID(),
-          title,
-          completed: false,
-        }),
-      );
-    }
+  toggleAllTodos(): void {
+    this.todos = this.todos.map((todo) => ({
+      ...todo,
+      completed: !todo.completed,
+    }));
+  }
 
-    clearCompletedTodos(): void {
-      this.todos = this.todos.filter((todo$) => !todo$.value.completed);
-    }
+  updateTodo(id: string, title: string): void {
+    this.todos = this.todos.map((todo) => {
+      if (todo.id !== id) {
+        return todo;
+      }
+      return { ...todo, title };
+    });
+  }
+}
 
-    removeTodo(id: string): void {
-      this.todos = this.todos.filter((todo$) => todo$.value.id !== id);
-    }
-
-    toggleTodo(id: string): void {
-      this.todos = this.todos.map((todo$) => {
-        if (todo$.value.id === id) {
-          this.todos = this.todos;
-          todo$.value = { ...todo$.value, completed: !todo$.value.completed };
-        }
-        return todo$;
-      });
-    }
-
-    toggleAllTodos(): void {
-      this.todos = this.todos.map((todo$) => {
-        todo$.value = { ...todo$.value, completed: !todo$.value.completed };
-        return todo$;
-      });
-    }
-
-    updateTodo(id: string, title: string): void {
-      this.todos = this.todos.map((todo$) => {
-        if (todo$.value.id === id) {
-          todo$.value = { ...todo$.value, title };
-        }
-        return todo$;
-      });
-    }
-  },
-);
+export const TodoStore = defineStore(TodoState);
 
 export type TodoStore = InstanceType<typeof TodoStore>;
 

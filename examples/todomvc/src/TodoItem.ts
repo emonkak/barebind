@@ -1,20 +1,18 @@
 import { component, type RenderContext, shallowEqual } from '@emonkak/ebit';
-import type { Atom } from '@emonkak/ebit/extensions/signal';
 
 import { type Todo, TodoStore } from './store.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface TodoItemProps {
-  todo$: Atom<Todo>;
+  todo: Todo;
 }
 
 export function TodoItem(
-  { todo$ }: TodoItemProps,
+  { todo }: TodoItemProps,
   context: RenderContext,
 ): unknown {
   const [isEditing, setIsEditing] = context.useState(false);
   const todoStore = context.use(TodoStore);
-  const todo = context.use(todo$);
 
   const handleStartEditing = () => {
     setIsEditing(true);
