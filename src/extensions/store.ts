@@ -107,15 +107,15 @@ export function defineStore<TClass extends Constructable>(
   } as unknown as StoreClass<TClass>;
 }
 
-class StoreSignal<TClass extends StoreExtensions> extends Signal<TClass> {
-  private readonly _store: TClass;
+class StoreSignal<TInstance extends StoreExtensions> extends Signal<TInstance> {
+  private readonly _store: TInstance;
 
-  constructor(store: TClass) {
+  constructor(store: TInstance) {
     super();
     this._store = store;
   }
 
-  get value(): TClass {
+  get value(): TInstance {
     return this._store;
   }
 
