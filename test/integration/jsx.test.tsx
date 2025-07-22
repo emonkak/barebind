@@ -2,7 +2,7 @@ import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
 import { component } from '@/component.js';
 import { createSyncRoot } from '@/root/sync.js';
-import { filterComments, stripComments } from '../test-utils.js';
+import { stripComments } from '../test-utils.js';
 
 test('render a component returning virtual DOM', () => {
   const value1 = component(App, {
@@ -35,27 +35,23 @@ test('render a component returning virtual DOM', () => {
 
   root.mount();
 
-  const itemNodes = filterComments(
-    container.querySelector('ul')?.childNodes ?? [],
-  );
+  const items = [...container.querySelectorAll('li')];
 
   expect(stripComments(container).innerHTML).toBe(
     '<div><ul><li>foo</li><li>bar</li><li>qux</li></ul><p>Hello, World!</p></div>',
   );
-  expect(itemNodes).toHaveLength(3);
+  expect(items).toHaveLength(3);
 
   root.update(value2);
 
   expect(stripComments(container).innerHTML).toBe(
     '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
   );
-  expect(
-    filterComments(container.querySelector('ul')?.childNodes ?? []),
-  ).toStrictEqual([
-    expect.exact(itemNodes[2]),
+  expect([...container.querySelectorAll('li')]).toStrictEqual([
+    expect.exact(items[2]),
     expect.any(HTMLLIElement),
-    expect.exact(itemNodes[1]),
-    expect.exact(itemNodes[0]),
+    expect.exact(items[1]),
+    expect.exact(items[0]),
   ]);
 
   root.unmount();

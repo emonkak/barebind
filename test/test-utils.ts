@@ -94,12 +94,6 @@ export function flushSession(session: RenderSession): Lanes {
   return pendingLanes;
 }
 
-export function filterComments(children: ArrayLike<Node>): Node[] {
-  return Array.from(children).filter(
-    (node) => node.nodeType !== Node.COMMENT_NODE,
-  );
-}
-
 export function getPromiseState(
   promise: Promise<unknown>,
 ): Promise<'pending' | 'fulfilled' | 'rejected'> {
