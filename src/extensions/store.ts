@@ -72,7 +72,7 @@ export function defineStore<TClass extends Constructable>(
     }
 
     getSignal<TKey extends SignalKeys<this>>(key: TKey): Signal<this[TKey]>;
-    getSignal(key: string): Signal<unknown> | undefined {
+    getSignal(key: PropertyKey): Signal<unknown> | undefined {
       return this[$signalMap][key];
     }
 
