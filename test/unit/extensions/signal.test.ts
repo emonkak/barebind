@@ -15,7 +15,11 @@ import {
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from '../../mocks.js';
-import { cleanupHooks, createElement } from '../../test-utils.js';
+import {
+  createElement,
+  disposeSession,
+  flushSession,
+} from '../../test-utils.js';
 
 describe('SignalDirective', () => {
   describe('name', () => {
@@ -266,20 +270,18 @@ describe('Signal', () => {
       expect(session.use(signal)).toBe('foo');
       expect(forceUpdateSpy).toHaveBeenCalledTimes(0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
       signal.value = 'bar';
 
       expect(session.use(signal)).toBe('bar');
       expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
       signal.value = 'bar';
 
       expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
 
-      cleanupHooks(session['_hooks']);
+      disposeSession(session);
       signal.value = 'baz';
 
       expect(forceUpdateSpy).toHaveBeenCalledTimes(1);

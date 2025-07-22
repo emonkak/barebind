@@ -10,7 +10,11 @@ import { RelativeURL } from '@/extensions/router/url.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from '../../../mocks.js';
-import { cleanupHooks, createElement } from '../../../test-utils.js';
+import {
+  createElement,
+  disposeSession,
+  flushSession,
+} from '../../../test-utils.js';
 
 describe('BrowserLocation', () => {
   const originalUrl = location.href;
@@ -27,7 +31,7 @@ describe('BrowserLocation', () => {
   });
 
   afterEach(() => {
-    cleanupHooks(session['_hooks']);
+    disposeSession(session);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -58,8 +62,8 @@ describe('BrowserLocation', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     session.use(BrowserLocation);
-    session.finalize();
-    session.flush();
+
+    flushSession(session);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -75,7 +79,7 @@ describe('BrowserLocation', () => {
       expect.any(Function),
     );
 
-    cleanupHooks(session['_hooks']);
+    disposeSession(session);
 
     expect(removeEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
@@ -99,8 +103,7 @@ describe('BrowserLocation', () => {
     const [locationSnapshot1, locationNavigator1] =
       session.use(BrowserLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     locationNavigator1.navigate(new RelativeURL('/articles/456'));
 
@@ -125,8 +128,7 @@ describe('BrowserLocation', () => {
     const [locationSnapshot1, locationNavigator1] =
       session.use(BrowserLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     locationNavigator1.navigate(new RelativeURL('/articles/123'), {
       replace: true,
@@ -151,8 +153,7 @@ describe('BrowserLocation', () => {
 
     const [locationSnapshot1] = session.use(BrowserLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
@@ -174,8 +175,7 @@ describe('BrowserLocation', () => {
 
     const [locationSnapshot1] = session.use(BrowserLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
@@ -193,8 +193,7 @@ describe('BrowserLocation', () => {
 
     const [locationSnapshot1] = session.use(BrowserLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     history.replaceState(state, '', '/articles/123');
     dispatchEvent(new PopStateEvent('popstate', { state }));
@@ -212,8 +211,7 @@ describe('BrowserLocation', () => {
 
     const [locationSnapshot1] = session.use(BrowserLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));

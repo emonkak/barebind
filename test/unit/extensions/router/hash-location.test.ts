@@ -9,7 +9,11 @@ import { RelativeURL } from '@/extensions/router/url.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from '../../../mocks.js';
-import { cleanupHooks, createElement } from '../../../test-utils.js';
+import {
+  createElement,
+  disposeSession,
+  flushSession,
+} from '../../../test-utils.js';
 
 describe('HashLocation', () => {
   const originalUrl = location.href;
@@ -26,7 +30,7 @@ describe('HashLocation', () => {
   });
 
   afterEach(() => {
-    cleanupHooks(session['_hooks']);
+    disposeSession(session);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
   });
@@ -57,10 +61,9 @@ describe('HashLocation', () => {
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
     session.use(HashLocation);
-    session.finalize();
-    session.flush();
 
-    cleanupHooks(session['_hooks']);
+    flushSession(session);
+    disposeSession(session);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -88,8 +91,7 @@ describe('HashLocation', () => {
 
     const [locationSnapshot1, locationNavigator1] = session.use(HashLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'));
 
@@ -111,8 +113,7 @@ describe('HashLocation', () => {
 
     const [locationSnapshot1, locationNavigator1] = session.use(HashLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'), {
       replace: true,
@@ -135,8 +136,7 @@ describe('HashLocation', () => {
 
     const [locationSnapshot1] = session.use(HashLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     document.body.appendChild(element);
     element.dispatchEvent(event);
@@ -158,8 +158,7 @@ describe('HashLocation', () => {
 
     const [locationSnapshot1] = session.use(HashLocation);
 
-    session.finalize();
-    session.flush();
+    flushSession(session);
 
     dispatchEvent(event);
 

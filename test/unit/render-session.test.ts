@@ -3,7 +3,7 @@ import { Lanes, Literal } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
-import { cleanupHooks } from '../test-utils.js';
+import { disposeSession, flushSession } from '../test-utils.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {
@@ -119,8 +119,8 @@ describe('RenderSession', () => {
       );
 
       session.useEffect(() => {});
-      session.finalize();
-      session.flush();
+
+      flushSession(session);
 
       expect(() => session.finalize()).toThrow('Unexpected hook type.');
     });
@@ -273,13 +273,11 @@ describe('RenderSession', () => {
 
       expect(session.useCallback(callback1, ['foo'])).toBe(callback1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(session.useCallback(callback2, ['foo'])).toBe(callback1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(session.useCallback(callback2, ['bar'])).toBe(callback2);
     });
@@ -300,15 +298,13 @@ describe('RenderSession', () => {
 
       expect(session.useDeferredValue(value1)).toBe(value1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       expect(session.useDeferredValue(value2)).toBe(value1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(1);
 
@@ -319,8 +315,7 @@ describe('RenderSession', () => {
 
       expect(session.useDeferredValue(value2)).toBe(value2);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
@@ -339,8 +334,7 @@ describe('RenderSession', () => {
 
       expect(session.useDeferredValue(value2, value1)).toBe(value1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
@@ -349,8 +343,7 @@ describe('RenderSession', () => {
 
       expect(session.useDeferredValue(value2, value1)).toBe(value2);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
@@ -375,16 +368,14 @@ describe('RenderSession', () => {
 
       session[hookMethod](callback);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(cleanup).toHaveBeenCalledTimes(0);
 
       session[hookMethod](callback);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(callback).toHaveBeenCalledTimes(2);
       expect(cleanup).toHaveBeenCalledTimes(1);
@@ -404,24 +395,21 @@ describe('RenderSession', () => {
 
       session[hookMethod](callback, ['foo']);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
 
       session[hookMethod](callback, ['foo']);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
 
       session[hookMethod](callback, ['bar']);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(callback).toHaveBeenCalledTimes(2);
       expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
@@ -435,8 +423,7 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(() => session[hookMethod](() => {})).toThrow(
         'Unexpected hook type.',
@@ -459,8 +446,7 @@ describe('RenderSession', () => {
       expect(id1).toMatch(/[0-9a-z]+:1/);
       expect(id2).toMatch(/[0-9a-z]+:2/);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(session.useId()).toBe(id1);
       expect(session.useId()).toBe(id2);
@@ -474,8 +460,7 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(() => session.useId()).toThrow('Unexpected hook type.');
     });
@@ -494,13 +479,11 @@ describe('RenderSession', () => {
 
       expect(session.useMemo(() => value1, ['foo'])).toBe(value1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(session.useMemo(() => value2, ['foo'])).toBe(value1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(session.useMemo(() => value2, ['bar'])).toBe(value2);
     });
@@ -513,8 +496,7 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(() => session.useMemo(() => null, [])).toThrow(
         'Unexpected hook type.',
@@ -534,8 +516,7 @@ describe('RenderSession', () => {
 
       let [count, increment] = session.useReducer(reducer, 0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(count).toBe(0);
 
@@ -547,8 +528,7 @@ describe('RenderSession', () => {
 
       [count, increment] = session.useReducer(reducer, 0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(count).toBe(1);
     });
@@ -564,8 +544,7 @@ describe('RenderSession', () => {
 
       let [count, increment] = session.useReducer(reducer, 0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(count).toBe(0);
 
@@ -577,8 +556,7 @@ describe('RenderSession', () => {
 
       [count, increment] = session.useReducer(reducer, 0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(count).toBe(0);
     });
@@ -594,8 +572,7 @@ describe('RenderSession', () => {
 
       const [count] = session.useReducer(reducer, () => 0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(count).toBe(0);
     });
@@ -608,8 +585,7 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(() =>
         session.useReducer<number, number>((count, n) => count + n, 0),
@@ -630,13 +606,11 @@ describe('RenderSession', () => {
 
       expect(ref).toStrictEqual({ current: 'foo' });
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(session.useRef('bar')).toBe(ref);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
     });
   });
 
@@ -651,10 +625,8 @@ describe('RenderSession', () => {
 
       let [count, setCount] = session.useState(0);
 
-      session.finalize();
-      session.flush();
-
       expect(count).toBe(0);
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
 
       expect(await session.waitforUpdate()).toBe(0);
 
@@ -664,10 +636,8 @@ describe('RenderSession', () => {
 
       [count, setCount] = session.useState(0);
 
-      session.finalize();
-      session.flush();
-
       expect(count).toBe(1);
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
     });
 
     it('should skip the update if the state does not changed', async () => {
@@ -680,10 +650,8 @@ describe('RenderSession', () => {
 
       let [count, setCount] = session.useState(0);
 
-      session.finalize();
-      session.flush();
-
       expect(count).toBe(0);
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
 
       expect(await session.waitforUpdate()).toBe(0);
 
@@ -694,9 +662,7 @@ describe('RenderSession', () => {
       [count, setCount] = session.useState(0);
 
       expect(count).toBe(0);
-
-      session.finalize();
-      session.flush();
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
     });
 
     it('can set the state by the function', async () => {
@@ -709,10 +675,8 @@ describe('RenderSession', () => {
 
       let [count, setCount] = session.useState(() => 0);
 
-      session.finalize();
-      session.flush();
-
       expect(count).toBe(0);
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
 
       // Call twice and the result is the same.
       setCount((count) => count + 1);
@@ -723,9 +687,7 @@ describe('RenderSession', () => {
       [count, setCount] = session.useState(0);
 
       expect(count).toBe(1);
-
-      session.finalize();
-      session.flush();
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
     });
 
     it('should not return the pending state', async () => {
@@ -738,11 +700,9 @@ describe('RenderSession', () => {
 
       let [count, setCount, isPending] = session.useState(() => 0);
 
-      expect(session.finalize()).toBe(Lanes.NoLanes);
-      session.flush();
-
       expect(count).toBe(0);
       expect(isPending).toBe(false);
+      expect(flushSession(session)).toBe(Lanes.NoLanes);
 
       setCount(1, { priority: 'background' });
 
@@ -752,9 +712,7 @@ describe('RenderSession', () => {
 
       expect(count).toBe(0);
       expect(isPending).toBe(true);
-
-      expect(session.finalize()).toBe(Lanes.BackgroundLane);
-      session.flush();
+      expect(flushSession(session)).toBe(Lanes.BackgroundLane);
     });
   });
 
@@ -785,8 +743,7 @@ describe('RenderSession', () => {
 
       expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       notifySubscribers();
 
@@ -795,12 +752,11 @@ describe('RenderSession', () => {
 
       expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(0);
 
-      cleanupHooks(session['_hooks']);
+      disposeSession(session);
 
       expect(subscribers.size).toBe(0);
     });
@@ -826,8 +782,7 @@ describe('RenderSession', () => {
         },
       });
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(1);
       expect(subscribe).toHaveBeenCalledOnce();
@@ -841,14 +796,13 @@ describe('RenderSession', () => {
         },
       });
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(0);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
-      cleanupHooks(session['_hooks']);
+      disposeSession(session);
 
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).toHaveBeenCalledOnce();
@@ -873,8 +827,7 @@ describe('RenderSession', () => {
         'foo',
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(0);
 
@@ -887,8 +840,7 @@ describe('RenderSession', () => {
         'foo',
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(0);
 
@@ -901,8 +853,7 @@ describe('RenderSession', () => {
         'bar',
       );
 
-      session.finalize();
-      session.flush();
+      flushSession(session);
 
       expect(await session.waitforUpdate()).toBe(0);
 
@@ -911,7 +862,7 @@ describe('RenderSession', () => {
       expect(unsubscribe1).toHaveBeenCalledTimes(1);
       expect(unsubscribe2).toHaveBeenCalledTimes(0);
 
-      cleanupHooks(session['_hooks']);
+      disposeSession(session);
 
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);

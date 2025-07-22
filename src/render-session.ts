@@ -84,11 +84,6 @@ export class RenderSession implements RenderContext {
     return this._pendingLanes;
   }
 
-  flush(): void {
-    this._context.flushSync();
-    this._hookIndex = 0;
-  }
-
   forceUpdate(options?: UpdateOptions): UpdateTask {
     return this._context.scheduleUpdate(this._coroutine, options);
   }
