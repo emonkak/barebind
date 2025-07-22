@@ -3,7 +3,7 @@ import { $toDirective, Lanes, PartType } from '@/core.js';
 import {
   Atom,
   Computed,
-  SignalBinding,
+  type SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
 import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
@@ -48,7 +48,8 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal, part);
+      const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.shouldBind(signal)).toBe(true);
     });
@@ -62,8 +63,8 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal1, part);
       const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(signal1, part, runtime);
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -82,10 +83,14 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal, part);
+      const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(
+        signal,
+        part,
+        runtime,
+      ) as SignalBinding<string>;
       const container = createElement('div', {}, part.node);
       const nodeScanner = new HydrationNodeScanner(container);
-      const runtime = new Runtime(new MockBackend());
 
       binding.hydrate(nodeScanner, runtime);
       binding.commit(runtime);
@@ -107,10 +112,10 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal, part);
+      const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
       const container = createElement('div', {}, part.node);
       const nodeScanner = new HydrationNodeScanner(container);
-      const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -130,8 +135,12 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal, part);
       const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(
+        signal,
+        part,
+        runtime,
+      ) as SignalBinding<string>;
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -154,8 +163,12 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal1, part);
       const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(
+        signal1,
+        part,
+        runtime,
+      ) as SignalBinding<string>;
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -184,8 +197,12 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const binding = new SignalBinding(signal, part);
       const runtime = new Runtime(new MockBackend());
+      const binding = SignalDirective.resolveBinding(
+        signal,
+        part,
+        runtime,
+      ) as SignalBinding<string>;
 
       binding.connect(runtime);
       binding.commit(runtime);

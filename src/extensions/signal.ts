@@ -30,9 +30,10 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
   resolveBinding<T>(
     signal: Signal<T>,
     part: Part,
-    _context: DirectiveContext,
+    context: DirectiveContext,
   ): SignalBinding<T> {
-    return new SignalBinding(signal, part);
+    const slot = context.resolveSlot(signal.value, part);
+    return new SignalBinding(signal, slot);
   },
 };
 
@@ -42,15 +43,16 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   private _signal: Signal<T>;
 
-  private _part: Part;
+  private readonly _slot: Slot<T>;
 
-  private _slot: Slot<T> | null = null;
+  private _memoizedVersion: number;
 
   private _subscription: Subscription | null = null;
 
-  constructor(signal: Signal<T>, part: Part) {
+  constructor(signal: Signal<T>, slot: Slot<T>) {
     this._signal = signal;
-    this._part = part;
+    this._slot = slot;
+    this._memoizedVersion = signal.version;
   }
 
   get type(): DirectiveType<Signal<T>> {
@@ -62,7 +64,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   get part(): Part {
-    return this._part;
+    return this._slot.part;
   }
 
   shouldBind(signal: Signal<T>): boolean {
@@ -71,49 +73,53 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   bind(signal: Signal<T>): void {
     this._subscription?.();
-    this._subscription = null;
     this._signal = signal;
+    this._memoizedVersion = -1;
+    this._subscription = null;
   }
 
   resume(_lanes: Lanes, context: UpdateContext): Lanes {
-    this._slot?.reconcile(this._signal.value, context);
+    this._slot.reconcile(this._signal.value, context);
+    this._memoizedVersion = this._signal.version;
     return Lanes.NoLanes;
   }
 
   hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
-    if (this._slot !== null) {
+    if (this._subscription !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',
       );
     }
 
-    this._slot = context.resolveSlot(this._signal.value, this._part);
     this._slot.hydrate(nodeScanner, context);
-    this._subscription ??= this._subscribeSignal(context);
+    this._subscription = this._subscribeSignal(context);
   }
 
   connect(context: UpdateContext): void {
-    if (this._slot !== null) {
+    const version = this._signal.version;
+
+    if (version > this._memoizedVersion) {
       this._slot.reconcile(this._signal.value, context);
+      this._memoizedVersion = version;
     } else {
-      this._slot ??= context.resolveSlot(this._signal.value, this._part);
       this._slot.connect(context);
     }
+
     this._subscription ??= this._subscribeSignal(context);
   }
 
   disconnect(context: UpdateContext): void {
     this._subscription?.();
-    this._slot?.disconnect(context);
+    this._slot.disconnect(context);
     this._subscription = null;
   }
 
   commit(context: CommitContext): void {
-    this._slot?.commit(context);
+    this._slot.commit(context);
   }
 
   rollback(context: CommitContext): void {
-    this._slot?.rollback(context);
+    this._slot.rollback(context);
   }
 
   private _subscribeSignal(context: UpdateContext): Subscription {
