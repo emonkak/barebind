@@ -3,15 +3,15 @@ import type { HookContext } from '@/core.js';
 import { Atom, Computed } from '@/extensions/signal.js';
 import { defineStore } from '@/extensions/store.js';
 
-class App {
-  readonly counter: CounterStore;
+class AppState {
+  readonly counterStore: CounterStore;
 
-  constructor(ounterStore: CounterStore) {
-    this.counter = ounterStore;
+  constructor(counterStore: CounterStore) {
+    this.counterStore = counterStore;
   }
 }
 
-class Counter {
+class CounterState {
   count: number;
 
   private _doublyCountVersion: number = 0;
@@ -53,13 +53,13 @@ class Counter {
   }
 }
 
-const AppStore = defineStore(App);
+const AppStore = defineStore(AppState);
 
-const CounterStore = defineStore(Counter);
+const CounterStore = defineStore(CounterState);
 
 type CounterStore = InstanceType<typeof CounterStore>;
 
-describe('Store', () => {
+describe('StoreExtensions', () => {
   describe('static onCustomHook()', () => {
     it('returns the store in the context', () => {
       const store = new CounterStore();
@@ -89,8 +89,29 @@ describe('Store', () => {
       expect(() => {
         CounterStore.onCustomHook(context);
       }).toThrow(
-        `The context value for the store of ${Counter.name} is not registered,`,
+        `The context value for the store of ${CounterState.name} is not registered,`,
       );
+    });
+  });
+
+  describe('applySnapshot()', () => {
+    it('apply a snapshot into the state', () => {
+      const counterStore = new CounterStore(100);
+      const appStore = new AppStore(counterStore);
+
+      counterStore.applySnapshot({
+        count: 200,
+      });
+
+      expect(counterStore.count).toStrictEqual(200);
+
+      appStore.applySnapshot({
+        counterStore: {
+          count: 300,
+        },
+      });
+
+      expect(counterStore.count).toStrictEqual(300);
     });
   });
 
@@ -181,6 +202,22 @@ describe('Store', () => {
     });
   });
 
+  describe('toSnapshot()', () => {
+    it('create a snapshot from the state', () => {
+      const counterStore = new CounterStore(100);
+      const appStore = new AppStore(counterStore);
+
+      expect(counterStore.toSnapshot()).toStrictEqual({
+        count: 100,
+      });
+      expect(appStore.toSnapshot()).toStrictEqual({
+        counterStore: {
+          count: 100,
+        },
+      });
+    });
+  });
+
   it('recalculates the computed property when any dependent properties are updated', () => {
     const store = new CounterStore(100);
 
@@ -214,14 +251,14 @@ describe('Store', () => {
 
     appStore.subscribe(subscriber);
 
-    expect(appStore.counter).toBe(counterStore);
+    expect(appStore.counterStore).toBe(counterStore);
     expect(appStore.getVersion()).toBe(0);
     expect(counterStore.count).toBe(100);
     expect(subscriber).toHaveBeenCalledTimes(0);
 
     counterStore.count++;
 
-    expect(appStore.counter).toBe(counterStore);
+    expect(appStore.counterStore).toBe(counterStore);
     expect(appStore.getVersion()).toBe(1);
     expect(counterStore.count).toBe(101);
     expect(subscriber).toHaveBeenCalledTimes(1);
