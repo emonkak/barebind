@@ -2,7 +2,6 @@ import {
   type Binding,
   type CommitContext,
   type Component,
-  type ComponentFunction,
   type Coroutine,
   type DirectiveContext,
   type Effect,
@@ -25,6 +24,11 @@ export function component<TProps, TResult>(
 ): DirectiveSpecifier<TProps> {
   const directive = new FunctionComponent(componentFn);
   return new DirectiveSpecifier(directive, props);
+}
+
+export interface ComponentFunction<TProps, TResult = unknown> {
+  (props: TProps, context: RenderContext): TResult;
+  shouldSkipUpdate?(nextProps: TProps, prevProps: TProps): boolean;
 }
 
 export class FunctionComponent<TProps, TResult>

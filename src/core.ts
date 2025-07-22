@@ -58,11 +58,6 @@ export interface Component<TProps, TResult> extends DirectiveType<TProps> {
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
 
-export interface ComponentFunction<TProps, TResult = unknown> {
-  (props: TProps, context: RenderContext): TResult;
-  shouldSkipUpdate?(nextProps: TProps, prevProps: TProps): boolean;
-}
-
 export interface ComponentResult<T> {
   value: T;
   pendingLanes: Lanes;

@@ -1,11 +1,10 @@
 import { shallowEqual } from '../compare.js';
-import { FunctionComponent } from '../component.js';
+import { type ComponentFunction, FunctionComponent } from '../component.js';
 import {
   $toDirective,
   type Bindable,
   type Binding,
   type CommitContext,
-  type ComponentFunction,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
