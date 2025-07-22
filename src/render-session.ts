@@ -282,11 +282,11 @@ export class RenderSession implements RenderContext {
     getSnapshot: () => TSnapshot,
   ): TSnapshot {
     const snapshot = getSnapshot();
-    const hookState = this.useMemo(() => ({ getSnapshot, snapshot }), []);
+    const state = this.useMemo(() => ({ getSnapshot, snapshot }), []);
 
     this.useLayoutEffect(() => {
-      hookState.getSnapshot = getSnapshot;
-      hookState.snapshot = snapshot;
+      state.getSnapshot = getSnapshot;
+      state.snapshot = snapshot;
 
       if (!Object.is(getSnapshot(), snapshot)) {
         this.forceUpdate();
@@ -294,13 +294,13 @@ export class RenderSession implements RenderContext {
     }, [getSnapshot, snapshot]);
 
     this.useEffect(() => {
-      const updateIfSnapshotChanged = () => {
-        if (!Object.is(hookState.getSnapshot(), hookState.snapshot)) {
+      const subscriber = () => {
+        if (!Object.is(state.getSnapshot(), state.snapshot)) {
           this.forceUpdate();
         }
       };
-      updateIfSnapshotChanged();
-      return subscribe(updateIfSnapshotChanged);
+      subscriber();
+      return subscribe(subscriber);
     }, [subscribe]);
 
     return snapshot;

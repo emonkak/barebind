@@ -145,17 +145,21 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   }
 
   onCustomHook(context: HookContext): T {
-    const [state, setState] = context.useState(() => this.value);
+    const snapshot = context.useRef<T | null>(null);
 
-    context.useLayoutEffect(
-      () =>
-        this.subscribe(() => {
-          setState(() => this.value);
-        }),
-      [this],
-    );
+    context.useEffect(() => {
+      const subscriber = () => {
+        if (!Object.is(this.value, snapshot.current)) {
+          context.forceUpdate();
+        }
+      };
+      subscriber();
+      return this.subscribe(subscriber);
+    }, [this]);
 
-    return state;
+    snapshot.current = this.value;
+
+    return snapshot.current;
   }
 
   valueOf(): T {
