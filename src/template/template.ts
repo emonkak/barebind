@@ -4,7 +4,8 @@ import {
   type DirectiveContext,
   type Effect,
   getStartNode,
-  type NodeScanner,
+  HydrationError,
+  type HydrationNodeScanner,
   type Part,
   PartType,
   type Template,
@@ -14,7 +15,6 @@ import {
 import { debugPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
-import { HydrationError } from '../hydration.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';
@@ -44,7 +44,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    nodeScanner: NodeScanner,
+    nodeScanner: HydrationNodeScanner,
     context: UpdateContext,
   ): TemplateResult;
 
@@ -107,7 +107,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     this._binds = binds;
   }
 
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
     if (this._pendingResult !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',

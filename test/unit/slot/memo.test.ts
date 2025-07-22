@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType } from '@/core.js';
+import { HydrationNodeScanner, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { HydrationNodeScanner } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { MemoSlot, memo } from '@/slot/memo.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

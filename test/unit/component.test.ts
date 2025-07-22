@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ComponentBinding, component, FunctionComponent } from '@/component.js';
-import { CommitPhase, Lanes, PartType, type RenderContext } from '@/core.js';
-import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
+import {
+  CommitPhase,
+  HydrationError,
+  HydrationNodeScanner,
+  Lanes,
+  PartType,
+  type RenderContext,
+} from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

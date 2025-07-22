@@ -1,7 +1,7 @@
 import { sequentialEqual } from '../compare.js';
 import {
   areDirectiveTypesEqual,
-  type NodeScanner,
+  type HydrationNodeScanner,
   type Part,
   type Template,
   type TemplateResult,
@@ -34,7 +34,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     binds: readonly unknown[],
     part: Part.ChildNodePart,
-    nodeScanner: NodeScanner,
+    nodeScanner: HydrationNodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const childNodes = [];

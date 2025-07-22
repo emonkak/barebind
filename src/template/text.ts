@@ -1,5 +1,5 @@
 import {
-  type NodeScanner,
+  type HydrationNodeScanner,
   type Part,
   PartType,
   type TemplateResult,
@@ -33,7 +33,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   hydrate(
     binds: readonly [T],
     _part: Part.ChildNodePart,
-    nodeScanner: NodeScanner,
+    nodeScanner: HydrationNodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const textPart = {

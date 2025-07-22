@@ -7,8 +7,9 @@ import {
   type Effect,
   type Hook,
   HookType,
+  HydrationError,
+  type HydrationNodeScanner,
   Lanes,
-  type NodeScanner,
   type Part,
   type RenderContext,
   Scope,
@@ -16,7 +17,6 @@ import {
   type UpdateContext,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
-import { HydrationError } from './hydration.js';
 
 export function component<TProps, TResult>(
   componentFn: ComponentFunction<TProps, TResult>,
@@ -141,7 +141,7 @@ export class ComponentBinding<TProps, TResult>
     return pendingLanes;
   }
 
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
     if (this._slot !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',

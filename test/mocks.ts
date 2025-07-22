@@ -15,8 +15,8 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
+  type HydrationNodeScanner,
   Lanes,
-  type NodeScanner,
   type Part,
   PartType,
   type Primitive,
@@ -69,7 +69,7 @@ export class MockBinding<T> implements Binding<T> {
     this.value = value;
   }
 
-  hydrate(_nodeScanner: NodeScanner, _context: UpdateContext): void {
+  hydrate(_nodeScanner: HydrationNodeScanner, _context: UpdateContext): void {
     this.isConnected = true;
   }
 
@@ -325,7 +325,7 @@ export class MockSlot<T> implements Slot<T> {
     }
   }
 
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
     this.binding.hydrate(nodeScanner, context);
     this.isConnected = true;
   }
@@ -391,7 +391,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
-    _nodeScanner: NodeScanner,
+    _nodeScanner: HydrationNodeScanner,
     _context: UpdateContext,
   ): TemplateResult {
     return {

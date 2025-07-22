@@ -1,12 +1,17 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $toDirective, Lanes, PartType } from '@/core.js';
+import {
+  $toDirective,
+  HydrationError,
+  HydrationNodeScanner,
+  Lanes,
+  PartType,
+} from '@/core.js';
 import {
   Atom,
   Computed,
   type SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
-import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from '../../mocks.js';

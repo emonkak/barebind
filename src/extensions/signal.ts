@@ -9,13 +9,13 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type HookContext,
+  HydrationError,
+  type HydrationNodeScanner,
   Lanes,
-  type NodeScanner,
   type Part,
   type Slot,
   type UpdateContext,
 } from '../core.js';
-import { HydrationError } from '../hydration.js';
 import { LinkedList } from '../linked-list.js';
 
 export type Subscriber = () => void;
@@ -84,7 +84,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return Lanes.NoLanes;
   }
 
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
     if (this._subscription !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',

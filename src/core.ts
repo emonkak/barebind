@@ -1,5 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { debugNode } from './debug/node.js';
+
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
 export interface Backend {
@@ -35,7 +37,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void;
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -208,12 +210,6 @@ export type NewState<T> = [T] extends [Function]
   ? (prevState: T) => T
   : ((prevState: T) => T) | T;
 
-export interface NodeScanner {
-  nextNode(expectedName: string): ChildNode;
-  peekNode(expectedName: string): ChildNode;
-  splitText(): this;
-}
-
 export type Part =
   | Part.AttributePart
   | Part.ChildNodePart
@@ -354,7 +350,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: unknown;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): void;
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void;
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -374,7 +370,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    nodeScanner: NodeScanner,
+    nodeScanner: HydrationNodeScanner,
     context: UpdateContext,
   ): TemplateResult;
 }
@@ -418,6 +414,51 @@ interface ScopeEntry {
   value: unknown;
 }
 
+export class HydrationError extends Error {}
+
+export class HydrationNodeScanner {
+  private readonly _treeWalker: TreeWalker;
+
+  private _lookaheadNode: Node | null;
+
+  constructor(container: Element) {
+    this._treeWalker = container.ownerDocument.createTreeWalker(
+      container,
+      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+    );
+    this._lookaheadNode = this._treeWalker.nextNode();
+  }
+
+  nextNode(expectedName: string): ChildNode {
+    const lookaheadNode = this._lookaheadNode;
+    ensureNode(expectedName, lookaheadNode, this._treeWalker.currentNode);
+    this._lookaheadNode = this._treeWalker.nextNode();
+    return lookaheadNode;
+  }
+
+  peekNode(expectedName: string): ChildNode {
+    const lookaheadNode = this._lookaheadNode;
+    ensureNode(expectedName, lookaheadNode, this._treeWalker.currentNode);
+    return lookaheadNode;
+  }
+
+  splitText(): this {
+    const currentNode = this._treeWalker.currentNode;
+    const lookaheadNode = this._lookaheadNode;
+
+    if (
+      currentNode instanceof Text &&
+      (lookaheadNode === null || lookaheadNode.previousSibling === currentNode)
+    ) {
+      const splittedText = currentNode.ownerDocument.createTextNode('');
+      currentNode.after(splittedText);
+      this._lookaheadNode = splittedText;
+    }
+
+    return this;
+  }
+}
+
 export class Literal extends String {}
 
 export class Scope {
@@ -453,6 +494,29 @@ export function areDirectiveTypesEqual(
   y: DirectiveType<unknown>,
 ): boolean {
   return x.equals?.(y) ?? x === y;
+}
+
+/**
+ * @internal
+ */
+function ensureNode<TName extends string>(
+  expectedName: TName,
+  actualNode: Node | null,
+  lastNode: Node,
+): asserts actualNode is ChildNode {
+  if (actualNode === null) {
+    throw new HydrationError(
+      `Hydration is failed because there is no node. ${expectedName} node is expected here:\n` +
+        debugNode(lastNode, '[[THIS IS THE LAST NODE!]]'),
+    );
+  }
+
+  if (actualNode.nodeName !== expectedName) {
+    throw new HydrationError(
+      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here:\n` +
+        debugNode(lastNode, '[[THIS IS MISMATCHED!]]'),
+    );
+  }
 }
 
 /**

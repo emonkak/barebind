@@ -1,5 +1,5 @@
 import {
-  type NodeScanner,
+  type HydrationNodeScanner,
   type Part,
   PartType,
   type Slot,
@@ -137,7 +137,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    nodeScanner: NodeScanner,
+    nodeScanner: HydrationNodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const holes = this._holes;

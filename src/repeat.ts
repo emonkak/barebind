@@ -6,7 +6,8 @@ import {
   type DirectiveContext,
   type DirectiveType,
   getStartNode,
-  type NodeScanner,
+  HydrationError,
+  type HydrationNodeScanner,
   type Part,
   PartType,
   type Slot,
@@ -15,7 +16,6 @@ import {
 import { debugPart } from './debug/part.js';
 import { markUsedValue } from './debug/value.js';
 import { DirectiveSpecifier } from './directive.js';
-import { HydrationError } from './hydration.js';
 
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   source: Iterable<TSource>;
@@ -133,7 +133,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._props = props;
   }
 
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
     if (this._memoizedItems !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',

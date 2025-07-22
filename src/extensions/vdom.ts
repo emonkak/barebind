@@ -8,8 +8,8 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
+  type HydrationNodeScanner,
   isBindable,
-  type NodeScanner,
   type Part,
   PartType,
   type Template,
@@ -255,7 +255,7 @@ export class ElementBinding implements Binding<ElementProps> {
     this._pendingProps = props;
   }
 
-  hydrate(_nodeScanner: NodeScanner, _context: UpdateContext): void {}
+  hydrate(_nodeScanner: HydrationNodeScanner, _context: UpdateContext): void {}
 
   connect(_context: UpdateContext): void {}
 

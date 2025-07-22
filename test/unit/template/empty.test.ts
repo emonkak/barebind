@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
-import { HydrationNodeScanner } from '@/hydration.js';
+import { HydrationNodeScanner, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

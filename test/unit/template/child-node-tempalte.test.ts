@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
-import { HydrationError, HydrationNodeScanner } from '@/hydration.js';
+import { HydrationError, HydrationNodeScanner, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

@@ -1,6 +1,6 @@
 import {
   type DirectiveType,
-  type NodeScanner,
+  type HydrationNodeScanner,
   type Part,
   PartType,
   type TemplateResult,
@@ -42,7 +42,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    nodeScanner: NodeScanner,
+    nodeScanner: HydrationNodeScanner,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;

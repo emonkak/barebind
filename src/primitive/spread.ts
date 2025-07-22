@@ -2,7 +2,7 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveContext,
-  type NodeScanner,
+  type HydrationNodeScanner,
   type Part,
   PartType,
   type Primitive,
@@ -74,7 +74,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     this._props = props;
   }
 
-  hydrate(_nodeScanner: NodeScanner, _context: UpdateContext): void {}
+  hydrate(_nodeScanner: HydrationNodeScanner, _context: UpdateContext): void {}
 
   connect(context: UpdateContext): void {
     const nextSlots = new Map(this._pendingSlots);

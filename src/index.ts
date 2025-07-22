@@ -4,10 +4,10 @@ export { sequentialEqual, shallowEqual } from './compare.js';
 export { component } from './component.js';
 export {
   type HookContext,
+  HydrationError,
   Literal,
   type RenderContext,
 } from './core.js';
-export { HydrationError } from './hydration.js';
 export {
   type RepeatProps,
   repeat,

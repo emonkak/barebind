@@ -3,7 +3,7 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveType,
-  type NodeScanner,
+  type HydrationNodeScanner,
   type Part,
   type Slot,
   type UpdateContext,
@@ -79,7 +79,7 @@ export class MemoSlot<T> implements Slot<T> {
     }
   }
 
-  hydrate(nodeScanner: NodeScanner, context: UpdateContext): void {
+  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
     this._pendingBinding.hydrate(nodeScanner, context);
     this._dirty = true;
   }

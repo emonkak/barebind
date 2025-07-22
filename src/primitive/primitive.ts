@@ -1,7 +1,7 @@
 import type {
   Binding,
   CommitContext,
-  NodeScanner,
+  HydrationNodeScanner,
   Part,
   Primitive,
   UpdateContext,
@@ -35,7 +35,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._pendingValue = value;
   }
 
-  hydrate(_nodeScanner: NodeScanner, _context: UpdateContext): void {}
+  hydrate(_nodeScanner: HydrationNodeScanner, _context: UpdateContext): void {}
 
   connect(_context: UpdateContext): void {}
 
