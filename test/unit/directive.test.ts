@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { $toDirective, PartType } from '@/core.js';
-import { debugValue } from '@/debug.js';
+import { debugValue } from '@/debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

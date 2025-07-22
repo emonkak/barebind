@@ -8,7 +8,8 @@ import {
   type Slot,
   type UpdateContext,
 } from '../core.js';
-import { debugPart, markUsedValue } from '../debug.js';
+import { debugPart } from '../debug/part.js';
+import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
 
 export function strict<T>(value: T): SlotSpecifier<T> {

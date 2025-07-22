@@ -9,7 +9,8 @@ import {
   type Slot,
   type UpdateContext,
 } from '../core.js';
-import { debugPart, debugValue, markUsedValue } from '../debug.js';
+import { debugPart } from '../debug/part.js';
+import { debugValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 
 export type SpreadProperties = { [key: string]: unknown };

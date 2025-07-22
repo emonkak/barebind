@@ -1,5 +1,5 @@
 import type { NodeScanner } from './core.js';
-import { debugNode } from './debug.js';
+import { debugNode } from './debug/node.js';
 
 export class HydrationNodeScanner implements NodeScanner {
   private readonly _treeWalker: TreeWalker;

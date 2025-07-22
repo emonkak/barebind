@@ -28,7 +28,7 @@ import {
   type UpdateOptions,
   type UpdateTask,
 } from './core.js';
-import { debugValue } from './debug.js';
+import { debugValue } from './debug/value.js';
 import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import { TemplateLiteralPreprocessor } from './template-literal.js';

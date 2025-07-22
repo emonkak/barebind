@@ -6,7 +6,8 @@ import {
   PartType,
   type Primitive,
 } from '../core.js';
-import { debugPart, debugValue, markUsedValue } from '../debug.js';
+import { debugPart } from '../debug/part.js';
+import { debugValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 

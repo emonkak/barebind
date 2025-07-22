@@ -7,7 +7,8 @@ import {
   type TemplateResult,
   type UpdateContext,
 } from '../core.js';
-import { debugNode, debugPart } from '../debug.js';
+import { debugNode } from '../debug/node.js';
+import { debugPart } from '../debug/part.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,
