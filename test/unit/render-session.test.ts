@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Lanes, Literal } from '@/core.js';
+import { Lanes, Literal, type RefObject } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
-import { disposeSession, flushSession } from '../test-utils.js';
+import { disposeSession, flushSession, waitForUpdate } from '../test-utils.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {
@@ -271,15 +271,23 @@ describe('RenderSession', () => {
       const callback1 = () => {};
       const callback2 = () => {};
 
-      expect(session.useCallback(callback1, ['foo'])).toBe(callback1);
+      SESSION1: {
+        expect(session.useCallback(callback1, ['foo'])).toBe(callback1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(session.useCallback(callback2, ['foo'])).toBe(callback1);
+      SESSION2: {
+        expect(session.useCallback(callback2, ['foo'])).toBe(callback1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(session.useCallback(callback2, ['bar'])).toBe(callback2);
+      SESSION3: {
+        expect(session.useCallback(callback2, ['bar'])).toBe(callback2);
+
+        flushSession(session);
+      }
     });
   });
 
@@ -296,27 +304,34 @@ describe('RenderSession', () => {
 
       const scheduleUpdateSpy = vi.spyOn(session['_context'], 'scheduleUpdate');
 
-      expect(session.useDeferredValue(value1)).toBe(value1);
+      SESSION1: {
+        expect(session.useDeferredValue(value1)).toBe(value1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
+      expect(await waitForUpdate(session)).toBe(0);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
-      expect(session.useDeferredValue(value2)).toBe(value1);
+      SESSION2: {
+        expect(session.useDeferredValue(value2)).toBe(value1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(1);
-
+      expect(await waitForUpdate(session)).toBe(1);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
         priority: 'background',
       });
 
-      expect(session.useDeferredValue(value2)).toBe(value2);
+      SESSION3: {
+        expect(session.useDeferredValue(value2)).toBe(value2);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
+      expect(await waitForUpdate(session)).toBe(0);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -332,18 +347,22 @@ describe('RenderSession', () => {
 
       const scheduleUpdateSpy = vi.spyOn(session['_context'], 'scheduleUpdate');
 
-      expect(session.useDeferredValue(value2, value1)).toBe(value1);
+      SESSION1: {
+        expect(session.useDeferredValue(value2, value1)).toBe(value1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
         priority: 'background',
       });
 
-      expect(session.useDeferredValue(value2, value1)).toBe(value2);
+      SESSION2: {
+        expect(session.useDeferredValue(value2, value1)).toBe(value2);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
@@ -366,20 +385,24 @@ describe('RenderSession', () => {
       const callback = vi.fn().mockReturnValue(cleanup);
       const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
 
-      session[hookMethod](callback);
+      SESSION1: {
+        session[hookMethod](callback);
 
-      flushSession(session);
+        flushSession(session);
 
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(cleanup).toHaveBeenCalledTimes(0);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(cleanup).toHaveBeenCalledTimes(0);
+      }
 
-      session[hookMethod](callback);
+      SESSION2: {
+        session[hookMethod](callback);
 
-      flushSession(session);
+        flushSession(session);
 
-      expect(callback).toHaveBeenCalledTimes(2);
-      expect(cleanup).toHaveBeenCalledTimes(1);
-      expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
+        expect(callback).toHaveBeenCalledTimes(2);
+        expect(cleanup).toHaveBeenCalledTimes(1);
+        expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
+      }
     });
 
     it('does not perform the callback function if dependencies are not changed', () => {
@@ -393,26 +416,32 @@ describe('RenderSession', () => {
       const callback = vi.fn();
       const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
 
-      session[hookMethod](callback, ['foo']);
+      SESSION1: {
+        session[hookMethod](callback, ['foo']);
 
-      flushSession(session);
+        flushSession(session);
 
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+      }
 
-      session[hookMethod](callback, ['foo']);
+      SESSION2: {
+        session[hookMethod](callback, ['foo']);
 
-      flushSession(session);
+        flushSession(session);
 
-      expect(callback).toHaveBeenCalledTimes(1);
-      expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+      }
 
-      session[hookMethod](callback, ['bar']);
+      SESSION3: {
+        session[hookMethod](callback, ['bar']);
 
-      flushSession(session);
+        flushSession(session);
 
-      expect(callback).toHaveBeenCalledTimes(2);
-      expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
+        expect(callback).toHaveBeenCalledTimes(2);
+        expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
+      }
     });
 
     it('throws an error if given a different type of hook', () => {
@@ -440,16 +469,25 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      const id1 = session.useId();
-      const id2 = session.useId();
+      let id1: string;
+      let id2: string;
 
-      expect(id1).toMatch(/[0-9a-z]+:1/);
-      expect(id2).toMatch(/[0-9a-z]+:2/);
+      SESSION1: {
+        id1 = session.useId();
+        id2 = session.useId();
 
-      flushSession(session);
+        expect(id1).toMatch(/[0-9a-z]+:1/);
+        expect(id2).toMatch(/[0-9a-z]+:2/);
 
-      expect(session.useId()).toBe(id1);
-      expect(session.useId()).toBe(id2);
+        flushSession(session);
+      }
+
+      SESSION2: {
+        expect(session.useId()).toBe(id1);
+        expect(session.useId()).toBe(id2);
+
+        flushSession(session);
+      }
     });
 
     it('throws an error if given a different type of hook', () => {
@@ -477,15 +515,23 @@ describe('RenderSession', () => {
       const value1 = 'foo';
       const value2 = 'bar';
 
-      expect(session.useMemo(() => value1, ['foo'])).toBe(value1);
+      SESSION1: {
+        expect(session.useMemo(() => value1, ['foo'])).toBe(value1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(session.useMemo(() => value2, ['foo'])).toBe(value1);
+      SESSION2: {
+        expect(session.useMemo(() => value2, ['foo'])).toBe(value1);
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(session.useMemo(() => value2, ['bar'])).toBe(value2);
+      SESSION3: {
+        expect(session.useMemo(() => value2, ['bar'])).toBe(value2);
+
+        flushSession(session);
+      }
     });
 
     it('throws an error if given a different type of hook', () => {
@@ -514,23 +560,33 @@ describe('RenderSession', () => {
       );
       const reducer = (count: number, n: number) => count + n;
 
-      let [count, increment] = session.useReducer(reducer, 0);
+      SESSION1: {
+        const [count, increment] = session.useReducer(reducer, 0);
 
-      flushSession(session);
+        session.useEffect(() => {
+          increment(1);
+        }, []);
 
-      expect(count).toBe(0);
+        flushSession(session);
 
-      expect(await session.waitforUpdate()).toBe(0);
+        expect(count).toBe(0);
+      }
 
-      increment(1);
+      expect(await waitForUpdate(session)).toBe(1);
 
-      expect(await session.waitforUpdate()).toBe(1);
+      SESSION2: {
+        const [count, increment] = session.useReducer(reducer, 0);
 
-      [count, increment] = session.useReducer(reducer, 0);
+        session.useEffect(() => {
+          increment(1);
+        }, []);
 
-      flushSession(session);
+        flushSession(session);
 
-      expect(count).toBe(1);
+        expect(count).toBe(1);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
     });
 
     it('should skip the update if the state does not changed', async () => {
@@ -542,23 +598,19 @@ describe('RenderSession', () => {
       );
       const reducer = (count: number, n: number) => count + n;
 
-      let [count, increment] = session.useReducer(reducer, 0);
+      SESSION1: {
+        const [count, increment] = session.useReducer(reducer, 0);
 
-      flushSession(session);
+        session.useEffect(() => {
+          increment(0);
+        }, []);
 
-      expect(count).toBe(0);
+        flushSession(session);
 
-      expect(await session.waitforUpdate()).toBe(0);
+        expect(count).toBe(0);
+      }
 
-      increment(0);
-
-      expect(await session.waitforUpdate()).toBe(0);
-
-      [count, increment] = session.useReducer(reducer, 0);
-
-      flushSession(session);
-
-      expect(count).toBe(0);
+      expect(await waitForUpdate(session)).toBe(0);
     });
 
     it('returns the initial state by the function', async () => {
@@ -602,15 +654,21 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      const ref = session.useRef('foo');
+      let ref: RefObject<string>;
 
-      expect(ref).toStrictEqual({ current: 'foo' });
+      SESSION1: {
+        ref = session.useRef('foo');
 
-      flushSession(session);
+        expect(ref).toStrictEqual({ current: 'foo' });
 
-      expect(session.useRef('bar')).toBe(ref);
+        flushSession(session);
+      }
 
-      flushSession(session);
+      SESSION2: {
+        expect(session.useRef('bar')).toBe(ref);
+
+        flushSession(session);
+      }
     });
   });
 
@@ -623,21 +681,33 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      let [count, setCount] = session.useState(0);
+      SESSION1: {
+        const [count, setCount] = session.useState(0);
 
-      expect(count).toBe(0);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+        session.useEffect(() => {
+          setCount(1);
+        }, []);
 
-      expect(await session.waitforUpdate()).toBe(0);
+        flushSession(session);
 
-      setCount(1);
+        expect(count).toBe(0);
+      }
 
-      expect(await session.waitforUpdate()).toBe(1);
+      expect(await waitForUpdate(session)).toBe(1);
 
-      [count, setCount] = session.useState(0);
+      SESSION2: {
+        const [count, setCount] = session.useState(0);
 
-      expect(count).toBe(1);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+        session.useEffect(() => {
+          setCount(1);
+        }, []);
+
+        flushSession(session);
+
+        expect(count).toBe(1);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
     });
 
     it('should skip the update if the state does not changed', async () => {
@@ -648,24 +718,22 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      let [count, setCount] = session.useState(0);
+      SESSION1: {
+        const [count, setCount] = session.useState(0);
 
-      expect(count).toBe(0);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+        session.useEffect(() => {
+          setCount(0);
+        }, []);
 
-      expect(await session.waitforUpdate()).toBe(0);
+        flushSession(session);
 
-      setCount(0);
+        expect(count).toBe(0);
+      }
 
-      expect(await session.waitforUpdate()).toBe(0);
-
-      [count, setCount] = session.useState(0);
-
-      expect(count).toBe(0);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+      expect(await waitForUpdate(session)).toBe(0);
     });
 
-    it('can set the state by the function', async () => {
+    it('sets a new state from the old one', async () => {
       const session = new RenderSession(
         [],
         Lanes.AllLanes,
@@ -673,21 +741,36 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      let [count, setCount] = session.useState(() => 0);
+      SESSION1: {
+        const [count, setCount] = session.useState(() => 0);
 
-      expect(count).toBe(0);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+        session.useEffect(() => {
+          // Call twice and the result is the same.
+          setCount((count) => count + 1);
+          setCount((count) => count + 1);
+        }, []);
 
-      // Call twice and the result is the same.
-      setCount((count) => count + 1);
-      setCount((count) => count + 1);
+        flushSession(session);
 
-      expect(await session.waitforUpdate()).toBe(1);
+        expect(count).toBe(0);
+      }
 
-      [count, setCount] = session.useState(0);
+      expect(await waitForUpdate(session)).toBe(1);
 
-      expect(count).toBe(1);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+      SESSION2: {
+        const [count, setCount] = session.useState(0);
+
+        session.useEffect(() => {
+          setCount((count) => count + 1);
+          setCount((count) => count + 1);
+        }, []);
+
+        flushSession(session);
+
+        expect(count).toBe(1);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
     });
 
     it('should not return the pending state', async () => {
@@ -698,21 +781,35 @@ describe('RenderSession', () => {
         new Runtime(new MockBackend()),
       );
 
-      let [count, setCount, isPending] = session.useState(() => 0);
+      SESSION1: {
+        const [count, setCount, isPending] = session.useState(() => 0);
 
-      expect(count).toBe(0);
-      expect(isPending).toBe(false);
-      expect(flushSession(session)).toBe(Lanes.NoLanes);
+        session.useEffect(() => {
+          setCount(1, { priority: 'background' });
+        }, []);
 
-      setCount(1, { priority: 'background' });
+        expect(flushSession(session)).toBe(Lanes.NoLanes);
 
-      expect(await session.waitforUpdate()).toBe(1);
+        expect(count).toBe(0);
+        expect(isPending).toBe(false);
+      }
 
-      [count, setCount, isPending] = session.useState(0);
+      expect(await waitForUpdate(session)).toBe(1);
 
-      expect(count).toBe(0);
-      expect(isPending).toBe(true);
-      expect(flushSession(session)).toBe(Lanes.BackgroundLane);
+      SESSION2: {
+        const [count, setCount, isPending] = session.useState(0);
+
+        session.useEffect(() => {
+          setCount(1, { priority: 'background' });
+        }, []);
+
+        expect(count).toBe(0);
+        expect(isPending).toBe(true);
+
+        expect(flushSession(session)).toBe(Lanes.BackgroundLane);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
     });
   });
 
@@ -741,20 +838,26 @@ describe('RenderSession', () => {
         }
       };
 
-      expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
+      SESSION1: {
+        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
 
-      flushSession(session);
+        session.useEffect(notifySubscribers, []);
 
-      notifySubscribers();
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(1);
+      expect(await waitForUpdate(session)).toBe(1);
       expect(subscribers.size).toBe(1);
 
-      expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
+      SESSION2: {
+        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
 
-      flushSession(session);
+        session.useEffect(notifySubscribers, []);
 
-      expect(await session.waitforUpdate()).toBe(0);
+        flushSession(session);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
 
       disposeSession(session);
 
@@ -774,31 +877,31 @@ describe('RenderSession', () => {
       const subscribe = vi.fn().mockReturnValue(unsubscribe);
       const getSnapshot = () => count;
 
-      expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
+      SESSION1: {
+        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
 
-      session['_context'].enqueueMutationEffect({
-        commit() {
+        session.useLayoutEffect(() => {
           count++;
-        },
-      });
+        });
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(1);
+      expect(await waitForUpdate(session)).toBe(1);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
-      expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
+      SESSION2: {
+        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
 
-      session['_context'].enqueueLayoutEffect({
-        commit() {
+        session.useLayoutEffect(() => {
           count++;
-        },
-      });
+        });
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(0);
+      expect(await waitForUpdate(session)).toBe(0);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
@@ -823,40 +926,43 @@ describe('RenderSession', () => {
       const getSnapshot1 = () => 'foo';
       const getSnapshot2 = () => 'bar';
 
-      expect(session.useSyncEnternalStore(subscribe1, getSnapshot1)).toBe(
-        'foo',
-      );
+      SESSION1: {
+        expect(session.useSyncEnternalStore(subscribe1, getSnapshot1)).toBe(
+          'foo',
+        );
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(0);
-
+      expect(await waitForUpdate(session)).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(0);
       expect(unsubscribe1).toHaveBeenCalledTimes(0);
       expect(unsubscribe2).toHaveBeenCalledTimes(0);
 
-      expect(session.useSyncEnternalStore(subscribe2, getSnapshot1)).toBe(
-        'foo',
-      );
+      SESSION2: {
+        expect(session.useSyncEnternalStore(subscribe2, getSnapshot1)).toBe(
+          'foo',
+        );
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(0);
-
+      expect(await waitForUpdate(session)).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);
       expect(unsubscribe1).toHaveBeenCalledTimes(1);
       expect(unsubscribe2).toHaveBeenCalledTimes(0);
 
-      expect(session.useSyncEnternalStore(subscribe2, getSnapshot2)).toBe(
-        'bar',
-      );
+      SESSION3: {
+        expect(session.useSyncEnternalStore(subscribe2, getSnapshot2)).toBe(
+          'bar',
+        );
 
-      flushSession(session);
+        flushSession(session);
+      }
 
-      expect(await session.waitforUpdate()).toBe(0);
-
+      expect(await waitForUpdate(session)).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);
       expect(unsubscribe1).toHaveBeenCalledTimes(1);

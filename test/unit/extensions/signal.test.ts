@@ -19,6 +19,7 @@ import {
   createElement,
   disposeSession,
   flushSession,
+  waitForUpdate,
 } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
@@ -256,7 +257,7 @@ describe('Signal', () => {
   });
 
   describe('onCustomHook()', () => {
-    it('request an update if the signal value has been changed', () => {
+    it('request an update if the signal value has been changed', async () => {
       const session = new RenderSession(
         [],
         Lanes.AllLanes,
@@ -265,26 +266,35 @@ describe('Signal', () => {
       );
       const signal = new Atom('foo');
 
-      const forceUpdateSpy = vi.spyOn(session, 'forceUpdate');
+      SESSION1: {
+        expect(session.use(signal)).toBe('foo');
 
-      expect(session.use(signal)).toBe('foo');
-      expect(forceUpdateSpy).toHaveBeenCalledTimes(0);
+        session.useEffect(() => {
+          signal.value = 'bar';
+        });
 
-      flushSession(session);
-      signal.value = 'bar';
+        flushSession(session);
+      }
 
-      expect(session.use(signal)).toBe('bar');
-      expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(await waitForUpdate(session)).toBe(1);
 
-      flushSession(session);
-      signal.value = 'bar';
+      SESSION2: {
+        expect(session.use(signal)).toBe('bar');
 
-      expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
+        session.useEffect(() => {
+          signal.value = 'bar';
+        });
+
+        flushSession(session);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
 
       disposeSession(session);
+
       signal.value = 'baz';
 
-      expect(forceUpdateSpy).toHaveBeenCalledTimes(1);
+      expect(await waitForUpdate(session)).toBe(0);
     });
   });
 

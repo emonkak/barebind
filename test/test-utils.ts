@@ -155,3 +155,7 @@ export function templateLiteral(
 ): { strings: TemplateStringsArray; values: readonly unknown[] } {
   return { strings, values };
 }
+
+export function waitForUpdate(session: RenderSession): Promise<number> {
+  return session['_context'].waitForUpdate(session['_coroutine']);
+}
