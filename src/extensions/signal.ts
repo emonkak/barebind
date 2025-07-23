@@ -22,6 +22,10 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
+type UnwrapSignals<T> = {
+  [K in keyof T]: T[K] extends Signal<infer Value> ? Value : T[K];
+};
+
 /**
  * @internal
  */
@@ -141,7 +145,7 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
   abstract subscribe(subscriber: Subscriber): Subscription;
 
   map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
-    return new Computed((dependency) => selector(dependency.value), [this]);
+    return new Computed<TResult, [Signal<T>]>(selector, [this]);
   }
 
   onCustomHook(context: HookContext): T {
@@ -222,7 +226,9 @@ export class Computed<
   TResult,
   const TDependencies extends Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
-  private readonly _producer: (...signals: TDependencies) => TResult;
+  private readonly _producer: (
+    ...signals: UnwrapSignals<TDependencies>
+  ) => TResult;
 
   private readonly _dependencies: TDependencies;
 
@@ -231,20 +237,20 @@ export class Computed<
   private _memoizedVersion;
 
   constructor(
-    producer: (...dependencies: TDependencies) => TResult,
+    producer: (...dependencies: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   );
   /**
    * @internal
    */
   constructor(
-    producer: (...dependencies: TDependencies) => TResult,
+    producer: (...dependencies: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult,
     initialVersion: number,
   );
   constructor(
-    producer: (...dependencies: TDependencies) => TResult,
+    producer: (...dependencies: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult | null = null,
     initialVersion = -1, // -1 is indicated an uninitialized signal.
@@ -261,7 +267,11 @@ export class Computed<
 
     if (this._memoizedVersion < version) {
       const producer = this._producer;
-      this._memoizedResult = producer(...this._dependencies);
+      this._memoizedResult = producer(
+        ...(this._dependencies.map(
+          (dependency) => dependency.value,
+        ) as UnwrapSignals<TDependencies>),
+      );
       this._memoizedVersion = version;
     }
 

@@ -392,9 +392,9 @@ describe('Computed', () => {
 
       const signal = new Computed(
         (foo, bar, baz) => ({
-          foo: foo.value,
-          bar: bar.value,
-          baz: baz.value,
+          foo,
+          bar,
+          baz,
         }),
         [foo, bar, baz],
       );
@@ -413,9 +413,9 @@ describe('Computed', () => {
 
       const signal = new Computed(
         (foo, bar, baz) => ({
-          foo: foo.value,
-          bar: bar.value,
-          baz: baz.value,
+          foo,
+          bar,
+          baz,
         }),
         [foo, bar, baz],
       );
@@ -442,7 +442,7 @@ describe('Computed', () => {
       const subscriber = vi.fn();
 
       const signal = new Computed(
-        (foo, bar, baz) => foo.value + bar.value + baz.value,
+        (foo, bar, baz) => foo + bar + baz,
         [foo, bar, baz],
       );
 
@@ -470,11 +470,10 @@ describe('Computed', () => {
 
       const signal = new Computed(
         (foo, bar, baz) => ({
-          foo: foo.value,
-          bar: bar.value,
-          baz: baz.value,
+          foo,
+          bar,
+          baz,
         }),
-
         [foo, bar, baz],
       );
 
