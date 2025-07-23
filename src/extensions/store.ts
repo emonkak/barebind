@@ -15,6 +15,7 @@ export interface StoreClass<TClass extends Constructable>
 }
 
 export interface StoreExtensions<TState> extends CustomHook<void> {
+  readonly [$signalMap]: SignalMap;
   applySnapshot(snapshot: Snapshot<TState>): void;
   asSignal(): Signal<this>;
   getSignal<TKey extends SignalKeys<TState>>(key: TKey): Signal<TState[TKey]>;
@@ -25,7 +26,7 @@ export interface StoreExtensions<TState> extends CustomHook<void> {
 }
 
 export type Snapshot<T> = {
-  [K in StateKeys<T>]: T[K] extends StoreExtensions<infer State>
+  [K in SnapshotKeys<T>]: T[K] extends StoreExtensions<infer State>
     ? Snapshot<State>
     : T[K];
 };
@@ -34,9 +35,14 @@ type Constructable<T = object> = new (...args: any[]) => T;
 
 type UseStore<TState> = TState & StoreExtensions<TState>;
 
-type StateKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
+type SnapshotKeys<T> = Extract<SignalKeys<T>, WritableKeys<T>>;
 
-type SignalKeys<T> = Exclude<keyof T & string, PrivateKeys | FunctionKeys<T>>;
+type SignalKeys<T> = Exclude<
+  Extract<keyof T, string>,
+  PrivateKeys | FunctionKeys<T>
+>;
+
+type SignalMap = Record<PropertyKey, Signal<unknown>>;
 
 type PrivateKeys = `_${string}`;
 
@@ -66,10 +72,7 @@ export function defineStore<TClass extends Constructable>(
     extends superclass
     implements StoreExtensions<InstanceType<TClass>>
   {
-    private [$signalMap]: Record<PropertyKey, Signal<unknown>> = Object.create(
-      null,
-      {},
-    );
+    readonly [$signalMap]: SignalMap = Object.create(null, {});
 
     static onCustomHook(
       this: Constructable<Store>,
@@ -100,10 +103,10 @@ export function defineStore<TClass extends Constructable>(
         const signal = this[$signalMap][key];
 
         if (signal instanceof Atom) {
-          signal.value = snapshot[key as StateKeys<InstanceType<TClass>>];
+          signal.value = snapshot[key as SnapshotKeys<InstanceType<TClass>>];
         } else if (signal instanceof StoreSignal) {
           signal.value.applySnapshot(
-            snapshot[key as StateKeys<InstanceType<TClass>>],
+            snapshot[key as SnapshotKeys<InstanceType<TClass>>],
           );
         }
       }
@@ -193,7 +196,7 @@ class StoreSignal<
 
 function defineInstanceProperties<T extends object>(
   instance: T,
-  signalMap: Record<PropertyKey, Signal<unknown>>,
+  signalMap: SignalMap,
 ): void {
   const descriptors = Object.getOwnPropertyDescriptors(instance);
 
@@ -232,7 +235,7 @@ function defineInstanceProperties<T extends object>(
 function definePrototypeProperties<T extends object>(
   superclass: Constructable<T>,
   instance: T,
-  signalMap: Record<PropertyKey, Signal<unknown>>,
+  signalMap: SignalMap,
 ): void {
   for (
     let prototype = superclass.prototype;
@@ -288,7 +291,7 @@ function isStore(value: unknown): value is StoreExtensions<unknown> {
 
 function trackSignalAccesses<T extends object>(
   instance: T,
-  signalMap: Record<PropertyKey, Signal<unknown>>,
+  signalMap: SignalMap,
   dependencies: Signal<unknown>[],
 ): T {
   return new Proxy(instance, {
