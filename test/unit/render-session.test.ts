@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Lanes, Literal, type RefObject } from '@/core.js';
+import { $customHook, Lanes, Literal, type RefObject } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
@@ -251,12 +251,12 @@ describe('RenderSession', () => {
       );
       const result = 'foo';
       const hook = {
-        onCustomHook: vi.fn().mockReturnValue(result),
+        [$customHook]: vi.fn().mockReturnValue(result),
       };
 
       expect(session.use(hook)).toBe(result);
-      expect(hook.onCustomHook).toHaveBeenCalledOnce();
-      expect(hook.onCustomHook).toHaveBeenCalledWith(session);
+      expect(hook[$customHook]).toHaveBeenCalledOnce();
+      expect(hook[$customHook]).toHaveBeenCalledWith(session);
     });
   });
 

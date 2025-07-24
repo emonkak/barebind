@@ -36,7 +36,7 @@ describe('DirectiveSpecifier', () => {
 });
 
 describe('SlotSpecifier', () => {
-  describe('[$toDirectiveElement]()', () => {
+  describe('[$toDirective]()', () => {
     it('returns a directive element with the primitive value', () => {
       const slotType = MockSlot;
       const value = 'foo';

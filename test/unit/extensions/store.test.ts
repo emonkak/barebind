@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { HookContext } from '@/core.js';
+import { $customHook, type HookContext } from '@/core.js';
 import { Atom, Computed } from '@/extensions/signal.js';
 import { defineStore } from '@/extensions/store.js';
 
@@ -60,7 +60,7 @@ const CounterStore = defineStore(CounterState);
 type CounterStore = InstanceType<typeof CounterStore>;
 
 describe('StoreExtensions', () => {
-  describe('static onCustomHook()', () => {
+  describe('static [$customHook]()', () => {
     it('returns the store in the context', () => {
       const store = new CounterStore();
       const contextStorage = new Map();
@@ -73,9 +73,9 @@ describe('StoreExtensions', () => {
         },
       } as HookContext;
 
-      store.onCustomHook(context);
+      store[$customHook](context);
 
-      expect(CounterStore.onCustomHook(context)).toBe(store);
+      expect(CounterStore[$customHook](context)).toBe(store);
     });
 
     it('throws an error when the store is not registered in the context', () => {
@@ -87,7 +87,7 @@ describe('StoreExtensions', () => {
       } as HookContext;
 
       expect(() => {
-        CounterStore.onCustomHook(context);
+        CounterStore[$customHook](context);
       }).toThrow(
         `The context value for the store of ${CounterState.name} is not registered,`,
       );

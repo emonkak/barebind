@@ -1,5 +1,6 @@
 import { sequentialEqual } from './compare.js';
 import {
+  $customHook,
   type Coroutine,
   type CustomHook,
   type Effect,
@@ -121,7 +122,7 @@ export class RenderSession implements RenderContext {
   }
 
   use<T>(hook: CustomHook<T>): T {
-    return hook.onCustomHook(this);
+    return hook[$customHook](this);
   }
 
   useCallback<T extends Function>(callback: T, dependencies: unknown[]): T {

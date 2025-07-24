@@ -2,6 +2,8 @@
 
 import { debugNode } from './debug/node.js';
 
+export const $customHook: unique symbol = Symbol('$customHook');
+
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
 export interface Backend {
@@ -70,7 +72,7 @@ export interface Coroutine extends Effect {
 }
 
 export interface CustomHook<T> {
-  onCustomHook(context: HookContext): T;
+  [$customHook](context: HookContext): T;
 }
 
 export interface Directive<T> {

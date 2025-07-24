@@ -1,4 +1,5 @@
 import {
+  $customHook,
   $toDirective,
   type Bindable,
   type Binding,
@@ -138,17 +139,7 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
 
   abstract get version(): number;
 
-  [$toDirective](): Directive<Signal<T>> {
-    return { type: SignalDirective, value: this };
-  }
-
-  abstract subscribe(subscriber: Subscriber): Subscription;
-
-  map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
-    return new Computed<TResult, [Signal<T>]>(selector, [this]);
-  }
-
-  onCustomHook(context: HookContext): T {
+  [$customHook](context: HookContext): T {
     const snapshot = context.useRef<T | null>(null);
 
     context.useEffect(() => {
@@ -164,6 +155,16 @@ export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
     snapshot.current = this.value;
 
     return snapshot.current;
+  }
+
+  [$toDirective](): Directive<Signal<T>> {
+    return { type: SignalDirective, value: this };
+  }
+
+  abstract subscribe(subscriber: Subscriber): Subscription;
+
+  map<TResult>(selector: (value: T) => TResult): Signal<TResult> {
+    return new Computed<TResult, [Signal<T>]>(selector, [this]);
   }
 
   valueOf(): T {

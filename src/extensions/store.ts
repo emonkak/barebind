@@ -1,8 +1,8 @@
-import type { CustomHook, HookContext } from '../core.js';
+import { $customHook, type CustomHook, type HookContext } from '../core.js';
+import { Signal } from './Signal.js';
 import {
   Atom,
   Computed,
-  Signal,
   type Subscriber,
   type Subscription,
 } from './signal.js';
@@ -74,7 +74,7 @@ export function defineStore<TClass extends Constructable>(
   {
     readonly [$signalMap]: SignalMap = Object.create(null, {});
 
-    static onCustomHook(
+    static [$customHook](
       this: Constructable<Store>,
       context: HookContext,
     ): Store {
@@ -94,7 +94,7 @@ export function defineStore<TClass extends Constructable>(
       Object.freeze(this[$signalMap]);
     }
 
-    onCustomHook(context: HookContext): void {
+    [$customHook](context: HookContext): void {
       context.setContextValue(this.constructor, this);
     }
 

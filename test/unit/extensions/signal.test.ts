@@ -232,31 +232,7 @@ describe('SiganlBinding', () => {
 });
 
 describe('Signal', () => {
-  describe('[$toDirectiveElement]()', () => {
-    it('returns a DirectiveElement with the signal', () => {
-      const signal = new Atom('foo');
-      const directive = signal[$toDirective]();
-
-      expect(directive.type).toBe(SignalDirective);
-      expect(directive.value).toBe(signal);
-      expect(directive.slotType).toBe(undefined);
-    });
-  });
-
-  describe('map()', () => {
-    it('returns a computed signal that depend on itself', () => {
-      const signal = new Atom(100);
-      const computedSignal = signal.map((count) => count * 2);
-
-      expect(computedSignal).toBeInstanceOf(Computed);
-      expect(computedSignal.value).toBe(200);
-      expect(
-        (computedSignal as Computed<number>)['_dependencies'],
-      ).toStrictEqual([signal]);
-    });
-  });
-
-  describe('onCustomHook()', () => {
+  describe('[$customHook]()', () => {
     it('request an update if the signal value has been changed', async () => {
       const session = new RenderSession(
         [],
@@ -295,6 +271,30 @@ describe('Signal', () => {
       signal.value = 'baz';
 
       expect(await waitForUpdate(session)).toBe(0);
+    });
+  });
+
+  describe('[$toDirective]()', () => {
+    it('returns a DirectiveElement with the signal', () => {
+      const signal = new Atom('foo');
+      const directive = signal[$toDirective]();
+
+      expect(directive.type).toBe(SignalDirective);
+      expect(directive.value).toBe(signal);
+      expect(directive.slotType).toBe(undefined);
+    });
+  });
+
+  describe('map()', () => {
+    it('returns a computed signal that depend on itself', () => {
+      const signal = new Atom(100);
+      const computedSignal = signal.map((count) => count * 2);
+
+      expect(computedSignal).toBeInstanceOf(Computed);
+      expect(computedSignal.value).toBe(200);
+      expect(
+        (computedSignal as Computed<number>)['_dependencies'],
+      ).toStrictEqual([signal]);
     });
   });
 
