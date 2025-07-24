@@ -829,7 +829,54 @@ describe('RenderSession', () => {
   });
 
   describe('useSyncExternalStore()', () => {
-    it('forces the update if the snapshot is changed when the store is updated', async () => {
+    it('forces the update if the snapshot has been changed when updating the snapshot', async () => {
+      const session = new RenderSession(
+        [],
+        Lanes.AllLanes,
+        new MockCoroutine(),
+        new Runtime(new MockBackend()),
+      );
+      let count = 0;
+
+      const unsubscribe = vi.fn();
+      const subscribe = vi.fn().mockReturnValue(unsubscribe);
+      const getSnapshot = () => count;
+
+      SESSION1: {
+        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
+
+        session.useInsertionEffect(() => {
+          count++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      expect(await waitForUpdate(session)).toBe(1);
+      expect(subscribe).toHaveBeenCalledOnce();
+      expect(unsubscribe).not.toHaveBeenCalled();
+
+      SESSION2: {
+        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
+
+        session.useInsertionEffect(() => {
+          count++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      expect(await waitForUpdate(session)).toBe(0);
+      expect(subscribe).toHaveBeenCalledOnce();
+      expect(unsubscribe).not.toHaveBeenCalled();
+
+      disposeSession(session);
+
+      expect(subscribe).toHaveBeenCalledOnce();
+      expect(unsubscribe).toHaveBeenCalledOnce();
+    });
+
+    it('forces the update if the snapshot has been changed when subscribing the store', async () => {
       const session = new RenderSession(
         [],
         Lanes.AllLanes,
@@ -877,53 +924,6 @@ describe('RenderSession', () => {
       disposeSession(session);
 
       expect(subscribers.size).toBe(0);
-    });
-
-    it('forces the update if the snapshot have been changed during update', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
-      let count = 0;
-
-      const unsubscribe = vi.fn();
-      const subscribe = vi.fn().mockReturnValue(unsubscribe);
-      const getSnapshot = () => count;
-
-      SESSION1: {
-        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(0);
-
-        session.useLayoutEffect(() => {
-          count++;
-        });
-
-        flushSession(session);
-      }
-
-      expect(await waitForUpdate(session)).toBe(1);
-      expect(subscribe).toHaveBeenCalledOnce();
-      expect(unsubscribe).not.toHaveBeenCalled();
-
-      SESSION2: {
-        expect(session.useSyncEnternalStore(subscribe, getSnapshot)).toBe(1);
-
-        session.useLayoutEffect(() => {
-          count++;
-        });
-
-        flushSession(session);
-      }
-
-      expect(await waitForUpdate(session)).toBe(0);
-      expect(subscribe).toHaveBeenCalledOnce();
-      expect(unsubscribe).not.toHaveBeenCalled();
-
-      disposeSession(session);
-
-      expect(subscribe).toHaveBeenCalledOnce();
-      expect(unsubscribe).toHaveBeenCalledOnce();
     });
 
     it('should resubscribe the store if the subscribe function is changed', async () => {
