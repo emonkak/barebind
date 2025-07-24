@@ -242,7 +242,22 @@ describe('RenderSession', () => {
   });
 
   describe('use()', () => {
-    it('performs the custom hook', () => {
+    it('performs a custom hook function', () => {
+      const session = new RenderSession(
+        [],
+        Lanes.AllLanes,
+        new MockCoroutine(),
+        new Runtime(new MockBackend()),
+      );
+      const result = 'foo';
+      const hook = vi.fn().mockReturnValue(result);
+
+      expect(session.use(hook)).toBe(result);
+      expect(hook).toHaveBeenCalledOnce();
+      expect(hook).toHaveBeenCalledWith(session);
+    });
+
+    it('performs a custom hook object', () => {
       const session = new RenderSession(
         [],
         Lanes.AllLanes,

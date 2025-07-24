@@ -1,4 +1,4 @@
-import { $customHook, type CustomHook } from '../../core.js';
+import { $customHook, type CustomHookObject } from '../../core.js';
 import type { RelativeURL } from './url.js';
 
 export interface LocationSnapshot {
@@ -17,7 +17,7 @@ export interface NavigateOptions {
   state?: unknown;
 }
 
-export const CurrentLocation: CustomHook<
+export const CurrentLocation: CustomHookObject<
   readonly [LocationSnapshot, LocationNavigator]
 > = {
   [$customHook](context) {

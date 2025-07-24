@@ -1,8 +1,12 @@
-import { $customHook, type CustomHook, type HookContext } from '../core.js';
-import { Signal } from './Signal.js';
+import {
+  $customHook,
+  type CustomHookObject,
+  type HookContext,
+} from '../core.js';
 import {
   Atom,
   Computed,
+  Signal,
   type Subscriber,
   type Subscription,
 } from './signal.js';
@@ -10,11 +14,11 @@ import {
 const $signalMap = Symbol('$signalMap');
 
 export interface StoreClass<TClass extends Constructable>
-  extends CustomHook<UseStore<InstanceType<TClass>>> {
+  extends CustomHookObject<UseStore<InstanceType<TClass>>> {
   new (...args: ConstructorParameters<TClass>): UseStore<InstanceType<TClass>>;
 }
 
-export interface StoreExtensions<TState> extends CustomHook<void> {
+export interface StoreExtensions<TState> extends CustomHookObject<void> {
   readonly [$signalMap]: SignalMap;
   applySnapshot(snapshot: Snapshot<TState>): void;
   asSignal(): Signal<this>;

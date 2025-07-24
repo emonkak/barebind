@@ -71,7 +71,9 @@ export interface Coroutine extends Effect {
   resume(lanes: Lanes, context: UpdateContext): Lanes;
 }
 
-export interface CustomHook<T> {
+export type CustomHookFunction<T> = (context: HookContext) => T;
+
+export interface CustomHookObject<T> {
   [$customHook](context: HookContext): T;
 }
 
@@ -143,7 +145,7 @@ export interface HookContext {
   forceUpdate(options?: UpdateOptions): UpdateTask;
   getContextValue(key: unknown): unknown;
   setContextValue(key: unknown, value: unknown): void;
-  use<T>(hook: CustomHook<T>): T;
+  use<T>(usable: Usable<T>): T;
   useCallback<T extends Function>(callback: T, dependencies: unknown[]): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
@@ -410,6 +412,8 @@ export interface UpdateTask {
   lanes: Lanes;
   promise: Promise<void>;
 }
+
+export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
 interface ScopeEntry {
   key: unknown;

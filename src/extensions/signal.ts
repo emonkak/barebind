@@ -5,7 +5,7 @@ import {
   type Binding,
   type CommitContext,
   type Coroutine,
-  type CustomHook,
+  type CustomHookObject,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -134,7 +134,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 }
 
-export abstract class Signal<T> implements CustomHook<T>, Bindable<Signal<T>> {
+export abstract class Signal<T>
+  implements CustomHookObject<T>, Bindable<Signal<T>>
+{
   abstract get value(): T;
 
   abstract get version(): number;

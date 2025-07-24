@@ -2,7 +2,6 @@ import { sequentialEqual } from './compare.js';
 import {
   $customHook,
   type Coroutine,
-  type CustomHook,
   type Effect,
   type Hook,
   HookType,
@@ -15,6 +14,7 @@ import {
   type TemplateMode,
   type UpdateOptions,
   type UpdateTask,
+  type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
 
@@ -121,8 +121,12 @@ export class RenderSession implements RenderContext {
     return this._template(strings, binds, 'textarea');
   }
 
-  use<T>(hook: CustomHook<T>): T {
-    return hook[$customHook](this);
+  use<T>(usable: Usable<T>): T {
+    if (typeof usable === 'function') {
+      return usable(this);
+    } else {
+      return usable[$customHook](this);
+    }
   }
 
   useCallback<T extends Function>(callback: T, dependencies: unknown[]): T {
