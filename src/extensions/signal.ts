@@ -101,11 +101,11 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   connect(context: UpdateContext): void {
-    const version = this._signal.version;
+    const currentVersion = this._signal.version;
 
-    if (version > this._memoizedVersion) {
+    if (this._memoizedVersion < currentVersion) {
       this._slot.reconcile(this._signal.value, context);
-      this._memoizedVersion = version;
+      this._memoizedVersion = currentVersion;
     } else {
       this._slot.connect(context);
     }
@@ -266,16 +266,16 @@ export class Computed<
   }
 
   get value(): TResult {
-    const { version } = this;
+    const currentVersion = this.version;
 
-    if (this._memoizedVersion < version) {
+    if (this._memoizedVersion < currentVersion) {
       const producer = this._producer;
       this._memoizedResult = producer(
         ...(this._dependencies.map(
           (dependency) => dependency.value,
         ) as UnwrapSignals<TDependencies>),
       );
-      this._memoizedVersion = version;
+      this._memoizedVersion = currentVersion;
     }
 
     return this._memoizedResult!;
