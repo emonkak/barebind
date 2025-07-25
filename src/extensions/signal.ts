@@ -199,10 +199,6 @@ export class Atom<T> extends Signal<T> {
     return this._version;
   }
 
-  setUntrackedValue(newValue: T): void {
-    this._value = newValue;
-  }
-
   subscribe(subscriber: Subscriber): Subscription {
     const node = this._subscribers.pushBack(subscriber);
     return () => {

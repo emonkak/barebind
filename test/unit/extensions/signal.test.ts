@@ -369,21 +369,6 @@ describe('Atom', () => {
       expect(signal.version).toBe(1);
     });
   });
-
-  describe('setUntrackedValue()', () => {
-    it('sets the new value without notifications', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
-      const signal = new Atom(value1);
-      const subscriber = vi.fn();
-
-      signal.subscribe(subscriber);
-      signal.setUntrackedValue(value2);
-
-      expect(signal.value).toBe(value2);
-      expect(subscriber).not.toHaveBeenCalled();
-    });
-  });
 });
 
 describe('Computed', () => {
