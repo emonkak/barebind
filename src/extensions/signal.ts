@@ -192,24 +192,11 @@ export class Atom<T> extends Signal<T> {
 
   set value(newValue: T) {
     this._value = newValue;
-    this.notifySubscribers();
+    this.touch();
   }
 
   get version(): number {
     return this._version;
-  }
-
-  notifySubscribers(): void {
-    this._version += 1;
-
-    for (
-      let node = this._subscribers.front();
-      node !== null;
-      node = node.next
-    ) {
-      const subscriber = node.value;
-      subscriber();
-    }
   }
 
   setUntrackedValue(newValue: T): void {
@@ -218,10 +205,21 @@ export class Atom<T> extends Signal<T> {
 
   subscribe(subscriber: Subscriber): Subscription {
     const node = this._subscribers.pushBack(subscriber);
-
     return () => {
       this._subscribers.remove(node);
     };
+  }
+
+  touch(): void {
+    this._version += 1;
+    for (
+      let node = this._subscribers.front();
+      node !== null;
+      node = node.next
+    ) {
+      const subscriber = node.value;
+      subscriber();
+    }
   }
 }
 

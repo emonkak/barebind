@@ -355,13 +355,16 @@ describe('Atom', () => {
     });
   });
 
-  describe('notifySubscribers()', () => {
-    it('increments the version', () => {
+  describe('touch()', () => {
+    it('increments the version and notify subscribers', () => {
       const value = 'foo';
       const signal = new Atom(value);
+      const subscriber = vi.fn();
 
-      signal.notifySubscribers();
+      signal.subscribe(subscriber);
+      signal.touch();
 
+      expect(subscriber).toHaveBeenCalledOnce();
       expect(signal.value).toBe(value);
       expect(signal.version).toBe(1);
     });
