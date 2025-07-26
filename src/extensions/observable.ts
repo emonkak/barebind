@@ -23,7 +23,7 @@ interface ObservableDescriptor<T> {
 
 type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
-type ObservableProperty<T, K extends keyof T> = T extends object
+type ObservableProperty<T, K extends ObservableKeys<T>> = T extends object
   ? Observable<T[K]>
   : undefined;
 
@@ -60,7 +60,7 @@ export class Observable<T> extends Signal<T> {
     return getSnapshot(this._descriptor);
   }
 
-  set value(value: T) {
+  set value(source: T) {
     const descriptor = this._descriptor;
     if (!isWritableSignal(descriptor.source$)) {
       throw new TypeError('Cannot set value on a read-only descriptor.');
@@ -69,11 +69,17 @@ export class Observable<T> extends Signal<T> {
     descriptor.children = null;
     descriptor.flags |= FLAG_NEW;
     descriptor.flags &= ~FLAG_DIRTY;
-    descriptor.source$.value = value;
+    descriptor.source$.value = source;
   }
 
   get version(): number {
     return this._descriptor.source$.version;
+  }
+
+  assign(source: Partial<Pick<T, ObservableKeys<T>>>): void {
+    for (const key of Object.keys(source)) {
+      this.set(key as ObservableKeys<T>, source[key as ObservableKeys<T>]!);
+    }
   }
 
   get<K extends ObservableKeys<T>>(
@@ -99,6 +105,16 @@ export class Observable<T> extends Signal<T> {
     );
 
     callback(proxy);
+  }
+
+  set<K extends ObservableKeys<T>>(key: K, value: T[K]): void {
+    const child = getChildDescriptor(this._descriptor, key);
+    if (child === undefined || !isWritableSignal(child.source$)) {
+      throw new TypeError('Cannot set value on a read-only descriptor.');
+    }
+    child.source$.value = value;
+    child.flags |= FLAG_NEW;
+    child.flags &= ~FLAG_DIRTY;
   }
 
   subscribe(subscriber: Subscriber): Subscription {

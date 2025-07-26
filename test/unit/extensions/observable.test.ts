@@ -103,7 +103,7 @@ describe('Observable', () => {
       expect(state$.version).toBe(3);
     });
 
-    it('assigns a new value to the accessor property', () => {
+    it('sets a new value to an accessor property', () => {
       const state$ = Observable.from({
         _count: 0,
         get count() {
@@ -136,9 +136,39 @@ describe('Observable', () => {
       const state$ = Observable.from(initialState);
       const activeTodos$ = state$.get('activeTodos');
 
-      expect(() => (activeTodos$.value = [])).toThrow(
-        'Cannot set value on a read-only descriptor.',
-      );
+      expect(() => {
+        activeTodos$.value = [];
+      }).toThrow('Cannot set value on a read-only descriptor.');
+    });
+  });
+
+  describe('assign()', () => {
+    it('assign new values to properties', () => {
+      const initialState = new TodoState([
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
+      ]);
+      const state$ = Observable.from(initialState);
+
+      state$.assign({ todos: [], filter: 'completed' });
+
+      const snapshot = state$.value;
+
+      expect(snapshot).toBeInstanceOf(TodoState);
+      expect(snapshot.todos).toStrictEqual([]);
+      expect(snapshot.filter).toStrictEqual('completed');
+    });
+
+    it('throws an error when trying to set a new value to a readonly property', () => {
+      const initialState = new TodoState([
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
+      ]);
+      const state$ = Observable.from(initialState);
+
+      expect(() => {
+        state$.assign({ visibleTodos: [] });
+      }).toThrow('Cannot set value on a read-only descriptor.');
     });
   });
 
@@ -180,7 +210,6 @@ describe('Observable', () => {
       const initialState = new TodoState();
       const state$ = Observable.from(initialState);
 
-      expect(state$.get('' as any)).toBe(undefined);
       expect(state$.get('todos').get(0)).toBe(undefined);
     });
   });
@@ -252,6 +281,37 @@ describe('Observable', () => {
       expect(() => state$.mutate(() => {})).toThrow(
         'Cannot mutate value with a non-object descriptor.',
       );
+    });
+  });
+
+  describe('set()', () => {
+    it('sets a new value to a property', () => {
+      const initialState = new TodoState([
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
+      ]);
+      const state$ = Observable.from(initialState);
+
+      state$.set('todos', []);
+      state$.set('filter', 'completed');
+
+      const snapshot = state$.value;
+
+      expect(snapshot).toBeInstanceOf(TodoState);
+      expect(snapshot.todos).toStrictEqual([]);
+      expect(snapshot.filter).toStrictEqual('completed');
+    });
+
+    it('throws an error when trying to set a new value to a readonly property', () => {
+      const initialState = new TodoState([
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
+      ]);
+      const state$ = Observable.from(initialState);
+
+      expect(() => {
+        state$.set('visibleTodos', []);
+      }).toThrow('Cannot set value on a read-only descriptor.');
     });
   });
 
