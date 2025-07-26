@@ -157,5 +157,5 @@ export function templateLiteral(
 }
 
 export function waitForUpdate(session: RenderSession): Promise<number> {
-  return session['_context'].waitForUpdate(session['_coroutine']);
+  return session['_context'].waitForUpdate();
 }

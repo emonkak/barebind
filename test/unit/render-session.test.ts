@@ -145,7 +145,9 @@ describe('RenderSession', () => {
       const scheduleUpdateSpy = vi
         .spyOn(session['_context'], 'scheduleUpdate')
         .mockImplementation(() => ({
+          coroutine: new MockCoroutine(),
           lanes: Lanes.BackgroundLane,
+          running: false,
           promise: Promise.resolve(),
         }));
 

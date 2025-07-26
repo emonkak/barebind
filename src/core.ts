@@ -338,7 +338,7 @@ export interface RenderSessionContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  waitForUpdate(coroutine: Coroutine): Promise<number>;
+  waitForUpdate(): Promise<number>;
 }
 
 export interface RequestCallbackOptions {
@@ -409,7 +409,9 @@ export interface UpdateOptions {
 }
 
 export interface UpdateTask {
+  coroutine: Coroutine;
   lanes: Lanes;
+  running: boolean;
   promise: Promise<void>;
 }
 

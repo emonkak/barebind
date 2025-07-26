@@ -110,7 +110,7 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(1);
+      expect(await runtime.waitForUpdate()).toBe(1);
 
       expect(container.innerHTML).toBe(signal.value);
     });
@@ -160,7 +160,7 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(1);
+      expect(await runtime.waitForUpdate()).toBe(1);
 
       expect(part.node.nodeValue).toBe(signal.value);
     });
@@ -193,7 +193,7 @@ describe('SiganlBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(1);
+      expect(await runtime.waitForUpdate()).toBe(1);
 
       expect(part.node.nodeValue).toBe(signal2.value);
     });
@@ -221,12 +221,12 @@ describe('SiganlBinding', () => {
       binding.disconnect(runtime);
       binding.rollback(runtime);
 
-      expect(await runtime.waitForUpdate(binding)).toBe(0);
+      expect(await runtime.waitForUpdate()).toBe(0);
       expect(part.node.nodeValue).toBe('');
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate(binding)).toBe(0);
+      expect(await runtime.waitForUpdate()).toBe(0);
       expect(part.node.nodeValue).toBe('');
     });
   });
@@ -262,11 +262,13 @@ describe('Signal', () => {
         expect(session.use(signal)).toBe('baz');
 
         session.useEffect(() => {
-          signal.value = 'bar';
+          signal.value = 'baz';
         });
 
         flushSession(session);
       }
+
+      await Promise.resolve();
 
       expect(await waitForUpdate(session)).toBe(0);
 

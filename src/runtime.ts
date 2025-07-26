@@ -63,7 +63,6 @@ export type RuntimeEvent =
     };
 
 interface CoroutineState {
-  pendingTasks: LinkedList<UpdateTask>;
   pendingLanes: Lanes;
 }
 
@@ -75,6 +74,7 @@ interface RuntimeState {
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
   templatePlaceholder: string;
   updateCount: number;
+  updateTasks: LinkedList<UpdateTask>;
 }
 
 interface UpdateFrame {
@@ -377,44 +377,52 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
-    const { coroutineStates } = this._state;
-    const completeOptions: Required<UpdateOptions> = {
+    const { coroutineStates, updateTasks } = this._state;
+    const completeOptions = {
       priority: options?.priority ?? this._backend.getCurrentPriority(),
       viewTransition: options?.viewTransition ?? false,
     };
     const lanes = getScheduleLanesFromOptions(completeOptions);
+
+    for (const updateTask of updateTasks) {
+      if (
+        updateTask.coroutine === coroutine &&
+        updateTask.lanes === lanes &&
+        !updateTask.running
+      ) {
+        return updateTask;
+      }
+    }
+
     let coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState !== undefined) {
       coroutineState.pendingLanes |= lanes;
-
-      for (const task of coroutineState.pendingTasks) {
-        if (task.lanes === lanes) {
-          return task;
-        }
-      }
     } else {
-      coroutineState = {
-        pendingTasks: new LinkedList(),
-        pendingLanes: lanes,
-      };
+      coroutineState = { pendingLanes: lanes };
       coroutineStates.set(coroutine, coroutineState);
     }
 
-    const taskNode = coroutineState.pendingTasks.pushBack({
+    const updateTaskNode = updateTasks.pushBack({
+      coroutine,
       lanes,
-      promise: this._backend.requestCallback(() => {
-        coroutineState.pendingTasks.remove(taskNode);
+      running: false,
+      promise: this._backend.requestCallback(async () => {
+        try {
+          if ((coroutineState.pendingLanes & lanes) === Lanes.NoLanes) {
+            return;
+          }
 
-        if ((coroutineState.pendingLanes & lanes) === Lanes.NoLanes) {
-          return;
+          updateTaskNode.value.running = true;
+
+          await this._createSubcontext(coroutine).flushAsync(completeOptions);
+        } finally {
+          updateTasks.remove(updateTaskNode);
         }
-
-        return this._createSubcontext(coroutine).flushAsync(completeOptions);
       }, completeOptions),
     });
 
-    return taskNode.value;
+    return updateTaskNode.value;
   }
 
   undebugValue(
@@ -430,20 +438,13 @@ export class Runtime implements CommitContext, UpdateContext {
     }
   }
 
-  async waitForUpdate(coroutine: Coroutine): Promise<number> {
-    const { coroutineStates } = this._state;
-    const coroutineState = coroutineStates.get(coroutine);
-
-    if (coroutineState !== undefined) {
-      const pendingTasks = Array.from(
-        coroutineState.pendingTasks,
-        (task) => task.promise,
-      );
-      const results = await Promise.allSettled(pendingTasks);
-      return results.length;
-    }
-
-    return 0;
+  async waitForUpdate(): Promise<number> {
+    const updateTasks = Array.from(
+      this._state.updateTasks,
+      (task) => task.promise,
+    );
+    const results = await Promise.allSettled(updateTasks);
+    return results.length;
   }
 
   private _commitEffects(effects: Effect[], phase: CommitPhase): void {
@@ -592,6 +593,7 @@ function createRuntimeState(): RuntimeState {
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
     templatePlaceholder: generateRandomString(8),
     updateCount: 0,
+    updateTasks: new LinkedList(),
   };
 }
 
