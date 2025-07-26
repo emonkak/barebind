@@ -10,10 +10,14 @@ export interface ObservableOptions {
   shallow?: boolean;
 }
 
+const FLAG_IDLE = 0b0;
+const FLAG_NEW = 0b01;
+const FLAG_DIRTY = 0b10;
+
 interface ObservableDescriptor<T> {
   readonly source$: Signal<T>;
-  dirty: boolean;
   children: Map<PropertyKey, ObservableDescriptor<unknown> | undefined> | null;
+  flags: number;
 }
 
 type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
@@ -61,8 +65,9 @@ export class Observable<T> extends Signal<T> {
       throw new TypeError('Cannot set value on a read-only descriptor.');
     }
 
-    descriptor.dirty = false;
     descriptor.children = null;
+    descriptor.flags |= FLAG_NEW;
+    descriptor.flags &= ~FLAG_DIRTY;
     descriptor.source$.value = value;
   }
 
@@ -100,7 +105,7 @@ export class Observable<T> extends Signal<T> {
 
     if (this._options?.shallow) {
       return descriptor.source$.subscribe(() => {
-        if (!descriptor.dirty) {
+        if (!(descriptor.flags & FLAG_DIRTY)) {
           subscriber();
         }
       });
@@ -121,7 +126,7 @@ function createObservableDescriptor<T>(source: T): ObservableDescriptor<T> {
   return {
     source$: new Atom(source),
     children: null,
-    dirty: false,
+    flags: FLAG_IDLE,
   };
 }
 
@@ -142,7 +147,7 @@ function getChildDescriptor<T>(
 
     if (child?.source$ instanceof Atom) {
       child.source$.subscribe(() => {
-        parent.dirty = true;
+        parent.flags |= FLAG_DIRTY;
 
         if (parent.source$ instanceof Atom) {
           parent.source$.touch();
@@ -158,9 +163,9 @@ function getChildDescriptor<T>(
 }
 
 function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
-  const { dirty, children, source$ } = descriptor;
+  const { flags, children, source$ } = descriptor;
 
-  if (dirty && source$ instanceof Atom) {
+  if (flags & FLAG_DIRTY && source$ instanceof Atom) {
     const oldSource = source$.value;
 
     if (isObject(oldSource)) {
@@ -169,15 +174,16 @@ function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
         : cloneObject(oldSource);
 
       for (const [key, child] of children!.entries()) {
-        if (child?.source$ instanceof Atom) {
+        if (child !== undefined && child.flags & (FLAG_NEW | FLAG_DIRTY)) {
           newSource[key] = getSnapshot(child);
+          child.flags &= ~FLAG_NEW;
         }
       }
 
       source$['_value'] = newSource;
     }
 
-    descriptor.dirty = false;
+    descriptor.flags &= ~FLAG_DIRTY;
   }
 
   return source$.value;
@@ -204,6 +210,7 @@ function proxyDescriptor<T extends object>(
       const child = getChildDescriptor(descriptor, key);
       if (child?.source$ instanceof Atom) {
         child.source$.value = value;
+        child.flags |= FLAG_NEW;
         return true;
       } else {
         return Reflect.set(target, key, value, receiver);
@@ -245,7 +252,7 @@ function resolveChildDescriptor<T extends object>(
         return {
           source$: signal,
           children: null,
-          dirty: false,
+          flags: FLAG_IDLE,
         };
       } else if (prototype === root) {
         return createObservableDescriptor(value);
