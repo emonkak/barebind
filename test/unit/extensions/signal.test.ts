@@ -20,7 +20,6 @@ import {
   createElement,
   disposeSession,
   flushSession,
-  waitForUpdate,
 } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
@@ -256,7 +255,7 @@ describe('Signal', () => {
 
       await Promise.resolve();
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
         expect(session.use(signal)).toBe('baz');
@@ -270,13 +269,13 @@ describe('Signal', () => {
 
       await Promise.resolve();
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
 
       disposeSession(session);
 
       signal.value = 'baz';
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
   });
 

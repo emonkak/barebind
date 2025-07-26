@@ -182,6 +182,7 @@ export interface HookContext {
     subscribe: (subscriber: () => void) => (() => void) | void,
     getSnapshot: () => T,
   ): T;
+  waitForUpdate(): Promise<number>;
 }
 
 export const HookType = {
@@ -338,7 +339,7 @@ export interface RenderSessionContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  waitForUpdate(): Promise<number>;
+  waitForUpdate(coroutine?: Coroutine): Promise<number>;
 }
 
 export interface RequestCallbackOptions {

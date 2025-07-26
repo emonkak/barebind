@@ -311,6 +311,10 @@ export class RenderSession implements RenderContext {
     return snapshot;
   }
 
+  waitForUpdate(): Promise<number> {
+    return this._context.waitForUpdate(this._coroutine);
+  }
+
   private _dynamicTemplate(
     strings: TemplateStringsArray,
     binds: readonly unknown[],

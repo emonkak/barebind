@@ -438,13 +438,25 @@ export class Runtime implements CommitContext, UpdateContext {
     }
   }
 
-  async waitForUpdate(): Promise<number> {
-    const updateTasks = Array.from(
-      this._state.updateTasks,
-      (task) => task.promise,
-    );
-    const results = await Promise.allSettled(updateTasks);
-    return results.length;
+  async waitForUpdate(coroutine?: Coroutine): Promise<number> {
+    const { updateTasks } = this._state;
+    const promises: Promise<void>[] = [];
+
+    if (coroutine !== undefined) {
+      for (let node = updateTasks.front(); node !== null; node = node.next) {
+        if (node.value.coroutine === coroutine) {
+          promises.push(node.value.promise);
+        }
+      }
+    } else {
+      for (let node = updateTasks.front(); node !== null; node = node.next) {
+        promises.push(node.value.promise);
+      }
+    }
+
+    await Promise.allSettled(promises);
+
+    return promises.length;
   }
 
   private _commitEffects(effects: Effect[], phase: CommitPhase): void {

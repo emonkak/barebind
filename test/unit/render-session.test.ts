@@ -9,7 +9,7 @@ import {
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
-import { disposeSession, flushSession, waitForUpdate } from '../test-utils.js';
+import { disposeSession, flushSession } from '../test-utils.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {
@@ -337,7 +337,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
       SESSION2: {
@@ -346,7 +346,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
         priority: 'background',
@@ -358,7 +358,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
 
@@ -599,7 +599,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
         const [count, increment] = session.useReducer(reducer, 0);
@@ -613,7 +613,7 @@ describe('RenderSession', () => {
         expect(count).toBe(1);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('should skip the update if the state does not changed', async () => {
@@ -637,7 +637,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('returns the initial state by the function', async () => {
@@ -720,7 +720,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
         const [count, setCount] = session.useState(0);
@@ -734,7 +734,7 @@ describe('RenderSession', () => {
         expect(count).toBe(1);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('should skip the update if the state does not changed', async () => {
@@ -757,7 +757,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('sets a new state from the old one', async () => {
@@ -782,7 +782,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
         const [count, setCount] = session.useState(0);
@@ -797,7 +797,7 @@ describe('RenderSession', () => {
         expect(count).toBe(1);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('should not return the pending state', async () => {
@@ -821,7 +821,7 @@ describe('RenderSession', () => {
         expect(isPending).toBe(false);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
         const [count, setCount, isPending] = session.useState(0);
@@ -836,7 +836,7 @@ describe('RenderSession', () => {
         expect(flushSession(session)).toBe(Lanes.BackgroundLane);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
     });
   });
 
@@ -864,7 +864,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
@@ -878,7 +878,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
 
@@ -920,7 +920,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(1);
+      expect(await session.waitForUpdate()).toBe(1);
       expect(subscribers.size).toBe(1);
 
       SESSION2: {
@@ -931,7 +931,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
 
       disposeSession(session);
 
@@ -961,7 +961,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(0);
       expect(unsubscribe1).toHaveBeenCalledTimes(0);
@@ -975,7 +975,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);
       expect(unsubscribe1).toHaveBeenCalledTimes(1);
@@ -989,7 +989,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
-      expect(await waitForUpdate(session)).toBe(0);
+      expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);
       expect(unsubscribe1).toHaveBeenCalledTimes(1);
