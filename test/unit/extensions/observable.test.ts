@@ -27,6 +27,18 @@ class TodoState {
     return this.getVisibleTodos(this.filter);
   }
 
+  addTodo(title: string) {
+    this.todos = this.todos.concat({
+      id: this.todos.length,
+      title,
+      done: false,
+    });
+  }
+
+  changeFilter(filter: TodoFilter) {
+    this.filter = filter;
+  }
+
   getVisibleTodos(filter: TodoFilter): readonly Todo[] {
     switch (filter) {
       case 'active':
@@ -91,15 +103,9 @@ describe('Observable', () => {
       expect(state$.version).toBe(3);
     });
 
-    it('returns the new value as a snapshot', () => {
-      const state1 = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
-      ]);
-      const state2 = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
-      ]);
+    it('assigns the new value as a snapshot', () => {
+      const state1 = { count: 0 };
+      const state2 = { count: 1 };
       const state$ = Observable.from(state1);
 
       state$.value = state2;
@@ -113,7 +119,7 @@ describe('Observable', () => {
       const state$ = Observable.from(initialState);
       const activeTodos$ = state$.get('activeTodos');
 
-      expect(() => ((activeTodos$ as Observable<Todo[]>).value = [])).toThrow(
+      expect(() => (activeTodos$.value = [])).toThrow(
         'Cannot set value on a read-only descriptor.',
       );
     });
@@ -153,12 +159,67 @@ describe('Observable', () => {
       ]);
     });
 
-    it('returns undefinied if the property does not exist', () => {
+    it('returns undefined if the property does not exist', () => {
       const initialState = new TodoState();
       const state$ = Observable.from(initialState);
 
       expect(state$.get('' as any)).toBe(undefined);
       expect(state$.get('todos').get(0)).toBe(undefined);
+    });
+  });
+
+  describe('mutate()', () => {
+    it('mutates the state by mutation methods', () => {
+      const initialState = new TodoState([
+        { id: 0, title: 'foo', done: true },
+        { id: 1, title: 'bar', done: false },
+      ]);
+      const state$ = Observable.from(initialState);
+
+      state$.mutate((state) => {
+        state.addTodo('baz');
+        state.changeFilter('done');
+      });
+
+      const snapshot = state$.value;
+
+      expect(snapshot).toBeInstanceOf(TodoState);
+      expect(snapshot.todos).toStrictEqual([
+        { id: 0, title: 'foo', done: true },
+        { id: 1, title: 'bar', done: false },
+        { id: 2, title: 'baz', done: false },
+      ]);
+      expect(snapshot.filter).toBe('done');
+      expect(state$.version).toBe(2);
+    });
+
+    it('mutates the state by accessor properties', () => {
+      const state$ = Observable.from({
+        _count: 0,
+        get count() {
+          return this._count;
+        },
+        set count(count: number) {
+          this._count = count;
+        },
+      });
+
+      state$.mutate((state) => {
+        state.count++;
+      });
+
+      expect(state$.value).toStrictEqual({
+        _count: 1,
+        count: 1,
+      });
+    });
+
+    it('throws an error when trying to mutate to a non-object descriptor', () => {
+      const state$ = Observable.from('foo');
+
+      expect(() => state$.mutate(() => {})).toThrow(
+        'Cannot mutate value with a non-object descriptor.',
+      );
     });
   });
 

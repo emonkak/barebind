@@ -163,7 +163,7 @@ describe('StoreExtensions', () => {
       expect(doublyCount$.version).toBe(1);
     });
 
-    it('returns undefinied if the property is private', () => {
+    it('returns undefined if the property is private', () => {
       const store = new CounterStore();
 
       expect(store.getSignal('_doublyCountVersion')).toBe(undefined);

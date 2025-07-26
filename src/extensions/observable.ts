@@ -13,16 +13,10 @@ export interface ObservableOptions {
 interface ObservableDescriptor<T> {
   readonly source$: Signal<T>;
   dirty: boolean;
-  childDescriptors: Map<
-    PropertyKey,
-    ObservableDescriptor<unknown> | undefined
-  > | null;
+  children: Map<PropertyKey, ObservableDescriptor<unknown> | undefined> | null;
 }
 
-type ObservableKeys<T> = Exclude<
-  Extract<AllKeys<T>, string | number>,
-  FunctionKeys<T> | PrivateKeys
->;
+type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
 type ObservableProperty<T, K extends keyof T> = T extends object
   ? Observable<T[K]>
@@ -34,15 +28,13 @@ type FunctionKeys<T> = {
   [K in AllKeys<T>]: T[K] extends Function ? K : never;
 }[AllKeys<T>];
 
-type PrivateKeys = `_${string}`;
-
 export class Observable<T> extends Signal<T> {
   private readonly _descriptor: ObservableDescriptor<T>;
 
   private readonly _options: ObservableOptions | undefined;
 
   static from<T>(source: T, options?: ObservableOptions): Observable<T> {
-    return new Observable(toObservableDescriptor(source), options);
+    return new Observable(createObservableDescriptor(source), options);
   }
 
   private constructor(
@@ -65,14 +57,13 @@ export class Observable<T> extends Signal<T> {
 
   set value(value: T) {
     const descriptor = this._descriptor;
-
     if (!(descriptor.source$ instanceof Atom)) {
       throw new TypeError('Cannot set value on a read-only descriptor.');
     }
 
     descriptor.dirty = false;
-    descriptor.childDescriptors = null;
-    descriptor.source$.value = Object.freeze(value);
+    descriptor.children = null;
+    descriptor.source$.value = value;
   }
 
   get version(): number {
@@ -87,12 +78,21 @@ export class Observable<T> extends Signal<T> {
     key: PropertyKey,
     options?: ObservableOptions,
   ): Observable<unknown> | undefined {
-    const childDescriptor = getChildDescriptor(this._descriptor, key);
-    if (childDescriptor !== undefined) {
-      return new Observable(childDescriptor, options);
-    } else {
-      return undefined;
+    const child = getChildDescriptor(this._descriptor, key);
+    return child !== undefined ? new Observable(child, options) : undefined;
+  }
+
+  mutate(callback: (source: T) => void): void {
+    const source = this._descriptor.source$.value;
+    if (!isObject(source)) {
+      throw new TypeError('Cannot mutate value with a non-object descriptor.');
     }
+
+    const proxy = proxyDescriptor(
+      this._descriptor as ObservableDescriptor<T & object>,
+    );
+
+    callback(proxy);
   }
 
   subscribe(subscriber: Subscriber): Subscription {
@@ -111,59 +111,66 @@ export class Observable<T> extends Signal<T> {
 }
 
 function cloneObject<T extends object>(object: T): T {
-  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
+  return Object.create(
+    Object.getPrototypeOf(object),
+    Object.getOwnPropertyDescriptors(object),
+  );
+}
+
+function createObservableDescriptor<T>(source: T): ObservableDescriptor<T> {
+  return {
+    source$: new Atom(source),
+    children: null,
+    dirty: false,
+  };
 }
 
 function getChildDescriptor<T>(
-  parentDescriptor: ObservableDescriptor<T>,
+  parent: ObservableDescriptor<T>,
   key: PropertyKey,
 ): ObservableDescriptor<unknown> | undefined {
-  const { source$ } = parentDescriptor;
-  const source = source$.value;
+  let child = parent.children?.get(key);
+  if (child !== undefined) {
+    return child;
+  }
 
-  let childDescriptor = parentDescriptor.childDescriptors?.get(key);
-
-  if (
-    childDescriptor === undefined &&
-    typeof source === 'object' &&
-    source !== null
-  ) {
-    childDescriptor = toChildDescriptor(
-      parentDescriptor as ObservableDescriptor<object>,
+  if (isObject(parent.source$.value)) {
+    child = resolveChildDescriptor(
+      parent as ObservableDescriptor<T & object>,
       key,
     );
 
-    if (childDescriptor?.source$ instanceof Atom) {
-      childDescriptor.source$.subscribe(() => {
-        parentDescriptor.dirty = true;
+    if (child?.source$ instanceof Atom) {
+      child.source$.subscribe(() => {
+        parent.dirty = true;
 
-        if (parentDescriptor.source$ instanceof Atom) {
-          parentDescriptor.source$.touch();
+        if (parent.source$ instanceof Atom) {
+          parent.source$.touch();
         }
       });
     }
   }
 
-  parentDescriptor.childDescriptors ??= new Map();
-  parentDescriptor.childDescriptors.set(key, childDescriptor);
+  parent.children ??= new Map();
+  parent.children.set(key, child);
 
-  return childDescriptor;
+  return child;
 }
 
 function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
-  const { dirty, childDescriptors, source$ } = descriptor;
+  const { dirty, children, source$ } = descriptor;
 
   if (dirty && source$ instanceof Atom) {
     const oldSource = source$.value;
 
-    if (typeof oldSource === 'object' && oldSource !== null) {
+    if (isObject(oldSource)) {
       const newSource = Array.isArray(oldSource)
         ? oldSource.slice()
         : cloneObject(oldSource);
 
-      for (const [key, childDescriptor] of childDescriptors!.entries()) {
-        if (childDescriptor?.source$ instanceof Atom) {
-          newSource[key] = getSnapshot(childDescriptor);
+      for (const [key, child] of children!.entries()) {
+        if (child?.source$ instanceof Atom) {
+          newSource[key] = getSnapshot(child);
         }
       }
 
@@ -176,26 +183,40 @@ function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
   return source$.value;
 }
 
+function isObject<T>(value: T): value is T & object {
+  return typeof value === 'object' && value !== null;
+}
+
 function proxyDescriptor<T extends object>(
   descriptor: ObservableDescriptor<T>,
+  getChildValue: <T>(descriptor: ObservableDescriptor<T>) => T = getSnapshot,
 ): T {
-  return new Proxy(Object.create(descriptor.source$.value), {
-    get: (target, key, receiver) => {
-      const childDescriptor = getChildDescriptor(descriptor, key);
-      if (childDescriptor !== undefined) {
-        return getSnapshot(childDescriptor);
+  return new Proxy(descriptor.source$.value, {
+    get(target, key, receiver) {
+      const child = getChildDescriptor(descriptor, key);
+      if (child !== undefined) {
+        return getChildValue(child);
       } else {
         return Reflect.get(target, key, receiver);
+      }
+    },
+    set(target, key, value, receiver) {
+      const child = getChildDescriptor(descriptor, key);
+      if (child?.source$ instanceof Atom) {
+        child.source$.value = value;
+        return true;
+      } else {
+        return Reflect.set(target, key, value, receiver);
       }
     },
   });
 }
 
-function toChildDescriptor<T extends object>(
-  parentDescriptor: ObservableDescriptor<T>,
+function resolveChildDescriptor<T extends object>(
+  parent: ObservableDescriptor<T>,
   key: PropertyKey,
 ): ObservableDescriptor<unknown> | undefined {
-  const root = parentDescriptor.source$.value;
+  const root = parent.source$.value;
   let prototype = root;
 
   do {
@@ -206,25 +227,28 @@ function toChildDescriptor<T extends object>(
 
       if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
-        const proxy = trackDescriptor(parentDescriptor, dependencies);
+        const proxy = proxyDescriptor(parent, (child) => {
+          dependencies.push(child.source$);
+          return getSnapshot(child);
+        });
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
           (version, dependency) => version + dependency.version,
           0,
         );
         const signal = new Computed<unknown>(
-          () => get.call(proxyDescriptor(parentDescriptor)),
+          () => get.call(proxyDescriptor(parent)),
           dependencies,
           initialResult,
           initialVersion,
         );
         return {
           source$: signal,
-          childDescriptors: null,
+          children: null,
           dirty: false,
         };
       } else if (prototype === root) {
-        return toObservableDescriptor(value);
+        return createObservableDescriptor(value);
       }
     }
 
@@ -232,29 +256,4 @@ function toChildDescriptor<T extends object>(
   } while (prototype !== null && prototype !== Object.prototype);
 
   return undefined;
-}
-
-function toObservableDescriptor<T>(source: T): ObservableDescriptor<T> {
-  return {
-    source$: new Atom(Object.freeze(source)),
-    childDescriptors: null,
-    dirty: false,
-  };
-}
-
-function trackDescriptor<T extends object>(
-  descriptor: ObservableDescriptor<T>,
-  dependencies: Signal<unknown>[],
-): T {
-  return new Proxy(descriptor.source$.value, {
-    get: (target, key, receiver) => {
-      const childDescriptor = getChildDescriptor(descriptor, key);
-      if (childDescriptor !== undefined) {
-        dependencies.push(childDescriptor.source$);
-        return getSnapshot(childDescriptor);
-      } else {
-        return Reflect.get(target, key, receiver);
-      }
-    },
-  });
 }
