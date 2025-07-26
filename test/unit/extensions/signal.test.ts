@@ -248,15 +248,18 @@ describe('Signal', () => {
 
         session.useEffect(() => {
           signal.value = 'bar';
+          signal.value = 'baz';
         });
 
         flushSession(session);
       }
 
+      await Promise.resolve();
+
       expect(await waitForUpdate(session)).toBe(1);
 
       SESSION2: {
-        expect(session.use(signal)).toBe('bar');
+        expect(session.use(signal)).toBe('baz');
 
         session.useEffect(() => {
           signal.value = 'bar';

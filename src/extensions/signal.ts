@@ -145,13 +145,21 @@ export abstract class Signal<T>
     const snapshot = context.useRef<T | null>(null);
 
     context.useEffect(() => {
+      // The guard for batch updates with microtasks.
+      let guard = true;
       const subscriber = () => {
         if (!Object.is(this.value, snapshot.current)) {
           context.forceUpdate();
         }
+        guard = false;
       };
-      subscriber();
-      return this.subscribe(subscriber);
+      queueMicrotask(subscriber);
+      return this.subscribe(() => {
+        if (!guard) {
+          queueMicrotask(subscriber);
+          guard = true;
+        }
+      });
     }, [this]);
 
     snapshot.current = this.value;
