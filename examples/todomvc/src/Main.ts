@@ -1,16 +1,18 @@
 import { component, type RenderContext, repeat } from '@emonkak/ebit';
 
-import { TodoStore } from './store.js';
+import { TodoState } from './state.js';
 import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
 
 export function Main(_props: MainProps, context: RenderContext): unknown {
-  const store = context.use(TodoStore);
-  const visibleTodos = context.use(store.getSignal('visibleTodos'));
+  const todoState$ = context.use(TodoState);
+  const visibleTodos = context.use(todoState$.get('visibleTodos'));
 
   const handleToggleAll = () => {
-    store.toggleAllTodos();
+    todoState$.mutate((todoState) => {
+      todoState.toggleAllTodos();
+    });
   };
 
   return context.html`
@@ -41,5 +43,5 @@ export function Main(_props: MainProps, context: RenderContext): unknown {
         })}>
       </ul>
     </main>
-    `;
+  `;
 }

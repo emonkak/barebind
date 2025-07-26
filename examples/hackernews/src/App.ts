@@ -7,26 +7,19 @@ import {
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
 import { router } from './router.js';
-import type { ItemStore, StoryStore, UserStore } from './store.js';
+import type { AppStore } from './store.js';
 
 interface AppProps {
-  itemStore: ItemStore;
-  storyStore: StoryStore;
-  userStore: UserStore;
+  store: AppStore;
 }
 
-export function App(
-  { userStore, itemStore, storyStore }: AppProps,
-  context: RenderContext,
-): unknown {
+export function App({ store }: AppProps, context: RenderContext): unknown {
   const [locationSnapshot] = context.use(HashLocation);
   const page =
     router.handle(locationSnapshot.url, locationSnapshot.state) ??
     component(NotFound, { url: locationSnapshot.url });
 
-  context.use(itemStore);
-  context.use(storyStore);
-  context.use(userStore);
+  context.use(store);
 
   context.useLayoutEffect(() => {
     resetScrollPosition(locationSnapshot);

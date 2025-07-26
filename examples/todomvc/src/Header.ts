@@ -1,15 +1,17 @@
 import { component, type RenderContext } from '@emonkak/ebit';
 
-import { TodoStore } from './store.js';
+import { TodoState } from './state.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface HeaderProps {}
 
 export function Header(_props: HeaderProps, context: RenderContext): unknown {
-  const store = context.use(TodoStore);
+  const todoState$ = context.use(TodoState);
 
   const handleSubmit = (title: string) => {
-    store.addTodo(title);
+    todoState$.mutate((todoState) => {
+      todoState.addTodo(title);
+    });
   };
 
   return context.html`

@@ -1,6 +1,6 @@
 import { component, type RenderContext, repeat } from '@emonkak/ebit';
 
-import { StoryStore, type StoryType } from '../store.js';
+import { AppStore, type StoryType } from '../store.js';
 import { StoryView } from './StoryView.js';
 
 export interface StoriesPageProps {
@@ -14,12 +14,12 @@ export function StoriesPage(
   { type, page = 1 }: StoriesPageProps,
   context: RenderContext,
 ): unknown {
-  const store = context.use(StoryStore);
-  const { stories, isLoading } = context.use(store.asSignal());
+  const appStore = context.use(AppStore);
+  const storyState = context.use(appStore.storyState$);
 
   context.useEffect(() => {
-    if (store.type !== type || store.page !== page) {
-      store.fetchStories(type, page);
+    if (storyState.type !== type || storyState.page !== page) {
+      appStore.fetchStories(type, page);
     }
   }, [type, page]);
 
@@ -27,7 +27,7 @@ export function StoriesPage(
     <div class="story-view">
       <div class="story-list-nav">
         <${
-          !isLoading && page > 1
+          !storyState.isLoading && page > 1
             ? context.html`
                 <a
                   class="page-link"
@@ -45,7 +45,7 @@ export function StoriesPage(
         }>
         <span>page ${page}</span>
         <${
-          !isLoading && stories.length >= STORIES_PER_PAGE
+          !storyState.isLoading && storyState.stories.length >= STORIES_PER_PAGE
             ? context.html`
                 <a
                   class="page-link"
@@ -65,7 +65,7 @@ export function StoriesPage(
       <main class="story-list">
         <ul>
           <${repeat({
-            source: stories,
+            source: storyState.stories,
             keySelector: (story) => story.id,
             valueSelector: (story) => component(StoryView, { story }),
           })}>

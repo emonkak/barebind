@@ -1,28 +1,30 @@
 import type { RenderContext } from '@emonkak/ebit';
 
-import { type TodoFilter, TodoStore } from './store.js';
+import { type TodoFilter, TodoState } from './state.js';
 
 export interface FooterProps {}
 
 export function Footer(_props: FooterProps, context: RenderContext): unknown {
-  const todoStore = context.use(TodoStore);
-  const todos = context.use(todoStore.getSignal('todos'));
-  const activeTodos = context.use(todoStore.getSignal('activeTodos'));
-  const filter = context.use(todoStore.getSignal('filter'));
-
-  if (todos.length === 0) {
-    return null;
-  }
+  const todoState$ = context.use(TodoState);
+  const { todos, activeTodos, filter } = context.use(todoState$);
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
-    todoStore.filter = newFilter;
+    todoState$.mutate((todoState) => {
+      todoState.filter = newFilter;
+    });
   };
 
   const handleRemoveCompletedTodos = (event: Event) => {
     event.preventDefault();
-    todoStore.clearCompletedTodos();
+    todoState$.mutate((todoState) => {
+      todoState.clearCompletedTodos();
+    });
   };
+
+  if (todos.length === 0) {
+    return null;
+  }
 
   return context.html`
     <footer class="footer" data-testid="footer">

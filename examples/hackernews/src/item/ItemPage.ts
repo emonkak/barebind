@@ -1,6 +1,6 @@
 import { component, type RenderContext } from '@emonkak/ebit';
 
-import { ItemStore } from '../store.js';
+import { AppStore } from '../store.js';
 import { ItemView } from './ItemView.js';
 
 export interface ItemPageProps {
@@ -11,22 +11,24 @@ export function ItemPage(
   { id }: ItemPageProps,
   context: RenderContext,
 ): unknown {
-  const store = context.use(ItemStore);
-  const { item, isLoading, error } = context.use(store.asSignal());
+  const appStore = context.use(AppStore);
+  const itemState = context.use(appStore.itemState$);
 
   context.useEffect(() => {
-    if (store.item === null || store.item.id !== id) {
-      store.fetchItem(id);
+    if (itemState.item?.id !== id) {
+      appStore.fetchItem(id);
     }
   }, [id]);
 
-  if (!isLoading && error !== null) {
+  if (!itemState.isLoading && itemState.error !== null) {
     return context.html`
       <div class="error-view">
-        <h1>${error.error}</h1>
+        <h1>${itemState.error.error}</h1>
       </div>
     `;
   }
 
-  return !isLoading && item?.id === id ? component(ItemView, { item }) : null;
+  return !itemState.isLoading && itemState.item?.id === id
+    ? component(ItemView, { item: itemState.item })
+    : null;
 }

@@ -3,14 +3,14 @@ import { component, type RenderContext } from '@emonkak/ebit';
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';
 import { Main } from './Main.js';
-import type { TodoStore } from './store.js';
+import type { TodoState } from './state.js';
 
 interface AppProps {
-  store: TodoStore;
+  state: TodoState;
 }
 
-export function App({ store }: AppProps, context: RenderContext): unknown {
-  context.use(store);
+export function App({ state }: AppProps, context: RenderContext): unknown {
+  context.use(state);
 
   return context.html`
     <section class="todoapp">

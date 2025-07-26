@@ -1,6 +1,6 @@
 import { component, type RenderContext } from '@emonkak/ebit';
 
-import { UserStore } from '../store.js';
+import { AppStore } from '../store.js';
 import { UserView } from './UserView.js';
 
 export interface UserPageProps {
@@ -11,22 +11,24 @@ export function UserPage(
   { id }: UserPageProps,
   context: RenderContext,
 ): unknown {
-  const store = context.use(UserStore);
-  const { user, error, isLoading } = context.use(store.asSignal());
+  const appStore = context.use(AppStore);
+  const userState = context.use(appStore.userState$);
 
   context.useEffect(() => {
-    if (store.user === null || store.user.id !== id) {
-      store.fetchUser(id);
+    if (userState.user?.id !== id) {
+      appStore.fetchUser(id);
     }
   }, [id]);
 
-  if (!isLoading && error !== null) {
+  if (!userState.isLoading && userState.error !== null) {
     return context.html`
       <div class="error-view">
-        <h1>${error.error}</h1>
+        <h1>${userState.error.error}</h1>
       </div>
     `;
   }
 
-  return !isLoading && user?.id === id ? component(UserView, { user }) : null;
+  return !userState.isLoading && userState.user?.id === id
+    ? component(UserView, { user: userState.user })
+    : null;
 }

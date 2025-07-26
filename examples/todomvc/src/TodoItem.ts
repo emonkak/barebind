@@ -1,6 +1,6 @@
 import { component, type RenderContext, shallowEqual } from '@emonkak/ebit';
 
-import { type Todo, TodoStore } from './store.js';
+import { type Todo, TodoState } from './state.js';
 import { TodoInput } from './TodoInput.js';
 
 export interface TodoItemProps {
@@ -12,7 +12,7 @@ export function TodoItem(
   context: RenderContext,
 ): unknown {
   const [isEditing, setIsEditing] = context.useState(false);
-  const todoStore = context.use(TodoStore);
+  const todoState$ = context.use(TodoState);
 
   const handleStartEditing = () => {
     setIsEditing(true);
@@ -23,20 +23,26 @@ export function TodoItem(
   };
 
   const handleUpdate = (title: string) => {
-    if (title.length === 0) {
-      todoStore.removeTodo(todo.id);
-    } else {
-      todoStore.updateTodo(todo.id, title);
-    }
+    todoState$.mutate((todoState) => {
+      if (title.length === 0) {
+        todoState.removeTodo(todo.id);
+      } else {
+        todoState.updateTodo(todo.id, title);
+      }
+    });
     setIsEditing(false);
   };
 
   const handleToggleItem = () => {
-    todoStore.toggleTodo(todo.id);
+    todoState$.mutate((todoState) => {
+      todoState.toggleTodo(todo.id);
+    });
   };
 
   const handleRemoveItem = () => {
-    todoStore.removeTodo(todo.id);
+    todoState$.mutate((todoState) => {
+      todoState.removeTodo(todo.id);
+    });
   };
 
   return context.html`

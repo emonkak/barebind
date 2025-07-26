@@ -1,4 +1,5 @@
-import { defineStore } from '@emonkak/ebit/extensions/store';
+import { $customHook, type HookContext } from '@emonkak/ebit';
+import { Observable } from '@emonkak/ebit/extensions/observable';
 
 export interface Todo {
   id: string;
@@ -8,10 +9,22 @@ export interface Todo {
 
 export type TodoFilter = 'all' | 'active' | 'completed';
 
-class TodoState {
+export class TodoState {
   todos: readonly Todo[] = [];
 
   filter: TodoFilter = 'all';
+
+  static [$customHook](context: HookContext): Observable<TodoState> {
+    const state = context.getContextValue(this);
+    if (!(state instanceof Observable && state.value instanceof this)) {
+      throw new Error(`${this.name} is not registered in the context.`);
+    }
+    return state;
+  }
+
+  [$customHook](context: HookContext): void {
+    context.setContextValue(this.constructor, Observable.from(this));
+  }
 
   get activeTodos(): readonly Todo[] {
     return this.todos.filter((todo) => !todo.completed);
@@ -71,10 +84,6 @@ class TodoState {
     });
   }
 }
-
-export const TodoStore = defineStore(TodoState);
-
-export type TodoStore = InstanceType<typeof TodoStore>;
 
 function getUUID(): ReturnType<typeof crypto.randomUUID> {
   if (typeof crypto?.randomUUID === 'function') {

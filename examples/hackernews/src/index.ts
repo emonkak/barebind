@@ -5,13 +5,11 @@ import {
 } from '@emonkak/ebit/extensions/profiler';
 
 import { App } from './App.js';
-import { ItemStore, StoryStore, UserStore } from './store.js';
+import { AppStore, ItemState, StoryState, UserState } from './store.js';
 
 const root = createAsyncRoot(
   component(App, {
-    storyStore: new StoryStore(),
-    itemStore: new ItemStore(),
-    userStore: new UserStore(),
+    store: new AppStore(new ItemState(), new StoryState(), new UserState()),
   }),
   document.body,
   new BrowserBackend(),

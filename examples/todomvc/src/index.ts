@@ -5,10 +5,10 @@ import {
 } from '@emonkak/ebit/extensions/profiler';
 
 import { App } from './App.js';
-import { TodoStore } from './store.js';
+import { TodoState } from './state.js';
 
 const root = createAsyncRoot(
-  component(App, { store: new TodoStore() }),
+  component(App, { state: new TodoState() }),
   document.body,
   new BrowserBackend(),
 );
