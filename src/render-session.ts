@@ -122,10 +122,10 @@ export class RenderSession implements RenderContext {
   }
 
   use<T>(usable: Usable<T>): T {
-    if (typeof usable === 'function') {
-      return usable(this);
-    } else {
+    if ($customHook in usable) {
       return usable[$customHook](this);
+    } else {
+      return usable(this);
     }
   }
 

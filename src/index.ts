@@ -3,6 +3,9 @@ export { ServerBackend } from './backend/server.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { component } from './component.js';
 export {
+  $customHook,
+  type CustomHookFunction,
+  type CustomHookObject,
   type HookContext,
   HydrationError,
   Literal,
