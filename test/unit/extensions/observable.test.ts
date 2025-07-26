@@ -4,10 +4,10 @@ import { Observable } from '@/extensions/observable.js';
 interface Todo {
   id: number;
   title: string;
-  done: boolean;
+  completed: boolean;
 }
 
-type TodoFilter = 'all' | 'active' | 'done';
+type TodoFilter = 'all' | 'active' | 'completed';
 
 class TodoState {
   todos: readonly Todo[];
@@ -31,7 +31,7 @@ class TodoState {
     this.todos = this.todos.concat({
       id: this.todos.length,
       title,
-      done: false,
+      completed: false,
     });
   }
 
@@ -42,9 +42,9 @@ class TodoState {
   getVisibleTodos(filter: TodoFilter): readonly Todo[] {
     switch (filter) {
       case 'active':
-        return this.todos.filter((todo) => !todo.done);
-      case 'done':
-        return this.todos.filter((todo) => todo.done);
+        return this.todos.filter((todo) => !todo.completed);
+      case 'completed':
+        return this.todos.filter((todo) => todo.completed);
       default:
         return this.todos;
     }
@@ -55,8 +55,8 @@ describe('Observable', () => {
   describe('length', () => {
     it('returns a length of the array', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState);
       const todos$ = state$.get('todos');
@@ -78,32 +78,49 @@ describe('Observable', () => {
 
     it('returns a snapshot with the update applied', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState);
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
 
       todos$.value = todos$.value.concat([
-        { id: 2, title: 'baz', done: false },
+        { id: 2, title: 'baz', completed: false },
       ]);
-      todos$.get(1)!.value = { id: 1, title: 'bar', done: true };
+      todos$.get(1)!.value = { id: 1, title: 'bar', completed: true };
       filter$.value = 'active';
 
       const snapshot = state$.value;
 
       expect(snapshot).toBeInstanceOf(TodoState);
       expect(snapshot.todos).toStrictEqual([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: true },
-        { id: 2, title: 'baz', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: true },
+        { id: 2, title: 'baz', completed: false },
       ]);
       expect(snapshot.filter).toStrictEqual('active');
       expect(state$.version).toBe(3);
     });
 
-    it('assigns the new value as a snapshot', () => {
+    it('assigns a new value to the accessor property', () => {
+      const state$ = Observable.from({
+        _count: 0,
+        get count() {
+          return this._count;
+        },
+        set count(count) {
+          this._count = count;
+        },
+      });
+
+      state$.get('count').value++;
+
+      expect(state$.value).toStrictEqual({ _count: 1, count: 1 });
+      expect(state$.version).toBe(1);
+    });
+
+    it('assigns a new value as a snapshot', () => {
       const state1 = { count: 0 };
       const state2 = { count: 1 };
       const state$ = Observable.from(state1);
@@ -128,8 +145,8 @@ describe('Observable', () => {
   describe('get()', () => {
     it('computes a computed property is calculated from dependent values', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState);
       const todos$ = state$.get('todos');
@@ -138,24 +155,24 @@ describe('Observable', () => {
       const visibleTodos$ = state$.get('visibleTodos');
 
       expect(activeTodos$.value).toStrictEqual([
-        { id: 1, title: 'bar', done: false },
+        { id: 1, title: 'bar', completed: false },
       ]);
       expect(visibleTodos$.value).toStrictEqual([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
 
       todos$.value = todos$.value.concat([
-        { id: 2, title: 'baz', done: false },
+        { id: 2, title: 'baz', completed: false },
       ]);
-      filter$.value = 'done';
+      filter$.value = 'completed';
 
       expect(activeTodos$.value).toStrictEqual([
-        { id: 1, title: 'bar', done: false },
-        { id: 2, title: 'baz', done: false },
+        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'baz', completed: false },
       ]);
       expect(visibleTodos$.value).toStrictEqual([
-        { id: 0, title: 'foo', done: true },
+        { id: 0, title: 'foo', completed: true },
       ]);
     });
 
@@ -171,25 +188,25 @@ describe('Observable', () => {
   describe('mutate()', () => {
     it('mutates the state by mutation methods', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState);
 
       state$.mutate((state) => {
         state.addTodo('baz');
-        state.changeFilter('done');
+        state.changeFilter('completed');
       });
 
       const snapshot = state$.value;
 
       expect(snapshot).toBeInstanceOf(TodoState);
       expect(snapshot.todos).toStrictEqual([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
-        { id: 2, title: 'baz', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
+        { id: 2, title: 'baz', completed: false },
       ]);
-      expect(snapshot.filter).toBe('done');
+      expect(snapshot.filter).toBe('completed');
       expect(state$.version).toBe(2);
     });
 
@@ -214,6 +231,21 @@ describe('Observable', () => {
       });
     });
 
+    it('throws an error when trying to mutate to a readonly property', () => {
+      const state$ = Observable.from({
+        _count: 0,
+        get count() {
+          return this._count;
+        },
+      });
+
+      expect(() => {
+        state$.mutate((state) => {
+          (state as any).count++;
+        });
+      }).toThrow();
+    });
+
     it('throws an error when trying to mutate to a non-object descriptor', () => {
       const state$ = Observable.from('foo');
 
@@ -226,14 +258,14 @@ describe('Observable', () => {
   describe('subscribe()', () => {
     it('subscribes for deep updates', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState);
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber);
-      state$.get('todos').get(1)!.get('done').value = true;
+      state$.get('todos').get(1)!.get('completed').value = true;
 
       expect(subscriber).toHaveBeenCalledTimes(1);
 
@@ -248,14 +280,14 @@ describe('Observable', () => {
 
     it('subscribes only for shallow updates', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState, { shallow: true });
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber);
-      state$.get('todos').get(1)!.get('done').value = true;
+      state$.get('todos').get(1)!.get('completed').value = true;
 
       expect(subscriber).toHaveBeenCalledTimes(0);
 
@@ -270,14 +302,14 @@ describe('Observable', () => {
 
     it('do not notify subscribers of updates when the subscription is unsubscribed', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', done: true },
-        { id: 1, title: 'bar', done: false },
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Observable.from(initialState);
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber)();
-      state$.get('todos').get(1)!.get('done').value = true;
+      state$.get('todos').get(1)!.get('completed').value = true;
       state$.get('todos').value = [];
       state$.value = new TodoState();
 

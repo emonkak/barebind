@@ -1,4 +1,5 @@
 import {
+  Accessor,
   Atom,
   Computed,
   Signal,
@@ -10,7 +11,7 @@ export interface ObservableOptions {
   shallow?: boolean;
 }
 
-const FLAG_IDLE = 0b0;
+const NO_FLAGS = 0b0;
 const FLAG_NEW = 0b01;
 const FLAG_DIRTY = 0b10;
 
@@ -61,7 +62,7 @@ export class Observable<T> extends Signal<T> {
 
   set value(value: T) {
     const descriptor = this._descriptor;
-    if (!(descriptor.source$ instanceof Atom)) {
+    if (!isWritableSignal(descriptor.source$)) {
       throw new TypeError('Cannot set value on a read-only descriptor.');
     }
 
@@ -126,7 +127,7 @@ function createObservableDescriptor<T>(source: T): ObservableDescriptor<T> {
   return {
     source$: new Atom(source),
     children: null,
-    flags: FLAG_IDLE,
+    flags: NO_FLAGS,
   };
 }
 
@@ -145,7 +146,7 @@ function getChildDescriptor<T>(
       key,
     );
 
-    if (child?.source$ instanceof Atom) {
+    if (child !== undefined && child.source$ instanceof Atom) {
       child.source$.subscribe(() => {
         parent.flags |= FLAG_DIRTY;
 
@@ -193,6 +194,12 @@ function isObject<T>(value: T): value is T & object {
   return typeof value === 'object' && value !== null;
 }
 
+function isWritableSignal<T>(
+  signal: Signal<T>,
+): signal is Accessor<T> | Atom<T> {
+  return signal instanceof Accessor || signal instanceof Atom;
+}
+
 function proxyDescriptor<T extends object>(
   descriptor: ObservableDescriptor<T>,
   getChildValue: <T>(descriptor: ObservableDescriptor<T>) => T = getSnapshot,
@@ -208,7 +215,7 @@ function proxyDescriptor<T extends object>(
     },
     set(target, key, value, receiver) {
       const child = getChildDescriptor(descriptor, key);
-      if (child?.source$ instanceof Atom) {
+      if (child !== undefined && isWritableSignal(child.source$)) {
         child.source$.value = value;
         child.flags |= FLAG_NEW;
         return true;
@@ -230,9 +237,18 @@ function resolveChildDescriptor<T extends object>(
     const propertyDescriptor = Object.getOwnPropertyDescriptor(prototype, key);
 
     if (propertyDescriptor !== undefined) {
-      const { get, value } = propertyDescriptor;
+      const { get, set, value } = propertyDescriptor;
 
-      if (get !== undefined) {
+      if (get !== undefined && set !== undefined) {
+        return {
+          source$: new Accessor(
+            () => get.call(proxyDescriptor(parent)),
+            (value) => set.call(proxyDescriptor(parent), value),
+          ),
+          children: null,
+          flags: NO_FLAGS,
+        };
+      } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
         const proxy = proxyDescriptor(parent, (child) => {
           dependencies.push(child.source$);
@@ -252,7 +268,7 @@ function resolveChildDescriptor<T extends object>(
         return {
           source$: signal,
           children: null,
-          flags: FLAG_IDLE,
+          flags: NO_FLAGS,
         };
       } else if (prototype === root) {
         return createObservableDescriptor(value);

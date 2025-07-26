@@ -7,6 +7,7 @@ import {
   PartType,
 } from '@/core.js';
 import {
+  Accessor,
   Atom,
   Computed,
   type SignalBinding,
@@ -304,6 +305,90 @@ describe('Signal', () => {
       const signal = new Atom(value);
 
       expect(signal.valueOf()).toBe(value);
+    });
+  });
+});
+
+describe('Accessor', () => {
+  describe('version', () => {
+    it('increments the version on update', () => {
+      let value = 'foo';
+      const signal = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+
+      expect(signal.value).toBe('foo');
+      expect(signal.version).toBe(0);
+
+      signal.value = 'bar';
+
+      expect(signal.value).toBe('bar');
+      expect(signal.version).toBe(1);
+    });
+  });
+
+  describe('subscribe()', () => {
+    it('invokes the subscriber on update', () => {
+      let value = 'foo';
+      const signal = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+      const subscriber = vi.fn();
+
+      signal.subscribe(subscriber);
+      expect(subscriber).toHaveBeenCalledTimes(0);
+
+      signal.value = 'bar';
+      expect(subscriber).toHaveBeenCalledTimes(1);
+
+      signal.value = 'baz';
+      expect(subscriber).toHaveBeenCalledTimes(2);
+    });
+
+    it('does not invoke the invalidated subscriber', () => {
+      let value = 'foo';
+      const signal = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+      const subscriber = vi.fn();
+
+      signal.subscribe(subscriber)();
+      expect(subscriber).not.toHaveBeenCalled();
+
+      signal.value = 'bar';
+      expect(subscriber).not.toHaveBeenCalled();
+
+      signal.value = 'baz';
+      expect(subscriber).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('touch()', () => {
+    it('increments the version and notify subscribers', () => {
+      let value = 'foo';
+      const signal = new Accessor(
+        () => value,
+        (newValue) => {
+          value = newValue;
+        },
+      );
+      const subscriber = vi.fn();
+
+      signal.subscribe(subscriber);
+      signal.touch();
+
+      expect(subscriber).toHaveBeenCalledOnce();
+      expect(signal.value).toBe(value);
+      expect(signal.version).toBe(1);
     });
   });
 });
