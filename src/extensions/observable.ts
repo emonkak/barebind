@@ -94,7 +94,7 @@ export class Observable<T> extends Signal<T> {
     return child !== undefined ? new Observable(child, options) : undefined;
   }
 
-  mutate(callback: (source: T) => void): void {
+  mutate<TResult>(callback: (source: T) => TResult): TResult {
     const source = this._descriptor.source$.value;
     if (!isObject(source)) {
       throw new TypeError('Cannot mutate value with a non-object descriptor.');
@@ -104,7 +104,7 @@ export class Observable<T> extends Signal<T> {
       this._descriptor as ObservableDescriptor<T & object>,
     );
 
-    callback(proxy);
+    return callback(proxy);
   }
 
   set<K extends ObservableKeys<T>>(key: K, value: T[K]): void {

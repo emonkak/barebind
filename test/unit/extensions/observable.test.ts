@@ -250,10 +250,11 @@ describe('Observable', () => {
         },
       });
 
-      state$.mutate((state) => {
-        state.count++;
+      const previousCount = state$.mutate((state) => {
+        return state.count++;
       });
 
+      expect(previousCount).toBe(0);
       expect(state$.value).toStrictEqual({
         _count: 1,
         count: 1,

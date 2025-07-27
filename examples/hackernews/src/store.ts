@@ -90,63 +90,72 @@ export class AppStore implements CustomHookObject<void> {
   }
 
   async fetchItem(id: number): Promise<void> {
-    this.itemState$.set('isLoading', true);
+    return this.itemState$.mutate(async (itemState) => {
+      itemState.isLoading = true;
 
-    try {
-      const url = STORY_API_ORIGIN + '/item/' + id;
-      const response = await fetch(url);
-      const data = response.ok
-        ? await response.json()
-        : { error: response.statusText };
+      try {
+        const url = STORY_API_ORIGIN + '/item/' + id;
+        const response = await fetch(url);
+        const data = response.ok
+          ? await response.json()
+          : { error: response.statusText };
 
-      if (typeof data?.error === 'string') {
-        this.itemState$.assign({ item: null, error: data });
-      } else {
-        this.itemState$.assign({ item: data, error: null });
+        if (typeof data?.error === 'string') {
+          itemState.item = null;
+          itemState.error = data;
+        } else {
+          itemState.item = data;
+          itemState.error = null;
+        }
+      } finally {
+        itemState.isLoading = false;
       }
-    } finally {
-      this.itemState$.set('isLoading', false);
-    }
+    });
   }
 
   async fetchUser(id: string): Promise<void> {
-    this.userState$.set('isLoading', true);
+    return this.userState$.mutate(async (userState) => {
+      userState.isLoading = true;
 
-    try {
-      const url = USER_API_ORIGIN + '/v0/user/' + id + '.json';
-      const response = await fetch(url);
-      const data = response.ok ? await response.json() : null;
+      try {
+        const url = USER_API_ORIGIN + '/v0/user/' + id + '.json';
+        const response = await fetch(url);
+        const data = response.ok ? await response.json() : null;
 
-      if (data === null) {
-        this.userState$.assign({
-          user: null,
-          error: { error: `User ${id} not found.` },
-        });
-      } else {
-        this.userState$.assign({ user: data, error: null });
+        if (data === null) {
+          userState.user = null;
+          userState.error = { error: `User ${id} not found.` };
+        } else {
+          userState.user = data;
+          userState.error = null;
+        }
+      } finally {
+        userState.isLoading = false;
       }
-    } finally {
-      this.userState$.set('isLoading', false);
-    }
+    });
   }
 
   async fetchStories(type: StoryType, page: number): Promise<void> {
-    this.storyState$.set('isLoading', true);
+    return this.storyState$.mutate(async (storyState) => {
+      storyState.isLoading = true;
 
-    try {
-      const url =
-        STORY_API_ORIGIN +
-        '/' +
-        type +
-        '?' +
-        new URLSearchParams({ page: page.toString() });
-      const response = await fetch(url);
-      if (response.ok) {
-        this.storyState$.assign({ stories: await response.json(), type, page });
+      try {
+        const url =
+          STORY_API_ORIGIN +
+          '/' +
+          type +
+          '?' +
+          new URLSearchParams({ page: page.toString() });
+        const response = await fetch(url);
+        if (response.ok) {
+          storyState.stories = await response.json();
+          storyState.type = type;
+          storyState.page = page;
+        }
+      } finally {
+        storyState.isLoading = false;
       }
-    } finally {
-      this.storyState$.set('isLoading', false);
-    }
+    });
   }
 }
 
