@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Lanes } from '@/core.js';
 import {
   createHashClickHandler,
-  HashLocation,
-} from '@/extensions/router/hash-location.js';
-import { CurrentLocation } from '@/extensions/router/location.js';
+  HashHistory,
+} from '@/extensions/router/hash-history.js';
+import { CurrentHistory } from '@/extensions/router/history.js';
 import { RelativeURL } from '@/extensions/router/url.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
@@ -15,7 +15,7 @@ import {
   flushSession,
 } from '../../../test-utils.js';
 
-describe('HashLocation', () => {
+describe('HashHistory', () => {
   const originalUrl = location.href;
   const originalState = history.state;
   let session!: RenderSession;
@@ -35,32 +35,32 @@ describe('HashLocation', () => {
     vi.restoreAllMocks();
   });
 
-  it('gets the current location', () => {
+  it('gets the current history state', () => {
     const state = { key: 'foo' };
 
     history.replaceState(state, '', '#/articles/foo%2Fbar');
 
-    const [locationSnapshot, { getCurrentURL }] = session.use(HashLocation);
+    const [location, { getCurrentURL }] = session.use(HashHistory);
 
     expect(getCurrentURL().toString()).toBe('/articles/foo%2Fbar');
-    expect(location.hash).toBe('#/articles/foo%2Fbar');
-    expect(history.state).toStrictEqual(state);
-    expect(locationSnapshot.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationSnapshot.state).toStrictEqual(state);
-    expect(locationSnapshot.navigationType).toBe(null);
+    expect(window.location.hash).toBe('#/articles/foo%2Fbar');
+    expect(window.history.state).toStrictEqual(state);
+    expect(location.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(location.state).toStrictEqual(state);
+    expect(location.navigationType).toBe(null);
   });
 
-  it('registers the current location', () => {
-    const locationSnapshot = session.use(HashLocation);
+  it('registers the current history state', () => {
+    const currentHistory = session.use(HashHistory);
 
-    expect(session.use(CurrentLocation)).toBe(locationSnapshot);
+    expect(session.use(CurrentHistory)).toBe(currentHistory);
   });
 
   it('adds event listeners', () => {
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
-    session.use(HashLocation);
+    session.use(HashHistory);
 
     flushSession(session);
     disposeSession(session);
@@ -89,20 +89,20 @@ describe('HashLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationSnapshot1, locationNavigator1] = session.use(HashLocation);
+    const [location1, navigator] = session.use(HashHistory);
 
     flushSession(session);
 
-    locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'));
+    navigator.navigate(new RelativeURL('/articles/foo%2Fbar'));
 
-    const [locationSnapshot2] = session.use(HashLocation);
+    const [location2] = session.use(HashHistory);
 
     expect(pushStateSpy).toHaveBeenCalledOnce();
     expect(replaceStateSpy).not.toHaveBeenCalled();
-    expect(locationSnapshot2).not.toBe(locationSnapshot1);
-    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationSnapshot2.state).toBe(history.state);
-    expect(locationSnapshot2.navigationType).toBe('push');
+    expect(location2).not.toBe(location1);
+    expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(location2.state).toBe(history.state);
+    expect(location2.navigationType).toBe('push');
   });
 
   it('should replace a hash with the new location', () => {
@@ -111,30 +111,30 @@ describe('HashLocation', () => {
     const pushStateSpy = vi.spyOn(history, 'pushState');
     const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-    const [locationSnapshot1, locationNavigator1] = session.use(HashLocation);
+    const [location1, navigator] = session.use(HashHistory);
 
     flushSession(session);
 
-    locationNavigator1.navigate(new RelativeURL('/articles/foo%2Fbar'), {
+    navigator.navigate(new RelativeURL('/articles/foo%2Fbar'), {
       replace: true,
       state,
     });
 
-    const [locationSnapshot2] = session.use(HashLocation);
+    const [location2] = session.use(HashHistory);
 
     expect(pushStateSpy).not.toHaveBeenCalled();
     expect(replaceStateSpy).toHaveBeenCalledOnce();
-    expect(locationSnapshot2).not.toBe(locationSnapshot1);
-    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationSnapshot2.state).toBe(state);
-    expect(locationSnapshot2.navigationType).toBe('replace');
+    expect(location2).not.toBe(location1);
+    expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(location2.state).toBe(state);
+    expect(location2.navigationType).toBe('replace');
   });
 
   it('should update the state when the link is clicked', () => {
     const element = createElement('a', { href: '#/articles/foo%2Fbar' });
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
 
-    const [locationSnapshot1] = session.use(HashLocation);
+    const [location1] = session.use(HashHistory);
 
     flushSession(session);
 
@@ -142,12 +142,12 @@ describe('HashLocation', () => {
     element.dispatchEvent(event);
     document.body.removeChild(element);
 
-    const [locationSnapshot2] = session.use(HashLocation);
+    const [location2] = session.use(HashHistory);
 
-    expect(locationSnapshot2).not.toBe(locationSnapshot1);
-    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationSnapshot2.state).toBe(null);
-    expect(locationSnapshot2.navigationType).toBe('push');
+    expect(location2).not.toBe(location1);
+    expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(location2.state).toBe(null);
+    expect(location2.navigationType).toBe('push');
   });
 
   it('should update the location when the hash has been changed', () => {
@@ -156,18 +156,18 @@ describe('HashLocation', () => {
       newURL: getURLWithoutHash(location) + '#/articles/foo%2Fbar',
     });
 
-    const [locationSnapshot1] = session.use(HashLocation);
+    const [location1] = session.use(HashHistory);
 
     flushSession(session);
 
     dispatchEvent(event);
 
-    const [locationSnapshot2] = session.use(HashLocation);
+    const [location2] = session.use(HashHistory);
 
-    expect(locationSnapshot2).not.toBe(locationSnapshot1);
-    expect(locationSnapshot2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(locationSnapshot2.state).toBe(null);
-    expect(locationSnapshot2.navigationType).toBe('traverse');
+    expect(location2).not.toBe(location1);
+    expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
+    expect(location2.state).toBe(null);
+    expect(location2.navigationType).toBe('traverse');
   });
 });
 

@@ -1,7 +1,7 @@
-import { type LocationSnapshot, trimHash } from './location.js';
+import { type HisotryLocation, trimHash } from './history.js';
 
-export function resetScrollPosition(locationSnapshot: LocationSnapshot): void {
-  const { url, navigationType } = locationSnapshot;
+export function resetScrollPosition(location: HisotryLocation): void {
+  const { url, navigationType } = location;
 
   if (
     navigationType === null ||

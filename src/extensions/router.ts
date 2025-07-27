@@ -1,10 +1,10 @@
-export { BrowserLocation } from './router/browser-location.js';
-export { HashLocation } from './router/hash-location.js';
+export { BrowserHistory } from './router/browser-history.js';
+export { HashHistory } from './router/hash-history.js';
 export {
-  CurrentLocation,
-  type LocationNavigator,
-  type LocationSnapshot,
-} from './router/location.js';
+  CurrentHistory,
+  type HisotryLocation,
+  type HistoryNavigator,
+} from './router/history.js';
 export { resetScrollPosition } from './router/reset-scroll-position.js';
 export {
   type Handler,

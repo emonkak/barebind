@@ -1,6 +1,6 @@
 import { component, memo, type RenderContext } from '@emonkak/ebit';
 import {
-  HashLocation,
+  HashHistory,
   resetScrollPosition,
 } from '@emonkak/ebit/extensions/router';
 
@@ -14,16 +14,16 @@ interface AppProps {
 }
 
 export function App({ store }: AppProps, context: RenderContext): unknown {
-  const [locationSnapshot] = context.use(HashLocation);
+  const [location] = context.use(HashHistory);
   const page =
-    router.handle(locationSnapshot.url, locationSnapshot.state) ??
-    component(NotFound, { url: locationSnapshot.url });
+    router.handle(location.url, location.state) ??
+    component(NotFound, { url: location.url });
 
   context.use(store);
 
   context.useLayoutEffect(() => {
-    resetScrollPosition(locationSnapshot);
-  }, [locationSnapshot]);
+    resetScrollPosition(location);
+  }, [location]);
 
   return context.html`
     <div>
