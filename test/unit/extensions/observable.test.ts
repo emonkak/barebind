@@ -137,7 +137,7 @@ describe('Observable', () => {
       const activeTodos$ = state$.get('activeTodos');
 
       expect(() => {
-        activeTodos$.value = [];
+        (activeTodos$ as any).value = [];
       }).toThrow('Cannot set value on a read-only descriptor.');
     });
   });

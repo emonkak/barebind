@@ -21,17 +21,38 @@ interface ObservableDescriptor<T> {
   flags: number;
 }
 
-type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
-
 type ObservableProperty<T, K extends ObservableKeys<T>> = T extends object
-  ? Observable<T[K]>
+  ? Or<IsWritable<T, K>, IsNumber<K>> extends true
+    ? Observable<T[K]>
+    : Readonly<Observable<T[K]>>
   : undefined;
 
-type AllKeys<T> = T extends any ? keyof T : never;
+type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
 type FunctionKeys<T> = {
   [K in AllKeys<T>]: T[K] extends Function ? K : never;
 }[AllKeys<T>];
+
+type AllKeys<T> = T extends any ? keyof T : never;
+
+type IsWritable<T, K extends keyof T> = StrictEqual<
+  { -readonly [P in K]-?: T[P] },
+  Pick<T, K>
+>;
+
+type IsNumber<T> = T extends number ? true : false;
+
+type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
+  T,
+>() => T extends TRhs ? 1 : 2
+  ? true
+  : false;
+
+type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
+  ? true
+  : TRhs extends true
+    ? true
+    : false;
 
 export class Observable<T> extends Signal<T> {
   private readonly _descriptor: ObservableDescriptor<T>;
@@ -83,7 +104,7 @@ export class Observable<T> extends Signal<T> {
   get(
     key: PropertyKey,
     options?: ObservableOptions,
-  ): Observable<unknown> | undefined {
+  ): Readonly<Observable<unknown>> | Observable<unknown> | undefined {
     const child = getChildDescriptor(this._descriptor, key);
     return child !== undefined ? new Observable(child, options) : undefined;
   }
