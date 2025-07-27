@@ -182,56 +182,6 @@ export abstract class Signal<T>
   }
 }
 
-export class Accessor<T> extends Signal<T> {
-  private readonly _get: () => T;
-
-  private readonly _set: (value: T) => void;
-
-  private _version = 0;
-
-  private readonly _subscribers = new LinkedList<Subscriber>();
-
-  constructor(get: () => T, set: (value: T) => void) {
-    super();
-    this._get = get;
-    this._set = set;
-  }
-
-  get value(): T {
-    const get = this._get;
-    return get();
-  }
-
-  set value(newValue: T) {
-    const set = this._set;
-    set(newValue);
-    this.touch();
-  }
-
-  get version(): number {
-    return this._version;
-  }
-
-  subscribe(subscriber: Subscriber): Subscription {
-    const node = this._subscribers.pushBack(subscriber);
-    return () => {
-      this._subscribers.remove(node);
-    };
-  }
-
-  touch(): void {
-    this._version += 1;
-    for (
-      let node = this._subscribers.front();
-      node !== null;
-      node = node.next
-    ) {
-      const subscriber = node.value;
-      subscriber();
-    }
-  }
-}
-
 export class Atom<T> extends Signal<T> {
   private _value: T;
 
