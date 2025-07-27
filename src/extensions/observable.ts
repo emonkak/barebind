@@ -7,13 +7,13 @@ import {
   type Subscription,
 } from './signal.js';
 
-export interface ObservableOptions {
-  shallow?: boolean;
-}
-
 const NO_FLAGS = 0b0;
 const FLAG_NEW = 0b01;
 const FLAG_DIRTY = 0b10;
+
+export interface ObservableOptions {
+  shallow?: boolean;
+}
 
 interface ObservableDescriptor<T> {
   readonly source$: Signal<T>;
@@ -76,12 +76,6 @@ export class Observable<T> extends Signal<T> {
     return this._descriptor.source$.version;
   }
 
-  assign(source: Partial<Pick<T, ObservableKeys<T>>>): void {
-    for (const key of Object.keys(source)) {
-      this.set(key as ObservableKeys<T>, source[key as ObservableKeys<T>]!);
-    }
-  }
-
   get<K extends ObservableKeys<T>>(
     key: K,
     options?: ObservableOptions,
@@ -105,16 +99,6 @@ export class Observable<T> extends Signal<T> {
     );
 
     return callback(proxy);
-  }
-
-  set<K extends ObservableKeys<T>>(key: K, value: T[K]): void {
-    const child = getChildDescriptor(this._descriptor, key);
-    if (child === undefined || !isWritableSignal(child.source$)) {
-      throw new TypeError('Cannot set value on a read-only descriptor.');
-    }
-    child.source$.value = value;
-    child.flags |= FLAG_NEW;
-    child.flags &= ~FLAG_DIRTY;
   }
 
   subscribe(subscriber: Subscriber): Subscription {
