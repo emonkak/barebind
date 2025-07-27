@@ -4,17 +4,15 @@ import { RelativeURL } from '@/extensions/router/url.js';
 
 describe('RelativeURL', () => {
   describe('.from()', () => {
-    it.each([
-      [new RelativeURL('/foo', '?bar=/123/', '#baz')],
-      [new URL('/foo?bar=/123/#baz', 'file:')],
-      [
-        {
-          pathname: '/foo',
-          search: '?bar=/123/',
-          hash: '#baz',
-        },
-      ],
-      ['/foo?bar=/123/#baz'],
+    it.for([
+      new RelativeURL('/foo', '?bar=/123/', '#baz'),
+      new URL('/foo?bar=/123/#baz', 'file:'),
+      {
+        pathname: '/foo',
+        search: '?bar=/123/',
+        hash: '#baz',
+      },
+      '/foo?bar=/123/#baz',
     ])('constructs a new relative URL from the url like value', (value) => {
       const url = RelativeURL.from(value);
 
@@ -41,11 +39,7 @@ describe('RelativeURL', () => {
       expect(url.toURL('file:').toString()).toBe('file:///foo?bar=/123/#baz');
     });
 
-    it.each([
-      ['/foo'],
-      [new RelativeURL('/foo')],
-      [new URL('/foo', 'file://')],
-    ])(
+    it.for(['/foo', new RelativeURL('/foo'), new URL('/foo', 'file://')])(
       'constructs a new relative URL from the String with base URL',
       (base) => {
         const url = RelativeURL.fromString('?bar=/123/#baz', base);
@@ -77,7 +71,7 @@ describe('RelativeURL', () => {
       expect(url.toJSON()).toBe('/foo?bar=/123/#baz');
     });
 
-    it.each([[new URL('/', 'file:'), new URL('/foo?bar=/123/#baz', 'file:')]])(
+    it.for([new URL('/', 'file:'), new URL('/foo?bar=/123/#baz', 'file:')])(
       'constructs a new RelativeURL from the URL',
       (inputUrl) => {
         const url = RelativeURL.fromURL(inputUrl);

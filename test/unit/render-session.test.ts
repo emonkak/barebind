@@ -6,20 +6,17 @@ import {
   Literal,
   type RefObject,
 } from '@/core.js';
-import { RenderSession } from '@/render-session.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend, MockCoroutine, MockTemplate } from '../mocks.js';
-import { disposeSession, flushSession } from '../test-utils.js';
+import { MockCoroutine, MockTemplate } from '../mocks.js';
+import {
+  createSession,
+  disposeSession,
+  flushSession,
+} from '../session-utils.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {
     it('returns a bindable with the dynamic HTML template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -36,12 +33,7 @@ describe('RenderSession', () => {
 
   describe('dynamicMath()', () => {
     it('returns a bindable with the dynamic MathML template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -58,12 +50,7 @@ describe('RenderSession', () => {
 
   describe('dynamicSVG()', () => {
     it('returns a bindable with the dynamic SVG template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -79,15 +66,10 @@ describe('RenderSession', () => {
   });
 
   describe('getContextValue()', () => {
-    it.each([['foo'], [Symbol('bar')], [{}]])(
+    it.for(['foo', Symbol('bar'), {}])(
       'returns a session value by the key',
       (key) => {
-        const session = new RenderSession(
-          [],
-          Lanes.AllLanes,
-          new MockCoroutine(),
-          new Runtime(new MockBackend()),
-        );
+        const session = createSession();
 
         expect(session.getContextValue(key)).toBe(undefined);
 
@@ -104,12 +86,7 @@ describe('RenderSession', () => {
 
   describe('finalize()', () => {
     it('denies using a hook after finalize', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       session.finalize();
 
@@ -117,12 +94,7 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       session.useEffect(() => {});
 
@@ -134,12 +106,7 @@ describe('RenderSession', () => {
 
   describe('forceUpdate()', () => {
     it('schedules the update with the current coroutine', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const options = { priority: 'background' } as const;
 
       const scheduleUpdateSpy = vi
@@ -163,12 +130,7 @@ describe('RenderSession', () => {
 
   describe('html()', () => {
     it('returns a bindable with the HTML template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.html`<div>Hello, ${'World'}!</div>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -185,12 +147,7 @@ describe('RenderSession', () => {
 
   describe('math()', () => {
     it('returns a bindable with the MathML template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.math`<mi>${'x'}</mi>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -207,12 +164,7 @@ describe('RenderSession', () => {
 
   describe('svg()', () => {
     it('returns a bindable with the SVG template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.svg`<text>Hello, ${'World'}!</text>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -229,12 +181,7 @@ describe('RenderSession', () => {
 
   describe('text()', () => {
     it('returns a bindable with the text template', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const bindable = session.text`<div>Hello, ${'World'}!</div>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -251,12 +198,7 @@ describe('RenderSession', () => {
 
   describe('use()', () => {
     it('performs a custom hook function', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const result = 'foo';
       const hook = vi.fn().mockReturnValue(result);
 
@@ -266,12 +208,7 @@ describe('RenderSession', () => {
     });
 
     it('performs a custom hook object', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const result = 'foo';
       const hook = new (class {
         [$customHook]: CustomHookFunction<void>;
@@ -289,12 +226,7 @@ describe('RenderSession', () => {
 
   describe('useCallback()', () => {
     it('returns the memoized callback if dependencies are the same as the previous value', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const callback1 = () => {};
       const callback2 = () => {};
 
@@ -320,12 +252,7 @@ describe('RenderSession', () => {
 
   describe('useDeferredValue()', async () => {
     it('returns the value deferred until next rendering', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const value1 = 'foo';
       const value2 = 'bar';
 
@@ -363,12 +290,7 @@ describe('RenderSession', () => {
     });
 
     it('returns the initial value if it is given', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const value1 = 'foo';
       const value2 = 'bar';
 
@@ -401,12 +323,7 @@ describe('RenderSession', () => {
     ['useInsertionEffect', 'enqueueMutationEffect'],
   ] as const)('useEffect()', (hookMethod, enqueueMethod) => {
     it('performs the cleanup function when the callback is changed', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       const cleanup = vi.fn();
       const callback = vi.fn().mockReturnValue(cleanup);
@@ -433,12 +350,7 @@ describe('RenderSession', () => {
     });
 
     it('does not perform the callback function if dependencies are not changed', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       const callback = vi.fn();
       const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
@@ -472,12 +384,7 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       flushSession(session);
 
@@ -489,12 +396,7 @@ describe('RenderSession', () => {
 
   describe('useId()', () => {
     it('returns a unique identifier', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       let id1: string;
       let id2: string;
@@ -518,12 +420,7 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       flushSession(session);
 
@@ -533,12 +430,7 @@ describe('RenderSession', () => {
 
   describe('useMemo()', () => {
     it('returns the memoized value if dependencies are the same as the previous value', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const value1 = 'foo';
       const value2 = 'bar';
 
@@ -562,12 +454,7 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       flushSession(session);
 
@@ -579,12 +466,7 @@ describe('RenderSession', () => {
 
   describe('useReducer()', () => {
     it('schedules the update when the state is changed', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const reducer = (count: number, n: number) => count + n;
 
       SESSION1: {
@@ -617,12 +499,7 @@ describe('RenderSession', () => {
     });
 
     it('should skip the update if the state does not changed', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const reducer = (count: number, n: number) => count + n;
 
       SESSION1: {
@@ -641,12 +518,7 @@ describe('RenderSession', () => {
     });
 
     it('returns the initial state by the function', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const reducer = (count: number, n: number) => count + n;
 
       const [count] = session.useReducer(reducer, () => 0);
@@ -657,12 +529,7 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       flushSession(session);
 
@@ -674,12 +541,7 @@ describe('RenderSession', () => {
 
   describe('useRef()', () => {
     it('returns a memoized ref object', () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       let ref: RefObject<string>;
 
@@ -701,12 +563,7 @@ describe('RenderSession', () => {
 
   describe('useState()', () => {
     it('schedules the update when the state is changed', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       SESSION1: {
         const [count, setCount] = session.useState(0);
@@ -738,12 +595,7 @@ describe('RenderSession', () => {
     });
 
     it('should skip the update if the state does not changed', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       SESSION1: {
         const [count, setCount] = session.useState(0);
@@ -761,12 +613,7 @@ describe('RenderSession', () => {
     });
 
     it('sets a new state from the old one', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       SESSION1: {
         const [count, setCount] = session.useState(() => 0);
@@ -801,12 +648,7 @@ describe('RenderSession', () => {
     });
 
     it('should not return the pending state', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.UserBlockingLane,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession(Lanes.UserBlockingLane);
 
       SESSION1: {
         const [count, setCount, isPending] = session.useState(() => 0);
@@ -842,12 +684,7 @@ describe('RenderSession', () => {
 
   describe('useSyncExternalStore()', () => {
     it('forces the update if the snapshot has been changed when updating the snapshot', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       let count = 0;
 
       const unsubscribe = vi.fn();
@@ -889,12 +726,7 @@ describe('RenderSession', () => {
     });
 
     it('forces the update if the snapshot has been changed when subscribing the store', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const subscribers = new Set<() => void>();
       let snapshot = 0;
 
@@ -939,12 +771,7 @@ describe('RenderSession', () => {
     });
 
     it('should resubscribe the store if the subscribe function is changed', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
 
       const unsubscribe1 = vi.fn();
       const unsubscribe2 = vi.fn();

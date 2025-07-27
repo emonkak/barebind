@@ -3,7 +3,6 @@ import {
   $toDirective,
   HydrationError,
   HydrationNodeScanner,
-  Lanes,
   PartType,
 } from '@/core.js';
 import {
@@ -13,14 +12,14 @@ import {
   type SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
-import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
-import { MockBackend, MockCoroutine } from '../../mocks.js';
+import { MockBackend } from '../../mocks.js';
 import {
-  createElement,
+  createSession,
   disposeSession,
   flushSession,
-} from '../../test-utils.js';
+} from '../../session-utils.js';
+import { createElement } from '../../test-utils.js';
 
 describe('SignalDirective', () => {
   describe('name', () => {
@@ -234,12 +233,7 @@ describe('SiganlBinding', () => {
 describe('Signal', () => {
   describe('[$customHook]()', () => {
     it('request an update if the signal value has been changed', async () => {
-      const session = new RenderSession(
-        [],
-        Lanes.AllLanes,
-        new MockCoroutine(),
-        new Runtime(new MockBackend()),
-      );
+      const session = createSession();
       const signal = new Atom('foo');
 
       SESSION1: {

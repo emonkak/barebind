@@ -1,8 +1,5 @@
 import { component, memo, type RenderContext } from '@emonkak/ebit';
-import {
-  HashHistory,
-  resetScrollPosition,
-} from '@emonkak/ebit/extensions/router';
+import { HashHistory, ScrollRestration } from '@emonkak/ebit/extensions/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';
@@ -21,9 +18,7 @@ export function App({ store }: AppProps, context: RenderContext): unknown {
 
   context.use(store);
 
-  context.useLayoutEffect(() => {
-    resetScrollPosition(location);
-  }, [location]);
+  context.use(ScrollRestration);
 
   return context.html`
     <div>

@@ -87,11 +87,7 @@ describe('ServerBackend', () => {
       ]);
     });
 
-    it.each([
-      [templateLiteral``],
-      [templateLiteral`\n`],
-      [templateLiteral`\n \n`],
-    ])(
+    it.for([templateLiteral``, templateLiteral`\n`, templateLiteral`\n \n`])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const backend = new ServerBackend(document);
@@ -106,12 +102,12 @@ describe('ServerBackend', () => {
       },
     );
 
-    it.each([
-      [templateLiteral`<${'foo'}>`],
-      [templateLiteral`<${'foo'}/>`],
-      [templateLiteral`\n <${'foo'} /> \n`],
-      [templateLiteral`\n <!--${'foo'}--> \n`],
-      [templateLiteral`\n <!-- ${'foo'} --> \n`],
+    it.for([
+      templateLiteral`<${'foo'}>`,
+      templateLiteral`<${'foo'}/>`,
+      templateLiteral`\n <${'foo'} /> \n`,
+      templateLiteral`\n <!--${'foo'}--> \n`,
+      templateLiteral`\n <!-- ${'foo'} --> \n`,
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {
@@ -175,7 +171,7 @@ describe('ServerBackend', () => {
       expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
     });
 
-    it.each([['user-blocking'], ['user-visible'], ['background']] as const)(
+    it.for(['user-blocking', 'user-visible', 'background'] as const)(
       'schedules a callback with an arbitrary priority using setTimeout()',
       async (priority) => {
         const backend = new ServerBackend(document);

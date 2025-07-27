@@ -46,10 +46,10 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 
 describe('BrowserBackend', () => {
   describe('commitEffects()', () => {
-    it.each([
-      [CommitPhase.Mutation],
-      [CommitPhase.Layout],
-      [CommitPhase.Passive],
+    it.for([
+      CommitPhase.Mutation,
+      CommitPhase.Layout,
+      CommitPhase.Passive,
     ] as const)('commits given effects', (phase) => {
       const effects = [
         {
@@ -79,7 +79,7 @@ describe('BrowserBackend', () => {
       vi.restoreAllMocks();
     });
 
-    it.each(CONTINUOUS_EVENT_TYPES)(
+    it.for(CONTINUOUS_EVENT_TYPES)(
       'returns "user-visible" if the current event is continuous',
       (eventType) => {
         const backend = new BrowserBackend();
@@ -165,11 +165,7 @@ describe('BrowserBackend', () => {
       ]);
     });
 
-    it.each([
-      [templateLiteral``],
-      [templateLiteral`\n`],
-      [templateLiteral`\n \n`],
-    ])(
+    it.for([templateLiteral``, templateLiteral`\n`, templateLiteral`\n \n`])(
       'creates an EmptyTemplate if there is no contents',
       ({ strings, values }) => {
         const backend = new BrowserBackend();
@@ -184,12 +180,12 @@ describe('BrowserBackend', () => {
       },
     );
 
-    it.each([
-      [templateLiteral`<${'foo'}>`],
-      [templateLiteral`<${'foo'}/>`],
-      [templateLiteral`\n <${'foo'} /> \n`],
-      [templateLiteral`\n <!--${'foo'}--> \n`],
-      [templateLiteral`\n <!-- ${'foo'} --> \n`],
+    it.for([
+      templateLiteral`<${'foo'}>`,
+      templateLiteral`<${'foo'}/>`,
+      templateLiteral`\n <${'foo'} /> \n`,
+      templateLiteral`\n <!--${'foo'}--> \n`,
+      templateLiteral`\n <!-- ${'foo'} --> \n`,
     ])(
       'creates a ChildNodeTemplate if there is a only child value',
       ({ strings, values }) => {

@@ -26,7 +26,7 @@ describe('SpreadPrimitive', () => {
       }).not.toThrow();
     });
 
-    it.each([[null], [undefined], ['foo']])(
+    it.for([null, undefined, 'foo'])(
       'throws an error if the value is not object',
       (value) => {
         const part = {

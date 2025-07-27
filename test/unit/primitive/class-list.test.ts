@@ -18,7 +18,7 @@ describe('ClassListPrimitive', () => {
   });
 
   describe('ensureValue()', () => {
-    it.each([[[]], [[{ foo: true }]], [['foo']], [[null]], [[undefined]]])(
+    it.for([[], [{ foo: true }], ['foo'], [null], [undefined]])(
       'asserts the value is an array of class specifier',
       (value) => {
         const part = {
@@ -35,7 +35,7 @@ describe('ClassListPrimitive', () => {
       },
     );
 
-    it.each([[[123]], [{}], ['foo'], [null], [undefined]])(
+    it.for([[123], {}, 'foo', null, undefined])(
       'throws an error if the value is not an array',
       (value) => {
         const part = {
@@ -56,7 +56,7 @@ describe('ClassListPrimitive', () => {
   });
 
   describe('resolveBinding()', () => {
-    it.each([[':CLASSLIST'], [':classlist']])(
+    it.for([':CLASSLIST', ':classlist'])(
       'constructs a new AttributeBinding',
       (attributeName) => {
         const specifier = ['foo', 'bar', 'baz'];

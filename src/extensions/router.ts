@@ -2,10 +2,9 @@ export { BrowserHistory } from './router/browser-history.js';
 export { HashHistory } from './router/hash-history.js';
 export {
   CurrentHistory,
-  type HisotryLocation,
+  type HistoryLocation,
   type HistoryNavigator,
 } from './router/history.js';
-export { resetScrollPosition } from './router/reset-scroll-position.js';
 export {
   type Handler,
   integer,
@@ -17,4 +16,5 @@ export {
   route,
   wildcard,
 } from './router/router.js';
+export { ScrollRestration } from './router/scroll-restration.js';
 export { RelativeURL } from './router/url.js';

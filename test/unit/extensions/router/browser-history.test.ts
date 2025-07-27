@@ -1,20 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Lanes } from '@/core.js';
 import {
   BrowserHistory,
   createFormSubmitHandler,
   createLinkClickHandler,
 } from '@/extensions/router/browser-history.js';
 import { CurrentHistory } from '@/extensions/router/history.js';
-import { RelativeURL } from '@/extensions/router/url.js';
-import { RenderSession } from '@/render-session.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend, MockCoroutine } from '../../../mocks.js';
+import type { RenderSession } from '@/render-session.js';
 import {
-  createElement,
+  createSession,
   disposeSession,
   flushSession,
-} from '../../../test-utils.js';
+} from '../../../session-utils.js';
+import { createElement } from '../../../test-utils.js';
 
 describe('BrowserHistory', () => {
   const originalUrl = location.href;
@@ -22,33 +19,99 @@ describe('BrowserHistory', () => {
   let session!: RenderSession;
 
   beforeEach(() => {
-    session = new RenderSession(
-      [],
-      Lanes.AllLanes,
-      new MockCoroutine(),
-      new Runtime(new MockBackend()),
-    );
+    session = createSession();
   });
 
   afterEach(() => {
     disposeSession(session);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
-  it('gets the current history state', () => {
-    const state = { key: 'foo' };
+  describe('HistoryNavigator', () => {
+    it('gets the current URL', () => {
+      const state = { key: 'foo' };
 
-    history.replaceState(state, '', '/articles/123');
+      history.replaceState(state, '', '/foo/bar');
 
-    const [location, { getCurrentURL }] = session.use(BrowserHistory);
+      const [location, navigator] = session.use(BrowserHistory);
 
-    expect(getCurrentURL().toString()).toBe('/articles/123');
-    expect(window.location.pathname).toBe('/articles/123');
-    expect(window.history.state).toStrictEqual(state);
-    expect(location.url.toString()).toBe('/articles/123');
-    expect(location.state).toStrictEqual(state);
-    expect(location.navigationType).toBe(null);
+      expect(location.url.toString()).toBe('/foo/bar');
+      expect(location.state).toStrictEqual(state);
+      expect(location.navigationType).toBe(null);
+      expect(navigator.getCurrentURL().toString()).toBe(
+        location.url.toString(),
+      );
+      expect(history.state).toStrictEqual(state);
+    });
+
+    it('pushes a new location', () => {
+      const pushStateSpy = vi.spyOn(history, 'pushState');
+      const replaceStateSpy = vi.spyOn(history, 'replaceState');
+
+      const [location1, navigator1] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      navigator1.navigate('/articles/456');
+
+      const [location2, navigator2] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      expect(pushStateSpy).toHaveBeenCalledOnce();
+      expect(replaceStateSpy).not.toHaveBeenCalled();
+
+      expect(location2).not.toBe(location1);
+      expect(location2.url.toString()).toBe('/articles/456');
+      expect(location2.state).toBe(null);
+      expect(location2.navigationType).toBe('push');
+      expect(navigator2).toBe(navigator1);
+    });
+
+    it('replaces with a new location', () => {
+      const state = { key: 'foo' };
+
+      const pushStateSpy = vi.spyOn(history, 'pushState');
+      const replaceStateSpy = vi.spyOn(history, 'replaceState');
+
+      const [location1, navigator1] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      navigator1.navigate('/foo/bar', {
+        replace: true,
+        state,
+      });
+
+      const [location2, navigator2] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      expect(pushStateSpy).not.toHaveBeenCalled();
+      expect(replaceStateSpy).toHaveBeenCalledOnce();
+
+      expect(location2).not.toBe(location1);
+      expect(location2.url.toString()).toBe('/foo/bar');
+      expect(location2.state).toBe(state);
+      expect(location2.navigationType).toBe('replace');
+      expect(navigator2).toBe(navigator1);
+    });
+
+    it('waits for navigation transition', async () => {
+      const resumeSpy = vi.spyOn(session['_coroutine'], 'resume');
+
+      const [_location, navigator] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      navigator.navigate('/articles/foo%2Fbar');
+
+      expect(await navigator.waitForTransition()).toBe(true);
+
+      expect(resumeSpy).toHaveBeenCalledOnce();
+    });
   });
 
   it('registers the current history state', () => {
@@ -57,13 +120,17 @@ describe('BrowserHistory', () => {
     expect(session.use(CurrentHistory)).toBe(currentHistory);
   });
 
-  it('adds event listeners', () => {
+  it('registers event listeners for "click", "submit" and "popstate"', () => {
     const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
 
+    vi.stubGlobal('navigation', undefined);
+
+    session.setContextValue(CurrentHistory, [location, navigator]);
     session.use(BrowserHistory);
 
     flushSession(session);
+    disposeSession(session);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -78,9 +145,6 @@ describe('BrowserHistory', () => {
       'popstate',
       expect.any(Function),
     );
-
-    disposeSession(session);
-
     expect(removeEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(removeEventListenerSpy).toHaveBeenCalledWith(
       'click',
@@ -96,114 +160,168 @@ describe('BrowserHistory', () => {
     );
   });
 
-  it('pushes a history entry with the new location', () => {
-    const pushStateSpy = vi.spyOn(history, 'pushState');
-    const replaceStateSpy = vi.spyOn(history, 'replaceState');
+  it.runIf(typeof navigation === 'object')(
+    'registers event listeners for "click", "submit" and "navigate" if Navigation API is available',
+    () => {
+      const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
+      const addNavigationEventListenerSpy = vi.spyOn(
+        navigation!,
+        'addEventListener',
+      );
+      const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+      const removeNavigationEventListenerSpy = vi.spyOn(
+        navigation!,
+        'removeEventListener',
+      );
 
-    const [location1, navigator1] = session.use(BrowserHistory);
+      session.setContextValue(CurrentHistory, [location, navigator]);
+      session.use(BrowserHistory);
 
-    flushSession(session);
+      flushSession(session);
+      disposeSession(session);
 
-    navigator1.navigate(new RelativeURL('/articles/456'));
-
-    const [location2, navigator2] = session.use(BrowserHistory);
-
-    expect(pushStateSpy).toHaveBeenCalledOnce();
-    expect(replaceStateSpy).not.toHaveBeenCalled();
-    expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/456');
-    expect(location2.state).toBe(null);
-    expect(location2.navigationType).toBe('push');
-    expect(navigator2).toBe(navigator1);
-  });
-
-  it('replaces the history entry with the new location', () => {
-    const state = { key: 'foo' };
-
-    const pushStateSpy = vi.spyOn(history, 'pushState');
-    const replaceStateSpy = vi.spyOn(history, 'replaceState');
-
-    const [location1, navigator1] = session.use(BrowserHistory);
-
-    flushSession(session);
-
-    navigator1.navigate(new RelativeURL('/articles/123'), {
-      replace: true,
-      state,
-    });
-
-    const [location2, navigator2] = session.use(BrowserHistory);
-
-    expect(pushStateSpy).not.toHaveBeenCalled();
-    expect(replaceStateSpy).toHaveBeenCalledOnce();
-    expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/123');
-    expect(location2.state).toBe(state);
-    expect(location2.navigationType).toBe('replace');
-    expect(navigator2).toBe(navigator1);
-  });
+      expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        expect.any(Function),
+      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        'submit',
+        expect.any(Function),
+      );
+      expect(addNavigationEventListenerSpy).toHaveBeenCalledTimes(1);
+      expect(addNavigationEventListenerSpy).toHaveBeenCalledWith(
+        'navigate',
+        expect.any(Function),
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'click',
+        expect.any(Function),
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        'submit',
+        expect.any(Function),
+      );
+      expect(removeNavigationEventListenerSpy).toHaveBeenCalledTimes(1);
+      expect(removeNavigationEventListenerSpy).toHaveBeenCalledWith(
+        'navigate',
+        expect.any(Function),
+      );
+    },
+  );
 
   it('should update the state when the link is clicked', () => {
-    const element = createElement('a', { href: '/articles/123' });
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    const element = createElement('a', { href: '/foo/bar' });
 
     const [location1] = session.use(BrowserHistory);
 
     flushSession(session);
 
     document.body.appendChild(element);
-    element.dispatchEvent(event);
+    element.click();
     document.body.removeChild(element);
 
     const [location2] = session.use(BrowserHistory);
 
+    flushSession(session);
+
     expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/123');
+    expect(location2.url.toString()).toBe('/foo/bar');
     expect(location2.state).toBe(null);
   });
 
   it('should update the state when the form is submitted', () => {
     const element = createElement('form', {
       method: 'GET',
-      action: '/articles/123',
+      action: '/foo/bar',
     });
-    const event = new MouseEvent('submit', { bubbles: true, cancelable: true });
 
     const [location1] = session.use(BrowserHistory);
 
     flushSession(session);
 
     document.body.appendChild(element);
-    element.dispatchEvent(event);
+    element.dispatchEvent(
+      new SubmitEvent('submit', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     document.body.removeChild(element);
 
     const [location2] = session.use(BrowserHistory);
 
+    flushSession(session);
+
     expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/123');
+    expect(location2.url.toString()).toBe('/foo/bar');
     expect(location2.state).toBe(null);
   });
 
-  it('should update the location when the history has been changed', () => {
+  it.runIf(typeof navigation === 'object')(
+    'should update the location when NavigateEvent is received',
+    () => {
+      const state = { key: 'foo' };
+
+      const [location1] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      navigation!.dispatchEvent(
+        Object.assign(new Event('navigate'), {
+          hashChange: true,
+          navigationType: 'traverse',
+          destination: {
+            url: location.origin + '/foo/bar',
+            getState() {
+              return state;
+            },
+          },
+        } as NavigateEventInit),
+      );
+
+      const [location2] = session.use(BrowserHistory);
+
+      flushSession(session);
+
+      expect(location2).not.toBe(location1);
+      expect(location2.url.toString()).toBe('/foo/bar');
+      expect(location2.state).toBe(state);
+      expect(location2.navigationType).toBe('traverse');
+    },
+  );
+
+  it('should update the location when PopStateEvent is received', () => {
     const state = { key: 'foo' };
 
     const [location1] = session.use(BrowserHistory);
 
+    vi.stubGlobal('navigation', undefined);
+
     flushSession(session);
 
-    history.replaceState(state, '', '/articles/123');
-    dispatchEvent(new PopStateEvent('popstate', { state }));
+    history.replaceState(state, '', '/foo/bar');
+    dispatchEvent(
+      new PopStateEvent('popstate', {
+        state,
+      }),
+    );
 
     const [location2] = session.use(BrowserHistory);
 
+    flushSession(session);
+
     expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/123');
+    expect(location2.url.toString()).toBe('/foo/bar');
     expect(location2.state).toBe(state);
     expect(location2.navigationType).toBe('traverse');
   });
 
   it('should not update the location when only the hash has been changed', () => {
     const state = { key: 'foo' };
+
+    vi.stubGlobal('navigation', undefined);
 
     const [location1] = session.use(BrowserHistory);
 
@@ -213,6 +331,8 @@ describe('BrowserHistory', () => {
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
     const [location2] = session.use(BrowserHistory);
+
+    flushSession(session);
 
     expect(location1).toBe(location2);
   });
@@ -229,13 +349,8 @@ describe('createLinkClickHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const clickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
-    );
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     container.addEventListener('click', clickHandler);
     container.appendChild(element);
@@ -265,13 +380,8 @@ describe('createLinkClickHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const clickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
-    );
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     container.appendChild(element);
     container.addEventListener('click', clickHandler);
@@ -303,13 +413,8 @@ describe('createLinkClickHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const clickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
-    );
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     container.appendChild(element);
     container.addEventListener('click', clickHandler);
@@ -339,13 +444,8 @@ describe('createLinkClickHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const clickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
-    );
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     container.appendChild(element);
     container.addEventListener('click', clickHandler);
@@ -358,12 +458,12 @@ describe('createLinkClickHandler()', () => {
     expect(event.defaultPrevented).toBe(false);
   });
 
-  it.each([
-    [{ altKey: true, bubbles: true }],
-    [{ ctrlKey: true, bubbles: true }],
-    [{ metaKey: true, bubbles: true }],
-    [{ shiftKey: true, bubbles: true }],
-    [{ button: 1, bubbles: true }],
+  it.for([
+    { altKey: true, bubbles: true },
+    { ctrlKey: true, bubbles: true },
+    { metaKey: true, bubbles: true },
+    { shiftKey: true, bubbles: true },
+    { button: 1, bubbles: true },
   ])(
     'should ignore the event if any modifier keys or the button other than left button are pressed',
     (eventInit) => {
@@ -371,13 +471,8 @@ describe('createLinkClickHandler()', () => {
       const element = createElement('a');
       const event = new MouseEvent('click', eventInit);
 
-      const getCurrentURL = vi
-        .fn()
-        .mockImplementation(() => RelativeURL.fromURL(location));
       const navigate = vi.fn();
-      const clickHandler = vi.fn(
-        createLinkClickHandler({ getCurrentURL, navigate }),
-      );
+      const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
       container.appendChild(element);
       container.addEventListener('click', clickHandler);
@@ -395,13 +490,8 @@ describe('createLinkClickHandler()', () => {
     const element = createElement('a');
     const event = new MouseEvent('click', { cancelable: true, bubbles: true });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const clickHandler = vi.fn(
-      createLinkClickHandler({ getCurrentURL, navigate }),
-    );
+    const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
 
     event.preventDefault();
     container.appendChild(element);
@@ -432,13 +522,8 @@ describe('createLinkClickHandler()', () => {
         bubbles: true,
       });
 
-      const getCurrentURL = vi
-        .fn()
-        .mockImplementation(() => RelativeURL.fromURL(location));
       const navigate = vi.fn();
-      const clickHandler = vi.fn(
-        createLinkClickHandler({ getCurrentURL, navigate }),
-      );
+      const clickHandler = vi.fn(createLinkClickHandler({ navigate }));
       const cancelHandler = vi.fn((event: Event) => {
         event.preventDefault();
       });
@@ -473,13 +558,8 @@ describe('createFormSubmitHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     form.addEventListener('submit', formSubmitHandler);
     form.dispatchEvent(event);
@@ -519,13 +599,8 @@ describe('createFormSubmitHandler()', () => {
       submitter: form.querySelector('button'),
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     form.addEventListener('submit', formSubmitHandler);
     form.dispatchEvent(event);
@@ -563,13 +638,8 @@ describe('createFormSubmitHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     form.addEventListener('submit', formSubmitHandler);
     form.dispatchEvent(event);
@@ -597,13 +667,8 @@ describe('createFormSubmitHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     event.preventDefault();
     form.addEventListener('submit', formSubmitHandler);
@@ -624,13 +689,8 @@ describe('createFormSubmitHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     form.addEventListener('submit', formSubmitHandler);
     form.dispatchEvent(event);
@@ -650,13 +710,8 @@ describe('createFormSubmitHandler()', () => {
       cancelable: true,
     });
 
-    const getCurrentURL = vi
-      .fn()
-      .mockImplementation(() => RelativeURL.fromURL(location));
     const navigate = vi.fn();
-    const formSubmitHandler = vi.fn(
-      createFormSubmitHandler({ getCurrentURL, navigate }),
-    );
+    const formSubmitHandler = vi.fn(createFormSubmitHandler({ navigate }));
 
     form.addEventListener('submit', formSubmitHandler);
     form.dispatchEvent(event);

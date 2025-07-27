@@ -438,7 +438,7 @@ describe('RepeatBinding', () => {
   });
 });
 
-describe.each([[true], [false]])('moveChildNodes()', (useMoveBefore) => {
+describe.for([true, false])('moveChildNodes()', (useMoveBefore) => {
   const originalMoveBefore = Element.prototype.moveBefore;
 
   beforeEach(() => {

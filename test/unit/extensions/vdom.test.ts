@@ -425,7 +425,7 @@ describe('ElementBinding', () => {
       expect(part.node.checked).toBe(false);
     });
 
-    it.each([['input'], ['output'], ['textarea']] as const)(
+    it.for(['input', 'output', 'textarea'] as const)(
       'updates "value" property of form control elements',
       (name) => {
         const props1 = { value: 'foo', defaultValue: 'bar' };

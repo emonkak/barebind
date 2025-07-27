@@ -77,7 +77,7 @@ describe('AttributeBinding', () => {
   });
 
   describe('commit()', () => {
-    it.each([[null], [undefined]])(
+    it.for([null, undefined])(
       'removes the attribute when the value is null or undefined',
       (value2) => {
         const value1 = 'foo';

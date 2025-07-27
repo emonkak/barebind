@@ -1,8 +1,10 @@
+/// <reference types="navigation-api-types" />
+
 import type { HookContext } from '../../core.js';
 import {
   anyModifiersArePressed,
   CurrentHistory,
-  type HisotryLocation,
+  type HistoryLocation,
   type HistoryNavigator,
   isInternalLink,
 } from './history.js';
@@ -10,86 +12,118 @@ import { RelativeURL } from './url.js';
 
 export function BrowserHistory(
   context: HookContext,
-): readonly [HisotryLocation, HistoryNavigator] {
-  const [historyState, setHistoryState] = context.useState<{
-    location: HisotryLocation;
+): readonly [HistoryLocation, HistoryNavigator] {
+  const historyState = context.useMemo<{
+    location: HistoryLocation;
     navigator: HistoryNavigator;
-  }>(() => ({
-    location: {
-      url: RelativeURL.fromURL(window.location),
-      state: window.history.state,
-      navigationType: null,
-    },
-    navigator: {
-      getCurrentURL: () => RelativeURL.fromURL(window.location),
-      navigate: (url, { replace = false, state = null } = {}) => {
-        let navigationType: NavigationType;
-        if (replace) {
-          history.replaceState(state, '', url.toString());
-          navigationType = 'replace';
-        } else {
-          history.pushState(state, '', url.toString());
-          navigationType = 'push';
-        }
-        const location = {
-          url: RelativeURL.from(url),
-          state,
-          navigationType,
-        };
-        setHistoryState(({ navigator }) => ({
-          location,
-          navigator,
-        }));
-      },
-    },
-  }));
-  const { location, navigator } = historyState;
-
-  context.useLayoutEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      setHistoryState((historyState) => {
-        const { location, navigator } = historyState;
-        if (
-          location.url.pathname === window.location.pathname &&
-          location.url.search === window.location.search
-        ) {
-          // Ignore an event when the hash has only changed.
-          return historyState;
-        }
-        return {
-          location: {
-            url: RelativeURL.fromURL(window.location),
-            state: event.state,
-            navigationType: 'traverse',
-          },
-          navigator,
-        };
-      });
+    setLocation: (newLocation: HistoryLocation) => void;
+  }>(() => {
+    const setLocation = (newLocation: HistoryLocation) => {
+      context.forceUpdate();
+      historyState.location = newLocation;
     };
-    const handleClick = createLinkClickHandler(navigator);
-    const handleSubmit = createFormSubmitHandler(navigator);
+    return {
+      location: {
+        url: RelativeURL.fromURL(window.location),
+        state: history.state,
+        navigationType: null,
+      },
+      navigator: {
+        getCurrentURL: () => RelativeURL.fromURL(window.location),
+        navigate: (url, { replace = false, state = null } = {}) => {
+          setLocation({
+            url: RelativeURL.from(url),
+            state,
+            navigationType: replace ? 'replace' : 'push',
+          });
 
-    addEventListener('click', handleClick);
-    addEventListener('submit', handleSubmit);
-    addEventListener('popstate', handlePopState);
-
-    return () => {
-      removeEventListener('click', handleClick);
-      removeEventListener('submit', handleSubmit);
-      removeEventListener('popstate', handlePopState);
+          if (replace) {
+            history.replaceState(state, '', url.toString());
+          } else {
+            history.pushState(state, '', url.toString());
+          }
+        },
+        async waitForTransition(): Promise<boolean> {
+          return (await context.waitForUpdate()) > 0;
+        },
+      },
+      setLocation,
     };
   }, []);
 
-  const currentLocation = [location, navigator] as const;
+  context.useLayoutEffect(() => {
+    const handleClick = createLinkClickHandler(historyState.navigator);
+    const handleSubmit = createFormSubmitHandler(historyState.navigator);
 
-  context.setContextValue(CurrentHistory, currentLocation);
+    if (typeof navigation === 'object') {
+      const handleNavigate = (event: NavigateEvent) => {
+        if (!event.hashChange) {
+          // Ignore an event when the hash has only changed.
+          return;
+        }
 
-  return currentLocation;
+        if (event.navigationType === 'traverse') {
+          historyState.setLocation({
+            url: RelativeURL.fromString(event.destination.url),
+            state: event.destination.getState(),
+            navigationType: 'traverse',
+          });
+        }
+      };
+
+      addEventListener('click', handleClick);
+      addEventListener('submit', handleSubmit);
+      navigation.addEventListener('navigate', handleNavigate);
+
+      return () => {
+        removeEventListener('click', handleClick);
+        removeEventListener('submit', handleSubmit);
+        navigation.removeEventListener('navigate', handleNavigate);
+      };
+    } else {
+      const handlePopState = (event: PopStateEvent) => {
+        const { url } = historyState.location;
+
+        if (
+          url.pathname === window.location.pathname &&
+          url.search === window.location.search
+        ) {
+          // Ignore an event when the hash has only changed.
+          return;
+        }
+
+        historyState.setLocation({
+          url: RelativeURL.fromURL(window.location),
+          state: event.state,
+          navigationType: 'traverse',
+        });
+      };
+
+      addEventListener('click', handleClick);
+      addEventListener('submit', handleSubmit);
+      addEventListener('popstate', handlePopState);
+
+      return () => {
+        removeEventListener('click', handleClick);
+        removeEventListener('submit', handleSubmit);
+        removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, []);
+
+  const currentHistory = [
+    historyState.location,
+    historyState.navigator,
+  ] as const;
+
+  context.setContextValue(CurrentHistory, currentHistory);
+
+  return currentHistory;
 }
 
 export function createLinkClickHandler({
   navigate,
-}: HistoryNavigator): (event: MouseEvent) => void {
+}: Pick<HistoryNavigator, 'navigate'>): (event: MouseEvent) => void {
   return (event) => {
     if (
       anyModifiersArePressed(event) ||
@@ -102,7 +136,7 @@ export function createLinkClickHandler({
     const element = (event.composedPath() as Element[]).find(isInternalLink);
     if (
       element === undefined ||
-      element.origin !== location.origin ||
+      element.origin !== window.location.origin ||
       element.getAttribute('href')!.startsWith('#')
     ) {
       return;
@@ -113,7 +147,7 @@ export function createLinkClickHandler({
     const url = RelativeURL.fromURL(element);
     const replace =
       element.hasAttribute('data-link-replace') ||
-      element.href === location.href;
+      element.href === window.location.href;
 
     navigate(url, { replace });
   };
@@ -121,7 +155,7 @@ export function createLinkClickHandler({
 
 export function createFormSubmitHandler({
   navigate,
-}: HistoryNavigator): (event: SubmitEvent) => void {
+}: Pick<HistoryNavigator, 'navigate'>): (event: SubmitEvent) => void {
   return (event) => {
     if (event.defaultPrevented) {
       return;
@@ -139,7 +173,7 @@ export function createFormSubmitHandler({
     }
 
     const action = new URL(submitter?.formAction ?? form.action);
-    if (action.origin !== location.origin) {
+    if (action.origin !== window.location.origin) {
       return;
     }
 
@@ -154,7 +188,7 @@ export function createFormSubmitHandler({
     );
     const replace =
       form.hasAttribute('data-link-replace') ||
-      url.toString() === location.href;
+      url.toString() === window.location.href;
 
     navigate(url, { replace });
   };

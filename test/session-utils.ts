@@ -1,0 +1,37 @@
+import { HookType, Lanes } from '@/core.js';
+import { RenderSession } from '@/render-session.js';
+import { Runtime } from '@/runtime.js';
+import { MockBackend, MockCoroutine } from './mocks.js';
+
+export function createSession(lanes: Lanes = Lanes.AllLanes): RenderSession {
+  return new RenderSession(
+    [],
+    lanes,
+    new MockCoroutine(),
+    new Runtime(new MockBackend()),
+  );
+}
+
+export function disposeSession(session: RenderSession): void {
+  for (let i = session['_hooks'].length - 1; i >= 0; i--) {
+    const hook = session['_hooks'][i]!;
+    if (
+      hook.type === HookType.Effect ||
+      hook.type === HookType.LayoutEffect ||
+      hook.type === HookType.InsertionEffect
+    ) {
+      hook.cleanup?.();
+      hook.cleanup = undefined;
+    }
+  }
+}
+
+export function flushSession(session: RenderSession): Lanes {
+  const pendingLanes = session.finalize();
+
+  session['_context'].flushSync();
+  session['_hookIndex'] = 0;
+  session['_pendingLanes'] = Lanes.NoLanes;
+
+  return pendingLanes;
+}

@@ -153,7 +153,6 @@ describe('ConsoleReporter', () => {
         },
         [],
       ],
-
       [
         {
           id: 0,

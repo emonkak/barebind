@@ -1,6 +1,3 @@
-import { HookType, Lanes } from '@/core.js';
-import type { RenderSession } from '@/render-session.js';
-
 export function* allCombinations<T>(xs: T[]): Generator<T[]> {
   for (let i = 1; i <= xs.length; i++) {
     yield* combinations(xs, i);
@@ -62,36 +59,12 @@ export function createElementNS(
   return element;
 }
 
-export function disposeSession(session: RenderSession): void {
-  for (let i = session['_hooks'].length - 1; i >= 0; i--) {
-    const hook = session['_hooks'][i]!;
-    if (
-      hook.type === HookType.Effect ||
-      hook.type === HookType.LayoutEffect ||
-      hook.type === HookType.InsertionEffect
-    ) {
-      hook.cleanup?.();
-      hook.cleanup = undefined;
-    }
-  }
-}
-
 export function factorial(n: number): number {
   let result = 1;
   for (let i = n; i > 1; i--) {
     result *= i;
   }
   return result;
-}
-
-export function flushSession(session: RenderSession): Lanes {
-  const pendingLanes = session.finalize();
-
-  session['_context'].flushSync();
-  session['_hookIndex'] = 0;
-  session['_pendingLanes'] = Lanes.NoLanes;
-
-  return pendingLanes;
 }
 
 export function getPromiseState(

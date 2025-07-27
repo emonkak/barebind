@@ -28,7 +28,7 @@ describe('StylePrimitive', () => {
       }).not.toThrow();
     });
 
-    it.each([[null], [undefined], ['foo']])(
+    it.for([null, undefined, 'foo'])(
       'throws an error if the value is not object',
       (value) => {
         const part = {
@@ -47,7 +47,7 @@ describe('StylePrimitive', () => {
   });
 
   describe('resolveBinding()', () => {
-    it.each([[':STYLE'], [':style']])(
+    it.for([':STYLE', ':style'])(
       'constructs a new StyleBinding',
       (attributeName) => {
         const style = { color: 'red' };

@@ -1,7 +1,7 @@
 import type { HookContext } from '../../core.js';
 import type { RelativeURL } from './url.js';
 
-export interface HisotryLocation {
+export interface HistoryLocation {
   readonly url: RelativeURL;
   readonly state: unknown;
   readonly navigationType: NavigationType | null;
@@ -10,9 +10,13 @@ export interface HisotryLocation {
 export interface HistoryNavigator {
   getCurrentURL(): RelativeURL;
   navigate(url: string | RelativeURL, options?: NavigateOptions): void;
+  waitForTransition(): Promise<boolean>;
 }
 
-export type NavigationListener = (location: HisotryLocation) => void;
+export type NavigationListener = (
+  newLocation: HistoryLocation,
+  oldLocation: HistoryLocation,
+) => void;
 
 export interface NavigateOptions {
   replace?: boolean;
@@ -21,7 +25,7 @@ export interface NavigateOptions {
 
 export function CurrentHistory(
   context: HookContext,
-): readonly [HisotryLocation, HistoryNavigator] {
+): readonly [HistoryLocation, HistoryNavigator] {
   const value = context.getContextValue(CurrentHistory);
 
   if (value === undefined) {
@@ -30,7 +34,7 @@ export function CurrentHistory(
     );
   }
 
-  return value as [HisotryLocation, HistoryNavigator];
+  return value as [HistoryLocation, HistoryNavigator];
 }
 
 export function anyModifiersArePressed(event: MouseEvent): boolean {

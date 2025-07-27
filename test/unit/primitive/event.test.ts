@@ -203,7 +203,7 @@ describe('EventBinding', () => {
       expect(listener2.handleEvent).toHaveBeenCalledWith(event);
     });
 
-    it.each([[null], [undefined]])(
+    it.for([null, undefined])(
       'detaches the event listener if the new event listener is null or undefined',
       (listener2) => {
         const listener1 = { handleEvent: () => {} };
