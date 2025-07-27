@@ -21,45 +21,45 @@ a {
   z-index: 999;
   block-size: 55px;
   inset: 0;
+}
 
-  .inner {
-    box-sizing: border-box;
-    max-inline-size: 800px;
-    margin-inline: auto;
-    padding-block: 15px;
-    padding-inline: 5px;
-  }
+.header .inner {
+  box-sizing: border-box;
+  max-inline-size: 800px;
+  margin-inline: auto;
+  padding-block: 15px;
+  padding-inline: 5px;
+}
 
-  a {
-    color: rgba(255, 255, 255, 0.8);
-    line-height: 24px;
-    transition: color 0.15s ease;
-    display: inline-block;
-    vertical-align: middle;
-    font-weight: 300;
-    letter-spacing: 0.075em;
-    margin-inline-end: 1.8em;
-  }
+.header a {
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 24px;
+  transition: color 0.15s ease;
+  display: inline-block;
+  vertical-align: middle;
+  font-weight: 300;
+  letter-spacing: 0.075em;
+  margin-inline-end: 1.8em;
+}
 
-  a:hover {
-    color: #fff;
-  }
+.header a:hover {
+  color: #fff;
+}
 
-  a.active {
-    color: #fff;
-    font-weight: 400;
-  }
+.header a.active {
+  color: #fff;
+  font-weight: 400;
+}
 
-  a:nth-child(6) {
-    margin-inline-end: 0;
-  }
+.header a:nth-child(6) {
+  margin-inline-end: 0;
+}
 
-  .github {
-    color: #fff;
-    font-size: 0.9em;
-    margin: 0;
-    float: right;
-  }
+.header .github {
+  color: #fff;
+  font-size: 0.9em;
+  margin: 0;
+  float: right;
 }
 
 .logo {
@@ -86,27 +86,23 @@ a {
 }
 
 @media (max-width: 860px) {
-  .header {
-    .inner {
-      padding-block: 15px;
-      padding-inline: 30px;
-    }
+  .header .inner {
+    padding-block: 15px;
+    padding-inline: 30px;
   }
 }
 
 @media (max-width: 600px) {
-  .header {
-    .inner {
-      padding: 15px;
-    }
+  .header .inner {
+    padding: 15px;
+  }
 
-    a {
-      margin-inline-end: 1em;
-    }
+  .header a {
+    margin-inline-end: 1em;
+  }
 
-    .github {
-      display: none;
-    }
+  .header .github {
+    display: none;
   }
 }
 
@@ -125,12 +121,12 @@ a {
   margin-block: 30px;
   inline-size: 100%;
   transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
+}
 
-  ul {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-  }
+.story-list ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
 }
 
 .story-list-nav {
@@ -142,14 +138,14 @@ a {
   inset-inline: 0;
   z-index: 998;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
 
-  .page-link {
-    margin-inline: 1em;
-  }
+.story-list-nav .page-link {
+  margin-inline: 1em;
+}
 
-  .disabled {
-    color: #aaa;
-  }
+.story-list-nav .disabled {
+  color: #aaa;
 }
 
 @media (max-width: 600px) {
@@ -165,35 +161,35 @@ a {
   border-bottom: 1px solid #eee;
   position: relative;
   line-height: 20px;
+}
 
-  .score {
-    color: #335d92;
-    font-size: 1.1em;
-    font-weight: 700;
-    position: absolute;
-    inset-block-start: 50%;
-    inset-inline-start: 0;
-    inline-size: 80px;
-    text-align: center;
-    margin-block-start: -10px;
-  }
+.story-item .score {
+  color: #335d92;
+  font-size: 1.1em;
+  font-weight: 700;
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 0;
+  inline-size: 80px;
+  text-align: center;
+  margin-block-start: -10px;
+}
 
-  .host,
-  .meta {
-    font-size: 0.85em;
-    color: #626262;
-  }
+.story-item .host,
+.story-item .meta {
+  font-size: 0.85em;
+  color: #626262;
+}
 
-  .host a,
-  .meta a {
-    color: #626262;
-    text-decoration: underline;
-  }
+.story-item .host a,
+.story-item .meta a {
+  color: #626262;
+  text-decoration: underline;
+}
 
-  .host a:hover,
-  .meta a:hover {
-    color: #335d92;
-  }
+.story-item .host a:hover,
+.story-item .meta a:hover {
+  color: #335d92;
 }
 
 .item-view-header {
@@ -201,26 +197,26 @@ a {
   padding-block: 1.8em 1em;
   padding-inline: 2em;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
 
-  h1 {
-    display: inline;
-    font-size: 1.5em;
-    margin-inline-end: 0.5em;
-  }
+.item-view-header h1 {
+  display: inline;
+  font-size: 1.5em;
+  margin-inline-end: 0.5em;
+}
 
-  .host,
-  .meta,
-  .meta a {
-    color: #626262;
-  }
+.item-view-header .host,
+.item-view-header .meta,
+.item-view-header .meta a {
+  color: #626262;
+}
 
-  .meta {
-    padding-block: 1em;
-  }
+.item-view-header .meta {
+  padding-block: 1em;
+}
 
-  .meta a {
-    text-decoration: underline;
-  }
+.item-view-header .meta a {
+  text-decoration: underline;
 }
 
 .item-view-comments {
@@ -256,81 +252,81 @@ a {
 .comment {
   border-block-start: 1px solid #eee;
   position: relative;
+}
 
-  .by,
-  .text,
-  .toggle {
-    font-size: 0.9em;
-    margin-block: 1em;
-  }
+.comment .by,
+.comment .text,
+.comment .toggle {
+  font-size: 0.9em;
+  margin-block: 1em;
+}
 
-  .by {
-    color: #626262;
-  }
+.comment .by {
+  color: #626262;
+}
 
-  .by a {
-    color: #626262;
-    text-decoration: underline;
-  }
+.comment .by a {
+  color: #626262;
+  text-decoration: underline;
+}
 
-  .text {
-    overflow-wrap: break-word;
-  }
+.comment .text {
+  overflow-wrap: break-word;
+}
 
-  .text a:hover {
-    color: #335d92;
-  }
+.comment .text a:hover {
+  color: #335d92;
+}
 
-  .text pre {
-    white-space: pre-wrap;
-  }
+.comment .text pre {
+  white-space: pre-wrap;
+}
 
-  .toggle {
-    background-color: #fffbf2;
-    padding-block: 0.3em;
-    padding-inline: 0.5em;
-    border-radius: 4px;
-  }
+.comment .toggle {
+  background-color: #fffbf2;
+  padding-block: 0.3em;
+  padding-inline: 0.5em;
+  border-radius: 4px;
+}
 
-  .toggle a {
-    color: #626262;
-    cursor: pointer;
-  }
+.comment .toggle a {
+  color: #626262;
+  cursor: pointer;
+}
 
-  .toggle.open {
-    padding: 0;
-    background-color: transparent;
-    margin-block-end: -0.5em;
-  }
+.comment .toggle.open {
+  padding: 0;
+  background-color: transparent;
+  margin-block-end: -0.5em;
 }
 
 .user-view {
   background-color: #fff;
   padding-block: 2em;
   padding-inline: 3em;
+}
 
-  h1 {
-    margin: 0;
-    font-size: 1.5em;
-  }
+.user-view h1 {
+  margin: 0;
+  font-size: 1.5em;
+}
 
-  .meta {
-    list-style-type: none;
-    padding: 0;
-  }
+.user-view .meta {
+  list-style-type: none;
+  padding: 0;
+}
 
-  .label {
-    display: inline-block;
-    min-inline-size: 4em;
-  }
+.user-view .label {
+  display: inline-block;
+  min-inline-size: 4em;
+}
 
-  .about {
-    margin-block: 1em;
-  }
+.user-view .about {
+  margin-block: 1em;
+}
 
-  .links a {
-    text-decoration: underline;
-  }
+.user-view .links a {
+  text-decoration: underline;
 }
 
 .error-view {
