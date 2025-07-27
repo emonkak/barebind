@@ -32,6 +32,7 @@ export function HashHistory(
       navigator: {
         getCurrentURL: () =>
           RelativeURL.fromString(trimHash(window.location.hash)),
+        isTransitionPending: () => context.isUpdatePending(),
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation({
             url: RelativeURL.from(url),
@@ -45,8 +46,8 @@ export function HashHistory(
             history.pushState(state, '', '#' + url);
           }
         },
-        async waitForTransition(): Promise<boolean> {
-          return (await context.waitForUpdate()) > 0;
+        async waitForTransition(): Promise<number> {
+          return context.waitForUpdate();
         },
       },
       setLocation,

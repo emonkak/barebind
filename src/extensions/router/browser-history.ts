@@ -30,6 +30,7 @@ export function BrowserHistory(
       },
       navigator: {
         getCurrentURL: () => RelativeURL.fromURL(window.location),
+        isTransitionPending: () => context.isUpdatePending(),
         navigate: (url, { replace = false, state = null } = {}) => {
           setLocation({
             url: RelativeURL.from(url),
@@ -43,8 +44,8 @@ export function BrowserHistory(
             history.pushState(state, '', url.toString());
           }
         },
-        async waitForTransition(): Promise<boolean> {
-          return (await context.waitForUpdate()) > 0;
+        async waitForTransition(): Promise<number> {
+          return context.waitForUpdate();
         },
       },
       setLocation,

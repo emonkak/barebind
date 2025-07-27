@@ -35,11 +35,7 @@ describe('ScrollRestration', () => {
         state: null,
         navigationType,
       };
-      const navigator: HistoryNavigator = {
-        navigate: vi.fn(),
-        getCurrentURL: vi.fn(),
-        waitForTransition: vi.fn(),
-      };
+      const navigator = createMockNavigator();
 
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
@@ -61,11 +57,7 @@ describe('ScrollRestration', () => {
         state: null,
         navigationType,
       };
-      const navigator: HistoryNavigator = {
-        navigate: vi.fn(),
-        getCurrentURL: vi.fn(),
-        waitForTransition: vi.fn(),
-      };
+      const navigator = createMockNavigator();
 
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
@@ -84,11 +76,7 @@ describe('ScrollRestration', () => {
       state: null,
       navigationType: 'push',
     };
-    const navigator: HistoryNavigator = {
-      navigate: vi.fn(),
-      getCurrentURL: vi.fn(),
-      waitForTransition: vi.fn(),
-    };
+    const navigator = createMockNavigator();
 
     const element = createElement('div', {
       id: 'foo',
@@ -111,11 +99,7 @@ describe('ScrollRestration', () => {
       state: null,
       navigationType: 'push',
     };
-    const navigator: HistoryNavigator = {
-      navigate: vi.fn(),
-      getCurrentURL: vi.fn(),
-      waitForTransition: vi.fn(),
-    };
+    const navigator = createMockNavigator();
 
     const element = createElement('div', {
       id: 'foo',
@@ -176,11 +160,8 @@ describe('ScrollRestration', () => {
         state: null,
         navigationType: 'push',
       };
-      const navigator: HistoryNavigator = {
-        navigate: vi.fn(),
-        getCurrentURL: vi.fn(),
-        waitForTransition: vi.fn().mockReturnValue(true),
-      };
+      const navigator = createMockNavigator(1);
+
       const event = Object.assign(new Event('navigate'), {
         canIntercept: true,
         downloadRequest: null,
@@ -207,21 +188,18 @@ describe('ScrollRestration', () => {
   );
 
   it.runIf(typeof navigation === 'object').each([
-    [false, null],
-    [true, 'foo'],
+    [false, null, 1],
+    [true, 'foo', 1],
+    [false, null, 0],
   ])(
     'not intercepts navigation if the event is not interceptable',
-    async (canIntercept, downloadRequest) => {
+    async (canIntercept, downloadRequest, pendingTransitions) => {
       const location: HistoryLocation = {
         url: new RelativeURL('/'),
         state: null,
         navigationType: 'push',
       };
-      const navigator: HistoryNavigator = {
-        navigate: vi.fn(),
-        getCurrentURL: vi.fn(),
-        waitForTransition: vi.fn().mockReturnValue(true),
-      };
+      const navigator = createMockNavigator(pendingTransitions);
       const event = Object.assign(new Event('navigate'), {
         canIntercept,
         downloadRequest,
@@ -253,11 +231,7 @@ describe('ScrollRestration', () => {
       state: null,
       navigationType: 'push',
     };
-    const navigator: HistoryNavigator = {
-      navigate: vi.fn(),
-      getCurrentURL: vi.fn(),
-      waitForTransition: vi.fn(),
-    };
+    const navigator = createMockNavigator();
 
     vi.stubGlobal('navigation', undefined);
 
@@ -269,3 +243,12 @@ describe('ScrollRestration', () => {
     expect(history.scrollRestoration).toBe('auto');
   });
 });
+
+function createMockNavigator(pendingTransitions: number = 0): HistoryNavigator {
+  return {
+    navigate: vi.fn(),
+    getCurrentURL: vi.fn(() => new RelativeURL('/')),
+    isTransitionPending: vi.fn(() => pendingTransitions > 0),
+    waitForTransition: vi.fn(() => Promise.resolve(pendingTransitions)),
+  };
+}

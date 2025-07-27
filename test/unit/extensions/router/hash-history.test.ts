@@ -105,8 +105,12 @@ describe('HashHistory', () => {
 
       navigator.navigate('/articles/foo%2Fbar');
 
-      expect(await navigator.waitForTransition()).toBe(true);
+      expect(navigator.isTransitionPending()).toBe(true);
+      expect(await navigator.waitForTransition()).toBe(1);
+      expect(resumeSpy).toHaveBeenCalledOnce();
 
+      expect(navigator.isTransitionPending()).toBe(false);
+      expect(await navigator.waitForTransition()).toBe(0);
       expect(resumeSpy).toHaveBeenCalledOnce();
     });
   });

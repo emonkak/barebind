@@ -11,15 +11,18 @@ export function ScrollRestration(context: HookContext): void {
 
     if (typeof navigation === 'object') {
       const handleNavigate = (event: NavigateEvent) => {
-        if (!event.canIntercept || event.downloadRequest !== null) {
+        if (
+          !event.canIntercept ||
+          event.downloadRequest !== null ||
+          !navigator.isTransitionPending()
+        ) {
           return;
         }
 
         event.intercept({
           async handler() {
-            if (await navigator.waitForTransition()) {
-              event.scroll();
-            }
+            await navigator.waitForTransition();
+            event.scroll();
           },
         });
       };
