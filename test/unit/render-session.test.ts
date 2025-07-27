@@ -264,6 +264,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
       expect(scheduleUpdateSpy).not.toHaveBeenCalled();
 
@@ -273,6 +274,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
       expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
@@ -285,6 +287,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
       expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
     });
@@ -481,6 +484,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
@@ -495,6 +499,7 @@ describe('RenderSession', () => {
         expect(count).toBe(1);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
     });
 
@@ -514,6 +519,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
     });
 
@@ -577,6 +583,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
@@ -591,6 +598,7 @@ describe('RenderSession', () => {
         expect(count).toBe(1);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
     });
 
@@ -609,6 +617,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
     });
 
@@ -629,6 +638,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
@@ -644,6 +654,7 @@ describe('RenderSession', () => {
         expect(count).toBe(1);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
     });
 
@@ -663,6 +674,7 @@ describe('RenderSession', () => {
         expect(isPending).toBe(false);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
@@ -678,6 +690,7 @@ describe('RenderSession', () => {
         expect(flushSession(session)).toBe(Lanes.BackgroundLane);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
     });
   });
@@ -701,6 +714,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
@@ -715,6 +729,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
@@ -752,6 +767,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(true);
       expect(await session.waitForUpdate()).toBe(1);
       expect(subscribers.size).toBe(1);
 
@@ -763,6 +779,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
 
       disposeSession(session);
@@ -788,6 +805,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(0);
@@ -802,6 +820,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);
@@ -816,6 +835,7 @@ describe('RenderSession', () => {
         flushSession(session);
       }
 
+      expect(session.isUpdatePending()).toBe(false);
       expect(await session.waitForUpdate()).toBe(0);
       expect(subscribe1).toHaveBeenCalledTimes(1);
       expect(subscribe2).toHaveBeenCalledTimes(1);

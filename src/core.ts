@@ -1,6 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import { debugNode } from './debug/node.js';
+import type { LinkedList } from './linked-list.js';
 
 export const $customHook: unique symbol = Symbol('$customHook');
 
@@ -144,6 +145,7 @@ export namespace Hook {
 export interface HookContext {
   forceUpdate(options?: UpdateOptions): UpdateTask;
   getContextValue(key: unknown): unknown;
+  isUpdatePending(): boolean;
   setContextValue(key: unknown, value: unknown): void;
   use<T>(usable: Usable<T>): T;
   useCallback<T extends Function>(callback: T, dependencies: unknown[]): T;
@@ -331,6 +333,7 @@ export interface RenderSessionContext {
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
   flushSync(): void;
+  getPendingTasks(): LinkedList<UpdateTask>;
   getScope(): Scope;
   nextIdentifier(): string;
   resolveTemplate(
@@ -339,7 +342,6 @@ export interface RenderSessionContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
-  waitForUpdate(coroutine?: Coroutine): Promise<number>;
 }
 
 export interface RequestCallbackOptions {

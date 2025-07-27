@@ -28,6 +28,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../mocks.js';
+import { waitForUpdate } from '../session-utils.js';
 import { getPromiseState, templateLiteral } from '../test-utils.js';
 
 describe('Runtime', () => {
@@ -710,7 +711,7 @@ describe('Runtime', () => {
 
       expect(task.lanes).toBe(Lanes.UserBlockingLane);
 
-      expect(await runtime.waitForUpdate()).toBe(1);
+      expect(await waitForUpdate(runtime)).toBe(1);
       expect(await getPromiseState(task.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
@@ -741,7 +742,7 @@ describe('Runtime', () => {
       expect(task2.lanes).toBe(Lanes.BackgroundLane);
       expect(task3.lanes).toBe(Lanes.BackgroundLane | Lanes.ViewTransitionLane);
 
-      expect(await runtime.waitForUpdate()).toBe(3);
+      expect(await waitForUpdate(runtime)).toBe(3);
       expect(await getPromiseState(task1.promise)).toBe('fulfilled');
       expect(await getPromiseState(task2.promise)).toBe('fulfilled');
       expect(await getPromiseState(task3.promise)).toBe('fulfilled');
@@ -769,7 +770,7 @@ describe('Runtime', () => {
         runtime.scheduleUpdate(coroutine, { priority: 'user-blocking' }),
       ).toBe(task);
 
-      expect(await runtime.waitForUpdate()).toBe(1);
+      expect(await waitForUpdate(runtime)).toBe(1);
       expect(await getPromiseState(task.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
@@ -787,7 +788,7 @@ describe('Runtime', () => {
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
-      expect(await runtime.waitForUpdate()).toBe(0);
+      expect(await waitForUpdate(runtime)).toBe(0);
 
       expect(resumeSpy).not.toHaveBeenCalled();
     });

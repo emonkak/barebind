@@ -1,4 +1,4 @@
-import { HookType, Lanes } from '@/core.js';
+import { HookType, Lanes, type RenderSessionContext } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
@@ -34,4 +34,15 @@ export function flushSession(session: RenderSession): Lanes {
   session['_pendingLanes'] = Lanes.NoLanes;
 
   return pendingLanes;
+}
+
+export async function waitForUpdate(
+  context: RenderSessionContext,
+): Promise<number> {
+  const pendingTasks = context.getPendingTasks();
+  const promises = Array.from(
+    pendingTasks,
+    (pendingTask) => pendingTask.promise,
+  );
+  return (await Promise.allSettled(promises)).length;
 }

@@ -96,6 +96,18 @@ export class RenderSession implements RenderContext {
     return this._template(strings, binds, 'html');
   }
 
+  isUpdatePending(): boolean {
+    const pendingTasks = this._context.getPendingTasks();
+
+    for (let node = pendingTasks.front(); node !== null; node = node.next) {
+      if (node.value.coroutine === this._coroutine) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   math(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
@@ -311,8 +323,17 @@ export class RenderSession implements RenderContext {
     return snapshot;
   }
 
-  waitForUpdate(): Promise<number> {
-    return this._context.waitForUpdate(this._coroutine);
+  async waitForUpdate(): Promise<number> {
+    const pendingTasks = this._context.getPendingTasks();
+    const promises: Promise<void>[] = [];
+
+    for (let node = pendingTasks.front(); node !== null; node = node.next) {
+      if (node.value.coroutine === this._coroutine) {
+        promises.push(node.value.promise);
+      }
+    }
+
+    return (await Promise.allSettled(promises)).length;
   }
 
   private _dynamicTemplate(

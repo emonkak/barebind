@@ -18,6 +18,7 @@ import {
   createSession,
   disposeSession,
   flushSession,
+  waitForUpdate,
 } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
@@ -108,7 +109,7 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate()).toBe(1);
+      expect(await waitForUpdate(runtime)).toBe(1);
 
       expect(container.innerHTML).toBe(signal.value);
     });
@@ -158,7 +159,7 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate()).toBe(1);
+      expect(await waitForUpdate(runtime)).toBe(1);
 
       expect(part.node.nodeValue).toBe(signal.value);
     });
@@ -191,7 +192,7 @@ describe('SiganlBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
-      expect(await runtime.waitForUpdate()).toBe(1);
+      expect(await waitForUpdate(runtime)).toBe(1);
 
       expect(part.node.nodeValue).toBe(signal2.value);
     });
@@ -219,12 +220,12 @@ describe('SiganlBinding', () => {
       binding.disconnect(runtime);
       binding.rollback(runtime);
 
-      expect(await runtime.waitForUpdate()).toBe(0);
+      expect(await waitForUpdate(runtime)).toBe(0);
       expect(part.node.nodeValue).toBe('');
 
       signal.value = 'bar';
 
-      expect(await runtime.waitForUpdate()).toBe(0);
+      expect(await waitForUpdate(runtime)).toBe(0);
       expect(part.node.nodeValue).toBe('');
     });
   });
