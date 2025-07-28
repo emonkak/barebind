@@ -103,7 +103,7 @@ describe('Observable', () => {
       expect(state$.version).toBe(3);
     });
 
-    it('sets a new value to an accessor property', () => {
+    it('sets a new value to the accessor property', () => {
       const state$ = Observable.from({
         _count: 0,
         get count() {
@@ -209,7 +209,7 @@ describe('Observable', () => {
       expect(state$.version).toBe(2);
     });
 
-    it('mutates the state by accessor properties', () => {
+    it('mutates the state by an accessor property', () => {
       const state$ = Observable.from({
         _count: 0,
         get count() {
@@ -231,7 +231,7 @@ describe('Observable', () => {
       });
     });
 
-    it('throws an error when trying to mutate to a readonly property', () => {
+    it('throws an error when trying to set a value to the readonly property', () => {
       const state$ = Observable.from({
         _count: 0,
         get count() {
@@ -244,6 +244,19 @@ describe('Observable', () => {
           (state as any).count++;
         });
       }).toThrow();
+    });
+
+    it('throws an error when trying to mutate a readonly descriptor', () => {
+      const state$ = Observable.from({
+        _count: 0,
+        get count() {
+          return this._count;
+        },
+      });
+
+      expect(() => state$.get('count').mutate(() => {})).toThrow(
+        'Cannot mutate value with a readonly descriptor.',
+      );
     });
 
     it('throws an error when trying to mutate to a non-object descriptor', () => {

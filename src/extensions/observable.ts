@@ -115,8 +115,11 @@ export class Observable<T> extends Signal<T> {
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
-    const source = this._descriptor.source$.value;
-    if (!isObject(source)) {
+    if (!(this._descriptor.source$ instanceof Atom)) {
+      throw new TypeError('Cannot mutate value with a readonly descriptor.');
+    }
+
+    if (!isObject(this._descriptor.source$.value)) {
       throw new TypeError('Cannot mutate value with a non-object descriptor.');
     }
 
