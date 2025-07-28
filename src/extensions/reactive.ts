@@ -10,8 +10,14 @@ const NO_FLAGS = 0b0;
 const FLAG_NEW = 0b01;
 const FLAG_DIRTY = 0b10;
 
-export interface ObservableOptions {
+export interface ReactiveOptions {
   shallow?: boolean;
+}
+
+interface ReactiveDescriptor<T> {
+  readonly source$: Signal<T>;
+  flags: number;
+  children: Map<PropertyKey, ReactiveDescriptor<unknown> | null> | null;
 }
 
 interface Difference {
@@ -19,19 +25,13 @@ interface Difference {
   value: unknown;
 }
 
-interface ObservableDescriptor<T> {
-  readonly source$: Signal<T>;
-  flags: number;
-  children: Map<PropertyKey, ObservableDescriptor<unknown> | null> | null;
-}
-
-type ObservableProperty<T, K extends ObservableKeys<T>> = T extends object
+type ReactiveProperty<T, K extends ReactiveKeys<T>> = T extends object
   ? Or<IsWritable<T, K>, IsNumber<K>> extends true
-    ? Observable<T[K]>
-    : Readonly<Observable<T[K]>>
+    ? Reactive<T[K]>
+    : Readonly<Reactive<T[K]>>
   : null;
 
-type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
+type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
 type FunctionKeys<T> = {
   [K in AllKeys<T>]: T[K] extends Function ? K : never;
@@ -58,18 +58,18 @@ type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
     ? true
     : false;
 
-export class Observable<T> extends Signal<T> {
-  private readonly _descriptor: ObservableDescriptor<T>;
+export class Reactive<T> extends Signal<T> {
+  private readonly _descriptor: ReactiveDescriptor<T>;
 
-  private readonly _options: ObservableOptions | undefined;
+  private readonly _options: ReactiveOptions | undefined;
 
-  static from<T>(source: T, options?: ObservableOptions): Observable<T> {
-    return new Observable(toObservableDescriptor(source), options);
+  static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
+    return new Reactive(toReactiveDescriptor(source), options);
   }
 
   private constructor(
-    descriptor: ObservableDescriptor<T>,
-    options?: ObservableOptions,
+    descriptor: ReactiveDescriptor<T>,
+    options?: ReactiveOptions,
   ) {
     super();
     this._descriptor = descriptor;
@@ -113,20 +113,14 @@ export class Observable<T> extends Signal<T> {
     return differences;
   }
 
-  get<K extends ObservableKeys<T>>(
+  get<K extends ReactiveKeys<T>>(
     key: K,
-    options?: ObservableOptions,
-  ): ObservableProperty<T, K>;
-  get(
-    key: PropertyKey,
-    options?: ObservableOptions,
-  ): Observable<unknown> | null;
-  get(
-    key: PropertyKey,
-    options?: ObservableOptions,
-  ): Observable<unknown> | null {
+    options?: ReactiveOptions,
+  ): ReactiveProperty<T, K>;
+  get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null;
+  get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null {
     const child = getChildDescriptor(this._descriptor, key);
-    return child !== null ? new Observable(child, options) : null;
+    return child !== null ? new Reactive(child, options) : null;
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
@@ -139,7 +133,7 @@ export class Observable<T> extends Signal<T> {
     }
 
     const proxy = proxyObjectDescriptor(
-      this._descriptor as ObservableDescriptor<T & object>,
+      this._descriptor as ReactiveDescriptor<T & object>,
     );
 
     return callback(proxy);
@@ -161,7 +155,7 @@ export class Observable<T> extends Signal<T> {
 }
 
 function collectDefferences<T>(
-  descriptor: ObservableDescriptor<T>,
+  descriptor: ReactiveDescriptor<T>,
   differences: Difference[],
 ): void {
   const { children, flags, source$ } = descriptor;
@@ -184,9 +178,9 @@ function collectDefferences<T>(
 }
 
 function getChildDescriptor<T>(
-  parent: ObservableDescriptor<T>,
+  parent: ReactiveDescriptor<T>,
   key: PropertyKey,
-): ObservableDescriptor<unknown> | null {
+): ReactiveDescriptor<unknown> | null {
   let child = parent.children?.get(key);
   if (child !== undefined) {
     return child;
@@ -194,7 +188,7 @@ function getChildDescriptor<T>(
 
   if (isObject(parent.source$.value)) {
     child = resolveChildDescriptor(
-      parent as ObservableDescriptor<T & object>,
+      parent as ReactiveDescriptor<T & object>,
       key,
     );
 
@@ -218,7 +212,7 @@ function getChildDescriptor<T>(
   return child;
 }
 
-function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
+function getSnapshot<T>(descriptor: ReactiveDescriptor<T>): T {
   const { children, flags, source$ } = descriptor;
 
   if (flags & FLAG_DIRTY) {
@@ -249,8 +243,8 @@ function isObject<T>(value: T): value is T & object {
 }
 
 function proxyObjectDescriptor<T extends object>(
-  descriptor: ObservableDescriptor<T>,
-  getChildValue: <T>(descriptor: ObservableDescriptor<T>) => T = getSnapshot,
+  descriptor: ReactiveDescriptor<T>,
+  getChildValue: <T>(descriptor: ReactiveDescriptor<T>) => T = getSnapshot,
 ): T {
   return new Proxy(descriptor.source$.value, {
     get(target, key, receiver) {
@@ -275,9 +269,9 @@ function proxyObjectDescriptor<T extends object>(
 }
 
 function resolveChildDescriptor<T extends object>(
-  parent: ObservableDescriptor<T>,
+  parent: ReactiveDescriptor<T>,
   key: PropertyKey,
-): ObservableDescriptor<unknown> | null {
+): ReactiveDescriptor<unknown> | null {
   const root = parent.source$.value;
   let prototype = root;
 
@@ -316,7 +310,7 @@ function resolveChildDescriptor<T extends object>(
           children: null,
         };
       } else if (prototype === root) {
-        return toObservableDescriptor(value);
+        return toReactiveDescriptor(value);
       }
     }
 
@@ -337,7 +331,7 @@ function shallowClone<T extends object>(object: T): T {
   }
 }
 
-function toObservableDescriptor<T>(source: T): ObservableDescriptor<T> {
+function toReactiveDescriptor<T>(source: T): ReactiveDescriptor<T> {
   return {
     source$: new Atom(source),
     flags: NO_FLAGS,

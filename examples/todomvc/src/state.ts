@@ -1,5 +1,5 @@
 import { $customHook, type HookContext } from '@emonkak/ebit';
-import { Observable } from '@emonkak/ebit/extensions/observable';
+import { Reactive } from '@emonkak/ebit/extensions/reactive';
 
 export interface Todo {
   id: string;
@@ -14,16 +14,16 @@ export class TodoState {
 
   filter: TodoFilter = 'all';
 
-  static [$customHook](context: HookContext): Observable<TodoState> {
+  static [$customHook](context: HookContext): Reactive<TodoState> {
     const state = context.getContextValue(this);
-    if (!(state instanceof Observable && state.value instanceof this)) {
+    if (!(state instanceof Reactive && state.value instanceof this)) {
       throw new Error(`${this.name} is not registered in the context.`);
     }
     return state;
   }
 
   [$customHook](context: HookContext): void {
-    context.setContextValue(this.constructor, Observable.from(this));
+    context.setContextValue(this.constructor, Reactive.from(this));
   }
 
   get activeTodos(): readonly Todo[] {

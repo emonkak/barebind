@@ -3,7 +3,7 @@ import {
   type CustomHookObject,
   type HookContext,
 } from '@emonkak/ebit';
-import { Observable } from '@emonkak/ebit/extensions/observable';
+import { Reactive } from '@emonkak/ebit/extensions/reactive';
 
 const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';
@@ -88,20 +88,20 @@ export class AppStore implements CustomHookObject<void> {
     return state;
   }
 
-  readonly itemState$: Observable<ItemState> = Observable.from({
+  readonly itemState$: Reactive<ItemState> = Reactive.from({
     item: null,
     isLoading: false,
     error: null,
   });
 
-  readonly storyState$: Observable<StoryState> = Observable.from({
+  readonly storyState$: Reactive<StoryState> = Reactive.from({
     stories: [],
     type: null,
     page: 0,
     isLoading: false,
   });
 
-  readonly userState$: Observable<UserState> = Observable.from({
+  readonly userState$: Reactive<UserState> = Reactive.from({
     user: null,
     isLoading: false,
     error: null,

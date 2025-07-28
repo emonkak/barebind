@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Observable } from '@/extensions/observable.js';
+import { Reactive } from '@/extensions/reactive.js';
 
 interface Todo {
   id: number;
@@ -51,14 +51,14 @@ class TodoState {
   }
 }
 
-describe('Observable', () => {
+describe('Reactive', () => {
   describe('length', () => {
     it('returns a length of the array', () => {
       const initialState = new TodoState([
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
 
@@ -70,7 +70,7 @@ describe('Observable', () => {
   describe('value', () => {
     it('returns the initial state as a snapshot if there is no update', () => {
       const initialState = new TodoState();
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
 
       expect(state$.value).toBe(initialState);
       expect(state$.version).toBe(0);
@@ -81,7 +81,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
 
@@ -104,7 +104,7 @@ describe('Observable', () => {
     });
 
     it('sets a new value to the accessor property', () => {
-      const state$ = Observable.from({
+      const state$ = Reactive.from({
         _count: 0,
         get count() {
           return this._count;
@@ -123,7 +123,7 @@ describe('Observable', () => {
     it('assigns a new value as a snapshot', () => {
       const state1 = { count: 0 };
       const state2 = { count: 1 };
-      const state$ = Observable.from(state1);
+      const state$ = Reactive.from(state1);
 
       state$.value = state2;
 
@@ -133,7 +133,7 @@ describe('Observable', () => {
 
     it('throws an error when trying to set to a readonly descriptor', () => {
       const initialState = new TodoState();
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const activeTodos$ = state$.get('activeTodos');
 
       expect(() => {
@@ -148,7 +148,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
 
@@ -186,7 +186,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
       const activeTodos$ = state$.get('activeTodos');
@@ -216,7 +216,7 @@ describe('Observable', () => {
 
     it('returns undefined if the property does not exist', () => {
       const initialState = new TodoState();
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
 
       expect(state$.get('todos').get(0)).toBe(null);
       expect(state$.get('filter').get(0)).toBe(null);
@@ -229,7 +229,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
 
       state$.mutate((state) => {
         state.addTodo('baz');
@@ -249,7 +249,7 @@ describe('Observable', () => {
     });
 
     it('mutates the state by an accessor property', () => {
-      const state$ = Observable.from({
+      const state$ = Reactive.from({
         _count: 0,
         get count() {
           return this._count;
@@ -271,7 +271,7 @@ describe('Observable', () => {
     });
 
     it('throws an error when trying to set a value to the readonly property', () => {
-      const state$ = Observable.from({
+      const state$ = Reactive.from({
         _count: 0,
         get count() {
           return this._count;
@@ -286,7 +286,7 @@ describe('Observable', () => {
     });
 
     it('throws an error when trying to mutate a readonly descriptor', () => {
-      const state$ = Observable.from({
+      const state$ = Reactive.from({
         _count: 0,
         get count() {
           return this._count;
@@ -299,7 +299,7 @@ describe('Observable', () => {
     });
 
     it('throws an error when trying to mutate to a non-object descriptor', () => {
-      const state$ = Observable.from('foo');
+      const state$ = Reactive.from('foo');
 
       expect(() => state$.mutate(() => {})).toThrow(
         'Cannot mutate value with a non-object descriptor.',
@@ -313,7 +313,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber);
@@ -335,7 +335,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState, { shallow: true });
+      const state$ = Reactive.from(initialState, { shallow: true });
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber);
@@ -357,7 +357,7 @@ describe('Observable', () => {
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
-      const state$ = Observable.from(initialState);
+      const state$ = Reactive.from(initialState);
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber)();
