@@ -91,8 +91,8 @@ export class Observable<T> extends Signal<T> {
       throw new TypeError('Cannot set value on a read-only descriptor.');
     }
 
-    // We must clear the dirty flag for shallow subscription before assign the
-    // value.
+    // We must clear the dirty flag for shallow subscription before set the new
+    // source.
     descriptor.flags |= FLAG_NEW;
     descriptor.flags &= ~FLAG_DIRTY;
     descriptor.children = null;
@@ -157,17 +157,6 @@ export class Observable<T> extends Signal<T> {
     } else {
       return descriptor.source$.subscribe(subscriber);
     }
-  }
-}
-
-function cloneObject<T extends object>(object: T): T {
-  if (Array.isArray(object)) {
-    return object.slice() as T;
-  } else {
-    return Object.create(
-      Object.getPrototypeOf(object),
-      Object.getOwnPropertyDescriptors(object),
-    );
   }
 }
 
@@ -236,11 +225,11 @@ function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
     const oldSource = source$.value;
 
     if (isObject(oldSource)) {
-      const newSource = cloneObject(oldSource) as any;
+      const newSource = shallowClone(oldSource);
 
       for (const [key, child] of children!.entries()) {
         if (child !== null && child.flags & (FLAG_NEW | FLAG_DIRTY)) {
-          newSource[key] = getSnapshot(child);
+          (newSource as any)[key] = getSnapshot(child);
           child.flags &= ~FLAG_NEW;
         }
       }
@@ -335,6 +324,17 @@ function resolveChildDescriptor<T extends object>(
   } while (prototype !== null && prototype !== Object.prototype);
 
   return null;
+}
+
+function shallowClone<T extends object>(object: T): T {
+  if (Array.isArray(object)) {
+    return object.slice() as T;
+  } else {
+    return Object.create(
+      Object.getPrototypeOf(object),
+      Object.getOwnPropertyDescriptors(object),
+    );
+  }
 }
 
 function toObservableDescriptor<T>(source: T): ObservableDescriptor<T> {
