@@ -14,17 +14,22 @@ export interface ObservableOptions {
   shallow?: boolean;
 }
 
+interface Difference {
+  path: PropertyKey[];
+  value: unknown;
+}
+
 interface ObservableDescriptor<T> {
   readonly source$: Signal<T>;
   flags: number;
-  children: Map<PropertyKey, ObservableDescriptor<unknown> | undefined> | null;
+  children: Map<PropertyKey, ObservableDescriptor<unknown> | null> | null;
 }
 
 type ObservableProperty<T, K extends ObservableKeys<T>> = T extends object
   ? Or<IsWritable<T, K>, IsNumber<K>> extends true
     ? Observable<T[K]>
     : Readonly<Observable<T[K]>>
-  : undefined;
+  : null;
 
 type ObservableKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
@@ -98,6 +103,16 @@ export class Observable<T> extends Signal<T> {
     return this._descriptor.source$.version;
   }
 
+  diff(): Difference[] {
+    const differences: Difference[] = [];
+    collectDefferences(this._descriptor, differences);
+    for (let i = 0, l = differences.length; i < l; i++) {
+      // The path is constructed in reverse order from child to parent.
+      differences[i]!.path.reverse();
+    }
+    return differences;
+  }
+
   get<K extends ObservableKeys<T>>(
     key: K,
     options?: ObservableOptions,
@@ -105,13 +120,13 @@ export class Observable<T> extends Signal<T> {
   get(
     key: PropertyKey,
     options?: ObservableOptions,
-  ): Observable<unknown> | undefined;
+  ): Observable<unknown> | null;
   get(
     key: PropertyKey,
     options?: ObservableOptions,
-  ): Observable<unknown> | undefined {
+  ): Observable<unknown> | null {
     const child = getChildDescriptor(this._descriptor, key);
-    return child !== undefined ? new Observable(child, options) : undefined;
+    return child !== null ? new Observable(child, options) : null;
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
@@ -146,16 +161,43 @@ export class Observable<T> extends Signal<T> {
 }
 
 function cloneObject<T extends object>(object: T): T {
-  return Object.create(
-    Object.getPrototypeOf(object),
-    Object.getOwnPropertyDescriptors(object),
-  );
+  if (Array.isArray(object)) {
+    return object.slice() as T;
+  } else {
+    return Object.create(
+      Object.getPrototypeOf(object),
+      Object.getOwnPropertyDescriptors(object),
+    );
+  }
+}
+
+function collectDefferences<T>(
+  descriptor: ObservableDescriptor<T>,
+  differences: Difference[],
+): void {
+  const { children, flags, source$ } = descriptor;
+
+  if (flags & FLAG_NEW) {
+    differences.push({ path: [], value: source$.value });
+  }
+
+  if (flags & FLAG_DIRTY) {
+    for (const [key, child] of children!.entries()) {
+      if (child !== null) {
+        const startIndex = differences.length;
+        collectDefferences(child, differences);
+        for (let i = startIndex, l = differences.length; i < l; i++) {
+          differences[i]!.path.push(key);
+        }
+      }
+    }
+  }
 }
 
 function getChildDescriptor<T>(
   parent: ObservableDescriptor<T>,
   key: PropertyKey,
-): ObservableDescriptor<unknown> | undefined {
+): ObservableDescriptor<unknown> | null {
   let child = parent.children?.get(key);
   if (child !== undefined) {
     return child;
@@ -167,15 +209,18 @@ function getChildDescriptor<T>(
       key,
     );
 
-    if (child !== undefined && child.source$ instanceof Atom) {
+    if (
+      child !== null &&
+      parent.source$ instanceof Atom &&
+      child.source$ instanceof Atom
+    ) {
       child.source$.subscribe(() => {
         parent.flags |= FLAG_DIRTY;
-
-        if (parent.source$ instanceof Atom) {
-          parent.source$.touch();
-        }
+        (parent.source$ as Atom<T>).touch();
       });
     }
+  } else {
+    child = null;
   }
 
   parent.children ??= new Map();
@@ -187,23 +232,21 @@ function getChildDescriptor<T>(
 function getSnapshot<T>(descriptor: ObservableDescriptor<T>): T {
   const { children, flags, source$ } = descriptor;
 
-  if (flags & FLAG_DIRTY && source$ instanceof Atom) {
+  if (flags & FLAG_DIRTY) {
     const oldSource = source$.value;
 
     if (isObject(oldSource)) {
-      const newSource = Array.isArray(oldSource)
-        ? oldSource.slice()
-        : cloneObject(oldSource);
+      const newSource = cloneObject(oldSource) as any;
 
       for (const [key, child] of children!.entries()) {
-        if (child !== undefined && child.flags & (FLAG_NEW | FLAG_DIRTY)) {
+        if (child !== null && child.flags & (FLAG_NEW | FLAG_DIRTY)) {
           newSource[key] = getSnapshot(child);
           child.flags &= ~FLAG_NEW;
         }
       }
 
       // Update the source without notification to subscribers.
-      source$['_value'] = newSource;
+      (source$ as Atom<T>)['_value'] = newSource;
     }
 
     descriptor.flags &= ~FLAG_DIRTY;
@@ -223,7 +266,7 @@ function proxyObjectDescriptor<T extends object>(
   return new Proxy(descriptor.source$.value, {
     get(target, key, receiver) {
       const child = getChildDescriptor(descriptor, key);
-      if (child !== undefined) {
+      if (child !== null) {
         return getChildValue(child);
       } else {
         return Reflect.get(target, key, receiver);
@@ -231,7 +274,7 @@ function proxyObjectDescriptor<T extends object>(
     },
     set(target, key, value, receiver) {
       const child = getChildDescriptor(descriptor, key);
-      if (child !== undefined && child.source$ instanceof Atom) {
+      if (child !== null && child.source$ instanceof Atom) {
         child.flags |= FLAG_NEW;
         child.source$.value = value;
         return true;
@@ -245,7 +288,7 @@ function proxyObjectDescriptor<T extends object>(
 function resolveChildDescriptor<T extends object>(
   parent: ObservableDescriptor<T>,
   key: PropertyKey,
-): ObservableDescriptor<unknown> | undefined {
+): ObservableDescriptor<unknown> | null {
   const root = parent.source$.value;
   let prototype = root;
 
@@ -291,7 +334,7 @@ function resolveChildDescriptor<T extends object>(
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return undefined;
+  return null;
 }
 
 function toObservableDescriptor<T>(source: T): ObservableDescriptor<T> {

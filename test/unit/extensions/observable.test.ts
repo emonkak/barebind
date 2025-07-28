@@ -142,6 +142,44 @@ describe('Observable', () => {
     });
   });
 
+  describe('diff()', () => {
+    it('returns a list of changed properties', () => {
+      const initialState = new TodoState([
+        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'bar', completed: false },
+      ]);
+      const state$ = Observable.from(initialState);
+      const todos$ = state$.get('todos');
+      const filter$ = state$.get('filter');
+
+      todos$.get(1)!.get('completed').value = true;
+      filter$.value = 'completed';
+
+      expect(state$.diff()).toStrictEqual([
+        {
+          path: ['todos', 1, 'completed'],
+          value: true,
+        },
+        {
+          path: ['filter'],
+          value: 'completed',
+        },
+      ]);
+      expect(todos$.diff()).toStrictEqual([
+        {
+          path: [1, 'completed'],
+          value: true,
+        },
+      ]);
+      expect(filter$.diff()).toStrictEqual([
+        {
+          path: [],
+          value: 'completed',
+        },
+      ]);
+    });
+  });
+
   describe('get()', () => {
     it('computes a computed property is calculated from dependent values', () => {
       const initialState = new TodoState([
@@ -180,7 +218,8 @@ describe('Observable', () => {
       const initialState = new TodoState();
       const state$ = Observable.from(initialState);
 
-      expect(state$.get('todos').get(0)).toBe(undefined);
+      expect(state$.get('todos').get(0)).toBe(null);
+      expect(state$.get('filter').get(0)).toBe(null);
     });
   });
 
