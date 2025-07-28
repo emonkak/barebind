@@ -97,9 +97,9 @@ export class RenderSession implements RenderContext {
   }
 
   isUpdatePending(): boolean {
-    const pendingTasks = this._context.getPendingTasks();
+    const scheduledTasks = this._context.getScheduledTasks();
 
-    for (let node = pendingTasks.front(); node !== null; node = node.next) {
+    for (let node = scheduledTasks.front(); node !== null; node = node.next) {
       if (node.value.coroutine === this._coroutine) {
         return true;
       }
@@ -324,10 +324,10 @@ export class RenderSession implements RenderContext {
   }
 
   async waitForUpdate(): Promise<number> {
-    const pendingTasks = this._context.getPendingTasks();
+    const scheduledTasks = this._context.getScheduledTasks();
     const promises: Promise<void>[] = [];
 
-    for (let node = pendingTasks.front(); node !== null; node = node.next) {
+    for (let node = scheduledTasks.front(); node !== null; node = node.next) {
       if (node.value.coroutine === this._coroutine) {
         promises.push(node.value.promise);
       }

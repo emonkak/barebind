@@ -333,7 +333,7 @@ export interface RenderSessionContext {
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
   flushSync(): void;
-  getPendingTasks(): LinkedList<UpdateTask>;
+  getScheduledTasks(): LinkedList<UpdateTask>;
   getScope(): Scope;
   nextIdentifier(): string;
   resolveTemplate(

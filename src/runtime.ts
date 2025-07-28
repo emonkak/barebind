@@ -71,7 +71,7 @@ interface RuntimeState {
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   observers: LinkedList<RuntimeObserver>;
-  pendingTasks: LinkedList<UpdateTask>;
+  scheduledTasks: LinkedList<UpdateTask>;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
   templatePlaceholder: string;
   updateCount: number;
@@ -290,8 +290,8 @@ export class Runtime implements CommitContext, UpdateContext {
     }
   }
 
-  getPendingTasks(): LinkedList<UpdateTask> {
-    return this._state.pendingTasks;
+  getScheduledTasks(): LinkedList<UpdateTask> {
+    return this._state.scheduledTasks;
   }
 
   getScope(): Scope {
@@ -381,20 +381,20 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
-    const { coroutineStates, pendingTasks } = this._state;
+    const { coroutineStates, scheduledTasks } = this._state;
     const completeOptions = {
       priority: options?.priority ?? this._backend.getCurrentPriority(),
       viewTransition: options?.viewTransition ?? false,
     };
     const lanes = getScheduleLanesFromOptions(completeOptions);
 
-    for (const pendingTask of pendingTasks) {
+    for (const scheduledTask of scheduledTasks) {
       if (
-        pendingTask.coroutine === coroutine &&
-        pendingTask.lanes === lanes &&
-        !pendingTask.running
+        scheduledTask.coroutine === coroutine &&
+        scheduledTask.lanes === lanes &&
+        !scheduledTask.running
       ) {
-        return pendingTask;
+        return scheduledTask;
       }
     }
 
@@ -407,7 +407,7 @@ export class Runtime implements CommitContext, UpdateContext {
       coroutineStates.set(coroutine, coroutineState);
     }
 
-    const pendingTaskNode = pendingTasks.pushBack({
+    const scheduledTaskNode = scheduledTasks.pushBack({
       coroutine,
       lanes,
       running: false,
@@ -417,16 +417,16 @@ export class Runtime implements CommitContext, UpdateContext {
             return;
           }
 
-          pendingTaskNode.value.running = true;
+          scheduledTaskNode.value.running = true;
 
           await this._createSubcontext(coroutine).flushAsync(completeOptions);
         } finally {
-          pendingTasks.remove(pendingTaskNode);
+          scheduledTasks.remove(scheduledTaskNode);
         }
       }, completeOptions),
     });
 
-    return pendingTaskNode.value;
+    return scheduledTaskNode.value;
   }
 
   undebugValue(
@@ -585,10 +585,10 @@ function createRuntimeState(): RuntimeState {
     coroutineStates: new WeakMap(),
     identifierCount: 0,
     observers: new LinkedList(),
+    scheduledTasks: new LinkedList(),
     templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
     templatePlaceholder: generateRandomString(8),
     updateCount: 0,
-    pendingTasks: new LinkedList(),
   };
 }
 

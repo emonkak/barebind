@@ -39,10 +39,10 @@ export function flushSession(session: RenderSession): Lanes {
 export async function waitForUpdate(
   context: RenderSessionContext,
 ): Promise<number> {
-  const pendingTasks = context.getPendingTasks();
+  const scheduledTasks = context.getScheduledTasks();
   const promises = Array.from(
-    pendingTasks,
-    (pendingTask) => pendingTask.promise,
+    scheduledTasks,
+    (scheduledTask) => scheduledTask.promise,
   );
   return (await Promise.allSettled(promises)).length;
 }
