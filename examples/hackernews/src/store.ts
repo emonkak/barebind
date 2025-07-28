@@ -60,6 +60,25 @@ export interface User {
   submitted: number[];
 }
 
+export interface ItemState {
+  item: Item | null;
+  isLoading: boolean;
+  error: APIError | null;
+}
+
+export interface StoryState {
+  stories: Story[];
+  type: StoryType | null;
+  page: number;
+  isLoading: boolean;
+}
+
+export interface UserState {
+  user: User | null;
+  isLoading: boolean;
+  error: APIError | null;
+}
+
 export class AppStore implements CustomHookObject<void> {
   static [$customHook](context: HookContext): AppStore {
     const state = context.getContextValue(this);
@@ -69,21 +88,24 @@ export class AppStore implements CustomHookObject<void> {
     return state;
   }
 
-  readonly itemState$: Observable<ItemState>;
+  readonly itemState$: Observable<ItemState> = Observable.from({
+    item: null,
+    isLoading: false,
+    error: null,
+  });
 
-  readonly storyState$: Observable<StoryState>;
+  readonly storyState$: Observable<StoryState> = Observable.from({
+    stories: [],
+    type: null,
+    page: 0,
+    isLoading: false,
+  });
 
-  readonly userState$: Observable<UserState>;
-
-  constructor(
-    itemState: ItemState,
-    storyState: StoryState,
-    userState: UserState,
-  ) {
-    this.itemState$ = Observable.from(itemState);
-    this.storyState$ = Observable.from(storyState);
-    this.userState$ = Observable.from(userState);
-  }
+  readonly userState$: Observable<UserState> = Observable.from({
+    user: null,
+    isLoading: false,
+    error: null,
+  });
 
   [$customHook](context: HookContext): void {
     context.setContextValue(this.constructor, this);
@@ -157,30 +179,4 @@ export class AppStore implements CustomHookObject<void> {
       }
     });
   }
-}
-
-export class ItemState {
-  item: Item | null = null;
-
-  isLoading = false;
-
-  error: APIError | null = null;
-}
-
-export class StoryState {
-  stories: Story[] = [];
-
-  type: StoryType | null = null;
-
-  page = 0;
-
-  isLoading = false;
-}
-
-export class UserState {
-  user: User | null = null;
-
-  isLoading: boolean = false;
-
-  error: APIError | null = null;
 }
