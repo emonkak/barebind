@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   $toDirective,
   HydrationError,
-  HydrationNodeScanner,
+  HydrationTree,
   PartType,
 } from '@/core.js';
 import {
@@ -99,9 +99,9 @@ describe('SiganlBinding', () => {
         runtime,
       ) as SignalBinding<string>;
       const container = createElement('div', {}, part.node);
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
 
-      binding.hydrate(nodeScanner, runtime);
+      binding.hydrate(tree, runtime);
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(signal.value);
@@ -124,13 +124,13 @@ describe('SiganlBinding', () => {
       const runtime = new Runtime(new MockBackend());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
       const container = createElement('div', {}, part.node);
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
 
       binding.connect(runtime);
       binding.commit(runtime);
 
       expect(() => {
-        binding.hydrate(nodeScanner, runtime);
+        binding.hydrate(tree, runtime);
       }).toThrow(HydrationError);
     });
   });

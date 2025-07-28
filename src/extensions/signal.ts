@@ -11,7 +11,7 @@ import {
   type DirectiveType,
   type HookContext,
   HydrationError,
-  type HydrationNodeScanner,
+  type HydrationTree,
   Lanes,
   type Part,
   type Slot,
@@ -89,14 +89,14 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return Lanes.NoLanes;
   }
 
-  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
+  hydrate(tree: HydrationTree, context: UpdateContext): void {
     if (this._subscription !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',
       );
     }
 
-    this._slot.hydrate(nodeScanner, context);
+    this._slot.hydrate(tree, context);
     this._subscription = this._subscribeSignal(context);
   }
 

@@ -1,4 +1,4 @@
-import { type Backend, HydrationNodeScanner, PartType } from '../core.js';
+import { type Backend, HydrationTree, PartType } from '../core.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
@@ -29,11 +29,11 @@ export function createSyncRoot<T>(
       return runtime.observe(observer);
     },
     hydrate() {
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
 
-      slot.hydrate(nodeScanner, runtime);
+      slot.hydrate(tree, runtime);
 
-      nodeScanner.nextNode(part.node.nodeName).replaceWith(part.node);
+      tree.nextNode(part.node.nodeName).replaceWith(part.node);
 
       runtime.enqueueMutationEffect(new MountSlot(slot, container));
       runtime.flushSync();

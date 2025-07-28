@@ -40,7 +40,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
-  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void;
+  hydrate(tree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -357,7 +357,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: unknown;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): void;
-  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void;
+  hydrate(tree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -377,7 +377,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    nodeScanner: HydrationNodeScanner,
+    tree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult;
 }
@@ -427,7 +427,7 @@ interface ScopeEntry {
 
 export class HydrationError extends Error {}
 
-export class HydrationNodeScanner {
+export class HydrationTree {
   private readonly _treeWalker: TreeWalker;
 
   private _lookaheadNode: Node | null;

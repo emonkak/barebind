@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationNodeScanner, PartType } from '@/core.js';
+import { HydrationError, HydrationTree, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
@@ -37,12 +37,12 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -72,11 +72,11 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
-        template.hydrate(binds, part, nodeScanner, runtime);
+        template.hydrate(binds, part, tree, runtime);
       }).toThrow(HydrationError);
     });
   });

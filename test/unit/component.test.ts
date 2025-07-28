@@ -3,7 +3,7 @@ import { ComponentBinding, component, FunctionComponent } from '@/component.js';
 import {
   CommitPhase,
   HydrationError,
-  HydrationNodeScanner,
+  HydrationTree,
   Lanes,
   PartType,
   type RenderContext,
@@ -166,10 +166,10 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(component, props, part);
       const container = createElement('div', {}, part.node);
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
-      binding.hydrate(nodeScanner, runtime);
+      binding.hydrate(tree, runtime);
       runtime.enqueueMutationEffect(binding);
       runtime.flushSync();
 
@@ -211,16 +211,14 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(component, props, part);
       const container = document.createElement('div');
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       runtime.enqueueCoroutine(binding);
       runtime.enqueueMutationEffect(binding);
       runtime.flushSync();
 
-      expect(() => binding.hydrate(nodeScanner, runtime)).toThrow(
-        HydrationError,
-      );
+      expect(() => binding.hydrate(tree, runtime)).toThrow(HydrationError);
     });
   });
 

@@ -7,7 +7,7 @@ import {
   type DirectiveType,
   getStartNode,
   HydrationError,
-  type HydrationNodeScanner,
+  type HydrationTree,
   type Part,
   PartType,
   type Slot,
@@ -133,7 +133,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._props = props;
   }
 
-  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
+  hydrate(tree: HydrationTree, context: UpdateContext): void {
     if (this._memoizedItems !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',
@@ -156,9 +156,9 @@ export class RepeatBinding<TSource, TKey, TValue>
       };
       const slot = context.resolveSlot(value, part);
 
-      slot.hydrate(nodeScanner, context);
+      slot.hydrate(tree, context);
 
-      nodeScanner.nextNode(part.node.nodeName).replaceWith(part.node);
+      tree.nextNode(part.node.nodeName).replaceWith(part.node);
 
       targetItems[i] = {
         key,

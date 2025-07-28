@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HydrationError, HydrationNodeScanner, PartType } from '@/core.js';
+import { HydrationError, HydrationTree, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import {
   getNamespaceURIByTagName,
@@ -109,7 +109,7 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
@@ -117,15 +117,10 @@ describe('TemplateBinding', () => {
         slots: [],
       });
 
-      binding.hydrate(nodeScanner, runtime);
+      binding.hydrate(tree, runtime);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(
-        binds,
-        part,
-        nodeScanner,
-        runtime,
-      );
+      expect(hydrateSpy).toHaveBeenCalledWith(binds, part, tree, runtime);
       expect(container.innerHTML).toBe('foo<!---->');
 
       binding.disconnect(runtime);
@@ -145,15 +140,13 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = document.createElement('div');
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(() => binding.hydrate(nodeScanner, runtime)).toThrow(
-        HydrationError,
-      );
+      expect(() => binding.hydrate(tree, runtime)).toThrow(HydrationError);
     });
   });
 

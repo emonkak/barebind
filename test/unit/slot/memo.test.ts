@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HydrationNodeScanner, PartType } from '@/core.js';
+import { HydrationTree, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { Runtime } from '@/runtime.js';
 import { MemoSlot, memo } from '@/slot/memo.js';
@@ -226,20 +226,18 @@ describe('MemoSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new MemoSlot(binding);
-      const nodeScanner = new HydrationNodeScanner(
-        document.createElement('div'),
-      );
+      const tree = new HydrationTree(document.createElement('div'));
       const runtime = new Runtime(new MockBackend());
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
       const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.hydrate(nodeScanner, runtime);
+      slot.hydrate(tree, runtime);
       slot.commit(runtime);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(nodeScanner, runtime);
+      expect(hydrateSpy).toHaveBeenCalledWith(tree, runtime);
       expect(commitSpy).toHaveBeenCalledOnce();
       expect(commitSpy).toHaveBeenCalledWith(runtime);
       expect(debugValueSpy).toHaveBeenCalledOnce();

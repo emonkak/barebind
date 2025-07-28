@@ -8,7 +8,7 @@ import {
   type Hook,
   HookType,
   HydrationError,
-  type HydrationNodeScanner,
+  type HydrationTree,
   Lanes,
   type Part,
   type RenderContext,
@@ -141,7 +141,7 @@ export class ComponentBinding<TProps, TResult>
     return pendingLanes;
   }
 
-  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
+  hydrate(tree: HydrationTree, context: UpdateContext): void {
     if (this._slot !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initilized.',
@@ -160,7 +160,7 @@ export class ComponentBinding<TProps, TResult>
     );
 
     this._slot = subcontext.resolveSlot(value, this._part);
-    this._slot.hydrate(nodeScanner, subcontext);
+    this._slot.hydrate(tree, subcontext);
     this._parentScope = scope;
   }
 

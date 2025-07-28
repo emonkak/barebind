@@ -3,7 +3,7 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveType,
-  type HydrationNodeScanner,
+  type HydrationTree,
   type Part,
   type Slot,
   type UpdateContext,
@@ -61,8 +61,8 @@ export class LooseSlot<T> implements Slot<T> {
     }
   }
 
-  hydrate(nodeScanner: HydrationNodeScanner, context: UpdateContext): void {
-    this._pendingBinding.hydrate(nodeScanner, context);
+  hydrate(tree: HydrationTree, context: UpdateContext): void {
+    this._pendingBinding.hydrate(tree, context);
     this._dirty = true;
   }
 

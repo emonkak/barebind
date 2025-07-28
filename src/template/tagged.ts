@@ -1,5 +1,5 @@
 import {
-  type HydrationNodeScanner,
+  type HydrationTree,
   type Part,
   PartType,
   type Slot,
@@ -137,7 +137,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    nodeScanner: HydrationNodeScanner,
+    tree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const holes = this._holes;
@@ -171,7 +171,7 @@ export class TaggedTemplate<
           case PartType.Attribute: {
             childPart = {
               type: PartType.Attribute,
-              node: nodeScanner.peekNode(currentNode.nodeName) as Element,
+              node: tree.peekNode(currentNode.nodeName) as Element,
               name: hole.name,
             };
             break;
@@ -188,18 +188,18 @@ export class TaggedTemplate<
           case PartType.Element:
             childPart = {
               type: PartType.Element,
-              node: nodeScanner.peekNode(currentNode.nodeName) as Element,
+              node: tree.peekNode(currentNode.nodeName) as Element,
             };
             break;
           case PartType.Event:
             childPart = {
               type: PartType.Event,
-              node: nodeScanner.peekNode(currentNode.nodeName) as Element,
+              node: tree.peekNode(currentNode.nodeName) as Element,
               name: hole.name,
             };
             break;
           case PartType.Live: {
-            const node = nodeScanner.peekNode(currentNode.nodeName) as Element;
+            const node = tree.peekNode(currentNode.nodeName) as Element;
             childPart = {
               type: PartType.Live,
               node,
@@ -209,7 +209,7 @@ export class TaggedTemplate<
             break;
           }
           case PartType.Property: {
-            const node = nodeScanner.peekNode(currentNode.nodeName) as Element;
+            const node = tree.peekNode(currentNode.nodeName) as Element;
             childPart = {
               type: PartType.Property,
               node,
@@ -221,9 +221,7 @@ export class TaggedTemplate<
           case PartType.Text:
             childPart = {
               type: PartType.Text,
-              node: nodeScanner
-                .splitText()
-                .peekNode(currentNode.nodeName) as Text,
+              node: tree.splitText().peekNode(currentNode.nodeName) as Text,
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
@@ -232,10 +230,10 @@ export class TaggedTemplate<
 
         const slot = context.resolveSlot(binds[holeIndex]!, childPart);
         slots[holeIndex] = slot;
-        slot.hydrate(nodeScanner, context);
+        slot.hydrate(tree, context);
       }
 
-      const actualNode = nodeScanner.nextNode(currentNode.nodeName);
+      const actualNode = tree.nextNode(currentNode.nodeName);
 
       if (alternateNode !== null) {
         actualNode.replaceWith(alternateNode);

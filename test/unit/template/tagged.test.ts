@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationNodeScanner, PartType } from '@/core.js';
+import { HydrationError, HydrationTree, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
@@ -487,13 +487,13 @@ describe('TaggedTemplate', () => {
           createElement('span', {}, 'quux'),
         ),
       );
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -591,12 +591,12 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -617,12 +617,12 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'Hello, World!'),
       );
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -670,12 +670,12 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -692,11 +692,11 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
-        template.hydrate([] as any, part, nodeScanner, runtime);
+        template.hydrate([] as any, part, tree, runtime);
       }).toThrow('There may be multiple holes indicating the same attribute.');
     });
 
@@ -718,11 +718,11 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
 
       expect(() => {
-        template.hydrate(['foo'], part, nodeScanner, runtime);
+        template.hydrate(['foo'], part, tree, runtime);
       }).toThrow('There is no node that the hole indicates.');
     });
 
@@ -749,11 +749,11 @@ describe('TaggedTemplate', () => {
           childNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const nodeScanner = new HydrationNodeScanner(container);
+        const tree = new HydrationTree(container);
         const runtime = new Runtime(new MockBackend());
 
         expect(() => {
-          template.hydrate([], part, nodeScanner, runtime);
+          template.hydrate([], part, tree, runtime);
         }).toThrow(HydrationError);
       },
     );

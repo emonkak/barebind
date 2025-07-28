@@ -1,10 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  HydrationError,
-  HydrationNodeScanner,
-  type Part,
-  PartType,
-} from '@/core.js';
+import { HydrationError, HydrationTree, type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import {
   moveChildNodes,
@@ -134,11 +129,11 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const binding = new RepeatBinding(props, part);
       const runtime = new Runtime(new MockBackend());
 
-      binding.hydrate(nodeScanner, runtime);
+      binding.hydrate(tree, runtime);
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
@@ -169,7 +164,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const binding = new RepeatBinding(props, part);
       const runtime = new Runtime(new MockBackend());
 
@@ -177,7 +172,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(() => {
-        binding.hydrate(nodeScanner, runtime);
+        binding.hydrate(tree, runtime);
       }).toThrow(HydrationError);
     });
   });

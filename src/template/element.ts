@@ -1,6 +1,6 @@
 import {
   type DirectiveType,
-  type HydrationNodeScanner,
+  type HydrationTree,
   type Part,
   PartType,
   type TemplateResult,
@@ -42,7 +42,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    nodeScanner: HydrationNodeScanner,
+    tree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -50,7 +50,7 @@ export class ElementTemplate<
       getNamespaceURIByTagName(this._name) ?? part.namespaceURI;
     const elementPart = {
       type: PartType.Element,
-      node: nodeScanner.nextNode(this._name.toUpperCase()) as Element,
+      node: tree.nextNode(this._name.toUpperCase()) as Element,
     };
     const childrenPart = {
       type: PartType.ChildNode,
@@ -61,12 +61,10 @@ export class ElementTemplate<
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
-    elementSlot.hydrate(nodeScanner, context);
-    childrenSlot.hydrate(nodeScanner, context);
+    elementSlot.hydrate(tree, context);
+    childrenSlot.hydrate(tree, context);
 
-    nodeScanner
-      .nextNode(childrenPart.node.nodeName)
-      .replaceWith(childrenPart.node);
+    tree.nextNode(childrenPart.node.nodeName).replaceWith(childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

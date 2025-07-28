@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationNodeScanner, PartType } from '@/core.js';
+import { HydrationError, HydrationTree, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -34,13 +34,13 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, document.createComment(''));
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -70,12 +70,12 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const template = new ChildNodeTemplate();
 
       expect(() => {
-        template.hydrate(binds, part, nodeScanner, runtime);
+        template.hydrate(binds, part, tree, runtime);
       }).toThrow(HydrationError);
     });
   });

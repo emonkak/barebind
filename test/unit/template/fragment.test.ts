@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HydrationNodeScanner, PartType } from '@/core.js';
+import { HydrationTree, PartType } from '@/core.js';
 import { Runtime } from '@/runtime.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -69,7 +69,7 @@ describe('FragmentTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = document.createElement('div');
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
       const runtime = new Runtime(new MockBackend());
       const template = new FragmentTemplate(internalTemplates);
 
@@ -95,7 +95,7 @@ describe('FragmentTemplate', () => {
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
 
@@ -119,21 +119,16 @@ describe('FragmentTemplate', () => {
       expect(hydrationSpys[0]).toHaveBeenCalledWith(
         ['foo'],
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
       expect(hydrationSpys[1]).toHaveBeenCalledOnce();
-      expect(hydrationSpys[1]).toHaveBeenCalledWith(
-        [],
-        part,
-        nodeScanner,
-        runtime,
-      );
+      expect(hydrationSpys[1]).toHaveBeenCalledWith([], part, tree, runtime);
       expect(hydrationSpys[2]).toHaveBeenCalledOnce();
       expect(hydrationSpys[2]).toHaveBeenCalledWith(
         ['bar', 'baz'],
         part,
-        nodeScanner,
+        tree,
         runtime,
       );
     });

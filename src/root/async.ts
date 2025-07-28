@@ -1,6 +1,6 @@
 import {
   type Backend,
-  HydrationNodeScanner,
+  HydrationTree,
   PartType,
   type UpdateOptions,
 } from '../core.js';
@@ -44,11 +44,11 @@ export function createAsyncRoot<T>(
       return runtime.observe(observer);
     },
     hydrate(options) {
-      const nodeScanner = new HydrationNodeScanner(container);
+      const tree = new HydrationTree(container);
 
-      slot.hydrate(nodeScanner, runtime);
+      slot.hydrate(tree, runtime);
 
-      nodeScanner.nextNode(part.node.nodeName).replaceWith(part.node);
+      tree.nextNode(part.node.nodeName).replaceWith(part.node);
 
       const completeOptions = toCompleteOptions(options);
 
