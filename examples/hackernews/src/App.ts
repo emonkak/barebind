@@ -21,9 +21,11 @@ export function App({ store }: AppProps, context: RenderContext): unknown {
   context.use(ScrollRestration);
 
   return context.html`
-    <div>
+    <header class="header">
       <${component(Nav, {})}>
+    </header>
+    <main class="main">
       <${memo(page)}>
-    </div>
+    </main>
   `;
 }

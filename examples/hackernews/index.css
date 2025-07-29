@@ -2,7 +2,8 @@ body {
   font-family:
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
     Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
-  font-size: 15px;
+  font-size: clamp(1rem, 0.875rem + 0.4vi, 1.125rem);
+  line-height: 1.5;
   background-color: #f2f3f5;
   margin: 0;
   padding-block-start: 55px;
@@ -13,6 +14,11 @@ body {
 a {
   color: #34495e;
   text-decoration: none;
+}
+
+.main {
+  max-inline-size: 80ch;
+  margin-inline: auto;
 }
 
 .header {
@@ -33,7 +39,6 @@ a {
 
 .header a {
   color: rgba(255, 255, 255, 0.8);
-  line-height: 24px;
   transition: color 0.15s ease;
   display: inline-block;
   vertical-align: middle;
@@ -67,12 +72,6 @@ a {
   margin-inline-end: 10px;
   display: inline-block;
   vertical-align: middle;
-}
-
-.view {
-  max-inline-size: 800px;
-  margin-inline: auto;
-  position: relative;
 }
 
 .fade-enter-active,
@@ -119,7 +118,6 @@ a {
 .story-list {
   position: absolute;
   margin-block: 30px;
-  inline-size: 100%;
   transition: all 0.5s cubic-bezier(0.55, 0, 0.1, 1);
 }
 
@@ -160,7 +158,6 @@ a {
   padding-inline: 80px 30px;
   border-bottom: 1px solid #eee;
   position: relative;
-  line-height: 20px;
 }
 
 .story-item .score {

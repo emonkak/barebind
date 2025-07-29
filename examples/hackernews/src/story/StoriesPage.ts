@@ -62,7 +62,7 @@ export function StoriesPage(
               `
         }>
       </div>
-      <main class="story-list">
+      <div class="story-list">
         <ul>
           <${repeat({
             source: storyState.stories,
@@ -70,7 +70,7 @@ export function StoriesPage(
             valueSelector: (story) => component(StoryView, { story }),
           })}>
         </ul>
-      </main>
+      </div>
     </div>
   `;
 }
