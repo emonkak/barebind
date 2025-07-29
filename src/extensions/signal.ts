@@ -157,8 +157,8 @@ export abstract class Signal<T>
       queueMicrotask(subscriber);
       return this.subscribe(() => {
         if (!guard) {
-          queueMicrotask(subscriber);
           guard = true;
+          queueMicrotask(subscriber);
         }
       });
     }, [this]);
