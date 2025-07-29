@@ -5,6 +5,7 @@ import {
   type Binding,
   type CommitContext,
   type Coroutine,
+  type CustomHookFunction,
   type CustomHookObject,
   type Directive,
   type DirectiveContext,
@@ -183,6 +184,14 @@ export abstract class Signal<T>
 }
 
 export class Atom<T> extends Signal<T> {
+  static local<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+    return (context) => {
+      const signal = context.useMemo(() => new Atom(initialValue), []);
+      context.use(signal);
+      return signal;
+    };
+  }
+
   private _value: T;
 
   private _version = 0;

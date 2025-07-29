@@ -308,6 +308,40 @@ describe('Signal', () => {
 });
 
 describe('Atom', () => {
+  describe('static local()', () => {
+    it('returns a custom hook that creates a signal with the initial value', async () => {
+      const session = createSession();
+
+      SESSION1: {
+        const signal = session.use(Atom.local(100));
+
+        expect(signal.value).toBe(100);
+
+        session.useEffect(() => {
+          signal.value++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(1);
+
+      SESSION2: {
+        const signal = session.use(Atom.local(100));
+
+        expect(signal.value).toBe(101);
+
+        session.useEffect(() => {
+          signal.value++;
+        }, []);
+
+        flushSession(session);
+      }
+    });
+  });
+
   describe('version', () => {
     it('increments the version on update', () => {
       const value1 = 'foo';
