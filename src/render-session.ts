@@ -256,7 +256,7 @@ export class RenderSession implements RenderContext {
           const oldState = hook.memoizedState;
           const newState = hook.reducer(oldState, action);
 
-          if (!Object.is(oldState, newState)) {
+          if (!Object.is(newState, oldState)) {
             const { lanes } = this.forceUpdate(options);
             hook.pendingState = newState;
             hook.lanes |= lanes;
