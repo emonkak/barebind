@@ -23,22 +23,22 @@ export function sequentialEqual<T>(
 export function shallowEqual<T extends {}>(
   xs: T,
   ys: T,
-  equals: (x: T[keyof T], y: T[keyof T]) => boolean = Object.is,
+  equals: <K extends keyof T>(x: T[K], y: T[K]) => boolean = Object.is,
 ): boolean {
   if (xs === ys) {
     return true;
   }
 
-  const firstKeys = Object.keys(xs);
-  const secondKeys = Object.keys(ys);
+  const ks1 = Object.keys(xs);
+  const ks2 = Object.keys(ys);
 
-  if (firstKeys.length !== secondKeys.length) {
+  if (ks1.length !== ks2.length) {
     return false;
   }
 
-  for (let i = 0, l = firstKeys.length; i < l; i++) {
-    const key = firstKeys[i]! as keyof T;
-    if (!Object.hasOwn(ys, key) || !equals(xs[key]!, ys[key]!)) {
+  for (let i = 0, l = ks1.length; i < l; i++) {
+    const k = ks1[i]! as keyof T;
+    if (!Object.hasOwn(ys, k) || !equals(xs[k]!, ys[k]!)) {
       return false;
     }
   }
