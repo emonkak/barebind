@@ -118,7 +118,7 @@ export namespace Hook {
       | typeof HookType.InsertionEffect;
     callback: () => (() => void) | void;
     cleanup: (() => void) | void;
-    dependencies: unknown[] | null;
+    dependencies: readonly unknown[] | null;
   }
 
   export interface IdHook {
@@ -129,7 +129,7 @@ export namespace Hook {
   export interface MemoHook<TResult> {
     type: typeof HookType.Memo;
     value: TResult;
-    dependencies: unknown[] | null;
+    dependencies: readonly unknown[] | null;
   }
 
   export interface ReducerHook<TState, TAction> {
@@ -148,22 +148,25 @@ export interface HookContext {
   isUpdatePending(): boolean;
   setContextValue(key: unknown, value: unknown): void;
   use<T>(usable: Usable<T>): T;
-  useCallback<T extends Function>(callback: T, dependencies: unknown[]): T;
+  useCallback<T extends Function>(
+    callback: T,
+    dependencies: readonly unknown[],
+  ): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null,
+    dependencies: readonly unknown[] | null,
   ): void;
   useId(): string;
   useInsertionEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null,
+    dependencies: readonly unknown[] | null,
   ): void;
   useLayoutEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null,
+    dependencies: readonly unknown[] | null,
   ): void;
-  useMemo<T>(factory: () => T, dependencies: unknown[]): T;
+  useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
   useReducer<TState, TAction>(
     reducer: (state: TState, action: TAction) => TState,
     initialState: InitialState<TState>,

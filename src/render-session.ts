@@ -141,7 +141,10 @@ export class RenderSession implements RenderContext {
     }
   }
 
-  useCallback<T extends Function>(callback: T, dependencies: unknown[]): T {
+  useCallback<T extends Function>(
+    callback: T,
+    dependencies: readonly unknown[],
+  ): T {
     return this.useMemo(() => callback, dependencies);
   }
 
@@ -160,7 +163,7 @@ export class RenderSession implements RenderContext {
 
   useEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null = null,
+    dependencies: readonly unknown[] | null = null,
   ): void {
     this._useEffect(callback, dependencies, HookType.Effect);
   }
@@ -185,19 +188,19 @@ export class RenderSession implements RenderContext {
 
   useInsertionEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null = null,
+    dependencies: readonly unknown[] | null = null,
   ): void {
     this._useEffect(callback, dependencies, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null = null,
+    dependencies: readonly unknown[] | null = null,
   ): void {
     this._useEffect(callback, dependencies, HookType.LayoutEffect);
   }
 
-  useMemo<T>(factory: () => T, dependencies: unknown[]): T {
+  useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
     let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -362,7 +365,7 @@ export class RenderSession implements RenderContext {
 
   private _useEffect(
     callback: () => (() => void) | void,
-    dependencies: unknown[] | null,
+    dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
   ): void {
     const currentHook = this._hooks[this._hookIndex];
@@ -404,8 +407,8 @@ class InvokeEffectHook implements Effect {
 }
 
 function areDependenciesChanged(
-  oldDependencies: ArrayLike<unknown> | null,
-  newDependencies: ArrayLike<unknown> | null,
+  oldDependencies: readonly unknown[] | null,
+  newDependencies: readonly unknown[] | null,
 ): boolean {
   return (
     oldDependencies === null ||
