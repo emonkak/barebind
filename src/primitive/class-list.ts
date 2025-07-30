@@ -145,10 +145,10 @@ function areClassSpecifiersEqual(
   if (typeof x === 'string') {
     return x === y;
   }
-  if (y == null || typeof y === 'string') {
-    return false;
+  if (typeof y === 'object' && y !== null) {
+    return shallowEqual(x, y);
   }
-  return shallowEqual(x, y);
+  return false;
 }
 
 function isClassSpecifier(value: unknown): value is ClassSpecifier {
