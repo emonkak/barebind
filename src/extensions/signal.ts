@@ -25,7 +25,7 @@ export type Subscriber = () => void;
 export type Subscription = () => void;
 
 type UnwrapSignals<T> = {
-  [K in keyof T]: T[K] extends Signal<infer Value> ? Value : T[K];
+  [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
 };
 
 /**
@@ -240,6 +240,20 @@ export class Computed<
   TResult,
   const TDependencies extends readonly Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
+  static local<TResult, const TDependencies extends readonly Signal<any>[]>(
+    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    dependencies: TDependencies,
+  ): CustomHookFunction<Computed<TResult, TDependencies>> {
+    return (context) => {
+      const signal = context.useMemo(
+        () => new Computed(producer, dependencies),
+        dependencies,
+      );
+      context.use(signal);
+      return signal;
+    };
+  }
+
   private readonly _producer: (
     ...signals: UnwrapSignals<TDependencies>
   ) => TResult;
@@ -251,20 +265,20 @@ export class Computed<
   private _memoizedVersion;
 
   constructor(
-    producer: (...dependencies: UnwrapSignals<TDependencies>) => TResult,
+    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   );
   /**
    * @internal
    */
   constructor(
-    producer: (...dependencies: UnwrapSignals<TDependencies>) => TResult,
+    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult,
     initialVersion: number,
   );
   constructor(
-    producer: (...dependencies: UnwrapSignals<TDependencies>) => TResult,
+    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult | null = null,
     initialVersion = -1, // -1 is indicated an uninitialized signal.

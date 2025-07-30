@@ -8,6 +8,7 @@ import {
 import {
   Atom,
   Computed,
+  type Signal,
   type SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
@@ -312,6 +313,8 @@ describe('Atom', () => {
     it('returns a custom hook that creates a signal with the initial value', async () => {
       const session = createSession();
 
+      let initialSignal: Signal<number>;
+
       SESSION1: {
         const signal = session.use(Atom.local(100));
 
@@ -322,6 +325,8 @@ describe('Atom', () => {
         }, []);
 
         flushSession(session);
+
+        initialSignal = signal;
       }
 
       await Promise.resolve();
@@ -331,6 +336,7 @@ describe('Atom', () => {
       SESSION2: {
         const signal = session.use(Atom.local(100));
 
+        expect(signal).toBe(initialSignal);
         expect(signal.value).toBe(101);
 
         session.useEffect(() => {
@@ -344,16 +350,14 @@ describe('Atom', () => {
 
   describe('version', () => {
     it('increments the version on update', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
-      const signal = new Atom(value1);
+      const signal = new Atom('foo');
 
-      expect(signal.value).toBe(value1);
+      expect(signal.value).toBe('foo');
       expect(signal.version).toBe(0);
 
-      signal.value = value2;
+      signal.value = 'bar';
 
-      expect(signal.value).toBe(value2);
+      expect(signal.value).toBe('bar');
       expect(signal.version).toBe(1);
     });
   });
@@ -390,21 +394,81 @@ describe('Atom', () => {
 
   describe('touch()', () => {
     it('increments the version and notify subscribers', () => {
-      const value = 'foo';
-      const signal = new Atom(value);
+      const signal = new Atom('foo');
       const subscriber = vi.fn();
 
       signal.subscribe(subscriber);
       signal.touch();
 
       expect(subscriber).toHaveBeenCalledOnce();
-      expect(signal.value).toBe(value);
+      expect(signal.value).toBe('foo');
       expect(signal.version).toBe(1);
     });
   });
 });
 
 describe('Computed', () => {
+  describe('static local()', () => {
+    it('returns a custom hook that creates a signal with dependencies', async () => {
+      const session = createSession();
+      const foo = new Atom(1);
+      const bar = new Atom(2);
+      const baz = new Atom(3);
+
+      let initialSignal: Signal<number>;
+
+      SESSION1: {
+        const signal = session.use(
+          Computed.local((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
+        );
+
+        expect(signal.value).toBe(6);
+
+        session.useEffect(() => {
+          foo.value++;
+        }, []);
+
+        flushSession(session);
+
+        initialSignal = signal;
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(1);
+
+      SESSION2: {
+        const signal = session.use(
+          Computed.local((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
+        );
+
+        expect(signal).toBe(initialSignal);
+        expect(signal.value).toBe(7);
+
+        session.useEffect(() => {
+          foo.value++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      SESSION3: {
+        const signal = session.use(
+          Computed.local((foo, bar) => foo + bar, [foo, bar]),
+        );
+
+        expect(signal).not.toBe(initialSignal);
+        expect(signal.value).toBe(4);
+
+        session.useEffect(() => {
+          foo.value++;
+        }, []);
+
+        flushSession(session);
+      }
+    });
+  });
+
   describe('value', () => {
     it('computes a memoized value by dependent signals', () => {
       const foo = new Atom(1);
