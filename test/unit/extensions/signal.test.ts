@@ -345,6 +345,27 @@ describe('Atom', () => {
 
         flushSession(session);
       }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(0);
+
+      SESSION3: {
+        const signal = session.use(Atom.controlled(200));
+
+        expect(signal).not.toBe(initialSignal);
+        expect(signal.value).toBe(200);
+
+        session.useEffect(() => {
+          signal.value++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(0);
     });
   });
 
@@ -377,6 +398,23 @@ describe('Atom', () => {
 
         expect(signal).toBe(initialSignal);
         expect(signal.value).toBe(101);
+
+        session.useEffect(() => {
+          signal.value++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(0);
+
+      SESSION3: {
+        const signal = session.use(Atom.uncontrolled(200));
+
+        expect(signal).not.toBe(initialSignal);
+        expect(signal.value).toBe(200);
 
         session.useEffect(() => {
           signal.value++;
