@@ -1,9 +1,11 @@
 import {
+  type Cleanup,
   type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
   type Primitive,
+  type RefCallback,
   type RefObject,
 } from '../core.js';
 import { debugPart } from '../debug/part.js';
@@ -16,10 +18,6 @@ export type Ref =
   | RefObject<Element | null>
   | null
   | undefined;
-
-export type RefCallback<T> = (value: T) => Cleanup | void;
-
-export type Cleanup = () => void;
 
 export const RefPrimitive: Primitive<Ref> = {
   name: 'RefPrimitive',

@@ -9,6 +9,8 @@ export {
   type HookContext,
   HydrationError,
   Literal,
+  type RefCallback,
+  type RefObject,
   type RenderContext,
 } from './core.js';
 export {

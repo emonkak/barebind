@@ -45,6 +45,8 @@ export interface Binding<T> extends ReversibleEffect {
   disconnect(context: UpdateContext): void;
 }
 
+export type Cleanup = () => void;
+
 export interface CommitContext {
   debugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void;
   undebugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void;
@@ -116,8 +118,8 @@ export namespace Hook {
       | typeof HookType.Effect
       | typeof HookType.LayoutEffect
       | typeof HookType.InsertionEffect;
-    callback: () => (() => void) | void;
-    cleanup: (() => void) | void;
+    callback: () => Cleanup | void;
+    cleanup: Cleanup | void;
     dependencies: readonly unknown[] | null;
   }
 
@@ -291,6 +293,8 @@ export type PartType = (typeof PartType)[keyof typeof PartType];
 export interface Primitive<T> extends DirectiveType<T> {
   ensureValue?(value: unknown, part: Part): asserts value is T;
 }
+
+export type RefCallback<T> = (value: T) => Cleanup | void;
 
 export interface RefObject<T> {
   current: T;
