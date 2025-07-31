@@ -13,23 +13,28 @@ import { debugValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type Ref =
-  | RefCallback<Element>
-  | RefObject<Element | null>
-  | null
-  | undefined;
+export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
 
-export const RefPrimitive: Primitive<Ref> = {
+type Nullable<T> = T | null | undefined;
+
+export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
   name: 'RefPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is Ref {
-    if (!isRef(value)) {
+  ensureValue(
+    value: unknown,
+    part: Part,
+  ): asserts value is Nullable<ElementRef> {
+    if (value != null && !isElementRef(value)) {
       throw new Error(
         `The value of RefPrimitive must be a function, object, null or undefined, but got ${debugValue(value)}.\n` +
           debugPart(part, markUsedValue(value)),
       );
     }
   },
-  resolveBinding(ref: Ref, part: Part, _context: DirectiveContext): RefBinding {
+  resolveBinding(
+    ref: Nullable<ElementRef>,
+    part: Part,
+    _context: DirectiveContext,
+  ): RefBinding {
     if (
       part.type !== PartType.Attribute ||
       part.name.toLowerCase() !== ':ref'
@@ -43,16 +48,19 @@ export const RefPrimitive: Primitive<Ref> = {
   },
 };
 
-export class RefBinding extends PrimitiveBinding<Ref, Part.AttributePart> {
-  private _memoizedValue: Ref = null;
+export class RefBinding extends PrimitiveBinding<
+  Nullable<ElementRef>,
+  Part.AttributePart
+> {
+  private _memoizedValue: Nullable<ElementRef> = null;
 
   private _memoizedCleanup: Cleanup | void = undefined;
 
-  get type(): Primitive<Ref> {
+  get type(): Primitive<Nullable<ElementRef>> {
     return RefPrimitive;
   }
 
-  shouldBind(ref: Ref): boolean {
+  shouldBind(ref: Nullable<ElementRef>): boolean {
     return ref !== this._memoizedValue;
   }
 
@@ -98,9 +106,8 @@ export class RefBinding extends PrimitiveBinding<Ref, Part.AttributePart> {
   }
 }
 
-function isRef(value: unknown): value is Ref {
+function isElementRef(value: {}): value is ElementRef {
   return (
-    value == null ||
     typeof value === 'function' ||
     (typeof value === 'object' &&
       (value as RefObject<unknown>).current !== undefined)
