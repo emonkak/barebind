@@ -309,14 +309,14 @@ describe('Signal', () => {
 });
 
 describe('Atom', () => {
-  describe('static controlled()', () => {
+  describe('static tracked()', () => {
     it('returns a custom hook that creates an atom signal associated as a state', async () => {
       const session = createSession();
 
       let initialSignal: Signal<number>;
 
       SESSION1: {
-        const signal = session.use(Atom.controlled(100));
+        const signal = session.use(Atom.tracked(100));
 
         expect(signal.value).toBe(100);
 
@@ -334,7 +334,7 @@ describe('Atom', () => {
       expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
-        const signal = session.use(Atom.controlled(100));
+        const signal = session.use(Atom.tracked(100));
 
         expect(signal).toBe(initialSignal);
         expect(signal.value).toBe(101);
@@ -351,7 +351,7 @@ describe('Atom', () => {
       expect(await session.waitForUpdate()).toBe(0);
 
       SESSION3: {
-        const signal = session.use(Atom.controlled(200));
+        const signal = session.use(Atom.tracked(200));
 
         expect(signal).not.toBe(initialSignal);
         expect(signal.value).toBe(200);
@@ -369,14 +369,14 @@ describe('Atom', () => {
     });
   });
 
-  describe('static uncontrolled()', () => {
+  describe('static untracked()', () => {
     it('returns a custom hook that creates an atom signal with no state associated', async () => {
       const session = createSession();
 
       let initialSignal: Signal<number>;
 
       SESSION1: {
-        const signal = session.use(Atom.uncontrolled(100));
+        const signal = session.use(Atom.untracked(100));
 
         expect(signal.value).toBe(100);
 
@@ -394,7 +394,7 @@ describe('Atom', () => {
       expect(await session.waitForUpdate()).toBe(0);
 
       SESSION2: {
-        const signal = session.use(Atom.uncontrolled(100));
+        const signal = session.use(Atom.untracked(100));
 
         expect(signal).toBe(initialSignal);
         expect(signal.value).toBe(101);
@@ -411,7 +411,7 @@ describe('Atom', () => {
       expect(await session.waitForUpdate()).toBe(0);
 
       SESSION3: {
-        const signal = session.use(Atom.uncontrolled(200));
+        const signal = session.use(Atom.untracked(200));
 
         expect(signal).not.toBe(initialSignal);
         expect(signal.value).toBe(200);
@@ -485,7 +485,7 @@ describe('Atom', () => {
 });
 
 describe('Computed', () => {
-  describe('static controlled()', () => {
+  describe('static tracked()', () => {
     it('returns a custom hook that creates a computed signal associated as a state', async () => {
       const session = createSession();
       const foo = new Atom(1);
@@ -496,7 +496,7 @@ describe('Computed', () => {
 
       SESSION1: {
         const signal = session.use(
-          Computed.controlled(
+          Computed.tracked(
             (foo, bar, baz) => foo + bar + baz,
             [foo, bar, baz],
           ),
@@ -519,7 +519,7 @@ describe('Computed', () => {
 
       SESSION2: {
         const signal = session.use(
-          Computed.controlled(
+          Computed.tracked(
             (foo, bar, baz) => foo + bar + baz,
             [foo, bar, baz],
           ),
@@ -537,7 +537,7 @@ describe('Computed', () => {
 
       SESSION3: {
         const signal = session.use(
-          Computed.controlled((foo, bar) => foo + bar, [foo, bar]),
+          Computed.tracked((foo, bar) => foo + bar, [foo, bar]),
         );
 
         expect(signal).not.toBe(initialSignal);
@@ -552,7 +552,7 @@ describe('Computed', () => {
     });
   });
 
-  describe('static uncontrolled()', () => {
+  describe('static untracked()', () => {
     it('returns a custom hook that creates a computed signal with no state associated', async () => {
       const session = createSession();
       const foo = new Atom(1);
@@ -563,7 +563,7 @@ describe('Computed', () => {
 
       SESSION1: {
         const signal = session.use(
-          Computed.uncontrolled(
+          Computed.untracked(
             (foo, bar, baz) => foo + bar + baz,
             [foo, bar, baz],
           ),
@@ -586,7 +586,7 @@ describe('Computed', () => {
 
       SESSION2: {
         const signal = session.use(
-          Computed.uncontrolled(
+          Computed.untracked(
             (foo, bar, baz) => foo + bar + baz,
             [foo, bar, baz],
           ),
@@ -608,7 +608,7 @@ describe('Computed', () => {
 
       SESSION3: {
         const signal = session.use(
-          Computed.uncontrolled((foo, bar) => foo + bar, [foo, bar]),
+          Computed.untracked((foo, bar) => foo + bar, [foo, bar]),
         );
 
         expect(signal).not.toBe(initialSignal);

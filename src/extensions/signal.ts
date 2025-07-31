@@ -184,7 +184,7 @@ export abstract class Signal<T>
 }
 
 export class Atom<T> extends Signal<T> {
-  static controlled<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+  static tracked<T>(initialValue: T): CustomHookFunction<Atom<T>> {
     return (context) => {
       const signal = context.useMemo(
         () => new Atom(initialValue),
@@ -195,7 +195,7 @@ export class Atom<T> extends Signal<T> {
     };
   }
 
-  static uncontrolled<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+  static untracked<T>(initialValue: T): CustomHookFunction<Atom<T>> {
     return (context) => {
       return context.useMemo(() => new Atom(initialValue), [initialValue]);
     };
@@ -249,7 +249,7 @@ export class Computed<
   TResult,
   const TDependencies extends readonly Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
-  static controlled<
+  static tracked<
     TResult,
     const TDependencies extends readonly Signal<any>[],
   >(
@@ -266,7 +266,7 @@ export class Computed<
     };
   }
 
-  static uncontrolled<
+  static untracked<
     TResult,
     const TDependencies extends readonly Signal<any>[],
   >(
