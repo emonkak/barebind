@@ -156,17 +156,17 @@ export interface HookContext {
   ): T;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
-    callback: () => (() => void) | void,
-    dependencies: readonly unknown[] | null,
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
   ): void;
   useId(): string;
   useInsertionEffect(
-    callback: () => (() => void) | void,
-    dependencies: readonly unknown[] | null,
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
   ): void;
   useLayoutEffect(
-    callback: () => (() => void) | void,
-    dependencies: readonly unknown[] | null,
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
   ): void;
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
   useReducer<TState, TAction>(
@@ -186,7 +186,7 @@ export interface HookContext {
     isPending: boolean,
   ];
   useSyncEnternalStore<T>(
-    subscribe: (subscriber: () => void) => (() => void) | void,
+    subscribe: (subscriber: () => void) => Cleanup | void,
     getSnapshot: () => T,
   ): T;
   waitForUpdate(): Promise<number>;

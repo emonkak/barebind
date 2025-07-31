@@ -1,6 +1,7 @@
 import { sequentialEqual } from './compare.js';
 import {
   $customHook,
+  type Cleanup,
   type Coroutine,
   type Effect,
   type Hook,
@@ -162,10 +163,10 @@ export class RenderSession implements RenderContext {
   }
 
   useEffect(
-    callback: () => (() => void) | void,
-    dependencies: readonly unknown[] | null = null,
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
   ): void {
-    this._useEffect(callback, dependencies, HookType.Effect);
+    this._useEffect(callback, dependencies ?? null, HookType.Effect);
   }
 
   useId(): string {
@@ -187,17 +188,17 @@ export class RenderSession implements RenderContext {
   }
 
   useInsertionEffect(
-    callback: () => (() => void) | void,
-    dependencies: readonly unknown[] | null = null,
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
   ): void {
-    this._useEffect(callback, dependencies, HookType.InsertionEffect);
+    this._useEffect(callback, dependencies ?? null, HookType.InsertionEffect);
   }
 
   useLayoutEffect(
-    callback: () => (() => void) | void,
-    dependencies: readonly unknown[] | null = null,
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
   ): void {
-    this._useEffect(callback, dependencies, HookType.LayoutEffect);
+    this._useEffect(callback, dependencies ?? null, HookType.LayoutEffect);
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
@@ -298,7 +299,7 @@ export class RenderSession implements RenderContext {
   }
 
   useSyncEnternalStore<TSnapshot>(
-    subscribe: (subscriber: () => void) => (() => void) | void,
+    subscribe: (subscriber: () => void) => Cleanup | void,
     getSnapshot: () => TSnapshot,
   ): TSnapshot {
     const snapshot = getSnapshot();
@@ -364,7 +365,7 @@ export class RenderSession implements RenderContext {
   }
 
   private _useEffect(
-    callback: () => (() => void) | void,
+    callback: () => Cleanup | void,
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
   ): void {
