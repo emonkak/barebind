@@ -184,11 +184,17 @@ export abstract class Signal<T>
 }
 
 export class Atom<T> extends Signal<T> {
-  static local<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+  static controlled<T>(initialValue: T): CustomHookFunction<Atom<T>> {
     return (context) => {
       const signal = context.useMemo(() => new Atom(initialValue), []);
       context.use(signal);
       return signal;
+    };
+  }
+
+  static uncontrolled<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+    return (context) => {
+      return context.useMemo(() => new Atom(initialValue), []);
     };
   }
 
@@ -240,7 +246,10 @@ export class Computed<
   TResult,
   const TDependencies extends readonly Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
-  static local<TResult, const TDependencies extends readonly Signal<any>[]>(
+  static controlled<
+    TResult,
+    const TDependencies extends readonly Signal<any>[],
+  >(
     producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   ): CustomHookFunction<Computed<TResult, TDependencies>> {
@@ -251,6 +260,21 @@ export class Computed<
       );
       context.use(signal);
       return signal;
+    };
+  }
+
+  static uncontrolled<
+    TResult,
+    const TDependencies extends readonly Signal<any>[],
+  >(
+    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    dependencies: TDependencies,
+  ): CustomHookFunction<Computed<TResult, TDependencies>> {
+    return (context) => {
+      return context.useMemo(
+        () => new Computed(producer, dependencies),
+        dependencies,
+      );
     };
   }
 

@@ -309,14 +309,14 @@ describe('Signal', () => {
 });
 
 describe('Atom', () => {
-  describe('static local()', () => {
-    it('returns a custom hook that creates a signal with the initial value', async () => {
+  describe('static controlled()', () => {
+    it('returns a custom hook that creates an atom signal associated as a state', async () => {
       const session = createSession();
 
       let initialSignal: Signal<number>;
 
       SESSION1: {
-        const signal = session.use(Atom.local(100));
+        const signal = session.use(Atom.controlled(100));
 
         expect(signal.value).toBe(100);
 
@@ -334,7 +334,46 @@ describe('Atom', () => {
       expect(await session.waitForUpdate()).toBe(1);
 
       SESSION2: {
-        const signal = session.use(Atom.local(100));
+        const signal = session.use(Atom.controlled(100));
+
+        expect(signal).toBe(initialSignal);
+        expect(signal.value).toBe(101);
+
+        session.useEffect(() => {
+          signal.value++;
+        }, []);
+
+        flushSession(session);
+      }
+    });
+  });
+
+  describe('static uncontrolled()', () => {
+    it('returns a custom hook that creates an atom signal with no state associated', async () => {
+      const session = createSession();
+
+      let initialSignal: Signal<number>;
+
+      SESSION1: {
+        const signal = session.use(Atom.uncontrolled(100));
+
+        expect(signal.value).toBe(100);
+
+        session.useEffect(() => {
+          signal.value++;
+        }, []);
+
+        flushSession(session);
+
+        initialSignal = signal;
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(0);
+
+      SESSION2: {
+        const signal = session.use(Atom.uncontrolled(100));
 
         expect(signal).toBe(initialSignal);
         expect(signal.value).toBe(101);
@@ -408,8 +447,8 @@ describe('Atom', () => {
 });
 
 describe('Computed', () => {
-  describe('static local()', () => {
-    it('returns a custom hook that creates a signal with dependencies', async () => {
+  describe('static controlled()', () => {
+    it('returns a custom hook that creates a computed signal associated as a state', async () => {
       const session = createSession();
       const foo = new Atom(1);
       const bar = new Atom(2);
@@ -419,7 +458,10 @@ describe('Computed', () => {
 
       SESSION1: {
         const signal = session.use(
-          Computed.local((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
+          Computed.controlled(
+            (foo, bar, baz) => foo + bar + baz,
+            [foo, bar, baz],
+          ),
         );
 
         expect(signal.value).toBe(6);
@@ -439,7 +481,10 @@ describe('Computed', () => {
 
       SESSION2: {
         const signal = session.use(
-          Computed.local((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
+          Computed.controlled(
+            (foo, bar, baz) => foo + bar + baz,
+            [foo, bar, baz],
+          ),
         );
 
         expect(signal).toBe(initialSignal);
@@ -454,7 +499,78 @@ describe('Computed', () => {
 
       SESSION3: {
         const signal = session.use(
-          Computed.local((foo, bar) => foo + bar, [foo, bar]),
+          Computed.controlled((foo, bar) => foo + bar, [foo, bar]),
+        );
+
+        expect(signal).not.toBe(initialSignal);
+        expect(signal.value).toBe(4);
+
+        session.useEffect(() => {
+          foo.value++;
+        }, []);
+
+        flushSession(session);
+      }
+    });
+  });
+
+  describe('static uncontrolled()', () => {
+    it('returns a custom hook that creates a computed signal with no state associated', async () => {
+      const session = createSession();
+      const foo = new Atom(1);
+      const bar = new Atom(2);
+      const baz = new Atom(3);
+
+      let initialSignal: Signal<number>;
+
+      SESSION1: {
+        const signal = session.use(
+          Computed.uncontrolled(
+            (foo, bar, baz) => foo + bar + baz,
+            [foo, bar, baz],
+          ),
+        );
+
+        expect(signal.value).toBe(6);
+
+        session.useEffect(() => {
+          foo.value++;
+        }, []);
+
+        flushSession(session);
+
+        initialSignal = signal;
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(0);
+
+      SESSION2: {
+        const signal = session.use(
+          Computed.uncontrolled(
+            (foo, bar, baz) => foo + bar + baz,
+            [foo, bar, baz],
+          ),
+        );
+
+        expect(signal).toBe(initialSignal);
+        expect(signal.value).toBe(7);
+
+        session.useEffect(() => {
+          foo.value++;
+        }, []);
+
+        flushSession(session);
+      }
+
+      await Promise.resolve();
+
+      expect(await session.waitForUpdate()).toBe(0);
+
+      SESSION3: {
+        const signal = session.use(
+          Computed.uncontrolled((foo, bar) => foo + bar, [foo, bar]),
         );
 
         expect(signal).not.toBe(initialSignal);
