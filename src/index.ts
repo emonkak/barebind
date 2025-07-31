@@ -13,6 +13,7 @@ export {
   type RefObject,
   type RenderContext,
 } from './core.js';
+export type { StyleProperties } from './primitive/style.js';
 export {
   type RepeatProps,
   repeat,
