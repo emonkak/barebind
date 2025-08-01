@@ -8,7 +8,7 @@ export interface Debuggable {
 
 export interface DebugValueContext {
   maxDepth: number;
-  maxLength: number;
+  maxStringLength: number;
   seenObjects: object[];
 }
 
@@ -16,13 +16,13 @@ export function debugValue(
   value: unknown,
   context: DebugValueContext = {
     maxDepth: 2,
-    maxLength: 8,
+    maxStringLength: 16,
     seenObjects: [],
   },
 ): string {
   switch (typeof value) {
     case 'string':
-      return value.length <= context.maxLength
+      return value.length <= context.maxStringLength
         ? JSON.stringify(value)
         : 'String';
     case 'number':
