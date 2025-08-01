@@ -6,14 +6,25 @@ export interface Debuggable {
   [$debug](format: (value: unknown) => string): string;
 }
 
+export interface DebugValueContext {
+  maxDepth: number;
+  maxLength: number;
+  seenObjects: object[];
+}
+
 export function debugValue(
   value: unknown,
-  maxDepth: number = 3,
-  seenObjects: object[] = [],
+  context: DebugValueContext = {
+    maxDepth: 2,
+    maxLength: 8,
+    seenObjects: [],
+  },
 ): string {
   switch (typeof value) {
     case 'string':
-      return JSON.stringify(value);
+      return value.length <= context.maxLength
+        ? JSON.stringify(value)
+        : 'String';
     case 'number':
       return Object.is(value, -0) ? '-0' : value.toString();
     case 'undefined':
@@ -26,18 +37,18 @@ export function debugValue(
       if (value === null) {
         return 'null';
       }
-      if (seenObjects.includes(value)) {
+      if (context.seenObjects.includes(value)) {
         return '[Circular]';
       }
-      seenObjects.push(value);
+      context.seenObjects.push(value);
       try {
         if (isDebuggable(value)) {
-          return value[$debug]((v) => debugValue(v, maxDepth, seenObjects));
+          return value[$debug]((v) => debugValue(v, context));
         }
         switch (value.constructor) {
           case Array:
             if (
-              maxDepth < seenObjects.length &&
+              context.maxDepth < context.seenObjects.length &&
               (value as unknown[]).length > 0
             ) {
               return '[...]';
@@ -45,7 +56,7 @@ export function debugValue(
             return (
               '[' +
               (value as unknown[])
-                .map((v) => debugValue(v, maxDepth, seenObjects))
+                .map((v) => debugValue(v, context))
                 .join(', ') +
               ']'
             );
@@ -53,7 +64,7 @@ export function debugValue(
           case null:
           case undefined: {
             if (
-              maxDepth < seenObjects.length &&
+              context.maxDepth < context.seenObjects.length &&
               Object.keys(value).length > 0
             ) {
               return '{...}';
@@ -68,7 +79,7 @@ export function debugValue(
                           ? k
                           : JSON.stringify(k)) +
                         ': ' +
-                        debugValue(v, maxDepth, seenObjects),
+                        debugValue(v, context),
                     )
                     .join(', ') +
                   ' }'
@@ -78,7 +89,7 @@ export function debugValue(
             return value.constructor.name;
         }
       } finally {
-        seenObjects.pop();
+        context.seenObjects.pop();
       }
     default:
       return value!.toString();

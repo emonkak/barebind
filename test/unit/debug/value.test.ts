@@ -43,13 +43,11 @@ describe('debugValue()', () => {
       { foo: 1, bar: [2], baz: { $qux: 3, 'foo-bar': 4 } },
       '{ foo: 1, bar: [2], baz: { $qux: 3, "foo-bar": 4 } }',
     ],
-    [{ foo: { bar: { baz: {} } } }, '{ foo: { bar: { baz: {} } } }'],
-    [{ foo: { bar: { baz: [] } } }, '{ foo: { bar: { baz: [] } } }'],
-    [
-      { foo: { bar: { baz: { qux: 123 } } } },
-      '{ foo: { bar: { baz: {...} } } }',
-    ],
-    [{ foo: { bar: { baz: [123] } } }, '{ foo: { bar: { baz: [...] } } }'],
+    [{ foo: { bar: {} } }, '{ foo: { bar: {} } }'],
+    [{ foo: { bar: [] } }, '{ foo: { bar: [] } }'],
+    [{ foo: { bar: { baz: 123 } } }, '{ foo: { bar: {...} } }'],
+    [{ foo: { bar: [123] } }, '{ foo: { bar: [...] } }'],
+    ['abracadabra'.repeat(10), 'String'],
     [circlerValue, '{ x: [Circular] }'],
   ])(
     'returns a string representation of the value',
