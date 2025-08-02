@@ -25,28 +25,42 @@ interface Difference {
   value: unknown;
 }
 
+type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
+
 type ReactiveProperty<T, K extends keyof T> = T extends object
-  ? Or<IsWritable<T, K>, IsNumber<K>> extends true
+  ? Or<IsWritable<T, K>, IsArray<T>> extends true
     ? Reactive<Get<T, K>>
     : Readonly<Reactive<Get<T, K>>>
   : undefined;
 
-type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
+type AllKeys<T> = T extends any ? keyof T : never;
+
+type ExplicitKeys<T> = {
+  [K in AllKeys<T>]: IsPropertyKey<K> extends true ? never : K;
+}[AllKeys<T>];
 
 type FunctionKeys<T> = {
   [K in AllKeys<T>]: T[K] extends Function ? K : never;
 }[AllKeys<T>];
 
-type AllKeys<T> = T extends any ? keyof T : never;
+type Get<T, K extends keyof T> = K extends ExplicitKeys<T>
+  ? T[K]
+  : T[K] | undefined;
 
-type Get<T, K extends keyof T> = K extends number ? T[K] | undefined : T[K];
+type IsArray<T> = T extends readonly any[] ? true : false;
+
+type IsPropertyKey<K> = string extends K
+  ? true
+  : number extends K
+    ? true
+    : symbol extends K
+      ? true
+      : false;
 
 type IsWritable<T, K extends keyof T> = StrictEqual<
   { -readonly [P in K]-?: T[P] },
   Pick<T, K>
 >;
-
-type IsNumber<T> = T extends number ? true : false;
 
 type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
   ? true
