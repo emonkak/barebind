@@ -496,10 +496,7 @@ describe('Computed', () => {
 
       SESSION1: {
         const signal = session.use(
-          Computed.tracked(
-            (foo, bar, baz) => foo + bar + baz,
-            [foo, bar, baz],
-          ),
+          Computed.tracked((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
         );
 
         expect(signal.value).toBe(6);
@@ -519,10 +516,7 @@ describe('Computed', () => {
 
       SESSION2: {
         const signal = session.use(
-          Computed.tracked(
-            (foo, bar, baz) => foo + bar + baz,
-            [foo, bar, baz],
-          ),
+          Computed.tracked((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
         );
 
         expect(signal).toBe(initialSignal);
