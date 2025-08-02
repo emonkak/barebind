@@ -181,7 +181,7 @@ describe('Reactive', () => {
   });
 
   describe('get()', () => {
-    it('computes a computed property is calculated from dependent values', () => {
+    it('returns a computed reactive is calculated from dependent values', () => {
       const initialState = new TodoState([
         { id: 0, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
@@ -214,12 +214,15 @@ describe('Reactive', () => {
       ]);
     });
 
-    it('returns undefined if the property does not exist', () => {
-      const initialState = new TodoState();
-      const state$ = Reactive.from(initialState);
+    it('returns an undefined reactive if the property does not exist', () => {
+      expect(Reactive.from([0]).get(0).value).toBe(0);
+      expect(Reactive.from([0]).get(1).value).toBe(undefined);
+    });
 
-      expect(state$.get('todos').get(0)).toBe(null);
-      expect(state$.get('filter').get(0)).toBe(null);
+    it('returns undefined if the value is an primitive', () => {
+      expect(Reactive.from('foo').get(0)).toBe(undefined);
+      expect(Reactive.from(123).get('toString')).toBe(undefined);
+      expect(Reactive.from(true).get('toString')).toBe(undefined);
     });
   });
 

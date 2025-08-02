@@ -25,11 +25,11 @@ interface Difference {
   value: unknown;
 }
 
-type ReactiveProperty<T, K extends ReactiveKeys<T>> = T extends object
+type ReactiveProperty<T, K extends keyof T> = T extends object
   ? Or<IsWritable<T, K>, IsNumber<K>> extends true
-    ? Reactive<T[K]>
-    : Readonly<Reactive<T[K]>>
-  : null;
+    ? Reactive<Get<T, K>>
+    : Readonly<Reactive<Get<T, K>>>
+  : undefined;
 
 type ReactiveKeys<T> = Exclude<AllKeys<T>, FunctionKeys<T>>;
 
@@ -39,6 +39,8 @@ type FunctionKeys<T> = {
 
 type AllKeys<T> = T extends any ? keyof T : never;
 
+type Get<T, K extends keyof T> = K extends number ? T[K] | undefined : T[K];
+
 type IsWritable<T, K extends keyof T> = StrictEqual<
   { -readonly [P in K]-?: T[P] },
   Pick<T, K>
@@ -46,17 +48,17 @@ type IsWritable<T, K extends keyof T> = StrictEqual<
 
 type IsNumber<T> = T extends number ? true : false;
 
-type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
-  T,
->() => T extends TRhs ? 1 : 2
-  ? true
-  : false;
-
 type Or<TLhs extends boolean, TRhs extends boolean> = TLhs extends true
   ? true
   : TRhs extends true
     ? true
     : false;
+
+type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
+  T,
+>() => T extends TRhs ? 1 : 2
+  ? true
+  : false;
 
 export class Reactive<T> extends Signal<T> {
   private readonly _descriptor: ReactiveDescriptor<T>;
@@ -117,10 +119,16 @@ export class Reactive<T> extends Signal<T> {
     key: K,
     options?: ReactiveOptions,
   ): ReactiveProperty<T, K>;
-  get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null;
-  get(key: PropertyKey, options?: ReactiveOptions): Reactive<unknown> | null {
+  get(
+    key: PropertyKey,
+    options?: ReactiveOptions,
+  ): Reactive<unknown> | undefined;
+  get(
+    key: PropertyKey,
+    options?: ReactiveOptions,
+  ): Reactive<unknown> | undefined {
     const child = getChildDescriptor(this._descriptor, key);
-    return child !== null ? new Reactive(child, options) : null;
+    return child !== null ? new Reactive(child, options) : undefined;
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
@@ -192,11 +200,7 @@ function getChildDescriptor<T>(
       key,
     );
 
-    if (
-      child !== null &&
-      parent.source$ instanceof Atom &&
-      child.source$ instanceof Atom
-    ) {
+    if (parent.source$ instanceof Atom && child.source$ instanceof Atom) {
       child.source$.subscribe(() => {
         parent.flags |= FLAG_DIRTY;
         (parent.source$ as Atom<T>).touch();
@@ -271,7 +275,7 @@ function proxyObjectDescriptor<T extends object>(
 function resolveChildDescriptor<T extends object>(
   parent: ReactiveDescriptor<T>,
   key: PropertyKey,
-): ReactiveDescriptor<unknown> | null {
+): ReactiveDescriptor<unknown> {
   const root = parent.source$.value;
   let prototype = root;
 
@@ -309,7 +313,7 @@ function resolveChildDescriptor<T extends object>(
           flags: NO_FLAGS,
           children: null,
         };
-      } else if (prototype === root) {
+      } else {
         return toReactiveDescriptor(value);
       }
     }
@@ -317,7 +321,7 @@ function resolveChildDescriptor<T extends object>(
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return null;
+  return toReactiveDescriptor(undefined);
 }
 
 function shallowClone<T extends object>(object: T): T {
