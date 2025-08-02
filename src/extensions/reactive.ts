@@ -136,7 +136,7 @@ export class Reactive<T> extends Signal<T> {
   get(
     key: PropertyKey,
     options?: ReactiveOptions,
-  ): Reactive<unknown> | undefined;
+  ): T extends object ? Reactive<unknown> : undefined;
   get(
     key: PropertyKey,
     options?: ReactiveOptions,

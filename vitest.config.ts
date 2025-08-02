@@ -20,5 +20,8 @@ export default defineConfig({
       include: ['src/**'],
       exclude: ['src/extensions/router.ts', 'src/index.ts'],
     },
+    typecheck: {
+      enabled: true,
+    },
   },
 });
