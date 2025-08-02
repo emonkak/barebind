@@ -121,14 +121,28 @@ describe('Reactive', () => {
     });
 
     it('assigns a new value as a snapshot', () => {
-      const state1 = { count: 0 };
-      const state2 = { count: 1 };
+      const state1 = {
+        count: 0,
+        get doublyCount() {
+          return this.count * 2;
+        },
+      };
+      const state2 = {
+        count: 1,
+        get doublyCount() {
+          return this.count * 2;
+        },
+      };
       const state$ = Reactive.from(state1);
 
       state$.value = state2;
 
       expect(state$.value).toBe(state2);
       expect(state$.version).toBe(1);
+      expect(state$.get('count').value).toBe(1);
+      expect(state$.get('count').version).toBe(1);
+      expect(state$.get('doublyCount').value).toBe(2);
+      expect(state$.get('doublyCount').version).toBe(1);
     });
 
     it('throws an error when trying to set to a readonly descriptor', () => {
@@ -152,7 +166,7 @@ describe('Reactive', () => {
       const todos$ = state$.get('todos');
       const filter$ = state$.get('filter');
 
-      todos$.get(1)!.get('completed').value = true;
+      todos$.get(1).get('completed')!.value = true;
       filter$.value = 'completed';
 
       expect(state$.diff()).toStrictEqual([
@@ -320,7 +334,7 @@ describe('Reactive', () => {
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber);
-      state$.get('todos').get(1)!.get('completed').value = true;
+      state$.get('todos').get(1).get('completed')!.value = true;
 
       expect(subscriber).toHaveBeenCalledTimes(1);
 
@@ -342,7 +356,7 @@ describe('Reactive', () => {
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber);
-      state$.get('todos').get(1)!.get('completed').value = true;
+      state$.get('todos').get(1).get('completed')!.value = true;
 
       expect(subscriber).toHaveBeenCalledTimes(0);
 
@@ -364,7 +378,7 @@ describe('Reactive', () => {
       const subscriber = vi.fn();
 
       state$.subscribe(subscriber)();
-      state$.get('todos').get(1)!.get('completed').value = true;
+      state$.get('todos').get(1).get('completed')!.value = true;
       state$.get('todos').value = [];
       state$.value = new TodoState();
 

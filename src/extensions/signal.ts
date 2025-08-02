@@ -203,13 +203,19 @@ export class Atom<T> extends Signal<T> {
 
   private _value: T;
 
-  private _version = 0;
+  private _version: number;
 
   private readonly _subscribers = new LinkedList<Subscriber>();
 
-  constructor(value: T) {
+  constructor(initialValue: T);
+  /**
+   * @internal
+   */
+  constructor(initialValue: T, initialVersion: number);
+  constructor(initialValue: T, initialVersion: number = 0) {
     super();
-    this._value = value;
+    this._value = initialValue;
+    this._version = initialVersion;
   }
 
   get value(): T {
@@ -249,10 +255,7 @@ export class Computed<
   TResult,
   const TDependencies extends readonly Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
-  static tracked<
-    TResult,
-    const TDependencies extends readonly Signal<any>[],
-  >(
+  static tracked<TResult, const TDependencies extends readonly Signal<any>[]>(
     producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   ): CustomHookFunction<Computed<TResult, TDependencies>> {
@@ -266,10 +269,7 @@ export class Computed<
     };
   }
 
-  static untracked<
-    TResult,
-    const TDependencies extends readonly Signal<any>[],
-  >(
+  static untracked<TResult, const TDependencies extends readonly Signal<any>[]>(
     producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   ): CustomHookFunction<Computed<TResult, TDependencies>> {

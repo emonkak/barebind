@@ -66,7 +66,7 @@ export class Reactive<T> extends Signal<T> {
   private readonly _options: ReactiveOptions | undefined;
 
   static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(toReactiveDescriptor(source), options);
+    return new Reactive(toReactiveDescriptor(source, 0), options);
   }
 
   private constructor(
@@ -287,7 +287,10 @@ function resolveChildDescriptor<T extends object>(
 
       if (get !== undefined && set !== undefined) {
         return {
-          source$: new Atom(get.call(proxyObjectDescriptor(parent))),
+          source$: new Atom(
+            get.call(proxyObjectDescriptor(parent)),
+            parent.source$.version,
+          ),
           flags: NO_FLAGS,
           children: null,
         };
@@ -300,7 +303,7 @@ function resolveChildDescriptor<T extends object>(
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
           (version, dependency) => version + dependency.version,
-          0,
+          parent.source$.version,
         );
         const signal = new Computed<unknown>(
           () => get.call(proxyObjectDescriptor(parent)),
@@ -314,14 +317,14 @@ function resolveChildDescriptor<T extends object>(
           children: null,
         };
       } else {
-        return toReactiveDescriptor(value);
+        return toReactiveDescriptor(value, parent.source$.version);
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return toReactiveDescriptor(undefined);
+  return toReactiveDescriptor(undefined, parent.source$.version);
 }
 
 function shallowClone<T extends object>(object: T): T {
@@ -335,9 +338,12 @@ function shallowClone<T extends object>(object: T): T {
   }
 }
 
-function toReactiveDescriptor<T>(source: T): ReactiveDescriptor<T> {
+function toReactiveDescriptor<T>(
+  value: T,
+  version: number,
+): ReactiveDescriptor<T> {
   return {
-    source$: new Atom(source),
+    source$: new Atom(value, version),
     flags: NO_FLAGS,
     children: null,
   };
