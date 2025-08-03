@@ -137,7 +137,7 @@ describe('SiganlBinding', () => {
   });
 
   describe('connect()', () => {
-    it('subscribes the signal', async () => {
+    it('schedule an update when the signal value has been changed', async () => {
       const signal = new Atom('foo');
       const part = {
         type: PartType.Text,
@@ -164,7 +164,7 @@ describe('SiganlBinding', () => {
       expect(part.node.nodeValue).toBe(signal.value);
     });
 
-    it('subscribes the signal again if the signal has been changed', async () => {
+    it('schedule an update when the signal itself has been changed', async () => {
       const signal1 = new Atom('foo');
       const signal2 = new Atom('bar');
       const part = {
