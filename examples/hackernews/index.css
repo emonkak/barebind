@@ -33,15 +33,14 @@ a {
   box-sizing: border-box;
   max-inline-size: 800px;
   margin-inline: auto;
-  padding-block: 15px;
   padding-inline: 5px;
+  line-height: 55px;
 }
 
 .header a {
   color: rgba(255, 255, 255, 0.8);
   transition: color 0.15s ease;
   display: inline-block;
-  vertical-align: middle;
   font-weight: 300;
   letter-spacing: 0.075em;
   margin-inline-end: 1.8em;
@@ -65,23 +64,6 @@ a {
   font-size: 0.9em;
   margin: 0;
   float: right;
-}
-
-.logo {
-  inline-size: 24px;
-  margin-inline-end: 10px;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.fade-enter-active,
-.fade-exit-active {
-  transition: all 0.2s ease;
-}
-
-.fade-enter,
-.fade-exit-active {
-  opacity: 0;
 }
 
 @media (max-width: 860px) {
