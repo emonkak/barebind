@@ -55,7 +55,7 @@ describe('FunctionComponent', () => {
         [],
         Lanes.AllLanes,
         new MockCoroutine(),
-        new Runtime(new MockBackend()),
+        Runtime.create(new MockBackend()),
       );
 
       component.render(props, session);
@@ -103,7 +103,7 @@ describe('FunctionComponent', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = component.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(component);
@@ -140,7 +140,7 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
@@ -167,7 +167,7 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(component, props, part);
       const container = createElement('div', {}, part.node);
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.hydrate(tree, runtime);
       runtime.enqueueMutationEffect(binding);
@@ -212,7 +212,7 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(component, props, part);
       const container = document.createElement('div');
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       runtime.enqueueCoroutine(binding);
       runtime.enqueueMutationEffect(binding);
@@ -240,7 +240,7 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
@@ -286,7 +286,7 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);

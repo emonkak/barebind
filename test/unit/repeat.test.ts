@@ -46,7 +46,7 @@ describe('RepeatDirective', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(RepeatDirective);
@@ -60,7 +60,7 @@ describe('RepeatDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() =>
         RepeatDirective.resolveBinding(props, part, runtime),
@@ -94,7 +94,7 @@ describe('RepeatBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new RepeatBinding(props1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -131,7 +131,7 @@ describe('RepeatBinding', () => {
       );
       const tree = new HydrationTree(container);
       const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.hydrate(tree, runtime);
       binding.commit(runtime);
@@ -166,7 +166,7 @@ describe('RepeatBinding', () => {
       );
       const tree = new HydrationTree(container);
       const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -201,7 +201,7 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = new Runtime(new MockBackend());
+          const runtime = Runtime.create(new MockBackend());
 
           binding.connect(runtime);
           binding.commit(runtime);
@@ -249,7 +249,7 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = new Runtime(new MockBackend());
+          const runtime = Runtime.create(new MockBackend());
 
           binding.connect(runtime);
           binding.commit(runtime);
@@ -306,7 +306,7 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = new Runtime(new MockBackend());
+          const runtime = Runtime.create(new MockBackend());
 
           binding.connect(runtime);
           binding.commit(runtime);
@@ -365,7 +365,7 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -409,7 +409,7 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

@@ -8,7 +8,7 @@ export function createSession(lanes: Lanes = Lanes.AllLanes): RenderSession {
     [],
     lanes,
     new MockCoroutine(),
-    new Runtime(new MockBackend()),
+    Runtime.create(new MockBackend()),
   );
 }
 

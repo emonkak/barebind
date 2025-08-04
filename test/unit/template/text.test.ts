@@ -38,7 +38,7 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {}, 'foo');
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
@@ -73,7 +73,7 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {});
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() => {
         template.hydrate(binds, part, tree, runtime);
@@ -91,7 +91,7 @@ describe('TextTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);

@@ -22,7 +22,7 @@ describe('NodePrimitive', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = NodePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(NodePrimitive);
@@ -36,7 +36,7 @@ describe('NodePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() => NodePrimitive.resolveBinding(value, part, runtime)).toThrow(
         'NodePrimitive must be used in a child node,',
@@ -70,7 +70,7 @@ describe('NodeBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -91,7 +91,7 @@ describe('NodeBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding<string | null>(value1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -115,7 +115,7 @@ describe('NodeBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding<number | null>(value1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -140,7 +140,7 @@ describe('NodeBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -162,7 +162,7 @@ describe('NodeBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 

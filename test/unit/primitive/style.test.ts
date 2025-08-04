@@ -56,7 +56,7 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const runtime = new Runtime(new MockBackend());
+        const runtime = Runtime.create(new MockBackend());
         const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
         expect(binding.type).toBe(StylePrimitive);
@@ -72,7 +72,7 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: 'style',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
         'StylePrimitive must be used in a ":style" attribute part,',
@@ -104,7 +104,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -133,7 +133,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -159,7 +159,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -180,7 +180,7 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -209,7 +209,7 @@ describe('StyleBinding', () => {
         name: ':classlist',
       };
       const binding = new StyleBinding(style, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

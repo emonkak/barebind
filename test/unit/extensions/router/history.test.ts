@@ -11,7 +11,7 @@ describe('CurrentHistory', () => {
       [],
       Lanes.AllLanes,
       new MockCoroutine(),
-      new Runtime(new MockBackend()),
+      Runtime.create(new MockBackend()),
     );
 
     expect(() => session.use(CurrentHistory)).toThrow(

@@ -65,7 +65,7 @@ describe('ClassListPrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const runtime = new Runtime(new MockBackend());
+        const runtime = Runtime.create(new MockBackend());
         const binding = ClassListPrimitive.resolveBinding(
           specifier,
           part,
@@ -85,7 +85,7 @@ describe('ClassListPrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() =>
         ClassListPrimitive.resolveBinding(specifier, part, runtime),
@@ -118,7 +118,7 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       };
       const binding = new ClassListBinding(specifier, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -149,7 +149,7 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       };
       const binding = new ClassListBinding(specifier1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -178,7 +178,7 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       };
       const binding = new ClassListBinding(specifier1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -206,7 +206,7 @@ describe('ClassListBinding', () => {
         name: 'class',
       };
       const binding = new ClassListBinding(specifier, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -223,7 +223,7 @@ describe('ClassListBinding', () => {
         name: 'class',
       };
       const binding = new ClassListBinding(specifier1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -247,7 +247,7 @@ describe('ClassListBinding', () => {
         name: ':classlist',
       };
       const binding = new ClassListBinding(specifier, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

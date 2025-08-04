@@ -50,7 +50,7 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(SpreadPrimitive);
@@ -66,7 +66,7 @@ describe('SpreadPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() =>
         SpreadPrimitive.resolveBinding(props, part, runtime),
@@ -96,7 +96,7 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -124,7 +124,7 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -255,7 +255,7 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
@@ -276,7 +276,7 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

@@ -40,7 +40,7 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       runtime.debugValue(new MockDirective('FirstDirective'), 'foo', part);
       expect(part.node.data).toBe('/FirstDirective("foo")');
@@ -65,7 +65,7 @@ describe('Runtime', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       runtime.debugValue(new MockDirective('FirstDirective'), 'foo', part);
 
@@ -80,7 +80,7 @@ describe('Runtime', () => {
   describe('enterScope()', () => {
     it('returns a new Runtime with the new scope', () => {
       const scope = new Scope(null);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const newRuntime = runtime.enterScope(scope);
 
       expect(newRuntime).not.toBe(runtime);
@@ -93,7 +93,7 @@ describe('Runtime', () => {
     it('expands literals in template values', () => {
       const { strings, values } =
         templateLiteral`<${new Literal('div')}>${'foo'}</${new Literal('div')}>`;
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const templateLiteral1 = runtime.expandLiterals(strings, values);
       const templateLiteral2 = runtime.expandLiterals(strings, values);
@@ -133,15 +133,15 @@ describe('Runtime', () => {
         commit: vi.fn(),
       };
       const observer = new MockRuntimeObserver();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const unobserve = runtime.observe(observer);
 
       const requestCallbackSpy = vi.spyOn(
-        runtime['_backend'],
+        runtime['_environment'].backend,
         'requestCallback',
       );
       const startViewTransitionSpy = vi.spyOn(
-        runtime['_backend'],
+        runtime['_environment'].backend,
         'startViewTransition',
       );
 
@@ -355,7 +355,7 @@ describe('Runtime', () => {
         commit: vi.fn(),
       };
       const observer = new MockRuntimeObserver();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const unobserve = runtime.observe(observer);
 
       runtime.enqueueCoroutine(coroutine);
@@ -516,7 +516,7 @@ describe('Runtime', () => {
 
   describe('nextIdentifier()', () => {
     it('generates a new identifier', () => {
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(runtime.nextIdentifier()).toMatch(/[0-9a-z]+:1/);
       expect(runtime.nextIdentifier()).toMatch(/[0-9a-z]+:2/);
@@ -531,7 +531,7 @@ describe('Runtime', () => {
       const lanes = Lanes.AllLanes;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const renderSpy = vi.spyOn(component, 'render');
 
@@ -585,10 +585,10 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_backend'],
+        runtime['_environment'].backend,
         'resolvePrimitive',
       );
 
@@ -612,7 +612,7 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const $toDirectiveSpy = vi.spyOn(value, $toDirective);
 
@@ -638,9 +638,12 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
-      const resolveSlotSpy = vi.spyOn(runtime['_backend'], 'resolveSlotType');
+      const resolveSlotSpy = vi.spyOn(
+        runtime['_environment'].backend,
+        'resolveSlotType',
+      );
 
       const slot = runtime.resolveSlot(value, part);
 
@@ -660,10 +663,10 @@ describe('Runtime', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const resolvePrimitiveSpy = vi.spyOn(
-        runtime['_backend'],
+        runtime['_environment'].backend,
         'resolvePrimitive',
       );
 
@@ -683,7 +686,7 @@ describe('Runtime', () => {
       const strings = ['<div>', '</div>'];
       const binds = ['foo'];
       const mode = 'html';
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const template = runtime.resolveTemplate(strings, binds, mode);
 
@@ -703,7 +706,7 @@ describe('Runtime', () => {
   describe('scheduleUpdate()', () => {
     it('schedules the update with the current priority of the backend', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -723,7 +726,7 @@ describe('Runtime', () => {
 
     it('schedules as a different update if the lanes are different', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -756,7 +759,7 @@ describe('Runtime', () => {
 
     it('returns the pending task scheduled in the same lane', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -784,7 +787,7 @@ describe('Runtime', () => {
   describe('waitForUpdate()', () => {
     it('returns 0 if pending tasks do not exist', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 

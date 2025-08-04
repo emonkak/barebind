@@ -70,7 +70,7 @@ describe('FragmentTemplate', () => {
       };
       const container = document.createElement('div');
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new FragmentTemplate(internalTemplates);
 
       const hydrationSpys = internalTemplates.map((template) =>
@@ -148,7 +148,7 @@ describe('FragmentTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new FragmentTemplate(internalTemplates);
 
       const renderSpys = internalTemplates.map((template) =>

@@ -20,7 +20,7 @@ describe('AttributePrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = AttributePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(AttributePrimitive);
@@ -34,7 +34,7 @@ describe('AttributePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() =>
         AttributePrimitive.resolveBinding(value, part, runtime),
@@ -66,7 +66,7 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding(value1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -87,7 +87,7 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding<unknown>(value1, part);
-        const runtime = new Runtime(new MockBackend());
+        const runtime = Runtime.create(new MockBackend());
 
         binding.connect(runtime);
         binding.commit(runtime);
@@ -120,7 +120,7 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const runtime = new Runtime(new MockBackend());
+        const runtime = Runtime.create(new MockBackend());
 
         binding.connect(runtime);
         binding.commit(runtime);
@@ -141,7 +141,7 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const runtime = new Runtime(new MockBackend());
+        const runtime = Runtime.create(new MockBackend());
 
         binding.connect(runtime);
         binding.commit(runtime);
@@ -160,7 +160,7 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -179,7 +179,7 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const removeAttributeSpy = vi.spyOn(part.node, 'removeAttribute');
 

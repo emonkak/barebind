@@ -19,7 +19,7 @@ describe('BlackholePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(BlackholePrimitive);
@@ -53,7 +53,7 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -68,7 +68,7 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.disconnect(runtime);
       binding.rollback(runtime);

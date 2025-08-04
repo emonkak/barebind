@@ -38,7 +38,7 @@ describe('SignalDirective', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.type).toBe(SignalDirective);
@@ -58,7 +58,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.shouldBind(signal)).toBe(true);
@@ -73,7 +73,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(signal1, part, runtime);
 
       binding.connect(runtime);
@@ -93,7 +93,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
@@ -122,7 +122,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
       const container = createElement('div', {}, part.node);
       const tree = new HydrationTree(container);
@@ -145,7 +145,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
@@ -173,7 +173,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(
         signal1,
         part,
@@ -207,7 +207,7 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(
         signal,
         part,

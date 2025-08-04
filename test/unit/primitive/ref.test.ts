@@ -55,7 +55,7 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: attributeName,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
       expect(binding.type).toBe(RefPrimitive);
@@ -69,7 +69,7 @@ describe('RefPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
         'RefPrimitive must be used in ":ref" attribute part,',
@@ -101,7 +101,7 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -121,7 +121,7 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -155,7 +155,7 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -189,7 +189,7 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
@@ -205,7 +205,7 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -227,7 +227,7 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

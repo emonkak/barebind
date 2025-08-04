@@ -35,7 +35,7 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {}, document.createComment(''));
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -71,7 +71,7 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {});
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new ChildNodeTemplate();
 
       expect(() => {
@@ -89,7 +89,7 @@ describe('ChildNodeTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.render(binds, part, runtime);
 

@@ -33,7 +33,7 @@ describe('EmptyTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const tree = new HydrationTree(document.createElement('div'));
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new EmptyTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -56,7 +56,7 @@ describe('EmptyTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new EmptyTemplate();
       const { childNodes, slots } = template.render(binds, part, runtime);
 

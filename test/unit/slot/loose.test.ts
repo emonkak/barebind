@@ -52,7 +52,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -86,7 +86,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -143,7 +143,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -182,7 +182,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi
         .spyOn(binding, 'shouldBind')
@@ -216,7 +216,7 @@ describe('LooseSlot', () => {
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
       const tree = new HydrationTree(document.createElement('div'));
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -251,7 +251,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -285,7 +285,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
@@ -320,7 +320,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const rollbackSpy = vi.spyOn(binding, 'rollback');

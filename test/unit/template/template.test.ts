@@ -35,7 +35,7 @@ describe('AbstractTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new MockTemplate();
       const binding = template.resolveBinding(binds, part, runtime);
 
@@ -50,7 +50,7 @@ describe('AbstractTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new MockTemplate();
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
@@ -87,7 +87,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -110,7 +110,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         childNodes: [container.firstChild!],
@@ -141,7 +141,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = document.createElement('div');
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
@@ -162,7 +162,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const container = createElement('div', {}, part.node);
       const renderRoot = createElement(
@@ -309,7 +309,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const container = createElement('div', {}, part.node);
       const childNodes = [

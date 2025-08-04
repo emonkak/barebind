@@ -46,7 +46,7 @@ describe('SlotSpecifier', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective](part, runtime);
 
@@ -64,7 +64,7 @@ describe('SlotSpecifier', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const bindable = new SlotSpecifier(slotType, value);
       const directive = bindable[$toDirective](part, runtime);
 

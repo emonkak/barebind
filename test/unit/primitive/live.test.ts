@@ -21,7 +21,7 @@ describe('LivePrimitive', () => {
         name: 'value',
         defaultValue: '',
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(LivePrimitive);
@@ -35,7 +35,7 @@ describe('LivePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('textarea'),
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
         'LivePrimitive must be used in a live part,',
@@ -70,7 +70,7 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
@@ -98,7 +98,7 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);

@@ -52,7 +52,7 @@ describe('ElementTemplate', () => {
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
       const tree = new HydrationTree(container);
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new ElementTemplate('div');
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -96,7 +96,7 @@ describe('ElementTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new ElementTemplate('div');
       const { childNodes, slots } = template.render(binds, part, runtime);
 
@@ -138,7 +138,7 @@ describe('ElementTemplate', () => {
         childNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = new Runtime(new MockBackend());
+      const runtime = Runtime.create(new MockBackend());
       const template = new ElementTemplate('svg');
       const { childNodes, slots } = template.render(binds, part, runtime);
 

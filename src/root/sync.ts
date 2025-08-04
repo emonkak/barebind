@@ -15,7 +15,7 @@ export function createSyncRoot<T>(
   container: Element,
   backend: Backend,
 ): SyncRoot<T> {
-  const runtime = new Runtime(backend);
+  const runtime = Runtime.create(backend);
   const part = {
     type: PartType.ChildNode,
     node: container.ownerDocument.createComment(''),
