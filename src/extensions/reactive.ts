@@ -16,8 +16,8 @@ export interface ReactiveOptions {
 
 interface ReactiveDescriptor<T> {
   readonly source$: Signal<T>;
+  children: Map<PropertyKey, ReactiveDescriptor<unknown>> | null;
   flags: number;
-  children: Map<PropertyKey, ReactiveDescriptor<unknown> | null> | null;
 }
 
 interface Difference {
@@ -109,9 +109,9 @@ export class Reactive<T> extends Signal<T> {
 
     // We must clear the dirty flag for shallow subscription before set the new
     // source.
+    descriptor.children = null;
     descriptor.flags |= FLAG_NEW;
     descriptor.flags &= ~FLAG_DIRTY;
-    descriptor.children = null;
     descriptor.source$.value = source;
   }
 
@@ -141,8 +141,16 @@ export class Reactive<T> extends Signal<T> {
     key: PropertyKey,
     options?: ReactiveOptions,
   ): Reactive<unknown> | undefined {
-    const child = getChildDescriptor(this._descriptor, key);
-    return child !== null ? new Reactive(child, options) : undefined;
+    if (!isObject(this._descriptor.source$.value)) {
+      return undefined;
+    }
+
+    const child = getChildDescriptor(
+      this._descriptor as ReactiveDescriptor<T & object>,
+      key,
+    );
+
+    return new Reactive(child, options);
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
@@ -199,29 +207,22 @@ function collectDefferences<T>(
   }
 }
 
-function getChildDescriptor<T>(
+function getChildDescriptor<T extends object>(
   parent: ReactiveDescriptor<T>,
   key: PropertyKey,
-): ReactiveDescriptor<unknown> | null {
+): ReactiveDescriptor<unknown> {
   let child = parent.children?.get(key);
   if (child !== undefined) {
     return child;
   }
 
-  if (isObject(parent.source$.value)) {
-    child = resolveChildDescriptor(
-      parent as ReactiveDescriptor<T & object>,
-      key,
-    );
+  child = resolveChildDescriptor(parent, key);
 
-    if (parent.source$ instanceof Atom && child.source$ instanceof Atom) {
-      child.source$.subscribe(() => {
-        parent.flags |= FLAG_DIRTY;
-        (parent.source$ as Atom<T>).touch();
-      });
-    }
-  } else {
-    child = null;
+  if (parent.source$ instanceof Atom && child.source$ instanceof Atom) {
+    child.source$.subscribe(() => {
+      parent.flags |= FLAG_DIRTY;
+      (parent.source$ as Atom<T>).touch();
+    });
   }
 
   parent.children ??= new Map();
@@ -265,17 +266,13 @@ function proxyObjectDescriptor<T extends object>(
   getChildValue: <T>(descriptor: ReactiveDescriptor<T>) => T = getSnapshot,
 ): T {
   return new Proxy(descriptor.source$.value, {
-    get(target, key, receiver) {
+    get(_target, key, _receiver) {
       const child = getChildDescriptor(descriptor, key);
-      if (child !== null) {
-        return getChildValue(child);
-      } else {
-        return Reflect.get(target, key, receiver);
-      }
+      return getChildValue(child);
     },
     set(target, key, value, receiver) {
       const child = getChildDescriptor(descriptor, key);
-      if (child !== null && child.source$ instanceof Atom) {
+      if (child.source$ instanceof Atom) {
         child.flags |= FLAG_NEW;
         child.source$.value = value;
         return true;
@@ -305,8 +302,8 @@ function resolveChildDescriptor<T extends object>(
             get.call(proxyObjectDescriptor(parent)),
             parent.source$.version,
           ),
-          flags: NO_FLAGS,
           children: null,
+          flags: NO_FLAGS,
         };
       } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
@@ -327,8 +324,8 @@ function resolveChildDescriptor<T extends object>(
         );
         return {
           source$: signal,
-          flags: NO_FLAGS,
           children: null,
+          flags: NO_FLAGS,
         };
       } else {
         return toReactiveDescriptor(value, parent.source$.version);
@@ -358,7 +355,7 @@ function toReactiveDescriptor<T>(
 ): ReactiveDescriptor<T> {
   return {
     source$: new Atom(value, version),
-    flags: NO_FLAGS,
     children: null,
+    flags: NO_FLAGS,
   };
 }
