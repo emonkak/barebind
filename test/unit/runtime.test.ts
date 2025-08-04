@@ -8,14 +8,9 @@ import {
   Literal,
   PartType,
   Scope,
-  type UpdateOptions,
 } from '@/core.js';
 import { RenderSession } from '@/render-session.js';
-import {
-  getFlushLanesFromOptions,
-  getScheduleLanesFromOptions,
-  Runtime,
-} from '@/runtime.js';
+import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBackend,
@@ -148,10 +143,7 @@ describe('Runtime', () => {
       runtime.enqueueCoroutine(coroutine);
       runtime.enqueueMutationEffect(coroutine);
 
-      await runtime.flushAsync({
-        priority: 'user-blocking',
-        viewTransition: false,
-      });
+      await runtime.flushAsync(Lanes.UserBlockingLane);
 
       expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
@@ -175,8 +167,8 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          priority: 'user-blocking',
-          viewTransition: false,
+          lanes: Lanes.UserBlockingLane,
+          concurrent: true,
         },
         {
           type: 'RENDER_START',
@@ -225,17 +217,14 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          priority: 'user-blocking',
-          viewTransition: false,
+          lanes: Lanes.UserBlockingLane,
+          concurrent: true,
         },
       ]);
 
       runtime.enqueueCoroutine(subcoroutine);
       runtime.enqueueMutationEffect(subcoroutine);
-      await runtime.flushAsync({
-        priority: 'background',
-        viewTransition: true,
-      });
+      await runtime.flushAsync(Lanes.BackgroundLane | Lanes.ViewTransitionLane);
 
       expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
@@ -255,8 +244,8 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          priority: 'background',
-          viewTransition: true,
+          lanes: Lanes.BackgroundLane | Lanes.ViewTransitionLane,
+          concurrent: true,
         },
         {
           type: 'RENDER_START',
@@ -305,16 +294,13 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          priority: 'background',
-          viewTransition: true,
+          lanes: Lanes.BackgroundLane | Lanes.ViewTransitionLane,
+          concurrent: true,
         },
       ]);
 
       unobserve();
-      await runtime.flushAsync({
-        priority: 'background',
-        viewTransition: false,
-      });
+      await runtime.flushAsync(Lanes.BackgroundLane);
 
       expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
@@ -360,12 +346,15 @@ describe('Runtime', () => {
 
       runtime.enqueueCoroutine(coroutine);
       runtime.enqueueMutationEffect(coroutine);
-      runtime.flushSync();
+      runtime.flushSync(Lanes.UpdateLanes);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(1);
-      expect(subcoroutine.resume).toHaveBeenCalledWith(Lanes.AllLanes, runtime);
+      expect(subcoroutine.resume).toHaveBeenCalledWith(
+        Lanes.UpdateLanes,
+        runtime,
+      );
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
-      expect(coroutine.resume).toHaveBeenCalledWith(Lanes.AllLanes, runtime);
+      expect(coroutine.resume).toHaveBeenCalledWith(Lanes.UpdateLanes, runtime);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
@@ -376,8 +365,8 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          priority: null,
-          viewTransition: false,
+          lanes: Lanes.UpdateLanes,
+          concurrent: false,
         },
         {
           type: 'RENDER_START',
@@ -426,17 +415,20 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          priority: null,
-          viewTransition: false,
+          lanes: Lanes.UpdateLanes,
+          concurrent: false,
         },
       ]);
 
       runtime.enqueueCoroutine(subcoroutine);
       runtime.enqueueMutationEffect(subcoroutine);
-      runtime.flushSync();
+      runtime.flushSync(Lanes.UpdateLanes);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
-      expect(subcoroutine.resume).toHaveBeenCalledWith(Lanes.AllLanes, runtime);
+      expect(subcoroutine.resume).toHaveBeenCalledWith(
+        Lanes.UpdateLanes,
+        runtime,
+      );
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
@@ -448,8 +440,8 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          priority: null,
-          viewTransition: false,
+          lanes: Lanes.UpdateLanes,
+          concurrent: false,
         },
         {
           type: 'RENDER_START',
@@ -498,13 +490,13 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          priority: null,
-          viewTransition: false,
+          lanes: Lanes.UpdateLanes,
+          concurrent: false,
         },
       ]);
 
       unobserve();
-      runtime.flushSync();
+      runtime.flushSync(Lanes.UpdateLanes);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
@@ -528,7 +520,7 @@ describe('Runtime', () => {
       const component = new MockComponent();
       const props = {};
       const hooks: Hook[] = [];
-      const lanes = Lanes.AllLanes;
+      const lanes = Lanes.UpdateLanes;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const runtime = Runtime.create(new MockBackend());
@@ -703,10 +695,10 @@ describe('Runtime', () => {
     });
   });
 
-  describe('scheduleUpdate()', () => {
+  describe.for([true, false])('scheduleUpdate()', (concurrent) => {
     it('schedules the update with the current priority of the backend', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend());
+      const runtime = Runtime.create(new MockBackend(), { concurrent });
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -719,14 +711,14 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.UserBlockingLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane,
         expect.not.exact(runtime),
       );
     });
 
     it('schedules as a different update if the lanes are different', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend());
+      const runtime = Runtime.create(new MockBackend(), { concurrent });
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -752,14 +744,14 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.UserBlockingLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane,
         expect.not.exact(runtime),
       );
     });
 
     it('returns the pending task scheduled in the same lane', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend());
+      const runtime = Runtime.create(new MockBackend(), { concurrent });
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -778,7 +770,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.UserBlockingLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane,
         expect.not.exact(runtime),
       );
     });
@@ -796,67 +788,4 @@ describe('Runtime', () => {
       expect(resumeSpy).not.toHaveBeenCalled();
     });
   });
-});
-
-describe('getFlushLanesFromOptions()', () => {
-  it.each([
-    [{}, Lanes.DefaultLanes],
-    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
-    [
-      { priority: 'user-visible' },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane,
-    ],
-    [
-      { priority: 'background' },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane,
-    ],
-    [{ viewTransition: true }, Lanes.DefaultLanes | Lanes.ViewTransitionLane],
-    [
-      { priority: 'user-blocking', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'background', viewTransition: true },
-      Lanes.UserBlockingLane |
-        Lanes.UserVisibleLane |
-        Lanes.BackgroundLane |
-        Lanes.ViewTransitionLane,
-    ],
-  ] as [UpdateOptions, Lanes][])(
-    'returns the lanes for flush',
-    (options, lanes) => {
-      expect(getFlushLanesFromOptions(options)).toBe(lanes);
-    },
-  );
-});
-
-describe('getScheduleLanesFromOptions()', () => {
-  it.each([
-    [{}, Lanes.DefaultLanes],
-    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
-    [{ priority: 'user-visible' }, Lanes.UserVisibleLane],
-    [{ priority: 'background' }, Lanes.BackgroundLane],
-    [{ viewTransition: true }, Lanes.DefaultLanes | Lanes.ViewTransitionLane],
-    [
-      { priority: 'user-blocking', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', viewTransition: true },
-      Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'background', viewTransition: true },
-      Lanes.BackgroundLane | Lanes.ViewTransitionLane,
-    ],
-  ] as [UpdateOptions, Lanes][])(
-    'returns lanes for schedule',
-    (options, lanes) => {
-      expect(getScheduleLanesFromOptions(options)).toBe(lanes);
-    },
-  );
 });

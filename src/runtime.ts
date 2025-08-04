@@ -11,6 +11,8 @@ import {
   type Directive,
   type DirectiveType,
   type Effect,
+  getFlushLanesFromOptions,
+  getScheduleLanesFromOptions,
   type Hook,
   isBindable,
   Lanes,
@@ -33,16 +35,12 @@ import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import { TemplateLiteralPreprocessor } from './template-literal.js';
 
-export interface RuntimeObserver {
-  onRuntimeEvent(event: RuntimeEvent): void;
-}
-
 export type RuntimeEvent =
   | {
       type: 'UPDATE_START' | 'UPDATE_END';
       id: number;
-      priority: TaskPriority | null;
-      viewTransition: boolean;
+      lanes: Lanes;
+      concurrent: boolean;
     }
   | {
       type: 'RENDER_START' | 'RENDER_END';
@@ -62,6 +60,14 @@ export type RuntimeEvent =
       context: RenderContext;
     };
 
+export interface RuntimeObserver {
+  onRuntimeEvent(event: RuntimeEvent): void;
+}
+
+export interface RuntimeOptions {
+  concurrent?: boolean;
+}
+
 interface CoroutineState {
   pendingLanes: Lanes;
 }
@@ -69,6 +75,7 @@ interface CoroutineState {
 interface Environment {
   backend: Backend;
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
+  concurrent: boolean;
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   observers: LinkedList<RuntimeObserver>;
@@ -93,7 +100,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
   private readonly _environment: Environment;
 
-  static create(backend: Backend): Runtime {
+  static create(backend: Backend, options: RuntimeOptions = {}): Runtime {
     const frame: Frame = {
       id: 0,
       pendingCoroutines: [],
@@ -105,6 +112,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const environment: Environment = {
       backend,
       cachedTemplates: new WeakMap(),
+      concurrent: options.concurrent ?? false,
       coroutineStates: new WeakMap(),
       identifierCount: 0,
       observers: new LinkedList(),
@@ -170,16 +178,15 @@ export class Runtime implements CommitContext, UpdateContext {
     );
   }
 
-  async flushAsync(options: Required<UpdateOptions>): Promise<void> {
+  async flushAsync(lanes: Lanes): Promise<void> {
     const { coroutineStates, backend, observers } = this._environment;
-    const lanes = getFlushLanesFromOptions(options);
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
         type: 'UPDATE_START',
         id: this._frame.id,
-        priority: options.priority,
-        viewTransition: options.viewTransition,
+        lanes,
+        concurrent: true,
       });
     }
 
@@ -197,10 +204,10 @@ export class Runtime implements CommitContext, UpdateContext {
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
           const coroutineState = coroutineStates.get(coroutine);
-          const peningLanes = coroutine.resume(lanes, this);
+          const pendingLanes = coroutine.resume(lanes, this);
 
           if (coroutineState !== undefined) {
-            coroutineState.pendingLanes = peningLanes;
+            coroutineState.pendingLanes = pendingLanes;
           }
         }
 
@@ -226,7 +233,7 @@ export class Runtime implements CommitContext, UpdateContext {
         this._commitEffects(layoutEffects, CommitPhase.Layout);
       };
 
-      if (options.viewTransition) {
+      if (lanes & Lanes.ViewTransitionLane) {
         await backend.startViewTransition(callback);
       } else {
         await backend.requestCallback(callback, {
@@ -247,22 +254,22 @@ export class Runtime implements CommitContext, UpdateContext {
         this._notifyObservers({
           type: 'UPDATE_END',
           id: this._frame.id,
-          priority: options.priority,
-          viewTransition: options.viewTransition,
+          lanes,
+          concurrent: true,
         });
       }
     }
   }
 
-  flushSync(): void {
-    const { observers } = this._environment;
+  flushSync(lanes: Lanes): void {
+    const { coroutineStates, observers } = this._environment;
 
     if (!observers.isEmpty()) {
       this._notifyObservers({
         type: 'UPDATE_START',
         id: this._frame.id,
-        priority: null,
-        viewTransition: false,
+        lanes,
+        concurrent: false,
       });
     }
 
@@ -279,7 +286,12 @@ export class Runtime implements CommitContext, UpdateContext {
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          coroutine.resume(Lanes.AllLanes, this);
+          const coroutineState = coroutineStates.get(coroutine);
+          const pendingLanes = coroutine.resume(lanes, this);
+
+          if (coroutineState !== undefined) {
+            coroutineState.pendingLanes = pendingLanes;
+          }
         }
       } while (this._frame.pendingCoroutines.length > 0);
 
@@ -302,8 +314,8 @@ export class Runtime implements CommitContext, UpdateContext {
         this._notifyObservers({
           type: 'UPDATE_END',
           id: this._frame.id,
-          priority: null,
-          viewTransition: false,
+          lanes,
+          concurrent: false,
         });
       }
     }
@@ -400,18 +412,22 @@ export class Runtime implements CommitContext, UpdateContext {
     return template;
   }
 
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask {
-    const { backend, coroutineStates, scheduledTasks } = this._environment;
-    const completeOptions = {
-      priority: options?.priority ?? backend.getCurrentPriority(),
-      viewTransition: options?.viewTransition ?? false,
+  scheduleUpdate(
+    coroutine: Coroutine,
+    options: UpdateOptions = {},
+  ): UpdateTask {
+    const { backend, concurrent, coroutineStates, scheduledTasks } =
+      this._environment;
+    const completeOptions: Required<UpdateOptions> = {
+      priority: options.priority ?? backend.getCurrentPriority(),
+      viewTransition: options.viewTransition ?? false,
     };
-    const lanes = getScheduleLanesFromOptions(completeOptions);
+    const scheduleLanes = getScheduleLanesFromOptions(completeOptions);
 
     for (const scheduledTask of scheduledTasks) {
       if (
         scheduledTask.coroutine === coroutine &&
-        scheduledTask.lanes === lanes &&
+        scheduledTask.lanes === scheduleLanes &&
         !scheduledTask.running
       ) {
         return scheduledTask;
@@ -421,25 +437,32 @@ export class Runtime implements CommitContext, UpdateContext {
     let coroutineState = coroutineStates.get(coroutine);
 
     if (coroutineState !== undefined) {
-      coroutineState.pendingLanes |= lanes;
+      coroutineState.pendingLanes |= scheduleLanes;
     } else {
-      coroutineState = { pendingLanes: lanes };
+      coroutineState = { pendingLanes: scheduleLanes };
       coroutineStates.set(coroutine, coroutineState);
     }
 
     const scheduledTaskNode = scheduledTasks.pushBack({
       coroutine,
-      lanes,
+      lanes: scheduleLanes,
       running: false,
       promise: backend.requestCallback(async () => {
         try {
-          if ((coroutineState.pendingLanes & lanes) === Lanes.NoLanes) {
+          if ((coroutineState.pendingLanes & scheduleLanes) === Lanes.NoLanes) {
             return;
           }
 
           scheduledTaskNode.value.running = true;
 
-          await this._createSubcontext(coroutine).flushAsync(completeOptions);
+          const subcontext = this._createSubcontext(coroutine);
+          const flushLanes = getFlushLanesFromOptions(completeOptions);
+
+          if (concurrent) {
+            await subcontext.flushAsync(flushLanes);
+          } else {
+            subcontext.flushSync(flushLanes);
+          }
         } finally {
           scheduledTasks.remove(scheduledTaskNode);
         }
@@ -510,63 +533,6 @@ export class Runtime implements CommitContext, UpdateContext {
       node.value.onRuntimeEvent(event);
     }
   }
-}
-
-/**
- * @internal
- */
-export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes: Lanes;
-
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes = Lanes.UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes = Lanes.UserBlockingLane | Lanes.UserVisibleLane;
-      break;
-    case 'background':
-      lanes =
-        Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane;
-      break;
-    default:
-      lanes = Lanes.DefaultLanes;
-      break;
-  }
-
-  if (options.viewTransition) {
-    lanes |= Lanes.ViewTransitionLane;
-  }
-
-  return lanes;
-}
-
-/**
- * @internal
- */
-export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes: Lanes;
-
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes = Lanes.UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes = Lanes.UserVisibleLane;
-      break;
-    case 'background':
-      lanes = Lanes.BackgroundLane;
-      break;
-    default:
-      lanes = Lanes.DefaultLanes;
-      break;
-  }
-
-  if (options.viewTransition) {
-    lanes |= Lanes.ViewTransitionLane;
-  }
-
-  return lanes;
 }
 
 function consumeCoroutines(updateFrame: Frame): Coroutine[] {

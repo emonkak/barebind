@@ -1,4 +1,4 @@
-import { BrowserBackend, component, createAsyncRoot } from '@emonkak/ebit';
+import { AsyncRoot, BrowserBackend, component } from '@emonkak/ebit';
 import {
   ConsoleReporter,
   RuntimeProfiler,
@@ -7,7 +7,7 @@ import {
 import { App } from './App.js';
 import { TodoState } from './state.js';
 
-const root = createAsyncRoot(
+const root = AsyncRoot.create(
   component(App, { state: new TodoState() }),
   document.body,
   new BrowserBackend(),

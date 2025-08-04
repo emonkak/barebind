@@ -1,16 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { createSyncRoot } from '@/root/sync.js';
+import { Lanes } from '@/core.js';
+import { SyncRoot } from '@/root/sync.js';
 import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 describe('SyncRoot', () => {
-  describe('observe()', () => {
-    it('adds the observer to the runtime', () => {
+  describe('static create()', () => {
+    it('returns a SyncRoot without concurrent mode', () => {
       const value = 'foo';
       const container = document.createElement('div');
       const backend = new MockBackend();
-      const root = createSyncRoot(value, container, backend);
+      const root = SyncRoot.create(value, container, backend);
+
+      expect(root['_runtime']['_environment'].concurrent).toBe(false);
+    });
+  });
+
+  describe('observe()', () => {
+    it('registers an observer to the runtime', () => {
+      const value = 'foo';
+      const container = document.createElement('div');
+      const backend = new MockBackend();
+      const root = SyncRoot.create(value, container, backend);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -21,14 +32,14 @@ describe('SyncRoot', () => {
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_START',
         id: 0,
-        priority: null,
-        viewTransition: false,
+        lanes: Lanes.SyncLane,
+        concurrent: false,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
         id: 0,
-        priority: null,
-        viewTransition: false,
+        lanes: Lanes.SyncLane,
+        concurrent: false,
       });
 
       const callCount = observer.onRuntimeEvent.mock.calls.length;
@@ -41,12 +52,12 @@ describe('SyncRoot', () => {
   });
 
   describe('mount()', () => {
-    it('mounts the value', () => {
+    it('mounts a value', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = document.createElement('div');
       const backend = new MockBackend();
-      const root = createSyncRoot(value1, container, backend);
+      const root = SyncRoot.create(value1, container, backend);
 
       root.mount();
 
@@ -63,12 +74,12 @@ describe('SyncRoot', () => {
   });
 
   describe('hydrate()', () => {
-    it('hydrates the value', async () => {
+    it('hydrates a value', async () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
       const backend = new MockBackend();
-      const root = createSyncRoot(value1, container, backend);
+      const root = SyncRoot.create(value1, container, backend);
 
       root.hydrate();
 

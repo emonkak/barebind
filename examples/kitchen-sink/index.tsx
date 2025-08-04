@@ -1,7 +1,7 @@
 import {
+  AsyncRoot,
   BrowserBackend,
   component,
-  createAsyncRoot,
   Literal,
   type RenderContext,
   repeat,
@@ -343,7 +343,7 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const root = createAsyncRoot(
+const root = AsyncRoot.create(
   component(App, {}),
   document.body,
   new BrowserBackend(),

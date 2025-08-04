@@ -155,7 +155,7 @@ export class ComponentBinding<TProps, TResult>
       this._component,
       this._props,
       this._hooks,
-      Lanes.AllLanes,
+      Lanes.UpdateLanes,
       this,
     );
 

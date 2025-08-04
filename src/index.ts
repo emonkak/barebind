@@ -20,8 +20,8 @@ export {
   type RepeatProps,
   repeat,
 } from './repeat.js';
-export { type AsyncRoot, createAsyncRoot } from './root/async.js';
-export { createSyncRoot, type SyncRoot } from './root/sync.js';
+export { AsyncRoot } from './root/async.js';
+export { SyncRoot } from './root/sync.js';
 export type { RuntimeEvent, RuntimeObserver } from './runtime.js';
 export { loose } from './slot/loose.js';
 export { memo } from './slot/memo.js';

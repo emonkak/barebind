@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
 import { component } from '@/component.js';
-import { createSyncRoot } from '@/root/sync.js';
+import { SyncRoot } from '@/root/sync.js';
 import { stripComments } from '../test-utils.js';
 
 test('render a component returning virtual DOM', () => {
@@ -31,7 +31,7 @@ test('render a component returning virtual DOM', () => {
     name: 'Alternative world',
   });
   const container = document.createElement('div');
-  const root = createSyncRoot(value1, container, new BrowserBackend());
+  const root = SyncRoot.create(value1, container, new BrowserBackend());
 
   root.mount();
 

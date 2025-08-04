@@ -184,6 +184,12 @@ export abstract class Signal<T>
 }
 
 export class Atom<T> extends Signal<T> {
+  private _value: T;
+
+  private _version: number;
+
+  private readonly _subscribers = new LinkedList<Subscriber>();
+
   static tracked<T>(initialValue: T): CustomHookFunction<Atom<T>> {
     return (context) => {
       const signal = context.useMemo(
@@ -200,12 +206,6 @@ export class Atom<T> extends Signal<T> {
       return context.useMemo(() => new Atom(initialValue), [initialValue]);
     };
   }
-
-  private _value: T;
-
-  private _version: number;
-
-  private readonly _subscribers = new LinkedList<Subscriber>();
 
   constructor(initialValue: T);
   /**
@@ -255,6 +255,16 @@ export class Computed<
   TResult,
   const TDependencies extends readonly Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
+  private readonly _producer: (
+    ...signals: UnwrapSignals<TDependencies>
+  ) => TResult;
+
+  private readonly _dependencies: TDependencies;
+
+  private _memoizedResult: TResult | null;
+
+  private _memoizedVersion;
+
   static tracked<TResult, const TDependencies extends readonly Signal<any>[]>(
     producer: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
@@ -280,16 +290,6 @@ export class Computed<
       );
     };
   }
-
-  private readonly _producer: (
-    ...signals: UnwrapSignals<TDependencies>
-  ) => TResult;
-
-  private readonly _dependencies: TDependencies;
-
-  private _memoizedResult: TResult | null;
-
-  private _memoizedVersion;
 
   constructor(
     producer: (...values: UnwrapSignals<TDependencies>) => TResult,

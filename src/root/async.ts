@@ -1,91 +1,78 @@
 import {
   type Backend,
   HydrationTree,
+  Lanes,
   PartType,
-  type UpdateOptions,
+  type Slot,
 } from '../core.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
-export interface AsyncRoot<T> {
-  observe(observer: RuntimeObserver): () => void;
-  hydrate(options?: UpdateOptions): Promise<void>;
-  mount(options?: UpdateOptions): Promise<void>;
-  unmount(options?: UpdateOptions): Promise<void>;
-  update(value: T, options?: UpdateOptions): Promise<void>;
-}
+export class AsyncRoot<T> {
+  private readonly _slot: Slot<T>;
 
-export function createAsyncRoot<T>(
-  value: T,
-  container: Element,
-  backend: Backend,
-): AsyncRoot<T> {
-  const runtime = Runtime.create(backend);
-  const part = {
-    type: PartType.ChildNode,
-    node: container.ownerDocument.createComment(''),
-    childNode: null,
-    namespaceURI: container.namespaceURI,
-  };
-  const slot = runtime.resolveSlot(value, part);
+  private readonly _container: Element;
 
-  function toCompleteOptions(
-    options: UpdateOptions | undefined,
-  ): Required<UpdateOptions> {
-    return {
-      priority: backend.getCurrentPriority(),
-      viewTransition: false,
-      ...options,
+  private readonly _runtime: Runtime;
+
+  static create<T>(
+    value: T,
+    container: Element,
+    backend: Backend,
+  ): AsyncRoot<T> {
+    const runtime = Runtime.create(backend, { concurrent: true });
+    const part = {
+      type: PartType.ChildNode,
+      node: container.ownerDocument.createComment(''),
+      childNode: null,
+      namespaceURI: container.namespaceURI,
     };
+    const slot = runtime.resolveSlot(value, part);
+    return new AsyncRoot(slot, container, runtime);
   }
 
-  return {
-    observe(observer) {
-      return runtime.observe(observer);
-    },
-    hydrate(options) {
-      const tree = new HydrationTree(container);
+  private constructor(slot: Slot<T>, container: Element, runtime: Runtime) {
+    this._slot = slot;
+    this._container = container;
+    this._runtime = runtime;
+  }
 
-      slot.hydrate(tree, runtime);
+  observe(observer: RuntimeObserver): () => void {
+    return this._runtime.observe(observer);
+  }
 
-      tree.nextNode(part.node.nodeName).replaceWith(part.node);
+  hydrate(): Promise<void> {
+    const tree = new HydrationTree(this._container);
+    const part = this._slot.part;
 
-      const completeOptions = toCompleteOptions(options);
+    this._slot.hydrate(tree, this._runtime);
+    tree.nextNode(part.node.nodeName).replaceWith(part.node);
 
-      return backend.requestCallback(() => {
-        runtime.enqueueMutationEffect(new MountSlot(slot, container));
-        return runtime.flushAsync(completeOptions);
-      }, completeOptions);
-    },
-    mount(options) {
-      slot.connect(runtime);
+    this._runtime.enqueueMutationEffect(
+      new MountSlot(this._slot, this._container),
+    );
+    return this._runtime.flushAsync(Lanes.SyncLane);
+  }
 
-      const completeOptions = toCompleteOptions(options);
+  mount(): Promise<void> {
+    this._slot.connect(this._runtime);
+    this._runtime.enqueueMutationEffect(
+      new MountSlot(this._slot, this._container),
+    );
+    return this._runtime.flushAsync(Lanes.SyncLane);
+  }
 
-      return backend.requestCallback(() => {
-        runtime.enqueueMutationEffect(new MountSlot(slot, container));
-        return runtime.flushAsync(completeOptions);
-      }, completeOptions);
-    },
-    update(value, options) {
-      slot.reconcile(value, runtime);
+  update(value: T): Promise<void> {
+    this._slot.reconcile(value, this._runtime);
+    this._runtime.enqueueMutationEffect(this._slot);
+    return this._runtime.flushAsync(Lanes.SyncLane);
+  }
 
-      const completeOptions = toCompleteOptions(options);
-
-      return backend.requestCallback(() => {
-        runtime.enqueueMutationEffect(slot);
-        return runtime.flushAsync(completeOptions);
-      }, completeOptions);
-    },
-    unmount(options) {
-      slot.disconnect(runtime);
-
-      const completeOptions = toCompleteOptions(options);
-
-      return backend.requestCallback(() => {
-        runtime.enqueueMutationEffect(new UnmountSlot(slot, container));
-        return runtime.flushAsync(completeOptions);
-      }, completeOptions);
-    },
-  };
+  unmount(): Promise<void> {
+    this._slot.disconnect(this._runtime);
+    this._runtime.enqueueMutationEffect(
+      new UnmountSlot(this._slot, this._container),
+    );
+    return this._runtime.flushAsync(Lanes.SyncLane);
+  }
 }

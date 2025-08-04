@@ -208,12 +208,12 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
 export const Lanes = {
   NoLanes: 0b0,
-  UserBlockingLane: 0b1,
-  UserVisibleLane: 0b10,
-  BackgroundLane: 0b100,
-  ViewTransitionLane: 0b1000,
-  DefaultLanes: 0b111,
-  AllLanes: -1,
+  UpdateLanes: 0b1111,
+  SyncLane: 0b1,
+  UserBlockingLane: 0b10,
+  UserVisibleLane: 0b100,
+  BackgroundLane: 0b1000,
+  ViewTransitionLane: 0b10000,
 } as const;
 
 export type Lanes = number;
@@ -339,7 +339,7 @@ export interface RenderSessionContext {
     strings: TemplateStringsArray,
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
-  flushSync(): void;
+  flushSync(lanes: Lanes): void;
   getScheduledTasks(): LinkedList<UpdateTask>;
   getScope(): Scope;
   nextIdentifier(): string;
@@ -534,6 +534,72 @@ function ensureNode<TName extends string>(
       `Hydration is failed because the node is mismatched. ${expectedName} node is expected here:\n` +
         debugNode(lastNode, '[[THIS IS MISMATCHED!]]'),
     );
+  }
+}
+
+/**
+ * @internal
+ */
+export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
+  let lanes = Lanes.SyncLane;
+
+  switch (options.priority) {
+    case 'user-blocking':
+      lanes |= Lanes.UserBlockingLane;
+      break;
+    case 'user-visible':
+      lanes |= Lanes.UserBlockingLane | Lanes.UserVisibleLane;
+      break;
+    case 'background':
+      lanes |=
+        Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane;
+      break;
+  }
+
+  if (options.viewTransition) {
+    lanes |= Lanes.ViewTransitionLane;
+  }
+
+  return lanes;
+}
+
+/**
+ * @internal
+ */
+export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
+  let lanes = Lanes.NoLanes;
+
+  switch (options.priority) {
+    case 'user-blocking':
+      lanes |= Lanes.UserBlockingLane;
+      break;
+    case 'user-visible':
+      lanes |= Lanes.UserVisibleLane;
+      break;
+    case 'background':
+      lanes |= Lanes.BackgroundLane;
+      break;
+  }
+
+  if (options.viewTransition) {
+    lanes |= Lanes.ViewTransitionLane;
+  }
+
+  return lanes;
+}
+
+/**
+ * @internal
+ */
+export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
+  if (lanes & Lanes.BackgroundLane) {
+    return 'background';
+  } else if (lanes & Lanes.UserVisibleLane) {
+    return 'user-visible';
+  } else if (lanes & Lanes.UserBlockingLane) {
+    return 'user-blocking';
+  } else {
+    return null;
   }
 }
 

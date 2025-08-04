@@ -1,6 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import { CommitPhase } from '../core.js';
+import { CommitPhase, getPriorityFromLanes, Lanes } from '../core.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface RuntimeProfile {
@@ -16,8 +16,7 @@ export interface RuntimeProfile {
 export interface UpdateMeasurement {
   startTime: number;
   duration: number;
-  priority: TaskPriority | null;
-  viewTransition: boolean;
+  lanes: Lanes;
 }
 
 export interface RenderMeasurement {
@@ -80,8 +79,7 @@ export class RuntimeProfiler implements RuntimeObserver {
         profile.updateMeasurement = {
           startTime: performance.now(),
           duration: 0,
-          priority: event.priority,
-          viewTransition: event.viewTransition,
+          lanes: event.lanes,
         };
         break;
       }
@@ -189,13 +187,11 @@ export class ConsoleReporter implements RuntimeReporter {
       return;
     }
 
-    const titleLablel = updateMeasurement.viewTransition
-      ? 'Transition'
-      : 'Update';
-    const priorityLabel =
-      updateMeasurement.priority !== null
-        ? `with ${updateMeasurement.priority}`
-        : 'without';
+    const viewTransition =
+      (updateMeasurement.lanes & Lanes.ViewTransitionLane) !== 0;
+    const priority = getPriorityFromLanes(updateMeasurement.lanes);
+    const titleLablel = viewTransition ? 'Transition' : 'Update';
+    const priorityLabel = priority !== null ? `with ${priority}` : 'without';
 
     this._logger.group(
       `${titleLablel} #${profile.id} ${priorityLabel} priority in %c${updateMeasurement.duration}ms`,

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CommitPhase, type Effect, type RenderContext } from '@/core.js';
+import { CommitPhase, type Effect, Lanes, type RenderContext } from '@/core.js';
 import {
   type ConsoleLogger,
   ConsoleReporter,
@@ -25,8 +25,8 @@ describe('RuntimeProfiler', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          priority: 'user-blocking',
-          viewTransition: false,
+          lanes: Lanes.UserBlockingLane,
+          concurrent: true,
         },
         {
           type: 'RENDER_START',
@@ -89,8 +89,8 @@ describe('RuntimeProfiler', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          priority: 'user-blocking',
-          viewTransition: false,
+          lanes: Lanes.UserBlockingLane,
+          concurrent: true,
         },
       ];
 
@@ -104,8 +104,7 @@ describe('RuntimeProfiler', () => {
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
-          priority: 'user-blocking',
-          viewTransition: false,
+          lanes: Lanes.UserBlockingLane,
         },
         renderMeasurement: {
           startTime: expect.any(Number),
@@ -159,8 +158,7 @@ describe('ConsoleReporter', () => {
           updateMeasurement: {
             startTime: 0,
             duration: 10,
-            priority: null,
-            viewTransition: true,
+            lanes: Lanes.ViewTransitionLane,
           },
           renderMeasurement: null,
           componentMeasurements: [],
@@ -176,8 +174,7 @@ describe('ConsoleReporter', () => {
           updateMeasurement: {
             startTime: 0,
             duration: 10,
-            priority: 'user-blocking',
-            viewTransition: false,
+            lanes: Lanes.UserBlockingLane,
           },
           renderMeasurement: {
             startTime: 0,
