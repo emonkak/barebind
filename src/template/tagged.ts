@@ -421,13 +421,11 @@ function parseAttribtues(
   holes: Hole[],
   index: number,
 ): void {
-  // Persist element attributes since ones may be removed.
-  const attributes = Array.from(element.attributes);
+  const attributeNames = element.getAttributeNames();
 
-  for (let i = 0, l = attributes.length; i < l; i++) {
-    const attribute = attributes[i]!;
-    const name = attribute.name;
-    const value = attribute.value;
+  for (let i = 0, l = attributeNames.length; i < l; i++) {
+    const name = attributeNames[i]!;
+    const value = element.getAttribute(name)!;
     let hole: Hole;
 
     if (name === marker && value === '') {
@@ -545,7 +543,15 @@ function parseChildren(
             );
           }
         }
-        parseAttribtues(currentNode as Element, strings, marker, holes, index);
+        if ((currentNode as Element).hasAttributes()) {
+          parseAttribtues(
+            currentNode as Element,
+            strings,
+            marker,
+            holes,
+            index,
+          );
+        }
         break;
       }
       case Node.COMMENT_NODE: {
