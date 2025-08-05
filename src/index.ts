@@ -1,7 +1,7 @@
 export { BrowserBackend } from './backend/browser.js';
 export { ServerBackend } from './backend/server.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
-export { component } from './component.js';
+export { component, memo } from './component.js';
 export {
   $customHook,
   type CustomHookFunction,

@@ -1,4 +1,4 @@
-import { component, type RenderContext, shallowEqual } from '@emonkak/ebit';
+import { component, memo, type RenderContext } from '@emonkak/ebit';
 
 import { type Todo, TodoState } from './state.js';
 import { TodoInput } from './TodoInput.js';
@@ -85,4 +85,4 @@ export function TodoItem(
   `;
 }
 
-TodoItem.shouldSkipUpdate = shallowEqual;
+memo(TodoItem);

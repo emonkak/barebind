@@ -3,9 +3,9 @@ import {
   BrowserBackend,
   component,
   Literal,
+  memo,
   type RenderContext,
   repeat,
-  shallowEqual,
 } from '@emonkak/ebit';
 import {
   ConsoleReporter,
@@ -253,7 +253,7 @@ function Item(
   `;
 }
 
-Item.shouldSkipUpdate = shallowEqual;
+memo(Item);
 
 function TemplateCounter(_props: {}, context: RenderContext): unknown {
   const [count, setCount] = context.useState(0);

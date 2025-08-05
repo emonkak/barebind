@@ -14,7 +14,7 @@ export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
 
   readonly value: T;
 
-  constructor(type: DirectiveType<T>, value: NoInfer<T>) {
+  constructor(type: DirectiveType<T>, value: T) {
     this.type = type;
     this.value = value;
   }

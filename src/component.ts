@@ -1,3 +1,4 @@
+import { shallowEqual } from './compare.js';
 import {
   type Binding,
   type CommitContext,
@@ -24,6 +25,17 @@ export function component<TProps, TResult>(
 ): DirectiveSpecifier<TProps> {
   const directive = new FunctionComponent(componentFn);
   return new DirectiveSpecifier(directive, props);
+}
+
+export function memo<TProps extends {}, TResult>(
+  componentFn: ComponentFunction<TProps, TResult>,
+  arePropsEqual: (
+    nextProps: TProps,
+    prevProps: TProps,
+  ) => boolean = shallowEqual,
+): ComponentFunction<TProps, TResult> {
+  componentFn.shouldSkipUpdate = arePropsEqual;
+  return componentFn;
 }
 
 export interface ComponentFunction<TProps, TResult = unknown> {

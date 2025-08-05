@@ -1,4 +1,4 @@
-import { type RenderContext, shallowEqual } from '@emonkak/ebit';
+import { memo, type RenderContext } from '@emonkak/ebit';
 
 export interface NavProps {}
 
@@ -27,4 +27,4 @@ export function Nav(_props: NavProps, context: RenderContext): unknown {
   `;
 }
 
-Nav.shouldSkipUpdate = shallowEqual;
+memo(Nav);

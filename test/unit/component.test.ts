@@ -1,5 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ComponentBinding, component, FunctionComponent } from '@/component.js';
+import { shallowEqual } from '@/compare.js';
+import {
+  ComponentBinding,
+  type ComponentFunction,
+  component,
+  FunctionComponent,
+  memo,
+} from '@/component.js';
 import {
   CommitPhase,
   HydrationError,
@@ -15,12 +22,21 @@ import { MockBackend, MockCoroutine, MockSlot } from '../mocks.js';
 import { createElement } from '../test-utils.js';
 
 describe('component()', () => {
-  it('returns a new DirectiveSpecifier with the component', () => {
+  it('returns a new DirectiveSpecifier with the component function', () => {
     const props = { name: 'foo', greet: 'Hello' };
     const directive = component(Greet, props);
 
     expect(directive.type).toBeInstanceOf(FunctionComponent);
     expect(directive.value).toBe(props);
+  });
+});
+
+describe('memo()', () => {
+  it('set a property comparison Function to the component function', () => {
+    const componentFn: ComponentFunction<{}> = (_props: {}) => null;
+
+    expect(memo(componentFn)).toBe(componentFn);
+    expect(componentFn.shouldSkipUpdate).toBe(shallowEqual);
   });
 });
 
@@ -345,8 +361,7 @@ function Memo({ value }: MemoProps): unknown {
   return value;
 }
 
-Memo.shouldSkipUpdate = (nextProps: MemoProps, prevProps: MemoProps): boolean =>
-  nextProps.key === prevProps.key;
+memo(Memo, (nextProps, prevProps) => nextProps.key === prevProps.key);
 
 interface EnqueueEffectProps {
   callback: (phase: CommitPhase) => void;
