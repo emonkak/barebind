@@ -49,6 +49,8 @@ export class MockBinding<T> implements Binding<T> {
 
   value: T;
 
+  memoizedValue: T | null = null;
+
   readonly part: Part;
 
   isConnected: boolean = false;
@@ -61,8 +63,8 @@ export class MockBinding<T> implements Binding<T> {
     this.part = part;
   }
 
-  shouldBind(_value: T): boolean {
-    return true;
+  shouldBind(value: T): boolean {
+    return !Object.is(value, this.memoizedValue);
   }
 
   bind(value: T): void {
@@ -115,6 +117,7 @@ export class MockBinding<T> implements Binding<T> {
         break;
     }
 
+    this.memoizedValue = this.value;
     this.isCommitted = true;
   }
 
@@ -144,6 +147,7 @@ export class MockBinding<T> implements Binding<T> {
         break;
     }
 
+    this.memoizedValue = null;
     this.isCommitted = false;
   }
 }
@@ -309,7 +313,7 @@ export class MockSlot<T> implements Slot<T> {
     return this.binding.part;
   }
 
-  reconcile(value: T, context: UpdateContext): void {
+  reconcile(value: T, context: UpdateContext): boolean {
     const directive = context.resolveDirective(value, this.binding.part);
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
@@ -318,11 +322,15 @@ export class MockSlot<T> implements Slot<T> {
       );
     }
 
-    if (this.binding.shouldBind(directive.value)) {
+    const dirty = this.binding.shouldBind(directive.value);
+
+    if (dirty) {
       this.binding.bind(directive.value);
       this.binding.connect(context);
       this.isConnected = true;
     }
+
+    return dirty;
   }
 
   hydrate(tree: HydrationTree, context: UpdateContext): void {

@@ -18,6 +18,8 @@ const TEXT_TEMPLATE = new TextTemplate<string>();
 
 const EMPTY_COMMENT = '<!---->';
 
+type KeyValuePair = { key: string; value: string };
+
 describe('repeat()', () => {
   it('returns a new DirectiveSpecifier with RepeatDirective', () => {
     const props: RepeatProps<string> = {
@@ -137,7 +139,8 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source.map((item) => item + EMPTY_COMMENT).join('') + EMPTY_COMMENT,
+        source.map((element) => element + EMPTY_COMMENT).join('') +
+          EMPTY_COMMENT,
       );
     });
 
@@ -179,19 +182,24 @@ describe('RepeatBinding', () => {
 
   describe('connect()', () => {
     it('updates items according to keys', () => {
-      const source = ['foo', 'bar', 'baz', 'qux'];
+      const source: KeyValuePair[] = [
+        { key: 'one', value: 'foo' },
+        { key: 'two', value: 'bar' },
+        { key: 'three', value: 'baz' },
+        { key: 'four', value: 'qux' },
+      ];
 
       for (const combinations1 of allCombinations(source)) {
         for (const combinations2 of allCombinations(source)) {
-          const props1: RepeatProps<string> = {
+          const props1: RepeatProps<KeyValuePair> = {
             source: combinations1,
-            keySelector: (item) => item,
-            valueSelector: textTemplate,
+            keySelector: ({ key }) => key,
+            valueSelector: ({ value }) => textTemplate(value),
           };
-          const props2: RepeatProps<string> = {
+          const props2: RepeatProps<KeyValuePair> = {
             source: combinations2,
-            keySelector: (item) => item,
-            valueSelector: textTemplate,
+            keySelector: ({ key }) => key,
+            valueSelector: ({ value }) => textTemplate(value),
           };
           const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
@@ -207,39 +215,49 @@ describe('RepeatBinding', () => {
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            combinations1.map((item) => item + EMPTY_COMMENT).join('') +
+            combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
               '<!---->',
           );
-          expect(part.childNode?.nodeValue).toBe(combinations1[0]);
+          expect(part.childNode?.nodeValue).toBe(combinations1[0]?.value);
 
           binding.bind(props2);
           binding.connect(runtime);
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            combinations2.map((item) => item + EMPTY_COMMENT).join('') +
+            combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(combinations2[0]);
+          expect(part.childNode?.nodeValue).toBe(combinations2[0]?.value);
         }
       }
     });
 
     it('updates items containing duplicate keys', () => {
-      const source1 = ['foo', 'bar', 'baz', 'baz', 'baz'];
-      const source2 = ['foo', 'bar', 'baz'];
+      const source1: KeyValuePair[] = [
+        { key: 'one', value: 'foo' },
+        { key: 'two', value: 'bar' },
+        { key: 'three', value: 'baz' },
+        { key: 'three', value: 'qux' },
+        { key: 'three', value: 'quux' },
+      ];
+      const source2: KeyValuePair[] = [
+        { key: 'one', value: 'foo' },
+        { key: 'two', value: 'bar' },
+        { key: 'three', value: 'baz' },
+      ];
 
       for (const permutation1 of permutations(source1)) {
         for (const permutation2 of permutations(source2)) {
-          const props1: RepeatProps<string> = {
+          const props1: RepeatProps<KeyValuePair> = {
             source: permutation1,
-            keySelector: (item) => item,
-            valueSelector: textTemplate,
+            keySelector: ({ key }) => key,
+            valueSelector: ({ value }) => textTemplate(value),
           };
-          const props2: RepeatProps<string> = {
+          const props2: RepeatProps<KeyValuePair> = {
             source: permutation2,
-            keySelector: (item) => item,
-            valueSelector: textTemplate,
+            keySelector: ({ key }) => key,
+            valueSelector: ({ value }) => textTemplate(value),
           };
           const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
@@ -255,48 +273,57 @@ describe('RepeatBinding', () => {
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            permutation1.map((item) => item + EMPTY_COMMENT).join('') +
+            permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]?.value);
 
           binding.bind(props2);
           binding.connect(runtime);
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            permutation2.map((item) => item + EMPTY_COMMENT).join('') +
+            permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(permutation2[0]);
+          expect(part.childNode?.nodeValue).toBe(permutation2[0]?.value);
 
           binding.bind(props1);
           binding.connect(runtime);
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            permutation1.map((item) => item + EMPTY_COMMENT).join('') +
+            permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]?.value);
         }
       }
     });
 
     it('swaps items according to keys', () => {
-      const source = ['foo', 'bar', 'baz'];
+      const source1: KeyValuePair[] = [
+        { key: 'one', value: 'foo' },
+        { key: 'two', value: 'bar' },
+        { key: 'three', value: 'baz' },
+      ];
+      const source2: KeyValuePair[] = [
+        { key: 'one', value: 'baz' },
+        { key: 'two', value: 'bar' },
+        { key: 'three', value: 'foo' },
+      ];
 
-      for (const permutation1 of permutations(source)) {
-        for (const permutation2 of permutations(source)) {
-          const props1: RepeatProps<string> = {
+      for (const permutation1 of permutations(source1)) {
+        for (const permutation2 of permutations(source2)) {
+          const props1: RepeatProps<KeyValuePair> = {
             source: permutation1,
-            keySelector: (item) => item,
-            valueSelector: textTemplate,
+            keySelector: ({ key }) => key,
+            valueSelector: ({ value }) => value,
           };
-          const props2: RepeatProps<string> = {
+          const props2: RepeatProps<KeyValuePair> = {
             source: permutation2,
-            keySelector: (item) => item,
-            valueSelector: textTemplate,
+            keySelector: ({ key }) => key,
+            valueSelector: ({ value }) => value,
           };
           const part: Part.ChildNodePart = {
             type: PartType.ChildNode,
@@ -312,30 +339,30 @@ describe('RepeatBinding', () => {
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            permutation1.map((item) => item + EMPTY_COMMENT).join('') +
+            permutation1.map(({ value }) => `<!--${value}-->`).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]?.value);
 
           binding.bind(props2);
           binding.connect(runtime);
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            permutation2.map((item) => item + EMPTY_COMMENT).join('') +
+            permutation2.map(({ value }) => `<!--${value}-->`).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(permutation2[0]);
+          expect(part.childNode?.nodeValue).toBe(permutation2[0]?.value);
 
           binding.bind(props1);
           binding.connect(runtime);
           binding.commit(runtime);
 
           expect(container.innerHTML).toBe(
-            permutation1.map((item) => item + EMPTY_COMMENT).join('') +
+            permutation1.map(({ value }) => `<!--${value}-->`).join('') +
               EMPTY_COMMENT,
           );
-          expect(part.childNode?.nodeValue).toBe(permutation1[0]);
+          expect(part.childNode?.nodeValue).toBe(permutation1[0]?.value);
         }
       }
     });

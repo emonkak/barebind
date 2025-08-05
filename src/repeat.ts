@@ -17,6 +17,12 @@ import { debugPart } from './debug/part.js';
 import { markUsedValue } from './debug/value.js';
 import { DirectiveSpecifier } from './directive.js';
 
+const OPERATION_INSERT = 0;
+const OPERATION_MOVE = 1;
+const OPERATION_MOVE_AND_UPDATE = 2;
+const OPERATION_REMOVE = 3;
+const OPERATION_UPDATE = 4;
+
 export type RepeatProps<TSource, TKey = unknown, TValue = unknown> = {
   source: Iterable<TSource>;
   keySelector?: (element: TSource, index: number) => TKey;
@@ -30,24 +36,22 @@ interface Item<TKey, TValue> {
 
 type Operation<TKey, TValue> =
   | {
-      type: typeof OperationType.Insert;
+      type: typeof OPERATION_INSERT;
       item: Item<TKey, TValue>;
       referenceItem: Item<TKey, TValue> | undefined;
     }
   | {
-      type: typeof OperationType.Move;
+      type: typeof OPERATION_MOVE;
       item: Item<TKey, TValue>;
       referenceItem: Item<TKey, TValue> | undefined;
     }
-  | { type: typeof OperationType.Update; item: Item<TKey, TValue> }
-  | { type: typeof OperationType.Remove; item: Item<TKey, TValue> };
-
-const OperationType = {
-  Insert: 0,
-  Move: 1,
-  Update: 2,
-  Remove: 3,
-} as const;
+  | {
+      type: typeof OPERATION_MOVE_AND_UPDATE;
+      item: Item<TKey, TValue>;
+      referenceItem: Item<TKey, TValue> | undefined;
+    }
+  | { type: typeof OPERATION_UPDATE; item: Item<TKey, TValue> }
+  | { type: typeof OPERATION_REMOVE; item: Item<TKey, TValue> };
 
 interface ReconciliationHandler<TKey, TSource, TTarget> {
   insert(
@@ -192,33 +196,41 @@ export class RepeatBinding<TSource, TKey, TValue>
         };
         slot.connect(context);
         this._pendingOperations.push({
-          type: OperationType.Insert,
+          type: OPERATION_INSERT,
           item,
           referenceItem,
         });
         return item;
       },
       update: (item, { value }) => {
-        item.value.reconcile(value, context);
-        this._pendingOperations.push({
-          type: OperationType.Update,
-          item,
-        });
+        if (item.value.reconcile(value, context)) {
+          this._pendingOperations.push({
+            type: OPERATION_UPDATE,
+            item,
+          });
+        }
         return item;
       },
       move: (item, { value }, referenceItem) => {
-        item.value.reconcile(value, context);
-        this._pendingOperations.push({
-          type: OperationType.Move,
-          item,
-          referenceItem,
-        });
+        if (item.value.reconcile(value, context)) {
+          this._pendingOperations.push({
+            type: OPERATION_MOVE_AND_UPDATE,
+            item,
+            referenceItem,
+          });
+        } else {
+          this._pendingOperations.push({
+            type: OPERATION_MOVE,
+            item,
+            referenceItem,
+          });
+        }
         return item;
       },
       remove: (item) => {
         item.value.disconnect(context);
         this._pendingOperations.push({
-          type: OperationType.Remove,
+          type: OPERATION_REMOVE,
           item,
         });
       },
@@ -236,35 +248,29 @@ export class RepeatBinding<TSource, TKey, TValue>
     for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
       const operation = this._pendingOperations[i]!;
       switch (operation.type) {
-        case OperationType.Insert: {
+        case OPERATION_INSERT: {
           const { item, referenceItem } = operation;
-          const referenceNode =
-            referenceItem !== undefined
-              ? getStartNode(referenceItem.value.part)
-              : this._part.node;
-          referenceNode.before(item.value.part.node);
+          insertItem(item, referenceItem, this._part);
           item.value.commit(context);
           break;
         }
-        case OperationType.Move: {
+        case OPERATION_MOVE: {
           const { item, referenceItem } = operation;
-          const startNode = getStartNode(item.value.part);
-          const endNode = item.value.part.node;
-          const childNodes = getChildNodes(startNode, endNode);
-          const referenceNode =
-            referenceItem !== undefined
-              ? getStartNode(referenceItem.value.part)
-              : this._part.node;
-          moveChildNodes(childNodes, referenceNode);
+          moveItem(item, referenceItem, this._part);
+          break;
+        }
+        case OPERATION_MOVE_AND_UPDATE: {
+          const { item, referenceItem } = operation;
+          moveItem(item, referenceItem, this._part);
           item.value.commit(context);
           break;
         }
-        case OperationType.Update: {
+        case OPERATION_UPDATE: {
           const { item } = operation;
           item.value.commit(context);
           break;
         }
-        case OperationType.Remove: {
+        case OPERATION_REMOVE: {
           const { item } = operation;
           item.value.rollback(context);
           item.value.part.node.remove();
@@ -350,11 +356,38 @@ function getChildNodes(startNode: ChildNode, endNode: ChildNode): ChildNode[] {
   return childNodes;
 }
 
+function insertItem<TKey, TValue>(
+  item: Item<TKey, Slot<TValue>>,
+  referenceItem: Item<TKey, Slot<TValue>> | undefined,
+  part: Part,
+): void {
+  const referenceNode =
+    referenceItem !== undefined
+      ? getStartNode(referenceItem.value.part)
+      : part.node;
+  referenceNode.before(item.value.part.node);
+}
+
 function matchesItem<TKey, TSource, TTarget>(
   targetItem: Item<TKey, TTarget>,
   sourceItem: Item<TKey, TSource>,
 ) {
   return Object.is(targetItem.key, sourceItem.key);
+}
+
+function moveItem<TKey, TValue>(
+  item: Item<TKey, Slot<TValue>>,
+  referenceItem: Item<TKey, Slot<TValue>> | undefined,
+  part: Part,
+): void {
+  const startNode = getStartNode(item.value.part);
+  const endNode = item.value.part.node;
+  const childNodes = getChildNodes(startNode, endNode);
+  const referenceNode =
+    referenceItem !== undefined
+      ? getStartNode(referenceItem.value.part)
+      : part.node;
+  moveChildNodes(childNodes, referenceNode);
 }
 
 function reconcileItems<TKey, TSource, TTarget>(
@@ -411,7 +444,7 @@ function reconcileItems<TKey, TSource, TTarget>(
       newTargetItems[newTail] = handler.move(
         oldTargetItems[oldHead]!,
         newSourceItems[newTail]!,
-        newTargetItems[newTail + 1]!,
+        newTargetItems[newTail + 1],
       );
       newTail--;
       oldHead++;
@@ -421,7 +454,7 @@ function reconcileItems<TKey, TSource, TTarget>(
       newTargetItems[newHead] = handler.move(
         oldTargetItems[oldTail]!,
         newSourceItems[newHead]!,
-        oldTargetItems[oldHead]!,
+        oldTargetItems[oldHead],
       );
       newHead++;
       oldTail--;
