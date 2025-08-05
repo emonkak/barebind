@@ -39,12 +39,14 @@ type Operation<TKey, TValue> =
       item: Item<TKey, TValue>;
       referenceItem: Item<TKey, TValue> | undefined;
     }
+  | { type: typeof OperationType.Update; item: Item<TKey, TValue> }
   | { type: typeof OperationType.Remove; item: Item<TKey, TValue> };
 
 const OperationType = {
   Insert: 0,
   Move: 1,
-  Remove: 2,
+  Update: 2,
+  Remove: 3,
 } as const;
 
 interface ReconciliationHandler<TKey, TSource, TTarget> {
@@ -198,6 +200,10 @@ export class RepeatBinding<TSource, TKey, TValue>
       },
       update: (item, { value }) => {
         item.value.reconcile(value, context);
+        this._pendingOperations.push({
+          type: OperationType.Update,
+          item,
+        });
         return item;
       },
       move: (item, { value }, referenceItem) => {
@@ -230,23 +236,41 @@ export class RepeatBinding<TSource, TKey, TValue>
     for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
       const operation = this._pendingOperations[i]!;
       switch (operation.type) {
-        case OperationType.Insert:
-          commitInsert(operation.item, operation.referenceItem, this._part);
+        case OperationType.Insert: {
+          const { item, referenceItem } = operation;
+          const referenceNode =
+            referenceItem !== undefined
+              ? getStartNode(referenceItem.value.part)
+              : this._part.node;
+          referenceNode.before(item.value.part.node);
+          item.value.commit(context);
           break;
-
-        case OperationType.Move:
-          commitMove(operation.item, operation.referenceItem, this._part);
+        }
+        case OperationType.Move: {
+          const { item, referenceItem } = operation;
+          const startNode = getStartNode(item.value.part);
+          const endNode = item.value.part.node;
+          const childNodes = getChildNodes(startNode, endNode);
+          const referenceNode =
+            referenceItem !== undefined
+              ? getStartNode(referenceItem.value.part)
+              : this._part.node;
+          moveChildNodes(childNodes, referenceNode);
+          item.value.commit(context);
           break;
-
-        case OperationType.Remove:
-          commitRemove(operation.item, context);
+        }
+        case OperationType.Update: {
+          const { item } = operation;
+          item.value.commit(context);
           break;
+        }
+        case OperationType.Remove: {
+          const { item } = operation;
+          item.value.rollback(context);
+          item.value.part.node.remove();
+          break;
+        }
       }
-    }
-
-    for (let i = 0, l = this._pendingItems.length; i < l; i++) {
-      const { value } = this._pendingItems[i]!;
-      value.commit(context);
     }
 
     if (this._pendingItems.length > 0) {
@@ -263,7 +287,8 @@ export class RepeatBinding<TSource, TKey, TValue>
     if (this._memoizedItems !== null) {
       for (let i = this._memoizedItems.length - 1; i >= 0; i--) {
         const item = this._memoizedItems[i]!;
-        commitRemove(item, context);
+        item.value.rollback(context);
+        item.value.part.node.remove();
       }
     }
 
@@ -291,41 +316,6 @@ export function moveChildNodes(
       insertOrMoveBefore.call(parentNode, childNodes[i]!, referenceNode);
     }
   }
-}
-
-function commitInsert<TKey, TValue>(
-  { value }: Item<TKey, Slot<TValue>>,
-  referenceItem: Item<TKey, Slot<TValue>> | undefined,
-  part: Part.ChildNodePart,
-): void {
-  const referenceNode =
-    referenceItem !== undefined
-      ? getStartNode(referenceItem.value.part)
-      : part.node;
-  referenceNode.before(value.part.node);
-}
-
-function commitMove<TKey, TValue>(
-  { value }: Item<TKey, Slot<TValue>>,
-  referenceItem: Item<TKey, Slot<TValue>> | undefined,
-  part: Part.ChildNodePart,
-): void {
-  const startNode = getStartNode(value.part);
-  const endNode = value.part.node;
-  const childNodes = getChildNodes(startNode, endNode);
-  const referenceNode =
-    referenceItem !== undefined
-      ? getStartNode(referenceItem.value.part)
-      : part.node;
-  moveChildNodes(childNodes, referenceNode);
-}
-
-function commitRemove<TKey, TValue>(
-  { value }: Item<TKey, Slot<TValue>>,
-  context: CommitContext,
-): void {
-  value.rollback(context);
-  value.part.node.remove();
 }
 
 function defaultKeySelector(_element: unknown, index: number): any {
