@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { HydrationTree, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { Runtime } from '@/runtime.js';
-import { MemoSlot, memo } from '@/slot/memo.js';
+import { FlexibleSlot, flexible } from '@/slot/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBackend,
@@ -11,19 +11,19 @@ import {
   MockPrimitive,
 } from '../../mocks.js';
 
-describe('loose()', () => {
-  it('creates a SlotElement with MemoSlot', () => {
+describe('flexible()', () => {
+  it('creates a SlotElement with FlexibleSlot', () => {
     const value = 'foo';
-    const bindable = memo(value);
+    const bindable = flexible(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.slotType).toBe(MemoSlot);
+    expect(bindable.slotType).toBe(FlexibleSlot);
   });
 });
 
-describe('MemoSlot', () => {
+describe('FlexibleSlot', () => {
   describe('constructor()', () => {
-    it('constructs a new MemoSlot from the binding', () => {
+    it('constructs a new FlexibleSlot from the binding', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -32,7 +32,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
 
       expect(slot.type).toBe(MockPrimitive);
       expect(slot.value).toBe(value);
@@ -51,7 +51,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(value1.type, value1.value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
@@ -89,7 +89,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
@@ -153,7 +153,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
       const shouldBindSpy = vi
@@ -186,7 +186,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const tree = new HydrationTree(document.createElement('div'));
       const runtime = Runtime.create(new MockBackend());
 
@@ -221,7 +221,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
       const connectSpy = vi.spyOn(binding, 'connect');
@@ -256,7 +256,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
@@ -292,7 +292,7 @@ describe('MemoSlot', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new MemoSlot(binding);
+      const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
       const disconnectSpy = vi.spyOn(binding, 'disconnect');

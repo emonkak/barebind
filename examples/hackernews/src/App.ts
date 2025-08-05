@@ -1,4 +1,4 @@
-import { component, memo, type RenderContext } from '@emonkak/ebit';
+import { component, flexible, type RenderContext } from '@emonkak/ebit';
 import { HashHistory, ScrollRestration } from '@emonkak/ebit/extensions/router';
 
 import { Nav } from './Nav.js';
@@ -25,7 +25,7 @@ export function App({ store }: AppProps, context: RenderContext): unknown {
       <${component(Nav, {})}>
     </header>
     <main class="main">
-      <${memo(page)}>
+      <${flexible(page)}>
     </main>
   `;
 }

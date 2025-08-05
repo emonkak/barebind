@@ -10,11 +10,11 @@ import {
 } from '../core.js';
 import { SlotSpecifier } from '../directive.js';
 
-export function memo<T>(value: T): SlotSpecifier<T> {
-  return new SlotSpecifier(MemoSlot, value);
+export function flexible<T>(value: T): SlotSpecifier<T> {
+  return new SlotSpecifier(FlexibleSlot, value);
 }
 
-export class MemoSlot<T> implements Slot<T> {
+export class FlexibleSlot<T> implements Slot<T> {
   private _pendingBinding: Binding<unknown>;
 
   private _memoizedBinding: Binding<unknown> | null = null;

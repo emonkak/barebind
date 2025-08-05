@@ -23,7 +23,7 @@ export {
 export { AsyncRoot } from './root/async.js';
 export { SyncRoot } from './root/sync.js';
 export type { RuntimeEvent, RuntimeObserver } from './runtime.js';
+export { flexible } from './slot/flexible.js';
 export { loose } from './slot/loose.js';
-export { memo } from './slot/memo.js';
 export { strict } from './slot/strict.js';
 export { element } from './template/element.js';
