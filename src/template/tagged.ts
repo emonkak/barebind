@@ -535,7 +535,7 @@ function parseChildren(
     switch (currentNode.nodeType) {
       case Node.ELEMENT_NODE: {
         DEBUG: {
-          if ((currentNode as Element).tagName.includes(marker.toUpperCase())) {
+          if ((currentNode as Element).localName.includes(marker)) {
             throw new Error(
               'Expressions are not allowed as a tag name:\n' +
                 debugPart(

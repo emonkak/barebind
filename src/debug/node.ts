@@ -58,7 +58,7 @@ export function debugNode(node: Node, marker: string): string {
 
 function annotateInsideTag(element: Element, marker: string): string[] {
   const isSelfClosing = isSelfClosingTag(element);
-  const offset = isSelfClosing ? 1 : element.tagName.length + 4;
+  const offset = isSelfClosing ? 1 : element.localName.length + 4;
   const unclosedOpenTag = element.outerHTML.slice(
     0,
     -(element.innerHTML.length + offset),
@@ -93,7 +93,7 @@ function annotateNode(node: Node, marker: string): string[] {
 }
 
 function closeTag(element: Element): string {
-  return '</' + element.tagName.toLowerCase() + '>';
+  return '</' + element.localName + '>';
 }
 
 function getComplexity(node: Node): number {
@@ -130,7 +130,7 @@ function isSelfClosingTag(element: Element): boolean {
 
 function openTag(element: Element): string {
   // Assumption: The element is not a self-closing tag.
-  const offset = element.tagName.length + 3;
+  const offset = element.localName.length + 3;
   return element.outerHTML.slice(0, -(element.innerHTML.length + offset));
 }
 

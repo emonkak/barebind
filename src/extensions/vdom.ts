@@ -334,25 +334,25 @@ export class ElementBinding implements Binding<ElementProps> {
         element[key] = '';
         return;
       case 'checked':
-        if (narrowElement(element, 'INPUT')) {
+        if (narrowElement(element, 'input')) {
           element.checked = false;
           return;
         }
         break;
       case 'defaultChecked':
-        if (narrowElement(element, 'INPUT')) {
+        if (narrowElement(element, 'input')) {
           element.defaultChecked = false;
           return;
         }
         break;
       case 'defaultValue':
-        if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
+        if (narrowElement(element, 'input', 'output', 'textarea')) {
           element.defaultValue = '';
           return;
         }
         break;
       case 'htmlFor':
-        if (narrowElement(element, 'LABEL')) {
+        if (narrowElement(element, 'label')) {
           element.htmlFor = '';
           return;
         }
@@ -369,7 +369,7 @@ export class ElementBinding implements Binding<ElementProps> {
         );
         return;
       case 'value':
-        if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
+        if (narrowElement(element, 'input', 'output', 'select', 'textarea')) {
           element.value = '';
         }
         break;
@@ -415,7 +415,7 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         return;
       case 'checked':
-        if (narrowElement(element, 'INPUT')) {
+        if (narrowElement(element, 'input')) {
           const newChecked = !!newValue;
           const oldChecked = element.checked;
           if (newChecked !== oldChecked) {
@@ -425,7 +425,7 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         break;
       case 'defaultChecked':
-        if (narrowElement(element, 'INPUT')) {
+        if (narrowElement(element, 'input')) {
           if (!Object.is(newValue, oldValue)) {
             element.defaultChecked = !!newValue;
           }
@@ -433,7 +433,7 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         break;
       case 'defaultValue':
-        if (narrowElement(element, 'INPUT', 'OUTPUT', 'TEXTAREA')) {
+        if (narrowElement(element, 'input', 'output', 'textarea')) {
           if (!Object.is(newValue, oldValue)) {
             element.defaultValue = safeToString(newValue);
           }
@@ -441,7 +441,7 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         break;
       case 'htmlFor':
-        if (narrowElement(element, 'LABEL')) {
+        if (narrowElement(element, 'label')) {
           if (!Object.is(newValue, oldValue)) {
             element.htmlFor = safeToString(newValue);
           }
@@ -471,7 +471,7 @@ export class ElementBinding implements Binding<ElementProps> {
         );
         return;
       case 'value':
-        if (narrowElement(element, 'INPUT', 'OUTPUT', 'SELECT', 'TEXTAREA')) {
+        if (narrowElement(element, 'input', 'output', 'select', 'textarea')) {
           const newString = safeToString(newValue);
           const oldString = element.value;
           if (newString !== oldString) {
@@ -553,13 +553,11 @@ function isNullableObject(value: unknown): value is object | null | undefined {
   return typeof value === 'object' || value === undefined;
 }
 
-function narrowElement<
-  const TName extends Uppercase<keyof HTMLElementTagNameMap>,
->(
+function narrowElement<const TName extends keyof HTMLElementTagNameMap>(
   element: Element,
   ...expectedNames: TName[]
 ): element is HTMLElementTagNameMap[Lowercase<TName>] {
-  return (expectedNames as string[]).includes(element.tagName);
+  return (expectedNames as string[]).includes(element.localName);
 }
 
 function resolveChild(child: VNode): Bindable<unknown> {

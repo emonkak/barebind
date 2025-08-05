@@ -44,7 +44,7 @@ export function anyModifiersArePressed(event: MouseEvent): boolean {
 
 export function isInternalLink(element: Element): element is HTMLAnchorElement {
   return (
-    element.tagName === 'A' &&
+    element.localName === 'a' &&
     element.hasAttribute('href') &&
     !element.hasAttribute('target') &&
     !element.hasAttribute('download') &&
