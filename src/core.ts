@@ -363,7 +363,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly type: DirectiveType<unknown>;
   readonly value: unknown;
   readonly part: Part;
-  reconcile(value: T, context: UpdateContext): void;
+  reconcile(value: T, context: UpdateContext): boolean;
   hydrate(tree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;

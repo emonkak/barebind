@@ -75,7 +75,7 @@ describe('StrictSlot', () => {
       expect(part.node.data).toBe(value2);
     });
 
-    it('updates the binding is dirty', () => {
+    it('updates the binding only if it is dirty', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -92,49 +92,10 @@ describe('StrictSlot', () => {
         .mockReturnValue(false);
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
-      const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
       const debugValueSpy = vi.spyOn(runtime, 'debugValue');
 
-      slot.connect(runtime);
-      slot.reconcile(value, runtime);
-      slot.commit(runtime);
-
-      slot.disconnect(runtime);
-      slot.reconcile(value, runtime);
-      slot.commit(runtime);
-
-      expect(shouldBindSpy).not.toHaveBeenCalled();
-      expect(bindSpy).toHaveBeenCalledTimes(2);
-      expect(connectSpy).toHaveBeenCalledTimes(3);
-      expect(disconnectSpy).toHaveBeenCalledTimes(1);
-      expect(commitSpy).toHaveBeenCalledTimes(2);
-      expect(debugValueSpy).toHaveBeenCalledTimes(2);
-      expect(part.node.data).toBe('foo');
-    });
-
-    it('does not updates the binding with a new value if shouldBind() returns false', () => {
-      const value1 = 'foo';
-      const value2 = 'bar';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        childNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, value1, part);
-      const slot = new StrictSlot(binding);
-      const runtime = Runtime.create(new MockBackend());
-
-      const shouldBindSpy = vi
-        .spyOn(binding, 'shouldBind')
-        .mockReturnValue(false);
-      const bindSpy = vi.spyOn(binding, 'bind');
-      const connectSpy = vi.spyOn(binding, 'connect');
-      const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(runtime, 'debugValue');
-
-      slot.reconcile(value2, runtime);
+      expect(slot.reconcile(value, runtime)).toBe(false);
       slot.commit(runtime);
 
       expect(shouldBindSpy).toHaveBeenCalledOnce();

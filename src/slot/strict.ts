@@ -37,7 +37,7 @@ export class StrictSlot<T> implements Slot<T> {
     return this._binding.part;
   }
 
-  reconcile(value: T, context: UpdateContext): void {
+  reconcile(value: T, context: UpdateContext): boolean {
     const directive = context.resolveDirective(value, this._binding.part);
 
     if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
@@ -57,6 +57,8 @@ export class StrictSlot<T> implements Slot<T> {
       this._binding.connect(context);
       this._dirty = true;
     }
+
+    return this._dirty;
   }
 
   hydrate(tree: HydrationTree, context: UpdateContext): void {

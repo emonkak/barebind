@@ -39,7 +39,7 @@ export class MemoSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: T, context: UpdateContext): void {
+  reconcile(value: T, context: UpdateContext): boolean {
     const directive = context.resolveDirective(
       value,
       this._pendingBinding.part,
@@ -77,6 +77,8 @@ export class MemoSlot<T> implements Slot<T> {
         this._dirty = true;
       }
     }
+
+    return this._dirty;
   }
 
   hydrate(tree: HydrationTree, context: UpdateContext): void {
