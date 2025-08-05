@@ -364,9 +364,6 @@ export class TaggedTemplate<
 
     const childNodes = Array.from(fragment.childNodes);
 
-    // Detach child nodes from the fragment.
-    fragment.replaceChildren();
-
     return { childNodes, slots };
   }
 }
