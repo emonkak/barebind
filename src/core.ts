@@ -150,10 +150,10 @@ export interface HookContext {
   isUpdatePending(): boolean;
   setContextValue(key: unknown, value: unknown): void;
   use<T>(usable: Usable<T>): T;
-  useCallback<T extends Function>(
-    callback: T,
+  useCallback<TCallback extends (...args: any[]) => any>(
+    callback: TCallback,
     dependencies: readonly unknown[],
-  ): T;
+  ): TCallback;
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
     callback: () => Cleanup | void,

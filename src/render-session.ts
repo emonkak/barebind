@@ -142,10 +142,10 @@ export class RenderSession implements RenderContext {
     }
   }
 
-  useCallback<T extends Function>(
-    callback: T,
+  useCallback<TCallback extends (...args: any[]) => any>(
+    callback: TCallback,
     dependencies: readonly unknown[],
-  ): T {
+  ): TCallback {
     return this.useMemo(() => callback, dependencies);
   }
 
