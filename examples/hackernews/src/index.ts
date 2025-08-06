@@ -1,7 +1,7 @@
 import { AsyncRoot, BrowserBackend, component } from '@emonkak/ebit';
 import {
   ConsoleReporter,
-  RuntimeProfiler,
+  PerformanceProfiler,
 } from '@emonkak/ebit/extensions/profiler';
 
 import { App } from './App.js';
@@ -15,6 +15,6 @@ const root = AsyncRoot.create(
   new BrowserBackend(),
 );
 
-root.observe(new RuntimeProfiler(new ConsoleReporter()));
+root.observe(new PerformanceProfiler(new ConsoleReporter()));
 
 root.mount();

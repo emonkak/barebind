@@ -3,19 +3,19 @@ import { CommitPhase, type Effect, Lanes, type RenderContext } from '@/core.js';
 import {
   type ConsoleLogger,
   ConsoleReporter,
-  type RuntimeProfile,
-  RuntimeProfiler,
+  type PerformanceProfile,
+  PerformanceProfiler,
 } from '@/extensions/profiler.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { MockComponent, MockEffect } from '../../mocks.js';
 
-describe('RuntimeProfiler', () => {
+describe('PerformanceProfiler', () => {
   describe('onRuntimeEvent()', () => {
     it('collects profiles from runtime events', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };
-      const profiler = new RuntimeProfiler(reporter);
+      const profiler = new PerformanceProfiler(reporter);
 
       const component = new MockComponent();
       const mutationEffects = [new MockEffect(), new MockEffect()];
@@ -226,7 +226,7 @@ describe('ConsoleReporter', () => {
           ['groupEnd'],
         ],
       ],
-    ] as [RuntimeProfile, [keyof ConsoleLogger, ...unknown[]][]][])(
+    ] as [PerformanceProfile, [keyof ConsoleLogger, ...unknown[]][]][])(
       'logs the profile',
       (profile, expectedLogs) => {
         const logger = new MockLogger();

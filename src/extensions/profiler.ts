@@ -3,7 +3,7 @@
 import { CommitPhase, getPriorityFromLanes, Lanes } from '../core.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
-export interface RuntimeProfile {
+export interface PerformanceProfile {
   id: number;
   updateMeasurement: UpdateMeasurement | null;
   renderMeasurement: RenderMeasurement | null;
@@ -36,8 +36,8 @@ export interface CommitMeasurement {
   totalEffects: number;
 }
 
-export interface RuntimeReporter {
-  reportProfile(profile: RuntimeProfile): void;
+export interface PerformanceReporter {
+  reportProfile(profile: PerformanceProfile): void;
 }
 
 export type ConsoleLogger = Pick<
@@ -57,12 +57,13 @@ const DURATION_STYLE =
   'color: light-dark(#5e5d67, #918f9a); font-weight: normal';
 const DEFAULT_STYLE = 'font-weight: normal';
 
-export class RuntimeProfiler implements RuntimeObserver {
-  private readonly _reporter: RuntimeReporter;
+export class PerformanceProfiler implements RuntimeObserver {
+  private readonly _reporter: PerformanceReporter;
 
-  private readonly _inProgressProfiles: Map<number, RuntimeProfile> = new Map();
+  private readonly _inProgressProfiles: Map<number, PerformanceProfile> =
+    new Map();
 
-  constructor(reporter: RuntimeReporter) {
+  constructor(reporter: PerformanceReporter) {
     this._reporter = reporter;
   }
 
@@ -166,14 +167,14 @@ export class RuntimeProfiler implements RuntimeObserver {
   }
 }
 
-export class ConsoleReporter implements RuntimeReporter {
+export class ConsoleReporter implements PerformanceReporter {
   private readonly _logger: ConsoleLogger;
 
   constructor(logger: ConsoleLogger = console) {
     this._logger = logger;
   }
 
-  reportProfile(profile: RuntimeProfile): void {
+  reportProfile(profile: PerformanceProfile): void {
     const {
       updateMeasurement,
       renderMeasurement,
@@ -242,7 +243,7 @@ export class ConsoleReporter implements RuntimeReporter {
   }
 }
 
-function createProfile(id: number): RuntimeProfile {
+function createProfile(id: number): PerformanceProfile {
   return {
     id,
     updateMeasurement: null,

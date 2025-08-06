@@ -9,7 +9,7 @@ import {
 } from '@emonkak/ebit';
 import {
   ConsoleReporter,
-  RuntimeProfiler,
+  PerformanceProfiler,
 } from '@emonkak/ebit/extensions/profiler';
 import { Atom, type Signal } from '@emonkak/ebit/extensions/signal';
 import type { VElement } from '@emonkak/ebit/extensions/vdom';
@@ -349,6 +349,6 @@ const root = AsyncRoot.create(
   new BrowserBackend(),
 );
 
-root.observe(new RuntimeProfiler(new ConsoleReporter()));
+root.observe(new PerformanceProfiler(new ConsoleReporter()));
 
 root.mount();
