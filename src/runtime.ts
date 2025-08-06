@@ -182,7 +182,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const { coroutineStates, backend, observers } = this._environment;
 
     if (!observers.isEmpty()) {
-      this._notifyObservers({
+      notifyObservers(observers, {
         type: 'UPDATE_START',
         id: this._frame.id,
         lanes,
@@ -192,7 +192,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
     try {
       if (!observers.isEmpty()) {
-        this._notifyObservers({
+        notifyObservers(observers, {
           type: 'RENDER_START',
           id: this._frame.id,
         });
@@ -219,7 +219,7 @@ export class Runtime implements CommitContext, UpdateContext {
       }
 
       if (!observers.isEmpty()) {
-        this._notifyObservers({
+        notifyObservers(observers, {
           type: 'RENDER_END',
           id: this._frame.id,
         });
@@ -251,7 +251,7 @@ export class Runtime implements CommitContext, UpdateContext {
       }
     } finally {
       if (!observers.isEmpty()) {
-        this._notifyObservers({
+        notifyObservers(observers, {
           type: 'UPDATE_END',
           id: this._frame.id,
           lanes,
@@ -265,7 +265,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const { coroutineStates, observers } = this._environment;
 
     if (!observers.isEmpty()) {
-      this._notifyObservers({
+      notifyObservers(observers, {
         type: 'UPDATE_START',
         id: this._frame.id,
         lanes,
@@ -275,7 +275,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
     try {
       if (!observers.isEmpty()) {
-        this._notifyObservers({
+        notifyObservers(observers, {
           type: 'RENDER_START',
           id: this._frame.id,
         });
@@ -296,7 +296,7 @@ export class Runtime implements CommitContext, UpdateContext {
       } while (this._frame.pendingCoroutines.length > 0);
 
       if (!observers.isEmpty()) {
-        this._notifyObservers({
+        notifyObservers(observers, {
           type: 'RENDER_END',
           id: this._frame.id,
         });
@@ -311,7 +311,7 @@ export class Runtime implements CommitContext, UpdateContext {
       this._commitEffects(passiveEffects, CommitPhase.Passive);
     } finally {
       if (!observers.isEmpty()) {
-        this._notifyObservers({
+        notifyObservers(observers, {
           type: 'UPDATE_END',
           id: this._frame.id,
           lanes,
@@ -347,7 +347,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const context = new RenderSession(hooks, lanes, coroutine, this);
 
     if (!observers.isEmpty()) {
-      this._notifyObservers({
+      notifyObservers(observers, {
         type: 'COMPONENT_RENDER_START',
         id: this._frame.id,
         component,
@@ -360,7 +360,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const pendingLanes = context.finalize();
 
     if (!observers.isEmpty()) {
-      this._notifyObservers({
+      notifyObservers(observers, {
         type: 'COMPONENT_RENDER_END',
         id: this._frame.id,
         component,
@@ -489,7 +489,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const { backend, observers } = this._environment;
 
     if (!observers.isEmpty()) {
-      this._notifyObservers({
+      notifyObservers(observers, {
         type: 'COMMIT_START',
         id: this._frame.id,
         effects,
@@ -500,7 +500,7 @@ export class Runtime implements CommitContext, UpdateContext {
     backend.commitEffects(effects, phase, this);
 
     if (!observers.isEmpty()) {
-      this._notifyObservers({
+      notifyObservers(observers, {
         type: 'COMMIT_END',
         id: this._frame.id,
         effects,
@@ -522,16 +522,6 @@ export class Runtime implements CommitContext, UpdateContext {
     this._environment.updateCount = id;
 
     return new Runtime(updateFrame, this._scope, this._environment);
-  }
-
-  private _notifyObservers(event: RuntimeEvent): void {
-    for (
-      let node = this._environment.observers.front();
-      node !== null;
-      node = node.next
-    ) {
-      node.value.onRuntimeEvent(event);
-    }
   }
 }
 
@@ -563,4 +553,13 @@ function generateRandomString(length: number): string {
 
 function incrementIdentifier(id: number): number {
   return (id % Number.MAX_SAFE_INTEGER) + 1;
+}
+
+function notifyObservers(
+  observers: LinkedList<RuntimeObserver>,
+  event: RuntimeEvent,
+): void {
+  for (let node = observers.front(); node !== null; node = node.next) {
+    node.value.onRuntimeEvent(event);
+  }
 }
