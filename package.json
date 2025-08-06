@@ -19,8 +19,8 @@
         "types": "./lib/index.d.ts"
       },
       "./core": {
-        "import": "./lib/extensions/core.js",
-        "types": "./lib/extensions/core.d.ts"
+        "import": "./lib/core.js",
+        "types": "./lib/core.d.ts"
       },
       "./extensions/*": {
         "import": "./lib/extensions/*.js",
