@@ -11,11 +11,7 @@ export function ScrollRestration(context: HookContext): void {
 
     if (typeof navigation === 'object') {
       const handleNavigate = (event: NavigateEvent) => {
-        if (
-          !event.canIntercept ||
-          event.downloadRequest !== null ||
-          !navigator.isTransitionPending()
-        ) {
+        if (!event.canIntercept || !navigator.isTransitionPending()) {
           return;
         }
 

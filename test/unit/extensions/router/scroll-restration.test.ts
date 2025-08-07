@@ -164,7 +164,6 @@ describe('ScrollRestration', () => {
 
       const event = Object.assign(new Event('navigate'), {
         canIntercept: true,
-        downloadRequest: null,
         intercept: ({ handler }: NavigationInterceptOptions) => {
           handler?.();
         },
@@ -188,12 +187,11 @@ describe('ScrollRestration', () => {
   );
 
   it.runIf(typeof navigation === 'object').each([
-    [false, null, 1],
-    [true, 'foo', 1],
-    [false, null, 0],
+    [false, 1],
+    [true, 0],
   ])(
     'not intercepts navigation if the event is not interceptable',
-    async (canIntercept, downloadRequest, pendingTransitions) => {
+    async (canIntercept, pendingTransitions) => {
       const location: HistoryLocation = {
         url: new RelativeURL('/'),
         state: null,
@@ -202,7 +200,6 @@ describe('ScrollRestration', () => {
       const navigator = createMockNavigator(pendingTransitions);
       const event = Object.assign(new Event('navigate'), {
         canIntercept,
-        downloadRequest,
         intercept: ({ handler }: NavigationInterceptOptions) => {
           handler?.();
         },
