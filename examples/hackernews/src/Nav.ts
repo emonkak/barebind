@@ -2,8 +2,8 @@ import { memo, type RenderContext } from '@emonkak/ebit';
 
 export interface NavProps {}
 
-export function Nav(_props: NavProps, context: RenderContext): unknown {
-  return context.html`
+export function Nav(_props: NavProps, $: RenderContext): unknown {
+  return $.html`
     <nav class="inner">
       <a href="#/">
         <strong>HN</strong>

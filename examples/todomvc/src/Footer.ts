@@ -4,9 +4,9 @@ import { type TodoFilter, TodoState } from './state.js';
 
 export interface FooterProps {}
 
-export function Footer(_props: FooterProps, context: RenderContext): unknown {
-  const todoState$ = context.use(TodoState);
-  const { todos, activeTodos, filter } = context.use(todoState$);
+export function Footer(_props: FooterProps, $: RenderContext): unknown {
+  const todoState$ = $.use(TodoState);
+  const { todos, activeTodos, filter } = $.use(todoState$);
 
   const handleChangeFilter = (newFilter: TodoFilter) => (event: Event) => {
     event.preventDefault();
@@ -26,7 +26,7 @@ export function Footer(_props: FooterProps, context: RenderContext): unknown {
     return null;
   }
 
-  return context.html`
+  return $.html`
     <footer class="footer" data-testid="footer">
       <span class="todo-count">${activeTodos.length} ${activeTodos.length === 1 ? 'item' : 'items'} left!</span>
       <ul class="filters" data-testid="footer-navigation">

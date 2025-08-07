@@ -7,21 +7,18 @@ export interface UserPageProps {
   id: string;
 }
 
-export function UserPage(
-  { id }: UserPageProps,
-  context: RenderContext,
-): unknown {
-  const appStore = context.use(AppStore);
-  const userState = context.use(appStore.userState$);
+export function UserPage({ id }: UserPageProps, $: RenderContext): unknown {
+  const appStore = $.use(AppStore);
+  const userState = $.use(appStore.userState$);
 
-  context.useEffect(() => {
+  $.useEffect(() => {
     if (userState.user?.id !== id) {
       appStore.fetchUser(id);
     }
   }, [id]);
 
   if (!userState.isLoading && userState.error !== null) {
-    return context.html`
+    return $.html`
       <div class="error-view">
         <h1>${userState.error.error}</h1>
       </div>

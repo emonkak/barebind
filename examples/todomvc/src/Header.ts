@@ -5,8 +5,8 @@ import { TodoInput } from './TodoInput.js';
 
 export interface HeaderProps {}
 
-export function Header(_props: HeaderProps, context: RenderContext): unknown {
-  const todoState$ = context.use(TodoState);
+export function Header(_props: HeaderProps, $: RenderContext): unknown {
+  const todoState$ = $.use(TodoState);
 
   const handleSubmit = (title: string) => {
     todoState$.mutate((todoState) => {
@@ -14,7 +14,7 @@ export function Header(_props: HeaderProps, context: RenderContext): unknown {
     });
   };
 
-  return context.html`
+  return $.html`
     <header class="header" data-testid="header">
       <h1>todos</h1>
       <${component(TodoInput, {

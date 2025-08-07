@@ -16,11 +16,11 @@ export function TodoInput(
     onSubmit = null,
     placeholder,
   }: TodoInputProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  const inputRef = context.useRef<HTMLInputElement | null>(null);
+  const inputRef = $.useRef<HTMLInputElement | null>(null);
 
-  context.useEffect(() => {
+  $.useEffect(() => {
     const element = inputRef.current;
     if (element !== null) {
       element.value = defaultValue;
@@ -40,7 +40,7 @@ export function TodoInput(
     }
   };
 
-  return context.html`
+  return $.html`
     <div class="input-container">
       <input
         :ref=${inputRef}

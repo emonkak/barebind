@@ -9,10 +9,10 @@ interface AppProps {
   state: TodoState;
 }
 
-export function App({ state }: AppProps, context: RenderContext): unknown {
-  context.use(state);
+export function App({ state }: AppProps, $: RenderContext): unknown {
+  $.use(state);
 
-  return context.html`
+  return $.html`
     <section class="todoapp">
       <${component(Header, {})}>
       <${component(Main, {})}>

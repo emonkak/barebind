@@ -32,26 +32,23 @@ const ITEM_LABELS = [
   'thud',
 ];
 
-function App(_props: {}, context: RenderContext) {
-  const count$ = context.useMemo(() => new Atom(0), []);
+function App(_props: {}, $: RenderContext) {
+  const count$ = $.useMemo(() => new Atom(0), []);
 
-  const [state, setState] = context.useState({
+  const [state, setState] = $.useState({
     items: ITEM_LABELS.slice(0, 4),
     resevedItems: ITEM_LABELS.slice(4),
   });
 
-  context.setContextValue(
-    ENV_CONTEXT,
-    `${state.items.length} item(s) are available`,
-  );
+  $.setContextValue(ENV_CONTEXT, `${state.items.length} item(s) are available`);
 
-  const handleIncrement = context.useCallback(() => {
+  const handleIncrement = $.useCallback(() => {
     count$.value += 1;
   }, []);
-  const handleDecrement = context.useCallback(() => {
+  const handleDecrement = $.useCallback(() => {
     count$.value -= 1;
   }, []);
-  const handleAdd = context.useCallback(() => {
+  const handleAdd = $.useCallback(() => {
     setState((state) => {
       if (state.resevedItems.length > 0) {
         const items = state.items.concat([state.resevedItems[0]!]);
@@ -64,7 +61,7 @@ function App(_props: {}, context: RenderContext) {
       }
     });
   }, []);
-  const handleUp = context.useCallback(
+  const handleUp = $.useCallback(
     (index: number, isFirst: boolean, _isLast: boolean) => {
       if (!isFirst) {
         setState((state) => {
@@ -78,7 +75,7 @@ function App(_props: {}, context: RenderContext) {
     },
     [],
   );
-  const handleDown = context.useCallback(
+  const handleDown = $.useCallback(
     (index: number, _isFirst: boolean, isLast: boolean) => {
       if (!isLast) {
         setState((state) => {
@@ -92,7 +89,7 @@ function App(_props: {}, context: RenderContext) {
     },
     [],
   );
-  const handleDelete = context.useCallback((index: number) => {
+  const handleDelete = $.useCallback((index: number) => {
     setState((state) => {
       const items = state.items.slice();
       const deletedItems = items.splice(index, 1);
@@ -102,14 +99,14 @@ function App(_props: {}, context: RenderContext) {
       };
     });
   }, []);
-  const handleShuffle = context.useCallback(() => {
+  const handleShuffle = $.useCallback(() => {
     setState((state) => {
       const items = shuffle(state.items.slice());
       return { ...state, items };
     });
   }, []);
 
-  return context.html`
+  return $.html`
     <div ${{ class: 'root' }}>
       <${component(Dashboard, { count$ })}>
       <nav>
@@ -129,7 +126,7 @@ function App(_props: {}, context: RenderContext) {
       <${component(VDOMSVG, {})}>
       <div>
         <h1>Text</h1>
-        <${context.text`This is a <plain> text.`}>
+        <${$.text`This is a <plain> text.`}>
       </div>
       <div class="SVGCounter">
         <h1>SVG Counter</h1>
@@ -145,17 +142,14 @@ interface DashboardProps {
   count$: Signal<number>;
 }
 
-function Dashboard(
-  { count$ }: DashboardProps,
-  context: RenderContext,
-): unknown {
-  const env = context.getContextValue(ENV_CONTEXT);
-  const countElementRef = context.useRef<Element | null>(null);
-  const count = context.use(count$);
+function Dashboard({ count$ }: DashboardProps, $: RenderContext): unknown {
+  const env = $.getContextValue(ENV_CONTEXT);
+  const countElementRef = $.useRef<Element | null>(null);
+  const count = $.use(count$);
 
   const greetTag = new Literal(count$.value % 2 === 0 ? 'span' : 'em');
 
-  return context.html`
+  return $.html`
     <div
       :classlist=${[
         'Dashboard',
@@ -168,7 +162,7 @@ function Dashboard(
       data-count=${count}
     >
       <h1>
-        <${context.dynamicHTML`
+        <${$.dynamicHTML`
           <${greetTag} :style=${{ color: 'blue' }}>Hello, World!</${greetTag}>
         `}>
       </h1>
@@ -190,9 +184,9 @@ interface ListProps {
 
 function List(
   { items, onUp, onDown, onDelete }: ListProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  const itemsList = context.useMemo(
+  const itemsList = $.useMemo(
     () =>
       repeat({
         source: items,
@@ -211,7 +205,7 @@ function List(
     [items],
   );
 
-  return context.html`
+  return $.html`
     <div class="List">
       <h1>List</h1>
       <ol><${itemsList}></ol>
@@ -231,7 +225,7 @@ interface ItemProps {
 
 function Item(
   { isFirst, isLast, index, label, onUp, onDown, onDelete }: ItemProps,
-  context: RenderContext,
+  $: RenderContext,
 ) {
   const handleUp = () => {
     onUp(index, isFirst, isLast);
@@ -243,7 +237,7 @@ function Item(
     onDelete(index);
   };
 
-  return context.html`
+  return $.html`
     <li>
       <span>${label}</span>
       <button type="button" disabled=${isFirst} @click=${handleUp}>↑</button>
@@ -255,14 +249,14 @@ function Item(
 
 memo(Item);
 
-function TemplateCounter(_props: {}, context: RenderContext): unknown {
-  const [count, setCount] = context.useState(0);
+function TemplateCounter(_props: {}, $: RenderContext): unknown {
+  const [count, setCount] = $.useState(0);
 
-  const handleIncrement = context.useCallback(() => {
+  const handleIncrement = $.useCallback(() => {
     setCount((count) => count + 1);
   }, []);
 
-  return context.html`
+  return $.html`
     <div class="TemplateCounter">
       <h1>Tempalte Counter</h1>
       <button type="button" @click=${handleIncrement}>${count}</button>
@@ -270,13 +264,13 @@ function TemplateCounter(_props: {}, context: RenderContext): unknown {
   `;
 }
 
-function VDOMCounter(_props: {}, context: RenderContext): VElement {
-  const [count, setCount] = context.useState(0);
+function VDOMCounter(_props: {}, $: RenderContext): VElement {
+  const [count, setCount] = $.useState(0);
 
-  const handleIncrement = context.useCallback(() => {
+  const handleIncrement = $.useCallback(() => {
     setCount((count) => count + 1);
   }, []);
-  const handleDecrement = context.useCallback(() => {
+  const handleDecrement = $.useCallback(() => {
     setCount((count) => count - 1);
   }, []);
 
@@ -321,9 +315,9 @@ interface SVGCounterProps {
 
 function SVGCounter(
   { cx, cy, r, fill, text$ }: SVGCounterProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  return context.svg`
+  return $.svg`
     <circle cx=${cx} cy=${cy} r=${r} fill=${fill} />
     <text x=${cx} y=${cy} fill="white" dominant-baseline="middle" text-anchor="middle">${text$}</text>
   `;

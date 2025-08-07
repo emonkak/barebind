@@ -10,17 +10,17 @@ interface AppProps {
   store: AppStore;
 }
 
-export function App({ store }: AppProps, context: RenderContext): unknown {
-  const [location] = context.use(HashHistory);
+export function App({ store }: AppProps, $: RenderContext): unknown {
+  const [location] = $.use(HashHistory);
   const page =
     router.handle(location.url, location.state) ??
     component(NotFound, { url: location.url });
 
-  context.use(store);
+  $.use(store);
 
-  context.use(ScrollRestration);
+  $.use(ScrollRestration);
 
-  return context.html`
+  return $.html`
     <header class="header">
       <${component(Nav, {})}>
     </header>

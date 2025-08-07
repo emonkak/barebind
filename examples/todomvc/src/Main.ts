@@ -5,9 +5,9 @@ import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
 
-export function Main(_props: MainProps, context: RenderContext): unknown {
-  const todoState$ = context.use(TodoState);
-  const visibleTodos = context.use(todoState$.get('visibleTodos'));
+export function Main(_props: MainProps, $: RenderContext): unknown {
+  const todoState$ = $.use(TodoState);
+  const visibleTodos = $.use(todoState$.get('visibleTodos'));
 
   const handleToggleAll = () => {
     todoState$.mutate((todoState) => {
@@ -15,11 +15,11 @@ export function Main(_props: MainProps, context: RenderContext): unknown {
     });
   };
 
-  return context.html`
+  return $.html`
     <main class="main" data-testid="main">
       <${
         visibleTodos.length > 0
-          ? context.html`
+          ? $.html`
             <div class="toggle-all-container">
               <input
                 class="toggle-all"

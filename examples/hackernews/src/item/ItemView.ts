@@ -7,17 +7,14 @@ export interface ItemViewProps {
   item: Item;
 }
 
-export function ItemView(
-  { item }: ItemViewProps,
-  context: RenderContext,
-): unknown {
-  return context.html`
+export function ItemView({ item }: ItemViewProps, $: RenderContext): unknown {
+  return $.html`
     <div class="item-view">
       <div class="item-view-header">
         <a href=${item.url} target="_blank">
           <h1>${item.title}</h1>
         </a>
-        <${item.domain ? context.html`<span class="host">(${item.domain})</span>` : null}>
+        <${item.domain ? $.html`<span class="host">(${item.domain})</span>` : null}>
         <div class="meta">
           ${item.points} points | by <a href=${`#/users/${item.user}`}>${item.user}</a> ${item.time_ago}
         </div>

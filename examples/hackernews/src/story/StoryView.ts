@@ -8,16 +8,16 @@ export interface StoryViewProps {
 
 export function StoryView(
   { story }: StoryViewProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  return context.html`
+  return $.html`
     <li class="story-item">
       <div class="score">${story.points}</div>
       <div class="title">
         <${
           story.url.startsWith('item?id=')
-            ? context.html`<a href=${`#/items/${story.id}`}>${story.title}</a>`
-            : context.html`
+            ? $.html`<a href=${`#/items/${story.id}`}>${story.title}</a>`
+            : $.html`
               <a href=${story.url} target="_blank" rel="noreferrer">
                 ${story.title}
               </a>
@@ -28,8 +28,8 @@ export function StoryView(
       <div class="meta">
         <${
           story.type === 'job'
-            ? context.html`<a href=${`#/items/${story.id}`}>${story.time_ago}</a>`
-            : context.html`
+            ? $.html`<a href=${`#/items/${story.id}`}>${story.time_ago}</a>`
+            : $.html`
               by <a href=${`#/users/${story.user}`}>${story.user}</a>${' '}
               ${story.time_ago}${' | '}
               <a href=${`#/items/${story.id}`}>
@@ -39,7 +39,7 @@ export function StoryView(
         }>
         <${
           story.type !== 'link'
-            ? context.html` | <span class="label">${story.type}</span>`
+            ? $.html` | <span class="label">${story.type}</span>`
             : null
         }>
       </div>

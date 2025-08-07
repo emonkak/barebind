@@ -7,12 +7,9 @@ export interface TodoItemProps {
   todo: Todo;
 }
 
-export function TodoItem(
-  { todo }: TodoItemProps,
-  context: RenderContext,
-): unknown {
-  const [isEditing, setIsEditing] = context.useState(false);
-  const todoState$ = context.use(TodoState);
+export function TodoItem({ todo }: TodoItemProps, $: RenderContext): unknown {
+  const [isEditing, setIsEditing] = $.useState(false);
+  const todoState$ = $.use(TodoState);
 
   const handleStartEditing = () => {
     setIsEditing(true);
@@ -45,7 +42,7 @@ export function TodoItem(
     });
   };
 
-  return context.html`
+  return $.html`
     <li
       :classlist=${[{ completed: todo.completed }]}
       data-testid="todo-item">
@@ -58,7 +55,7 @@ export function TodoItem(
                 onBlur: handleEndEditing,
                 defaultValue: todo.title,
               })
-            : context.html`
+            : $.html`
               <input
                 type="checkbox"
                 class="toggle"

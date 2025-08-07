@@ -12,23 +12,23 @@ const STORIES_PER_PAGE = 30;
 
 export function StoriesPage(
   { type, page = 1 }: StoriesPageProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  const appStore = context.use(AppStore);
-  const storyState = context.use(appStore.storyState$);
+  const appStore = $.use(AppStore);
+  const storyState = $.use(appStore.storyState$);
 
-  context.useEffect(() => {
+  $.useEffect(() => {
     if (storyState.type !== type || storyState.page !== page) {
       appStore.fetchStories(type, page);
     }
   }, [type, page]);
 
-  return context.html`
+  return $.html`
     <div class="story-view">
       <div class="story-list-nav">
         <${
           !storyState.isLoading && page > 1
-            ? context.html`
+            ? $.html`
                 <a
                   class="page-link"
                   href=${`#/${storyTypeToPathName(type)}/${page - 1}`}
@@ -37,7 +37,7 @@ export function StoriesPage(
                   &lt; prev
                 </a>
               `
-            : context.html`
+            : $.html`
                 <span class="page-link disabled" aria-hidden="true">
                   &lt; prev
                 </span>
@@ -46,7 +46,7 @@ export function StoriesPage(
         <span>page ${page}</span>
         <${
           !storyState.isLoading && storyState.stories.length >= STORIES_PER_PAGE
-            ? context.html`
+            ? $.html`
                 <a
                   class="page-link"
                   href=${`#/${storyTypeToPathName(type)}/${page + 1}`}
@@ -55,7 +55,7 @@ export function StoriesPage(
                   more &gt;
                 </a>
               `
-            : context.html`
+            : $.html`
                 <span class="page-link disabled" aria-hidden="true">
                   more &gt;
                 </span>

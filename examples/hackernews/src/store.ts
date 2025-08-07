@@ -83,7 +83,7 @@ export class AppStore implements CustomHookObject<void> {
   static [$customHook](context: HookContext): AppStore {
     const state = context.getContextValue(this);
     if (!(state instanceof this)) {
-      throw new Error(`${this.name} is not registered in the context.`);
+      throw new Error(`${this.name} is not registered in this context.`);
     }
     return state;
   }

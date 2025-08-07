@@ -17,7 +17,7 @@ export class TodoState {
   static [$customHook](context: HookContext): Reactive<TodoState> {
     const state = context.getContextValue(this);
     if (!(state instanceof Reactive && state.value instanceof this)) {
-      throw new Error(`${this.name} is not registered in the context.`);
+      throw new Error(`${this.name} is not registered in this context.`);
     }
     return state;
   }

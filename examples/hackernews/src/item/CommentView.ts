@@ -8,9 +8,9 @@ interface CommentViewProps {
 
 export function CommentView(
   { comment }: CommentViewProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  return context.html`
+  return $.html`
     <li class="comment">
       <div class="by">
         <a href=${`#/users/${comment.user}`}>${comment.user}</a> ${comment.time_ago}
@@ -31,15 +31,15 @@ interface CommentListProps {
 
 export function CommentList(
   { comments }: CommentListProps,
-  context: RenderContext,
+  $: RenderContext,
 ): unknown {
-  const [isOpened, setIsOpened] = context.useState<boolean>(true);
+  const [isOpened, setIsOpened] = $.useState<boolean>(true);
 
-  const handleToggleOpen = context.useCallback(() => {
+  const handleToggleOpen = $.useCallback(() => {
     setIsOpened((isOpened) => !isOpened);
   }, []);
 
-  return context.html`
+  return $.html`
     <div :classlist=${['toggle', { open: isOpened }]}>
       <a @click=${handleToggleOpen}>
         ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
@@ -47,7 +47,7 @@ export function CommentList(
     </div>
     <${
       isOpened
-        ? context.html`
+        ? $.html`
           <ul class="comment-children">
             <${repeat({
               source: comments,
