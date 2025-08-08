@@ -78,10 +78,12 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   bind(signal: Signal<T>): void {
-    this._subscription?.();
+    if (this._subscription !== null) {
+      this._subscription();
+      this._subscription = null;
+    }
     this._signal = signal;
     this._memoizedVersion = -1;
-    this._subscription = null;
   }
 
   resume(_lanes: Lanes, context: UpdateContext): Lanes {
