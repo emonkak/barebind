@@ -107,10 +107,10 @@ export class Reactive<T> extends Signal<T> {
       throw new TypeError('Cannot set value on a read-only descriptor.');
     }
 
-    // We must clear the dirty flag for shallow subscription before set the new
-    // source.
     descriptor.children = null;
     descriptor.flags |= FLAG_NEW;
+    // We must clear the dirty flag for shallow subscription before set the new
+    // source.
     descriptor.flags &= ~FLAG_DIRTY;
     descriptor.source$.value = source;
   }
