@@ -132,7 +132,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscribeSignal(context: UpdateContext): Subscription {
     return this._signal.subscribe(() => {
-      context.scheduleUpdate(this, { priority: 'background' });
+      context.scheduleUpdate(this);
     });
   }
 }
