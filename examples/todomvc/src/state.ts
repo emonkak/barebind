@@ -1,5 +1,5 @@
-import { $customHook, type HookContext } from '@emonkak/ebit';
-import { Reactive } from '@emonkak/ebit/extensions/reactive';
+import { $customHook, type HookContext } from 'barebind';
+import { Reactive } from 'barebind/extensions/reactive';
 
 export interface Todo {
   id: string;

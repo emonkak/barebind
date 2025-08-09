@@ -1,4 +1,4 @@
-import type { RenderContext } from '@emonkak/ebit';
+import type { RenderContext } from 'barebind';
 
 export interface TodoInputProps {
   defaultValue?: string;

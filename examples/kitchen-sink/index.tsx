@@ -6,13 +6,13 @@ import {
   memo,
   type RenderContext,
   repeat,
-} from '@emonkak/ebit';
+} from 'barebind';
 import {
   ConsoleReporter,
   PerformanceProfiler,
-} from '@emonkak/ebit/extensions/profiler';
-import { Atom, type Signal } from '@emonkak/ebit/extensions/signal';
-import type { VElement } from '@emonkak/ebit/extensions/vdom';
+} from 'barebind/extensions/profiler';
+import { Atom, type Signal } from 'barebind/extensions/signal';
+import type { VElement } from 'barebind/extensions/vdom';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
 

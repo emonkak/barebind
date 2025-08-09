@@ -1,8 +1,8 @@
-# Ebit
+# Barebind
 
-![CI Status](https://github.com/emonkak/ebit/actions/workflows/ci.yml/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/emonkak/ebit/badge.svg)](https://coveralls.io/github/emonkak/ebit)
+![CI Status](https://github.com/emonkak/barebind/actions/workflows/ci.yml/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/emonkak/barebind/badge.svg)](https://coveralls.io/github/emonkak/barebind)
 
 <img src="logo.svg" alt="Logo" width="200" height="300">
 
-**Ebit**, which means **E**fficient **Bi**nding **T**emplate, is a framework for template rendering.
+No magic, no custom compiler - just bind data to plain JS templates.

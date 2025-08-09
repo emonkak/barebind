@@ -1,5 +1,5 @@
-import { component, flexible, type RenderContext } from '@emonkak/ebit';
-import { HashHistory, ScrollRestration } from '@emonkak/ebit/extensions/router';
+import { component, flexible, type RenderContext } from 'barebind';
+import { HashHistory, ScrollRestration } from 'barebind/extensions/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';

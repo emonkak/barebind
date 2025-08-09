@@ -33,19 +33,19 @@ importers:
 
   examples/hackernews:
     dependencies:
-      '@emonkak/ebit':
+      'barebind':
         specifier: workspace:*
         version: link:../..
 
   examples/kitchen-sink:
     dependencies:
-      '@emonkak/ebit':
+      'barebind':
         specifier: workspace:*
         version: link:../..
 
   examples/todomvc:
     dependencies:
-      '@emonkak/ebit':
+      'barebind':
         specifier: workspace:*
         version: link:../..
       todomvc-app-css:

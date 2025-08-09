@@ -1,5 +1,5 @@
 {
-  "name": "@emonkak/ebit",
+  "name": "barebind",
   "version": "0.1.0",
   "exports": {
     ".": {

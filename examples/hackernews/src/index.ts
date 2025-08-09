@@ -1,8 +1,8 @@
-import { AsyncRoot, BrowserBackend, component } from '@emonkak/ebit';
+import { AsyncRoot, BrowserBackend, component } from 'barebind';
 import {
   ConsoleReporter,
   PerformanceProfiler,
-} from '@emonkak/ebit/extensions/profiler';
+} from 'barebind/extensions/profiler';
 
 import { App } from './App.js';
 import { AppStore } from './store.js';

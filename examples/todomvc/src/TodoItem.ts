@@ -1,4 +1,4 @@
-import { component, memo, type RenderContext } from '@emonkak/ebit';
+import { component, memo, type RenderContext } from 'barebind';
 
 import { type Todo, TodoState } from './state.js';
 import { TodoInput } from './TodoInput.js';

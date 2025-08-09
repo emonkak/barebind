@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@emonkak/ebit/extensions",
+    "jsxImportSource": "barebind/extensions",
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"]

@@ -1,4 +1,4 @@
-import { memo, type RenderContext } from '@emonkak/ebit';
+import { memo, type RenderContext } from 'barebind';
 
 export interface NavProps {}
 
@@ -20,8 +20,8 @@ export function Nav(_props: NavProps, $: RenderContext): unknown {
       <a href="#/jobs">
         <strong>Jobs</strong>
       </a>
-      <a class="github" href="https://github.com/emonkak/ebit" target="_blank">
-        Built with Ebit
+      <a class="github" href="https://github.com/emonkak/barebind" target="_blank">
+        Built with Barebind
       </a>
     </nav>
   `;

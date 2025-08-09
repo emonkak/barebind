@@ -1,10 +1,5 @@
-import { component } from '@emonkak/ebit';
-import {
-  integer,
-  Router,
-  route,
-  wildcard,
-} from '@emonkak/ebit/extensions/router';
+import { component } from 'barebind';
+import { integer, Router, route, wildcard } from 'barebind/extensions/router';
 
 import { ItemPage } from './item/ItemPage.js';
 import { StoriesPage } from './story/StoriesPage.js';

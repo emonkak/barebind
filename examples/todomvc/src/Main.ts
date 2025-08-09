@@ -1,4 +1,4 @@
-import { component, type RenderContext, repeat } from '@emonkak/ebit';
+import { component, type RenderContext, repeat } from 'barebind';
 
 import { TodoState } from './state.js';
 import { TodoItem } from './TodoItem.js';

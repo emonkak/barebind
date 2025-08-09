@@ -1,9 +1,5 @@
-import {
-  $customHook,
-  type CustomHookObject,
-  type HookContext,
-} from '@emonkak/ebit';
-import { Reactive } from '@emonkak/ebit/extensions/reactive';
+import { $customHook, type CustomHookObject, type HookContext } from 'barebind';
+import { Reactive } from 'barebind/extensions/reactive';
 
 const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
 const USER_API_ORIGIN = 'https://hacker-news.firebaseio.com';

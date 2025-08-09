@@ -1,4 +1,4 @@
-import { component, type RenderContext, repeat } from '@emonkak/ebit';
+import { component, type RenderContext, repeat } from 'barebind';
 
 import type { Item } from '../store.js';
 import { CommentView } from './CommentView.js';

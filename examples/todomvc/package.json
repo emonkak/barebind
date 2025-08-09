@@ -9,7 +9,7 @@
     "clean": "rm -fr lib"
   },
   "dependencies": {
-    "@emonkak/ebit": "workspace:*",
+    "barebind": "workspace:*",
     "todomvc-app-css": "^2.4.3"
   }
 }

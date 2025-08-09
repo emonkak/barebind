@@ -1,4 +1,4 @@
-import { component, type RenderContext, repeat } from '@emonkak/ebit';
+import { component, type RenderContext, repeat } from 'barebind';
 
 import { AppStore, type StoryType } from '../store.js';
 import { StoryView } from './StoryView.js';

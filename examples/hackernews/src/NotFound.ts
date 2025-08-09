@@ -1,5 +1,5 @@
-import type { RenderContext } from '@emonkak/ebit';
-import type { RelativeURL } from '@emonkak/ebit/extensions/router';
+import type { RenderContext } from 'barebind';
+import type { RelativeURL } from 'barebind/extensions/router';
 
 export interface NotFoundProps {
   url: RelativeURL;

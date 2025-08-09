@@ -1,4 +1,4 @@
-import { component, type RenderContext } from '@emonkak/ebit';
+import { component, type RenderContext } from 'barebind';
 
 import { AppStore } from '../store.js';
 import { ItemView } from './ItemView.js';
