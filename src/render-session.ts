@@ -13,8 +13,8 @@ import {
   type RenderContext,
   type RenderSessionContext,
   type TemplateMode,
+  type UpdateHandle,
   type UpdateOptions,
-  type UpdateTask,
   type Usable,
 } from './core.js';
 import { DirectiveSpecifier } from './directive.js';
@@ -86,7 +86,7 @@ export class RenderSession implements RenderContext {
     return this._pendingLanes;
   }
 
-  forceUpdate(options?: UpdateOptions): UpdateTask {
+  forceUpdate(options?: UpdateOptions): UpdateHandle {
     return this._context.scheduleUpdate(this._coroutine, options);
   }
 
@@ -98,9 +98,9 @@ export class RenderSession implements RenderContext {
   }
 
   isUpdatePending(): boolean {
-    const scheduledTasks = this._context.getScheduledTasks();
+    const updateHandles = this._context.getUpdateHandles();
 
-    for (let node = scheduledTasks.front(); node !== null; node = node.next) {
+    for (let node = updateHandles.front(); node !== null; node = node.next) {
       if (node.value.coroutine === this._coroutine) {
         return true;
       }
@@ -328,10 +328,10 @@ export class RenderSession implements RenderContext {
   }
 
   async waitForUpdate(): Promise<number> {
-    const scheduledTasks = this._context.getScheduledTasks();
+    const updateHandles = this._context.getUpdateHandles();
     const promises: Promise<void>[] = [];
 
-    for (let node = scheduledTasks.front(); node !== null; node = node.next) {
+    for (let node = updateHandles.front(); node !== null; node = node.next) {
       if (node.value.coroutine === this._coroutine) {
         promises.push(node.value.promise);
       }

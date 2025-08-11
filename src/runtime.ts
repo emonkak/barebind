@@ -27,8 +27,8 @@ import {
   type TemplateLiteral,
   type TemplateMode,
   type UpdateContext,
+  type UpdateHandle,
   type UpdateOptions,
-  type UpdateTask,
 } from './core.js';
 import { debugValue } from './debug/value.js';
 import { LinkedList } from './linked-list.js';
@@ -79,10 +79,10 @@ interface Environment {
   coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   observers: LinkedList<RuntimeObserver>;
-  scheduledTasks: LinkedList<UpdateTask>;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
   templatePlaceholder: string;
   updateCount: number;
+  updateHandles: LinkedList<UpdateHandle>;
 }
 
 interface UpdateFrame {
@@ -116,10 +116,10 @@ export class Runtime implements CommitContext, UpdateContext {
       coroutineStates: new WeakMap(),
       identifierCount: 0,
       observers: new LinkedList(),
-      scheduledTasks: new LinkedList(),
       templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
       templatePlaceholder: generateRandomString(8),
       updateCount: 0,
+      updateHandles: new LinkedList(),
     };
     return new Runtime(updateFrame, scope, environment);
   }
@@ -329,8 +329,8 @@ export class Runtime implements CommitContext, UpdateContext {
     return this._scope;
   }
 
-  getScheduledTasks(): LinkedList<UpdateTask> {
-    return this._environment.scheduledTasks;
+  getUpdateHandles(): LinkedList<UpdateHandle> {
+    return this._environment.updateHandles;
   }
 
   nextIdentifier(): string {
@@ -419,8 +419,8 @@ export class Runtime implements CommitContext, UpdateContext {
   scheduleUpdate(
     coroutine: Coroutine,
     options: UpdateOptions = {},
-  ): UpdateTask {
-    const { backend, concurrent, coroutineStates, scheduledTasks } =
+  ): UpdateHandle {
+    const { backend, concurrent, coroutineStates, updateHandles } =
       this._environment;
     const completeOptions: Required<UpdateOptions> = {
       concurrent: options.concurrent ?? concurrent,
@@ -429,13 +429,13 @@ export class Runtime implements CommitContext, UpdateContext {
     };
     const scheduleLanes = getScheduleLanesFromOptions(completeOptions);
 
-    for (const scheduledTask of scheduledTasks) {
+    for (const updateHandle of updateHandles) {
       if (
-        scheduledTask.coroutine === coroutine &&
-        scheduledTask.lanes === scheduleLanes &&
-        !scheduledTask.running
+        updateHandle.coroutine === coroutine &&
+        updateHandle.lanes === scheduleLanes &&
+        !updateHandle.running
       ) {
-        return scheduledTask;
+        return updateHandle;
       }
     }
 
@@ -448,7 +448,7 @@ export class Runtime implements CommitContext, UpdateContext {
       coroutineStates.set(coroutine, coroutineState);
     }
 
-    const scheduledTaskNode = scheduledTasks.pushBack({
+    const updateHandleNode = updateHandles.pushBack({
       coroutine,
       lanes: scheduleLanes,
       running: false,
@@ -458,7 +458,7 @@ export class Runtime implements CommitContext, UpdateContext {
             return;
           }
 
-          scheduledTaskNode.value.running = true;
+          updateHandleNode.value.running = true;
 
           const subcontext = this._createSubcontext(coroutine);
           const flushLanes = getFlushLanesFromOptions(completeOptions);
@@ -469,12 +469,12 @@ export class Runtime implements CommitContext, UpdateContext {
             subcontext.flushSync(flushLanes);
           }
         } finally {
-          scheduledTasks.remove(scheduledTaskNode);
+          updateHandles.remove(updateHandleNode);
         }
       }, completeOptions),
     });
 
-    return scheduledTaskNode.value;
+    return updateHandleNode.value;
   }
 
   undebugValue(

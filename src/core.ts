@@ -145,7 +145,7 @@ export namespace Hook {
 }
 
 export interface HookContext {
-  forceUpdate(options?: UpdateOptions): UpdateTask;
+  forceUpdate(options?: UpdateOptions): UpdateHandle;
   getContextValue(key: unknown): unknown;
   isUpdatePending(): boolean;
   setContextValue(key: unknown, value: unknown): void;
@@ -342,14 +342,14 @@ export interface RenderSessionContext {
   ): TemplateLiteral<T>;
   flushSync(lanes: Lanes): void;
   getCurrentScope(): Scope;
-  getScheduledTasks(): LinkedList<UpdateTask>;
+  getUpdateHandles(): LinkedList<UpdateHandle>;
   nextIdentifier(): string;
   resolveTemplate(
     strings: readonly string[],
     binds: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateTask;
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
 export interface RequestCallbackOptions {
@@ -420,7 +420,7 @@ export interface UpdateOptions {
   viewTransition?: boolean;
 }
 
-export interface UpdateTask {
+export interface UpdateHandle {
   coroutine: Coroutine;
   lanes: Lanes;
   running: boolean;
