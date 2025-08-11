@@ -196,21 +196,17 @@ export class Runtime implements CommitContext, UpdateContext {
         });
       }
 
-      let currentLanes = lanes;
-
       while (true) {
         const coroutines = consumeCoroutines(this._updateFrame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          coroutine.resume(currentLanes, this);
+          coroutine.resume(lanes, this);
         }
 
         if (this._updateFrame.pendingCoroutines.length === 0) {
           break;
         }
-
-        currentLanes &= ~Lanes.RootLane;
 
         await backend.yieldToMain();
       }
@@ -281,17 +277,13 @@ export class Runtime implements CommitContext, UpdateContext {
         });
       }
 
-      let currentLanes = lanes;
-
       do {
         const coroutines = consumeCoroutines(this._updateFrame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          coroutine.resume(currentLanes, this);
+          coroutine.resume(lanes, this);
         }
-
-        currentLanes &= ~Lanes.RootLane;
       } while (this._updateFrame.pendingCoroutines.length > 0);
 
       if (!observers.isEmpty()) {
@@ -447,9 +439,8 @@ export class Runtime implements CommitContext, UpdateContext {
 
           updateHandleNode.value.running = true;
 
-          const subcontext = this._createSubcontext(coroutine);
-          const flushLanes =
-            getFlushLanesFromOptions(completeOptions) | Lanes.RootLane;
+          const subcontext = this._enterFrame(coroutine);
+          const flushLanes = getFlushLanesFromOptions(completeOptions);
 
           if (completeOptions.concurrent) {
             await subcontext.flushAsync(flushLanes);
@@ -502,7 +493,7 @@ export class Runtime implements CommitContext, UpdateContext {
     }
   }
 
-  private _createSubcontext(coroutine: Coroutine): Runtime {
+  private _enterFrame(coroutine: Coroutine): Runtime {
     const updateCount = incrementIdentifier(this._environment.updateCount);
     const updateFrame: UpdateFrame = {
       id: updateCount,

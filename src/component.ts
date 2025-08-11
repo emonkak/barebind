@@ -148,7 +148,8 @@ export class ComponentBinding<TProps, TResult>
       flushLanes,
       this,
     );
-    let shouldCommit = !!(flushLanes & Lanes.RootLane);
+    // When the scope level is the same, the binding is the update root.
+    let shouldCommit = context.getCurrentScope().level === scope.level;
 
     if (this._slot !== null) {
       const dirty = this._slot.reconcile(value, subcontext);

@@ -32,16 +32,17 @@ describe('Literal', () => {
 });
 
 describe('Scope', () => {
-  it('gets the own entry value', () => {
+  it('returns the own entry value', () => {
     const scope = new Scope(null);
 
     scope.set('foo', 1);
 
     expect(scope.get('foo')).toBe(1);
     expect(scope.get('bar')).toBe(undefined);
+    expect(scope.level).toBe(0);
   });
 
-  it('gets the inherited entry value', () => {
+  it('returns the inherited entry value', () => {
     const parentScope = new Scope(null);
     const childScope = new Scope(parentScope);
 
@@ -49,9 +50,15 @@ describe('Scope', () => {
     parentScope.set('bar', 2);
     childScope.set('foo', 3);
 
+    expect(parentScope.get('foo')).toBe(1);
+    expect(parentScope.get('bar')).toBe(2);
+    expect(parentScope.get('baz')).toBe(undefined);
+    expect(parentScope.level).toBe(0);
+
     expect(childScope.get('foo')).toBe(3);
     expect(childScope.get('bar')).toBe(2);
     expect(childScope.get('baz')).toBe(undefined);
+    expect(childScope.level).toBe(1);
   });
 });
 

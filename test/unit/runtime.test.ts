@@ -694,10 +694,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane |
-          Lanes.UserBlockingLane |
-          Lanes.RootLane |
-          concurrentLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
@@ -735,10 +732,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane |
-          Lanes.UserBlockingLane |
-          Lanes.RootLane |
-          concurrentLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
@@ -768,10 +762,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane |
-          Lanes.UserBlockingLane |
-          Lanes.RootLane |
-          concurrentLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });

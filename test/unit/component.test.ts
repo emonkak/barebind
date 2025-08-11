@@ -194,7 +194,7 @@ describe('ComponentBinding', () => {
         expect(binding.pendingLanes).toBe(Lanes.SyncLane);
 
         runtime.enqueueCoroutine(binding);
-        runtime.flushSync(Lanes.SyncLane | Lanes.RootLane);
+        runtime.flushSync(Lanes.SyncLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
         expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -208,7 +208,7 @@ describe('ComponentBinding', () => {
         expect(binding.pendingLanes).toBe(Lanes.SyncLane);
 
         runtime.enqueueCoroutine(binding);
-        runtime.flushSync(Lanes.SyncLane | Lanes.RootLane);
+        runtime.flushSync(Lanes.SyncLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);

@@ -211,14 +211,13 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 // biome-ignore format: Align lane flags
 export const Lanes = {
   NoLanes:            0,
-  RootLane:           0b1,
-  SyncLane:           0b10,
-  HydrationLane:      0b100,
-  UserBlockingLane:   0b1000,
-  UserVisibleLane:    0b10000,
-  BackgroundLane:     0b100000,
-  ConcurrentLane:     0b1000000,
-  ViewTransitionLane: 0b10000000,
+  SyncLane:           0b1,
+  HydrationLane:      0b10,
+  UserBlockingLane:   0b100,
+  UserVisibleLane:    0b1000,
+  BackgroundLane:     0b10000,
+  ConcurrentLane:     0b100000,
+  ViewTransitionLane: 0b1000000,
 } as const;
 
 export type Lanes = number;
@@ -433,7 +432,7 @@ export interface UpdateHandle {
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
-interface ScopeEntry {
+interface KeyValuePair {
   key: unknown;
   value: unknown;
 }
@@ -486,30 +485,33 @@ export class HydrationTree {
 export class Literal extends String {}
 
 export class Scope {
-  private readonly _parent: Scope | null;
+  readonly level: number;
 
-  private readonly _entries: ScopeEntry[] = [];
+  readonly parent: Scope | null;
+
+  readonly entries: KeyValuePair[] = [];
 
   constructor(parent: Scope | null) {
-    this._parent = parent;
+    this.level = parent !== null ? parent.level + 1 : 0;
+    this.parent = parent;
   }
 
   get(key: unknown): unknown {
     let currentScope: Scope | null = this;
     do {
-      for (let i = currentScope._entries.length - 1; i >= 0; i--) {
-        const entry = currentScope._entries[i]!;
+      for (let i = currentScope.entries.length - 1; i >= 0; i--) {
+        const entry = currentScope.entries[i]!;
         if (Object.is(entry.key, key)) {
           return entry.value;
         }
       }
-      currentScope = currentScope._parent;
+      currentScope = currentScope.parent;
     } while (currentScope !== null);
     return undefined;
   }
 
   set(key: unknown, value: unknown): void {
-    this._entries.push({ key, value });
+    this.entries.push({ key, value });
   }
 }
 
