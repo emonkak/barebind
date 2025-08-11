@@ -69,7 +69,7 @@ describe('FunctionComponent', () => {
       };
       const session = new RenderSession(
         [],
-        Lanes.UpdateLanes,
+        Lanes.SyncLane,
         new MockCoroutine(),
         Runtime.create(new MockBackend()),
       );
@@ -160,7 +160,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -168,7 +168,7 @@ describe('ComponentBinding', () => {
   });
 
   describe('hydrate()', () => {
-    it('hydrates the tree by the value rendered by the component', () => {
+    it('hydrates the tree by the component result', () => {
       const component = new FunctionComponent(Greet);
       const props = {
         name: 'foo',
@@ -187,7 +187,7 @@ describe('ComponentBinding', () => {
 
       binding.hydrate(tree, runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.HydrationLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -232,7 +232,7 @@ describe('ComponentBinding', () => {
 
       runtime.enqueueCoroutine(binding);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(() => binding.hydrate(tree, runtime)).toThrow(HydrationError);
     });
@@ -260,7 +260,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -274,7 +274,7 @@ describe('ComponentBinding', () => {
 
       binding.bind(props2);
       binding.connect(runtime);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -306,7 +306,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -320,7 +320,7 @@ describe('ComponentBinding', () => {
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(

@@ -423,6 +423,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const { backend, concurrent, coroutineStates, scheduledTasks } =
       this._environment;
     const completeOptions: Required<UpdateOptions> = {
+      concurrent: options.concurrent ?? concurrent,
       priority: options.priority ?? backend.getCurrentPriority(),
       viewTransition: options.viewTransition ?? false,
     };
@@ -453,7 +454,7 @@ export class Runtime implements CommitContext, UpdateContext {
       running: false,
       promise: backend.requestCallback(async () => {
         try {
-          if ((coroutineState.pendingLanes & scheduleLanes) === Lanes.NoLanes) {
+          if ((coroutineState.pendingLanes & scheduleLanes) !== scheduleLanes) {
             return;
           }
 
@@ -462,7 +463,7 @@ export class Runtime implements CommitContext, UpdateContext {
           const subcontext = this._createSubcontext(coroutine);
           const flushLanes = getFlushLanesFromOptions(completeOptions);
 
-          if (concurrent) {
+          if (completeOptions.concurrent) {
             await subcontext.flushAsync(flushLanes);
           } else {
             subcontext.flushSync(flushLanes);

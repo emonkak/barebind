@@ -82,24 +82,32 @@ describe('getFlushLanesFromOptions()', () => {
         Lanes.UserVisibleLane |
         Lanes.BackgroundLane,
     ],
-    [{ viewTransition: true }, Lanes.SyncLane | Lanes.ViewTransitionLane],
     [
-      { priority: 'user-blocking', viewTransition: true },
-      Lanes.SyncLane | Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
+      { concurrent: true, viewTransition: true },
+      Lanes.SyncLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'user-visible', viewTransition: true },
+      { priority: 'user-blocking', concurrent: true, viewTransition: true },
       Lanes.SyncLane |
         Lanes.UserBlockingLane |
-        Lanes.UserVisibleLane |
+        Lanes.ConcurrentLane |
         Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'background', viewTransition: true },
+      { priority: 'user-visible', concurrent: true, viewTransition: true },
+      Lanes.SyncLane |
+        Lanes.UserBlockingLane |
+        Lanes.UserVisibleLane |
+        Lanes.ConcurrentLane |
+        Lanes.ViewTransitionLane,
+    ],
+    [
+      { priority: 'background', concurrent: true, viewTransition: true },
       Lanes.SyncLane |
         Lanes.UserBlockingLane |
         Lanes.UserVisibleLane |
         Lanes.BackgroundLane |
+        Lanes.ConcurrentLane |
         Lanes.ViewTransitionLane,
     ],
   ] as [UpdateOptions, Lanes][])(
@@ -119,16 +127,16 @@ describe('getScheduleLanesFromOptions()', () => {
     [{ priority: 'background' }, Lanes.BackgroundLane],
     [{ viewTransition: true }, Lanes.ViewTransitionLane],
     [
-      { priority: 'user-blocking', viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
+      { priority: 'user-blocking', concurrent: true, viewTransition: true },
+      Lanes.UserBlockingLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'user-visible', viewTransition: true },
-      Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
+      { priority: 'user-visible', concurrent: true, viewTransition: true },
+      Lanes.UserVisibleLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'background', viewTransition: true },
-      Lanes.BackgroundLane | Lanes.ViewTransitionLane,
+      { priority: 'background', concurrent: true, viewTransition: true },
+      Lanes.BackgroundLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
     ],
   ] as [UpdateOptions, Lanes][])(
     'returns lanes for schedule',

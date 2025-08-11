@@ -9,7 +9,7 @@ describe('CurrentHistory', () => {
   it('should throw an error if the current location is not registered', () => {
     const session = new RenderSession(
       [],
-      Lanes.UpdateLanes,
+      Lanes.SyncLane,
       new MockCoroutine(),
       Runtime.create(new MockBackend()),
     );

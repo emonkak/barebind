@@ -346,15 +346,12 @@ describe('Runtime', () => {
 
       runtime.enqueueCoroutine(coroutine);
       runtime.enqueueMutationEffect(coroutine);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(1);
-      expect(subcoroutine.resume).toHaveBeenCalledWith(
-        Lanes.UpdateLanes,
-        runtime,
-      );
+      expect(subcoroutine.resume).toHaveBeenCalledWith(Lanes.SyncLane, runtime);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
-      expect(coroutine.resume).toHaveBeenCalledWith(Lanes.UpdateLanes, runtime);
+      expect(coroutine.resume).toHaveBeenCalledWith(Lanes.SyncLane, runtime);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
@@ -365,7 +362,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.UpdateLanes,
+          lanes: Lanes.SyncLane,
           concurrent: false,
         },
         {
@@ -415,20 +412,17 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          lanes: Lanes.UpdateLanes,
+          lanes: Lanes.SyncLane,
           concurrent: false,
         },
       ]);
 
       runtime.enqueueCoroutine(subcoroutine);
       runtime.enqueueMutationEffect(subcoroutine);
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
-      expect(subcoroutine.resume).toHaveBeenCalledWith(
-        Lanes.UpdateLanes,
-        runtime,
-      );
+      expect(subcoroutine.resume).toHaveBeenCalledWith(Lanes.SyncLane, runtime);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
@@ -440,7 +434,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.UpdateLanes,
+          lanes: Lanes.SyncLane,
           concurrent: false,
         },
         {
@@ -490,13 +484,13 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          lanes: Lanes.UpdateLanes,
+          lanes: Lanes.SyncLane,
           concurrent: false,
         },
       ]);
 
       unobserve();
-      runtime.flushSync(Lanes.UpdateLanes);
+      runtime.flushSync(Lanes.SyncLane);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
@@ -520,7 +514,7 @@ describe('Runtime', () => {
       const component = new MockComponent();
       const props = {};
       const hooks: Hook[] = [];
-      const lanes = Lanes.UpdateLanes;
+      const lanes = Lanes.SyncLane;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const runtime = Runtime.create(new MockBackend());
@@ -696,46 +690,53 @@ describe('Runtime', () => {
   });
 
   describe.for([true, false])('scheduleUpdate()', (concurrent) => {
+    const concurrentLane = concurrent ? Lanes.ConcurrentLane : Lanes.NoLanes;
+
     it('schedules the update with the current priority of the backend', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend(), { concurrent });
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
-      const task = runtime.scheduleUpdate(coroutine);
+      const task = runtime.scheduleUpdate(coroutine, { concurrent });
 
-      expect(task.lanes).toBe(Lanes.UserBlockingLane);
+      expect(task.lanes).toBe(Lanes.UserBlockingLane | concurrentLane);
 
       expect(await waitForUpdate(runtime)).toBe(1);
       expect(await getPromiseState(task.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
 
     it('schedules as a different update if the lanes are different', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend(), { concurrent });
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
       const task1 = runtime.scheduleUpdate(coroutine, {
         priority: 'user-blocking',
+        concurrent,
       });
       const task2 = runtime.scheduleUpdate(coroutine, {
         priority: 'background',
+        concurrent,
       });
       const task3 = runtime.scheduleUpdate(coroutine, {
         priority: 'background',
+        concurrent,
         viewTransition: true,
       });
 
-      expect(task1.lanes).toBe(Lanes.UserBlockingLane);
-      expect(task2.lanes).toBe(Lanes.BackgroundLane);
-      expect(task3.lanes).toBe(Lanes.BackgroundLane | Lanes.ViewTransitionLane);
+      expect(task1.lanes).toBe(Lanes.UserBlockingLane | concurrentLane);
+      expect(task2.lanes).toBe(Lanes.BackgroundLane | concurrentLane);
+      expect(task3.lanes).toBe(
+        Lanes.BackgroundLane | Lanes.ViewTransitionLane | concurrentLane,
+      );
 
       expect(await waitForUpdate(runtime)).toBe(3);
       expect(await getPromiseState(task1.promise)).toBe('fulfilled');
@@ -744,25 +745,29 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
 
     it('returns the pending task scheduled in the same lane', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend(), { concurrent });
+      const runtime = Runtime.create(new MockBackend());
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
       const task = runtime.scheduleUpdate(coroutine, {
         priority: 'user-blocking',
+        concurrent,
       });
 
-      expect(task.lanes).toBe(Lanes.UserBlockingLane);
+      expect(task.lanes).toBe(Lanes.UserBlockingLane | concurrentLane);
 
       expect(
-        runtime.scheduleUpdate(coroutine, { priority: 'user-blocking' }),
+        runtime.scheduleUpdate(coroutine, {
+          priority: 'user-blocking',
+          concurrent,
+        }),
       ).toBe(task);
 
       expect(await waitForUpdate(runtime)).toBe(1);
@@ -770,7 +775,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane,
+        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });

@@ -3,7 +3,7 @@ import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
 
-export function createSession(lanes: Lanes = Lanes.UpdateLanes): RenderSession {
+export function createSession(lanes: Lanes = -1): RenderSession {
   return new RenderSession(
     [],
     lanes,
@@ -29,7 +29,7 @@ export function disposeSession(session: RenderSession): void {
 export function flushSession(session: RenderSession): Lanes {
   const pendingLanes = session.finalize();
 
-  session['_context'].flushSync(Lanes.UpdateLanes);
+  session['_context'].flushSync(Lanes.SyncLane);
   session['_hookIndex'] = 0;
   session['_pendingLanes'] = Lanes.NoLanes;
 

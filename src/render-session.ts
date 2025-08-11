@@ -240,7 +240,7 @@ export class RenderSession implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._lanes) !== Lanes.NoLanes) {
+      if ((currentHook.lanes & this._lanes) === currentHook.lanes) {
         currentHook.lanes = Lanes.NoLanes;
         currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;

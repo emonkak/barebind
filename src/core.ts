@@ -208,12 +208,13 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
 export const Lanes = {
   NoLanes: 0b0,
-  UpdateLanes: 0b1111,
   SyncLane: 0b1,
   UserBlockingLane: 0b10,
   UserVisibleLane: 0b100,
   BackgroundLane: 0b1000,
-  ViewTransitionLane: 0b10000,
+  HydrationLane: 0b10000,
+  ConcurrentLane: 0b100000,
+  ViewTransitionLane: 0b1000000,
 } as const;
 
 export type Lanes = number;
@@ -414,6 +415,7 @@ export interface UpdateContext extends DirectiveContext, RenderSessionContext {
 }
 
 export interface UpdateOptions {
+  concurrent?: boolean;
   priority?: TaskPriority;
   viewTransition?: boolean;
 }
@@ -556,6 +558,10 @@ export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
       break;
   }
 
+  if (options.concurrent) {
+    lanes |= Lanes.ConcurrentLane;
+  }
+
   if (options.viewTransition) {
     lanes |= Lanes.ViewTransitionLane;
   }
@@ -579,6 +585,10 @@ export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
     case 'background':
       lanes |= Lanes.BackgroundLane;
       break;
+  }
+
+  if (options.concurrent) {
+    lanes |= Lanes.ConcurrentLane;
   }
 
   if (options.viewTransition) {
