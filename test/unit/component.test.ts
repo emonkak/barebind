@@ -169,9 +169,10 @@ describe('ComponentBinding', () => {
 
   describe('resume()', () => {
     it('clear pending lanes', async () => {
-      const component = new FunctionComponent(Increment);
+      const component = new FunctionComponent(Greet);
       const props = {
-        initialCount: 100,
+        greet: 'Hello',
+        name: 'foo',
       };
       const part = {
         type: PartType.ChildNode,
@@ -182,14 +183,37 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(component, props, part);
       const runtime = Runtime.create(new MockBackend());
 
-      const handle = runtime.scheduleUpdate(binding);
+      const enqueueMutationEffectSpy = vi.spyOn(
+        runtime,
+        'enqueueMutationEffect',
+      );
 
-      expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
+      SESSION1: {
+        binding.suspend(Lanes.SyncLane, runtime);
 
-      await handle.promise;
+        expect(binding.pendingLanes).toBe(Lanes.SyncLane);
 
-      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
-      expect(part.node.nodeValue).toBe('100');
+        runtime.enqueueCoroutine(binding);
+        runtime.flushSync(Lanes.SyncLane | Lanes.RootLane);
+
+        expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+        expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
+        expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+        expect(part.node.nodeValue).toBe('Hello, foo!');
+      }
+
+      SESSION2: {
+        binding.suspend(Lanes.SyncLane, runtime);
+
+        expect(binding.pendingLanes).toBe(Lanes.SyncLane);
+
+        runtime.enqueueCoroutine(binding);
+        runtime.flushSync(Lanes.SyncLane | Lanes.RootLane);
+
+        expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
+        expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+        expect(part.node.nodeValue).toBe('Hello, foo!');
+      }
     });
   });
 
@@ -300,6 +324,7 @@ describe('ComponentBinding', () => {
 
       binding.bind(props2);
       binding.connect(runtime);
+      runtime.enqueueMutationEffect(binding);
       runtime.flushSync(Lanes.SyncLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -310,7 +335,7 @@ describe('ComponentBinding', () => {
         }),
       );
       expect(binding['_slot']?.part).toBe(part);
-      expect(part.node.nodeValue).toBe('Hello, foo!');
+      expect(part.node.nodeValue).toBe('Chao, bar!');
     });
   });
 
@@ -376,18 +401,6 @@ interface GreetProps {
 
 function Greet({ name, greet }: GreetProps): unknown {
   return `${greet}, ${name}!`;
-}
-
-interface IncrementProps {
-  initialCount: number;
-}
-
-function Increment(
-  { initialCount }: IncrementProps,
-  $: RenderContext,
-): unknown {
-  const countRef = $.useRef(initialCount);
-  return countRef.current++;
 }
 
 interface MemoProps {

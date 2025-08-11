@@ -140,7 +140,6 @@ describe('Runtime', () => {
       );
 
       runtime.enqueueCoroutine(coroutine);
-      runtime.enqueueMutationEffect(coroutine);
 
       await runtime.flushAsync(Lanes.UserBlockingLane);
 
@@ -175,13 +174,13 @@ describe('Runtime', () => {
           type: 'COMMIT_START',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [coroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_END',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [coroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_START',
@@ -216,7 +215,6 @@ describe('Runtime', () => {
       ]);
 
       runtime.enqueueCoroutine(subcoroutine);
-      runtime.enqueueMutationEffect(subcoroutine);
       await runtime.flushAsync(Lanes.BackgroundLane | Lanes.ViewTransitionLane);
 
       expect(resume1Spy).toHaveBeenCalledTimes(1);
@@ -249,13 +247,13 @@ describe('Runtime', () => {
           type: 'COMMIT_START',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [subcoroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_END',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [subcoroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_START',
@@ -292,7 +290,7 @@ describe('Runtime', () => {
       unobserve();
       await runtime.flushAsync(Lanes.BackgroundLane);
 
-      expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
+      expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
       expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
@@ -336,7 +334,6 @@ describe('Runtime', () => {
         });
 
       runtime.enqueueCoroutine(coroutine);
-      runtime.enqueueMutationEffect(coroutine);
       runtime.flushSync(Lanes.SyncLane);
 
       expect(resume1Spy).toHaveBeenCalledTimes(1);
@@ -368,13 +365,13 @@ describe('Runtime', () => {
           type: 'COMMIT_START',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [coroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_END',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [coroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_START',
@@ -409,7 +406,6 @@ describe('Runtime', () => {
       ]);
 
       runtime.enqueueCoroutine(subcoroutine);
-      runtime.enqueueMutationEffect(subcoroutine);
       runtime.flushSync(Lanes.SyncLane);
 
       expect(resume1Spy).toHaveBeenCalledTimes(1);
@@ -440,13 +436,13 @@ describe('Runtime', () => {
           type: 'COMMIT_START',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [subcoroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_END',
           id: 0,
           phase: CommitPhase.Mutation,
-          effects: [subcoroutine, mutationEffect],
+          effects: [mutationEffect],
         },
         {
           type: 'COMMIT_START',
@@ -685,11 +681,11 @@ describe('Runtime', () => {
 
     it('schedules the update with the current priority of the backend', async () => {
       const coroutine = new MockCoroutine();
-      const runtime = Runtime.create(new MockBackend());
+      const runtime = Runtime.create(new MockBackend(), { concurrent });
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
-      const task = runtime.scheduleUpdate(coroutine, { concurrent });
+      const task = runtime.scheduleUpdate(coroutine);
 
       expect(task.lanes).toBe(Lanes.UserBlockingLane | concurrentLane);
 
@@ -698,7 +694,10 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
+        Lanes.SyncLane |
+          Lanes.UserBlockingLane |
+          Lanes.RootLane |
+          concurrentLane,
         expect.not.exact(runtime),
       );
     });
@@ -736,7 +735,10 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
+        Lanes.SyncLane |
+          Lanes.UserBlockingLane |
+          Lanes.RootLane |
+          concurrentLane,
         expect.not.exact(runtime),
       );
     });
@@ -766,7 +768,10 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
+        Lanes.SyncLane |
+          Lanes.UserBlockingLane |
+          Lanes.RootLane |
+          concurrentLane,
         expect.not.exact(runtime),
       );
     });

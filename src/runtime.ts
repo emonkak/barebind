@@ -196,17 +196,21 @@ export class Runtime implements CommitContext, UpdateContext {
         });
       }
 
+      let currentLanes = lanes;
+
       while (true) {
         const coroutines = consumeCoroutines(this._updateFrame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          coroutine.resume(lanes, this);
+          coroutine.resume(currentLanes, this);
         }
 
         if (this._updateFrame.pendingCoroutines.length === 0) {
           break;
         }
+
+        currentLanes &= ~Lanes.RootLane;
 
         await backend.yieldToMain();
       }
@@ -221,17 +225,20 @@ export class Runtime implements CommitContext, UpdateContext {
       const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
         this._updateFrame,
       );
-      const callback = () => {
-        this._commitEffects(mutationEffects, CommitPhase.Mutation);
-        this._commitEffects(layoutEffects, CommitPhase.Layout);
-      };
 
-      if (lanes & Lanes.ViewTransitionLane) {
-        await backend.startViewTransition(callback);
-      } else {
-        await backend.requestCallback(callback, {
-          priority: 'user-blocking',
-        });
+      if (mutationEffects.length > 0 || layoutEffects.length > 0) {
+        const callback = () => {
+          this._commitEffects(mutationEffects, CommitPhase.Mutation);
+          this._commitEffects(layoutEffects, CommitPhase.Layout);
+        };
+
+        if (lanes & Lanes.ViewTransitionLane) {
+          await backend.startViewTransition(callback);
+        } else {
+          await backend.requestCallback(callback, {
+            priority: 'user-blocking',
+          });
+        }
       }
 
       if (passiveEffects.length > 0) {
@@ -274,13 +281,17 @@ export class Runtime implements CommitContext, UpdateContext {
         });
       }
 
+      let currentLanes = lanes;
+
       do {
         const coroutines = consumeCoroutines(this._updateFrame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          coroutine.resume(lanes, this);
+          coroutine.resume(currentLanes, this);
         }
+
+        currentLanes &= ~Lanes.RootLane;
       } while (this._updateFrame.pendingCoroutines.length > 0);
 
       if (!observers.isEmpty()) {
@@ -437,7 +448,8 @@ export class Runtime implements CommitContext, UpdateContext {
           updateHandleNode.value.running = true;
 
           const subcontext = this._createSubcontext(coroutine);
-          const flushLanes = getFlushLanesFromOptions(completeOptions);
+          const flushLanes =
+            getFlushLanesFromOptions(completeOptions) | Lanes.RootLane;
 
           if (completeOptions.concurrent) {
             await subcontext.flushAsync(flushLanes);
@@ -495,7 +507,7 @@ export class Runtime implements CommitContext, UpdateContext {
     const updateFrame: UpdateFrame = {
       id: updateCount,
       pendingCoroutines: [coroutine],
-      mutationEffects: [coroutine],
+      mutationEffects: [],
       layoutEffects: [],
       passiveEffects: [],
     };

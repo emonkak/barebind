@@ -184,8 +184,6 @@ export class MockCoroutine implements Coroutine {
   suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
     this.pendingLanes |= scheduleLanes;
   }
-
-  commit(): void {}
 }
 
 export class MockDirective<T> implements DirectiveType<T> {

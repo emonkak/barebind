@@ -6,8 +6,8 @@ import {
   type Subscription,
 } from './signal.js';
 
-const NO_FLAGS = 0b0;
-const FLAG_NEW = 0b01;
+const NO_FLAGS = 0;
+const FLAG_NEW = 0b1;
 const FLAG_DIRTY = 0b10;
 
 export interface ReactiveOptions {

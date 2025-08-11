@@ -70,7 +70,7 @@ export interface ComponentResult<T> {
   pendingLanes: Lanes;
 }
 
-export interface Coroutine extends Effect {
+export interface Coroutine {
   get pendingLanes(): Lanes;
   resume(flushLanes: Lanes, context: UpdateContext): void;
   suspend(scheduleLanes: Lanes, context: UpdateContext): void;
@@ -208,15 +208,17 @@ export type HookType = (typeof HookType)[keyof typeof HookType];
 
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
+// biome-ignore format: Align lane flags
 export const Lanes = {
-  NoLanes: 0b0,
-  SyncLane: 0b1,
-  UserBlockingLane: 0b10,
-  UserVisibleLane: 0b100,
-  BackgroundLane: 0b1000,
-  HydrationLane: 0b10000,
-  ConcurrentLane: 0b100000,
-  ViewTransitionLane: 0b1000000,
+  NoLanes:            0,
+  RootLane:           0b1,
+  SyncLane:           0b10,
+  HydrationLane:      0b100,
+  UserBlockingLane:   0b1000,
+  UserVisibleLane:    0b10000,
+  BackgroundLane:     0b100000,
+  ConcurrentLane:     0b1000000,
+  ViewTransitionLane: 0b10000000,
 } as const;
 
 export type Lanes = number;

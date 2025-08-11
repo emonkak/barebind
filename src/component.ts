@@ -148,12 +148,18 @@ export class ComponentBinding<TProps, TResult>
       flushLanes,
       this,
     );
+    let shouldCommit = !!(flushLanes & Lanes.RootLane);
 
     if (this._slot !== null) {
-      this._slot.reconcile(value, subcontext);
+      const dirty = this._slot.reconcile(value, subcontext);
+      shouldCommit &&= dirty;
     } else {
       this._slot = subcontext.resolveSlot(value, this._part);
       this._slot.connect(subcontext);
+    }
+
+    if (shouldCommit) {
+      context.enqueueMutationEffect(this);
     }
 
     this._pendingLanes = pendingLanes;
