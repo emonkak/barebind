@@ -340,8 +340,8 @@ export interface RenderSessionContext {
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
   flushSync(lanes: Lanes): void;
+  getCurrentScope(): Scope;
   getScheduledTasks(): LinkedList<UpdateTask>;
-  getScope(): Scope;
   nextIdentifier(): string;
   resolveTemplate(
     strings: readonly string[],

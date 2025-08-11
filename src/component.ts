@@ -160,7 +160,7 @@ export class ComponentBinding<TProps, TResult>
       );
     }
 
-    const parentScope = context.getScope();
+    const parentScope = context.getCurrentScope();
     const scope = new Scope(parentScope);
     const subcontext = context.enterScope(scope);
     const { value } = subcontext.renderComponent(
@@ -178,7 +178,7 @@ export class ComponentBinding<TProps, TResult>
 
   connect(context: UpdateContext): void {
     context.enqueueCoroutine(this);
-    this._parentScope = context.getScope();
+    this._parentScope = context.getCurrentScope();
   }
 
   disconnect(context: UpdateContext): void {

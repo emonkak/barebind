@@ -321,12 +321,12 @@ export class Runtime implements CommitContext, UpdateContext {
     }
   }
 
-  getScheduledTasks(): LinkedList<UpdateTask> {
-    return this._environment.scheduledTasks;
+  getCurrentScope(): Scope {
+    return this._scope;
   }
 
-  getScope(): Scope {
-    return this._scope;
+  getScheduledTasks(): LinkedList<UpdateTask> {
+    return this._environment.scheduledTasks;
   }
 
   nextIdentifier(): string {

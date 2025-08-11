@@ -79,8 +79,8 @@ describe('Runtime', () => {
       const newRuntime = runtime.enterScope(scope);
 
       expect(newRuntime).not.toBe(runtime);
-      expect(newRuntime.getScope()).toBe(scope);
-      expect(newRuntime.getScope()).not.toBe(runtime.getScope());
+      expect(newRuntime.getCurrentScope()).toBe(scope);
+      expect(newRuntime.getCurrentScope()).not.toBe(runtime.getCurrentScope());
     });
   });
 
