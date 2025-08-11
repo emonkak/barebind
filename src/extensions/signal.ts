@@ -55,6 +55,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscription: Subscription | null = null;
 
+  private _pendingLanes: Lanes = Lanes.NoLanes;
+
   constructor(signal: Signal<T>, slot: Slot<T>) {
     this._signal = signal;
     this._slot = slot;
@@ -73,6 +75,10 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._slot.part;
   }
 
+  get pendingLanes(): Lanes {
+    return this._pendingLanes;
+  }
+
   shouldBind(signal: Signal<T>): boolean {
     return this._subscription === null || signal !== this._signal;
   }
@@ -86,10 +92,14 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._memoizedVersion = -1;
   }
 
-  resume(_lanes: Lanes, context: UpdateContext): Lanes {
+  resume(_flushLanes: Lanes, context: UpdateContext): void {
     this._slot.reconcile(this._signal.value, context);
     this._memoizedVersion = this._signal.version;
-    return Lanes.NoLanes;
+    this._pendingLanes = Lanes.NoLanes;
+  }
+
+  suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
+    this._pendingLanes |= scheduleLanes;
   }
 
   hydrate(tree: HydrationTree, context: UpdateContext): void {

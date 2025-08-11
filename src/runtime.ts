@@ -68,15 +68,10 @@ export interface RuntimeOptions {
   concurrent?: boolean;
 }
 
-interface CoroutineState {
-  pendingLanes: Lanes;
-}
-
 interface Environment {
   backend: Backend;
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   concurrent: boolean;
-  coroutineStates: WeakMap<Coroutine, CoroutineState>;
   identifierCount: number;
   observers: LinkedList<RuntimeObserver>;
   templateLiteralPreprocessor: TemplateLiteralPreprocessor;
@@ -113,7 +108,6 @@ export class Runtime implements CommitContext, UpdateContext {
       backend,
       cachedTemplates: new WeakMap(),
       concurrent: options.concurrent ?? false,
-      coroutineStates: new WeakMap(),
       identifierCount: 0,
       observers: new LinkedList(),
       templateLiteralPreprocessor: new TemplateLiteralPreprocessor(),
@@ -183,7 +177,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   async flushAsync(lanes: Lanes): Promise<void> {
-    const { coroutineStates, backend, observers } = this._environment;
+    const { backend, observers } = this._environment;
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
@@ -207,12 +201,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          const coroutineState = coroutineStates.get(coroutine);
-          const pendingLanes = coroutine.resume(lanes, this);
-
-          if (coroutineState !== undefined) {
-            coroutineState.pendingLanes = pendingLanes;
-          }
+          coroutine.resume(lanes, this);
         }
 
         if (this._updateFrame.pendingCoroutines.length === 0) {
@@ -266,7 +255,7 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   flushSync(lanes: Lanes): void {
-    const { coroutineStates, observers } = this._environment;
+    const { observers } = this._environment;
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
@@ -290,12 +279,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
-          const coroutineState = coroutineStates.get(coroutine);
-          const pendingLanes = coroutine.resume(lanes, this);
-
-          if (coroutineState !== undefined) {
-            coroutineState.pendingLanes = pendingLanes;
-          }
+          coroutine.resume(lanes, this);
         }
       } while (this._updateFrame.pendingCoroutines.length > 0);
 
@@ -344,11 +328,11 @@ export class Runtime implements CommitContext, UpdateContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    lanes: Lanes,
+    flushLanes: Lanes,
     coroutine: Coroutine,
   ): ComponentResult<TResult> {
     const { observers } = this._environment;
-    const context = new RenderSession(hooks, lanes, coroutine, this);
+    const context = new RenderSession(hooks, flushLanes, coroutine, this);
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
@@ -420,8 +404,7 @@ export class Runtime implements CommitContext, UpdateContext {
     coroutine: Coroutine,
     options: UpdateOptions = {},
   ): UpdateHandle {
-    const { backend, concurrent, coroutineStates, updateHandles } =
-      this._environment;
+    const { backend, concurrent, updateHandles } = this._environment;
     const completeOptions: Required<UpdateOptions> = {
       concurrent: options.concurrent ?? concurrent,
       priority: options.priority ?? backend.getCurrentPriority(),
@@ -439,14 +422,7 @@ export class Runtime implements CommitContext, UpdateContext {
       }
     }
 
-    let coroutineState = coroutineStates.get(coroutine);
-
-    if (coroutineState !== undefined) {
-      coroutineState.pendingLanes |= scheduleLanes;
-    } else {
-      coroutineState = { pendingLanes: scheduleLanes };
-      coroutineStates.set(coroutine, coroutineState);
-    }
+    coroutine.suspend(scheduleLanes, this);
 
     const updateHandleNode = updateHandles.pushBack({
       coroutine,
@@ -454,7 +430,7 @@ export class Runtime implements CommitContext, UpdateContext {
       running: false,
       promise: backend.requestCallback(async () => {
         try {
-          if ((coroutineState.pendingLanes & scheduleLanes) !== scheduleLanes) {
+          if ((coroutine.pendingLanes & scheduleLanes) !== scheduleLanes) {
             return;
           }
 

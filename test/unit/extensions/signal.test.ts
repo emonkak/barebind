@@ -3,6 +3,7 @@ import {
   $toDirective,
   HydrationError,
   HydrationTree,
+  Lanes,
   PartType,
 } from '@/core.js';
 import {
@@ -159,8 +160,10 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
+      expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
       expect(await waitForUpdate(runtime)).toBe(1);
 
+      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(part.node.nodeValue).toBe(signal.value);
     });
 
@@ -192,8 +195,10 @@ describe('SiganlBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
+      expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
       expect(await waitForUpdate(runtime)).toBe(1);
 
+      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(part.node.nodeValue).toBe(signal2.value);
     });
   });

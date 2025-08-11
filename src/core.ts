@@ -71,7 +71,9 @@ export interface ComponentResult<T> {
 }
 
 export interface Coroutine extends Effect {
-  resume(lanes: Lanes, context: UpdateContext): Lanes;
+  get pendingLanes(): Lanes;
+  resume(flushLanes: Lanes, context: UpdateContext): void;
+  suspend(scheduleLanes: Lanes, context: UpdateContext): void;
 }
 
 export type CustomHookFunction<T> = (context: HookContext) => T;
@@ -409,7 +411,7 @@ export interface UpdateContext extends DirectiveContext, RenderSessionContext {
     component: Component<TProps, TResult>,
     props: TProps,
     hooks: Hook[],
-    lanes: Lanes,
+    flushLanes: Lanes,
     coroutine: Coroutine,
   ): ComponentResult<TResult>;
 }

@@ -167,6 +167,32 @@ describe('ComponentBinding', () => {
     });
   });
 
+  describe('resume()', () => {
+    it('clear pending lanes', async () => {
+      const component = new FunctionComponent(Increment);
+      const props = {
+        initialCount: 100,
+      };
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        childNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new ComponentBinding(component, props, part);
+      const runtime = Runtime.create(new MockBackend());
+
+      const handle = runtime.scheduleUpdate(binding);
+
+      expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
+
+      await handle.promise;
+
+      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+      expect(part.node.nodeValue).toBe('100');
+    });
+  });
+
   describe('hydrate()', () => {
     it('hydrates the tree by the component result', () => {
       const component = new FunctionComponent(Greet);
@@ -350,6 +376,18 @@ interface GreetProps {
 
 function Greet({ name, greet }: GreetProps): unknown {
   return `${greet}, ${name}!`;
+}
+
+interface IncrementProps {
+  initialCount: number;
+}
+
+function Increment(
+  { initialCount }: IncrementProps,
+  $: RenderContext,
+): unknown {
+  const countRef = $.useRef(initialCount);
+  return countRef.current++;
 }
 
 interface MemoProps {

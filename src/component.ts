@@ -99,6 +99,8 @@ export class ComponentBinding<TProps, TResult>
 
   private _hooks: Hook[] = [];
 
+  private _pendingLanes: Lanes = Lanes.NoLanes;
+
   constructor(
     component: Component<TProps, TResult>,
     props: TProps,
@@ -121,6 +123,10 @@ export class ComponentBinding<TProps, TResult>
     return this._part;
   }
 
+  get pendingLanes(): Lanes {
+    return this._pendingLanes;
+  }
+
   shouldBind(props: TProps): boolean {
     return (
       this._hooks.length === 0 ||
@@ -132,14 +138,14 @@ export class ComponentBinding<TProps, TResult>
     this._props = props;
   }
 
-  resume(lanes: Lanes, context: UpdateContext): Lanes {
+  resume(flushLanes: Lanes, context: UpdateContext): void {
     const scope = new Scope(this._parentScope);
     const subcontext = context.enterScope(scope);
     const { value, pendingLanes } = subcontext.renderComponent(
       this._component,
       this._props,
       this._hooks,
-      lanes,
+      flushLanes,
       this,
     );
 
@@ -150,7 +156,11 @@ export class ComponentBinding<TProps, TResult>
       this._slot.connect(subcontext);
     }
 
-    return pendingLanes;
+    this._pendingLanes = pendingLanes;
+  }
+
+  suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
+    this._pendingLanes |= scheduleLanes;
   }
 
   hydrate(tree: HydrationTree, context: UpdateContext): void {

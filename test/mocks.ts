@@ -175,8 +175,14 @@ export class MockComponent implements Component<unknown, unknown> {
 }
 
 export class MockCoroutine implements Coroutine {
-  resume(_lanes: Lanes, _context: UpdateContext): Lanes {
-    return Lanes.NoLanes;
+  pendingLanes: Lanes = Lanes.NoLanes;
+
+  resume(_flushLanes: Lanes, _context: UpdateContext): void {
+    this.pendingLanes = Lanes.NoLanes;
+  }
+
+  suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
+    this.pendingLanes |= scheduleLanes;
   }
 
   commit(): void {}

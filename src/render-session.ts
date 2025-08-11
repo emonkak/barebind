@@ -22,7 +22,7 @@ import { DirectiveSpecifier } from './directive.js';
 export class RenderSession implements RenderContext {
   private readonly _hooks: Hook[];
 
-  private readonly _lanes: Lanes;
+  private readonly _flushLanes: Lanes;
 
   private readonly _coroutine: Coroutine;
 
@@ -34,12 +34,12 @@ export class RenderSession implements RenderContext {
 
   constructor(
     hooks: Hook[],
-    lanes: Lanes,
+    flushLanes: Lanes,
     coroutine: Coroutine,
     runtime: RenderSessionContext,
   ) {
     this._hooks = hooks;
-    this._lanes = lanes;
+    this._flushLanes = flushLanes;
     this._coroutine = coroutine;
     this._context = runtime;
   }
@@ -240,7 +240,7 @@ export class RenderSession implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._lanes) === currentHook.lanes) {
+      if ((currentHook.lanes & this._flushLanes) === currentHook.lanes) {
         currentHook.lanes = Lanes.NoLanes;
         currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;
