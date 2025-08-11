@@ -173,7 +173,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot = subcontext.resolveSlot(value, this._part);
     this._slot.hydrate(tree, subcontext);
-    this._parentScope = scope;
+    this._parentScope = parentScope;
   }
 
   connect(context: UpdateContext): void {
