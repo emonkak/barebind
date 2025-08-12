@@ -145,14 +145,14 @@ describe('Reactive', () => {
       expect(state$.get('doublyCount').version).toBe(1);
     });
 
-    it('throws an error when trying to set to a readonly descriptor', () => {
+    it('throws an error when trying to set to a readonly value', () => {
       const initialState = new TodoState();
       const state$ = Reactive.from(initialState);
       const activeTodos$ = state$.get('activeTodos');
 
       expect(() => {
         (activeTodos$ as any).value = [];
-      }).toThrow('Cannot set value on a read-only descriptor.');
+      }).toThrow('Cannot set value on a read-only value.');
     });
   });
 
@@ -302,7 +302,7 @@ describe('Reactive', () => {
       }).toThrow();
     });
 
-    it('throws an error when trying to mutate a readonly descriptor', () => {
+    it('throws an error when trying to mutate a readonly value', () => {
       const state$ = Reactive.from({
         _count: 0,
         get count() {
@@ -311,15 +311,15 @@ describe('Reactive', () => {
       });
 
       expect(() => state$.get('count').mutate(() => {})).toThrow(
-        'Cannot mutate value with a readonly descriptor.',
+        'Cannot mutate value with a readonly value.',
       );
     });
 
-    it('throws an error when trying to mutate to a non-object descriptor', () => {
+    it('throws an error when trying to mutate to a non-object value', () => {
       const state$ = Reactive.from('foo');
 
       expect(() => state$.mutate(() => {})).toThrow(
-        'Cannot mutate value with a non-object descriptor.',
+        'Cannot mutate value with a non-object value.',
       );
     });
   });

@@ -14,9 +14,9 @@ export interface ReactiveOptions {
   shallow?: boolean;
 }
 
-interface ReactiveDescriptor<T> {
-  readonly source$: Signal<T>;
-  children: Map<PropertyKey, ReactiveDescriptor<unknown>> | null;
+interface ReactiveContainer<T> {
+  readonly source: Signal<T>;
+  properties: Map<PropertyKey, ReactiveContainer<unknown>> | null;
   flags: number;
 }
 
@@ -75,53 +75,52 @@ type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
   : false;
 
 export class Reactive<T> extends Signal<T> {
-  private readonly _descriptor: ReactiveDescriptor<T>;
+  private readonly _container: ReactiveContainer<T>;
 
   private readonly _options: ReactiveOptions | undefined;
 
   static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
-    return new Reactive(toReactiveDescriptor(source, 0), options);
+    return new Reactive(toReactiveContainer(source, 0), options);
   }
 
   private constructor(
-    descriptor: ReactiveDescriptor<T>,
+    container: ReactiveContainer<T>,
     options?: ReactiveOptions,
   ) {
     super();
-    this._descriptor = descriptor;
+    this._container = container;
     this._options = options;
   }
 
   get length(): number {
-    const source = this._descriptor.source$.value;
+    const source = this._container.source.value;
     return Array.isArray(source) ? source.length : 0;
   }
 
   get value(): T {
-    return getSnapshot(this._descriptor);
+    return getSnapshot(this._container);
   }
 
   set value(source: T) {
-    const descriptor = this._descriptor;
-    if (!(descriptor.source$ instanceof Atom)) {
-      throw new TypeError('Cannot set value on a read-only descriptor.');
+    if (!(this._container.source instanceof Atom)) {
+      throw new TypeError('Cannot set value on a read-only value.');
     }
 
-    descriptor.children = null;
-    descriptor.flags |= FLAG_NEW;
+    this._container.properties = null;
+    this._container.flags |= FLAG_NEW;
     // We must clear the dirty flag for shallow subscription before set the new
     // source.
-    descriptor.flags &= ~FLAG_DIRTY;
-    descriptor.source$.value = source;
+    this._container.flags &= ~FLAG_DIRTY;
+    this._container.source.value = source;
   }
 
   get version(): number {
-    return this._descriptor.source$.version;
+    return this._container.source.version;
   }
 
   diff(): Difference[] {
     const differences: Difference[] = [];
-    collectDefferences(this._descriptor, differences);
+    collectDefferences(this._container, differences);
     for (let i = 0, l = differences.length; i < l; i++) {
       // The path is constructed in reverse order from child to parent.
       differences[i]!.path.reverse();
@@ -141,64 +140,59 @@ export class Reactive<T> extends Signal<T> {
     key: PropertyKey,
     options?: ReactiveOptions,
   ): Reactive<unknown> | undefined {
-    if (!isObject(this._descriptor.source$.value)) {
+    if (!isObjectContainer(this._container)) {
       return undefined;
     }
 
-    const child = getChildDescriptor(
-      this._descriptor as ReactiveDescriptor<T & object>,
-      key,
-    );
+    const property = getPropertyContainer(this._container, key);
 
-    return new Reactive(child, options);
+    return new Reactive(property, options);
   }
 
   mutate<TResult>(callback: (source: T) => TResult): TResult {
-    if (!(this._descriptor.source$ instanceof Atom)) {
-      throw new TypeError('Cannot mutate value with a readonly descriptor.');
+    if (!(this._container.source instanceof Atom)) {
+      throw new TypeError('Cannot mutate value with a readonly value.');
     }
 
-    if (!isObject(this._descriptor.source$.value)) {
-      throw new TypeError('Cannot mutate value with a non-object descriptor.');
+    if (!isObjectContainer(this._container)) {
+      throw new TypeError('Cannot mutate value with a non-object value.');
     }
 
-    const proxy = proxyObjectDescriptor(
-      this._descriptor as ReactiveDescriptor<T & object>,
-    );
+    const proxy = proxyObject(this._container);
 
     return callback(proxy);
   }
 
   subscribe(subscriber: Subscriber): Subscription {
-    const descriptor = this._descriptor;
+    const container = this._container;
 
     if (this._options?.shallow) {
-      return descriptor.source$.subscribe(() => {
-        if (!(descriptor.flags & FLAG_DIRTY)) {
+      return container.source.subscribe(() => {
+        if (!(container.flags & FLAG_DIRTY)) {
           subscriber();
         }
       });
     } else {
-      return descriptor.source$.subscribe(subscriber);
+      return container.source.subscribe(subscriber);
     }
   }
 }
 
 function collectDefferences<T>(
-  descriptor: ReactiveDescriptor<T>,
+  container: ReactiveContainer<T>,
   differences: Difference[],
 ): void {
-  const { children, flags, source$ } = descriptor;
+  const { properties, flags, source } = container;
 
   if (flags & FLAG_NEW) {
-    differences.push({ path: [], value: source$.value });
+    differences.push({ path: [], value: source.value });
   }
 
   if (flags & FLAG_DIRTY) {
-    for (const [key, child] of children!.entries()) {
-      if (child !== null) {
+    for (const [key, property] of properties!.entries()) {
+      if (property !== null) {
         const startIndex = differences.length;
-        collectDefferences(child, differences);
+        collectDefferences(property, differences);
         for (let i = startIndex, l = differences.length; i < l; i++) {
           differences[i]!.path.push(key);
         }
@@ -207,74 +201,81 @@ function collectDefferences<T>(
   }
 }
 
-function getChildDescriptor<T extends object>(
-  parent: ReactiveDescriptor<T>,
+function getPropertyContainer<T extends object>(
+  parent: ReactiveContainer<T>,
   key: PropertyKey,
-): ReactiveDescriptor<unknown> {
-  let child = parent.children?.get(key);
-  if (child !== undefined) {
-    return child;
+): ReactiveContainer<unknown> {
+  let property = parent.properties?.get(key);
+  if (property !== undefined) {
+    return property;
   }
 
-  child = resolveChildDescriptor(parent, key);
+  property = resolvePropertyContainer(parent, key);
 
-  if (parent.source$ instanceof Atom && child.source$ instanceof Atom) {
-    child.source$.subscribe(() => {
+  if (parent.source instanceof Atom && property.source instanceof Atom) {
+    property.source.subscribe(() => {
       parent.flags |= FLAG_DIRTY;
-      (parent.source$ as Atom<T>).touch();
+      (parent.source as Atom<T>).touch();
     });
   }
 
-  parent.children ??= new Map();
-  parent.children.set(key, child);
+  parent.properties ??= new Map();
+  parent.properties.set(key, property);
 
-  return child;
+  return property;
 }
 
-function getSnapshot<T>(descriptor: ReactiveDescriptor<T>): T {
-  const { children, flags, source$ } = descriptor;
+function getSnapshot<T>(container: ReactiveContainer<T>): T {
+  const { properties, flags, source } = container;
 
   if (flags & FLAG_DIRTY) {
-    const oldSource = source$.value;
+    const oldSource = source.value;
 
     if (isObject(oldSource)) {
       const newSource = shallowClone(oldSource);
 
-      for (const [key, child] of children!.entries()) {
-        if (child !== null && child.flags & (FLAG_NEW | FLAG_DIRTY)) {
-          (newSource as any)[key] = getSnapshot(child);
-          child.flags &= ~FLAG_NEW;
+      for (const [key, property] of properties!.entries()) {
+        if (property !== null && property.flags & (FLAG_NEW | FLAG_DIRTY)) {
+          (newSource as any)[key] = getSnapshot(property);
+          property.flags &= ~FLAG_NEW;
         }
       }
 
-      // Update the source without notification to subscribers.
-      (source$ as Atom<T>)['_value'] = newSource;
+      // Update the source without notification (a source of the container with
+      // dirty flags is always Atom).
+      (source as Atom<T>)['_value'] = newSource;
     }
 
-    descriptor.flags &= ~FLAG_DIRTY;
+    container.flags &= ~FLAG_DIRTY;
   }
 
-  return source$.value;
+  return source.value;
 }
 
 function isObject<T>(value: T): value is T & object {
   return typeof value === 'object' && value !== null;
 }
 
-function proxyObjectDescriptor<T extends object>(
-  descriptor: ReactiveDescriptor<T>,
-  getChildValue: <T>(descriptor: ReactiveDescriptor<T>) => T = getSnapshot,
+function isObjectContainer<T>(
+  container: ReactiveContainer<T>,
+): container is ReactiveContainer<T & object> {
+  return isObject(container.source.value);
+}
+
+function proxyObject<T extends object>(
+  parent: ReactiveContainer<T>,
+  getContainerValue: <T>(container: ReactiveContainer<T>) => T = getSnapshot,
 ): T {
-  return new Proxy(descriptor.source$.value, {
+  return new Proxy(parent.source.value, {
     get(_target, key, _receiver) {
-      const child = getChildDescriptor(descriptor, key);
-      return getChildValue(child);
+      const property = getPropertyContainer(parent, key);
+      return getContainerValue(property);
     },
     set(target, key, value, receiver) {
-      const child = getChildDescriptor(descriptor, key);
-      if (child.source$ instanceof Atom) {
-        child.flags |= FLAG_NEW;
-        child.source$.value = value;
+      const property = getPropertyContainer(parent, key);
+      if (property.source instanceof Atom) {
+        property.flags |= FLAG_NEW;
+        property.source.value = value;
         return true;
       } else {
         return Reflect.set(target, key, value, receiver);
@@ -283,11 +284,11 @@ function proxyObjectDescriptor<T extends object>(
   });
 }
 
-function resolveChildDescriptor<T extends object>(
-  parent: ReactiveDescriptor<T>,
+function resolvePropertyContainer<T extends object>(
+  parent: ReactiveContainer<T>,
   key: PropertyKey,
-): ReactiveDescriptor<unknown> {
-  const root = parent.source$.value;
+): ReactiveContainer<unknown> {
+  const root = parent.source.value;
   let prototype = root;
 
   do {
@@ -298,44 +299,44 @@ function resolveChildDescriptor<T extends object>(
 
       if (get !== undefined && set !== undefined) {
         return {
-          source$: new Atom(
-            get.call(proxyObjectDescriptor(parent)),
-            parent.source$.version,
+          source: new Atom(
+            get.call(proxyObject(parent)),
+            parent.source.version,
           ),
-          children: null,
+          properties: null,
           flags: NO_FLAGS,
         };
       } else if (get !== undefined) {
         const dependencies: Signal<unknown>[] = [];
-        const proxy = proxyObjectDescriptor(parent, (child) => {
-          dependencies.push(child.source$);
-          return getSnapshot(child);
+        const proxy = proxyObject(parent, (container) => {
+          dependencies.push(container.source);
+          return getSnapshot(container);
         });
         const initialResult = get.call(proxy);
         const initialVersion = dependencies.reduce(
           (version, dependency) => version + dependency.version,
-          parent.source$.version,
+          parent.source.version,
         );
         const signal = new Computed<unknown>(
-          () => get.call(proxyObjectDescriptor(parent)),
+          () => get.call(proxyObject(parent)),
           dependencies,
           initialResult,
           initialVersion,
         );
         return {
-          source$: signal,
-          children: null,
+          source: signal,
+          properties: null,
           flags: NO_FLAGS,
         };
       } else {
-        return toReactiveDescriptor(value, parent.source$.version);
+        return toReactiveContainer(value, parent.source.version);
       }
     }
 
     prototype = Object.getPrototypeOf(prototype);
   } while (prototype !== null && prototype !== Object.prototype);
 
-  return toReactiveDescriptor(undefined, parent.source$.version);
+  return toReactiveContainer(undefined, parent.source.version);
 }
 
 function shallowClone<T extends object>(object: T): T {
@@ -349,13 +350,13 @@ function shallowClone<T extends object>(object: T): T {
   }
 }
 
-function toReactiveDescriptor<T>(
+function toReactiveContainer<T>(
   value: T,
   version: number,
-): ReactiveDescriptor<T> {
+): ReactiveContainer<T> {
   return {
-    source$: new Atom(value, version),
-    children: null,
+    source: new Atom(value, version),
+    properties: null,
     flags: NO_FLAGS,
   };
 }
