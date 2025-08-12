@@ -68,7 +68,6 @@ a {
 
 @media (max-width: 860px) {
   .header .inner {
-    padding-block: 15px;
     padding-inline: 30px;
   }
 }
