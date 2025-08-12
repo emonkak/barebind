@@ -33,13 +33,11 @@ describe('SyncRoot', () => {
         type: 'UPDATE_START',
         id: 0,
         lanes: Lanes.SyncLane,
-        concurrent: false,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
         id: 0,
         lanes: Lanes.SyncLane,
-        concurrent: false,
       });
 
       const callCount = observer.onRuntimeEvent.mock.calls.length;

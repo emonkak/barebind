@@ -40,7 +40,6 @@ export type RuntimeEvent =
       type: 'UPDATE_START' | 'UPDATE_END';
       id: number;
       lanes: Lanes;
-      concurrent: boolean;
     }
   | {
       type: 'RENDER_START' | 'RENDER_END';
@@ -184,7 +183,6 @@ export class Runtime implements CommitContext, UpdateContext {
         type: 'UPDATE_START',
         id: this._updateFrame.id,
         lanes,
-        concurrent: true,
       });
     }
 
@@ -251,7 +249,6 @@ export class Runtime implements CommitContext, UpdateContext {
           type: 'UPDATE_END',
           id: this._updateFrame.id,
           lanes,
-          concurrent: true,
         });
       }
     }
@@ -265,7 +262,6 @@ export class Runtime implements CommitContext, UpdateContext {
         type: 'UPDATE_START',
         id: this._updateFrame.id,
         lanes,
-        concurrent: false,
       });
     }
 
@@ -306,7 +302,6 @@ export class Runtime implements CommitContext, UpdateContext {
           type: 'UPDATE_END',
           id: this._updateFrame.id,
           lanes,
-          concurrent: false,
         });
       }
     }

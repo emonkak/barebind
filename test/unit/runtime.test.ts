@@ -160,7 +160,6 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           lanes: Lanes.UserBlockingLane,
-          concurrent: true,
         },
         {
           type: 'RENDER_START',
@@ -210,7 +209,6 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           lanes: Lanes.UserBlockingLane,
-          concurrent: true,
         },
       ]);
 
@@ -233,7 +231,6 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           lanes: Lanes.BackgroundLane | Lanes.ViewTransitionLane,
-          concurrent: true,
         },
         {
           type: 'RENDER_START',
@@ -283,7 +280,6 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           lanes: Lanes.BackgroundLane | Lanes.ViewTransitionLane,
-          concurrent: true,
         },
       ]);
 
@@ -351,7 +347,6 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           lanes: Lanes.SyncLane,
-          concurrent: false,
         },
         {
           type: 'RENDER_START',
@@ -401,7 +396,6 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           lanes: Lanes.SyncLane,
-          concurrent: false,
         },
       ]);
 
@@ -422,7 +416,6 @@ describe('Runtime', () => {
           type: 'UPDATE_START',
           id: 0,
           lanes: Lanes.SyncLane,
-          concurrent: false,
         },
         {
           type: 'RENDER_START',
@@ -472,7 +465,6 @@ describe('Runtime', () => {
           type: 'UPDATE_END',
           id: 0,
           lanes: Lanes.SyncLane,
-          concurrent: false,
         },
       ]);
 

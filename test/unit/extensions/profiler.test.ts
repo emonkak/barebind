@@ -26,7 +26,6 @@ describe('PerformanceProfiler', () => {
           type: 'UPDATE_START',
           id: 0,
           lanes: Lanes.UserBlockingLane,
-          concurrent: true,
         },
         {
           type: 'RENDER_START',
@@ -90,7 +89,6 @@ describe('PerformanceProfiler', () => {
           type: 'UPDATE_END',
           id: 0,
           lanes: Lanes.UserBlockingLane,
-          concurrent: true,
         },
       ];
 
