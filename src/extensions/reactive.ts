@@ -92,11 +92,6 @@ export class Reactive<T> extends Signal<T> {
     this._options = options;
   }
 
-  get length(): number {
-    const source = this._container.source.value;
-    return Array.isArray(source) ? source.length : 0;
-  }
-
   get value(): T {
     return getSnapshot(this._container);
   }

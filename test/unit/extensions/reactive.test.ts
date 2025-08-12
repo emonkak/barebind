@@ -52,21 +52,6 @@ class TodoState {
 }
 
 describe('Reactive', () => {
-  describe('length', () => {
-    it('returns a length of the array', () => {
-      const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
-        { id: 1, title: 'bar', completed: false },
-      ]);
-      const state$ = Reactive.from(initialState);
-      const todos$ = state$.get('todos');
-      const filter$ = state$.get('filter');
-
-      expect(todos$).toHaveLength(2);
-      expect(filter$).toHaveLength(0);
-    });
-  });
-
   describe('value', () => {
     it('returns the initial state as a snapshot if there is no update', () => {
       const initialState = new TodoState();
