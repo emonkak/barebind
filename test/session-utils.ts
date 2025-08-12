@@ -29,7 +29,7 @@ export function disposeSession(session: RenderSession): void {
 export function flushSession(session: RenderSession): Lanes {
   const pendingLanes = session.finalize();
 
-  session['_context'].flushSync(Lanes.SyncLane);
+  session['_context'].flushSync(Lanes.RootLane);
   session['_hookIndex'] = 0;
   session['_pendingLanes'] = Lanes.NoLanes;
 

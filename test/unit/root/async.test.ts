@@ -32,12 +32,12 @@ describe('AsyncRoot', () => {
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_START',
         id: 0,
-        lanes: Lanes.SyncLane | Lanes.ConcurrentLane,
+        lanes: Lanes.RootLane | Lanes.ConcurrentLane,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
         id: 0,
-        lanes: Lanes.SyncLane | Lanes.ConcurrentLane,
+        lanes: Lanes.RootLane | Lanes.ConcurrentLane,
       });
 
       const callCount = observer.onRuntimeEvent.mock.calls.length;

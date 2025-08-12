@@ -69,7 +69,7 @@ describe('FunctionComponent', () => {
       };
       const session = new RenderSession(
         [],
-        Lanes.SyncLane,
+        Lanes.RootLane,
         new MockCoroutine(),
         Runtime.create(new MockBackend()),
       );
@@ -160,7 +160,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -189,12 +189,12 @@ describe('ComponentBinding', () => {
       );
 
       SESSION1: {
-        binding.suspend(Lanes.SyncLane, runtime);
+        binding.suspend(Lanes.RootLane, runtime);
 
-        expect(binding.pendingLanes).toBe(Lanes.SyncLane);
+        expect(binding.pendingLanes).toBe(Lanes.RootLane);
 
         runtime.enqueueCoroutine(binding);
-        runtime.flushSync(Lanes.SyncLane);
+        runtime.flushSync(Lanes.RootLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
         expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -203,12 +203,12 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        binding.suspend(Lanes.SyncLane, runtime);
+        binding.suspend(Lanes.RootLane, runtime);
 
-        expect(binding.pendingLanes).toBe(Lanes.SyncLane);
+        expect(binding.pendingLanes).toBe(Lanes.RootLane);
 
         runtime.enqueueCoroutine(binding);
-        runtime.flushSync(Lanes.SyncLane);
+        runtime.flushSync(Lanes.RootLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -282,7 +282,7 @@ describe('ComponentBinding', () => {
 
       runtime.enqueueCoroutine(binding);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(() => binding.hydrate(tree, runtime)).toThrow(HydrationError);
     });
@@ -310,7 +310,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -325,7 +325,7 @@ describe('ComponentBinding', () => {
       binding.bind(props2);
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -357,7 +357,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -371,7 +371,7 @@ describe('ComponentBinding', () => {
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(

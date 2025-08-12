@@ -211,7 +211,7 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 // biome-ignore format: Align lane flags
 export const Lanes = {
   NoLanes:            0,
-  SyncLane:           0b1,
+  RootLane:           0b1,
   HydrationLane:      0b10,
   UserBlockingLane:   0b100,
   UserVisibleLane:    0b1000,
@@ -549,7 +549,7 @@ function ensureNode<TName extends string>(
  * @internal
  */
 export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes = Lanes.SyncLane;
+  let lanes = Lanes.RootLane;
 
   switch (options.priority) {
     case 'user-blocking':

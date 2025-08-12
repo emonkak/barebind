@@ -8,7 +8,7 @@ import {
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
-const ROOT_LANE = Lanes.SyncLane;
+const ROOT_LANE = Lanes.RootLane;
 
 export class SyncRoot<T> {
   private readonly _slot: Slot<T>;

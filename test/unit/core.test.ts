@@ -76,33 +76,33 @@ describe('areDirectiveTypesEqual()', () => {
 
 describe('getFlushLanesFromOptions()', () => {
   it.each([
-    [{}, Lanes.SyncLane],
-    [{ priority: 'user-blocking' }, Lanes.SyncLane | Lanes.UserBlockingLane],
+    [{}, Lanes.RootLane],
+    [{ priority: 'user-blocking' }, Lanes.RootLane | Lanes.UserBlockingLane],
     [
       { priority: 'user-visible' },
-      Lanes.SyncLane | Lanes.UserBlockingLane | Lanes.UserVisibleLane,
+      Lanes.RootLane | Lanes.UserBlockingLane | Lanes.UserVisibleLane,
     ],
     [
       { priority: 'background' },
-      Lanes.SyncLane |
+      Lanes.RootLane |
         Lanes.UserBlockingLane |
         Lanes.UserVisibleLane |
         Lanes.BackgroundLane,
     ],
     [
       { concurrent: true, viewTransition: true },
-      Lanes.SyncLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
+      Lanes.RootLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
     ],
     [
       { priority: 'user-blocking', concurrent: true, viewTransition: true },
-      Lanes.SyncLane |
+      Lanes.RootLane |
         Lanes.UserBlockingLane |
         Lanes.ConcurrentLane |
         Lanes.ViewTransitionLane,
     ],
     [
       { priority: 'user-visible', concurrent: true, viewTransition: true },
-      Lanes.SyncLane |
+      Lanes.RootLane |
         Lanes.UserBlockingLane |
         Lanes.UserVisibleLane |
         Lanes.ConcurrentLane |
@@ -110,7 +110,7 @@ describe('getFlushLanesFromOptions()', () => {
     ],
     [
       { priority: 'background', concurrent: true, viewTransition: true },
-      Lanes.SyncLane |
+      Lanes.RootLane |
         Lanes.UserBlockingLane |
         Lanes.UserVisibleLane |
         Lanes.BackgroundLane |

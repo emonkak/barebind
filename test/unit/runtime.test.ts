@@ -330,12 +330,12 @@ describe('Runtime', () => {
         });
 
       runtime.enqueueCoroutine(coroutine);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(resume1Spy).toHaveBeenCalledTimes(1);
-      expect(resume1Spy).toHaveBeenCalledWith(Lanes.SyncLane, runtime);
+      expect(resume1Spy).toHaveBeenCalledWith(Lanes.RootLane, runtime);
       expect(resume2Spy).toHaveBeenCalledTimes(1);
-      expect(resume2Spy).toHaveBeenCalledWith(Lanes.SyncLane, runtime);
+      expect(resume2Spy).toHaveBeenCalledWith(Lanes.RootLane, runtime);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
@@ -346,7 +346,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.SyncLane,
+          lanes: Lanes.RootLane,
         },
         {
           type: 'RENDER_START',
@@ -395,16 +395,16 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          lanes: Lanes.SyncLane,
+          lanes: Lanes.RootLane,
         },
       ]);
 
       runtime.enqueueCoroutine(subcoroutine);
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(resume1Spy).toHaveBeenCalledTimes(1);
       expect(resume2Spy).toHaveBeenCalledTimes(2);
-      expect(resume2Spy).toHaveBeenCalledWith(Lanes.SyncLane, runtime);
+      expect(resume2Spy).toHaveBeenCalledWith(Lanes.RootLane, runtime);
       expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
       expect(mutationEffect.commit).toHaveBeenCalledWith(runtime);
       expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
@@ -415,7 +415,7 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_START',
           id: 0,
-          lanes: Lanes.SyncLane,
+          lanes: Lanes.RootLane,
         },
         {
           type: 'RENDER_START',
@@ -464,12 +464,12 @@ describe('Runtime', () => {
         {
           type: 'UPDATE_END',
           id: 0,
-          lanes: Lanes.SyncLane,
+          lanes: Lanes.RootLane,
         },
       ]);
 
       unobserve();
-      runtime.flushSync(Lanes.SyncLane);
+      runtime.flushSync(Lanes.RootLane);
 
       expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
       expect(coroutine.resume).toHaveBeenCalledTimes(1);
@@ -493,7 +493,7 @@ describe('Runtime', () => {
       const component = new MockComponent();
       const props = {};
       const hooks: Hook[] = [];
-      const flushLanes = Lanes.SyncLane;
+      const flushLanes = Lanes.RootLane;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const runtime = Runtime.create(new MockBackend());
@@ -686,7 +686,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
+        Lanes.RootLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
@@ -724,7 +724,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
+        Lanes.RootLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
@@ -754,7 +754,7 @@ describe('Runtime', () => {
 
       expect(resumeSpy).toHaveBeenCalledOnce();
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.SyncLane | Lanes.UserBlockingLane | concurrentLane,
+        Lanes.RootLane | Lanes.UserBlockingLane | concurrentLane,
         expect.not.exact(runtime),
       );
     });
