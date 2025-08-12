@@ -398,7 +398,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source1.map(toComment).join('') + EMPTY_COMMENT,
+        source1.map(toCommentString).join('') + EMPTY_COMMENT,
       );
       expect(part.childNode?.nodeValue).toBe(source1[0]);
 
@@ -407,7 +407,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source2.map(toComment).join('') + EMPTY_COMMENT,
+        source2.map(toCommentString).join('') + EMPTY_COMMENT,
       );
       expect(part.childNode?.nodeValue).toBe(source2[0]);
 
@@ -416,7 +416,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source1.map(toComment).join('') + EMPTY_COMMENT,
+        source1.map(toCommentString).join('') + EMPTY_COMMENT,
       );
       expect(part.childNode?.nodeValue).toBe(source1[0]);
     });
@@ -442,7 +442,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source.map(toComment).join('') + EMPTY_COMMENT,
+        source.map(toCommentString).join('') + EMPTY_COMMENT,
       );
 
       binding.disconnect(runtime);
@@ -454,7 +454,7 @@ describe('RepeatBinding', () => {
       binding.commit(runtime);
 
       expect(container.innerHTML).toBe(
-        source.map(toComment).join('') + EMPTY_COMMENT,
+        source.map(toCommentString).join('') + EMPTY_COMMENT,
       );
     });
   });
@@ -500,7 +500,7 @@ function textTemplate(content: string): DirectiveSpecifier<readonly [string]> {
   return new DirectiveSpecifier(TEXT_TEMPLATE, [content]);
 }
 
-function toComment(content: string): string {
+function toCommentString(content: string): string {
   const node = document.createComment(content);
   return new XMLSerializer().serializeToString(node);
 }
