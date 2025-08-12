@@ -8,6 +8,8 @@ import {
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
+const ROOT_LANE = Lanes.SyncLane | Lanes.ConcurrentLane;
+
 export class AsyncRoot<T> {
   private readonly _slot: Slot<T>;
 
@@ -51,7 +53,7 @@ export class AsyncRoot<T> {
     this._runtime.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    return this._runtime.flushAsync(Lanes.SyncLane);
+    return this._runtime.flushAsync(ROOT_LANE);
   }
 
   mount(): Promise<void> {
@@ -59,13 +61,13 @@ export class AsyncRoot<T> {
     this._runtime.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    return this._runtime.flushAsync(Lanes.SyncLane);
+    return this._runtime.flushAsync(ROOT_LANE);
   }
 
   update(value: T): Promise<void> {
     this._slot.reconcile(value, this._runtime);
     this._runtime.enqueueMutationEffect(this._slot);
-    return this._runtime.flushAsync(Lanes.SyncLane);
+    return this._runtime.flushAsync(ROOT_LANE);
   }
 
   unmount(): Promise<void> {
@@ -73,6 +75,6 @@ export class AsyncRoot<T> {
     this._runtime.enqueueMutationEffect(
       new UnmountSlot(this._slot, this._container),
     );
-    return this._runtime.flushAsync(Lanes.SyncLane);
+    return this._runtime.flushAsync(ROOT_LANE);
   }
 }

@@ -32,13 +32,13 @@ describe('AsyncRoot', () => {
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_START',
         id: 0,
-        lanes: Lanes.SyncLane,
+        lanes: Lanes.SyncLane | Lanes.ConcurrentLane,
         concurrent: true,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
         id: 0,
-        lanes: Lanes.SyncLane,
+        lanes: Lanes.SyncLane | Lanes.ConcurrentLane,
         concurrent: true,
       });
 
