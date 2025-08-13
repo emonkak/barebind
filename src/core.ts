@@ -211,13 +211,11 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 // biome-ignore format: Align lane flags
 export const Lanes = {
   NoLanes:            0,
-  RootLane:           0b1,
-  HydrationLane:      0b10,
-  UserBlockingLane:   0b100,
-  UserVisibleLane:    0b1000,
-  BackgroundLane:     0b10000,
-  ConcurrentLane:     0b100000,
-  ViewTransitionLane: 0b1000000,
+  UserBlockingLane:   0b1,
+  UserVisibleLane:    0b10,
+  BackgroundLane:     0b100,
+  ConcurrentLane:     0b1000,
+  ViewTransitionLane: 0b10000,
 } as const;
 
 export type Lanes = number;
@@ -549,7 +547,7 @@ function ensureNode<TName extends string>(
  * @internal
  */
 export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes = Lanes.RootLane;
+  let lanes = Lanes.NoLanes;
 
   switch (options.priority) {
     case 'user-blocking':

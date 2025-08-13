@@ -15,10 +15,10 @@ import {
   PartType,
   type RenderContext,
 } from '@/core.js';
-import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBackend, MockCoroutine, MockSlot } from '../mocks.js';
+import { MockBackend, MockSlot } from '../mocks.js';
+import { createSession } from '../session-utils.js';
 import { createElement } from '../test-utils.js';
 
 describe('component()', () => {
@@ -67,12 +67,7 @@ describe('FunctionComponent', () => {
         greet: 'Hello',
         name: 'foo',
       };
-      const session = new RenderSession(
-        [],
-        Lanes.RootLane,
-        new MockCoroutine(),
-        Runtime.create(new MockBackend()),
-      );
+      const session = createSession();
 
       component.render(props, session);
 
@@ -160,7 +155,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.RootLane);
+      runtime.flushSync(Lanes.UserBlockingLane);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -189,12 +184,12 @@ describe('ComponentBinding', () => {
       );
 
       SESSION1: {
-        binding.suspend(Lanes.RootLane, runtime);
+        binding.suspend(Lanes.UserBlockingLane, runtime);
 
-        expect(binding.pendingLanes).toBe(Lanes.RootLane);
+        expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
 
         runtime.enqueueCoroutine(binding);
-        runtime.flushSync(Lanes.RootLane);
+        runtime.flushSync(Lanes.UserBlockingLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
         expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
@@ -203,12 +198,12 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        binding.suspend(Lanes.RootLane, runtime);
+        binding.suspend(Lanes.UserBlockingLane, runtime);
 
-        expect(binding.pendingLanes).toBe(Lanes.RootLane);
+        expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
 
         runtime.enqueueCoroutine(binding);
-        runtime.flushSync(Lanes.RootLane);
+        runtime.flushSync(Lanes.UserBlockingLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -237,7 +232,7 @@ describe('ComponentBinding', () => {
 
       binding.hydrate(tree, runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.HydrationLane);
+      runtime.flushSync(Lanes.NoLanes);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -282,7 +277,7 @@ describe('ComponentBinding', () => {
 
       runtime.enqueueCoroutine(binding);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.RootLane);
+      runtime.flushSync(Lanes.UserBlockingLane);
 
       expect(() => binding.hydrate(tree, runtime)).toThrow(HydrationError);
     });
@@ -310,7 +305,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.RootLane);
+      runtime.flushSync(Lanes.UserBlockingLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -325,7 +320,7 @@ describe('ComponentBinding', () => {
       binding.bind(props2);
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.RootLane);
+      runtime.flushSync(Lanes.UserBlockingLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -357,7 +352,7 @@ describe('ComponentBinding', () => {
 
       binding.connect(runtime);
       runtime.enqueueMutationEffect(binding);
-      runtime.flushSync(Lanes.RootLane);
+      runtime.flushSync(Lanes.UserBlockingLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(
@@ -371,7 +366,7 @@ describe('ComponentBinding', () => {
 
       binding.disconnect(runtime);
       binding.rollback(runtime);
-      runtime.flushSync(Lanes.RootLane);
+      runtime.flushSync(Lanes.UserBlockingLane);
 
       expect(binding['_slot']).toBeInstanceOf(MockSlot);
       expect(binding['_slot']).toStrictEqual(

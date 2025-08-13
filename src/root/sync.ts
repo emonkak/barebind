@@ -8,8 +8,6 @@ import {
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
-const ROOT_LANE = Lanes.RootLane;
-
 export class SyncRoot<T> {
   private readonly _slot: Slot<T>;
 
@@ -53,7 +51,7 @@ export class SyncRoot<T> {
     this._runtime.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    this._runtime.flushSync(ROOT_LANE);
+    this._runtime.flushSync(Lanes.NoLanes);
   }
 
   mount(): void {
@@ -61,13 +59,13 @@ export class SyncRoot<T> {
     this._runtime.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    this._runtime.flushSync(ROOT_LANE);
+    this._runtime.flushSync(Lanes.NoLanes);
   }
 
   update(value: T): void {
     this._slot.reconcile(value, this._runtime);
     this._runtime.enqueueMutationEffect(this._slot);
-    this._runtime.flushSync(ROOT_LANE);
+    this._runtime.flushSync(Lanes.NoLanes);
   }
 
   unmount(): void {
@@ -75,6 +73,6 @@ export class SyncRoot<T> {
     this._runtime.enqueueMutationEffect(
       new UnmountSlot(this._slot, this._container),
     );
-    this._runtime.flushSync(ROOT_LANE);
+    this._runtime.flushSync(Lanes.NoLanes);
   }
 }
