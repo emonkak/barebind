@@ -156,7 +156,7 @@ export class TaggedTemplate<
     let nodeIndex = 0;
     let holeIndex = 0;
 
-    while ((currentNode = treeWalker.nextNode()) !== null) {
+    for (; (currentNode = treeWalker.nextNode()) !== null; nodeIndex++) {
       let alternateNode: ChildNode | null = null;
 
       for (; holeIndex < holes.length; holeIndex++) {
@@ -234,17 +234,16 @@ export class TaggedTemplate<
         slots[holeIndex] = slot;
       }
 
-      const actualNode = tree.nextNode(currentNode.nodeName);
+      let actualNode = tree.nextNode(currentNode.nodeName);
 
       if (alternateNode !== null) {
         actualNode.replaceWith(alternateNode);
+        actualNode = alternateNode;
       }
 
       if (currentNode.parentNode === fragment) {
         childNodes.push(actualNode);
       }
-
-      nodeIndex++;
     }
 
     if (holeIndex < holes.length) {

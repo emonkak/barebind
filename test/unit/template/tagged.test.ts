@@ -469,6 +469,7 @@ describe('TaggedTemplate', () => {
           <!-- ${'bar'} -->
           <input type="text" $value=${'baz'} .disabled=${false} @onchange=${() => {}} ${{ class: 'qux' }}><span>${'quux'}</span>
         </div>
+        <!-- ${'corge'} -->
       `;
       const part = {
         type: PartType.ChildNode,
@@ -486,6 +487,7 @@ describe('TaggedTemplate', () => {
           createElement('input', { type: 'text', class: 'qux' }),
           createElement('span', {}, 'quux'),
         ),
+        document.createComment('corge'),
       );
       const tree = new HydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
@@ -499,6 +501,7 @@ describe('TaggedTemplate', () => {
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div class="foo"><!----><input type="text" class="qux"><span>quux</span></div>',
+        '<!---->',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
@@ -572,6 +575,17 @@ describe('TaggedTemplate', () => {
             precedingText: '',
           },
           value: binds[6],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.ChildNode,
+            node: expect.any(Comment),
+            childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
+          value: binds[7],
           isConnected: true,
           isCommitted: false,
         }),
@@ -766,6 +780,7 @@ describe('TaggedTemplate', () => {
           <!-- ${'bar'} -->
           <input type="text" $value=${'baz'} .disabled=${false} @onchange=${() => {}} ${{ class: 'qux' }}><span>${'quux'}</span>
         </div>
+        <!-- ${'corge'} -->
       `;
       const part = {
         type: PartType.ChildNode,
@@ -778,6 +793,7 @@ describe('TaggedTemplate', () => {
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div><!----><input type="text"><span></span></div>',
+        '<!---->',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
@@ -851,6 +867,17 @@ describe('TaggedTemplate', () => {
             followingText: '',
           },
           value: binds[6],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.ChildNode,
+            node: expect.any(Comment),
+            childNode: null,
+            namespaceURI: HTML_NAMESPACE_URI,
+          },
+          value: binds[7],
           isConnected: true,
           isCommitted: false,
         }),
