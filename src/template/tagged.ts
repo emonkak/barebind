@@ -1,4 +1,5 @@
 import {
+  HydrationError,
   type HydrationTree,
   type Part,
   PartType,
@@ -140,16 +141,15 @@ export class TaggedTemplate<
     tree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
-    const holes = this._holes;
-
-    assertNumberOfBinds(holes.length, binds.length);
+    assertNumberOfBinds(this._holes.length, binds.length);
 
     const document = part.node.ownerDocument;
-    const rootNode = this._template.content;
+    const fragment = this._template.content;
     const treeWalker = document.createTreeWalker(
-      rootNode,
+      fragment,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );
+    const holes = this._holes;
     const slots: Slot<unknown>[] = new Array(holes.length);
     const childNodes: ChildNode[] = [];
     let currentNode: Node | null = null;
@@ -165,11 +165,11 @@ export class TaggedTemplate<
           break;
         }
 
-        let childPart: Part;
+        let currentPart: Part;
 
         switch (hole.type) {
           case PartType.Attribute: {
-            childPart = {
+            currentPart = {
               type: PartType.Attribute,
               node: tree.peekNode(currentNode.nodeName) as Element,
               name: hole.name,
@@ -177,22 +177,22 @@ export class TaggedTemplate<
             break;
           }
           case PartType.ChildNode:
-            childPart = {
+            currentPart = {
               type: PartType.ChildNode,
               node: document.createComment(''),
               childNode: null,
               namespaceURI: getNamespaceURI(currentNode, this._mode),
             };
-            alternateNode = childPart.node;
+            alternateNode = currentPart.node;
             break;
           case PartType.Element:
-            childPart = {
+            currentPart = {
               type: PartType.Element,
               node: tree.peekNode(currentNode.nodeName) as Element,
             };
             break;
           case PartType.Event:
-            childPart = {
+            currentPart = {
               type: PartType.Event,
               node: tree.peekNode(currentNode.nodeName) as Element,
               name: hole.name,
@@ -200,7 +200,7 @@ export class TaggedTemplate<
             break;
           case PartType.Live: {
             const node = tree.peekNode(currentNode.nodeName) as Element;
-            childPart = {
+            currentPart = {
               type: PartType.Live,
               node,
               name: hole.name,
@@ -210,7 +210,7 @@ export class TaggedTemplate<
           }
           case PartType.Property: {
             const node = tree.peekNode(currentNode.nodeName) as Element;
-            childPart = {
+            currentPart = {
               type: PartType.Property,
               node,
               name: hole.name,
@@ -219,7 +219,7 @@ export class TaggedTemplate<
             break;
           }
           case PartType.Text:
-            childPart = {
+            currentPart = {
               type: PartType.Text,
               node: tree.splitText().peekNode(currentNode.nodeName) as Text,
               precedingText: hole.precedingText,
@@ -228,9 +228,10 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = context.resolveSlot(binds[holeIndex]!, childPart);
-        slots[holeIndex] = slot;
+        const slot = context.resolveSlot(binds[holeIndex]!, currentPart);
         slot.hydrate(tree, context);
+
+        slots[holeIndex] = slot;
       }
 
       const actualNode = tree.nextNode(currentNode.nodeName);
@@ -239,7 +240,7 @@ export class TaggedTemplate<
         actualNode.replaceWith(alternateNode);
       }
 
-      if (currentNode.parentNode === rootNode) {
+      if (currentNode.parentNode === fragment) {
         childNodes.push(actualNode);
       }
 
@@ -247,9 +248,7 @@ export class TaggedTemplate<
     }
 
     if (holeIndex < holes.length) {
-      throw new Error(
-        'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
-      );
+      throw new HydrationError('Hydration is failed there is no node.');
     }
 
     return { childNodes, slots };
@@ -260,12 +259,11 @@ export class TaggedTemplate<
     part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult {
-    const holes = this._holes;
-
-    assertNumberOfBinds(holes.length, binds.length);
+    assertNumberOfBinds(this._holes.length, binds.length);
 
     const document = part.node.ownerDocument;
     const fragment = document.importNode(this._template.content, true);
+    const holes = this._holes;
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
@@ -275,90 +273,81 @@ export class TaggedTemplate<
           NodeFilter.SHOW_TEXT |
           NodeFilter.SHOW_COMMENT,
       );
-      let currentNode: Node | null;
-      let currentHole = holes[0]!;
-      let nodeIndex = 0;
-      let holeIndex = 0;
+      let nodeIndex = -1;
 
-      OUTER: while ((currentNode = treeWalker.nextNode()) !== null) {
-        while (currentHole.index === nodeIndex) {
-          let currentPart: Part;
+      for (let i = 0, l = holes.length; i < l; i++) {
+        const hole = holes[i]!;
 
-          switch (currentHole.type) {
-            case PartType.Attribute:
-              currentPart = {
-                type: PartType.Attribute,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.ChildNode:
-              currentPart = {
-                type: PartType.ChildNode,
-                node: currentNode as Comment,
-                childNode: null,
-                namespaceURI: getNamespaceURI(currentNode, this._mode),
-              };
-              break;
-            case PartType.Element:
-              currentPart = {
-                type: PartType.Element,
-                node: currentNode as Element,
-              };
-              break;
-            case PartType.Event:
-              currentPart = {
-                type: PartType.Event,
-                node: currentNode as Element,
-                name: currentHole.name,
-              };
-              break;
-            case PartType.Live:
-              currentPart = {
-                type: PartType.Live,
-                node: currentNode as Element,
-                name: currentHole.name,
-                defaultValue: currentNode[currentHole.name as keyof Node],
-              };
-              break;
-            case PartType.Property:
-              currentPart = {
-                type: PartType.Property,
-                node: currentNode as Element,
-                name: currentHole.name,
-                defaultValue: currentNode[currentHole.name as keyof Node],
-              };
-              break;
-            case PartType.Text:
-              currentPart = {
-                type: PartType.Text,
-                node: currentNode as Text,
-                precedingText: currentHole.precedingText,
-                followingText: currentHole.followingText,
-              };
-              break;
+        for (; nodeIndex < hole.index; nodeIndex++) {
+          if (treeWalker.nextNode() === null) {
+            throw new Error(
+              'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
+            );
           }
-
-          const slot = context.resolveSlot(binds[holeIndex]!, currentPart);
-          slots[holeIndex] = slot;
-          slot.connect(context);
-
-          holeIndex++;
-
-          if (holeIndex >= holes.length) {
-            break OUTER;
-          }
-
-          currentHole = holes[holeIndex]!;
         }
 
-        nodeIndex++;
-      }
+        const currentNode = treeWalker.currentNode;
+        let currentPart: Part;
 
-      if (holeIndex < holes.length) {
-        throw new Error(
-          'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
-        );
+        switch (hole.type) {
+          case PartType.Attribute:
+            currentPart = {
+              type: PartType.Attribute,
+              node: currentNode as Element,
+              name: hole.name,
+            };
+            break;
+          case PartType.ChildNode:
+            currentPart = {
+              type: PartType.ChildNode,
+              node: currentNode as Comment,
+              childNode: null,
+              namespaceURI: getNamespaceURI(currentNode, this._mode),
+            };
+            break;
+          case PartType.Element:
+            currentPart = {
+              type: PartType.Element,
+              node: currentNode as Element,
+            };
+            break;
+          case PartType.Event:
+            currentPart = {
+              type: PartType.Event,
+              node: currentNode as Element,
+              name: hole.name,
+            };
+            break;
+          case PartType.Live:
+            currentPart = {
+              type: PartType.Live,
+              node: currentNode as Element,
+              name: hole.name,
+              defaultValue: currentNode[hole.name as keyof Node],
+            };
+            break;
+          case PartType.Property:
+            currentPart = {
+              type: PartType.Property,
+              node: currentNode as Element,
+              name: hole.name,
+              defaultValue: currentNode[hole.name as keyof Node],
+            };
+            break;
+          case PartType.Text:
+            currentPart = {
+              type: PartType.Text,
+              node: currentNode as Text,
+              precedingText: hole.precedingText,
+              followingText: hole.followingText,
+            };
+            break;
+        }
+
+        const slot = context.resolveSlot(binds[i]!, currentPart);
+        slot.connect(context);
+
+        slots[i] = slot;
       }
     }
 

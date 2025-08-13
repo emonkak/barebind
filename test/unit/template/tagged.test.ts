@@ -723,7 +723,7 @@ describe('TaggedTemplate', () => {
 
       expect(() => {
         template.hydrate(['foo'], part, tree, runtime);
-      }).toThrow('There is no node that the hole indicates.');
+      }).toThrow(HydrationError);
     });
 
     it.each([
