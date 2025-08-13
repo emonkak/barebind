@@ -1,20 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/core.js';
-import { NodeBinding, NodePrimitive } from '@/primitive/node.js';
+import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBackend } from '../../mocks.js';
 
-describe('NodePrimitive', () => {
+describe('CommentPrimitive', () => {
   describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(NodePrimitive.name, 'NodePrimitive');
+      expect(CommentPrimitive.name, 'CommentPrimitive');
     });
   });
 
   describe('resolveBinding()', () => {
-    it('constructs a new NodeBinding', () => {
+    it('constructs a new CommentBinding', () => {
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -23,9 +23,9 @@ describe('NodePrimitive', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
-      const binding = NodePrimitive.resolveBinding(value, part, runtime);
+      const binding = CommentPrimitive.resolveBinding(value, part, runtime);
 
-      expect(binding.type).toBe(NodePrimitive);
+      expect(binding.type).toBe(CommentPrimitive);
       expect(binding.value).toBe(value);
       expect(binding.part).toBe(part);
     });
@@ -38,14 +38,14 @@ describe('NodePrimitive', () => {
       };
       const runtime = Runtime.create(new MockBackend());
 
-      expect(() => NodePrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'NodePrimitive must be used in a child node,',
-      );
+      expect(() =>
+        CommentPrimitive.resolveBinding(value, part, runtime),
+      ).toThrow('CommentPrimitive must be used in a child node,');
     });
   });
 });
 
-describe('NodeBinding', () => {
+describe('CommentBinding', () => {
   describe('shouldBind()', () => {
     it('returns true if the committed value does not exist', () => {
       const value = '<div>foo</div>';
@@ -55,7 +55,7 @@ describe('NodeBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new NodeBinding(value, part);
+      const binding = new CommentBinding(value, part);
 
       expect(binding.shouldBind(value)).toBe(true);
     });
@@ -69,7 +69,7 @@ describe('NodeBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new NodeBinding(value1, part);
+      const binding = new CommentBinding(value1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
@@ -90,7 +90,7 @@ describe('NodeBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new NodeBinding<string | null>(value1, part);
+      const binding = new CommentBinding<string | null>(value1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
@@ -114,7 +114,7 @@ describe('NodeBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new NodeBinding<number | null>(value1, part);
+      const binding = new CommentBinding<number | null>(value1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
@@ -139,7 +139,7 @@ describe('NodeBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new NodeBinding(value, part);
+      const binding = new CommentBinding(value, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
@@ -161,7 +161,7 @@ describe('NodeBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new NodeBinding(value, part);
+      const binding = new CommentBinding(value, part);
       const runtime = Runtime.create(new MockBackend());
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');

@@ -4,8 +4,8 @@ import { CommitPhase, type Effect, PartType } from '@/core.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { ClassListPrimitive } from '@/primitive/class-list.js';
+import { CommentPrimitive } from '@/primitive/comment.js';
 import { LivePrimitive } from '@/primitive/live.js';
-import { NodePrimitive } from '@/primitive/node.js';
 import { PropertyPrimitive } from '@/primitive/property.js';
 import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
@@ -206,7 +206,7 @@ describe('ServerBackend', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
-        NodePrimitive,
+        CommentPrimitive,
       ],
       [
         null,

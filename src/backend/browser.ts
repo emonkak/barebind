@@ -16,9 +16,9 @@ import {
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { ClassListPrimitive } from '../primitive/class-list.js';
+import { CommentPrimitive } from '../primitive/comment.js';
 import { EventPrimitive } from '../primitive/event.js';
 import { LivePrimitive } from '../primitive/live.js';
-import { NodePrimitive } from '../primitive/node.js';
 import { PropertyPrimitive } from '../primitive/property.js';
 import { RefPrimitive } from '../primitive/ref.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
@@ -140,7 +140,7 @@ export class BrowserBackend implements Backend {
         }
         return AttributePrimitive;
       case PartType.ChildNode:
-        return value != null ? NodePrimitive : BlackholePrimitive;
+        return value != null ? CommentPrimitive : BlackholePrimitive;
       case PartType.Element:
         return SpreadPrimitive;
       case PartType.Event:
