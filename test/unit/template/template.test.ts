@@ -32,7 +32,7 @@ describe('AbstractTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -68,7 +68,7 @@ describe('TemplateBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds, part);
@@ -83,7 +83,7 @@ describe('TemplateBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
@@ -104,7 +104,7 @@ describe('TemplateBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds, part);
@@ -135,7 +135,7 @@ describe('TemplateBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds, part);
@@ -158,7 +158,7 @@ describe('TemplateBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
@@ -196,7 +196,7 @@ describe('TemplateBinding', () => {
                 type: PartType.ChildNode,
                 node: renderRoot.firstChild!.nextSibling!
                   .nextSibling as Comment,
-                childNode: null,
+                anchorNode: null,
                 namespaceURI: HTML_NAMESPACE_URI,
               }),
             ),
@@ -212,7 +212,7 @@ describe('TemplateBinding', () => {
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(binds1, part, runtime);
-      expect(part.childNode).toBe(renderRoot);
+      expect(part.anchorNode).toBe(renderRoot);
       expect(container.innerHTML).toBe(
         '<div><div class="foo"></div>bar<!--baz--></div><!---->',
       );
@@ -243,7 +243,7 @@ describe('TemplateBinding', () => {
       binding.commit(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.childNode).toBe(renderRoot);
+      expect(part.anchorNode).toBe(renderRoot);
       expect(container.innerHTML).toBe(
         '<div><div class="qux"></div>quux<!--corge--></div><!---->',
       );
@@ -273,7 +273,7 @@ describe('TemplateBinding', () => {
       binding.rollback(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.childNode).toBe(null);
+      expect(part.anchorNode).toBe(null);
       expect(container.innerHTML).toBe('<!---->');
       expect(binding['_pendingResult']).toStrictEqual({
         childNodes: [renderRoot],
@@ -305,7 +305,7 @@ describe('TemplateBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
@@ -325,7 +325,7 @@ describe('TemplateBinding', () => {
               new MockBinding(MockPrimitive, binds[0], {
                 type: PartType.ChildNode,
                 node: childNodes[0],
-                childNode: null,
+                anchorNode: null,
                 namespaceURI: HTML_NAMESPACE_URI,
               }),
             ),
@@ -359,7 +359,7 @@ describe('TemplateBinding', () => {
 
       expect(renderSpy).toHaveBeenCalledOnce();
       expect(renderSpy).toHaveBeenCalledWith(binds1, part, runtime);
-      expect(part.childNode).toStrictEqual(childNodes[0]);
+      expect(part.anchorNode).toStrictEqual(childNodes[0]);
       expect(container.innerHTML).toBe(
         '<!--foo-->bar<div class="baz"></div><!---->',
       );
@@ -390,7 +390,7 @@ describe('TemplateBinding', () => {
       binding.commit(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.childNode).toStrictEqual(childNodes[0]);
+      expect(part.anchorNode).toStrictEqual(childNodes[0]);
       expect(container.innerHTML).toBe(
         '<!--qux-->quux<div class="corge"></div><!---->',
       );
@@ -420,7 +420,7 @@ describe('TemplateBinding', () => {
       binding.rollback(runtime);
 
       expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.childNode).toBe(null);
+      expect(part.anchorNode).toBe(null);
       expect(container.innerHTML).toBe('<!---->');
       expect(binding['_pendingResult']).toStrictEqual({
         childNodes,

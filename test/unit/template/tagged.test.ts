@@ -474,7 +474,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement(
@@ -519,7 +519,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[1],
@@ -582,7 +582,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[7],
@@ -597,7 +597,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement(
@@ -623,7 +623,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement(
@@ -680,7 +680,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
@@ -702,7 +702,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
@@ -728,7 +728,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
@@ -760,7 +760,7 @@ describe('TaggedTemplate', () => {
         const part = {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
         const tree = new HydrationTree(container);
@@ -785,7 +785,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -811,7 +811,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[1],
@@ -874,7 +874,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[7],
@@ -889,7 +889,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -904,7 +904,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -944,7 +944,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -961,7 +961,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           value: binds[0],
@@ -972,7 +972,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: MATH_NAMESPACE_URI,
           },
           value: binds[1],
@@ -983,7 +983,7 @@ describe('TaggedTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: SVG_NAMESPACE_URI,
           },
           value: binds[2],
@@ -998,7 +998,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -1013,7 +1013,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -1037,7 +1037,7 @@ describe('TaggedTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());

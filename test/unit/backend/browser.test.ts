@@ -345,7 +345,7 @@ describe('BrowserBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         NodePrimitive,
@@ -355,7 +355,7 @@ describe('BrowserBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         BlackholePrimitive,
@@ -365,7 +365,7 @@ describe('BrowserBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         BlackholePrimitive,
@@ -495,7 +495,7 @@ describe('BrowserBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         LooseSlot,

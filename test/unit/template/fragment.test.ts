@@ -65,7 +65,7 @@ describe('FragmentTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = document.createElement('div');
@@ -78,7 +78,7 @@ describe('FragmentTemplate', () => {
           const part = {
             type: PartType.ChildNode,
             node: document.createComment(template.binds.join('')),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           };
           return {
@@ -145,7 +145,7 @@ describe('FragmentTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -156,7 +156,7 @@ describe('FragmentTemplate', () => {
           const part = {
             type: PartType.ChildNode,
             node: document.createComment(template.binds.join('')),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           };
           return {

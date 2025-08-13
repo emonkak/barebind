@@ -19,7 +19,7 @@ describe('NodePrimitive', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -52,7 +52,7 @@ describe('NodeBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value, part);
@@ -66,7 +66,7 @@ describe('NodeBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value1, part);
@@ -87,7 +87,7 @@ describe('NodeBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding<string | null>(value1, part);
@@ -111,7 +111,7 @@ describe('NodeBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding<number | null>(value1, part);
@@ -136,7 +136,7 @@ describe('NodeBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value, part);
@@ -158,7 +158,7 @@ describe('NodeBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new NodeBinding(value, part);

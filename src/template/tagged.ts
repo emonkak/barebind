@@ -180,7 +180,7 @@ export class TaggedTemplate<
             currentPart = {
               type: PartType.ChildNode,
               node: document.createComment(''),
-              childNode: null,
+              anchorNode: null,
               namespaceURI: getNamespaceURI(currentNode, this._mode),
             };
             alternateNode = currentPart.node;
@@ -300,7 +300,7 @@ export class TaggedTemplate<
             currentPart = {
               type: PartType.ChildNode,
               node: currentNode as Comment,
-              childNode: null,
+              anchorNode: null,
               namespaceURI: getNamespaceURI(currentNode, this._mode),
             };
             break;

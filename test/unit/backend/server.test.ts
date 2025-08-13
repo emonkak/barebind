@@ -203,7 +203,7 @@ describe('ServerBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         NodePrimitive,
@@ -213,7 +213,7 @@ describe('ServerBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         BlackholePrimitive,
@@ -223,7 +223,7 @@ describe('ServerBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         BlackholePrimitive,
@@ -353,7 +353,7 @@ describe('ServerBackend', () => {
         {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         },
         LooseSlot,

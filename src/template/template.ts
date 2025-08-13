@@ -162,12 +162,12 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
 
       if (childNodes.length > 0) {
-        this._part.childNode =
+        this._part.anchorNode =
           childNodes[0]! === slots[0]?.part.node
             ? getStartNode(slots[0].part)
             : childNodes[0]!;
       } else {
-        this._part.childNode = null;
+        this._part.anchorNode = null;
       }
     }
 
@@ -196,7 +196,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
     }
 
-    this._part.childNode = null;
+    this._part.anchorNode = null;
     this._memoizedResult = null;
   }
 }

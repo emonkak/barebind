@@ -167,7 +167,7 @@ describe('getStartNode()', () => {
       {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       },
     ],
@@ -216,11 +216,11 @@ describe('getStartNode()', () => {
     const part = {
       type: PartType.ChildNode,
       node: document.createComment(''),
-      childNode: document.createElement('div'),
+      anchorNode: document.createElement('div'),
       namespaceURI: HTML_NAMESPACE_URI,
     };
 
-    expect(getStartNode(part)).toBe(part.childNode);
+    expect(getStartNode(part)).toBe(part.anchorNode);
   });
 });
 

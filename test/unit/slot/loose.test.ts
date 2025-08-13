@@ -28,7 +28,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
@@ -47,7 +47,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
@@ -81,7 +81,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
@@ -138,7 +138,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
@@ -171,7 +171,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
@@ -207,7 +207,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
@@ -241,7 +241,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);
@@ -276,7 +276,7 @@ describe('LooseSlot', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new MockBinding(MockPrimitive, value, part);

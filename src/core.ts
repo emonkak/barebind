@@ -245,7 +245,7 @@ export namespace Part {
   export interface ChildNodePart {
     type: typeof PartType.ChildNode;
     node: Comment;
-    childNode: ChildNode | null;
+    anchorNode: ChildNode | null;
     namespaceURI: string | null;
   }
 
@@ -624,7 +624,7 @@ export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
  */
 export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
-    ? (part.childNode ?? part.node)
+    ? (part.anchorNode ?? part.node)
     : part.node;
 }
 

@@ -26,7 +26,7 @@ export class SyncRoot<T> {
     const part = {
       type: PartType.ChildNode,
       node: container.ownerDocument.createComment(''),
-      childNode: null,
+      anchorNode: null,
       namespaceURI: container.namespaceURI,
     };
     const slot = runtime.resolveSlot(value, part);

@@ -55,7 +55,7 @@ export class ElementTemplate<
     const childrenPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
-      childNode: null,
+      anchorNode: null,
       namespaceURI,
     };
     const elementSlot = context.resolveSlot(binds[0], elementPart);
@@ -86,7 +86,7 @@ export class ElementTemplate<
     const childrenPart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
-      childNode: null,
+      anchorNode: null,
       namespaceURI,
     };
     const elementSlot = context.resolveSlot(binds[0], elementPart);

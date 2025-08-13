@@ -27,7 +27,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     const childNodePart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
-      childNode: null,
+      anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
@@ -47,7 +47,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     const childNodePart = {
       type: PartType.ChildNode,
       node: document.createComment(''),
-      childNode: null,
+      anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);

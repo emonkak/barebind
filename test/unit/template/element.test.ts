@@ -43,7 +43,7 @@ describe('ElementTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement(
@@ -77,7 +77,7 @@ describe('ElementTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.exact(container.firstChild!.firstChild),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
@@ -93,7 +93,7 @@ describe('ElementTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -118,7 +118,7 @@ describe('ElementTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
@@ -135,7 +135,7 @@ describe('ElementTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -160,7 +160,7 @@ describe('ElementTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: SVG_NAMESPACE_URI,
           },
           isConnected: true,

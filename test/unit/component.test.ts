@@ -116,7 +116,7 @@ describe('FunctionComponent', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -137,7 +137,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);
@@ -152,7 +152,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props1, part);
@@ -177,7 +177,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);
@@ -227,7 +227,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment('Hello, foo!'),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);
@@ -272,7 +272,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);
@@ -302,7 +302,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props1, part);
@@ -349,7 +349,7 @@ describe('ComponentBinding', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(component, props, part);

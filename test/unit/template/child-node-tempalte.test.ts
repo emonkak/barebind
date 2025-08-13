@@ -30,7 +30,7 @@ describe('ChildNodeTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, document.createComment(''));
@@ -52,7 +52,7 @@ describe('ChildNodeTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.exact(container.firstChild),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,
@@ -66,7 +66,7 @@ describe('ChildNodeTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
@@ -86,7 +86,7 @@ describe('ChildNodeTemplate', () => {
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const runtime = Runtime.create(new MockBackend());
@@ -101,7 +101,7 @@ describe('ChildNodeTemplate', () => {
           part: {
             type: PartType.ChildNode,
             node: expect.any(Comment),
-            childNode: null,
+            anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
           isConnected: true,

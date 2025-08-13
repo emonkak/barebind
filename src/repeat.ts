@@ -157,7 +157,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
-        childNode: null,
+        anchorNode: null,
         namespaceURI: this._part.namespaceURI,
       };
       const slot = context.resolveSlot(value, part);
@@ -185,7 +185,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         const part = {
           type: PartType.ChildNode,
           node: document.createComment(''),
-          childNode: null,
+          anchorNode: null,
           namespaceURI: this._part.namespaceURI,
         };
         const slot = context.resolveSlot(value, part);
@@ -279,9 +279,9 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
 
     if (this._pendingItems.length > 0) {
-      this._part.childNode = getStartNode(this._pendingItems[0]!.value.part);
+      this._part.anchorNode = getStartNode(this._pendingItems[0]!.value.part);
     } else {
-      this._part.childNode = null;
+      this._part.anchorNode = null;
     }
 
     this._memoizedItems = this._pendingItems;
@@ -297,7 +297,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       }
     }
 
-    this._part.childNode = null;
+    this._part.anchorNode = null;
     this._pendingItems = [];
     this._memoizedItems = null;
     this._pendingOperations = [];
