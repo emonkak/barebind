@@ -140,17 +140,17 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   hydrate(tree: HydrationTree, context: UpdateContext): void {
-    if (this._memoizedItems !== null) {
+    if (this._memoizedItems !== null || this._pendingItems.length > 0) {
       throw new HydrationError(
-        'Hydration is failed because the binding has already been initilized.',
+        'Hydration is failed because the binding has already been initialized.',
       );
     }
 
+    const document = this._part.node.ownerDocument;
     const sourceItems = generateItems(this._props);
     const targetItems: Item<TKey, Slot<TValue>>[] = new Array(
       sourceItems.length,
     );
-    const document = this._part.node.ownerDocument;
 
     for (let i = 0, l = sourceItems.length; i < l; i++) {
       const { key, value } = sourceItems[i]!;
@@ -163,7 +163,6 @@ export class RepeatBinding<TSource, TKey, TValue>
       const slot = context.resolveSlot(value, part);
 
       slot.hydrate(tree, context);
-
       tree.nextNode(part.node.nodeName).replaceWith(part.node);
 
       targetItems[i] = {
@@ -177,9 +176,9 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   connect(context: UpdateContext): void {
+    const document = this._part.node.ownerDocument;
     const targetItems = this._pendingItems;
     const sourceItems = generateItems(this._props);
-    const document = this._part.node.ownerDocument;
 
     this._pendingItems = reconcileItems(targetItems, sourceItems, {
       insert: ({ key, value }, referenceItem) => {

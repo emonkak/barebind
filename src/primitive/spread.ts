@@ -2,6 +2,7 @@ import {
   type Binding,
   type CommitContext,
   type DirectiveContext,
+  HydrationError,
   type HydrationTree,
   type Part,
   PartType,
@@ -74,15 +75,37 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     this._props = props;
   }
 
-  hydrate(_tree: HydrationTree, _context: UpdateContext): void {}
+  hydrate(tree: HydrationTree, context: UpdateContext): void {
+    if (this._memoizedSlots !== null || this._pendingSlots.size > 0) {
+      throw new HydrationError(
+        'Hydration is failed because the binding has already been initialized.',
+      );
+    }
+
+    const slots = new Map();
+
+    for (const key of Object.keys(this._props)) {
+      const value = this._props[key];
+      if (value === undefined) {
+        continue;
+      }
+      const part = resolveNamedPart(key, this._part.node);
+      const slot = context.resolveSlot(value, part);
+      slot.hydrate(tree, context);
+      slots.set(key, slot);
+    }
+
+    this._pendingSlots = slots;
+    this._memoizedSlots = slots;
+  }
 
   connect(context: UpdateContext): void {
-    const nextSlots = new Map(this._pendingSlots);
+    const oldSlots = this._pendingSlots;
+    const newSlots = new Map();
 
-    for (const [key, slot] of nextSlots.entries()) {
+    for (const [key, slot] of oldSlots.entries()) {
       if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
         slot.disconnect(context);
-        nextSlots.delete(key);
       }
     }
 
@@ -91,18 +114,18 @@ export class SpreadBinding implements Binding<SpreadProperties> {
       if (value === undefined) {
         continue;
       }
-      let slot = nextSlots.get(key);
+      let slot = oldSlots.get(key);
       if (slot !== undefined) {
         slot.reconcile(value, context);
       } else {
         const part = resolveNamedPart(key, this._part.node);
         slot = context.resolveSlot(value, part);
         slot.connect(context);
-        nextSlots.set(key, slot);
       }
+      newSlots.set(key, slot);
     }
 
-    this._pendingSlots = nextSlots;
+    this._pendingSlots = newSlots;
   }
 
   disconnect(context: UpdateContext): void {

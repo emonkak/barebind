@@ -173,7 +173,7 @@ export class ComponentBinding<TProps, TResult>
   hydrate(tree: HydrationTree, context: UpdateContext): void {
     if (this._slot !== null) {
       throw new HydrationError(
-        'Hydration is failed because the binding has already been initilized.',
+        'Hydration is failed because the binding has already been initialized.',
       );
     }
 

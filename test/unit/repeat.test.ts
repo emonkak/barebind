@@ -144,7 +144,7 @@ describe('RepeatBinding', () => {
       );
     });
 
-    it('should throw the error if the items has already been initialized', () => {
+    it('should throw the error if the binding has already been initialized', () => {
       const source = ['foo', 'bar', 'baz'];
       const props: RepeatProps<string> = {
         source,

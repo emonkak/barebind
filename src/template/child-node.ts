@@ -33,7 +33,6 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.hydrate(tree, context);
-
     tree.nextNode(childNodePart.node.nodeName).replaceWith(childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };

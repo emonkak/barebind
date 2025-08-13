@@ -107,7 +107,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   hydrate(tree: HydrationTree, context: UpdateContext): void {
     if (this._subscription !== null) {
       throw new HydrationError(
-        'Hydration is failed because the binding has already been initilized.',
+        'Hydration is failed because the binding has already been initialized.',
       );
     }
 

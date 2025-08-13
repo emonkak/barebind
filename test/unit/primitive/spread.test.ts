@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { PartType } from '@/core.js';
+import { HydrationError, HydrationTree, PartType } from '@/core.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockSlot } from '../../mocks.js';
+import { createElement } from '../../test-utils.js';
 
 describe('SpreadPrimitive', () => {
   describe('name', () => {
@@ -106,11 +107,123 @@ describe('SpreadBinding', () => {
     });
   });
 
-  describe('commit()', () => {
-    it('commits the corresponding slots for each properties', () => {
+  describe('hydrate()', () => {
+    it('hydrates the corresponding slots for each properties', () => {
+      const props = {
+        id: 'foo',
+        class: 'bar',
+        title: undefined,
+        $open: true,
+        '.innerHTML': '<div>foo</div>',
+        '@click': () => {},
+      };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('dialog'),
+      };
+      const binding = new SpreadBinding(props, part);
+      const runtime = Runtime.create(new MockBackend());
+      const tree = new HydrationTree(createElement('div', {}, part.node));
+
+      binding.hydrate(tree, runtime);
+
+      const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+
+      expect(slots).toStrictEqual(
+        Object.fromEntries(
+          Object.entries(props)
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key]) => [key, expect.any(MockSlot)]),
+        ),
+      );
+      expect(slots).toStrictEqual({
+        id: expect.objectContaining({
+          isConnected: true,
+          isCommitted: false,
+          part: {
+            type: PartType.Attribute,
+            name: 'id',
+            node: expect.exact(part.node),
+          },
+          value: props.id,
+        }),
+        class: expect.objectContaining({
+          isConnected: true,
+          isCommitted: false,
+          part: {
+            type: PartType.Attribute,
+            name: 'class',
+            node: expect.exact(part.node),
+          },
+          value: props.class,
+        }),
+        $open: expect.objectContaining({
+          isConnected: true,
+          isCommitted: false,
+          part: {
+            type: PartType.Live,
+            name: 'open',
+            node: expect.exact(part.node),
+            defaultValue: false,
+          },
+          value: props.$open,
+        }),
+        '.innerHTML': expect.objectContaining({
+          isConnected: true,
+          isCommitted: false,
+          part: {
+            type: PartType.Property,
+            name: 'innerHTML',
+            node: expect.exact(part.node),
+            defaultValue: '',
+          },
+          value: props['.innerHTML'],
+        }),
+        '@click': expect.objectContaining({
+          isConnected: true,
+          isCommitted: false,
+          part: {
+            type: PartType.Event,
+            name: 'click',
+            node: expect.exact(part.node),
+          },
+          value: props['@click'],
+        }),
+      });
+    });
+
+    it('should throw the error if the binding has already been initialized', () => {
+      const props = {
+        id: 'foo',
+        class: 'bar',
+        title: undefined,
+        $open: true,
+        '.innerHTML': '<div>foo</div>',
+        '@click': () => {},
+      };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('dialog'),
+      };
+      const binding = new SpreadBinding(props, part);
+      const runtime = Runtime.create(new MockBackend());
+      const tree = new HydrationTree(createElement('div', {}, part.node));
+
+      binding.connect(runtime);
+      binding.commit(runtime);
+
+      expect(() => {
+        binding.hydrate(tree, runtime);
+      }).toThrow(HydrationError);
+    });
+  });
+
+  describe('connect()', () => {
+    it('connects the corresponding slots for each properties', () => {
       const props1 = {
         id: 'foo',
         class: 'bar',
+        title: undefined,
         $open: true,
         '.innerHTML': '<div>foo</div>',
         '@click': () => {},
@@ -129,14 +242,16 @@ describe('SpreadBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
-      const initialSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+      const slots1 = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-      expect(initialSlots).toStrictEqual(
+      expect(slots1).toStrictEqual(
         Object.fromEntries(
-          Object.entries(props1).map(([key]) => [key, expect.any(MockSlot)]),
+          Object.entries(props1)
+            .filter(([_key, value]) => value !== undefined)
+            .map(([key]) => [key, expect.any(MockSlot)]),
         ),
       );
-      expect(initialSlots).toStrictEqual({
+      expect(slots1).toStrictEqual({
         id: expect.objectContaining({
           isConnected: true,
           isCommitted: true,
@@ -195,9 +310,9 @@ describe('SpreadBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
-      const nextSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+      const slots2 = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-      expect(initialSlots).toStrictEqual({
+      expect(slots1).toStrictEqual({
         id: expect.objectContaining({
           isConnected: false,
           isCommitted: false,
@@ -225,14 +340,14 @@ describe('SpreadBinding', () => {
           isCommitted: false,
         }),
       });
-      expect(nextSlots).toStrictEqual(
+      expect(slots2).toStrictEqual(
         Object.fromEntries(
           Object.entries(props2)
             .filter(([_key, value]) => value !== undefined)
             .map(([key]) => [key, expect.any(MockSlot)]),
         ),
       );
-      expect(nextSlots).toStrictEqual({
+      expect(slots2).toStrictEqual({
         class: expect.objectContaining({
           isConnected: true,
           isCommitted: true,

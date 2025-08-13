@@ -63,7 +63,6 @@ export class ElementTemplate<
 
     elementSlot.hydrate(tree, context);
     childrenSlot.hydrate(tree, context);
-
     tree.nextNode(childrenPart.node.nodeName).replaceWith(childrenPart.node);
 
     return {
