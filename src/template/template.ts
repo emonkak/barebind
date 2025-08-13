@@ -114,13 +114,16 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       );
     }
 
-    this._pendingResult = this._template.hydrate(
+    const result = this._template.hydrate(
       this._binds,
       this._part,
       tree,
       context,
     );
-    this._memoizedResult = this._pendingResult;
+
+    this._part.anchorNode = getAnchorNode(result);
+    this._pendingResult = result;
+    this._memoizedResult = result;
   }
 
   connect(context: UpdateContext): void {
@@ -161,14 +164,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.commit(context);
       }
 
-      if (childNodes.length > 0) {
-        this._part.anchorNode =
-          childNodes[0]! === slots[0]?.part.node
-            ? getStartNode(slots[0].part)
-            : childNodes[0]!;
-      } else {
-        this._part.anchorNode = null;
-      }
+      this._part.anchorNode = getAnchorNode(this._pendingResult);
     }
 
     this._memoizedResult = this._pendingResult;
@@ -231,4 +227,17 @@ export function normalizeText(text: string): string {
     text = text.trimEnd();
   }
   return text;
+}
+
+function getAnchorNode({
+  childNodes,
+  slots,
+}: TemplateResult): ChildNode | null {
+  if (childNodes.length > 0) {
+    return childNodes[0]! === slots[0]?.part.node
+      ? getStartNode(slots[0].part)
+      : childNodes[0]!;
+  } else {
+    return null;
+  }
 }

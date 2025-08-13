@@ -136,8 +136,16 @@ describe('RepeatBinding', () => {
       const runtime = Runtime.create(new MockBackend());
 
       binding.hydrate(tree, runtime);
+
+      expect(part.anchorNode).toBe(container.firstChild);
+      expect(container.innerHTML).toBe(
+        source.map((element) => element + EMPTY_COMMENT).join('') +
+          EMPTY_COMMENT,
+      );
+
       binding.commit(runtime);
 
+      expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
         source.map((element) => element + EMPTY_COMMENT).join('') +
           EMPTY_COMMENT,

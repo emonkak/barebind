@@ -171,6 +171,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       };
     }
 
+    this._part.anchorNode = getAnchorNode(targetItems);
     this._pendingItems = targetItems;
     this._memoizedItems = targetItems;
   }
@@ -278,12 +279,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       }
     }
 
-    if (this._pendingItems.length > 0) {
-      this._part.anchorNode = getStartNode(this._pendingItems[0]!.value.part);
-    } else {
-      this._part.anchorNode = null;
-    }
-
+    this._part.anchorNode = getAnchorNode(this._pendingItems);
     this._memoizedItems = this._pendingItems;
     this._pendingOperations = [];
   }
@@ -341,6 +337,12 @@ function generateItems<TSource, TKey, TValue>({
     const value = valueSelector(element, i);
     return { key, value };
   });
+}
+
+function getAnchorNode<TKey, TValue>(
+  items: Item<TKey, Slot<TValue>>[],
+): ChildNode | null {
+  return items.length > 0 ? getStartNode(items[0]!.value.part) : null;
 }
 
 function getChildNodes(startNode: ChildNode, endNode: ChildNode): ChildNode[] {

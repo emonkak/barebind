@@ -121,12 +121,14 @@ describe('TemplateBinding', () => {
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(binds, part, tree, runtime);
+      expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe('foo<!---->');
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      binding.commit(runtime);
 
-      expect(container.innerHTML).toBe('<!---->');
+      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(part.anchorNode).toBe(container.firstChild);
+      expect(container.innerHTML).toBe('foo<!---->');
     });
 
     it('should throw the error if the template has already been rendered', () => {
