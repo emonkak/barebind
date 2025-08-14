@@ -1,4 +1,4 @@
-import { sequentialEqual, shallowEqual } from '../compare.js';
+import { shallowEqual } from '../compare.js';
 import {
   type CommitContext,
   type DirectiveContext,
@@ -11,22 +11,30 @@ import { debugValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type ClassSpecifier = ClassMap | string | null | undefined;
+export type ClassSpecifier = ClassList | ClassMap;
 
-export type ClassMap = { [key: string]: boolean };
+type ClassRecord = Record<string, ClassAtom>;
 
-export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
+type ClassList = readonly ClassAtom[];
+
+type ClassMap = {
+  readonly [key: string]: boolean;
+};
+
+type ClassAtom = ClassMap | boolean | string | null | undefined;
+
+export const ClassListPrimitive: Primitive<ClassSpecifier> = {
   name: 'ClassListPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier[] {
-    if (!(Array.isArray(value) && value.every(isClassSpecifier))) {
+  ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
+    if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of ClassListPrimitive must be an array of class specifier, but got ${debugValue(value)}.\n` +
+        `The value of ClassListPrimitive must be an array or object, but got ${debugValue(value)}.\n` +
           debugPart(part, markUsedValue(value)),
       );
     }
   },
   resolveBinding(
-    specifiers: ClassSpecifier[],
+    classSpecifier: ClassSpecifier,
     part: Part,
     _context: DirectiveContext,
   ): ClassListBinding {
@@ -38,69 +46,63 @@ export const ClassListPrimitive: Primitive<ClassSpecifier[]> = {
         'ClassListPrimitive must be used in a ":classlist" attribute part, but it is used here:\n' +
           debugPart(
             part,
-            markUsedValue(new DirectiveSpecifier(this, specifiers)),
+            markUsedValue(new DirectiveSpecifier(this, classSpecifier)),
           ),
       );
     }
-    return new ClassListBinding(specifiers, part);
+    return new ClassListBinding(classSpecifier, part);
   },
 };
 
 export class ClassListBinding extends PrimitiveBinding<
-  ClassSpecifier[],
+  ClassSpecifier,
   Part.AttributePart
 > {
-  private _memoizedValue: ClassSpecifier[] = [];
+  private _memoizedValue: ClassSpecifier = {};
 
-  get type(): Primitive<ClassSpecifier[]> {
+  get type(): Primitive<ClassSpecifier> {
     return ClassListPrimitive;
   }
 
-  shouldBind(specifiers: ClassSpecifier[]): boolean {
-    return !sequentialEqual(
-      specifiers,
-      this._memoizedValue,
-      areClassSpecifiersEqual,
+  shouldBind(classSpecifier: ClassSpecifier): boolean {
+    return !shallowEqual(
+      classSpecifier as ClassRecord,
+      this._memoizedValue as ClassRecord,
+      areClassAtomsEqual,
     );
   }
 
   commit(_context: CommitContext): void {
     const { classList } = this._part.node;
-    const newSpecifiers = this._pendingValue;
-    const oldSpecifiers = this._memoizedValue;
+    const newClassSpecifier = this._pendingValue as ClassRecord;
+    const oldClassSpecifier = this._memoizedValue as ClassRecord;
 
-    const newTail = newSpecifiers.length - 1;
-    const oldTail = oldSpecifiers.length - 1;
-    let index = 0;
+    for (const key of Object.keys(oldClassSpecifier)) {
+      const newClassAtom = Object.hasOwn(newClassSpecifier, key)
+        ? newClassSpecifier[key]
+        : undefined;
+      const oldClassAtom = oldClassSpecifier[key];
 
-    for (; index <= newTail && index <= oldTail; index++) {
-      const newSpecifier = newSpecifiers[index]!;
-      const oldSpecifier = oldSpecifiers[index]!;
-
-      if (typeof newSpecifier === typeof oldSpecifier) {
-        updateClasses(classList, newSpecifier, oldSpecifier);
-      } else {
-        if (oldSpecifier != null) {
-          removeClasses(classList, oldSpecifier);
-        }
-
-        if (newSpecifier != null) {
-          addClasses(classList, newSpecifier);
-        }
+      if (newClassAtom == null && oldClassAtom != null) {
+        removeClasses(classList, oldClassAtom, key);
       }
     }
 
-    for (; index <= oldTail; index++) {
-      const specifier = oldSpecifiers[index];
-      if (specifier != null) {
-        removeClasses(classList, specifier);
-      }
-    }
+    for (const key of Object.keys(newClassSpecifier)) {
+      const newClassAtom = newClassSpecifier[key];
+      const oldClassAtom = Object.hasOwn(oldClassSpecifier, key)
+        ? oldClassSpecifier[key]
+        : undefined;
 
-    for (; index <= newTail; index++) {
-      const specifier = newSpecifiers[index];
-      if (specifier != null) {
-        addClasses(classList, specifier);
+      if (newClassAtom != null) {
+        if (typeof newClassAtom === typeof oldClassAtom) {
+          updateClasses(classList, newClassAtom, oldClassAtom!, key);
+        } else {
+          if (oldClassAtom != null) {
+            removeClasses(classList, oldClassAtom, key);
+          }
+          addClasses(classList, newClassAtom, key);
+        }
       }
     }
 
@@ -109,68 +111,59 @@ export class ClassListBinding extends PrimitiveBinding<
 
   rollback(_context: CommitContext): void {
     const { classList } = this._part.node;
-    const classSpecifiers = this._memoizedValue;
+    const classSpecifier = this._memoizedValue as ClassRecord;
 
-    for (let i = 0, l = classSpecifiers.length; i < l; i++) {
-      const classSpecifier = classSpecifiers[i];
-      if (classSpecifier != null) {
-        removeClasses(classList, classSpecifier);
+    for (const key of Object.keys(classSpecifier)) {
+      const classAtom = classSpecifier[key];
+      if (classAtom != null) {
+        removeClasses(classList, classAtom, key);
       }
     }
 
-    this._memoizedValue = [];
+    this._memoizedValue = {};
   }
 }
 
 function addClasses(
   classList: DOMTokenList,
-  specifier: NonNullable<ClassSpecifier>,
+  classAtom: NonNullable<ClassAtom>,
+  key: string,
 ): void {
-  if (typeof specifier === 'string') {
-    classList.add(specifier);
+  if (typeof classAtom === 'string') {
+    classList.add(classAtom);
+  } else if (typeof classAtom === 'boolean') {
+    classList.toggle(key, classAtom);
   } else {
-    for (const key of Object.keys(specifier)) {
-      classList.toggle(key, specifier[key]);
+    for (const key of Object.keys(classAtom)) {
+      classList.toggle(key, classAtom[key]);
     }
   }
 }
 
-function areClassSpecifiersEqual(
-  x: ClassSpecifier,
-  y: ClassSpecifier,
-): boolean {
+function areClassAtomsEqual(x: ClassAtom, y: ClassAtom): boolean {
   if (x == null) {
     return y == null;
-  }
-  if (typeof x === 'string') {
+  } else if (typeof x === 'string' || typeof x === 'boolean') {
     return x === y;
-  }
-  if (typeof y === 'object' && y !== null) {
-    return shallowEqual(x, y);
-  }
-  return false;
-}
-
-function isClassSpecifier(value: unknown): value is ClassSpecifier {
-  switch (typeof value) {
-    case 'string':
-    case 'undefined':
-    case 'object':
-      return true;
-    default:
-      return false;
+  } else {
+    return typeof y === 'object' && y !== null && shallowEqual(x, y);
   }
 }
 
 function removeClasses(
   classList: DOMTokenList,
-  specifier: NonNullable<ClassSpecifier>,
+  classAtom: NonNullable<ClassAtom>,
+  key: string,
 ): void {
-  if (typeof specifier === 'string') {
-    classList.remove(specifier);
+  if (typeof classAtom === 'string') {
+    classList.remove(classAtom);
+  } else if (typeof classAtom === 'boolean') {
+    if (classAtom) {
+      classList.remove(key);
+    }
   } else {
-    for (const key of Object.keys(specifier)) {
-      if (specifier[key]) {
+    for (const key of Object.keys(classAtom)) {
+      if (classAtom[key]) {
         classList.remove(key);
       }
     }
@@ -179,23 +172,26 @@ function removeClasses(
 
 function updateClasses(
   classList: DOMTokenList,
-  newSpecifier: NonNullable<ClassSpecifier>,
-  oldSpecifier: NonNullable<ClassSpecifier>,
+  newClassAtom: NonNullable<ClassAtom>,
+  oldClassAtom: NonNullable<ClassAtom>,
+  key: string,
 ): void {
   // Precondition: newSpecifier and oldSpecifier are the same type.
-  if (typeof newSpecifier === 'string') {
-    if (oldSpecifier !== newSpecifier) {
-      classList.remove(oldSpecifier as string);
+  if (typeof newClassAtom === 'string') {
+    if (newClassAtom !== oldClassAtom) {
+      classList.remove(oldClassAtom as string);
     }
-    classList.add(newSpecifier);
+    classList.add(newClassAtom);
+  } else if (typeof newClassAtom === 'boolean') {
+    classList.toggle(key, newClassAtom);
   } else {
-    for (const key of Object.keys(oldSpecifier as ClassMap)) {
-      if (!Object.hasOwn(newSpecifier, key) || !newSpecifier[key]) {
+    for (const key of Object.keys(oldClassAtom as ClassMap)) {
+      if (!Object.hasOwn(newClassAtom, key) || !newClassAtom[key]) {
         classList.remove(key);
       }
     }
-    for (const key of Object.keys(newSpecifier)) {
-      classList.toggle(key, newSpecifier[key]);
+    for (const key of Object.keys(newClassAtom)) {
+      classList.toggle(key, newClassAtom[key]);
     }
   }
 }
