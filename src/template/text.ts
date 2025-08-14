@@ -2,10 +2,10 @@ import {
   type HydrationTree,
   type Part,
   PartType,
-  splitText,
   type TemplateResult,
   type UpdateContext,
 } from '../core.js';
+import { splitText } from '../hydration.js';
 import { AbstractTemplate } from './template.js';
 
 export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
@@ -39,7 +39,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   ): TemplateResult {
     const textPart = {
       type: PartType.Text,
-      node: splitText(targetTree.nextNode(), targetTree),
+      node: splitText(targetTree),
       precedingText: this._precedingText,
       followingText: this._followingText,
     };

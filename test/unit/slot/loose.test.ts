@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HydrationTree, PartType } from '@/core.js';
+import { PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { LooseSlot, loose } from '@/slot/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -176,7 +177,7 @@ describe('LooseSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new LooseSlot(binding);
-      const tree = new HydrationTree(document.createElement('div'));
+      const tree = createHydrationTree(document.createElement('div'));
       const runtime = Runtime.create(new MockBackend());
 
       const hydrateSpy = vi.spyOn(binding, 'hydrate');

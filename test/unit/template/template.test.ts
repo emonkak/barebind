@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HydrationError, HydrationTree, PartType } from '@/core.js';
+import { HydrationError, PartType } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import {
   getNamespaceURIByTagName,
@@ -109,7 +110,7 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
@@ -142,7 +143,7 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = document.createElement('div');
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);

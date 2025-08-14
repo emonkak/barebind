@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationTree, PartType } from '@/core.js';
+import { HydrationError, PartType } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
@@ -467,7 +468,8 @@ describe('TaggedTemplate', () => {
       const { template, binds } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
-          <input type="text" $value=${'baz'} .disabled=${false} @onchange=${() => {}} ${{ class: 'qux' }}><span>${'quux'}</span>
+          <label ${{ for: 'quux' }}>${'baz'}</label>
+          <input type="text" $value=${'qux'} .disabled=${false} @onchange=${() => {}} ${{ id: 'quux' }}>
         </div>
         <!-- ${'corge'} -->
       `;
@@ -484,12 +486,12 @@ describe('TaggedTemplate', () => {
           'div',
           { class: 'foo' },
           document.createComment('bar'),
-          createElement('input', { type: 'text', class: 'qux' }),
-          createElement('span', {}, 'quux'),
+          createElement('label', { for: 'quux' }, 'baz'),
+          createElement('input', { type: 'text', id: 'quux' }),
         ),
         document.createComment('corge'),
       );
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
 
       const { childNodes, slots } = template.hydrate(
@@ -500,7 +502,7 @@ describe('TaggedTemplate', () => {
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
-        '<div class="foo"><!----><input type="text" class="qux"><span>quux</span></div>',
+        '<div class="foo"><!----><label for="quux">baz</label><input type="text" id="quux"></div>',
         '<!---->',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
@@ -528,12 +530,32 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
+            type: PartType.Element,
+            node: expect.exact(container.querySelector('label')),
+          },
+          value: binds[2],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.exact(container.querySelector('label')?.firstChild),
+            followingText: '',
+            precedingText: '',
+          },
+          value: binds[3],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
             type: PartType.Live,
             node: expect.exact(container.querySelector('input')),
             name: 'value',
             defaultValue: '',
           },
-          value: binds[2],
+          value: binds[4],
           isConnected: true,
           isCommitted: false,
         }),
@@ -544,7 +566,7 @@ describe('TaggedTemplate', () => {
             name: 'disabled',
             defaultValue: false,
           },
-          value: binds[3],
+          value: binds[5],
           isConnected: true,
           isCommitted: false,
         }),
@@ -554,7 +576,7 @@ describe('TaggedTemplate', () => {
             node: expect.exact(container.querySelector('input')),
             name: 'onchange',
           },
-          value: binds[4],
+          value: binds[6],
           isConnected: true,
           isCommitted: false,
         }),
@@ -563,18 +585,7 @@ describe('TaggedTemplate', () => {
             type: PartType.Element,
             node: expect.exact(container.querySelector('input')),
           },
-          value: binds[5],
-          isConnected: true,
-          isCommitted: false,
-        }),
-        expect.objectContaining({
-          part: {
-            type: PartType.Text,
-            node: expect.exact(container.querySelector('span')!.firstChild),
-            followingText: '',
-            precedingText: '',
-          },
-          value: binds[6],
+          value: binds[7],
           isConnected: true,
           isCommitted: false,
         }),
@@ -585,7 +596,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[7],
+          value: binds[8],
           isConnected: true,
           isCommitted: false,
         }),
@@ -605,7 +616,7 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -633,7 +644,7 @@ describe('TaggedTemplate', () => {
         '(foo, bar, baz)',
         createElement('div', {}, '[qux, quux]'),
       );
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -723,7 +734,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const { childNodes, slots } = template.hydrate(
         binds,
@@ -754,7 +765,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
 
       expect(() => {
@@ -785,7 +796,7 @@ describe('TaggedTemplate', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const tree = new HydrationTree(container);
+        const tree = createHydrationTree(container);
         const runtime = Runtime.create(new MockBackend());
 
         expect(() => {
@@ -800,7 +811,8 @@ describe('TaggedTemplate', () => {
       const { template, binds } = html`
         <div class=${'foo'}>
           <!-- ${'bar'} -->
-          <input type="text" $value=${'baz'} .disabled=${false} @onchange=${() => {}} ${{ class: 'qux' }}><span>${'quux'}</span>
+          <label ${{ for: 'quux' }}>${'baz'}</label>
+          <input type="text" $value=${'qux'} .disabled=${false} @onchange=${() => {}} ${{ id: 'quux' }}>
         </div>
         <!-- ${'corge'} -->
       `;
@@ -814,7 +826,7 @@ describe('TaggedTemplate', () => {
       const { childNodes, slots } = template.render(binds, part, runtime);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
-        '<div><!----><input type="text"><span></span></div>',
+        '<div><!----><label></label><input type="text"></div>',
         '<!---->',
       ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
@@ -842,12 +854,32 @@ describe('TaggedTemplate', () => {
         }),
         expect.objectContaining({
           part: {
+            type: PartType.Element,
+            node: expect.any(HTMLLabelElement),
+          },
+          value: binds[2],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            followingText: '',
+            precedingText: '',
+          },
+          value: binds[3],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
             type: PartType.Live,
             node: expect.any(HTMLInputElement),
             name: 'value',
             defaultValue: '',
           },
-          value: binds[2],
+          value: binds[4],
           isConnected: true,
           isCommitted: false,
         }),
@@ -858,7 +890,7 @@ describe('TaggedTemplate', () => {
             name: 'disabled',
             defaultValue: false,
           },
-          value: binds[3],
+          value: binds[5],
           isConnected: true,
           isCommitted: false,
         }),
@@ -868,7 +900,7 @@ describe('TaggedTemplate', () => {
             node: expect.any(HTMLInputElement),
             name: 'onchange',
           },
-          value: binds[4],
+          value: binds[6],
           isConnected: true,
           isCommitted: false,
         }),
@@ -877,18 +909,7 @@ describe('TaggedTemplate', () => {
             type: PartType.Element,
             node: expect.any(HTMLInputElement),
           },
-          value: binds[5],
-          isConnected: true,
-          isCommitted: false,
-        }),
-        expect.objectContaining({
-          part: {
-            type: PartType.Text,
-            node: expect.any(Text),
-            precedingText: '',
-            followingText: '',
-          },
-          value: binds[6],
+          value: binds[7],
           isConnected: true,
           isCommitted: false,
         }),
@@ -899,7 +920,7 @@ describe('TaggedTemplate', () => {
             anchorNode: null,
             namespaceURI: HTML_NAMESPACE_URI,
           },
-          value: binds[7],
+          value: binds[8],
           isConnected: true,
           isCommitted: false,
         }),

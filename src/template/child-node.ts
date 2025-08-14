@@ -4,9 +4,9 @@ import {
   type Part,
   PartType,
   type TemplateResult,
-  treatNodeType,
   type UpdateContext,
 } from '../core.js';
+import { replaceMarkerNode } from '../hydration.js';
 import { AbstractTemplate } from './template.js';
 
 export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
@@ -35,11 +35,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
 
     childNodeSlot.hydrate(targetTree, context);
 
-    treatNodeType(
-      Node.COMMENT_NODE,
-      targetTree.nextNode(),
-      targetTree,
-    ).replaceWith(childNodePart.node);
+    replaceMarkerNode(targetTree, childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

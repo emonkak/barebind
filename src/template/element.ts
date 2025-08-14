@@ -4,11 +4,10 @@ import {
   type Part,
   PartType,
   type TemplateResult,
-  treatNodeName,
-  treatNodeType,
   type UpdateContext,
 } from '../core.js';
 import { DirectiveSpecifier } from '../directive.js';
+import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,
@@ -70,11 +69,7 @@ export class ElementTemplate<
     elementSlot.hydrate(targetTree, context);
     childrenSlot.hydrate(targetTree, context);
 
-    treatNodeType(
-      Node.COMMENT_NODE,
-      targetTree.nextNode(),
-      targetTree,
-    ).replaceWith(childrenPart.node);
+    replaceMarkerNode(targetTree, childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

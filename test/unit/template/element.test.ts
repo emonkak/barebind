@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationTree, PartType } from '@/core.js';
+import { PartType } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { ElementTemplate, element } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
@@ -51,7 +52,7 @@ describe('ElementTemplate', () => {
         {},
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const template = new ElementTemplate('div');
       const { childNodes, slots } = template.hydrate(

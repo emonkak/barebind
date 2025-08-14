@@ -1,6 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { debugNode } from './debug/node.js';
 import type { LinkedList } from './linked-list.js';
 
 export const $customHook: unique symbol = Symbol('$customHook');
@@ -102,6 +101,10 @@ export interface DirectiveType<T> {
 export interface Effect {
   commit(context: CommitContext): void;
 }
+
+export type HydrationTree = TreeWalker;
+
+export class HydrationError extends Error {}
 
 export type Hook =
   | Hook.FinalizerHook
@@ -435,47 +438,6 @@ interface KeyValuePair {
   value: unknown;
 }
 
-interface NodeTypeMap {
-  [Node.COMMENT_NODE]: Comment;
-  [Node.ELEMENT_NODE]: Element;
-  [Node.TEXT_NODE]: Text;
-}
-
-export class HydrationError extends Error {}
-
-export class HydrationTree {
-  private readonly _tree: TreeWalker;
-
-  private _lookaheadNode: Node | null;
-
-  constructor(container: Element) {
-    this._tree = container.ownerDocument.createTreeWalker(
-      container,
-      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-    );
-    this._lookaheadNode = this._tree.nextNode();
-  }
-
-  get currentNode(): Node {
-    return this._tree.currentNode;
-  }
-
-  set currentNode(currentNode: Node) {
-    this._tree.currentNode = currentNode;
-    this._lookaheadNode = currentNode;
-  }
-
-  nextNode(): Node | null {
-    const lookaheadNode = this._lookaheadNode;
-    this._lookaheadNode = this._tree.nextNode();
-    return lookaheadNode;
-  }
-
-  peekNode(): Node | null {
-    return this._lookaheadNode;
-  }
-}
-
 export class Literal extends String {}
 
 export class Scope {
@@ -607,56 +569,4 @@ export function getStartNode(part: Part): ChildNode {
  */
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
-}
-
-/**
- * @internal
- */
-export function splitText(node: Node | null, tree: HydrationTree): Text {
-  const previousNode = node !== null ? node.previousSibling : tree.currentNode;
-
-  if (previousNode instanceof Text) {
-    const splittedText = previousNode.ownerDocument.createTextNode('');
-    previousNode.after(splittedText);
-    tree.currentNode = splittedText;
-    return splittedText;
-  } else {
-    return treatNodeType(Node.TEXT_NODE, node, tree);
-  }
-}
-
-/**
- * @internal
- */
-export function treatNodeName(
-  expectedName: string,
-  node: Node | null,
-  tree: HydrationTree,
-): Node {
-  if (node === null || node.nodeName !== expectedName) {
-    throw new HydrationError(
-      `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName ?? 'null'}:\n` +
-        debugNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
-    );
-  }
-
-  return node;
-}
-
-/**
- * @internal
- */
-export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
-  expectedType: TExpectedType,
-  node: Node | null,
-  tree: HydrationTree,
-): NodeTypeMap[TExpectedType] {
-  if (node === null || node.nodeType !== expectedType) {
-    throw new HydrationError(
-      `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType ?? 'null'}:\n` +
-        debugNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
-    );
-  }
-
-  return node as NodeTypeMap[TExpectedType];
 }

@@ -1,11 +1,5 @@
-import {
-  type Backend,
-  HydrationTree,
-  Lanes,
-  PartType,
-  type Slot,
-  treatNodeType,
-} from '../core.js';
+import { type Backend, Lanes, PartType, type Slot } from '../core.js';
+import { createHydrationTree, replaceMarkerNode } from '../hydration.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
@@ -43,16 +37,11 @@ export class SyncRoot<T> {
   }
 
   hydrate(): void {
-    const targetTree = new HydrationTree(this._container);
-    const part = this._slot.part;
+    const targetTree = createHydrationTree(this._container);
 
     this._slot.hydrate(targetTree, this._runtime);
 
-    treatNodeType(
-      Node.COMMENT_NODE,
-      targetTree.nextNode(),
-      targetTree,
-    ).replaceWith(part.node);
+    replaceMarkerNode(targetTree, this._slot.part.node as Comment);
 
     this._runtime.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),

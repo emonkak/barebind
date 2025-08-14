@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { HydrationError, HydrationTree, PartType } from '@/core.js';
+import { HydrationError, PartType } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockSlot } from '../../mocks.js';
@@ -123,7 +124,7 @@ describe('SpreadBinding', () => {
       };
       const binding = new SpreadBinding(props, part);
       const runtime = Runtime.create(new MockBackend());
-      const tree = new HydrationTree(createElement('div', {}, part.node));
+      const tree = createHydrationTree(createElement('div', {}, part.node));
 
       binding.hydrate(tree, runtime);
 
@@ -207,7 +208,7 @@ describe('SpreadBinding', () => {
       };
       const binding = new SpreadBinding(props, part);
       const runtime = Runtime.create(new MockBackend());
-      const tree = new HydrationTree(createElement('div', {}, part.node));
+      const tree = createHydrationTree(createElement('div', {}, part.node));
 
       binding.connect(runtime);
       binding.commit(runtime);

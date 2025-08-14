@@ -3,15 +3,18 @@ import {
   type Part,
   PartType,
   type Slot,
-  splitText,
   type TemplateMode,
   type TemplateResult,
-  treatNodeName,
-  treatNodeType,
   type UpdateContext,
 } from '../core.js';
 import { debugNode } from '../debug/node.js';
 import { debugPart } from '../debug/part.js';
+import {
+  replaceMarkerNode,
+  splitText,
+  treatNodeName,
+  treatNodeType,
+} from '../hydration.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,
@@ -145,16 +148,14 @@ export class TaggedTemplate<
   ): TemplateResult {
     const document = part.node.ownerDocument;
     const fragment = this._template.content;
-    const sourceTree = document.createTreeWalker(
-      fragment,
-      NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-    );
+    const sourceTree = createTreeWalker(fragment);
     const holes = this._holes;
     const totalHoles = holes.length;
     const childNodes: ChildNode[] = [];
     const slots: Slot<unknown>[] = new Array(totalHoles);
     let nodeIndex = 0;
     let holeIndex = 0;
+    let lastPartIndex = -1;
 
     for (
       let sourceNode: Node | null;
@@ -169,6 +170,8 @@ export class TaggedTemplate<
           break;
         }
 
+        const continuous = hole.index === lastPartIndex;
+
         switch (hole.type) {
           case PartType.Attribute:
           case PartType.Event:
@@ -176,7 +179,7 @@ export class TaggedTemplate<
               type: hole.type,
               node: treatNodeType(
                 Node.ELEMENT_NODE,
-                targetTree.peekNode(),
+                continuous ? targetTree.currentNode : targetTree.nextNode(),
                 targetTree,
               ),
               name: hole.name,
@@ -195,7 +198,7 @@ export class TaggedTemplate<
               type: hole.type,
               node: treatNodeType(
                 Node.ELEMENT_NODE,
-                targetTree.peekNode(),
+                continuous ? targetTree.currentNode : targetTree.nextNode(),
                 targetTree,
               ),
             };
@@ -204,21 +207,21 @@ export class TaggedTemplate<
           case PartType.Property: {
             const node = treatNodeType(
               Node.ELEMENT_NODE,
-              targetTree.peekNode(),
+              continuous ? targetTree.currentNode : targetTree.nextNode(),
               targetTree,
             );
             currentPart = {
               type: hole.type,
               node,
               name: hole.name,
-              defaultValue: node[hole.name as keyof Node],
+              defaultValue: (node as any)[hole.name],
             };
             break;
           }
           case PartType.Text:
             currentPart = {
               type: hole.type,
-              node: splitText(targetTree.peekNode(), targetTree),
+              node: splitText(targetTree),
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
@@ -229,17 +232,24 @@ export class TaggedTemplate<
         slot.hydrate(targetTree, context);
 
         slots[holeIndex] = slot;
+        lastPartIndex = hole.index;
       }
 
-      let targetNode = treatNodeName(
-        sourceNode.nodeName,
-        targetTree.nextNode(),
-        targetTree,
-      ) as ChildNode;
+      let targetNode: ChildNode;
 
-      if (currentPart?.type === PartType.ChildNode) {
-        targetNode.replaceWith(currentPart.node);
-        targetNode = currentPart.node;
+      if (currentPart !== null) {
+        if (currentPart.type === PartType.ChildNode) {
+          replaceMarkerNode(targetTree, currentPart.node);
+          targetNode = currentPart.node;
+        } else {
+          targetNode = targetTree.currentNode as ChildNode;
+        }
+      } else {
+        targetNode = treatNodeName(
+          sourceNode.nodeName,
+          targetTree.nextNode(),
+          targetTree,
+        ) as ChildNode;
       }
 
       if (sourceNode.parentNode === fragment) {
@@ -267,12 +277,7 @@ export class TaggedTemplate<
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const sourceTree = document.createTreeWalker(
-        fragment,
-        NodeFilter.SHOW_ELEMENT |
-          NodeFilter.SHOW_TEXT |
-          NodeFilter.SHOW_COMMENT,
-      );
+      const sourceTree = createTreeWalker(fragment);
       let nodeIndex = 0;
 
       for (let i = 0, l = holes.length; i < l; i++) {
@@ -286,7 +291,6 @@ export class TaggedTemplate<
           }
         }
 
-        const currentNode = sourceTree.currentNode;
         let currentPart: Part;
 
         switch (hole.type) {
@@ -294,37 +298,37 @@ export class TaggedTemplate<
           case PartType.Event:
             currentPart = {
               type: hole.type,
-              node: currentNode as Element,
+              node: sourceTree.currentNode as Element,
               name: hole.name,
             };
             break;
           case PartType.ChildNode:
             currentPart = {
               type: hole.type,
-              node: currentNode as Comment,
+              node: sourceTree.currentNode as Comment,
               anchorNode: null,
-              namespaceURI: getNamespaceURI(currentNode, this._mode),
+              namespaceURI: getNamespaceURI(sourceTree.currentNode, this._mode),
             };
             break;
           case PartType.Element:
             currentPart = {
               type: hole.type,
-              node: currentNode as Element,
+              node: sourceTree.currentNode as Element,
             };
             break;
           case PartType.Live:
           case PartType.Property:
             currentPart = {
               type: hole.type,
-              node: currentNode as Element,
+              node: sourceTree.currentNode as Element,
               name: hole.name,
-              defaultValue: currentNode[hole.name as keyof Node],
+              defaultValue: (sourceTree.currentNode as any)[hole.name],
             };
             break;
           case PartType.Text:
             currentPart = {
               type: PartType.Text,
-              node: currentNode as Text,
+              node: sourceTree.currentNode as Text,
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
@@ -369,6 +373,13 @@ function createMarker(placeholder: string): string {
     );
   }
   return '??' + placeholder + '??';
+}
+
+function createTreeWalker(node: Node): TreeWalker {
+  return node.ownerDocument!.createTreeWalker(
+    node,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+  );
 }
 
 function extractCaseSensitiveAttributeName(token: string): string | undefined {
@@ -485,12 +496,9 @@ function parseChildren(
   rootNode: Node,
 ): Hole[] {
   const document = rootNode.ownerDocument!;
-  const sourceTree = document.createTreeWalker(
-    rootNode,
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-  );
+  const sourceTree = createTreeWalker(rootNode);
   const holes: Hole[] = [];
-  let nextNode: ChildNode | null = sourceTree.nextNode() as ChildNode | null;
+  let nextNode = sourceTree.nextNode() as ChildNode | null;
   let index = 0;
 
   while (nextNode !== null) {

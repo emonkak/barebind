@@ -10,11 +10,11 @@ import {
 import {
   CommitPhase,
   HydrationError,
-  HydrationTree,
   Lanes,
   PartType,
   type RenderContext,
 } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBackend, MockSlot } from '../mocks.js';
@@ -227,7 +227,7 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(component, props, part);
       const container = createElement('div', {}, part.node);
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
 
       binding.hydrate(tree, runtime);
@@ -272,7 +272,7 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(component, props, part);
       const container = document.createElement('div');
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
 
       runtime.enqueueCoroutine(binding);

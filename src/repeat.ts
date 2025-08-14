@@ -11,12 +11,12 @@ import {
   type Part,
   PartType,
   type Slot,
-  treatNodeType,
   type UpdateContext,
 } from './core.js';
 import { debugPart } from './debug/part.js';
 import { markUsedValue } from './debug/value.js';
 import { DirectiveSpecifier } from './directive.js';
+import { replaceMarkerNode } from './hydration.js';
 
 const OPERATION_INSERT = 0;
 const OPERATION_MOVE = 1;
@@ -165,11 +165,7 @@ export class RepeatBinding<TSource, TKey, TValue>
 
       slot.hydrate(targetTree, context);
 
-      treatNodeType(
-        Node.COMMENT_NODE,
-        targetTree.nextNode(),
-        targetTree,
-      ).replaceWith(part.node);
+      replaceMarkerNode(targetTree, part.node);
 
       targetItems[i] = {
         key,

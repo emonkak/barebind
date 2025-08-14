@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { HydrationError, HydrationTree, type Part, PartType } from '@/core.js';
+import { HydrationError, type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
+import { createHydrationTree } from '@/hydration.js';
 import {
   moveChildNodes,
   RepeatBinding,
@@ -131,7 +132,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const binding = new RepeatBinding(props, part);
       const runtime = Runtime.create(new MockBackend());
 
@@ -175,7 +176,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const binding = new RepeatBinding(props, part);
       const runtime = Runtime.create(new MockBackend());
 

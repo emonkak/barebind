@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, HydrationTree, PartType } from '@/core.js';
+import { HydrationError, PartType } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -34,7 +35,7 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, document.createComment(''));
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.hydrate(
@@ -70,7 +71,7 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const template = new ChildNodeTemplate();
 

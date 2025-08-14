@@ -1,11 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  $toDirective,
-  HydrationError,
-  HydrationTree,
-  Lanes,
-  PartType,
-} from '@/core.js';
+import { $toDirective, HydrationError, Lanes, PartType } from '@/core.js';
 import {
   Atom,
   Computed,
@@ -13,6 +7,7 @@ import {
   type SignalBinding,
   SignalDirective,
 } from '@/extensions/signal.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../../mocks.js';
 import {
@@ -101,7 +96,7 @@ describe('SiganlBinding', () => {
         runtime,
       ) as SignalBinding<string>;
       const container = createElement('div', {}, part.node);
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
 
       binding.hydrate(tree, runtime);
       binding.commit(runtime);
@@ -126,7 +121,7 @@ describe('SiganlBinding', () => {
       const runtime = Runtime.create(new MockBackend());
       const binding = SignalDirective.resolveBinding(signal, part, runtime);
       const container = createElement('div', {}, part.node);
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
 
       binding.connect(runtime);
       binding.commit(runtime);

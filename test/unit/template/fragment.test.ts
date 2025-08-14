@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { HydrationTree, PartType } from '@/core.js';
+import { PartType } from '@/core.js';
+import { createHydrationTree } from '@/hydration.js';
 import { Runtime } from '@/runtime.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -69,7 +70,7 @@ describe('FragmentTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = document.createElement('div');
-      const tree = new HydrationTree(container);
+      const tree = createHydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
       const template = new FragmentTemplate(internalTemplates);
 
