@@ -11,6 +11,7 @@ import {
   type Part,
   PartType,
   type Slot,
+  treatNodeType,
   type UpdateContext,
 } from './core.js';
 import { debugPart } from './debug/part.js';
@@ -139,7 +140,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._props = props;
   }
 
-  hydrate(tree: HydrationTree, context: UpdateContext): void {
+  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
     if (this._memoizedItems !== null || this._pendingItems.length > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
@@ -162,8 +163,13 @@ export class RepeatBinding<TSource, TKey, TValue>
       };
       const slot = context.resolveSlot(value, part);
 
-      slot.hydrate(tree, context);
-      tree.nextNode(part.node.nodeName).replaceWith(part.node);
+      slot.hydrate(targetTree, context);
+
+      treatNodeType(
+        Node.COMMENT_NODE,
+        targetTree.nextNode(),
+        targetTree,
+      ).replaceWith(part.node);
 
       targetItems[i] = {
         key,

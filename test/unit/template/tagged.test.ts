@@ -619,7 +619,8 @@ describe('TaggedTemplate', () => {
     });
 
     it('hydrates a split text template', () => {
-      const { template, binds } = html`<div>${'Hello'}, ${'World'}!</div>`;
+      const { template, binds } =
+        html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -629,7 +630,8 @@ describe('TaggedTemplate', () => {
       const container = createElement(
         'div',
         {},
-        createElement('div', {}, 'Hello, World!'),
+        '(foo, bar, baz)',
+        createElement('div', {}, '[qux, quux]'),
       );
       const tree = new HydrationTree(container);
       const runtime = Runtime.create(new MockBackend());
@@ -641,20 +643,24 @@ describe('TaggedTemplate', () => {
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
-        '<div>Hello, World!</div>',
+        '(foo, bar, baz)',
+        '',
+        '',
+        '<div>[qux, quux]</div>',
       ]);
-      expect(
-        childNodes.map((childNode) =>
-          Array.from(childNode.childNodes, serializeNode),
-        ),
-      ).toStrictEqual([['Hello, World!', '']]);
+      expect(childNodes).toStrictEqual([
+        expect.exact(slots[0]?.part.node),
+        expect.exact(slots[1]?.part.node),
+        expect.exact(slots[2]?.part.node),
+        expect.exact(container.lastChild),
+      ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
             type: PartType.Text,
-            node: expect.exact(container.firstChild!.firstChild),
-            precedingText: '',
+            node: expect.exact(container.firstChild),
+            precedingText: '(',
             followingText: '',
           },
           value: binds[0],
@@ -666,9 +672,42 @@ describe('TaggedTemplate', () => {
             type: PartType.Text,
             node: expect.any(Text),
             precedingText: ', ',
-            followingText: '!',
+            followingText: '',
           },
           value: binds[1],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            precedingText: ', ',
+            followingText: ')',
+          },
+          value: binds[2],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.exact(container.lastChild?.firstChild),
+            precedingText: '[',
+            followingText: '',
+          },
+          value: binds[3],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            precedingText: ', ',
+            followingText: ']',
+          },
+          value: binds[4],
           isConnected: true,
           isCommitted: false,
         }),
@@ -697,23 +736,6 @@ describe('TaggedTemplate', () => {
       expect(slots).toStrictEqual([]);
     });
 
-    it('should throw the error if the number of binds and holes do not match', () => {
-      const { template } = html`<div>${'foo'}</div>`;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const container = createElement('div', {}, 'foo');
-      const tree = new HydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
-
-      expect(() => {
-        template.hydrate([] as any, part, tree, runtime);
-      }).toThrow('There may be multiple holes indicating the same attribute.');
-    });
-
     it('should throw the error if the template is invalid', () => {
       const template: TaggedTemplate = new TaggedTemplate(
         document.createElement('template'),
@@ -737,7 +759,7 @@ describe('TaggedTemplate', () => {
 
       expect(() => {
         template.hydrate(['foo'], part, tree, runtime);
-      }).toThrow(HydrationError);
+      }).toThrow('There is no node that the hole indicates.');
     });
 
     it.each([
@@ -900,7 +922,8 @@ describe('TaggedTemplate', () => {
     });
 
     it('renders a split text template', () => {
-      const { template, binds } = html`${'Hello'}, ${'World'}!`;
+      const { template, binds } =
+        html`(${'foo'}, ${'bar'}, ${'baz'})<div>[${'qux'}, ${'quux'}]</div>`;
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -910,14 +933,25 @@ describe('TaggedTemplate', () => {
       const runtime = Runtime.create(new MockBackend());
       const { childNodes, slots } = template.render(binds, part, runtime);
 
-      expect(childNodes.map(serializeNode)).toStrictEqual(['', '']);
+      expect(childNodes.map(serializeNode)).toStrictEqual([
+        '',
+        '',
+        '',
+        '<div></div>',
+      ]);
+      expect(childNodes).toStrictEqual([
+        expect.exact(slots[0]?.part.node),
+        expect.exact(slots[1]?.part.node),
+        expect.exact(slots[2]?.part.node),
+        expect.any(HTMLDivElement),
+      ]);
       expect(slots).toStrictEqual(binds.map(() => expect.any(MockSlot)));
       expect(slots).toStrictEqual([
         expect.objectContaining({
           part: {
             type: PartType.Text,
             node: expect.any(Text),
-            precedingText: '',
+            precedingText: '(',
             followingText: '',
           },
           value: binds[0],
@@ -929,9 +963,42 @@ describe('TaggedTemplate', () => {
             type: PartType.Text,
             node: expect.any(Text),
             precedingText: ', ',
-            followingText: '!',
+            followingText: '',
           },
           value: binds[1],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            precedingText: ', ',
+            followingText: ')',
+          },
+          value: binds[2],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            precedingText: '[',
+            followingText: '',
+          },
+          value: binds[3],
+          isConnected: true,
+          isCommitted: false,
+        }),
+        expect.objectContaining({
+          part: {
+            type: PartType.Text,
+            node: expect.any(Text),
+            precedingText: ', ',
+            followingText: ']',
+          },
+          value: binds[4],
           isConnected: true,
           isCommitted: false,
         }),
@@ -1006,21 +1073,6 @@ describe('TaggedTemplate', () => {
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
-    });
-
-    it('should throw the error if the number of binds and holes do not match', () => {
-      const { template } = html`<div>${'foo'}</div>`;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const runtime = Runtime.create(new MockBackend());
-
-      expect(() => {
-        template.render([] as any, part, runtime);
-      }).toThrow('There may be multiple holes indicating the same attribute.');
     });
 
     it('should throw the error if the template is invalid', () => {

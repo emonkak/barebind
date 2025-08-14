@@ -1,11 +1,13 @@
 import {
-  HydrationError,
   type HydrationTree,
   type Part,
   PartType,
   type Slot,
+  splitText,
   type TemplateMode,
   type TemplateResult,
+  treatNodeName,
+  treatNodeType,
   type UpdateContext,
 } from '../core.js';
 import { debugNode } from '../debug/node.js';
@@ -138,116 +140,117 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    tree: HydrationTree,
+    targetTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
-    assertNumberOfBinds(this._holes.length, binds.length);
-
     const document = part.node.ownerDocument;
     const fragment = this._template.content;
-    const treeWalker = document.createTreeWalker(
+    const sourceTree = document.createTreeWalker(
       fragment,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );
     const holes = this._holes;
-    const slots: Slot<unknown>[] = new Array(holes.length);
+    const totalHoles = holes.length;
     const childNodes: ChildNode[] = [];
-    let currentNode: Node | null = null;
+    const slots: Slot<unknown>[] = new Array(totalHoles);
     let nodeIndex = 0;
     let holeIndex = 0;
 
-    for (; (currentNode = treeWalker.nextNode()) !== null; nodeIndex++) {
-      let alternateNode: ChildNode | null = null;
+    for (
+      let sourceNode: Node | null;
+      (sourceNode = sourceTree.nextNode()) !== null;
+      nodeIndex++
+    ) {
+      let currentPart: Part | null = null;
 
-      for (; holeIndex < holes.length; holeIndex++) {
+      for (; holeIndex < totalHoles; holeIndex++) {
         const hole = holes[holeIndex]!;
         if (hole.index !== nodeIndex) {
           break;
         }
 
-        let currentPart: Part;
-
         switch (hole.type) {
-          case PartType.Attribute: {
+          case PartType.Attribute:
+          case PartType.Event:
             currentPart = {
-              type: PartType.Attribute,
-              node: tree.peekNode(currentNode.nodeName) as Element,
+              type: hole.type,
+              node: treatNodeType(
+                Node.ELEMENT_NODE,
+                targetTree.peekNode(),
+                targetTree,
+              ),
               name: hole.name,
             };
             break;
-          }
           case PartType.ChildNode:
             currentPart = {
-              type: PartType.ChildNode,
+              type: hole.type,
               node: document.createComment(''),
               anchorNode: null,
-              namespaceURI: getNamespaceURI(currentNode, this._mode),
+              namespaceURI: getNamespaceURI(targetTree.currentNode, this._mode),
             };
-            alternateNode = currentPart.node;
             break;
           case PartType.Element:
             currentPart = {
-              type: PartType.Element,
-              node: tree.peekNode(currentNode.nodeName) as Element,
+              type: hole.type,
+              node: treatNodeType(
+                Node.ELEMENT_NODE,
+                targetTree.peekNode(),
+                targetTree,
+              ),
             };
             break;
-          case PartType.Event:
-            currentPart = {
-              type: PartType.Event,
-              node: tree.peekNode(currentNode.nodeName) as Element,
-              name: hole.name,
-            };
-            break;
-          case PartType.Live: {
-            const node = tree.peekNode(currentNode.nodeName) as Element;
-            currentPart = {
-              type: PartType.Live,
-              node,
-              name: hole.name,
-              defaultValue: node[hole.name as keyof Element],
-            };
-            break;
-          }
+          case PartType.Live:
           case PartType.Property: {
-            const node = tree.peekNode(currentNode.nodeName) as Element;
+            const node = treatNodeType(
+              Node.ELEMENT_NODE,
+              targetTree.peekNode(),
+              targetTree,
+            );
             currentPart = {
-              type: PartType.Property,
+              type: hole.type,
               node,
               name: hole.name,
-              defaultValue: node[hole.name as keyof Element],
+              defaultValue: node[hole.name as keyof Node],
             };
             break;
           }
           case PartType.Text:
             currentPart = {
-              type: PartType.Text,
-              node: tree.splitText().peekNode(currentNode.nodeName) as Text,
+              type: hole.type,
+              node: splitText(targetTree.peekNode(), targetTree),
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
             break;
         }
 
-        const slot = context.resolveSlot(binds[holeIndex]!, currentPart);
-        slot.hydrate(tree, context);
+        const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
+        slot.hydrate(targetTree, context);
 
         slots[holeIndex] = slot;
       }
 
-      let actualNode = tree.nextNode(currentNode.nodeName);
+      let targetNode = treatNodeName(
+        sourceNode.nodeName,
+        targetTree.nextNode(),
+        targetTree,
+      ) as ChildNode;
 
-      if (alternateNode !== null) {
-        actualNode.replaceWith(alternateNode);
-        actualNode = alternateNode;
+      if (currentPart?.type === PartType.ChildNode) {
+        targetNode.replaceWith(currentPart.node);
+        targetNode = currentPart.node;
       }
 
-      if (currentNode.parentNode === fragment) {
-        childNodes.push(actualNode);
+      if (sourceNode.parentNode === fragment) {
+        childNodes.push(targetNode);
       }
     }
 
-    if (holeIndex < holes.length) {
-      throw new HydrationError('Hydration is failed there is no node.');
+    if (holeIndex < totalHoles) {
+      throw new Error(
+        'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
+      );
     }
 
     return { childNodes, slots };
@@ -258,47 +261,46 @@ export class TaggedTemplate<
     part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult {
-    assertNumberOfBinds(this._holes.length, binds.length);
-
     const document = part.node.ownerDocument;
     const fragment = document.importNode(this._template.content, true);
     const holes = this._holes;
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
-      const treeWalker = document.createTreeWalker(
+      const sourceTree = document.createTreeWalker(
         fragment,
         NodeFilter.SHOW_ELEMENT |
           NodeFilter.SHOW_TEXT |
           NodeFilter.SHOW_COMMENT,
       );
-      let nodeIndex = -1;
+      let nodeIndex = 0;
 
       for (let i = 0, l = holes.length; i < l; i++) {
         const hole = holes[i]!;
 
-        for (; nodeIndex < hole.index; nodeIndex++) {
-          if (treeWalker.nextNode() === null) {
+        for (; nodeIndex <= hole.index; nodeIndex++) {
+          if (sourceTree.nextNode() === null) {
             throw new Error(
               'There is no node that the hole indicates. This may be a bug or the template may have been modified.',
             );
           }
         }
 
-        const currentNode = treeWalker.currentNode;
+        const currentNode = sourceTree.currentNode;
         let currentPart: Part;
 
         switch (hole.type) {
           case PartType.Attribute:
+          case PartType.Event:
             currentPart = {
-              type: PartType.Attribute,
+              type: hole.type,
               node: currentNode as Element,
               name: hole.name,
             };
             break;
           case PartType.ChildNode:
             currentPart = {
-              type: PartType.ChildNode,
+              type: hole.type,
               node: currentNode as Comment,
               anchorNode: null,
               namespaceURI: getNamespaceURI(currentNode, this._mode),
@@ -306,28 +308,14 @@ export class TaggedTemplate<
             break;
           case PartType.Element:
             currentPart = {
-              type: PartType.Element,
+              type: hole.type,
               node: currentNode as Element,
-            };
-            break;
-          case PartType.Event:
-            currentPart = {
-              type: PartType.Event,
-              node: currentNode as Element,
-              name: hole.name,
             };
             break;
           case PartType.Live:
-            currentPart = {
-              type: PartType.Live,
-              node: currentNode as Element,
-              name: hole.name,
-              defaultValue: currentNode[hole.name as keyof Node],
-            };
-            break;
           case PartType.Property:
             currentPart = {
-              type: PartType.Property,
+              type: hole.type,
               node: currentNode as Element,
               name: hole.name,
               defaultValue: currentNode[hole.name as keyof Node],
@@ -353,17 +341,6 @@ export class TaggedTemplate<
     const childNodes = Array.from(fragment.childNodes);
 
     return { childNodes, slots };
-  }
-}
-
-function assertNumberOfBinds(
-  expectedLength: number,
-  actualLength: number,
-): void {
-  if (expectedLength !== actualLength) {
-    throw new Error(
-      `The number of binds must be ${expectedLength}, but got ${actualLength}. There may be multiple holes indicating the same attribute.`,
-    );
   }
 }
 
@@ -508,12 +485,12 @@ function parseChildren(
   rootNode: Node,
 ): Hole[] {
   const document = rootNode.ownerDocument!;
-  const treeWalker = document.createTreeWalker(
+  const sourceTree = document.createTreeWalker(
     rootNode,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
   );
   const holes: Hole[] = [];
-  let nextNode: ChildNode | null = treeWalker.nextNode() as ChildNode | null;
+  let nextNode: ChildNode | null = sourceTree.nextNode() as ChildNode | null;
   let index = 0;
 
   while (nextNode !== null) {
@@ -566,7 +543,7 @@ function parseChildren(
       case Node.TEXT_NODE: {
         const normalizedText = normalizeText((currentNode as Text).data);
         if (normalizedText === '') {
-          nextNode = treeWalker.nextNode() as ChildNode | null;
+          nextNode = sourceTree.nextNode() as ChildNode | null;
           currentNode.remove();
           continue;
         }
@@ -603,7 +580,7 @@ function parseChildren(
       }
     }
 
-    nextNode = treeWalker.nextNode() as ChildNode | null;
+    nextNode = sourceTree.nextNode() as ChildNode | null;
     index++;
   }
 

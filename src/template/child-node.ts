@@ -4,6 +4,7 @@ import {
   type Part,
   PartType,
   type TemplateResult,
+  treatNodeType,
   type UpdateContext,
 } from '../core.js';
 import { AbstractTemplate } from './template.js';
@@ -20,7 +21,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   hydrate(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    tree: HydrationTree,
+    targetTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -32,8 +33,13 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.hydrate(tree, context);
-    tree.nextNode(childNodePart.node.nodeName).replaceWith(childNodePart.node);
+    childNodeSlot.hydrate(targetTree, context);
+
+    treatNodeType(
+      Node.COMMENT_NODE,
+      targetTree.nextNode(),
+      targetTree,
+    ).replaceWith(childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

@@ -81,8 +81,8 @@ export class FlexibleSlot<T> implements Slot<T> {
     return this._dirty;
   }
 
-  hydrate(tree: HydrationTree, context: UpdateContext): void {
-    this._pendingBinding.hydrate(tree, context);
+  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
+    this._pendingBinding.hydrate(targetTree, context);
     this._dirty = true;
   }
 

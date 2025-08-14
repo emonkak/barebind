@@ -4,6 +4,7 @@ import {
   Lanes,
   PartType,
   type Slot,
+  treatNodeType,
 } from '../core.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
@@ -42,11 +43,16 @@ export class AsyncRoot<T> {
   }
 
   hydrate(): Promise<void> {
-    const tree = new HydrationTree(this._container);
+    const targetTree = new HydrationTree(this._container);
     const part = this._slot.part;
 
-    this._slot.hydrate(tree, this._runtime);
-    tree.nextNode(part.node.nodeName).replaceWith(part.node);
+    this._slot.hydrate(targetTree, this._runtime);
+
+    treatNodeType(
+      Node.COMMENT_NODE,
+      targetTree.nextNode(),
+      targetTree,
+    ).replaceWith(part.node);
 
     this._runtime.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),

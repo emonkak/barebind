@@ -40,7 +40,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
-  hydrate(tree: HydrationTree, context: UpdateContext): void;
+  hydrate(targetTree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -366,7 +366,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: unknown;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): boolean;
-  hydrate(tree: HydrationTree, context: UpdateContext): void;
+  hydrate(targetTree: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -386,7 +386,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    tree: HydrationTree,
+    targetTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult;
 }
@@ -435,48 +435,44 @@ interface KeyValuePair {
   value: unknown;
 }
 
+interface NodeTypeMap {
+  [Node.COMMENT_NODE]: Comment;
+  [Node.ELEMENT_NODE]: Element;
+  [Node.TEXT_NODE]: Text;
+}
+
 export class HydrationError extends Error {}
 
 export class HydrationTree {
-  private readonly _treeWalker: TreeWalker;
+  private readonly _tree: TreeWalker;
 
   private _lookaheadNode: Node | null;
 
   constructor(container: Element) {
-    this._treeWalker = container.ownerDocument.createTreeWalker(
+    this._tree = container.ownerDocument.createTreeWalker(
       container,
       NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
     );
-    this._lookaheadNode = this._treeWalker.nextNode();
+    this._lookaheadNode = this._tree.nextNode();
   }
 
-  nextNode(expectedName: string): ChildNode {
+  get currentNode(): Node {
+    return this._tree.currentNode;
+  }
+
+  set currentNode(currentNode: Node) {
+    this._tree.currentNode = currentNode;
+    this._lookaheadNode = currentNode;
+  }
+
+  nextNode(): Node | null {
     const lookaheadNode = this._lookaheadNode;
-    ensureNode(expectedName, lookaheadNode, this._treeWalker.currentNode);
-    this._lookaheadNode = this._treeWalker.nextNode();
+    this._lookaheadNode = this._tree.nextNode();
     return lookaheadNode;
   }
 
-  peekNode(expectedName: string): ChildNode {
-    const lookaheadNode = this._lookaheadNode;
-    ensureNode(expectedName, lookaheadNode, this._treeWalker.currentNode);
-    return lookaheadNode;
-  }
-
-  splitText(): this {
-    const currentNode = this._treeWalker.currentNode;
-    const lookaheadNode = this._lookaheadNode;
-
-    if (
-      currentNode instanceof Text &&
-      (lookaheadNode === null || lookaheadNode.previousSibling === currentNode)
-    ) {
-      const splittedText = currentNode.ownerDocument.createTextNode('');
-      currentNode.after(splittedText);
-      this._lookaheadNode = splittedText;
-    }
-
-    return this;
+  peekNode(): Node | null {
+    return this._lookaheadNode;
   }
 }
 
@@ -513,34 +509,14 @@ export class Scope {
   }
 }
 
+/**
+ * @internal
+ */
 export function areDirectiveTypesEqual(
   x: DirectiveType<unknown>,
   y: DirectiveType<unknown>,
 ): boolean {
   return x.equals?.(y) ?? x === y;
-}
-
-/**
- * @internal
- */
-function ensureNode<TName extends string>(
-  expectedName: TName,
-  actualNode: Node | null,
-  lastNode: Node,
-): asserts actualNode is ChildNode {
-  if (actualNode === null) {
-    throw new HydrationError(
-      `Hydration is failed because there is no node. ${expectedName} node is expected here:\n` +
-        debugNode(lastNode, '[[THIS IS THE LAST NODE!]]'),
-    );
-  }
-
-  if (actualNode.nodeName !== expectedName) {
-    throw new HydrationError(
-      `Hydration is failed because the node is mismatched. ${expectedName} node is expected here:\n` +
-        debugNode(lastNode, '[[THIS IS MISMATCHED!]]'),
-    );
-  }
 }
 
 /**
@@ -576,6 +552,21 @@ export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
 /**
  * @internal
  */
+export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
+  if (lanes & Lanes.BackgroundLane) {
+    return 'background';
+  } else if (lanes & Lanes.UserVisibleLane) {
+    return 'user-visible';
+  } else if (lanes & Lanes.UserBlockingLane) {
+    return 'user-blocking';
+  } else {
+    return null;
+  }
+}
+
+/**
+ * @internal
+ */
 export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
   let lanes = Lanes.NoLanes;
 
@@ -605,27 +596,67 @@ export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
 /**
  * @internal
  */
-export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
-  if (lanes & Lanes.BackgroundLane) {
-    return 'background';
-  } else if (lanes & Lanes.UserVisibleLane) {
-    return 'user-visible';
-  } else if (lanes & Lanes.UserBlockingLane) {
-    return 'user-blocking';
-  } else {
-    return null;
-  }
-}
-
-/**
- * @internal
- */
 export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.anchorNode ?? part.node)
     : part.node;
 }
 
+/**
+ * @internal
+ */
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
+}
+
+/**
+ * @internal
+ */
+export function splitText(node: Node | null, tree: HydrationTree): Text {
+  const previousNode = node !== null ? node.previousSibling : tree.currentNode;
+
+  if (previousNode instanceof Text) {
+    const splittedText = previousNode.ownerDocument.createTextNode('');
+    previousNode.after(splittedText);
+    tree.currentNode = splittedText;
+    return splittedText;
+  } else {
+    return treatNodeType(Node.TEXT_NODE, node, tree);
+  }
+}
+
+/**
+ * @internal
+ */
+export function treatNodeName(
+  expectedName: string,
+  node: Node | null,
+  tree: HydrationTree,
+): Node {
+  if (node === null || node.nodeName !== expectedName) {
+    throw new HydrationError(
+      `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName ?? 'null'}:\n` +
+        debugNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
+    );
+  }
+
+  return node;
+}
+
+/**
+ * @internal
+ */
+export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
+  expectedType: TExpectedType,
+  node: Node | null,
+  tree: HydrationTree,
+): NodeTypeMap[TExpectedType] {
+  if (node === null || node.nodeType !== expectedType) {
+    throw new HydrationError(
+      `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType ?? 'null'}:\n` +
+        debugNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
+    );
+  }
+
+  return node as NodeTypeMap[TExpectedType];
 }

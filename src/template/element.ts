@@ -4,6 +4,8 @@ import {
   type Part,
   PartType,
   type TemplateResult,
+  treatNodeName,
+  treatNodeType,
   type UpdateContext,
 } from '../core.js';
 import { DirectiveSpecifier } from '../directive.js';
@@ -42,7 +44,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    tree: HydrationTree,
+    targetTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -50,7 +52,11 @@ export class ElementTemplate<
       getNamespaceURIByTagName(this._name) ?? part.namespaceURI;
     const elementPart = {
       type: PartType.Element,
-      node: tree.nextNode(this._name.toUpperCase()) as Element,
+      node: treatNodeName(
+        this._name.toUpperCase(),
+        targetTree.nextNode(),
+        targetTree,
+      ) as Element,
     };
     const childrenPart = {
       type: PartType.ChildNode,
@@ -61,9 +67,14 @@ export class ElementTemplate<
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
-    elementSlot.hydrate(tree, context);
-    childrenSlot.hydrate(tree, context);
-    tree.nextNode(childrenPart.node.nodeName).replaceWith(childrenPart.node);
+    elementSlot.hydrate(targetTree, context);
+    childrenSlot.hydrate(targetTree, context);
+
+    treatNodeType(
+      Node.COMMENT_NODE,
+      targetTree.nextNode(),
+      targetTree,
+    ).replaceWith(childrenPart.node);
 
     return {
       childNodes: [elementPart.node],
@@ -92,10 +103,10 @@ export class ElementTemplate<
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
+    elementPart.node.appendChild(childrenPart.node);
+
     elementSlot.connect(context);
     childrenSlot.connect(context);
-
-    elementPart.node.appendChild(childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

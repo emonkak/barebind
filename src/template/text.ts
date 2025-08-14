@@ -2,6 +2,7 @@ import {
   type HydrationTree,
   type Part,
   PartType,
+  splitText,
   type TemplateResult,
   type UpdateContext,
 } from '../core.js';
@@ -33,18 +34,18 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   hydrate(
     binds: readonly [T],
     _part: Part.ChildNodePart,
-    tree: HydrationTree,
+    targetTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const textPart = {
       type: PartType.Text,
-      node: tree.splitText().nextNode('#text') as Text,
+      node: splitText(targetTree.nextNode(), targetTree),
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
-    textSlot.hydrate(tree, context);
+    textSlot.hydrate(targetTree, context);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }
