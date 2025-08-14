@@ -15,11 +15,10 @@ import {
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
-import {
-  AbstractTemplate,
-  getNamespaceURIByTagName,
-  normalizeText,
-} from './template.js';
+import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
+
+const LEADING_NEWLINE_REGEXP = /^\s*\n/;
+const TAILING_NEWLINE_REGEXP = /\n\s*$/;
 
 export type Hole =
   | AttributeHole
@@ -346,6 +345,16 @@ export class TaggedTemplate<
 
     return { childNodes, slots };
   }
+}
+
+export function normalizeText(text: string): string {
+  if (LEADING_NEWLINE_REGEXP.test(text)) {
+    text = text.trimStart();
+  }
+  if (TAILING_NEWLINE_REGEXP.test(text)) {
+    text = text.trimEnd();
+  }
+  return text;
 }
 
 function assertNumberOfHoles(

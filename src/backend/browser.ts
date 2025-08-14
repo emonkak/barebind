@@ -10,8 +10,7 @@ import {
   type Primitive,
   type RequestCallbackOptions,
   type SlotType,
-  type Template,
-  type TemplateMode,
+  type TemplateFactory,
 } from '../core.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
@@ -26,19 +25,12 @@ import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
-import { ChildNodeTemplate } from '../template/child-node.js';
-import { EmptyTemplate } from '../template/empty.js';
-import { TaggedTemplate } from '../template/tagged.js';
-import {
-  isIsolatedTagInterpolation,
-  normalizeText,
-} from '../template/template.js';
-import { TextTemplate } from '../template/text.js';
-
-const CHILD_NODE_TEMPLATE = new ChildNodeTemplate();
-const EMPTY_TEMPLATE = new EmptyTemplate();
+import { OptimizedTemplateFactory } from '../template-factory.js';
 
 export class BrowserBackend implements Backend {
+  private readonly _templateFactory: OptimizedTemplateFactory =
+    new OptimizedTemplateFactory(document);
+
   commitEffects(
     effects: Effect[],
     _phase: CommitPhase,
@@ -60,37 +52,8 @@ export class BrowserBackend implements Backend {
     }
   }
 
-  parseTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    placeholder: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]> {
-    if (binds.length === 0) {
-      // Assert: strings.length === 1
-      if (normalizeText(strings[0]!) === '') {
-        return EMPTY_TEMPLATE;
-      }
-    } else if (binds.length === 1) {
-      // Assert: strings.length === 2
-      const precedingText = normalizeText(strings[0]!);
-      const followingText = normalizeText(strings[1]!);
-
-      if (
-        (!precedingText.includes('<') && !followingText.includes('<')) ||
-        mode === 'textarea'
-      ) {
-        // Tags are nowhere, so it is a plain text.
-        return new TextTemplate(precedingText, followingText);
-      }
-
-      if (isIsolatedTagInterpolation(precedingText, followingText)) {
-        // There is only one tag.
-        return CHILD_NODE_TEMPLATE;
-      }
-    }
-
-    return TaggedTemplate.parse(strings, binds, placeholder, mode, document);
+  getTemplateFactory(): TemplateFactory {
+    return this._templateFactory;
   }
 
   requestCallback(

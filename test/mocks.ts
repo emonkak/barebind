@@ -25,6 +25,7 @@ import {
   type Slot,
   type SlotType,
   type Template,
+  type TemplateFactory,
   type TemplateMode,
   type TemplateResult,
   type UpdateContext,
@@ -247,13 +248,8 @@ export class MockBackend implements Backend {
     return 'user-blocking';
   }
 
-  parseTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    placeholder: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]> {
-    return new MockTemplate(strings, binds, placeholder, mode);
+  getTemplateFactory(): TemplateFactory {
+    return new MockTemplateFactory();
   }
 
   requestCallback(
@@ -410,5 +406,16 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
       childNodes: [],
       slots: [],
     };
+  }
+}
+
+export class MockTemplateFactory implements TemplateFactory {
+  parseTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    placeholder: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]> {
+    return new MockTemplate(strings, binds, placeholder, mode);
   }
 }

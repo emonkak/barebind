@@ -386,12 +386,9 @@ export class Runtime implements CommitContext, UpdateContext {
     let template = cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = backend.parseTemplate(
-        strings,
-        binds,
-        templatePlaceholder,
-        mode,
-      );
+      template = backend
+        .getTemplateFactory()
+        .parseTemplate(strings, binds, templatePlaceholder, mode);
       cachedTemplates.set(strings, template);
     }
 

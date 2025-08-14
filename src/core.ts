@@ -13,12 +13,7 @@ export interface Backend {
     context: CommitContext,
   ): void;
   getCurrentPriority(): TaskPriority;
-  parseTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    placeholder: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
+  getTemplateFactory(): TemplateFactory;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
@@ -392,6 +387,15 @@ export interface Template<TBinds extends readonly unknown[]>
     targetTree: HydrationTree,
     context: UpdateContext,
   ): TemplateResult;
+}
+
+export interface TemplateFactory {
+  parseTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    placeholder: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
 }
 
 export interface TemplateLiteral<T> {
