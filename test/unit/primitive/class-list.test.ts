@@ -242,7 +242,7 @@ describe('ClassListBinding', () => {
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('bar foo');
+      expect(part.node.getAttribute('class')).toBe('bar');
 
       binding.bind(specifier1);
       binding.connect(runtime);
@@ -265,22 +265,6 @@ describe('ClassListBinding', () => {
       binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('baz foo bar');
-    });
-
-    it('can overwrite preset class names', () => {
-      const specifier: ClassSpecifier = { foo: true, bar: true, baz: false };
-      const part = {
-        type: PartType.Attribute,
-        node: createElement('div', { class: 'foo bar baz' }),
-        name: 'class',
-      };
-      const binding = new ClassListBinding(specifier, part);
-      const runtime = Runtime.create(new MockBackend());
-
-      binding.connect(runtime);
-      binding.commit(runtime);
-
-      expect(part.node.getAttribute('class')).toBe('foo bar');
     });
   });
 

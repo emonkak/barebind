@@ -96,7 +96,9 @@ export class ClassListBinding extends PrimitiveBinding<
 
       if (newClassAtom != null) {
         if (typeof newClassAtom === typeof oldClassAtom) {
-          updateClasses(classList, newClassAtom, oldClassAtom!, key);
+          if (newClassAtom !== oldClassAtom) {
+            toggleClasses(classList, newClassAtom, oldClassAtom!, key);
+          }
         } else {
           if (oldClassAtom != null) {
             removeClasses(classList, oldClassAtom, key);
@@ -132,10 +134,14 @@ function addClasses(
   if (typeof classAtom === 'string') {
     classList.add(classAtom);
   } else if (typeof classAtom === 'boolean') {
-    classList.toggle(key, classAtom);
+    if (classAtom) {
+      classList.add(key);
+    }
   } else {
     for (const key of Object.keys(classAtom)) {
-      classList.toggle(key, classAtom[key]);
+      if (classAtom[key]) {
+        classList.add(key);
+      }
     }
   }
 }
@@ -170,7 +176,7 @@ function removeClasses(
   }
 }
 
-function updateClasses(
+function toggleClasses(
   classList: DOMTokenList,
   newClassAtom: NonNullable<ClassAtom>,
   oldClassAtom: NonNullable<ClassAtom>,
@@ -178,9 +184,7 @@ function updateClasses(
 ): void {
   // Precondition: newSpecifier and oldSpecifier are the same type.
   if (typeof newClassAtom === 'string') {
-    if (newClassAtom !== oldClassAtom) {
-      classList.remove(oldClassAtom as string);
-    }
+    classList.remove(oldClassAtom as string);
     classList.add(newClassAtom);
   } else if (typeof newClassAtom === 'boolean') {
     classList.toggle(key, newClassAtom);
