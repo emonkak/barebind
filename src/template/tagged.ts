@@ -15,7 +15,11 @@ import {
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
-import { AbstractTemplate, getNamespaceURIByTagName, stripWhitespaces } from './template.js';
+import {
+  AbstractTemplate,
+  getNamespaceURIByTagName,
+  stripWhitespaces,
+} from './template.js';
 
 export type Hole =
   | AttributeHole
@@ -67,15 +71,16 @@ export interface TextHole {
   followingText: string;
 }
 
-const PLACEHOLDER_REGEXP = /^[0-9a-z_-]+$/;
+const PLACEHOLDER_PATTERN = /^[0-9a-z_-]+$/;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#attributes-2
 const ATTRIBUTE_NAME_CHARS = String.raw`[^ "'>/=\p{Control}\p{Noncharacter_Code_Point}]`;
 // https://infra.spec.whatwg.org/#ascii-whitespace
 const WHITESPACE_CHARS = String.raw`[\t\n\f\r ]`;
+const QUOTE_CHARS = `["']`;
 
-const ATTRIBUTE_NAME_REGEXP = new RegExp(
-  `(${ATTRIBUTE_NAME_CHARS}+)${WHITESPACE_CHARS}*=${WHITESPACE_CHARS}*["']?$`,
+const ATTRIBUTE_NAME_PATTERN = new RegExp(
+  `${ATTRIBUTE_NAME_CHARS}+(?=${WHITESPACE_CHARS}*=${WHITESPACE_CHARS}*${QUOTE_CHARS}?$)`,
   'u',
 );
 
@@ -231,25 +236,25 @@ export class TaggedTemplate<
         lastPartIndex = hole.index;
       }
 
-      let targetNode: ChildNode;
+      let targetNode: Node;
 
       if (currentPart !== null) {
         if (currentPart.type === PartType.ChildNode) {
           replaceMarkerNode(targetTree, currentPart.node);
           targetNode = currentPart.node;
         } else {
-          targetNode = targetTree.currentNode as ChildNode;
+          targetNode = targetTree.currentNode;
         }
       } else {
         targetNode = treatNodeName(
           sourceNode.nodeName,
           targetTree.nextNode(),
           targetTree,
-        ) as ChildNode;
+        );
       }
 
       if (sourceNode.parentNode === fragment) {
-        childNodes.push(targetNode);
+        childNodes.push(targetNode as ChildNode);
       }
     }
 
@@ -363,9 +368,9 @@ function createMarker(placeholder: string): string {
   //   case, the tag is treated as a comment.
   //   https://html.spec.whatwg.org/multipage/parsing.html#parse-error-unexpected-question-mark-instead-of-tag-name
   // - A marker is lowercase to match attribute names.
-  if (!PLACEHOLDER_REGEXP.test(placeholder)) {
+  if (!PLACEHOLDER_PATTERN.test(placeholder)) {
     throw new Error(
-      `The placeholder is in an invalid format. It must match pattern ${PLACEHOLDER_REGEXP.toString()}, but got ${JSON.stringify(placeholder)}.`,
+      `The placeholder is in an invalid format. It must match pattern ${PLACEHOLDER_PATTERN.toString()}, but got ${JSON.stringify(placeholder)}.`,
     );
   }
   return '??' + placeholder + '??';
@@ -378,8 +383,9 @@ function createTreeWalker(node: Node): TreeWalker {
   );
 }
 
-function extractCaseSensitiveAttributeName(token: string): string | undefined {
-  return ATTRIBUTE_NAME_REGEXP.exec(token)?.[1];
+function extractRawAttributeName(s: string): string {
+  /* v8 ignore next @preserve */
+  return s.match(ATTRIBUTE_NAME_PATTERN)?.[0] ?? s;
 }
 
 function getNamespaceURI(node: Node, mode: TemplateMode): string | null {
@@ -406,14 +412,12 @@ function parseAttribtues(
         index,
       };
     } else if (value === marker) {
-      const caseSensitiveName = extractCaseSensitiveAttributeName(
-        strings[holes.length]!,
-      );
+      const rawName = extractRawAttributeName(strings[holes.length]!);
 
       DEBUG: {
-        if (caseSensitiveName?.toLowerCase() !== name) {
+        if (rawName.toLowerCase() !== name) {
           throw new Error(
-            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute:\n` +
+            `The attribute name must be "${name}", but got "${rawName}". There may be a unclosed tag or a duplicate attribute:\n` +
               debugPart(
                 { type: PartType.Attribute, name, node: element },
                 ERROR_MAKER,
@@ -422,30 +426,35 @@ function parseAttribtues(
         }
       }
 
-      if (caseSensitiveName[0] === '@' && caseSensitiveName.length > 1) {
-        hole = {
-          type: PartType.Event,
-          index,
-          name: caseSensitiveName.slice(1),
-        };
-      } else if (caseSensitiveName[0] === '$' && caseSensitiveName.length > 1) {
-        hole = {
-          type: PartType.Live,
-          index,
-          name: caseSensitiveName.slice(1),
-        };
-      } else if (caseSensitiveName[0] === '.' && caseSensitiveName.length > 1) {
-        hole = {
-          type: PartType.Property,
-          index,
-          name: caseSensitiveName.slice(1),
-        };
-      } else {
-        hole = {
-          type: PartType.Attribute,
-          index,
-          name: caseSensitiveName,
-        };
+      switch (rawName[0]) {
+        case '@':
+          hole = {
+            type: PartType.Event,
+            index,
+            name: rawName.slice(1),
+          };
+          break;
+        case '$':
+          hole = {
+            type: PartType.Live,
+            index,
+            name: rawName.slice(1),
+          };
+          break;
+        case '.':
+          hole = {
+            type: PartType.Property,
+            index,
+            name: rawName.slice(1),
+          };
+          break;
+        default:
+          hole = {
+            type: PartType.Attribute,
+            index,
+            name: rawName,
+          };
+          break;
       }
     } else {
       DEBUG: {
@@ -525,7 +534,7 @@ function parseChildren(
       }
       case Node.COMMENT_NODE: {
         if (
-          trimTrailingSlash((currentNode as Comment).data).trim() === marker
+          stripTrailingSlash((currentNode as Comment).data).trim() === marker
         ) {
           holes.push({
             type: PartType.ChildNode,
@@ -593,6 +602,6 @@ function parseChildren(
   return holes;
 }
 
-function trimTrailingSlash(s: string): string {
+function stripTrailingSlash(s: string): string {
   return s.at(-1) === '/' ? s.slice(0, -1) : s;
 }
