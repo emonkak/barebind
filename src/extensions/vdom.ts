@@ -19,11 +19,7 @@ import { debugPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import {
-  deleteStyles,
-  type StyleProperties,
-  updateStyles,
-} from '../primitive/style.js';
+import { type StyleProperties, updateStyles } from '../primitive/style.js';
 import { RepeatDirective, type RepeatProps } from '../repeat.js';
 import { ChildNodeTemplate } from '../template/child-node.js';
 import { ElementTemplate } from '../template/element.js';
@@ -363,8 +359,9 @@ export class ElementBinding implements Binding<ElementProps> {
         }
         return;
       case 'style':
-        deleteStyles(
+        updateStyles(
           (element as HTMLElement).style,
+          {},
           (value ?? {}) as StyleProperties,
         );
         return;

@@ -90,21 +90,9 @@ export class StyleBinding extends PrimitiveBinding<
       | MathMLElement
       | SVGElement;
 
-    deleteStyles(style, props);
+    updateStyles(style, {}, props);
 
     this._memoizedValue = {};
-  }
-}
-
-export function deleteStyles(
-  style: CSSStyleDeclaration,
-  props: StyleProperties,
-): void {
-  for (const key of Object.keys(props)) {
-    if (props[key] != null) {
-      const property = toCSSProperty(key);
-      style.removeProperty(property);
-    }
   }
 }
 
