@@ -28,8 +28,11 @@ import { StrictSlot } from '../slot/strict.js';
 import { OptimizedTemplateFactory } from '../template-factory.js';
 
 export class BrowserBackend implements Backend {
-  private readonly _templateFactory: OptimizedTemplateFactory =
-    new OptimizedTemplateFactory(document);
+  private readonly _templateFactory: OptimizedTemplateFactory;
+
+  constructor(document: Document = window.document) {
+    this._templateFactory = new OptimizedTemplateFactory(document);
+  }
 
   commitEffects(
     effects: Effect[],
