@@ -75,7 +75,7 @@ export class BrowserBackend implements Backend {
             break;
           }
           case 'background': {
-            if (typeof window.requestIdleCallback === 'function') {
+            if (typeof requestIdleCallback === 'function') {
               requestIdleCallback(resolve);
             } else {
               setTimeout(resolve);
