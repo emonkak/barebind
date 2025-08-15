@@ -1,7 +1,8 @@
 import type { Template, TemplateFactory, TemplateMode } from './core.js';
 import { ChildNodeTemplate } from './template/child-node.js';
 import { EmptyTemplate } from './template/empty.js';
-import { normalizeText, TaggedTemplate } from './template/tagged.js';
+import { TaggedTemplate } from './template/tagged.js';
+import { stripWhitespaces } from './template/template.js';
 import { TextTemplate } from './template/text.js';
 
 const START_TAG_PATTERN = /^<(?:!--\s*)?$/;
@@ -28,13 +29,13 @@ export class OptimizedTemplateFactory implements TemplateFactory {
   ): Template<readonly unknown[]> {
     if (binds.length === 0) {
       // Assert: strings.length === 1
-      if (normalizeText(strings[0]!) === '') {
+      if (stripWhitespaces(strings[0]!) === '') {
         return this._emptyTemplate;
       }
     } else if (binds.length === 1) {
       // Assert: strings.length === 2
-      const precedingText = normalizeText(strings[0]!);
-      const followingText = normalizeText(strings[1]!);
+      const precedingText = stripWhitespaces(strings[0]!);
+      const followingText = stripWhitespaces(strings[1]!);
 
       if (
         mode === 'textarea' ||

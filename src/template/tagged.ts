@@ -15,10 +15,7 @@ import {
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
-import { AbstractTemplate, getNamespaceURIByTagName } from './template.js';
-
-const LEADING_NEWLINE_REGEXP = /^\s*\n/;
-const TAILING_NEWLINE_REGEXP = /\n\s*$/;
+import { AbstractTemplate, getNamespaceURIByTagName, stripWhitespaces } from './template.js';
 
 export type Hole =
   | AttributeHole
@@ -98,13 +95,13 @@ export class TaggedTemplate<
     const marker = createMarker(placeholder);
 
     if (mode === 'html') {
-      template.innerHTML = normalizeText(strings.join(marker));
+      template.innerHTML = stripWhitespaces(strings.join(marker));
     } else {
       template.innerHTML =
         '<' +
         mode +
         '>' +
-        normalizeText(strings.join(marker)) +
+        stripWhitespaces(strings.join(marker)) +
         '</' +
         mode +
         '>';
@@ -347,16 +344,6 @@ export class TaggedTemplate<
   }
 }
 
-export function normalizeText(text: string): string {
-  if (LEADING_NEWLINE_REGEXP.test(text)) {
-    text = text.trimStart();
-  }
-  if (TAILING_NEWLINE_REGEXP.test(text)) {
-    text = text.trimEnd();
-  }
-  return text;
-}
-
 function assertNumberOfHoles(
   expectedLength: number,
   actualLength: number,
@@ -558,7 +545,7 @@ function parseChildren(
         break;
       }
       case Node.TEXT_NODE: {
-        const normalizedText = normalizeText((currentNode as Text).data);
+        const normalizedText = stripWhitespaces((currentNode as Text).data);
         if (normalizedText === '') {
           nextNode = sourceTree.nextNode() as ChildNode | null;
           currentNode.remove();
@@ -574,7 +561,7 @@ function parseChildren(
             holes.push({
               type: PartType.Text,
               index,
-              precedingText: normalizeText(lastComponent),
+              precedingText: stripWhitespaces(lastComponent),
               followingText: '',
             });
             currentNode.before(document.createTextNode(''));
@@ -585,8 +572,8 @@ function parseChildren(
           holes.push({
             type: PartType.Text,
             index,
-            precedingText: normalizeText(lastComponent),
-            followingText: normalizeText(components[tail]!),
+            precedingText: stripWhitespaces(lastComponent),
+            followingText: stripWhitespaces(components[tail]!),
           });
           (currentNode as Text).data = '';
         } else {
