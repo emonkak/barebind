@@ -1,3 +1,6 @@
+import { debugPart } from '../debug/part.js';
+import { markUsedValue } from '../debug/value.js';
+import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
@@ -7,10 +10,7 @@ import {
   type Part,
   type Slot,
   type UpdateContext,
-} from '../core.js';
-import { debugPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
+} from '../internal.js';
 
 export function strict<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(StrictSlot, value);

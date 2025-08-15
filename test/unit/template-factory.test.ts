@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
+import { PartType } from '@/internal.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { TaggedTemplate } from '@/template/tagged.js';

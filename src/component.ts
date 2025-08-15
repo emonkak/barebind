@@ -1,4 +1,5 @@
 import { shallowEqual } from './compare.js';
+import { DirectiveSpecifier } from './directive.js';
 import {
   type Binding,
   type CommitContext,
@@ -16,8 +17,7 @@ import {
   Scope,
   type Slot,
   type UpdateContext,
-} from './core.js';
-import { DirectiveSpecifier } from './directive.js';
+} from './internal.js';
 
 export function component<TProps, TResult>(
   componentFn: ComponentFunction<TProps, TResult>,

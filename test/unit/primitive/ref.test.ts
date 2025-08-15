@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '@/core.js';
+import { PartType } from '@/internal.js';
 import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../../mocks.js';

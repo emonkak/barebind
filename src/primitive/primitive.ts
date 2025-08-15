@@ -5,7 +5,7 @@ import type {
   Part,
   Primitive,
   UpdateContext,
-} from '../core.js';
+} from '../internal.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>

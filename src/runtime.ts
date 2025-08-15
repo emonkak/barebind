@@ -1,5 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { debugValue } from './debug/value.js';
 import {
   $toDirective,
   type Backend,
@@ -29,8 +30,7 @@ import {
   type UpdateContext,
   type UpdateHandle,
   type UpdateOptions,
-} from './core.js';
-import { debugValue } from './debug/value.js';
+} from './internal.js';
 import { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import { TemplateLiteralPreprocessor } from './template-literal.js';

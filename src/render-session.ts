@@ -1,4 +1,5 @@
 import { sequentialEqual } from './compare.js';
+import { DirectiveSpecifier } from './directive.js';
 import {
   $customHook,
   type Cleanup,
@@ -16,8 +17,7 @@ import {
   type UpdateHandle,
   type UpdateOptions,
   type Usable,
-} from './core.js';
-import { DirectiveSpecifier } from './directive.js';
+} from './internal.js';
 
 export class RenderSession implements RenderContext {
   private readonly _hooks: Hook[];

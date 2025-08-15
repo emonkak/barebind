@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { HydrationError, PartType } from '@/core.js';
 import { createHydrationTree } from '@/hydration.js';
+import { HydrationError, PartType } from '@/internal.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockSlot } from '../../mocks.js';

@@ -7,7 +7,7 @@ import {
   Literal,
   PartType,
   Scope,
-} from '@/core.js';
+} from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

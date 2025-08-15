@@ -1,5 +1,5 @@
-import { type Backend, Lanes, PartType, type Slot } from '../core.js';
 import { createHydrationTree, replaceMarkerNode } from '../hydration.js';
+import { type Backend, Lanes, PartType, type Slot } from '../internal.js';
 import { Runtime, type RuntimeObserver } from '../runtime.js';
 import { MountSlot, UnmountSlot } from './root.js';
 

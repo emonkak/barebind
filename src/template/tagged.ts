@@ -1,12 +1,3 @@
-import {
-  type HydrationTree,
-  type Part,
-  PartType,
-  type Slot,
-  type TemplateMode,
-  type TemplateResult,
-  type UpdateContext,
-} from '../core.js';
 import { debugNode } from '../debug/node.js';
 import { debugPart } from '../debug/part.js';
 import {
@@ -15,6 +6,15 @@ import {
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
+import {
+  type HydrationTree,
+  type Part,
+  PartType,
+  type Slot,
+  type TemplateMode,
+  type TemplateResult,
+  type UpdateContext,
+} from '../internal.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,

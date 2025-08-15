@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { PartType } from '@/core.js';
 import { debugPart } from '@/debug/part.js';
+import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createElement } from '../../test-utils.js';
 

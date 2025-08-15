@@ -1,3 +1,5 @@
+import { DirectiveSpecifier } from '../directive.js';
+import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
   type HydrationTree,
@@ -5,9 +7,7 @@ import {
   PartType,
   type TemplateResult,
   type UpdateContext,
-} from '../core.js';
-import { DirectiveSpecifier } from '../directive.js';
-import { replaceMarkerNode, treatNodeName } from '../hydration.js';
+} from '../internal.js';
 import {
   AbstractTemplate,
   getNamespaceURIByTagName,

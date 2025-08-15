@@ -1,4 +1,4 @@
-import type { HookContext } from '../../core.js';
+import type { HookContext } from '../../internal.js';
 import type { RelativeURL } from './url.js';
 
 export interface HistoryLocation {

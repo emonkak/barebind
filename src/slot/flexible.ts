@@ -1,3 +1,4 @@
+import { SlotSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
@@ -7,8 +8,7 @@ import {
   type Part,
   type Slot,
   type UpdateContext,
-} from '../core.js';
-import { SlotSpecifier } from '../directive.js';
+} from '../internal.js';
 
 export function flexible<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(FlexibleSlot, value);

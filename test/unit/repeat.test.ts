@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { HydrationError, type Part, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { createHydrationTree } from '@/hydration.js';
+import { HydrationError, type Part, PartType } from '@/internal.js';
 import {
   moveChildNodes,
   RepeatBinding,

@@ -4,7 +4,7 @@ import type {
   Part,
   TemplateResult,
   UpdateContext,
-} from '../core.js';
+} from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
 export class EmptyTemplate extends AbstractTemplate<readonly []> {

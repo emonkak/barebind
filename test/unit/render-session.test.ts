@@ -5,7 +5,7 @@ import {
   Lanes,
   Literal,
   type RefObject,
-} from '@/core.js';
+} from '@/internal.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
 import {
   createSession,

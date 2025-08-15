@@ -12,7 +12,7 @@ export {
   type RefCallback,
   type RefObject,
   type RenderContext,
-} from './core.js';
+} from './internal.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
 export type { ElementRef } from './primitive/ref.js';

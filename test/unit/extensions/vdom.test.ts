@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { FunctionComponent } from '@/component.js';
-import { $toDirective, PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import {
   createElement,
@@ -11,6 +10,7 @@ import {
   VFragment,
   VStaticFragment,
 } from '@/extensions/vdom.js';
+import { $toDirective, PartType } from '@/internal.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
 import { Runtime } from '@/runtime.js';

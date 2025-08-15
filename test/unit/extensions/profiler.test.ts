@@ -1,11 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
-import { CommitPhase, type Effect, Lanes, type RenderContext } from '@/core.js';
 import {
   type ConsoleLogger,
   ConsoleReporter,
   type PerformanceProfile,
   PerformanceProfiler,
 } from '@/extensions/profiler.js';
+import {
+  CommitPhase,
+  type Effect,
+  Lanes,
+  type RenderContext,
+} from '@/internal.js';
 import type { RuntimeEvent } from '@/runtime.js';
 import { MockComponent, MockEffect } from '../../mocks.js';
 

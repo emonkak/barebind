@@ -1,3 +1,4 @@
+import { $debug, type Debuggable } from './debug/value.js';
 import {
   $toDirective,
   type Bindable,
@@ -6,8 +7,7 @@ import {
   type DirectiveType,
   type Part,
   type SlotType,
-} from './core.js';
-import { $debug, type Debuggable } from './debug/value.js';
+} from './internal.js';
 
 export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
   readonly type: DirectiveType<T>;

@@ -29,7 +29,7 @@ import {
   type TemplateMode,
   type TemplateResult,
   type UpdateContext,
-} from '@/core.js';
+} from '@/internal.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 

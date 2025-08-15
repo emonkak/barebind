@@ -1,14 +1,14 @@
 import { shallowEqual } from '../compare.js';
+import { debugPart } from '../debug/part.js';
+import { debugValue, markUsedValue } from '../debug/value.js';
+import { DirectiveSpecifier } from '../directive.js';
 import {
   type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
   type Primitive,
-} from '../core.js';
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+} from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type ClassSpecifier = ClassList | ClassMap;

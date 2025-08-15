@@ -1,5 +1,8 @@
 import { shallowEqual } from '../compare.js';
 import { type ComponentFunction, FunctionComponent } from '../component.js';
+import { debugPart } from '../debug/part.js';
+import { markUsedValue } from '../debug/value.js';
+import { DirectiveSpecifier } from '../directive.js';
 import {
   $toDirective,
   type Bindable,
@@ -14,10 +17,7 @@ import {
   PartType,
   type Template,
   type UpdateContext,
-} from '../core.js';
-import { debugPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+} from '../internal.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { type StyleProperties, updateStyles } from '../primitive/style.js';
 import { RepeatDirective, type RepeatProps } from '../repeat.js';

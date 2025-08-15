@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PartType } from '@/core.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import { createHydrationTree } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';
 import { FlexibleSlot, flexible } from '@/slot/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

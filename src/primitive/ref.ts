@@ -1,3 +1,6 @@
+import { debugPart } from '../debug/part.js';
+import { debugValue, markUsedValue } from '../debug/value.js';
+import { DirectiveSpecifier } from '../directive.js';
 import {
   type Cleanup,
   type CommitContext,
@@ -7,10 +10,7 @@ import {
   type Primitive,
   type RefCallback,
   type RefObject,
-} from '../core.js';
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+} from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export type ElementRef = RefCallback<Element> | RefObject<Element | null>;

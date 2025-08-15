@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { HydrationError, PartType } from '@/core.js';
 import { createHydrationTree } from '@/hydration.js';
+import { HydrationError, PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';

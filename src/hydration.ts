@@ -1,5 +1,5 @@
-import { HydrationError, type HydrationTree } from './core.js';
 import { debugNode } from './debug/node.js';
+import { HydrationError, type HydrationTree } from './internal.js';
 
 interface NodeTypeMap {
   [Node.COMMENT_NODE]: Comment;

@@ -1,4 +1,4 @@
-import type { Template, TemplateFactory, TemplateMode } from './core.js';
+import type { Template, TemplateFactory, TemplateMode } from './internal.js';
 import { ChildNodeTemplate } from './template/child-node.js';
 import { EmptyTemplate } from './template/empty.js';
 import { TaggedTemplate } from './template/tagged.js';

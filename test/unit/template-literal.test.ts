@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { Literal } from '@/core.js';
+import { Literal } from '@/internal.js';
 import { TemplateLiteralPreprocessor } from '@/template-literal.js';
 import { templateLiteral } from '../test-utils.js';
 

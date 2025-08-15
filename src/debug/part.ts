@@ -1,4 +1,4 @@
-import { type Part, PartType } from '../core.js';
+import { type Part, PartType } from '../internal.js';
 import { debugNode } from './node.js';
 
 export function debugPart(part: Part, marker: string): string {

@@ -1,5 +1,4 @@
 import { describe, expect, it, vi } from 'vitest';
-import { $toDirective, HydrationError, Lanes, PartType } from '@/core.js';
 import {
   Atom,
   Computed,
@@ -8,6 +7,7 @@ import {
   SignalDirective,
 } from '@/extensions/signal.js';
 import { createHydrationTree } from '@/hydration.js';
+import { $toDirective, HydrationError, Lanes, PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../../mocks.js';
 import {

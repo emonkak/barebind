@@ -1,3 +1,4 @@
+import { replaceMarkerNode } from '../hydration.js';
 import {
   type DirectiveType,
   type HydrationTree,
@@ -5,8 +6,7 @@ import {
   PartType,
   type TemplateResult,
   type UpdateContext,
-} from '../core.js';
-import { replaceMarkerNode } from '../hydration.js';
+} from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
 export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {

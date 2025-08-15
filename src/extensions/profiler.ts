@@ -1,6 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
-import { CommitPhase, getPriorityFromLanes, Lanes } from '../core.js';
+import { CommitPhase, getPriorityFromLanes, Lanes } from '../internal.js';
 import type { RuntimeEvent, RuntimeObserver } from '../runtime.js';
 
 export interface PerformanceProfile {

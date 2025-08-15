@@ -1,6 +1,6 @@
 /// <reference types="navigation-api-types" />
 
-import type { HookContext } from '../../core.js';
+import type { HookContext } from '../../internal.js';
 import {
   anyModifiersArePressed,
   CurrentHistory,

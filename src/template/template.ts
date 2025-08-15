@@ -1,3 +1,6 @@
+import { debugPart } from '../debug/part.js';
+import { markUsedValue } from '../debug/value.js';
+import { DirectiveSpecifier } from '../directive.js';
 import {
   type Binding,
   type CommitContext,
@@ -11,10 +14,7 @@ import {
   type Template,
   type TemplateResult,
   type UpdateContext,
-} from '../core.js';
-import { debugPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+} from '../internal.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
 export const MATH_NAMESPACE_URI = 'http://www.w3.org/1998/Math/MathML';

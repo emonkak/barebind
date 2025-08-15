@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PartType } from '@/core.js';
+import { PartType } from '@/internal.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';

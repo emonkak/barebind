@@ -7,14 +7,14 @@ import {
   FunctionComponent,
   memo,
 } from '@/component.js';
+import { createHydrationTree } from '@/hydration.js';
 import {
   CommitPhase,
   HydrationError,
   Lanes,
   PartType,
   type RenderContext,
-} from '@/core.js';
-import { createHydrationTree } from '@/hydration.js';
+} from '@/internal.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBackend, MockSlot } from '../mocks.js';

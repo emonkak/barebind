@@ -17,7 +17,7 @@ import {
   type Part,
   type Slot,
   type UpdateContext,
-} from '../core.js';
+} from '../internal.js';
 import { LinkedList } from '../linked-list.js';
 
 export type Subscriber = () => void;

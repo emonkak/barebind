@@ -1,5 +1,9 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
+import { debugPart } from './debug/part.js';
+import { markUsedValue } from './debug/value.js';
+import { DirectiveSpecifier } from './directive.js';
+import { replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
   type CommitContext,
@@ -12,11 +16,7 @@ import {
   PartType,
   type Slot,
   type UpdateContext,
-} from './core.js';
-import { debugPart } from './debug/part.js';
-import { markUsedValue } from './debug/value.js';
-import { DirectiveSpecifier } from './directive.js';
-import { replaceMarkerNode } from './hydration.js';
+} from './internal.js';
 
 const OPERATION_INSERT = 0;
 const OPERATION_MOVE = 1;

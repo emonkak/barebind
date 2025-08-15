@@ -11,7 +11,7 @@ import {
   type RequestCallbackOptions,
   type SlotType,
   type TemplateFactory,
-} from '../core.js';
+} from '../internal.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { ClassPrimitive } from '../primitive/class.js';

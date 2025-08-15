@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Lanes } from '@/core.js';
+import { Lanes } from '@/internal.js';
 import { SyncRoot } from '@/root/sync.js';
 import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';

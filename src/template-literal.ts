@@ -1,5 +1,5 @@
 import { sequentialEqual } from './compare.js';
-import { Literal, type TemplateLiteral } from './core.js';
+import { Literal, type TemplateLiteral } from './internal.js';
 
 interface TemplateDescriptor {
   strings: readonly string[];

@@ -1,3 +1,6 @@
+import { debugPart } from '../debug/part.js';
+import { debugValue, markUsedValue } from '../debug/value.js';
+import { DirectiveSpecifier } from '../directive.js';
 import {
   type Binding,
   type CommitContext,
@@ -9,10 +12,7 @@ import {
   type Primitive,
   type Slot,
   type UpdateContext,
-} from '../core.js';
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+} from '../internal.js';
 
 export type SpreadProperties = { [key: string]: unknown };
 

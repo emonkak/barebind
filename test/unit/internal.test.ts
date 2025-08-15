@@ -11,7 +11,7 @@ import {
   PartType,
   Scope,
   type UpdateOptions,
-} from '@/core.js';
+} from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
 

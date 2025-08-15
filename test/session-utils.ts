@@ -1,4 +1,4 @@
-import { HookType, Lanes, type RenderSessionContext } from '@/core.js';
+import { HookType, Lanes, type RenderSessionContext } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';

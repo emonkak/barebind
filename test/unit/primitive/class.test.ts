@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PartType } from '@/core.js';
+import { PartType } from '@/internal.js';
 import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../../mocks.js';

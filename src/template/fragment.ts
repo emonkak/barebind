@@ -6,7 +6,7 @@ import {
   type Template,
   type TemplateResult,
   type UpdateContext,
-} from '../core.js';
+} from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
 export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {

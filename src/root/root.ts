@@ -1,4 +1,4 @@
-import type { CommitContext, Effect, Slot } from '../core.js';
+import type { CommitContext, Effect, Slot } from '../internal.js';
 
 export class MountSlot<T> implements Effect {
   private readonly _slot: Slot<T>;

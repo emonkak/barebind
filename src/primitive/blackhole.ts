@@ -3,7 +3,7 @@ import type {
   DirectiveContext,
   Part,
   Primitive,
-} from '../core.js';
+} from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {

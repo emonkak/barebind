@@ -5,11 +5,11 @@
     ".": {
       "import": "./src/index.ts"
     },
-    "./core": {
-      "import": "./src/core.ts"
-    },
     "./extensions/*": {
       "import": "./src/extensions/*.ts"
+    },
+    "./internal": {
+      "import": "./src/internal.js"
     }
   },
   "publishConfig": {
@@ -18,13 +18,13 @@
         "import": "./lib/index.js",
         "types": "./lib/index.d.ts"
       },
-      "./core": {
-        "import": "./lib/core.js",
-        "types": "./lib/core.d.ts"
-      },
       "./extensions/*": {
         "import": "./lib/extensions/*.js",
         "types": "./lib/extensions/*.d.ts"
+      },
+      "./internal": {
+        "import": "./lib/internal.js",
+        "types": "./lib/core.d.ts"
       }
     }
   },
