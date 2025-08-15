@@ -14,6 +14,7 @@ export {
   type RenderContext,
 } from './core.js';
 export type { ClassSpecifier } from './primitive/class.js';
+export type { EventHandler } from './primitive/event.js';
 export type { ElementRef } from './primitive/ref.js';
 export type { StyleProperties } from './primitive/style.js';
 export {

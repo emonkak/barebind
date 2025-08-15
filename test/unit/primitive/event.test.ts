@@ -49,22 +49,22 @@ describe('EventPrimitive', () => {
 
   describe('resolveBinding()', () => {
     it('constructs a new EventBinding', () => {
-      const listener = () => {};
+      const handler = () => {};
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
       const runtime = Runtime.create(new MockBackend());
-      const binding = EventPrimitive.resolveBinding(listener, part, runtime);
+      const binding = EventPrimitive.resolveBinding(handler, part, runtime);
 
       expect(binding.type).toBe(EventPrimitive);
-      expect(binding.value).toBe(listener);
+      expect(binding.value).toBe(handler);
       expect(binding.part).toBe(part);
     });
 
     it('should throw the error if the part is not an event part', () => {
-      const listener = () => {};
+      const handler = () => {};
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
@@ -72,7 +72,7 @@ describe('EventPrimitive', () => {
       const runtime = Runtime.create(new MockBackend());
 
       expect(() =>
-        EventPrimitive.resolveBinding(listener, part, runtime),
+        EventPrimitive.resolveBinding(handler, part, runtime),
       ).toThrow('EventPrimitive must be used in an event part,');
     });
   });
@@ -81,46 +81,46 @@ describe('EventPrimitive', () => {
 describe('EventBinding', () => {
   describe('shouldBind()', () => {
     it('returns true if the committed value does not exist', () => {
-      const listener = () => {};
+      const handler = () => {};
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
-      const binding = new EventBinding(listener, part);
+      const binding = new EventBinding(handler, part);
 
-      expect(binding.shouldBind(listener)).toBe(true);
+      expect(binding.shouldBind(handler)).toBe(true);
     });
 
     it('returns true if the committed value is different from the new one', () => {
-      const listener1 = () => {};
-      const listener2 = () => {};
+      const handler1 = () => {};
+      const handler2 = () => {};
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
-      const binding = new EventBinding(listener1, part);
+      const binding = new EventBinding(handler1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(binding.shouldBind(listener1)).toBe(false);
-      expect(binding.shouldBind(listener2)).toBe(true);
+      expect(binding.shouldBind(handler1)).toBe(false);
+      expect(binding.shouldBind(handler2)).toBe(true);
     });
   });
 
   describe('commit()', () => {
     it('attaches the event listener function', () => {
-      const listener1 = vi.fn();
-      const listener2 = vi.fn();
+      const handler1 = vi.fn();
+      const handler2 = vi.fn();
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
-      const binding = new EventBinding(listener1, part);
+      const binding = new EventBinding(handler1, part);
       const runtime = Runtime.create(new MockBackend());
 
       const event = new MouseEvent('click');
@@ -134,11 +134,11 @@ describe('EventBinding', () => {
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
-      expect(listener1).toHaveBeenCalledOnce();
-      expect(listener1).toHaveBeenCalledWith(event);
-      expect(listener2).not.toHaveBeenCalled();
+      expect(handler1).toHaveBeenCalledOnce();
+      expect(handler1).toHaveBeenCalledWith(event);
+      expect(handler2).not.toHaveBeenCalled();
 
-      binding.bind(listener2);
+      binding.bind(handler2);
       binding.connect(runtime);
       binding.commit(runtime);
       part.node.dispatchEvent(event);
@@ -146,20 +146,20 @@ describe('EventBinding', () => {
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
-      expect(listener1).toHaveBeenCalledOnce();
-      expect(listener2).toHaveBeenCalledOnce();
-      expect(listener2).toHaveBeenCalledWith(event);
+      expect(handler1).toHaveBeenCalledOnce();
+      expect(handler2).toHaveBeenCalledOnce();
+      expect(handler2).toHaveBeenCalledWith(event);
     });
 
     it('attaches the event listener object', () => {
-      const listener1 = { handleEvent: vi.fn() };
-      const listener2 = { handleEvent: vi.fn() };
+      const handler1 = { handleEvent: vi.fn() };
+      const handler2 = { handleEvent: vi.fn() };
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
-      const binding = new EventBinding(listener1, part);
+      const binding = new EventBinding(handler1, part);
       const runtime = Runtime.create(new MockBackend());
 
       const event = new MouseEvent('click');
@@ -174,14 +174,14 @@ describe('EventBinding', () => {
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         'click',
         binding,
-        listener1,
+        handler1,
       );
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
-      expect(listener1.handleEvent).toHaveBeenCalledOnce();
-      expect(listener1.handleEvent).toHaveBeenCalledWith(event);
-      expect(listener2.handleEvent).not.toHaveBeenCalled();
+      expect(handler1.handleEvent).toHaveBeenCalledOnce();
+      expect(handler1.handleEvent).toHaveBeenCalledWith(event);
+      expect(handler2.handleEvent).not.toHaveBeenCalled();
 
-      binding.bind(listener2);
+      binding.bind(handler2);
       binding.connect(runtime);
       binding.commit(runtime);
       part.node.dispatchEvent(event);
@@ -190,29 +190,29 @@ describe('EventBinding', () => {
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         'click',
         binding,
-        listener2,
+        handler2,
       );
       expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         'click',
         binding,
-        listener1,
+        handler1,
       );
-      expect(listener1.handleEvent).toHaveBeenCalledOnce();
-      expect(listener2.handleEvent).toHaveBeenCalledOnce();
-      expect(listener2.handleEvent).toHaveBeenCalledWith(event);
+      expect(handler1.handleEvent).toHaveBeenCalledOnce();
+      expect(handler2.handleEvent).toHaveBeenCalledOnce();
+      expect(handler2.handleEvent).toHaveBeenCalledWith(event);
     });
 
     it.for([null, undefined])(
-      'detaches the event listener if the new event listener is null or undefined',
-      (listener2) => {
-        const listener1 = { handleEvent: () => {} };
+      'detaches the old event listener if the new event listener is null or undefined',
+      (handler2) => {
+        const handler1 = { handleEvent: () => {} };
         const part = {
           type: PartType.Event,
           node: document.createElement('div'),
           name: 'click',
         };
-        const binding = new EventBinding(listener1, part);
+        const binding = new EventBinding(handler1, part);
         const runtime = Runtime.create(new MockBackend());
 
         const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
@@ -228,11 +228,11 @@ describe('EventBinding', () => {
         expect(addEventListenerSpy).toHaveBeenCalledWith(
           'click',
           binding,
-          listener1,
+          handler1,
         );
         expect(removeEventListenerSpy).not.toHaveBeenCalled();
 
-        binding.bind(listener2);
+        binding.bind(handler2);
         binding.connect(runtime);
         binding.commit(runtime);
 
@@ -241,7 +241,7 @@ describe('EventBinding', () => {
         expect(removeEventListenerSpy).toHaveBeenCalledWith(
           'click',
           binding,
-          listener1,
+          handler1,
         );
       },
     );
@@ -249,13 +249,13 @@ describe('EventBinding', () => {
 
   describe('rollback()', () => {
     it('should do nothing if the attached event listener does not exist', () => {
-      const listener = () => {};
+      const handler = () => {};
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
-      const binding = new EventBinding(listener, part);
+      const binding = new EventBinding(handler, part);
       const runtime = Runtime.create(new MockBackend());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
@@ -269,13 +269,13 @@ describe('EventBinding', () => {
     });
 
     it('detaches the event listener', () => {
-      const listener = () => {};
+      const handler = () => {};
       const part = {
         type: PartType.Event,
         node: document.createElement('div'),
         name: 'click',
       };
-      const binding = new EventBinding(listener, part);
+      const binding = new EventBinding(handler, part);
       const runtime = Runtime.create(new MockBackend());
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
