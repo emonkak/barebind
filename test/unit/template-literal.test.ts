@@ -13,62 +13,72 @@ describe('TemplateLiteralPreprocessor', () => {
   it('returns the same strings as the argument if there are no literals', () => {
     const templateLiteralPreprocessor = new TemplateLiteralPreprocessor();
     const template = createElement('div', 'foo');
-    const prepreprocessedTemplate = templateLiteralPreprocessor.process(
+    const preprocessedTemplate = templateLiteralPreprocessor.process(
       template.strings,
       template.values,
     );
 
-    expect(prepreprocessedTemplate.strings).toStrictEqual([
-      '<',
-      '>',
-      '</',
-      '>',
-    ]);
-    expect(prepreprocessedTemplate.strings).toBe(template.strings);
-    expect(prepreprocessedTemplate.values).toStrictEqual(['div', 'foo', 'div']);
+    expect(preprocessedTemplate.strings).toStrictEqual(['<', '>', '</', '>']);
+    expect(preprocessedTemplate.strings).toBe(template.strings);
+    expect(preprocessedTemplate.values).toStrictEqual(['div', 'foo', 'div']);
+    expect(
+      templateLiteralPreprocessor.process(template.strings, template.values)
+        .strings,
+    ).toBe(preprocessedTemplate.strings);
   });
 
   it('returns the same strings as previous one if static strings is the same', () => {
     const templateLiteralPreprocessor = new TemplateLiteralPreprocessor();
     const template1 = createElement(new Literal('div'), 'foo');
     const template2 = createElement(new Literal('div'), 'bar');
-    const prepreprocessedTemplate1 = templateLiteralPreprocessor.process(
+    const preprocessedTemplate1 = templateLiteralPreprocessor.process(
       template1.strings,
       template1.values,
     );
-    const prepreprocessedTemplate2 = templateLiteralPreprocessor.process(
+    const preprocessedTemplate2 = templateLiteralPreprocessor.process(
       template2.strings,
       template2.values,
     );
 
-    expect(prepreprocessedTemplate1.strings).toStrictEqual(['<div>', '</div>']);
-    expect(prepreprocessedTemplate1.strings).toBe(
-      prepreprocessedTemplate2.strings,
-    );
-    expect(prepreprocessedTemplate1.values).toStrictEqual(['foo']);
-    expect(prepreprocessedTemplate2.values).toStrictEqual(['bar']);
+    expect(preprocessedTemplate1.strings).toStrictEqual(['<div>', '</div>']);
+    expect(preprocessedTemplate1.strings).toBe(preprocessedTemplate2.strings);
+    expect(preprocessedTemplate1.values).toStrictEqual(['foo']);
+    expect(preprocessedTemplate2.values).toStrictEqual(['bar']);
+    expect(
+      templateLiteralPreprocessor.process(template1.strings, template1.values)
+        .strings,
+    ).toBe(preprocessedTemplate1.strings);
+    expect(
+      templateLiteralPreprocessor.process(template2.strings, template2.values)
+        .strings,
+    ).toBe(preprocessedTemplate2.strings);
   });
 
   it('returns a new strings if the literal changes', () => {
     const templateLiteralPreprocessor = new TemplateLiteralPreprocessor();
     const template1 = createElement(new Literal('div'), 'foo');
     const template2 = createElement(new Literal('span'), 'foo');
-    const prepreprocessedTemplate1 = templateLiteralPreprocessor.process(
+    const preprocessedTemplate1 = templateLiteralPreprocessor.process(
       template1.strings,
       template1.values,
     );
-    const prepreprocessedTemplate2 = templateLiteralPreprocessor.process(
+    const preprocessedTemplate2 = templateLiteralPreprocessor.process(
       template2.strings,
       template2.values,
     );
 
-    expect(prepreprocessedTemplate1.strings).toStrictEqual(['<div>', '</div>']);
-    expect(prepreprocessedTemplate2.strings).toStrictEqual([
-      '<span>',
-      '</span>',
-    ]);
-    expect(prepreprocessedTemplate1.values).toStrictEqual(['foo']);
-    expect(prepreprocessedTemplate2.values).toStrictEqual(['foo']);
+    expect(preprocessedTemplate1.strings).toStrictEqual(['<div>', '</div>']);
+    expect(preprocessedTemplate2.strings).toStrictEqual(['<span>', '</span>']);
+    expect(preprocessedTemplate1.values).toStrictEqual(['foo']);
+    expect(preprocessedTemplate2.values).toStrictEqual(['foo']);
+    expect(
+      templateLiteralPreprocessor.process(template1.strings, template1.values)
+        .strings,
+    ).toBe(preprocessedTemplate1.strings);
+    expect(
+      templateLiteralPreprocessor.process(template2.strings, template2.values)
+        .strings,
+    ).toBe(preprocessedTemplate2.strings);
   });
 
   it('returns a new strings if the literal position changes', () => {
@@ -88,6 +98,14 @@ describe('TemplateLiteralPreprocessor', () => {
     expect(preprocessedTemplate2.strings).toStrictEqual(['1990-', '-01']);
     expect(preprocessedTemplate1.values).toStrictEqual(['01']);
     expect(preprocessedTemplate2.values).toStrictEqual(['01']);
+    expect(
+      templateLiteralPreprocessor.process(template1.strings, template1.values)
+        .strings,
+    ).toBe(preprocessedTemplate1.strings);
+    expect(
+      templateLiteralPreprocessor.process(template2.strings, template2.values)
+        .strings,
+    ).toBe(preprocessedTemplate2.strings);
   });
 
   it('returns a new strings if the template changes', () => {
@@ -116,5 +134,13 @@ describe('TemplateLiteralPreprocessor', () => {
     );
     expect(preprocessedTemplate1.values).toStrictEqual(['World']);
     expect(preprocessedTemplate2.values).toStrictEqual(['World']);
+    expect(
+      templateLiteralPreprocessor.process(template1.strings, template1.values)
+        .strings,
+    ).toBe(preprocessedTemplate1.strings);
+    expect(
+      templateLiteralPreprocessor.process(template2.strings, template2.values)
+        .strings,
+    ).toBe(preprocessedTemplate2.strings);
   });
 });

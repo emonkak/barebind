@@ -1,16 +1,16 @@
 import { sequentialEqual } from './compare.js';
 import { Literal, type TemplateLiteral } from './internal.js';
 
-interface TemplateDescriptor {
-  strings: readonly string[];
+interface ExpansionResult {
+  expandedStrings: readonly string[];
   literalValues: readonly string[];
   literalPositions: readonly number[];
 }
 
 export class TemplateLiteralPreprocessor {
-  private readonly _templateDescriptors: WeakMap<
+  private readonly _expansionResults: WeakMap<
     TemplateStringsArray,
-    TemplateDescriptor
+    ExpansionResult[]
   > = new WeakMap();
 
   process<T>(
@@ -31,24 +31,32 @@ export class TemplateLiteralPreprocessor {
       }
     }
 
-    const descriptor = this._templateDescriptors.get(strings);
+    let expansionResults = this._expansionResults.get(strings);
 
-    if (
-      descriptor !== undefined &&
-      sequentialEqual(descriptor.literalValues, literalValues) &&
-      sequentialEqual(descriptor.literalPositions, literalPositions)
-    ) {
-      return {
-        strings: descriptor.strings,
-        values: nonLiteralValues,
-      };
+    if (expansionResults !== undefined) {
+      for (let i = 0, l = expansionResults.length; i < l; i++) {
+        const expansionResult = expansionResults[i]!;
+
+        if (
+          sequentialEqual(expansionResult.literalValues, literalValues) &&
+          sequentialEqual(expansionResult.literalPositions, literalPositions)
+        ) {
+          return {
+            strings: expansionResult.expandedStrings,
+            values: nonLiteralValues,
+          };
+        }
+      }
+    } else {
+      expansionResults = [];
+      this._expansionResults.set(strings, expansionResults);
     }
 
     const expandedStrings =
       literalValues.length > 0 ? expandLiterals(strings, values) : strings;
 
-    this._templateDescriptors.set(strings, {
-      strings: expandedStrings,
+    expansionResults.push({
+      expandedStrings,
       literalValues,
       literalPositions,
     });
@@ -60,9 +68,9 @@ export class TemplateLiteralPreprocessor {
   }
 }
 
-function expandLiterals(
+function expandLiterals<T>(
   strings: readonly string[],
-  values: readonly unknown[],
+  values: readonly (T | Literal)[],
 ): readonly string[] {
   const expandedStrings = [strings[0]!];
 
