@@ -44,7 +44,7 @@ export function TodoItem({ todo }: TodoItemProps, $: RenderContext): unknown {
 
   return $.html`
     <li
-      :classlist=${{ completed: todo.completed }}
+      :class=${{ completed: todo.completed }}
       data-testid="todo-item">
       <div class="view">
         <${

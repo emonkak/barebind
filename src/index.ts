@@ -13,7 +13,7 @@ export {
   type RefObject,
   type RenderContext,
 } from './core.js';
-export type { ClassSpecifier } from './primitive/class-list.js';
+export type { ClassSpecifier } from './primitive/class.js';
 export type { ElementRef } from './primitive/ref.js';
 export type { StyleProperties } from './primitive/style.js';
 export {

@@ -32,7 +32,7 @@ export function Footer(_props: FooterProps, $: RenderContext): unknown {
       <ul class="filters" data-testid="footer-navigation">
         <li>
           <a
-            :classlist=${{ selected: filter === 'all' }}
+            :class=${{ selected: filter === 'all' }}
             href="#"
             @click=${handleChangeFilter('all')}
           >
@@ -41,7 +41,7 @@ export function Footer(_props: FooterProps, $: RenderContext): unknown {
         </li>
         <li>
           <a
-            :classlist=${{ selected: filter === 'active' }}
+            :class=${{ selected: filter === 'active' }}
             href="#"
             @click=${handleChangeFilter('active')}
           >
@@ -50,7 +50,7 @@ export function Footer(_props: FooterProps, $: RenderContext): unknown {
         </li>
         <li>
           <a
-            :classlist=${{ selected: filter === 'completed' }}
+            :class=${{ selected: filter === 'completed' }}
             href="#"
             @click=${handleChangeFilter('completed')}
           >

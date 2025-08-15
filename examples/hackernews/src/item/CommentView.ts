@@ -40,7 +40,7 @@ export function CommentList(
   }, []);
 
   return $.html`
-    <div :classlist=${['toggle', { open: isOpened }]}>
+    <div :class=${{ _: 'toggle', open: isOpened }}>
       <a @click=${handleToggleOpen}>
         ${isOpened ? '[-]' : '[+] ' + pluralize(comments.length) + ' collapsed'}
       </a>

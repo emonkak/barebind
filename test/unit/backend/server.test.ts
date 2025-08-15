@@ -3,7 +3,7 @@ import { ServerBackend } from '@/backend/server.js';
 import { CommitPhase, type Effect, PartType } from '@/core.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
-import { ClassListPrimitive } from '@/primitive/class-list.js';
+import { ClassPrimitive } from '@/primitive/class.js';
 import { CommentPrimitive } from '@/primitive/comment.js';
 import { LivePrimitive } from '@/primitive/live.js';
 import { PropertyPrimitive } from '@/primitive/property.js';
@@ -202,9 +202,9 @@ describe('ServerBackend', () => {
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
-          name: ':classlist',
+          name: ':class',
         },
-        ClassListPrimitive,
+        ClassPrimitive,
       ],
       [
         'foo',

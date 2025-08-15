@@ -1,85 +1,75 @@
 import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/core.js';
-import {
-  ClassListBinding,
-  ClassListPrimitive,
-  type ClassSpecifier,
-} from '@/primitive/class-list.js';
+import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
-describe('ClassListPrimitive', () => {
+describe('ClassPrimitive', () => {
   describe('name', () => {
     it('is a string that represents the primitive itself', () => {
-      expect(ClassListPrimitive.name, 'ClassListPrimitive');
+      expect(ClassPrimitive.name, 'ClassPrimitive');
     });
   });
 
   describe('ensureValue()', () => {
-    it.for([[{ foo: true }, 'bar', null, undefined], { foo: true }])(
+    it.for([{ foo: true }, ['foo'], {}, []])(
       'asserts the value is a class specifier',
       (value) => {
         const part = {
           type: PartType.Attribute,
           node: document.createElement('div'),
-          name: ':classlist',
+          name: ':class',
         };
-        const ensureValue: NonNullable<typeof ClassListPrimitive.ensureValue> =
-          ClassListPrimitive.ensureValue!;
+        const ensureValue: NonNullable<typeof ClassPrimitive.ensureValue> =
+          ClassPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue.call(ClassListPrimitive, value, part);
+          ensureValue.call(ClassPrimitive, value, part);
         }).not.toThrow();
       },
     );
 
     it.for(['foo', null, undefined])(
-      'throws an error if the value is not an array or object',
+      'throws an error if the value is not an object',
       (value) => {
         const part = {
           type: PartType.Attribute,
           node: document.createElement('div'),
-          name: ':classlist',
+          name: ':class',
         };
-        const ensureValue: NonNullable<typeof ClassListPrimitive.ensureValue> =
-          ClassListPrimitive.ensureValue!;
+        const ensureValue: NonNullable<typeof ClassPrimitive.ensureValue> =
+          ClassPrimitive.ensureValue!;
 
         expect(() => {
-          ensureValue.call(ClassListPrimitive, value, part);
-        }).toThrow(
-          'The value of ClassListPrimitive must be an array or object,',
-        );
+          ensureValue.call(ClassPrimitive, value, part);
+        }).toThrow('The value of ClassPrimitive must be an object,');
       },
     );
   });
 
   describe('resolveBinding()', () => {
-    it.for([':CLASSLIST', ':classlist'])(
+    it.for([':CLASS', ':class'])(
       'constructs a new AttributeBinding',
       (attributeName) => {
-        const classSpecifier = ['foo', 'bar', 'baz'];
+        const classes = { foo: true, bar: true, baz: false };
         const part = {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: attributeName,
         };
         const runtime = Runtime.create(new MockBackend());
-        const binding = ClassListPrimitive.resolveBinding(
-          classSpecifier,
-          part,
-          runtime,
-        );
+        const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
 
-        expect(binding.type).toBe(ClassListPrimitive);
-        expect(binding.value).toBe(classSpecifier);
+        expect(binding.type).toBe(ClassPrimitive);
+        expect(binding.value).toBe(classes);
         expect(binding.part).toBe(part);
       },
     );
 
-    it('throws an error if the part is not a ":classlist" attribute part', () => {
-      const classSpecifier = ['foo', 'bar', 'baz'];
+    it('throws an error if the part is not a ":class" attribute part', () => {
+      const classes = { foo: true, bar: true, baz: false };
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
@@ -88,163 +78,167 @@ describe('ClassListPrimitive', () => {
       const runtime = Runtime.create(new MockBackend());
 
       expect(() =>
-        ClassListPrimitive.resolveBinding(classSpecifier, part, runtime),
-      ).toThrow(
-        'ClassListPrimitive must be used in a ":classlist" attribute part,',
-      );
+        ClassPrimitive.resolveBinding(classes, part, runtime),
+      ).toThrow('ClassPrimitive must be used in a ":class" attribute part,');
     });
   });
 });
 
-describe('ClassListBinding', () => {
+describe('ClassBinding', () => {
   describe('shouldBind()', () => {
-    it('returns true if the committed specifier does not exist', () => {
-      const classSpecifier = ['foo', 'bar', 'baz'];
+    it('returns true if the committed classes does not exist', () => {
+      const classes = { foo: true, bar: true, baz: false };
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(classSpecifier, part);
+      const binding = new ClassBinding(classes, part);
 
-      expect(binding.shouldBind(classSpecifier)).toBe(true);
+      expect(binding.shouldBind(classes)).toBe(true);
     });
 
     it('returns true if any classes are not the same in the class list', () => {
-      const classSpecifier = ['foo', { bar: true }, null];
+      const classes = ['foo', 'bar', null];
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(classSpecifier, part);
+      const binding = new ClassBinding(classes, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(binding.shouldBind(classSpecifier)).toBe(false);
-      expect(binding.shouldBind(structuredClone(classSpecifier))).toBe(false);
-      expect(binding.shouldBind(['foo', { bar: true }, undefined])).toBe(false);
-      expect(binding.shouldBind(['foo', { bar: true }])).toBe(true);
-      expect(binding.shouldBind(['foo', { bar: true }, 'baz'])).toBe(true);
-      expect(binding.shouldBind([{ foo: true }, { bar: true }, null])).toBe(
+      expect(binding.shouldBind(classes)).toBe(false);
+      expect(binding.shouldBind(structuredClone(classes))).toBe(false);
+      expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
+      expect(binding.shouldBind({ foo: true, bar: true, baz: false })).toBe(
         true,
       );
+      expect(binding.shouldBind(['foo bar'])).toBe(true);
+      expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
+      expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
     });
 
     it('returns true if any classes are not the same in the class map', () => {
-      const classSpecifier = { foo: true, bar: true, baz: false };
+      const classes = { foo: true, bar: true, baz: false };
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(classSpecifier, part);
+      const binding = new ClassBinding(classes, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(binding.shouldBind(classSpecifier)).toBe(false);
-      expect(binding.shouldBind(structuredClone(classSpecifier))).toBe(false);
-      expect(binding.shouldBind({ baz: false, bar: true, foo: true })).toBe(
-        false,
-      );
+      expect(binding.shouldBind(classes)).toBe(false);
+      expect(binding.shouldBind(structuredClone(classes))).toBe(false);
       expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
       expect(binding.shouldBind({ foo: true, bar: true, baz: true })).toBe(
         true,
       );
+      expect(binding.shouldBind(['foo bar'])).toBe(true);
+      expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
+      expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
     });
   });
 
   describe('commit()', () => {
-    it('adds only valid class names in the class list', () => {
-      const specifier1 = [
-        'foo',
-        { bar: true, baz: false },
-        'qux',
-        { corge: true },
-      ];
-      const specifier2 = [undefined, 'baz', 'quux'];
+    it('adds only valid class names in class map', () => {
+      const classes1 = {
+        _: 'foo',
+        'bar baz': true,
+        qux: true,
+        quux: false,
+      };
+      const classes2 = {
+        _: 'foo',
+        'bar baz': null,
+        qux: undefined,
+        quux: true,
+      };
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(specifier1, part);
+      const binding = new ClassBinding(classes1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar qux corge');
+      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
 
-      binding.bind(specifier2);
+      binding.bind(classes2);
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('baz quux');
+      expect(part.node.getAttribute('class')).toBe('foo quux');
 
-      binding.bind(specifier1);
+      binding.bind(classes1);
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar qux corge');
+      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
     });
 
-    it('adds only valid class names in the class map', () => {
-      const specifier1 = { foo: true, bar: true, baz: false };
-      const specifier2 = { foo: true, bar: false };
+    it('adds only valid class names in class list', () => {
+      const classes1 = ['foo', 'bar baz', 'qux', undefined];
+      const classes2 = ['foo', null, undefined, 'quux'];
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(specifier1, part);
+      const binding = new ClassBinding(classes1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar');
+      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
 
-      binding.bind(specifier2);
+      binding.bind(classes2);
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('foo');
+      expect(part.node.getAttribute('class')).toBe('foo quux');
 
-      binding.bind(specifier1);
+      binding.bind(classes1);
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar');
+      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
     });
 
     it('adds duplicated classs names correctly', () => {
-      const specifier1 = [{ foo: true, bar: false }, 'foo'];
-      const specifier2 = [{ foo: false, bar: true }, 'foo'];
+      const classes1 = { _: 'foo bar', foo: true, bar: false };
+      const classes2 = { _: 'foo', foo: false, bar: true };
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(specifier1, part);
+      const binding = new ClassBinding(classes1, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
       binding.commit(runtime);
 
-      expect(part.node.getAttribute('class')).toBe('foo');
+      expect(part.node.getAttribute('class')).toBe('foo bar');
 
-      binding.bind(specifier2);
+      binding.bind(classes2);
       binding.connect(runtime);
       binding.commit(runtime);
 
       expect(part.node.getAttribute('class')).toBe('bar');
 
-      binding.bind(specifier1);
+      binding.bind(classes1);
       binding.connect(runtime);
       binding.commit(runtime);
 
@@ -252,13 +246,13 @@ describe('ClassListBinding', () => {
     });
 
     it('can preserve preset class names', () => {
-      const specifier = { foo: true, bar: true };
+      const classes = { foo: true, bar: true };
       const part = {
         type: PartType.Attribute,
         node: createElement('div', { class: 'baz' }),
         name: 'class',
       };
-      const binding = new ClassListBinding(specifier, part);
+      const binding = new ClassBinding(classes, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);
@@ -270,13 +264,13 @@ describe('ClassListBinding', () => {
 
   describe('rollback()', () => {
     it('removes committed class names', () => {
-      const specifier = { foo: true, bar: true, baz: false };
+      const classes = { foo: true, bar: true, baz: false };
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
-      const binding = new ClassListBinding(specifier, part);
+      const binding = new ClassBinding(classes, part);
       const runtime = Runtime.create(new MockBackend());
 
       binding.connect(runtime);

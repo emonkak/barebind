@@ -14,7 +14,7 @@ import {
 } from '../core.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
-import { ClassListPrimitive } from '../primitive/class-list.js';
+import { ClassPrimitive } from '../primitive/class.js';
 import { CommentPrimitive } from '../primitive/comment.js';
 import { EventPrimitive } from '../primitive/event.js';
 import { LivePrimitive } from '../primitive/live.js';
@@ -91,8 +91,8 @@ export class BrowserBackend implements Backend {
       case PartType.Attribute:
         if (part.name[0] === ':') {
           switch (part.name.slice(1).toLowerCase()) {
-            case 'classlist':
-              return ClassListPrimitive;
+            case 'class':
+              return ClassPrimitive;
             case 'ref':
               return RefPrimitive;
             case 'style':

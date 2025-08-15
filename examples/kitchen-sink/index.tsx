@@ -151,13 +151,11 @@ function Dashboard({ count$ }: DashboardProps, $: RenderContext): unknown {
 
   return $.html`
     <div
-      :classlist=${[
-        'Dashboard',
-        {
-          'is-odd': count % 2 !== 0,
-          'is-even': count % 2 === 0,
-        },
-      ]}
+      :class=${{
+        _: 'Dashboard',
+        'is-odd': count % 2 !== 0,
+        'is-even': count % 2 === 0,
+      }}
       :ref=${countElementRef}
       data-count=${count}
     >

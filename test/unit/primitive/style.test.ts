@@ -206,7 +206,7 @@ describe('StyleBinding', () => {
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),
-        name: ':classlist',
+        name: ':class',
       };
       const binding = new StyleBinding(style, part);
       const runtime = Runtime.create(new MockBackend());

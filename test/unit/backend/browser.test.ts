@@ -3,7 +3,7 @@ import { BrowserBackend } from '@/backend/browser.js';
 import { CommitPhase, PartType } from '@/core.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
-import { ClassListPrimitive } from '@/primitive/class-list.js';
+import { ClassPrimitive } from '@/primitive/class.js';
 import { CommentPrimitive } from '@/primitive/comment.js';
 import { EventPrimitive } from '@/primitive/event.js';
 import { LivePrimitive } from '@/primitive/live.js';
@@ -344,9 +344,9 @@ describe('BrowserBackend', () => {
         {
           type: PartType.Attribute,
           node: document.createElement('div'),
-          name: ':classlist',
+          name: ':class',
         },
-        ClassListPrimitive,
+        ClassPrimitive,
       ],
       [
         { current: null },
