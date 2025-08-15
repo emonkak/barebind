@@ -189,7 +189,7 @@ describe('ClassBinding', () => {
 
     it('adds only valid class names in class list', () => {
       const classes1 = ['foo', 'bar baz', 'qux', undefined];
-      const classes2 = ['foo', null, undefined, 'quux'];
+      const classes2 = ['foo', null, '', 'quux'];
       const part = {
         type: PartType.Attribute,
         node: document.createElement('div'),

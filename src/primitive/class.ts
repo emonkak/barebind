@@ -98,17 +98,19 @@ function toggleClass(
   let classInput: string;
 
   if (typeof value === 'string') {
-    classInput = value;
+    classInput = value.trim();
   } else if (value) {
-    classInput = key;
+    classInput = key.trim();
   } else {
     return;
   }
 
-  const classNames = classInput.trim().split(CLASS_SEPARATOR_PATTERN);
+  if (classInput !== '') {
+    const classNames = classInput.split(CLASS_SEPARATOR_PATTERN);
 
-  for (let i = 0, l = classNames.length; i < l; i++) {
-    classList.toggle(classNames[i]!, enabled);
+    for (let i = 0, l = classNames.length; i < l; i++) {
+      classList.toggle(classNames[i]!, enabled);
+    }
   }
 }
 
