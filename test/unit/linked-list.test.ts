@@ -229,7 +229,7 @@ describe('LinkedList', () => {
       expect(foo).toStrictEqual({
         value: 'foo',
         prev: null,
-        next: null,
+        next: bar,
         ownership: null,
       });
     });
@@ -249,7 +249,7 @@ describe('LinkedList', () => {
 
       expect(baz).toStrictEqual({
         value: 'baz',
-        prev: null,
+        prev: bar,
         next: null,
         ownership: null,
       });
@@ -258,20 +258,20 @@ describe('LinkedList', () => {
     it('should remove a middle node', () => {
       const list = new LinkedList();
 
-      const foo = list.pushFront('foo');
-      const bar = list.pushFront('bar');
-      const baz = list.pushFront('baz');
+      const foo = list.pushBack('foo');
+      const bar = list.pushBack('bar');
+      const baz = list.pushBack('baz');
 
       expect(list.remove(bar)).toBe(true);
       expect(list.isEmpty()).toBe(false);
-      expect(list.front()).toBe(baz);
-      expect(list.back()).toBe(foo);
-      expect(Array.from(list)).toStrictEqual(['baz', 'foo']);
+      expect(list.front()).toBe(foo);
+      expect(list.back()).toBe(baz);
+      expect(Array.from(list)).toStrictEqual(['foo', 'baz']);
 
       expect(bar).toStrictEqual({
         value: 'bar',
-        prev: null,
-        next: null,
+        prev: foo,
+        next: baz,
         ownership: null,
       });
     });
@@ -293,8 +293,8 @@ describe('LinkedList', () => {
 
       expect(bar).toStrictEqual({
         value: 'bar',
-        prev: null,
-        next: null,
+        prev: foo,
+        next: baz,
         ownership: null,
       });
     });

@@ -122,8 +122,6 @@ export class LinkedList<T> implements Iterable<T> {
     } else {
       this._tail = prev;
     }
-    node.prev = null;
-    node.next = null;
     node.ownership = null;
     return true;
   }
