@@ -1,16 +1,16 @@
 import { sequentialEqual } from './compare.js';
 import { Literal, type TemplateLiteral } from './internal.js';
 
-interface ExpansionResult {
+interface ExpandedResult {
   expandedStrings: readonly string[];
   literalValues: readonly string[];
   literalPositions: readonly number[];
 }
 
 export class TemplateLiteralPreprocessor {
-  private readonly _expansionResults: WeakMap<
+  private readonly _expandedResults: WeakMap<
     TemplateStringsArray,
-    ExpansionResult[]
+    ExpandedResult[]
   > = new WeakMap();
 
   process<T>(
@@ -31,31 +31,31 @@ export class TemplateLiteralPreprocessor {
       }
     }
 
-    let expansionResults = this._expansionResults.get(strings);
+    let expandedResults = this._expandedResults.get(strings);
 
-    if (expansionResults !== undefined) {
-      for (let i = 0, l = expansionResults.length; i < l; i++) {
-        const expansionResult = expansionResults[i]!;
+    if (expandedResults !== undefined) {
+      for (let i = 0, l = expandedResults.length; i < l; i++) {
+        const expandedResult = expandedResults[i]!;
 
         if (
-          sequentialEqual(expansionResult.literalValues, literalValues) &&
-          sequentialEqual(expansionResult.literalPositions, literalPositions)
+          sequentialEqual(expandedResult.literalValues, literalValues) &&
+          sequentialEqual(expandedResult.literalPositions, literalPositions)
         ) {
           return {
-            strings: expansionResult.expandedStrings,
+            strings: expandedResult.expandedStrings,
             values: nonLiteralValues,
           };
         }
       }
     } else {
-      expansionResults = [];
-      this._expansionResults.set(strings, expansionResults);
+      expandedResults = [];
+      this._expandedResults.set(strings, expandedResults);
     }
 
     const expandedStrings =
       literalValues.length > 0 ? expandLiterals(strings, values) : strings;
 
-    expansionResults.push({
+    expandedResults.push({
       expandedStrings,
       literalValues,
       literalPositions,
