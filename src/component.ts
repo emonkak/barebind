@@ -169,13 +169,13 @@ export class ComponentBinding<TProps, TResult>
       const hook = this._hooks[i]!;
       switch (hook.type) {
         case HookType.Effect:
-          context.enqueuePassiveEffect(new CleanEffectHook(hook));
+          context.enqueuePassiveEffect(new FinalizeEffectHook(hook));
           break;
         case HookType.LayoutEffect:
-          context.enqueueLayoutEffect(new CleanEffectHook(hook));
+          context.enqueueLayoutEffect(new FinalizeEffectHook(hook));
           break;
         case HookType.InsertionEffect:
-          context.enqueueMutationEffect(new CleanEffectHook(hook));
+          context.enqueueMutationEffect(new FinalizeEffectHook(hook));
           break;
       }
     }
@@ -193,7 +193,7 @@ export class ComponentBinding<TProps, TResult>
   }
 }
 
-class CleanEffectHook implements Effect {
+class FinalizeEffectHook implements Effect {
   private _hook: Hook.EffectHook;
 
   constructor(hook: Hook.EffectHook) {
