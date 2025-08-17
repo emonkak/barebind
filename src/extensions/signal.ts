@@ -156,29 +156,32 @@ export abstract class Signal<T>
   abstract get version(): number;
 
   [$customHook](context: HookContext): T {
-    const snapshot = context.useRef<T | null>(null);
+    const value = this.value;
+    const snapshot = context.useMemo(() => ({ value }), []);
+
+    context.useLayoutEffect(() => {
+      snapshot.value = value;
+    }, [value]);
 
     context.useEffect(() => {
       // The guard for batch updates with microtasks.
       let guard = true;
-      const subscriber = () => {
-        if (!Object.is(this.value, snapshot.current)) {
+      const checkForChanges = () => {
+        if (!Object.is(this.value, snapshot.value)) {
           context.forceUpdate();
         }
         guard = false;
       };
-      queueMicrotask(subscriber);
+      queueMicrotask(checkForChanges);
       return this.subscribe(() => {
         if (!guard) {
           guard = true;
-          queueMicrotask(subscriber);
+          queueMicrotask(checkForChanges);
         }
       });
     }, [this]);
 
-    snapshot.current = this.value;
-
-    return snapshot.current;
+    return value;
   }
 
   [$toDirective](): Directive<Signal<T>> {
