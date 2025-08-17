@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CurrentHistory } from '@/extensions/router/history.js';
+import { CurrentHistory } from '@/extras/router/history.js';
 import { createSession } from '../../../session-utils.js';
 
 describe('CurrentHistory', () => {

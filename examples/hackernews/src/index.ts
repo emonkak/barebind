@@ -2,7 +2,7 @@ import { AsyncRoot, BrowserBackend } from 'barebind';
 import {
   ConsoleReporter,
   PerformanceProfiler,
-} from 'barebind/extensions/profiler';
+} from 'barebind/extras/profiler';
 
 import { App } from './App.js';
 import { AppStore } from './store.js';

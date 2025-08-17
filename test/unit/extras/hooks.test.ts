@@ -5,8 +5,8 @@ import {
   LocalAtom,
   LocalComputed,
   SyncEnternalStore,
-} from '@/extensions/hooks.js';
-import { Atom, type Signal } from '@/extensions/signal.js';
+} from '@/extras/hooks.js';
+import { Atom, type Signal } from '@/extras/signal.js';
 import {
   createSession,
   disposeSession,

@@ -5,7 +5,7 @@ import {
   ConsoleReporter,
   type PerformanceProfile,
   PerformanceProfiler,
-} from '@/extensions/profiler.js';
+} from '@/extras/profiler.js';
 import {
   CommitPhase,
   type Effect,

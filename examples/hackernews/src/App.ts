@@ -1,5 +1,5 @@
 import { createComponent, Flexible, type RenderContext } from 'barebind';
-import { HashHistory, ScrollRestration } from 'barebind/extensions/router';
+import { HashHistory, ScrollRestration } from 'barebind/extras/router';
 
 import { Nav } from './Nav.js';
 import { NotFound } from './NotFound.js';

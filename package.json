@@ -5,8 +5,8 @@
     ".": {
       "import": "./src/index.ts"
     },
-    "./extensions/*": {
-      "import": "./src/extensions/*.ts"
+    "./extras/*": {
+      "import": "./src/extras/*.ts"
     },
     "./internal": {
       "import": "./src/internal.js"
@@ -18,9 +18,9 @@
         "import": "./lib/index.js",
         "types": "./lib/index.d.ts"
       },
-      "./extensions/*": {
-        "import": "./lib/extensions/*.js",
-        "types": "./lib/extensions/*.d.ts"
+      "./extras/*": {
+        "import": "./lib/extras/*.js",
+        "types": "./lib/extras/*.d.ts"
       },
       "./internal": {
         "import": "./lib/internal.js",

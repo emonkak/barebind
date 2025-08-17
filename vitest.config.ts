@@ -18,7 +18,7 @@ export default defineConfig({
     },
     coverage: {
       include: ['src/**'],
-      exclude: ['src/extensions/router.ts', 'src/index.ts'],
+      exclude: ['src/extras/router.ts', 'src/index.ts'],
     },
     typecheck: {
       enabled: true,

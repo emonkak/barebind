@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { Reactive } from '@/extensions/reactive.js';
+import { Reactive } from '@/extras/reactive.js';
 
 interface Todo {
   id: number;

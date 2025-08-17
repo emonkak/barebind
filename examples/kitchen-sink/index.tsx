@@ -10,9 +10,9 @@ import {
 import {
   ConsoleReporter,
   PerformanceProfiler,
-} from 'barebind/extensions/profiler';
-import { Atom, type Signal } from 'barebind/extensions/signal';
-import type { VElement } from 'barebind/extensions/vdom';
+} from 'barebind/extras/profiler';
+import { Atom, type Signal } from 'barebind/extras/signal';
+import type { VElement } from 'barebind/extras/vdom';
 
 const ENV_CONTEXT = Symbol('ENV_CONTEXT');
 

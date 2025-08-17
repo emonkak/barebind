@@ -3,9 +3,9 @@ import {
   CurrentHistory,
   type HistoryLocation,
   type HistoryNavigator,
-} from '@/extensions/router/history.js';
-import { ScrollRestration } from '@/extensions/router/scroll-restration.js';
-import { RelativeURL } from '@/extensions/router/url.js';
+} from '@/extras/router/history.js';
+import { ScrollRestration } from '@/extras/router/scroll-restration.js';
+import { RelativeURL } from '@/extras/router/url.js';
 import type { RenderSession } from '@/render-session.js';
 import {
   createSession,

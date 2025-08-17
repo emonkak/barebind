@@ -3,7 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "barebind/extensions",
+    "jsxImportSource": "barebind/extras",
     "noEmit": true,
     "paths": {
       "@/*": ["../src/*"]

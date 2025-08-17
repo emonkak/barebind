@@ -1,5 +1,5 @@
 import { $customHook, type HookContext } from 'barebind';
-import { Reactive } from 'barebind/extensions/reactive';
+import { Reactive } from 'barebind/extras/reactive';
 
 export interface Todo {
   id: string;

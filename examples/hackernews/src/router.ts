@@ -1,4 +1,4 @@
-import { integer, Router, route, wildcard } from 'barebind/extensions/router';
+import { integer, Router, route, wildcard } from 'barebind/extras/router';
 
 import { ItemPage } from './item/ItemPage.js';
 import { StoriesPage } from './story/StoriesPage.js';

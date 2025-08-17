@@ -9,7 +9,7 @@ import {
   VElement,
   VFragment,
   VStaticFragment,
-} from '@/extensions/vdom.js';
+} from '@/extras/vdom.js';
 import { $toDirective, PartType } from '@/internal.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';

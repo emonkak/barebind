@@ -4,7 +4,7 @@ import {
   Computed,
   type SignalBinding,
   SignalDirective,
-} from '@/extensions/signal.js';
+} from '@/extras/signal.js';
 import { createHydrationTree } from '@/hydration.js';
 import { $toDirective, HydrationError, Lanes, PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';

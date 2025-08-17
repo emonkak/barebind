@@ -6,8 +6,8 @@ import {
   regexp,
   route,
   wildcard,
-} from '@/extensions/router/router.js';
-import { RelativeURL } from '@/extensions/router/url.js';
+} from '@/extras/router/router.js';
+import { RelativeURL } from '@/extras/router/url.js';
 
 describe('Router', () => {
   const basicRouter = new Router([

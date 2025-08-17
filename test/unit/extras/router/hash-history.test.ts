@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createHashClickHandler,
   HashHistory,
-} from '@/extensions/router/hash-history.js';
-import { CurrentHistory } from '@/extensions/router/history.js';
-import { RelativeURL } from '@/extensions/router/url.js';
+} from '@/extras/router/hash-history.js';
+import { CurrentHistory } from '@/extras/router/history.js';
+import { RelativeURL } from '@/extras/router/url.js';
 import type { RenderSession } from '@/render-session.js';
 import {
   createSession,

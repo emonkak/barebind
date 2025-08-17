@@ -3,8 +3,8 @@ import {
   BrowserHistory,
   createFormSubmitHandler,
   createLinkClickHandler,
-} from '@/extensions/router/browser-history.js';
-import { CurrentHistory } from '@/extensions/router/history.js';
+} from '@/extras/router/browser-history.js';
+import { CurrentHistory } from '@/extras/router/history.js';
 import type { RenderSession } from '@/render-session.js';
 import {
   createSession,

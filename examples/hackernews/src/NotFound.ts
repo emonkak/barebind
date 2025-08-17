@@ -1,5 +1,5 @@
 import { createComponent, type RenderContext } from 'barebind';
-import type { RelativeURL } from 'barebind/extensions/router';
+import type { RelativeURL } from 'barebind/extras/router';
 
 export interface NotFoundProps {
   url: RelativeURL;

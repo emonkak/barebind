@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { Fragment, jsx, jsxs } from '@/extensions/jsx-runtime.js';
-import { VElement, VFragment, VStaticFragment } from '@/extensions/vdom.js';
+import { Fragment, jsx, jsxs } from '@/extras/jsx-runtime.js';
+import { VElement, VFragment, VStaticFragment } from '@/extras/vdom.js';
 
 describe('jsx()', () => {
   it('returns a new VElement', () => {
