@@ -169,6 +169,20 @@ export class RenderSession implements RenderContext {
     this._useEffect(callback, dependencies ?? null, HookType.Effect);
   }
 
+  useEffectEvent<TCallback extends (...args: any[]) => any>(
+    callback: TCallback,
+  ): (...args: Parameters<TCallback>) => ReturnType<TCallback> {
+    const callbackRef = this.useRef<TCallback | null>(null);
+
+    this.useLayoutEffect(() => {
+      callbackRef.current = callback;
+    }, [callback]);
+
+    // React's useEffectEvent() returns an unstable callback, but our
+    // implementation returns a stable callback.
+    return this.useCallback((...args) => callbackRef.current!(...args), []);
+  }
+
   useId(): string {
     let currentHook = this._hooks[this._hookIndex];
 

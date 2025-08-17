@@ -397,6 +397,38 @@ describe('RenderSession', () => {
     });
   });
 
+  describe('useEffectEvent()', () => {
+    it('returns a stable callback', () => {
+      const session = createSession();
+
+      const callback1 = vi.fn();
+      const callback2 = vi.fn();
+      let stableCallback: () => void;
+
+      SESSION1: {
+        stableCallback = session.useEffectEvent(callback1);
+
+        flushSession(session);
+
+        stableCallback();
+
+        expect(callback1).toHaveBeenCalledOnce();
+        expect(callback2).not.toHaveBeenCalled();
+      }
+
+      SESSION2: {
+        expect(session.useEffectEvent(callback2)).toBe(stableCallback);
+
+        flushSession(session);
+
+        stableCallback();
+
+        expect(callback1).toHaveBeenCalledOnce();
+        expect(callback2).toHaveBeenCalledOnce();
+      }
+    });
+  });
+
   describe('useId()', () => {
     it('returns a unique identifier', () => {
       const session = createSession();

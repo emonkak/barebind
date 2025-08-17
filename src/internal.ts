@@ -161,6 +161,9 @@ export interface HookContext {
     callback: () => Cleanup | void,
     dependencies?: readonly unknown[],
   ): void;
+  useEffectEvent<TCallback extends (...args: any[]) => any>(
+    callback: TCallback,
+  ): (...args: Parameters<TCallback>) => ReturnType<TCallback>;
   useId(): string;
   useInsertionEffect(
     callback: () => Cleanup | void,
