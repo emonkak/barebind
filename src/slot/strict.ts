@@ -9,6 +9,7 @@ import {
   type HydrationTree,
   type Part,
   type Slot,
+  type UnwrapBindable,
   type UpdateContext,
 } from '../internal.js';
 
@@ -17,19 +18,19 @@ export function Strict<T>(value: T): SlotSpecifier<T> {
 }
 
 export class StrictSlot<T> implements Slot<T> {
-  private readonly _binding: Binding<unknown>;
+  private readonly _binding: Binding<UnwrapBindable<T>>;
 
   private _dirty = false;
 
-  constructor(binding: Binding<unknown>) {
+  constructor(binding: Binding<UnwrapBindable<T>>) {
     this._binding = binding;
   }
 
-  get type(): DirectiveType<unknown> {
+  get type(): DirectiveType<UnwrapBindable<T>> {
     return this._binding.type;
   }
 
-  get value(): unknown {
+  get value(): UnwrapBindable<T> {
     return this._binding.value;
   }
 

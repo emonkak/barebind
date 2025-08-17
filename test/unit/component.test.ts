@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ComponentBinding, createComponent } from '@/component.js';
+import { DirectiveSpecifier } from '@/directive.js';
 import { createHydrationTree } from '@/hydration.js';
 import {
   CommitPhase,
@@ -28,8 +29,9 @@ describe('createComponent()', () => {
   describe('()', () => {
     it('returns a directive with props', () => {
       const props = { greet: 'Hello', name: 'foo' };
-      const directive = Greet(props);
+      const directive = Greet(props) as DirectiveSpecifier<GreetProps>;
 
+      expect(directive).toBeInstanceOf(DirectiveSpecifier);
       expect(directive.type).toBe(Greet);
       expect(directive.value).toBe(props);
     });

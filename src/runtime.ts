@@ -27,6 +27,7 @@ import {
   type Template,
   type TemplateLiteral,
   type TemplateMode,
+  type UnwrapBindable,
   type UpdateContext,
   type UpdateHandle,
   type UpdateOptions,
@@ -358,13 +359,16 @@ export class Runtime implements CommitContext, UpdateContext {
     return { value, pendingLanes };
   }
 
-  resolveDirective<T>(value: T, part: Part): Directive<unknown> {
+  resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>> {
     if (isBindable(value)) {
-      return value[$toDirective](part, this);
+      return value[$toDirective](part, this) as Directive<UnwrapBindable<T>>;
     } else {
       const type = this._environment.backend.resolvePrimitive(value, part);
       type.ensureValue?.(value, part);
-      return { type: type as Primitive<T>, value };
+      return {
+        type: type as Primitive<UnwrapBindable<T>>,
+        value: value as UnwrapBindable<T>,
+      };
     }
   }
 

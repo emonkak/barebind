@@ -1,10 +1,10 @@
 import { DirectiveSpecifier } from './directive.js';
 import {
+  type Bindable,
   type Binding,
   type CommitContext,
   type Component,
   type Coroutine,
-  type Directive,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -27,7 +27,7 @@ export function createComponent<TProps, TResult = unknown>(
   componentFn: (props: TProps, context: RenderContext) => TResult,
   options: ComponentOptions<TProps> = {},
 ): Component<TProps, TResult> {
-  function Component(props: TProps): Directive<TProps> {
+  function Component(props: TProps): Bindable<TProps> {
     return new DirectiveSpecifier(
       Component as Component<TProps, TResult>,
       props,

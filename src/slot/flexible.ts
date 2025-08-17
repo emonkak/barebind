@@ -7,6 +7,7 @@ import {
   type HydrationTree,
   type Part,
   type Slot,
+  type UnwrapBindable,
   type UpdateContext,
 } from '../internal.js';
 
@@ -15,23 +16,23 @@ export function Flexible<T>(value: T): SlotSpecifier<T> {
 }
 
 export class FlexibleSlot<T> implements Slot<T> {
-  private _pendingBinding: Binding<unknown>;
+  private _pendingBinding: Binding<UnwrapBindable<T>>;
 
-  private _memoizedBinding: Binding<unknown> | null = null;
+  private _memoizedBinding: Binding<UnwrapBindable<T>> | null = null;
 
-  private _reservedBinding: Binding<unknown> | null = null;
+  private _reservedBinding: Binding<UnwrapBindable<T>> | null = null;
 
   private _dirty = false;
 
-  constructor(binding: Binding<unknown>) {
+  constructor(binding: Binding<UnwrapBindable<T>>) {
     this._pendingBinding = binding;
   }
 
-  get type(): DirectiveType<unknown> {
+  get type(): DirectiveType<UnwrapBindable<T>> {
     return this._pendingBinding.type;
   }
 
-  get value(): unknown {
+  get value(): UnwrapBindable<T> {
     return this._pendingBinding.value;
   }
 

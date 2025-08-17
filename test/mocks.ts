@@ -25,6 +25,7 @@ import {
   type TemplateFactory,
   type TemplateMode,
   type TemplateResult,
+  type UnwrapBindable,
   type UpdateContext,
 } from '@/internal.js';
 import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
@@ -266,21 +267,21 @@ export class MockRuntimeObserver implements RuntimeObserver {
 }
 
 export class MockSlot<T> implements Slot<T> {
-  readonly binding: Binding<unknown>;
+  readonly binding: Binding<UnwrapBindable<T>>;
 
   isConnected = false;
 
   isCommitted = false;
 
-  constructor(binding: Binding<unknown>) {
+  constructor(binding: Binding<UnwrapBindable<T>>) {
     this.binding = binding;
   }
 
-  get type(): DirectiveType<unknown> {
+  get type(): DirectiveType<UnwrapBindable<T>> {
     return this.binding.type;
   }
 
-  get value(): unknown {
+  get value(): UnwrapBindable<T> {
     return this.binding.value;
   }
 

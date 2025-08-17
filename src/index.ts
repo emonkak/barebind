@@ -4,10 +4,10 @@ export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export {
   $customHook,
+  type Bindable,
   type Component,
   type CustomHookFunction,
   type CustomHookObject,
-  type Directive,
   type HookContext,
   HydrationError,
   Literal,

@@ -56,7 +56,7 @@ export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
 
 export interface Component<TProps, TResult = unknown>
   extends DirectiveType<TProps> {
-  (props: TProps): Directive<TProps>;
+  (props: TProps): Bindable<TProps>;
   render(props: TProps, context: RenderContext): TResult;
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
@@ -85,7 +85,7 @@ export interface Directive<T> {
 }
 
 export interface DirectiveContext {
-  resolveDirective<T>(value: T, part: Part): Directive<unknown>;
+  resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>>;
   resolveSlot<T>(value: T, part: Part): Slot<T>;
 }
 
@@ -357,8 +357,8 @@ export interface ReversibleEffect extends Effect {
 }
 
 export interface Slot<T> extends ReversibleEffect {
-  readonly type: DirectiveType<unknown>;
-  readonly value: unknown;
+  readonly type: DirectiveType<UnwrapBindable<T>>;
+  readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): boolean;
   hydrate(targetTree: HydrationTree, context: UpdateContext): void;
@@ -367,7 +367,7 @@ export interface Slot<T> extends ReversibleEffect {
 }
 
 export interface SlotType {
-  new <T>(binding: Binding<unknown>): Slot<T>;
+  new <T>(binding: Binding<UnwrapBindable<T>>): Slot<T>;
 }
 
 export interface Template<TBinds extends readonly unknown[]>
@@ -406,6 +406,8 @@ export interface TemplateResult {
   readonly childNodes: readonly ChildNode[];
   readonly slots: Slot<unknown>[];
 }
+
+export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface UpdateContext extends DirectiveContext, RenderSessionContext {
   enqueueCoroutine(coroutine: Coroutine): void;
