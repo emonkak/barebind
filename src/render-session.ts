@@ -149,38 +149,11 @@ export class RenderSession implements RenderContext {
     return this.useMemo(() => callback, dependencies);
   }
 
-  useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T {
-    const [deferredValue, setDeferredValue] = this.useReducer<T, T>(
-      (_state, value) => value,
-      initialValue ?? (() => value),
-    );
-
-    this.useLayoutEffect(() => {
-      setDeferredValue(value, { priority: 'background' });
-    }, [value]);
-
-    return deferredValue;
-  }
-
   useEffect(
     callback: () => Cleanup | void,
     dependencies?: readonly unknown[],
   ): void {
     this._useEffect(callback, dependencies ?? null, HookType.Effect);
-  }
-
-  useEffectEvent<TCallback extends (...args: any[]) => any>(
-    callback: TCallback,
-  ): (...args: Parameters<TCallback>) => ReturnType<TCallback> {
-    const callbackRef = this.useRef<TCallback | null>(null);
-
-    this.useLayoutEffect(() => {
-      callbackRef.current = callback;
-    }, [callback]);
-
-    // React's useEffectEvent() returns an unstable callback, but our
-    // implementation returns a stable callback.
-    return this.useCallback((...args) => callbackRef.current!(...args), []);
   }
 
   useId(): string {
@@ -310,38 +283,6 @@ export class RenderSession implements RenderContext {
         typeof action === 'function' ? action(state) : action,
       initialState,
     );
-  }
-
-  useSyncEnternalStore<TSnapshot>(
-    subscribe: (subscriber: () => void) => Cleanup | void,
-    getSnapshot: () => TSnapshot,
-  ): TSnapshot {
-    const snapshot = getSnapshot();
-    const store = this.useMemo(
-      () => ({ getSnapshot, memoizedSnapshot: snapshot }),
-      [],
-    );
-
-    this.useLayoutEffect(() => {
-      store.getSnapshot = getSnapshot;
-      store.memoizedSnapshot = snapshot;
-
-      if (!Object.is(getSnapshot(), snapshot)) {
-        this.forceUpdate();
-      }
-    }, [getSnapshot, snapshot]);
-
-    this.useEffect(() => {
-      const checkForChanges = () => {
-        if (!Object.is(store.getSnapshot(), store.memoizedSnapshot)) {
-          this.forceUpdate();
-        }
-      };
-      checkForChanges();
-      return subscribe(checkForChanges);
-    }, [subscribe]);
-
-    return snapshot;
   }
 
   async waitForUpdate(): Promise<number> {

@@ -156,14 +156,10 @@ export interface HookContext {
     callback: TCallback,
     dependencies: readonly unknown[],
   ): TCallback;
-  useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T;
   useEffect(
     callback: () => Cleanup | void,
     dependencies?: readonly unknown[],
   ): void;
-  useEffectEvent<TCallback extends (...args: any[]) => any>(
-    callback: TCallback,
-  ): (...args: Parameters<TCallback>) => ReturnType<TCallback>;
   useId(): string;
   useInsertionEffect(
     callback: () => Cleanup | void,
@@ -190,10 +186,6 @@ export interface HookContext {
     setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
     isPending: boolean,
   ];
-  useSyncEnternalStore<T>(
-    subscribe: (subscriber: () => void) => Cleanup | void,
-    getSnapshot: () => T,
-  ): T;
   waitForUpdate(): Promise<number>;
 }
 
