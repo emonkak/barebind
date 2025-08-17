@@ -5,7 +5,6 @@ import {
   type Binding,
   type CommitContext,
   type Coroutine,
-  type CustomHookFunction,
   type CustomHookObject,
   type Directive,
   type DirectiveContext,
@@ -24,7 +23,7 @@ export type Subscriber = () => void;
 
 export type Subscription = () => void;
 
-type UnwrapSignals<T> = {
+export type UnwrapSignals<T> = {
   [K in keyof T]: T[K] extends Signal<infer Value> ? Value : never;
 };
 
@@ -204,23 +203,6 @@ export class Atom<T> extends Signal<T> {
 
   private readonly _subscribers = new LinkedList<Subscriber>();
 
-  static tracked<T>(initialValue: T): CustomHookFunction<Atom<T>> {
-    return (context) => {
-      const signal = context.useMemo(
-        () => new Atom(initialValue),
-        [initialValue],
-      );
-      context.use(signal);
-      return signal;
-    };
-  }
-
-  static untracked<T>(initialValue: T): CustomHookFunction<Atom<T>> {
-    return (context) => {
-      return context.useMemo(() => new Atom(initialValue), [initialValue]);
-    };
-  }
-
   constructor(initialValue: T);
   /**
    * @internal
@@ -278,32 +260,6 @@ export class Computed<
   private _memoizedResult: TResult | null;
 
   private _memoizedVersion;
-
-  static tracked<TResult, const TDependencies extends readonly Signal<any>[]>(
-    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
-    dependencies: TDependencies,
-  ): CustomHookFunction<Computed<TResult, TDependencies>> {
-    return (context) => {
-      const signal = context.useMemo(
-        () => new Computed(computation, dependencies),
-        dependencies,
-      );
-      context.use(signal);
-      return signal;
-    };
-  }
-
-  static untracked<TResult, const TDependencies extends readonly Signal<any>[]>(
-    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
-    dependencies: TDependencies,
-  ): CustomHookFunction<Computed<TResult, TDependencies>> {
-    return (context) => {
-      return context.useMemo(
-        () => new Computed(computation, dependencies),
-        dependencies,
-      );
-    };
-  }
 
   constructor(
     computation: (...values: UnwrapSignals<TDependencies>) => TResult,

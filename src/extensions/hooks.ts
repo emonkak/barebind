@@ -1,4 +1,5 @@
 import type { Cleanup, CustomHookFunction, InitialState } from '../internal.js';
+import { Atom, Computed, type Signal, type UnwrapSignals } from './signal.js';
 
 export function DeferredValue<T>(
   value: T,
@@ -33,6 +34,27 @@ export function EffectEvent<TCallback extends (...args: any[]) => any>(
     // React's useEffectEvent() returns an unstable callback, but our
     // implementation returns a stable callback.
     return context.useCallback((...args) => callbackRef.current!(...args), []);
+  };
+}
+
+export function LocalAtom<T>(initialValue: T): CustomHookFunction<Atom<T>> {
+  return (context) => {
+    return context.useMemo(() => new Atom(initialValue), []);
+  };
+}
+
+export function LocalComputed<
+  TResult,
+  const TDependencies extends readonly Signal<any>[],
+>(
+  computation: (...values: UnwrapSignals<TDependencies>) => TResult,
+  dependencies: TDependencies,
+): CustomHookFunction<Computed<TResult, TDependencies>> {
+  return (context) => {
+    return context.useMemo(
+      () => new Computed(computation, dependencies),
+      dependencies,
+    );
   };
 }
 
