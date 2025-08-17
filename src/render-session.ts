@@ -317,11 +317,14 @@ export class RenderSession implements RenderContext {
     getSnapshot: () => TSnapshot,
   ): TSnapshot {
     const snapshot = getSnapshot();
-    const state = this.useMemo(() => ({ getSnapshot, snapshot }), []);
+    const store = this.useMemo(
+      () => ({ getSnapshot, memoizedSnapshot: snapshot }),
+      [],
+    );
 
     this.useLayoutEffect(() => {
-      state.getSnapshot = getSnapshot;
-      state.snapshot = snapshot;
+      store.getSnapshot = getSnapshot;
+      store.memoizedSnapshot = snapshot;
 
       if (!Object.is(getSnapshot(), snapshot)) {
         this.forceUpdate();
@@ -329,13 +332,13 @@ export class RenderSession implements RenderContext {
     }, [getSnapshot, snapshot]);
 
     this.useEffect(() => {
-      const subscriber = () => {
-        if (!Object.is(state.getSnapshot(), state.snapshot)) {
+      const checkForChanges = () => {
+        if (!Object.is(store.getSnapshot(), store.memoizedSnapshot)) {
           this.forceUpdate();
         }
       };
-      subscriber();
-      return subscribe(subscriber);
+      checkForChanges();
+      return subscribe(checkForChanges);
     }, [subscribe]);
 
     return snapshot;
