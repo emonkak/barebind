@@ -269,7 +269,7 @@ export class Computed<
   TResult,
   const TDependencies extends readonly Signal<any>[] = Signal<any>[],
 > extends Signal<TResult> {
-  private readonly _producer: (
+  private readonly _computation: (
     ...signals: UnwrapSignals<TDependencies>
   ) => TResult;
 
@@ -280,12 +280,12 @@ export class Computed<
   private _memoizedVersion;
 
   static tracked<TResult, const TDependencies extends readonly Signal<any>[]>(
-    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   ): CustomHookFunction<Computed<TResult, TDependencies>> {
     return (context) => {
       const signal = context.useMemo(
-        () => new Computed(producer, dependencies),
+        () => new Computed(computation, dependencies),
         dependencies,
       );
       context.use(signal);
@@ -294,38 +294,38 @@ export class Computed<
   }
 
   static untracked<TResult, const TDependencies extends readonly Signal<any>[]>(
-    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   ): CustomHookFunction<Computed<TResult, TDependencies>> {
     return (context) => {
       return context.useMemo(
-        () => new Computed(producer, dependencies),
+        () => new Computed(computation, dependencies),
         dependencies,
       );
     };
   }
 
   constructor(
-    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
   );
   /**
    * @internal
    */
   constructor(
-    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult,
     initialVersion: number,
   );
   constructor(
-    producer: (...values: UnwrapSignals<TDependencies>) => TResult,
+    computation: (...values: UnwrapSignals<TDependencies>) => TResult,
     dependencies: TDependencies,
     initialResult: TResult | null = null,
     initialVersion = -1, // -1 is indicated an uninitialized signal.
   ) {
     super();
-    this._producer = producer;
+    this._computation = computation;
     this._dependencies = dependencies;
     this._memoizedResult = initialResult;
     this._memoizedVersion = initialVersion;
@@ -335,8 +335,8 @@ export class Computed<
     const currentVersion = this.version;
 
     if (this._memoizedVersion < currentVersion) {
-      const producer = this._producer;
-      this._memoizedResult = producer(
+      const computation = this._computation;
+      this._memoizedResult = computation(
         ...(this._dependencies.map(
           (dependency) => dependency.value,
         ) as UnwrapSignals<TDependencies>),
