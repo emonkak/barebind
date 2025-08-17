@@ -1,10 +1,10 @@
-import { shallowEqual } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
 import {
   type Binding,
   type CommitContext,
   type Component,
   type Coroutine,
+  type Directive,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -19,69 +19,33 @@ import {
   type UpdateContext,
 } from './internal.js';
 
-export function component<TProps, TResult>(
-  componentFn: ComponentFunction<TProps, TResult>,
-  props: NoInfer<TProps>,
-): DirectiveSpecifier<TProps> {
-  const directive = new FunctionComponent(componentFn);
-  return new DirectiveSpecifier(directive, props);
+export interface ComponentOptions<TProps> {
+  shouldSkipUpdate?: (nextProps: TProps, prevProps: TProps) => boolean;
 }
 
-export function memo<TProps extends {}, TResult>(
-  componentFn: ComponentFunction<TProps, TResult>,
-  arePropsEqual: (
-    nextProps: TProps,
-    prevProps: TProps,
-  ) => boolean = shallowEqual,
-): ComponentFunction<TProps, TResult> {
-  componentFn.shouldSkipUpdate = arePropsEqual;
-  return componentFn;
-}
-
-export interface ComponentFunction<TProps, TResult = unknown> {
-  (props: TProps, context: RenderContext): TResult;
-  shouldSkipUpdate?(nextProps: TProps, prevProps: TProps): boolean;
-}
-
-export class FunctionComponent<TProps, TResult>
-  implements Component<TProps, TResult>
-{
-  private readonly _componentFn: ComponentFunction<TProps, TResult>;
-
-  constructor(componentFn: ComponentFunction<TProps, TResult>) {
-    this._componentFn = componentFn;
-  }
-
-  get name(): string {
-    return this._componentFn.name;
-  }
-
-  equals(other: unknown): boolean {
-    return (
-      other instanceof FunctionComponent &&
-      other._componentFn === this._componentFn
+export function createComponent<TProps, TResult = unknown>(
+  componentFn: (props: TProps, context: RenderContext) => TResult,
+  options: ComponentOptions<TProps> = {},
+): Component<TProps, TResult> {
+  function Component(props: TProps): Directive<TProps> {
+    return new DirectiveSpecifier(
+      Component as Component<TProps, TResult>,
+      props,
     );
   }
 
-  render(props: TProps, context: RenderContext): TResult {
-    const componentFn = this._componentFn;
-    return componentFn(props, context);
+  DEBUG: {
+    Object.defineProperty(Component, 'name', {
+      value: componentFn.name,
+      configurable: true,
+    });
   }
 
-  shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean {
-    return (
-      this._componentFn.shouldSkipUpdate?.(nextProps, prevProps) ??
-      nextProps === prevProps
-    );
-  }
+  Component.render = componentFn;
+  Component.resolveBinding = resolveBinding;
+  Component.shouldSkipUpdate = options.shouldSkipUpdate ?? Object.is;
 
-  resolveBinding(
-    props: TProps,
-    part: Part,
-    _context: DirectiveContext,
-  ): ComponentBinding<TProps, TResult> {
-    return new ComponentBinding(this, props, part);
-  }
+  return Component;
 }
 
 export class ComponentBinding<TProps, TResult>
@@ -239,4 +203,13 @@ class CleanEffectHook implements Effect {
     this._hook.cleanup?.();
     this._hook.cleanup = undefined;
   }
+}
+
+function resolveBinding<TProps, TResult>(
+  this: Component<TProps, TResult>,
+  props: TProps,
+  part: Part,
+  _context: DirectiveContext,
+): ComponentBinding<TProps, TResult> {
+  return new ComponentBinding(this, props, part);
 }

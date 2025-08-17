@@ -1,4 +1,4 @@
-import { component, type RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 import { AppStore } from '../store.js';
 import { UserView } from './UserView.js';
@@ -7,7 +7,10 @@ export interface UserPageProps {
   id: string;
 }
 
-export function UserPage({ id }: UserPageProps, $: RenderContext): unknown {
+export const UserPage = createComponent(function UserPage(
+  { id }: UserPageProps,
+  $: RenderContext,
+): unknown {
   const appStore = $.use(AppStore);
   const userState = $.use(appStore.userState$);
 
@@ -26,6 +29,6 @@ export function UserPage({ id }: UserPageProps, $: RenderContext): unknown {
   }
 
   return !userState.isLoading && userState.user?.id === id
-    ? component(UserView, { user: userState.user })
+    ? UserView({ user: userState.user })
     : null;
-}
+});

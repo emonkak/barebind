@@ -54,7 +54,7 @@ export type RuntimeEvent =
   | {
       type: 'COMPONENT_RENDER_START' | 'COMPONENT_RENDER_END';
       id: number;
-      component: Component<unknown, unknown>;
+      component: Component<any>;
       props: unknown;
       context: RenderContext;
     };

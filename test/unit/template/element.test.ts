@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';
-import { ElementTemplate, element } from '@/template/element.js';
+import { Element, ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import { MockBackend } from '../../mocks.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 
-describe('element()', () => {
+describe('Element()', () => {
   it('returns a new DirectiveSpecifier with the element', () => {
     const props = { class: 'foo' };
     const children = 'bar';
-    const bindable = element('div', props, children);
+    const bindable = Element('div', props, children);
 
     expect(bindable.type).toBeInstanceOf(ElementTemplate);
     expect((bindable.type as ElementTemplate)['_name']).toBe('div');
@@ -109,7 +109,7 @@ describe('ElementTemplate', () => {
           value: binds[0],
           part: {
             type: PartType.Element,
-            node: expect.any(Element),
+            node: expect.any(window.Element),
           },
           isConnected: true,
           isCommitted: false,
@@ -151,7 +151,7 @@ describe('ElementTemplate', () => {
           value: binds[0],
           part: {
             type: PartType.Element,
-            node: expect.any(Element),
+            node: expect.any(window.Element),
           },
           isConnected: true,
           isCommitted: false,

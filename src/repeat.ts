@@ -71,7 +71,7 @@ interface ReconciliationHandler<TKey, TSource, TTarget> {
   remove(item: Item<TKey, TTarget>): void;
 }
 
-export function repeat<TSource, TKey, TValue>(
+export function Repeat<TSource, TKey, TValue>(
   props: RepeatProps<TSource, TKey, TValue>,
 ): DirectiveSpecifier<RepeatProps<TSource, TKey, TValue>> {
   return new DirectiveSpecifier(RepeatDirective, props);

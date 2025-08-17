@@ -4,10 +4,10 @@ import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, type Part, PartType } from '@/internal.js';
 import {
   moveChildNodes,
+  Repeat,
   RepeatBinding,
   RepeatDirective,
   type RepeatProps,
-  repeat,
 } from '@/repeat.js';
 import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -21,12 +21,12 @@ const EMPTY_COMMENT = '<!---->';
 
 type KeyValuePair = { key: string; value: string };
 
-describe('repeat()', () => {
+describe('Repeat()', () => {
   it('returns a new DirectiveSpecifier with RepeatDirective', () => {
     const props: RepeatProps<string> = {
       source: ['foo', 'bar', 'baz'],
     };
-    const bindable = repeat(props);
+    const bindable = Repeat(props);
 
     expect(bindable.type).toBe(RepeatDirective);
     expect(bindable.value).toBe(props);

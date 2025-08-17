@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createComponent } from '@/component.js';
 import {
   type ConsoleLogger,
   ConsoleReporter,
@@ -12,7 +13,7 @@ import {
   type RenderContext,
 } from '@/internal.js';
 import type { RuntimeEvent } from '@/runtime.js';
-import { MockComponent, MockEffect } from '../../mocks.js';
+import { MockEffect } from '../../mocks.js';
 
 describe('PerformanceProfiler', () => {
   describe('onRuntimeEvent()', () => {
@@ -22,7 +23,9 @@ describe('PerformanceProfiler', () => {
       };
       const profiler = new PerformanceProfiler(reporter);
 
-      const component = new MockComponent();
+      const component = createComponent(function MyComponent(_props: {}) {
+        return null;
+      });
       const mutationEffects = [new MockEffect(), new MockEffect()];
       const layoutEffects = [new MockEffect()];
       const passiveEffects: Effect[] = [];
@@ -115,7 +118,7 @@ describe('PerformanceProfiler', () => {
         },
         componentMeasurements: [
           {
-            name: 'MockComponent',
+            name: 'MyComponent',
             startTime: expect.any(Number),
             duration: expect.any(Number),
           },
@@ -185,7 +188,7 @@ describe('ConsoleReporter', () => {
           },
           componentMeasurements: [
             {
-              name: 'MockComponent',
+              name: 'MyComponent',
               startTime: 0,
               duration: 4,
             },
@@ -216,7 +219,7 @@ describe('ConsoleReporter', () => {
             'table',
             [
               {
-                name: 'MockComponent',
+                name: 'MyComponent',
                 startTime: 0,
                 duration: 4,
               },

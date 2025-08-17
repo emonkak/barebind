@@ -1,4 +1,4 @@
-import type { RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 import type { Story } from '../store.js';
 
@@ -6,7 +6,7 @@ export interface StoryViewProps {
   story: Story;
 }
 
-export function StoryView(
+export const StoryView = createComponent(function StoryView(
   { story }: StoryViewProps,
   $: RenderContext,
 ): unknown {
@@ -45,4 +45,4 @@ export function StoryView(
       </div>
     </li>
   `;
-}
+});

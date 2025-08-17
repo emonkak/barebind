@@ -1,11 +1,14 @@
-import { component, type RenderContext, repeat } from 'barebind';
+import { createComponent, type RenderContext, Repeat } from 'barebind';
 
 import { TodoState } from './state.js';
 import { TodoItem } from './TodoItem.js';
 
 export interface MainProps {}
 
-export function Main(_props: MainProps, $: RenderContext): unknown {
+export const Main = createComponent(function Main(
+  _props: MainProps,
+  $: RenderContext,
+): unknown {
   const todoState$ = $.use(TodoState);
   const visibleTodos = $.use(todoState$.get('visibleTodos'));
 
@@ -36,12 +39,12 @@ export function Main(_props: MainProps, $: RenderContext): unknown {
           : null
       }>
       <ul class="todo-list" data-testid="todo-list">
-        <${repeat({
+        <${Repeat({
           source: visibleTodos,
           keySelector: (todo) => todo.id,
-          valueSelector: (todo) => component(TodoItem, { todo }),
+          valueSelector: (todo) => TodoItem({ todo }),
         })}>
       </ul>
     </main>
   `;
-}
+});

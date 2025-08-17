@@ -1,4 +1,4 @@
-import { component, type RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 import { AppStore } from '../store.js';
 import { ItemView } from './ItemView.js';
@@ -7,7 +7,10 @@ export interface ItemPageProps {
   id: number;
 }
 
-export function ItemPage({ id }: ItemPageProps, $: RenderContext): unknown {
+export const ItemPage = createComponent(function ItemPage(
+  { id }: ItemPageProps,
+  $: RenderContext,
+): unknown {
   const appStore = $.use(AppStore);
   const itemState = $.use(appStore.itemState$);
 
@@ -26,6 +29,6 @@ export function ItemPage({ id }: ItemPageProps, $: RenderContext): unknown {
   }
 
   return !itemState.isLoading && itemState.item?.id === id
-    ? component(ItemView, { item: itemState.item })
+    ? ItemView({ item: itemState.item })
     : null;
-}
+});

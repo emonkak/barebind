@@ -1,10 +1,13 @@
-import type { RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 import { type TodoFilter, TodoState } from './state.js';
 
 export interface FooterProps {}
 
-export function Footer(_props: FooterProps, $: RenderContext): unknown {
+export const Footer = createComponent(function Footer(
+  _props: FooterProps,
+  $: RenderContext,
+): unknown {
   const todoState$ = $.use(TodoState);
   const { todos, activeTodos, filter } = $.use(todoState$);
 
@@ -68,4 +71,4 @@ export function Footer(_props: FooterProps, $: RenderContext): unknown {
       </button>
     </footer>
   `;
-}
+});

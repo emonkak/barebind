@@ -1,11 +1,11 @@
 import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { component } from '@/component.js';
+import { createComponent } from '@/component.js';
 import { SyncRoot } from '@/root/sync.js';
 import { stripComments } from '../test-utils.js';
 
 test('render a component returning virtual DOM', () => {
-  const value1 = component(App, {
+  const value1 = App({
     footerItems: [],
     greet: 'Hello',
     items: [
@@ -16,7 +16,7 @@ test('render a component returning virtual DOM', () => {
     ],
     name: 'World',
   });
-  const value2 = component(App, {
+  const value2 = App({
     footerItems: [
       { title: 'foo', content: 'bar' },
       { title: 'baz', content: 'qux' },
@@ -76,7 +76,12 @@ interface FooterItem {
   content: string;
 }
 
-function App({ footerItems, greet, items, name }: AppProps) {
+const App = createComponent(function App({
+  footerItems,
+  greet,
+  items,
+  name,
+}: AppProps) {
   return (
     <div>
       <ul>
@@ -96,4 +101,4 @@ function App({ footerItems, greet, items, name }: AppProps) {
         ))}
     </div>
   );
-}
+});

@@ -10,7 +10,7 @@ import {
   type UpdateContext,
 } from '../internal.js';
 
-export function flexible<T>(value: T): SlotSpecifier<T> {
+export function Flexible<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(FlexibleSlot, value);
 }
 

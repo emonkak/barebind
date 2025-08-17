@@ -1,4 +1,4 @@
-import type { RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 export interface TodoInputProps {
   defaultValue?: string;
@@ -8,7 +8,7 @@ export interface TodoInputProps {
   placeholder?: string;
 }
 
-export function TodoInput(
+export const TodoInput = createComponent(function TodoInput(
   {
     defaultValue = '',
     label,
@@ -59,4 +59,4 @@ export function TodoInput(
       </label>
     </div>
   `;
-}
+});

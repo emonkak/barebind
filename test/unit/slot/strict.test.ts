@@ -3,7 +3,7 @@ import { DirectiveSpecifier } from '@/directive.js';
 import { createHydrationTree } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';
-import { StrictSlot, strict } from '@/slot/strict.js';
+import { Strict, StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBackend,
@@ -12,10 +12,10 @@ import {
   MockPrimitive,
 } from '../../mocks.js';
 
-describe('strcit()', () => {
+describe('Strcit()', () => {
   it('creates a SlotElement with StrictSlot', () => {
     const value = 'foo';
-    const bindable = strict(value);
+    const bindable = Strict(value);
 
     expect(bindable.value).toBe(value);
     expect(bindable.slotType).toBe(StrictSlot);

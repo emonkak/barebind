@@ -10,7 +10,7 @@ import {
   type UpdateContext,
 } from '../internal.js';
 
-export function loose<T>(value: T): SlotSpecifier<T> {
+export function Loose<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(LooseSlot, value);
 }
 

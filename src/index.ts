@@ -1,11 +1,13 @@
 export { BrowserBackend } from './backend/browser.js';
 export { ServerBackend } from './backend/server.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
-export { component, memo } from './component.js';
+export { type ComponentOptions, createComponent } from './component.js';
 export {
   $customHook,
+  type Component,
   type CustomHookFunction,
   type CustomHookObject,
+  type Directive,
   type HookContext,
   HydrationError,
   Literal,
@@ -18,13 +20,13 @@ export type { EventHandler } from './primitive/event.js';
 export type { ElementRef } from './primitive/ref.js';
 export type { StyleProperties } from './primitive/style.js';
 export {
+  Repeat,
   type RepeatProps,
-  repeat,
 } from './repeat.js';
 export { AsyncRoot } from './root/async.js';
 export { SyncRoot } from './root/sync.js';
 export type { RuntimeEvent, RuntimeObserver } from './runtime.js';
-export { flexible } from './slot/flexible.js';
-export { loose } from './slot/loose.js';
-export { strict } from './slot/strict.js';
-export { element } from './template/element.js';
+export { Flexible } from './slot/flexible.js';
+export { Loose } from './slot/loose.js';
+export { Strict } from './slot/strict.js';
+export { Element } from './template/element.js';

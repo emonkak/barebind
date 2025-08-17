@@ -1,4 +1,4 @@
-import { component, type RenderContext, repeat } from 'barebind';
+import { createComponent, type RenderContext, Repeat } from 'barebind';
 
 import type { Item } from '../store.js';
 import { CommentView } from './CommentView.js';
@@ -7,7 +7,10 @@ export interface ItemViewProps {
   item: Item;
 }
 
-export function ItemView({ item }: ItemViewProps, $: RenderContext): unknown {
+export const ItemView = createComponent(function ItemView(
+  { item }: ItemViewProps,
+  $: RenderContext,
+): unknown {
   return $.html`
     <div class="item-view">
       <div class="item-view-header">
@@ -24,13 +27,13 @@ export function ItemView({ item }: ItemViewProps, $: RenderContext): unknown {
           ${item.comments_count > 0 ? item.comments_count + ' comments' : 'No comments yet.'}
         </div>
         <ul class="comment-children">
-          <${repeat({
+          <${Repeat({
             source: item.comments,
             keySelector: (comment) => comment.id,
-            valueSelector: (comment) => component(CommentView, { comment }),
+            valueSelector: (comment) => CommentView({ comment }),
           })}>
         </ul>
       </div>
     </div>
   `;
-}
+});

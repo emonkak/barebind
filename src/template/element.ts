@@ -13,7 +13,7 @@ import {
   getNamespaceURIByTagName,
 } from '../template/template.js';
 
-export function element<TProps, TChildren>(
+export function Element<TProps, TChildren>(
   name: string,
   props: TProps,
   children: TChildren,

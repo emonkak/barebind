@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
@@ -14,7 +15,6 @@ import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBackend,
   MockBindable,
-  MockComponent,
   MockCoroutine,
   MockDirective,
   MockPrimitive,
@@ -490,7 +490,7 @@ describe('Runtime', () => {
 
   describe('renderComponent()', () => {
     it('renders the component with a new render session', () => {
-      const component = new MockComponent();
+      const component = createComponent(() => null);
       const props = {};
       const hooks: Hook[] = [];
       const flushLanes = Lanes.UserBlockingLane;

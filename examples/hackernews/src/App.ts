@@ -1,4 +1,4 @@
-import { component, flexible, type RenderContext } from 'barebind';
+import { createComponent, Flexible, type RenderContext } from 'barebind';
 import { HashHistory, ScrollRestration } from 'barebind/extensions/router';
 
 import { Nav } from './Nav.js';
@@ -10,11 +10,14 @@ interface AppProps {
   store: AppStore;
 }
 
-export function App({ store }: AppProps, $: RenderContext): unknown {
+export const App = createComponent(function App(
+  { store }: AppProps,
+  $: RenderContext,
+): unknown {
   const [location] = $.use(HashHistory);
   const page =
     router.handle(location.url, location.state) ??
-    component(NotFound, { url: location.url });
+    NotFound({ url: location.url });
 
   $.use(store);
 
@@ -22,10 +25,10 @@ export function App({ store }: AppProps, $: RenderContext): unknown {
 
   return $.html`
     <header class="header">
-      <${component(Nav, {})}>
+      <${Nav({})}>
     </header>
     <main class="main">
-      <${flexible(page)}>
+      <${Flexible(page)}>
     </main>
   `;
-}
+});

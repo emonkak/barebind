@@ -1,9 +1,10 @@
-import { memo, type RenderContext } from 'barebind';
+import { createComponent, type RenderContext, shallowEqual } from 'barebind';
 
 export interface NavProps {}
 
-export function Nav(_props: NavProps, $: RenderContext): unknown {
-  return $.html`
+export const Nav = createComponent(
+  function Nav(_props: NavProps, $: RenderContext): unknown {
+    return $.html`
     <nav class="inner">
       <a href="#/">
         <strong>HN</strong>
@@ -25,6 +26,6 @@ export function Nav(_props: NavProps, $: RenderContext): unknown {
       </a>
     </nav>
   `;
-}
-
-memo(Nav);
+  },
+  { shouldSkipUpdate: shallowEqual },
+);

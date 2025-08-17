@@ -12,7 +12,7 @@ import {
   type UpdateContext,
 } from '../internal.js';
 
-export function strict<T>(value: T): SlotSpecifier<T> {
+export function Strict<T>(value: T): SlotSpecifier<T> {
   return new SlotSpecifier(StrictSlot, value);
 }
 

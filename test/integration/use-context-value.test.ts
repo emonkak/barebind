@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { component } from '@/component.js';
+import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
 import { SyncRoot } from '@/root/sync.js';
 import { createElement, stripComments } from '../test-utils.js';
 
 test('hydrate a component using a context value', () => {
-  const value = component(Parent, {
+  const value = Parent({
     greet: 'Hello',
     name: 'foo',
   });
@@ -37,11 +37,11 @@ test('hydrate a component using a context value', () => {
 });
 
 test('render a component using a context value', () => {
-  const value1 = component(Parent, {
+  const value1 = Parent({
     greet: 'Hello',
     name: 'foo',
   });
-  const value2 = component(Parent, {
+  const value2 = Parent({
     greet: 'Chao',
     name: 'bar',
   });
@@ -70,18 +70,24 @@ interface ParentProps {
   name: string;
 }
 
-function Parent({ name, greet }: ParentProps, context: RenderContext): unknown {
+const Parent = createComponent(function Parent(
+  { name, greet }: ParentProps,
+  context: RenderContext,
+): unknown {
   context.setContextValue('greet', greet);
 
-  return context.html`<div><${component(Child, { name })}></div>`;
-}
+  return context.html`<div><${Child({ name })}></div>`;
+});
 
 interface ChildProps {
   name: string;
 }
 
-function Child({ name }: ChildProps, context: RenderContext): unknown {
+const Child = createComponent(function Child(
+  { name }: ChildProps,
+  context: RenderContext,
+): unknown {
   const greet = context.getContextValue('greet');
 
   return context.html`${greet}, <strong>${name}</strong>!`;
-}
+});

@@ -1,4 +1,4 @@
-import { component, type RenderContext, repeat } from 'barebind';
+import { createComponent, type RenderContext, Repeat } from 'barebind';
 
 import type { Comment } from '../store.js';
 
@@ -6,7 +6,7 @@ interface CommentViewProps {
   comment: Comment;
 }
 
-export function CommentView(
+export const CommentView = createComponent(function CommentView(
   { comment }: CommentViewProps,
   $: RenderContext,
 ): unknown {
@@ -18,18 +18,18 @@ export function CommentView(
       <div class="text" .innerHTML=${comment.content}></div>
       <${
         comment.comments.length > 0
-          ? component(CommentList, { comments: comment.comments })
+          ? CommentList({ comments: comment.comments })
           : null
       }>
     </li>
   `;
-}
+});
 
 interface CommentListProps {
   comments: Comment[];
 }
 
-export function CommentList(
+export const CommentList = createComponent(function CommentList(
   { comments }: CommentListProps,
   $: RenderContext,
 ): unknown {
@@ -49,17 +49,17 @@ export function CommentList(
       isOpened
         ? $.html`
           <ul class="comment-children">
-            <${repeat({
+            <${Repeat({
               source: comments,
               keySelector: (comment) => comment.id,
-              valueSelector: (comment) => component(CommentView, { comment }),
+              valueSelector: (comment) => CommentView({ comment }),
             })}>
           </ul>
         `
         : null
     }>
   `;
-}
+});
 
 function pluralize(n: number): string {
   return n + (n === 1 ? ' reply' : ' replies');

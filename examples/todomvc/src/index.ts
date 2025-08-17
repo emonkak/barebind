@@ -1,4 +1,4 @@
-import { AsyncRoot, BrowserBackend, component } from 'barebind';
+import { AsyncRoot, BrowserBackend } from 'barebind';
 import {
   ConsoleReporter,
   PerformanceProfiler,
@@ -8,7 +8,7 @@ import { App } from './App.js';
 import { TodoState } from './state.js';
 
 const root = AsyncRoot.create(
-  component(App, { state: new TodoState() }),
+  App({ state: new TodoState() }),
   document.body,
   new BrowserBackend(),
 );

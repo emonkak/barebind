@@ -1,6 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { ComponentBinding } from '@/component.js';
 import {
   $toDirective,
   areDirectiveTypesEqual,
@@ -9,7 +8,6 @@ import {
   type Binding,
   type CommitContext,
   type CommitPhase,
-  type Component,
   type Coroutine,
   type Directive,
   type DirectiveContext,
@@ -20,7 +18,6 @@ import {
   type Part,
   PartType,
   type Primitive,
-  type RenderContext,
   type RequestCallbackOptions,
   type Slot,
   type SlotType,
@@ -150,28 +147,6 @@ export class MockBinding<T> implements Binding<T> {
 
     this.memoizedValue = null;
     this.isCommitted = false;
-  }
-}
-
-export class MockComponent implements Component<unknown, unknown> {
-  get name(): string {
-    return MockComponent.name;
-  }
-
-  render(_props: unknown, _context: RenderContext): unknown {
-    return null;
-  }
-
-  shouldSkipUpdate(_nextProps: unknown, _prevProps: unknown): boolean {
-    return false;
-  }
-
-  resolveBinding(
-    props: unknown,
-    part: Part,
-    _context: DirectiveContext,
-  ): Binding<unknown> {
-    return new ComponentBinding(this, props, part);
   }
 }
 

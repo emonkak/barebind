@@ -1,4 +1,4 @@
-import { component, type RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 import { Footer } from './Footer.js';
 import { Header } from './Header.js';
@@ -9,18 +9,21 @@ interface AppProps {
   state: TodoState;
 }
 
-export function App({ state }: AppProps, $: RenderContext): unknown {
+export const App = createComponent(function App(
+  { state }: AppProps,
+  $: RenderContext,
+): unknown {
   $.use(state);
 
   return $.html`
     <section class="todoapp">
-      <${component(Header, {})}>
-      <${component(Main, {})}>
-      <${component(Footer, {})}>
+      <${Header({})}>
+      <${Main({})}>
+      <${Footer({})}>
     </section>
     <footer class="info">
       <p>Double-click to edit a todo</p>
       <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
     </footer>
   `;
-}
+});

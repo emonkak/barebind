@@ -3,7 +3,7 @@ import { DirectiveSpecifier } from '@/directive.js';
 import { createHydrationTree } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { Runtime } from '@/runtime.js';
-import { LooseSlot, loose } from '@/slot/loose.js';
+import { Loose, LooseSlot } from '@/slot/loose.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
   MockBackend,
@@ -12,10 +12,10 @@ import {
   MockPrimitive,
 } from '../../mocks.js';
 
-describe('loose()', () => {
+describe('Loose()', () => {
   it('creates a DirectiveInstance with LooseSlot', () => {
     const value = 'foo';
-    const bindable = loose(value);
+    const bindable = Loose(value);
 
     expect(bindable.value).toBe(value);
     expect(bindable.slotType).toBe(LooseSlot);

@@ -1,4 +1,4 @@
-import { component, type RenderContext, repeat } from 'barebind';
+import { createComponent, type RenderContext, Repeat } from 'barebind';
 
 import { AppStore, type StoryType } from '../store.js';
 import { StoryView } from './StoryView.js';
@@ -10,7 +10,7 @@ export interface StoriesPageProps {
 
 const STORIES_PER_PAGE = 30;
 
-export function StoriesPage(
+export const StoriesPage = createComponent(function StoriesPage(
   { type, page = 1 }: StoriesPageProps,
   $: RenderContext,
 ): unknown {
@@ -64,16 +64,16 @@ export function StoriesPage(
       </div>
       <div class="story-list">
         <ul>
-          <${repeat({
+          <${Repeat({
             source: storyState.stories,
             keySelector: (story) => story.id,
-            valueSelector: (story) => component(StoryView, { story }),
+            valueSelector: (story) => StoryView({ story }),
           })}>
         </ul>
       </div>
     </div>
   `;
-}
+});
 
 function storyTypeToPathName(type: StoryType): string {
   switch (type) {

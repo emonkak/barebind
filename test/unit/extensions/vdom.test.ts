@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { FunctionComponent } from '@/component.js';
+import { createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import {
   createElement,
@@ -53,12 +53,12 @@ describe('createFragment()', () => {
 describe('VElement', () => {
   describe('[$toDirective]()', () => {
     it('returns a directive with the function component', () => {
-      const type = () => {};
+      const type = createComponent((_props: {}) => null);
       const props = {};
       const element = new VElement(type, props);
       const directive = element[$toDirective]();
 
-      expect(directive.type).toStrictEqual(new FunctionComponent(type));
+      expect(directive.type).toStrictEqual(type);
       expect(directive.value).toBe(props);
     });
 
@@ -123,7 +123,7 @@ describe('VFragment', () => {
 describe('VStaticFragment', () => {
   describe('[$toDirective]()', () => {
     it('returns a directive with the fragment template', () => {
-      const component = () => {};
+      const component = createComponent((_props: {}) => null);
       const children = [
         new VElement(component, {}),
         new VElement('div', { children: 'foo' }),

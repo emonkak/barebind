@@ -54,7 +54,9 @@ export const CommitPhase = {
 
 export type CommitPhase = (typeof CommitPhase)[keyof typeof CommitPhase];
 
-export interface Component<TProps, TResult> extends DirectiveType<TProps> {
+export interface Component<TProps, TResult = unknown>
+  extends DirectiveType<TProps> {
+  (props: TProps): Directive<TProps>;
   render(props: TProps, context: RenderContext): TResult;
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }

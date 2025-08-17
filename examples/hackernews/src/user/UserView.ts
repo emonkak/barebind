@@ -1,4 +1,4 @@
-import type { RenderContext } from 'barebind';
+import { createComponent, type RenderContext } from 'barebind';
 
 import type { User } from '../store.js';
 
@@ -6,7 +6,10 @@ export interface UserViewProps {
   user: User;
 }
 
-export function UserView({ user }: UserViewProps, $: RenderContext): unknown {
+export const UserView = createComponent(function UserView(
+  { user }: UserViewProps,
+  $: RenderContext,
+): unknown {
   return $.html`
     <div class="user-view">
       <h1>User : ${user.id}</h1>
@@ -30,4 +33,4 @@ export function UserView({ user }: UserViewProps, $: RenderContext): unknown {
       </p>
     </div>
   `;
-}
+});

@@ -1,11 +1,11 @@
 import {
   AsyncRoot,
   BrowserBackend,
-  component,
+  createComponent,
   Literal,
-  memo,
   type RenderContext,
-  repeat,
+  Repeat,
+  shallowEqual,
 } from 'barebind';
 import {
   ConsoleReporter,
@@ -32,7 +32,7 @@ const ITEM_LABELS = [
   'thud',
 ];
 
-function App(_props: {}, $: RenderContext) {
+const App = createComponent(function App(_props: {}, $: RenderContext) {
   const count$ = $.useMemo(() => new Atom(0), []);
 
   const [state, setState] = $.useState({
@@ -108,22 +108,22 @@ function App(_props: {}, $: RenderContext) {
 
   return $.html`
     <div ${{ class: 'root' }}>
-      <${component(Dashboard, { count$ })}>
+      <${Dashboard({ count$ })}>
       <nav>
         <button type="button" @click=${handleIncrement}>+1</button>
         <button type="button" @click=${handleDecrement}>-1</button>
         <button type="button" disabled=${state.items.length >= ITEM_LABELS.length} @click=${handleAdd}>Add</button>
         <button type="button" @click=${handleShuffle}>Shuffle</button>
       </nav>
-      <${component(List, {
+      <${List({
         items: state.items,
         onUp: handleUp,
         onDown: handleDown,
         onDelete: handleDelete,
       })}>
-      <${component(TemplateCounter, {})}>
-      <${component(VDOMCounter, {})}>
-      <${component(VDOMSVG, {})}>
+      <${TemplateCounter({})}>
+      <${VDOMCounter({})}>
+      <${VDOMSVG({})}>
       <div>
         <h1>Text</h1>
         <${$.text`This is a <plain> text.`}>
@@ -131,18 +131,21 @@ function App(_props: {}, $: RenderContext) {
       <div class="SVGCounter">
         <h1>SVG Counter</h1>
         <svg width="100" height="100" viewBox="0 0 100 100">
-          <${component(SVGCounter, { cx: 50, cy: 50, r: 50, fill: 'red', text$: count$.map((count) => count.toString()) })}>
+          <${SVGCounter({ cx: 50, cy: 50, r: 50, fill: 'red', text$: count$.map((count) => count.toString()) })}>
         </svg>
       </div>
     </div>
   `;
-}
+});
 
 interface DashboardProps {
   count$: Signal<number>;
 }
 
-function Dashboard({ count$ }: DashboardProps, $: RenderContext): unknown {
+const Dashboard = createComponent(function Dashboard(
+  { count$ }: DashboardProps,
+  $: RenderContext,
+): unknown {
   const env = $.getContextValue(ENV_CONTEXT);
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
@@ -171,7 +174,7 @@ function Dashboard({ count$ }: DashboardProps, $: RenderContext): unknown {
       </ul>
     </div>
   `;
-}
+});
 
 interface ListProps {
   items: string[];
@@ -180,17 +183,17 @@ interface ListProps {
   onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
-function List(
+const List = createComponent(function List(
   { items, onUp, onDown, onDelete }: ListProps,
   $: RenderContext,
 ): unknown {
   const itemsList = $.useMemo(
     () =>
-      repeat({
+      Repeat({
         source: items,
         keySelector: (item) => item,
         valueSelector: (item, index) =>
-          component(Item, {
+          Item({
             index,
             isFirst: index === 0,
             isLast: index + 1 === items.length,
@@ -209,7 +212,7 @@ function List(
       <ol><${itemsList}></ol>
     </div>
   `;
-}
+});
 
 interface ItemProps {
   index: number;
@@ -221,33 +224,37 @@ interface ItemProps {
   onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
-function Item(
-  { isFirst, isLast, index, label, onUp, onDown, onDelete }: ItemProps,
+const Item = createComponent(
+  function Item(
+    { isFirst, isLast, index, label, onUp, onDown, onDelete }: ItemProps,
+    $: RenderContext,
+  ) {
+    const handleUp = () => {
+      onUp(index, isFirst, isLast);
+    };
+    const handleDown = () => {
+      onDown(index, isFirst, isLast);
+    };
+    const handleDelete = () => {
+      onDelete(index);
+    };
+
+    return $.html`
+      <li>
+        <span>${label}</span>
+        <button type="button" disabled=${isFirst} @click=${handleUp}>↑</button>
+        <button type="button" disabled=${isLast} @click=${handleDown}>↓</button>
+        <button type="button" @click=${handleDelete}>Delete</button>
+      </li>
+    `;
+  },
+  { shouldSkipUpdate: shallowEqual },
+);
+
+const TemplateCounter = createComponent(function TemplateCounter(
+  _props: {},
   $: RenderContext,
-) {
-  const handleUp = () => {
-    onUp(index, isFirst, isLast);
-  };
-  const handleDown = () => {
-    onDown(index, isFirst, isLast);
-  };
-  const handleDelete = () => {
-    onDelete(index);
-  };
-
-  return $.html`
-    <li>
-      <span>${label}</span>
-      <button type="button" disabled=${isFirst} @click=${handleUp}>↑</button>
-      <button type="button" disabled=${isLast} @click=${handleDown}>↓</button>
-      <button type="button" @click=${handleDelete}>Delete</button>
-    </li>
-  `;
-}
-
-memo(Item);
-
-function TemplateCounter(_props: {}, $: RenderContext): unknown {
+): unknown {
   const [count, setCount] = $.useState(0);
 
   const handleIncrement = $.useCallback(() => {
@@ -260,9 +267,12 @@ function TemplateCounter(_props: {}, $: RenderContext): unknown {
       <button type="button" @click=${handleIncrement}>${count}</button>
     </div>
   `;
-}
+});
 
-function VDOMCounter(_props: {}, $: RenderContext): VElement {
+const VDOMCounter = createComponent(function VDOMCounter(
+  _props: {},
+  $: RenderContext,
+): VElement {
   const [count, setCount] = $.useState(0);
 
   const handleIncrement = $.useCallback(() => {
@@ -286,9 +296,9 @@ function VDOMCounter(_props: {}, $: RenderContext): VElement {
       <div>Count: {count}</div>
     </div>
   );
-}
+});
 
-function VDOMSVG(_props: {}): VElement {
+const VDOMSVG = createComponent(function VDOMSVG(_props: {}): VElement {
   return (
     <div>
       <h1>Virtual DOM SVG</h1>
@@ -301,7 +311,7 @@ function VDOMSVG(_props: {}): VElement {
       </svg>
     </div>
   );
-}
+});
 
 interface SVGCounterProps {
   cx: number;
@@ -311,7 +321,7 @@ interface SVGCounterProps {
   text$: Signal<string>;
 }
 
-function SVGCounter(
+const SVGCounter = createComponent(function SVGCounter(
   { cx, cy, r, fill, text$ }: SVGCounterProps,
   $: RenderContext,
 ): unknown {
@@ -319,7 +329,7 @@ function SVGCounter(
     <circle cx=${cx} cy=${cy} r=${r} fill=${fill} />
     <text x=${cx} y=${cy} fill="white" dominant-baseline="middle" text-anchor="middle">${text$}</text>
   `;
-}
+});
 
 function shuffle<T>(elements: T[]): T[] {
   let currentIndex = elements.length;
@@ -335,11 +345,7 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const root = AsyncRoot.create(
-  component(App, {}),
-  document.body,
-  new BrowserBackend(),
-);
+const root = AsyncRoot.create(App({}), document.body, new BrowserBackend());
 
 root.observe(new PerformanceProfiler(new ConsoleReporter()));
 
