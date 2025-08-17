@@ -151,7 +151,7 @@ export class RenderSession implements RenderContext {
 
   useDeferredValue<T>(value: T, initialValue?: InitialState<T>): T {
     const [deferredValue, setDeferredValue] = this.useReducer<T, T>(
-      (_state, action) => action,
+      (_state, value) => value,
       initialValue ?? (() => value),
     );
 
@@ -221,7 +221,7 @@ export class RenderSession implements RenderContext {
     if (currentHook !== undefined) {
       ensureHookType<Hook.MemoHook<T>>(HookType.Memo, currentHook);
 
-      if (areDependenciesChanged(currentHook.dependencies, dependencies)) {
+      if (areDependenciesChanged(dependencies, currentHook.dependencies)) {
         currentHook.value = factory();
         currentHook.dependencies = dependencies;
       }
@@ -271,12 +271,12 @@ export class RenderSession implements RenderContext {
         pendingState: state,
         memoizedState: state,
         dispatch: (action: TAction, options?: UpdateOptions) => {
-          const oldState = hook.memoizedState;
-          const newState = hook.reducer(oldState, action);
+          const prevState = hook.memoizedState;
+          const nextState = hook.reducer(prevState, action);
 
-          if (!Object.is(newState, oldState)) {
+          if (!Object.is(nextState, prevState)) {
             const { lanes } = this.forceUpdate(options);
-            hook.pendingState = newState;
+            hook.pendingState = nextState;
             hook.lanes |= lanes;
           }
         },
@@ -390,7 +390,7 @@ export class RenderSession implements RenderContext {
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
-      if (areDependenciesChanged(currentHook.dependencies, dependencies)) {
+      if (areDependenciesChanged(dependencies, currentHook.dependencies)) {
         enqueueEffect(currentHook, this._context);
       }
       currentHook.callback = callback;
@@ -425,13 +425,13 @@ class InvokeEffectHook implements Effect {
 }
 
 function areDependenciesChanged(
-  oldDependencies: readonly unknown[] | null,
-  newDependencies: readonly unknown[] | null,
+  nextDependencies: readonly unknown[] | null,
+  prevDependencies: readonly unknown[] | null,
 ): boolean {
   return (
-    oldDependencies === null ||
-    newDependencies === null ||
-    !sequentialEqual(oldDependencies, newDependencies)
+    nextDependencies === null ||
+    prevDependencies === null ||
+    !sequentialEqual(nextDependencies, prevDependencies)
   );
 }
 
