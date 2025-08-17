@@ -16,6 +16,15 @@ import { createSession } from '../session-utils.js';
 import { createElement } from '../test-utils.js';
 
 describe('createComponent()', () => {
+  it('returns a directive with props', () => {
+    const props = { greet: 'Hello', name: 'foo' };
+    const directive = Greet(props) as DirectiveSpecifier<GreetProps>;
+
+    expect(directive).toBeInstanceOf(DirectiveSpecifier);
+    expect(directive.type).toBe(Greet);
+    expect(directive.value).toBe(props);
+  });
+
   describe('name', () => {
     it('returns the render function name', () => {
       function MyComponent() {
@@ -23,17 +32,6 @@ describe('createComponent()', () => {
       }
 
       expect(createComponent(MyComponent).name).toBe(MyComponent.name);
-    });
-  });
-
-  describe('()', () => {
-    it('returns a directive with props', () => {
-      const props = { greet: 'Hello', name: 'foo' };
-      const directive = Greet(props) as DirectiveSpecifier<GreetProps>;
-
-      expect(directive).toBeInstanceOf(DirectiveSpecifier);
-      expect(directive.type).toBe(Greet);
-      expect(directive.value).toBe(props);
     });
   });
 
@@ -52,7 +50,7 @@ describe('createComponent()', () => {
   });
 
   describe('shouldSkipUpdate()', () => {
-    it('returns whether the props is the same with Object.is equality', () => {
+    it('returns whether the props is the same with `===` equality', () => {
       const props1 = { greet: 'Hello', name: 'foo' };
       const props2 = { greet: 'Chao', name: 'bar' };
 

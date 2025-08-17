@@ -43,7 +43,8 @@ export function createComponent<TProps, TResult = unknown>(
 
   Component.render = componentFn;
   Component.resolveBinding = resolveBinding;
-  Component.shouldSkipUpdate = options.shouldSkipUpdate ?? Object.is;
+  Component.shouldSkipUpdate =
+    options.shouldSkipUpdate ?? defaultShouldSkipUpdate;
 
   return Component;
 }
@@ -203,6 +204,13 @@ class CleanEffectHook implements Effect {
     this._hook.cleanup?.();
     this._hook.cleanup = undefined;
   }
+}
+
+function defaultShouldSkipUpdate<TProps>(
+  nextProps: TProps,
+  prevProps: TProps,
+): boolean {
+  return nextProps === prevProps;
 }
 
 function resolveBinding<TProps, TResult>(
