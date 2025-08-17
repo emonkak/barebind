@@ -124,7 +124,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     if (shouldCommit) {
-      context.enqueueMutationEffect(this);
+      context.enqueueMutationEffect(this._slot);
     }
 
     this._pendingLanes = pendingLanes;

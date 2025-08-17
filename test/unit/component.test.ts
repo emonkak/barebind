@@ -158,7 +158,7 @@ describe('ComponentBinding', () => {
         runtime.flushSync(Lanes.UserBlockingLane);
 
         expect(enqueueMutationEffectSpy).toHaveBeenCalledOnce();
-        expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding);
+        expect(enqueueMutationEffectSpy).toHaveBeenCalledWith(binding['_slot']);
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
         expect(part.node.nodeValue).toBe('Hello, foo!');
       }
