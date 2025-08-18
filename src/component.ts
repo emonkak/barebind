@@ -54,15 +54,17 @@ export class ComponentBinding<TProps, TResult>
 {
   private readonly _component: Component<TProps, TResult>;
 
-  private _props: TProps;
+  private _pendingProps: TProps;
+
+  private _memoizedProps: TProps | null = null;
 
   private _slot: Slot<TResult> | null = null;
 
   private readonly _part: Part;
 
-  private _parentScope: Scope | null = null;
-
   private _hooks: Hook[] = [];
+
+  private _parentScope: Scope | null = null;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -72,7 +74,7 @@ export class ComponentBinding<TProps, TResult>
     part: Part,
   ) {
     this._component = component;
-    this._props = props;
+    this._pendingProps = props;
     this._part = part;
   }
 
@@ -81,7 +83,7 @@ export class ComponentBinding<TProps, TResult>
   }
 
   get value(): TProps {
-    return this._props;
+    return this._pendingProps;
   }
 
   get part(): Part {
@@ -94,13 +96,13 @@ export class ComponentBinding<TProps, TResult>
 
   shouldBind(props: TProps): boolean {
     return (
-      this._hooks.length === 0 ||
-      !this._component.shouldSkipUpdate(props, this._props)
+      this._memoizedProps === null ||
+      !this._component.shouldSkipUpdate(props, this._memoizedProps)
     );
   }
 
   bind(props: TProps): void {
-    this._props = props;
+    this._pendingProps = props;
   }
 
   resume(flushLanes: Lanes, context: UpdateContext): void {
@@ -108,7 +110,7 @@ export class ComponentBinding<TProps, TResult>
     const subcontext = context.enterScope(scope);
     const { value, pendingLanes } = subcontext.renderComponent(
       this._component,
-      this._props,
+      this._pendingProps,
       this._hooks,
       flushLanes,
       this,
@@ -129,6 +131,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._pendingLanes = pendingLanes;
+    this._memoizedProps = this._pendingProps;
   }
 
   suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
@@ -145,9 +148,9 @@ export class ComponentBinding<TProps, TResult>
     const parentScope = context.getCurrentScope();
     const scope = new Scope(parentScope);
     const subcontext = context.enterScope(scope);
-    const { value } = subcontext.renderComponent(
+    const { value, pendingLanes } = subcontext.renderComponent(
       this._component,
-      this._props,
+      this._pendingProps,
       this._hooks,
       Lanes.NoLanes,
       this,
@@ -155,7 +158,10 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot = subcontext.resolveSlot(value, this._part);
     this._slot.hydrate(targetTree, subcontext);
+
     this._parentScope = parentScope;
+    this._pendingLanes = pendingLanes;
+    this._memoizedProps = this._pendingProps;
   }
 
   connect(context: UpdateContext): void {
