@@ -7,10 +7,7 @@ import {
   Repeat,
   shallowEqual,
 } from 'barebind';
-import {
-  ConsoleReporter,
-  PerformanceProfiler,
-} from 'barebind/extras/profiler';
+import { ConsoleReporter, PerformanceProfiler } from 'barebind/extras/profiler';
 import { Atom, type Signal } from 'barebind/extras/signal';
 import type { VElement } from 'barebind/extras/vdom';
 
