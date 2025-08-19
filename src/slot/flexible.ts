@@ -62,12 +62,10 @@ export class FlexibleSlot<T> implements Slot<T> {
         reservedBinding !== null &&
         areDirectiveTypesEqual(reservedBinding.type, directive.type)
       ) {
-        if (reservedBinding.shouldBind(directive.value)) {
-          reservedBinding.bind(directive.value);
-          reservedBinding.connect(context);
-          this._dirty = true;
-        }
+        reservedBinding.bind(directive.value);
+        reservedBinding.connect(context);
         this._pendingBinding = reservedBinding;
+        this._dirty = true;
       } else {
         this._pendingBinding = directive.type.resolveBinding(
           directive.value,

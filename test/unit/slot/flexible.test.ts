@@ -93,7 +93,6 @@ describe('FlexibleSlot', () => {
       const slot = new FlexibleSlot(binding);
       const runtime = Runtime.create(new MockBackend());
 
-      const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
@@ -111,7 +110,6 @@ describe('FlexibleSlot', () => {
       slot.reconcile(value1, runtime);
       slot.commit(runtime);
 
-      expect(shouldBindSpy).toHaveBeenCalledOnce();
       expect(bindSpy).toHaveBeenCalledOnce();
       expect(connectSpy).toHaveBeenCalledTimes(2);
       expect(connectSpy).toHaveBeenCalledWith(runtime);
