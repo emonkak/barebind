@@ -66,7 +66,7 @@ export class RenderSession implements RenderContext {
   }
 
   getContextValue(key: unknown): unknown {
-    return this._context.getCurrentScope().get(key);
+    return this._context.getCurrentScope().getContextValue(key);
   }
 
   finalize(): Lanes {
@@ -117,7 +117,7 @@ export class RenderSession implements RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    this._context.getCurrentScope().set(key, value);
+    this._context.getCurrentScope().setContextValue(key, value);
   }
 
   svg(

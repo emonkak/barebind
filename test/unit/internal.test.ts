@@ -32,33 +32,35 @@ describe('Literal', () => {
 });
 
 describe('Scope', () => {
-  it('returns the own entry value', () => {
-    const scope = new Scope(null);
+  describe('getContextValue', () => {
+    it('returns the own entry value', () => {
+      const scope = new Scope(null);
 
-    scope.set('foo', 1);
+      scope.setContextValue('foo', 1);
 
-    expect(scope.get('foo')).toBe(1);
-    expect(scope.get('bar')).toBe(undefined);
-    expect(scope.level).toBe(0);
-  });
+      expect(scope.getContextValue('foo')).toBe(1);
+      expect(scope.getContextValue('bar')).toBe(undefined);
+      expect(scope.level).toBe(0);
+    });
 
-  it('returns the inherited entry value', () => {
-    const parentScope = new Scope(null);
-    const childScope = new Scope(parentScope);
+    it('returns the inherited entry value', () => {
+      const parentScope = new Scope(null);
+      const childScope = new Scope(parentScope);
 
-    parentScope.set('foo', 1);
-    parentScope.set('bar', 2);
-    childScope.set('foo', 3);
+      parentScope.setContextValue('foo', 1);
+      parentScope.setContextValue('bar', 2);
+      childScope.setContextValue('foo', 3);
 
-    expect(parentScope.get('foo')).toBe(1);
-    expect(parentScope.get('bar')).toBe(2);
-    expect(parentScope.get('baz')).toBe(undefined);
-    expect(parentScope.level).toBe(0);
+      expect(parentScope.getContextValue('foo')).toBe(1);
+      expect(parentScope.getContextValue('bar')).toBe(2);
+      expect(parentScope.getContextValue('baz')).toBe(undefined);
+      expect(parentScope.level).toBe(0);
 
-    expect(childScope.get('foo')).toBe(3);
-    expect(childScope.get('bar')).toBe(2);
-    expect(childScope.get('baz')).toBe(undefined);
-    expect(childScope.level).toBe(1);
+      expect(childScope.getContextValue('foo')).toBe(3);
+      expect(childScope.getContextValue('bar')).toBe(2);
+      expect(childScope.getContextValue('baz')).toBe(undefined);
+      expect(childScope.level).toBe(1);
+    });
   });
 });
 

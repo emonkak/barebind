@@ -436,10 +436,21 @@ export interface UpdateHandle {
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
-interface KeyValuePair {
-  key: unknown;
-  value: unknown;
+export type Boundary = Boundary.ContextBoundary;
+
+export namespace Boundary {
+  export interface ContextBoundary {
+    type: typeof BoundaryType.Context;
+    key: unknown;
+    value: unknown;
+  }
 }
+
+const BoundaryType = {
+  Context: 0,
+} as const;
+
+type BoundaryType = (typeof BoundaryType)[keyof typeof BoundaryType];
 
 export class Literal extends String {}
 
@@ -448,20 +459,23 @@ export class Scope {
 
   readonly parent: Scope | null;
 
-  readonly entries: KeyValuePair[] = [];
+  readonly boundaries: Boundary[] = [];
 
   constructor(parent: Scope | null) {
     this.level = parent !== null ? parent.level + 1 : 0;
     this.parent = parent;
   }
 
-  get(key: unknown): unknown {
+  getContextValue(key: unknown): unknown {
     let currentScope: Scope | null = this;
     do {
-      for (let i = currentScope.entries.length - 1; i >= 0; i--) {
-        const entry = currentScope.entries[i]!;
-        if (Object.is(entry.key, key)) {
-          return entry.value;
+      for (let i = currentScope.boundaries.length - 1; i >= 0; i--) {
+        const boudary = currentScope.boundaries[i]!;
+        switch (boudary.type) {
+          case BoundaryType.Context:
+            if (Object.is(boudary.key, key)) {
+              return boudary.value;
+            }
         }
       }
       currentScope = currentScope.parent;
@@ -469,8 +483,8 @@ export class Scope {
     return undefined;
   }
 
-  set(key: unknown, value: unknown): void {
-    this.entries.push({ key, value });
+  setContextValue(key: unknown, value: unknown): void {
+    this.boundaries.push({ type: BoundaryType.Context, key, value });
   }
 }
 
