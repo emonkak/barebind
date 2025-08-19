@@ -3,11 +3,11 @@ import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
+  createScope,
   type Hook,
   Lanes,
   Literal,
   PartType,
-  Scope,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime } from '@/runtime.js';
@@ -73,7 +73,7 @@ describe('Runtime', () => {
 
   describe('enterScope()', () => {
     it('returns a new Runtime with the new scope', () => {
-      const scope = new Scope(null);
+      const scope = createScope(null);
       const runtime = Runtime.create(new MockBackend());
       const newRuntime = runtime.enterScope(scope);
 
@@ -489,7 +489,7 @@ describe('Runtime', () => {
   });
 
   describe('renderComponent()', () => {
-    it('renders the component with a new render session', () => {
+    it('renders a component with the new render session', () => {
       const component = createComponent(() => null);
       const props = {};
       const hooks: Hook[] = [];

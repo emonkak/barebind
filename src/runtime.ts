@@ -9,6 +9,7 @@ import {
   type Component,
   type ComponentResult,
   type Coroutine,
+  createScope,
   type Directive,
   type DirectiveType,
   type Effect,
@@ -22,7 +23,7 @@ import {
   PartType,
   type Primitive,
   type RenderContext,
-  Scope,
+  type Scope,
   type Slot,
   type Template,
   type TemplateLiteral,
@@ -103,7 +104,7 @@ export class Runtime implements CommitContext, UpdateContext {
       layoutEffects: [],
       passiveEffects: [],
     };
-    const scope = new Scope(null);
+    const scope = createScope(null);
     const environment: Environment = {
       backend,
       cachedTemplates: new WeakMap(),

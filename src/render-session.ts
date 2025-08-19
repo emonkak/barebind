@@ -5,6 +5,7 @@ import {
   type Cleanup,
   type Coroutine,
   type Effect,
+  getContextValue,
   type Hook,
   HookType,
   type InitialState,
@@ -13,6 +14,7 @@ import {
   type RefObject,
   type RenderContext,
   type RenderSessionContext,
+  setContextValue,
   type TemplateMode,
   type UpdateHandle,
   type UpdateOptions,
@@ -36,12 +38,12 @@ export class RenderSession implements RenderContext {
     hooks: Hook[],
     flushLanes: Lanes,
     coroutine: Coroutine,
-    runtime: RenderSessionContext,
+    context: RenderSessionContext,
   ) {
     this._hooks = hooks;
     this._flushLanes = flushLanes;
     this._coroutine = coroutine;
-    this._context = runtime;
+    this._context = context;
   }
 
   dynamicHTML(
@@ -65,10 +67,6 @@ export class RenderSession implements RenderContext {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
 
-  getContextValue(key: unknown): unknown {
-    return this._context.getCurrentScope().getContextValue(key);
-  }
-
   finalize(): Lanes {
     const currentHook = this._hooks[this._hookIndex];
 
@@ -88,6 +86,10 @@ export class RenderSession implements RenderContext {
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
     return this._context.scheduleUpdate(this._coroutine, options);
+  }
+
+  getContextValue(key: unknown): unknown {
+    return getContextValue(this._context.getCurrentScope(), key);
   }
 
   html(
@@ -117,7 +119,7 @@ export class RenderSession implements RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    this._context.getCurrentScope().setContextValue(key, value);
+    setContextValue(this._context.getCurrentScope(), key, value);
   }
 
   svg(

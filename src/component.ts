@@ -5,6 +5,7 @@ import {
   type CommitContext,
   type Component,
   type Coroutine,
+  createScope,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -14,7 +15,7 @@ import {
   Lanes,
   type Part,
   type RenderContext,
-  Scope,
+  type Scope,
   type Slot,
   type UpdateContext,
 } from './internal.js';
@@ -106,7 +107,7 @@ export class ComponentBinding<TProps, TResult>
   }
 
   resume(flushLanes: Lanes, context: UpdateContext): void {
-    const scope = new Scope(this._parentScope);
+    const scope = createScope(this._parentScope);
     const subcontext = context.enterScope(scope);
     const { value, pendingLanes } = subcontext.renderComponent(
       this._component,
@@ -119,8 +120,9 @@ export class ComponentBinding<TProps, TResult>
     let shouldCommit = context.getCurrentScope().level === scope.level;
 
     if (this._slot !== null) {
-      const dirty = this._slot.reconcile(value, subcontext);
-      shouldCommit &&= dirty;
+      if (!this._slot.reconcile(value, subcontext)) {
+        shouldCommit = false;
+      }
     } else {
       this._slot = subcontext.resolveSlot(value, this._part);
       this._slot.connect(subcontext);
@@ -146,7 +148,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     const parentScope = context.getCurrentScope();
-    const scope = new Scope(parentScope);
+    const scope = createScope(parentScope);
     const subcontext = context.enterScope(scope);
     const { value, pendingLanes } = subcontext.renderComponent(
       this._component,

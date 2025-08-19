@@ -39,6 +39,22 @@ export interface Binding<T> extends ReversibleEffect {
   disconnect(context: UpdateContext): void;
 }
 
+export type Boundary = Boundary.ContextBoundary;
+
+export namespace Boundary {
+  export interface ContextBoundary {
+    type: typeof BoundaryType.Context;
+    key: unknown;
+    value: unknown;
+  }
+}
+
+export const BoundaryType = {
+  Context: 0,
+} as const;
+
+export type BoundaryType = (typeof BoundaryType)[keyof typeof BoundaryType];
+
 export type Cleanup = () => void;
 
 export interface CommitContext {
@@ -356,6 +372,12 @@ export interface ReversibleEffect extends Effect {
   rollback(context: CommitContext): void;
 }
 
+export interface Scope {
+  readonly level: number;
+  readonly parent: Scope | null;
+  readonly boundaries: Boundary[];
+}
+
 export interface Slot<T> extends ReversibleEffect {
   readonly type: DirectiveType<UnwrapBindable<T>>;
   readonly value: UnwrapBindable<T>;
@@ -436,57 +458,7 @@ export interface UpdateHandle {
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
-export type Boundary = Boundary.ContextBoundary;
-
-export namespace Boundary {
-  export interface ContextBoundary {
-    type: typeof BoundaryType.Context;
-    key: unknown;
-    value: unknown;
-  }
-}
-
-const BoundaryType = {
-  Context: 0,
-} as const;
-
-type BoundaryType = (typeof BoundaryType)[keyof typeof BoundaryType];
-
 export class Literal extends String {}
-
-export class Scope {
-  readonly level: number;
-
-  readonly parent: Scope | null;
-
-  readonly boundaries: Boundary[] = [];
-
-  constructor(parent: Scope | null) {
-    this.level = parent !== null ? parent.level + 1 : 0;
-    this.parent = parent;
-  }
-
-  getContextValue(key: unknown): unknown {
-    let currentScope: Scope | null = this;
-    do {
-      for (let i = currentScope.boundaries.length - 1; i >= 0; i--) {
-        const boudary = currentScope.boundaries[i]!;
-        switch (boudary.type) {
-          case BoundaryType.Context:
-            if (Object.is(boudary.key, key)) {
-              return boudary.value;
-            }
-        }
-      }
-      currentScope = currentScope.parent;
-    } while (currentScope !== null);
-    return undefined;
-  }
-
-  setContextValue(key: unknown, value: unknown): void {
-    this.boundaries.push({ type: BoundaryType.Context, key, value });
-  }
-}
 
 /**
  * @internal
@@ -496,6 +468,37 @@ export function areDirectiveTypesEqual(
   y: DirectiveType<unknown>,
 ): boolean {
   return x.equals?.(y) ?? x === y;
+}
+
+/**
+ * @internal
+ */
+export function createScope(parent: Scope | null): Scope {
+  return {
+    level: parent !== null ? parent.level + 1 : 0,
+    parent: parent,
+    boundaries: [],
+  };
+}
+
+/**
+ * @internal
+ */
+export function getContextValue(scope: Scope, key: unknown): unknown {
+  let currentScope: Scope | null = scope;
+  do {
+    for (let i = currentScope.boundaries.length - 1; i >= 0; i--) {
+      const boudary = currentScope.boundaries[i]!;
+      if (
+        boudary.type === BoundaryType.Context &&
+        Object.is(boudary.key, key)
+      ) {
+        return boudary.value;
+      }
+    }
+    currentScope = currentScope.parent;
+  } while (currentScope !== null);
+  return undefined;
 }
 
 /**
@@ -586,4 +589,15 @@ export function getStartNode(part: Part): ChildNode {
  */
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
+}
+
+/**
+ * @internal
+ */
+export function setContextValue(
+  scope: Scope,
+  key: unknown,
+  value: unknown,
+): void {
+  scope.boundaries.push({ type: BoundaryType.Context, key, value });
 }

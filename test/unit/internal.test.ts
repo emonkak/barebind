@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   areDirectiveTypesEqual,
+  createScope,
+  getContextValue,
   getFlushLanesFromOptions,
   getPriorityFromLanes,
   getScheduleLanesFromOptions,
@@ -9,7 +11,7 @@ import {
   Lanes,
   Literal,
   PartType,
-  Scope,
+  setContextValue,
   type UpdateOptions,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -31,39 +33,6 @@ describe('Literal', () => {
   });
 });
 
-describe('Scope', () => {
-  describe('getContextValue', () => {
-    it('returns the own entry value', () => {
-      const scope = new Scope(null);
-
-      scope.setContextValue('foo', 1);
-
-      expect(scope.getContextValue('foo')).toBe(1);
-      expect(scope.getContextValue('bar')).toBe(undefined);
-      expect(scope.level).toBe(0);
-    });
-
-    it('returns the inherited entry value', () => {
-      const parentScope = new Scope(null);
-      const childScope = new Scope(parentScope);
-
-      parentScope.setContextValue('foo', 1);
-      parentScope.setContextValue('bar', 2);
-      childScope.setContextValue('foo', 3);
-
-      expect(parentScope.getContextValue('foo')).toBe(1);
-      expect(parentScope.getContextValue('bar')).toBe(2);
-      expect(parentScope.getContextValue('baz')).toBe(undefined);
-      expect(parentScope.level).toBe(0);
-
-      expect(childScope.getContextValue('foo')).toBe(3);
-      expect(childScope.getContextValue('bar')).toBe(2);
-      expect(childScope.getContextValue('baz')).toBe(undefined);
-      expect(childScope.level).toBe(1);
-    });
-  });
-});
-
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {
     const type1 = new MockDirective();
@@ -73,6 +42,37 @@ describe('areDirectiveTypesEqual()', () => {
     expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
     expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
     expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
+  });
+});
+
+describe('getContextValue()', () => {
+  it('returns the own entry value', () => {
+    const scope = createScope(null);
+
+    setContextValue(scope, 'foo', 1);
+
+    expect(getContextValue(scope, 'foo')).toBe(1);
+    expect(getContextValue(scope, 'bar')).toBe(undefined);
+    expect(scope.level).toBe(0);
+  });
+
+  it('returns the inherited entry value', () => {
+    const parentScope = createScope(null);
+    const childScope = createScope(parentScope);
+
+    setContextValue(parentScope, 'foo', 1);
+    setContextValue(parentScope, 'bar', 2);
+    setContextValue(childScope, 'foo', 3);
+
+    expect(getContextValue(parentScope, 'foo')).toBe(1);
+    expect(getContextValue(parentScope, 'bar')).toBe(2);
+    expect(getContextValue(parentScope, 'baz')).toBe(undefined);
+    expect(parentScope.level).toBe(0);
+
+    expect(getContextValue(childScope, 'foo')).toBe(3);
+    expect(getContextValue(childScope, 'bar')).toBe(2);
+    expect(getContextValue(childScope, 'baz')).toBe(undefined);
+    expect(childScope.level).toBe(1);
   });
 });
 

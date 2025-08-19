@@ -130,7 +130,7 @@ describe('ComponentBinding', () => {
   });
 
   describe('resume()', () => {
-    it('clear pending lanes', async () => {
+    it('clears pending lanes', async () => {
       const props = {
         greet: 'Hello',
         name: 'foo',
