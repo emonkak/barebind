@@ -66,7 +66,9 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
 {
   private readonly _template: Template<TBinds>;
 
-  private _binds: TBinds;
+  private _pendingBinds: TBinds;
+
+  private _memoizedBinds: TBinds | null = null;
 
   private readonly _part: Part.ChildNodePart;
 
@@ -80,7 +82,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     part: Part.ChildNodePart,
   ) {
     this._template = template;
-    this._binds = binds;
+    this._pendingBinds = binds;
     this._part = part;
   }
 
@@ -89,7 +91,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   }
 
   get value(): TBinds {
-    return this._binds;
+    return this._pendingBinds;
   }
 
   get part(): Part.ChildNodePart {
@@ -97,11 +99,11 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   }
 
   shouldBind(binds: TBinds): boolean {
-    return this._memoizedResult === null || binds !== this._binds;
+    return this._memoizedBinds === null || binds !== this._memoizedBinds;
   }
 
   bind(binds: TBinds): void {
-    this._binds = binds;
+    this._pendingBinds = binds;
   }
 
   hydrate(targetTree: HydrationTree, context: UpdateContext): void {
@@ -112,13 +114,14 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     }
 
     const result = this._template.hydrate(
-      this._binds,
+      this._pendingBinds,
       this._part,
       targetTree,
       context,
     );
 
     this._part.anchorNode = getAnchorNode(result);
+    this._memoizedBinds = this._pendingBinds;
     this._pendingResult = result;
     this._memoizedResult = result;
   }
@@ -128,15 +131,17 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this._binds[i]!, context);
+        slots[i]!.reconcile(this._pendingBinds[i]!, context);
       }
     } else {
       this._pendingResult = this._template.render(
-        this._binds,
+        this._pendingBinds,
         this._part,
         context,
       );
     }
+
+    this._memoizedBinds = this._pendingBinds;
   }
 
   disconnect(context: UpdateContext): void {
