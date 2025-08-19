@@ -89,14 +89,14 @@ interface UpdateFrame {
 }
 
 export class Runtime implements CommitContext, UpdateContext {
-  private readonly _updateFrame: UpdateFrame;
+  private readonly _frame: UpdateFrame;
 
   private readonly _scope: Scope;
 
   private readonly _environment: Environment;
 
   static create(backend: Backend, options: RuntimeOptions = {}): Runtime {
-    const updateFrame: UpdateFrame = {
+    const frame: UpdateFrame = {
       id: 0,
       pendingCoroutines: [],
       mutationEffects: [],
@@ -115,15 +115,15 @@ export class Runtime implements CommitContext, UpdateContext {
       updateCount: 0,
       updateHandles: new LinkedList(),
     };
-    return new Runtime(updateFrame, scope, environment);
+    return new Runtime(frame, scope, environment);
   }
 
   private constructor(
-    updateFrame: UpdateFrame,
+    frame: UpdateFrame,
     scope: Scope,
     environment: Environment,
   ) {
-    this._updateFrame = updateFrame;
+    this._frame = frame;
     this._scope = scope;
     this._environment = environment;
   }
@@ -147,23 +147,23 @@ export class Runtime implements CommitContext, UpdateContext {
   }
 
   enqueueCoroutine(coroutine: Coroutine): void {
-    this._updateFrame.pendingCoroutines.push(coroutine);
+    this._frame.pendingCoroutines.push(coroutine);
   }
 
   enqueueLayoutEffect(effect: Effect): void {
-    this._updateFrame.layoutEffects.push(effect);
+    this._frame.layoutEffects.push(effect);
   }
 
   enqueueMutationEffect(effect: Effect): void {
-    this._updateFrame.mutationEffects.push(effect);
+    this._frame.mutationEffects.push(effect);
   }
 
   enqueuePassiveEffect(effect: Effect): void {
-    this._updateFrame.passiveEffects.push(effect);
+    this._frame.passiveEffects.push(effect);
   }
 
   enterScope(scope: Scope): Runtime {
-    return new Runtime(this._updateFrame, scope, this._environment);
+    return new Runtime(this._frame, scope, this._environment);
   }
 
   expandLiterals<T>(
@@ -182,7 +182,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'UPDATE_START',
-        id: this._updateFrame.id,
+        id: this._frame.id,
         lanes,
       });
     }
@@ -191,19 +191,19 @@ export class Runtime implements CommitContext, UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_START',
-          id: this._updateFrame.id,
+          id: this._frame.id,
         });
       }
 
       while (true) {
-        const coroutines = consumeCoroutines(this._updateFrame);
+        const coroutines = consumeCoroutines(this._frame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
           coroutine.resume(lanes, this);
         }
 
-        if (this._updateFrame.pendingCoroutines.length === 0) {
+        if (this._frame.pendingCoroutines.length === 0) {
           break;
         }
 
@@ -213,12 +213,12 @@ export class Runtime implements CommitContext, UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_END',
-          id: this._updateFrame.id,
+          id: this._frame.id,
         });
       }
 
       const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
-        this._updateFrame,
+        this._frame,
       );
 
       if (mutationEffects.length > 0 || layoutEffects.length > 0) {
@@ -248,7 +248,7 @@ export class Runtime implements CommitContext, UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'UPDATE_END',
-          id: this._updateFrame.id,
+          id: this._frame.id,
           lanes,
         });
       }
@@ -261,7 +261,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'UPDATE_START',
-        id: this._updateFrame.id,
+        id: this._frame.id,
         lanes,
       });
     }
@@ -270,28 +270,28 @@ export class Runtime implements CommitContext, UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_START',
-          id: this._updateFrame.id,
+          id: this._frame.id,
         });
       }
 
       do {
-        const coroutines = consumeCoroutines(this._updateFrame);
+        const coroutines = consumeCoroutines(this._frame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
           const coroutine = coroutines[i]!;
           coroutine.resume(lanes, this);
         }
-      } while (this._updateFrame.pendingCoroutines.length > 0);
+      } while (this._frame.pendingCoroutines.length > 0);
 
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_END',
-          id: this._updateFrame.id,
+          id: this._frame.id,
         });
       }
 
       const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
-        this._updateFrame,
+        this._frame,
       );
 
       this._commitEffects(mutationEffects, CommitPhase.Mutation);
@@ -301,7 +301,7 @@ export class Runtime implements CommitContext, UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'UPDATE_END',
-          id: this._updateFrame.id,
+          id: this._frame.id,
           lanes,
         });
       }
@@ -336,7 +336,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'COMPONENT_RENDER_START',
-        id: this._updateFrame.id,
+        id: this._frame.id,
         component,
         props,
         context,
@@ -349,7 +349,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'COMPONENT_RENDER_END',
-        id: this._updateFrame.id,
+        id: this._frame.id,
         component,
         props,
         context,
@@ -411,7 +411,8 @@ export class Runtime implements CommitContext, UpdateContext {
     };
     const scheduleLanes = getScheduleLanesFromOptions(completeOptions);
 
-    for (const updateHandle of updateHandles) {
+    for (let node = updateHandles.front(); node !== null; node = node.next) {
+      const updateHandle = node.value;
       if (
         updateHandle.coroutine === coroutine &&
         updateHandle.lanes === scheduleLanes &&
@@ -426,7 +427,6 @@ export class Runtime implements CommitContext, UpdateContext {
     const updateHandleNode = updateHandles.pushBack({
       coroutine,
       lanes: scheduleLanes,
-      running: false,
       promise: backend.requestCallback(async () => {
         try {
           if ((coroutine.pendingLanes & scheduleLanes) !== scheduleLanes) {
@@ -447,6 +447,7 @@ export class Runtime implements CommitContext, UpdateContext {
           updateHandles.remove(updateHandleNode);
         }
       }, completeOptions),
+      running: false,
     });
 
     return updateHandleNode.value;
@@ -471,7 +472,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'COMMIT_START',
-        id: this._updateFrame.id,
+        id: this._frame.id,
         effects,
         phase,
       });
@@ -482,7 +483,7 @@ export class Runtime implements CommitContext, UpdateContext {
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'COMMIT_END',
-        id: this._updateFrame.id,
+        id: this._frame.id,
         effects,
         phase,
       });
@@ -491,7 +492,7 @@ export class Runtime implements CommitContext, UpdateContext {
 
   private _enterFrame(coroutine: Coroutine): Runtime {
     const updateCount = incrementIdentifier(this._environment.updateCount);
-    const updateFrame: UpdateFrame = {
+    const frame: UpdateFrame = {
       id: updateCount,
       pendingCoroutines: [coroutine],
       mutationEffects: [],
@@ -501,23 +502,23 @@ export class Runtime implements CommitContext, UpdateContext {
 
     this._environment.updateCount = updateCount;
 
-    return new Runtime(updateFrame, this._scope, this._environment);
+    return new Runtime(frame, this._scope, this._environment);
   }
 }
 
-function consumeCoroutines(updateFrame: UpdateFrame): Coroutine[] {
-  const { pendingCoroutines } = updateFrame;
-  updateFrame.pendingCoroutines = [];
+function consumeCoroutines(frame: UpdateFrame): Coroutine[] {
+  const { pendingCoroutines } = frame;
+  frame.pendingCoroutines = [];
   return pendingCoroutines;
 }
 
 function consumeEffects(
-  updateFrame: UpdateFrame,
+  frame: UpdateFrame,
 ): Pick<UpdateFrame, 'mutationEffects' | 'layoutEffects' | 'passiveEffects'> {
-  const { mutationEffects, layoutEffects, passiveEffects } = updateFrame;
-  updateFrame.mutationEffects = [];
-  updateFrame.layoutEffects = [];
-  updateFrame.passiveEffects = [];
+  const { mutationEffects, layoutEffects, passiveEffects } = frame;
+  frame.mutationEffects = [];
+  frame.layoutEffects = [];
+  frame.passiveEffects = [];
   return {
     mutationEffects,
     layoutEffects,

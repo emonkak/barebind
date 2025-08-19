@@ -430,8 +430,8 @@ export interface UpdateOptions {
 export interface UpdateHandle {
   coroutine: Coroutine;
   lanes: Lanes;
-  running: boolean;
   promise: Promise<void>;
+  running: boolean;
 }
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
