@@ -229,11 +229,11 @@ export class RenderSession implements RenderContext {
       );
       if ((currentHook.lanes & this._flushLanes) === currentHook.lanes) {
         currentHook.lanes = Lanes.NoLanes;
-        currentHook.reducer = reducer;
         currentHook.memoizedState = currentHook.pendingState;
       } else {
         this._pendingLanes |= currentHook.lanes;
       }
+      currentHook.reducer = reducer;
     } else {
       const state =
         typeof initialState === 'function' ? initialState() : initialState;
