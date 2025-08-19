@@ -77,11 +77,6 @@ export interface Component<TProps, TResult = unknown>
   shouldSkipUpdate(nextProps: TProps, prevProps: TProps): boolean;
 }
 
-export interface ComponentResult<T> {
-  value: T;
-  pendingLanes: Lanes;
-}
-
 export interface Coroutine {
   get pendingLanes(): Lanes;
   resume(flushLanes: Lanes, context: UpdateContext): void;
@@ -345,6 +340,7 @@ export interface RenderContext extends HookContext {
 }
 
 export interface RenderSessionContext {
+  enqueueCoroutine(coroutine: Coroutine): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
   enqueuePassiveEffect(effect: Effect): void;
@@ -432,15 +428,14 @@ export interface TemplateResult {
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface UpdateContext extends DirectiveContext, RenderSessionContext {
-  enqueueCoroutine(coroutine: Coroutine): void;
   enterScope(scope: Scope): UpdateContext;
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
+    lanes: Lanes,
     hooks: Hook[],
-    flushLanes: Lanes,
     coroutine: Coroutine,
-  ): ComponentResult<TResult>;
+  ): TResult;
 }
 
 export interface UpdateOptions {

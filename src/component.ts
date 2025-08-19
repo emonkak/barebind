@@ -65,9 +65,9 @@ export class ComponentBinding<TProps, TResult>
 
   private _hooks: Hook[] = [];
 
-  private _parentScope: Scope | null = null;
-
   private _pendingLanes: Lanes = Lanes.NoLanes;
+
+  private _parentScope: Scope | null = null;
 
   constructor(
     component: Component<TProps, TResult>,
@@ -109,22 +109,22 @@ export class ComponentBinding<TProps, TResult>
   resume(flushLanes: Lanes, context: UpdateContext): void {
     const scope = createScope(this._parentScope);
     const subcontext = context.enterScope(scope);
-    const { value, pendingLanes } = subcontext.renderComponent(
+    const result = subcontext.renderComponent(
       this._component,
       this._pendingProps,
-      this._hooks,
       flushLanes,
+      this._hooks,
       this,
     );
     // When the scope level is the same, the binding is the update root.
     let shouldCommit = context.getCurrentScope().level === scope.level;
 
     if (this._slot !== null) {
-      if (!this._slot.reconcile(value, subcontext)) {
+      if (!this._slot.reconcile(result, subcontext)) {
         shouldCommit = false;
       }
     } else {
-      this._slot = subcontext.resolveSlot(value, this._part);
+      this._slot = subcontext.resolveSlot(result, this._part);
       this._slot.connect(subcontext);
     }
 
@@ -132,7 +132,7 @@ export class ComponentBinding<TProps, TResult>
       context.enqueueMutationEffect(this._slot);
     }
 
-    this._pendingLanes = pendingLanes;
+    this._pendingLanes &= ~flushLanes;
     this._memoizedProps = this._pendingProps;
   }
 
@@ -150,19 +150,18 @@ export class ComponentBinding<TProps, TResult>
     const parentScope = context.getCurrentScope();
     const scope = createScope(parentScope);
     const subcontext = context.enterScope(scope);
-    const { value, pendingLanes } = subcontext.renderComponent(
+    const result = subcontext.renderComponent(
       this._component,
       this._pendingProps,
-      this._hooks,
       Lanes.NoLanes,
+      this._hooks,
       this,
     );
 
-    this._slot = subcontext.resolveSlot(value, this._part);
+    this._slot = subcontext.resolveSlot(result, this._part);
     this._slot.hydrate(targetTree, subcontext);
 
     this._parentScope = parentScope;
-    this._pendingLanes = pendingLanes;
     this._memoizedProps = this._pendingProps;
   }
 

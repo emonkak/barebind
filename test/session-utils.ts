@@ -5,8 +5,8 @@ import { MockBackend, MockCoroutine } from './mocks.js';
 
 export function createSession(lanes: Lanes = -1): RenderSession {
   return new RenderSession(
-    [],
     lanes,
+    [],
     new MockCoroutine(),
     Runtime.create(new MockBackend()),
   );
@@ -26,14 +26,10 @@ export function disposeSession(session: RenderSession): void {
   }
 }
 
-export function flushSession(session: RenderSession): Lanes {
-  const pendingLanes = session.finalize();
-
+export function flushSession(session: RenderSession): void {
+  session.finalize();
   session['_context'].flushSync(Lanes.NoLanes);
   session['_hookIndex'] = 0;
-  session['_pendingLanes'] = Lanes.NoLanes;
-
-  return pendingLanes;
 }
 
 export async function waitForUpdate(

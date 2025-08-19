@@ -493,7 +493,7 @@ describe('Runtime', () => {
       const component = createComponent(() => null);
       const props = {};
       const hooks: Hook[] = [];
-      const flushLanes = Lanes.UserBlockingLane;
+      const lanes = Lanes.UserBlockingLane;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const runtime = Runtime.create(new MockBackend());
@@ -505,8 +505,8 @@ describe('Runtime', () => {
       const result = runtime.renderComponent(
         component,
         props,
+        lanes,
         hooks,
-        flushLanes,
         coroutine,
       );
 
@@ -514,10 +514,10 @@ describe('Runtime', () => {
       expect(renderSpy).toHaveBeenCalledWith(
         props,
         expect.objectContaining({
-          _context: expect.exact(runtime),
+          _lanes: expect.exact(lanes),
           _hooks: expect.exact(hooks),
-          _flushLanes: expect.exact(flushLanes),
           _coroutine: expect.exact(coroutine),
+          _context: expect.exact(runtime),
         }),
       );
       expect(observer.flushEvents()).toStrictEqual([
@@ -536,8 +536,7 @@ describe('Runtime', () => {
           context: expect.any(RenderSession),
         },
       ]);
-      expect(result.value).toBe(null);
-      expect(result.pendingLanes).toBe(Lanes.NoLanes);
+      expect(result).toBe(null);
     });
   });
 

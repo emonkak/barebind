@@ -7,7 +7,6 @@ import {
   type CommitContext,
   CommitPhase,
   type Component,
-  type ComponentResult,
   type Coroutine,
   createScope,
   type Directive,
@@ -196,26 +195,27 @@ export class Runtime implements CommitContext, UpdateContext {
         });
       }
 
-      while (true) {
-        const coroutines = consumeCoroutines(this._frame);
+      try {
+        while (true) {
+          const coroutines = consumeCoroutines(this._frame);
 
-        for (let i = 0, l = coroutines.length; i < l; i++) {
-          const coroutine = coroutines[i]!;
-          coroutine.resume(lanes, this);
+          for (let i = 0, l = coroutines.length; i < l; i++) {
+            coroutines[i]!.resume(lanes, this);
+          }
+
+          if (this._frame.pendingCoroutines.length === 0) {
+            break;
+          }
+
+          await backend.yieldToMain();
         }
-
-        if (this._frame.pendingCoroutines.length === 0) {
-          break;
+      } finally {
+        if (!observers.isEmpty()) {
+          notifyObservers(observers, {
+            type: 'RENDER_END',
+            id: this._frame.id,
+          });
         }
-
-        await backend.yieldToMain();
-      }
-
-      if (!observers.isEmpty()) {
-        notifyObservers(observers, {
-          type: 'RENDER_END',
-          id: this._frame.id,
-        });
       }
 
       const { mutationEffects, layoutEffects, passiveEffects } = consumeEffects(
@@ -279,8 +279,7 @@ export class Runtime implements CommitContext, UpdateContext {
         const coroutines = consumeCoroutines(this._frame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
-          const coroutine = coroutines[i]!;
-          coroutine.resume(lanes, this);
+          coroutines[i]!.resume(lanes, this);
         }
       } while (this._frame.pendingCoroutines.length > 0);
 
@@ -327,12 +326,12 @@ export class Runtime implements CommitContext, UpdateContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
+    lanes: Lanes,
     hooks: Hook[],
-    flushLanes: Lanes,
     coroutine: Coroutine,
-  ): ComponentResult<TResult> {
+  ): TResult {
     const { observers } = this._environment;
-    const context = new RenderSession(hooks, flushLanes, coroutine, this);
+    const session = new RenderSession(lanes, hooks, coroutine, this);
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
@@ -340,24 +339,25 @@ export class Runtime implements CommitContext, UpdateContext {
         id: this._frame.id,
         component,
         props,
-        context,
+        context: session,
       });
     }
 
-    const value = component.render(props, context);
-    const pendingLanes = context.finalize();
-
-    if (!observers.isEmpty()) {
-      notifyObservers(observers, {
-        type: 'COMPONENT_RENDER_END',
-        id: this._frame.id,
-        component,
-        props,
-        context,
-      });
+    try {
+      const result = component.render(props, session);
+      session.finalize();
+      return result;
+    } finally {
+      if (!observers.isEmpty()) {
+        notifyObservers(observers, {
+          type: 'COMPONENT_RENDER_END',
+          id: this._frame.id,
+          component,
+          props,
+          context: session,
+        });
+      }
     }
-
-    return { value, pendingLanes };
   }
 
   resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>> {

@@ -594,10 +594,10 @@ describe('RenderSession', () => {
           setCount(1, { priority: 'background' });
         }, []);
 
-        expect(flushSession(session)).toBe(Lanes.NoLanes);
-
         expect(count).toBe(0);
         expect(isPending).toBe(false);
+
+        flushSession(session);
       }
 
       expect(session.isUpdatePending()).toBe(true);
@@ -613,7 +613,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
         expect(isPending).toBe(true);
 
-        expect(flushSession(session)).toBe(Lanes.BackgroundLane);
+        flushSession(session);
       }
 
       expect(session.isUpdatePending()).toBe(false);

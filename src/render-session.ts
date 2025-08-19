@@ -22,9 +22,9 @@ import {
 } from './internal.js';
 
 export class RenderSession implements RenderContext {
-  private readonly _hooks: Hook[];
+  private readonly _lanes: Lanes;
 
-  private readonly _flushLanes: Lanes;
+  private readonly _hooks: Hook[];
 
   private readonly _coroutine: Coroutine;
 
@@ -32,16 +32,14 @@ export class RenderSession implements RenderContext {
 
   private _hookIndex = 0;
 
-  private _pendingLanes = Lanes.NoLanes;
-
   constructor(
+    lanes: Lanes,
     hooks: Hook[],
-    flushLanes: Lanes,
     coroutine: Coroutine,
     context: RenderSessionContext,
   ) {
+    this._lanes = lanes;
     this._hooks = hooks;
-    this._flushLanes = flushLanes;
     this._coroutine = coroutine;
     this._context = context;
   }
@@ -67,7 +65,7 @@ export class RenderSession implements RenderContext {
     return this._dynamicTemplate(strings, binds, 'svg');
   }
 
-  finalize(): Lanes {
+  finalize(): void {
     const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
@@ -80,8 +78,6 @@ export class RenderSession implements RenderContext {
     }
 
     this._hookIndex++;
-
-    return this._pendingLanes;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
@@ -229,11 +225,9 @@ export class RenderSession implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._flushLanes) === currentHook.lanes) {
+      if ((currentHook.lanes & this._lanes) === currentHook.lanes) {
         currentHook.lanes = Lanes.NoLanes;
         currentHook.memoizedState = currentHook.pendingState;
-      } else {
-        this._pendingLanes |= currentHook.lanes;
       }
       currentHook.reducer = reducer;
     } else {
