@@ -3,9 +3,9 @@ import {
   $customHook,
   type CustomHookFunction,
   Lanes,
-  Literal,
   type RefObject,
 } from '@/internal.js';
+import { Literal } from '@/template-literal.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
 import { createRenderSession, flushRenderSession } from '../session-utils.js';
 

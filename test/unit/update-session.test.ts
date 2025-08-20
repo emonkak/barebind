@@ -5,11 +5,11 @@ import {
   CommitPhase,
   type Hook,
   Lanes,
-  Literal,
   PartType,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { Literal } from '@/template-literal.js';
 import {
   MockBindable,
   MockCoroutine,

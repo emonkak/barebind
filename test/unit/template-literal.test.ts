@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { Literal } from '@/internal.js';
-import { TemplateLiteralPreprocessor } from '@/template-literal.js';
+import { Literal, TemplateLiteralPreprocessor } from '@/template-literal.js';
 import { templateLiteral } from '../test-utils.js';
+
+describe('Literal', () => {
+  describe('toString()', () => {
+    it('should return the string', () => {
+      const s = 'foo';
+      expect(new Literal(s).toString()).toBe(s);
+    });
+  });
+
+  describe('valueOf()', () => {
+    it('should return the string', () => {
+      const s = 'foo';
+      expect(new Literal(s).valueOf()).toBe(s);
+    });
+  });
+});
 
 describe('TemplateLiteralPreprocessor', () => {
   const createDate = (year: String, month: String, day: String) =>

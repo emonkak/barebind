@@ -1,10 +1,16 @@
 import { sequentialEqual } from './compare.js';
-import { Literal, type TemplateLiteral } from './internal.js';
 
 interface ExpandedResult {
   expandedStrings: readonly string[];
   literalValues: readonly string[];
   literalPositions: readonly number[];
+}
+
+export class Literal extends String {}
+
+export interface TemplateLiteral<T> {
+  strings: readonly string[];
+  values: T[];
 }
 
 export class TemplateLiteralPreprocessor {

@@ -9,29 +9,12 @@ import {
   getStartNode,
   isBindable,
   Lanes,
-  Literal,
   PartType,
   setContextValue,
   type UpdateOptions,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
-
-describe('Literal', () => {
-  describe('toString()', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(new Literal(s).toString()).toBe(s);
-    });
-  });
-
-  describe('valueOf()', () => {
-    it('should return the string', () => {
-      const s = 'foo';
-      expect(new Literal(s).valueOf()).toBe(s);
-    });
-  });
-});
 
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {

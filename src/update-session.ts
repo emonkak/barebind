@@ -16,14 +16,12 @@ import {
   type Hook,
   isBindable,
   Lanes,
-  type Literal,
   type Part,
   PartType,
   type Primitive,
   type Scope,
   type Slot,
   type Template,
-  type TemplateLiteral,
   type TemplateMode,
   type UnwrapBindable,
   type UpdateContext,
@@ -33,6 +31,7 @@ import {
 import type { LinkedList } from './linked-list.js';
 import { RenderSession } from './render-session.js';
 import type { Runtime, RuntimeEvent, RuntimeObserver } from './runtime.js';
+import type { Literal, TemplateLiteral } from './template-literal.js';
 
 interface UpdateFrame {
   id: number;

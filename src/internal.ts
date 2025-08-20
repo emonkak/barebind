@@ -1,6 +1,7 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
 import type { LinkedList } from './linked-list.js';
+import type { Literal, TemplateLiteral } from './template-literal.js';
 
 export const $customHook: unique symbol = Symbol('$customHook');
 
@@ -413,11 +414,6 @@ export interface TemplateFactory {
   ): Template<readonly unknown[]>;
 }
 
-export interface TemplateLiteral<T> {
-  strings: readonly string[];
-  values: T[];
-}
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
@@ -452,8 +448,6 @@ export interface UpdateHandle {
 }
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
-
-export class Literal extends String {}
 
 /**
  * @internal

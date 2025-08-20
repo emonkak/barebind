@@ -10,7 +10,6 @@ export {
   type CustomHookObject,
   type HookContext,
   HydrationError,
-  Literal,
   type RefCallback,
   type RefObject,
   type RenderContext,
@@ -30,3 +29,4 @@ export { Flexible } from './slot/flexible.js';
 export { Loose } from './slot/loose.js';
 export { Strict } from './slot/strict.js';
 export { Element } from './template/element.js';
+export { Literal } from './template-literal.js';
