@@ -251,7 +251,7 @@ export class ElementBinding implements Binding<ElementProps> {
     this._pendingProps = props;
   }
 
-  hydrate(_targetTree: HydrationTree, _context: UpdateContext): void {}
+  hydrate(_target: HydrationTree, _context: UpdateContext): void {}
 
   connect(_context: UpdateContext): void {}
 

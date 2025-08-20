@@ -7,9 +7,9 @@ import { CurrentHistory } from '@/extras/router/history.js';
 import { RelativeURL } from '@/extras/router/url.js';
 import type { RenderSession } from '@/render-session.js';
 import {
-  createSession,
-  disposeSession,
-  flushSession,
+  createRenderSession,
+  disposeRenderSession,
+  flushRenderSession,
 } from '../../../session-utils.js';
 import { createElement } from '../../../test-utils.js';
 
@@ -19,11 +19,11 @@ describe('HashHistory', () => {
   let session!: RenderSession;
 
   beforeEach(() => {
-    session = createSession();
+    session = createRenderSession();
   });
 
   afterEach(() => {
-    disposeSession(session);
+    disposeRenderSession(session);
     history.replaceState(originalState, '', originalURL);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -37,7 +37,7 @@ describe('HashHistory', () => {
 
       const [location, { getCurrentURL }] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(getCurrentURL().toString()).toBe('/articles/foo%2Fbar');
       expect(window.location.hash).toBe('#/articles/foo%2Fbar');
@@ -53,13 +53,13 @@ describe('HashHistory', () => {
 
       const [location1, navigator] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigator.navigate('/articles/foo%2Fbar');
 
       const [location2] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(pushStateSpy).toHaveBeenCalledOnce();
       expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -77,7 +77,7 @@ describe('HashHistory', () => {
 
       const [location1, navigator] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigator.navigate('/articles/foo%2Fbar', {
         replace: true,
@@ -86,7 +86,7 @@ describe('HashHistory', () => {
 
       const [location2] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(pushStateSpy).not.toHaveBeenCalled();
       expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -101,7 +101,7 @@ describe('HashHistory', () => {
 
       const [_location, navigator] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigator.navigate('/articles/foo%2Fbar');
 
@@ -130,8 +130,8 @@ describe('HashHistory', () => {
     session.setContextValue(CurrentHistory, [location, navigator]);
     session.use(HashHistory);
 
-    flushSession(session);
-    disposeSession(session);
+    flushRenderSession(session);
+    disposeRenderSession(session);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -170,8 +170,8 @@ describe('HashHistory', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(HashHistory);
 
-      flushSession(session);
-      disposeSession(session);
+      flushRenderSession(session);
+      disposeRenderSession(session);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -201,7 +201,7 @@ describe('HashHistory', () => {
 
     const [location1] = session.use(HashHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     document.body.appendChild(element);
     element.click();
@@ -209,7 +209,7 @@ describe('HashHistory', () => {
 
     const [location2] = session.use(HashHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
@@ -222,7 +222,7 @@ describe('HashHistory', () => {
     () => {
       const [location1] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigation!.dispatchEvent(
         Object.assign(new Event('navigate'), {
@@ -238,7 +238,7 @@ describe('HashHistory', () => {
 
       const [location2] = session.use(HashHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(location2).not.toBe(location1);
       expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
@@ -250,7 +250,7 @@ describe('HashHistory', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     dispatchEvent(
       new HashChangeEvent('hashchange', {
@@ -261,7 +261,7 @@ describe('HashHistory', () => {
 
     const [location2] = session.use(HashHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/articles/foo%2Fbar');

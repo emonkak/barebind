@@ -8,9 +8,9 @@ import { ScrollRestration } from '@/extras/router/scroll-restration.js';
 import { RelativeURL } from '@/extras/router/url.js';
 import type { RenderSession } from '@/render-session.js';
 import {
-  createSession,
-  disposeSession,
-  flushSession,
+  createRenderSession,
+  disposeRenderSession,
+  flushRenderSession,
 } from '../../../session-utils.js';
 import { createElement } from '../../../test-utils.js';
 
@@ -18,11 +18,11 @@ describe('ScrollRestration', () => {
   let session!: RenderSession;
 
   beforeEach(() => {
-    session = createSession();
+    session = createRenderSession();
   });
 
   afterEach(() => {
-    disposeSession(session);
+    disposeRenderSession(session);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -42,7 +42,7 @@ describe('ScrollRestration', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(ScrollRestration);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(scrollToSpy).toHaveBeenCalled();
       expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
@@ -64,7 +64,7 @@ describe('ScrollRestration', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(ScrollRestration);
 
-      disposeSession(session);
+      disposeRenderSession(session);
 
       expect(scrollToSpy).not.toHaveBeenCalled();
     },
@@ -87,7 +87,7 @@ describe('ScrollRestration', () => {
     session.use(ScrollRestration);
 
     document.body.appendChild(element);
-    flushSession(session);
+    flushRenderSession(session);
     document.body.removeChild(element);
 
     expect(scrollIntoViewSpy).toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe('ScrollRestration', () => {
     session.use(ScrollRestration);
 
     document.body.appendChild(element);
-    flushSession(session);
+    flushRenderSession(session);
     document.body.removeChild(element);
 
     expect(scrollToSpy).toHaveBeenCalled();
@@ -136,8 +136,8 @@ describe('ScrollRestration', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(ScrollRestration);
 
-      flushSession(session);
-      disposeSession(session);
+      flushRenderSession(session);
+      disposeRenderSession(session);
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -173,7 +173,7 @@ describe('ScrollRestration', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(ScrollRestration);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigation!.dispatchEvent(event);
 
@@ -209,7 +209,7 @@ describe('ScrollRestration', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(ScrollRestration);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigation!.dispatchEvent(event);
 
@@ -235,7 +235,7 @@ describe('ScrollRestration', () => {
     session.setContextValue(CurrentHistory, [location, navigator]);
     session.use(ScrollRestration);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(history.scrollRestoration).toBe('auto');
   });

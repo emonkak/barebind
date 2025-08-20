@@ -2,9 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
-import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('CommentPrimitive', () => {
   describe('name', () => {
@@ -22,8 +21,8 @@ describe('CommentPrimitive', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = CommentPrimitive.resolveBinding(value, part, runtime);
+      const session = createUpdateSession();
+      const binding = CommentPrimitive.resolveBinding(value, part, session);
 
       expect(binding.type).toBe(CommentPrimitive);
       expect(binding.value).toBe(value);
@@ -36,10 +35,10 @@ describe('CommentPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        CommentPrimitive.resolveBinding(value, part, runtime),
+        CommentPrimitive.resolveBinding(value, part, session),
       ).toThrow('CommentPrimitive must be used in a child node,');
     });
   });
@@ -70,13 +69,15 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(value1)).toBe(false);
-      expect(binding.shouldBind(value2)).toBe(true);
+        expect(binding.shouldBind(value1)).toBe(false);
+        expect(binding.shouldBind(value2)).toBe(true);
+      }
     });
   });
 
@@ -91,18 +92,22 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding<string | null>(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe(value1);
+        expect(part.node.nodeValue).toBe(value1);
+      }
 
-      binding.bind(value2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(value2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe('');
+        expect(part.node.nodeValue).toBe('');
+      }
     });
 
     it('sets the string representation of the value as a node value', () => {
@@ -115,18 +120,22 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding<number | null>(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe(value1.toString());
+        expect(part.node.nodeValue).toBe(value1.toString());
+      }
 
-      binding.bind(value2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(value2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe('');
+        expect(part.node.nodeValue).toBe('');
+      }
     });
   });
 
@@ -140,17 +149,21 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe(value);
+        expect(part.node.nodeValue).toBe(value);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.nodeValue).toBe('');
+        expect(part.node.nodeValue).toBe('');
+      }
     });
 
     it('should do nothing if the committed value does not exist', () => {
@@ -162,14 +175,16 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(setNodeValueSpy).not.toHaveBeenCalled();
+        expect(setNodeValueSpy).not.toHaveBeenCalled();
+      }
     });
   });
 });

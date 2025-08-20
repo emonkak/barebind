@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('RefPrimitive', () => {
   describe('name', () => {
@@ -55,8 +54,8 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: attributeName,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = RefPrimitive.resolveBinding(ref, part, runtime);
+      const session = createUpdateSession();
+      const binding = RefPrimitive.resolveBinding(ref, part, session);
 
       expect(binding.type).toBe(RefPrimitive);
       expect(binding.value).toBe(ref);
@@ -69,9 +68,9 @@ describe('RefPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
+      expect(() => RefPrimitive.resolveBinding(ref, part, session)).toThrow(
         'RefPrimitive must be used in ":ref" attribute part,',
       );
     });
@@ -101,13 +100,15 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(ref1)).toBe(false);
-      expect(binding.shouldBind(ref2)).toBe(true);
+        expect(binding.shouldBind(ref1)).toBe(false);
+        expect(binding.shouldBind(ref2)).toBe(true);
+      }
     });
   });
 
@@ -121,27 +122,33 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(ref1.current).toBe(part.node);
-      expect(ref2.current).toBe(null);
+        expect(ref1.current).toBe(part.node);
+        expect(ref2.current).toBe(null);
+      }
 
-      binding.bind(ref2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(ref2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(ref1.current).toBe(null);
-      expect(ref2.current).toBe(part.node);
+        expect(ref1.current).toBe(null);
+        expect(ref2.current).toBe(part.node);
+      }
 
-      binding.bind(null);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.bind(null);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(ref1.current).toBe(null);
-      expect(ref2.current).toBe(null);
+        expect(ref1.current).toBe(null);
+        expect(ref2.current).toBe(null);
+      }
     });
 
     it('invokes the callback with the element as an argument', () => {
@@ -155,28 +162,51 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(cleanup1).not.toHaveBeenCalled();
+        expect(cleanup2).not.toHaveBeenCalled();
+        expect(ref1).toHaveBeenCalledOnce();
+        expect(ref1).toHaveBeenCalledWith(part.node);
+        expect(ref2).not.toHaveBeenCalled();
+      }
 
-      binding.bind(ref2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.bind(null);
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(cleanup1).not.toHaveBeenCalled();
+        expect(cleanup2).not.toHaveBeenCalled();
+        expect(ref1).toHaveBeenCalledOnce();
+        expect(ref2).not.toHaveBeenCalled();
+      }
 
-      expect(cleanup1).toHaveBeenCalledOnce();
-      expect(cleanup2).toHaveBeenCalledOnce();
-      expect(ref1).toHaveBeenCalledOnce();
-      expect(ref1).toHaveBeenCalledWith(part.node);
-      expect(ref2).toHaveBeenCalledOnce();
-      expect(ref2).toHaveBeenCalledWith(part.node);
+      SESSION3: {
+        binding.bind(ref2);
+        binding.connect(session);
+        binding.commit(session);
+
+        expect(cleanup1).toHaveBeenCalledOnce();
+        expect(cleanup2).not.toHaveBeenCalled();
+        expect(ref1).toHaveBeenCalledOnce();
+        expect(ref2).toHaveBeenCalledOnce();
+        expect(ref2).toHaveBeenCalledWith(part.node);
+      }
+
+      SESSION4: {
+        binding.bind(null);
+        binding.connect(session);
+        binding.commit(session);
+
+        expect(cleanup1).toHaveBeenCalledOnce();
+        expect(cleanup2).toHaveBeenCalledOnce();
+        expect(ref1).toHaveBeenCalledOnce();
+        expect(ref2).toHaveBeenCalledOnce();
+      }
     });
   });
 
@@ -189,12 +219,14 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(ref).not.toHaveBeenCalled();
+        expect(ref).not.toHaveBeenCalled();
+      }
     });
 
     it('sets null as the current value', () => {
@@ -205,17 +237,21 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(ref.current).toBe(part.node);
+        expect(ref.current).toBe(part.node);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(ref.current).toBe(null);
+        expect(ref.current).toBe(null);
+      }
     });
 
     it('invokes the cleanup function returned by the callback', () => {
@@ -227,17 +263,24 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+        expect(cleanup).not.toHaveBeenCalled();
+        expect(ref).toHaveBeenCalledOnce();
+        expect(ref).toHaveBeenCalledWith(part.node);
+      }
 
-      expect(cleanup).toHaveBeenCalledOnce();
-      expect(ref).toHaveBeenCalledOnce();
-      expect(ref).toHaveBeenCalledWith(part.node);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(cleanup).toHaveBeenCalledOnce();
+        expect(ref).toHaveBeenCalledOnce();
+      }
     });
   });
 });

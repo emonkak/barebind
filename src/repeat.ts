@@ -140,7 +140,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._props = props;
   }
 
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, context: UpdateContext): void {
     if (this._memoizedItems !== null || this._pendingItems.length > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
@@ -163,9 +163,9 @@ export class RepeatBinding<TSource, TKey, TValue>
       };
       const slot = context.resolveSlot(value, part);
 
-      slot.hydrate(targetTree, context);
+      slot.hydrate(target, context);
 
-      replaceMarkerNode(targetTree, part.node);
+      replaceMarkerNode(target, part.node);
 
       targetItems[i] = {
         key,

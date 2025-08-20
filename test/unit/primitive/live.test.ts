@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('LivePrimitive', () => {
   describe('name', () => {
@@ -21,8 +20,8 @@ describe('LivePrimitive', () => {
         name: 'value',
         defaultValue: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = LivePrimitive.resolveBinding(value, part, runtime);
+      const session = createUpdateSession();
+      const binding = LivePrimitive.resolveBinding(value, part, session);
 
       expect(binding.type).toBe(LivePrimitive);
       expect(binding.value).toBe(value);
@@ -35,9 +34,9 @@ describe('LivePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('textarea'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
+      expect(() => LivePrimitive.resolveBinding(value, part, session)).toThrow(
         'LivePrimitive must be used in a live part,',
       );
     });
@@ -70,21 +69,25 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(setValueSpy).toHaveBeenCalledOnce();
-      expect(setValueSpy).toHaveBeenCalledWith(value);
+        expect(setValueSpy).toHaveBeenCalledOnce();
+        expect(setValueSpy).toHaveBeenCalledWith(value);
+      }
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(setValueSpy).toHaveBeenCalledOnce();
-      expect(setValueSpy).toHaveBeenCalledWith(value);
+        expect(setValueSpy).toHaveBeenCalledOnce();
+        expect(setValueSpy).toHaveBeenCalledWith(value);
+      }
     });
   });
 
@@ -98,15 +101,21 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+        expect(part.node.value).toBe(value);
+      }
 
-      expect(part.node.value).toBe('');
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(part.node.value).toBe('');
+      }
     });
   });
 });

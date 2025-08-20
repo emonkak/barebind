@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,
@@ -10,12 +9,12 @@ import {
   TemplateBinding,
 } from '@/template/template.js';
 import {
-  MockBackend,
   MockBinding,
   MockPrimitive,
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
 describe('AbstractTemplate', () => {
@@ -36,9 +35,9 @@ describe('AbstractTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const template = new MockTemplate();
-      const binding = template.resolveBinding(binds, part, runtime);
+      const binding = template.resolveBinding(binds, part, session);
 
       expect(binding.type).toBe(template);
       expect(binding.value).toBe(binds);
@@ -51,10 +50,10 @@ describe('AbstractTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const template = new MockTemplate();
 
-      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
+      expect(() => template.resolveBinding(binds, part, session)).toThrow(
         'MockTemplate must be used in a child node part,',
       );
     });
@@ -88,13 +87,15 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(binds1)).toBe(false);
-      expect(binding.shouldBind(binds2)).toBe(true);
+        expect(binding.shouldBind(binds1)).toBe(false);
+        expect(binding.shouldBind(binds2)).toBe(true);
+      }
     });
   });
 
@@ -110,22 +111,22 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         childNodes: [container.firstChild!],
         slots: [],
       });
 
-      binding.hydrate(tree, runtime);
+      binding.hydrate(target, session);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(binds, part, tree, runtime);
+      expect(hydrateSpy).toHaveBeenCalledWith(binds, part, target, session);
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe('foo<!---->');
 
-      binding.commit(runtime);
+      binding.commit(session);
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(part.anchorNode).toBe(container.firstChild);
@@ -143,13 +144,13 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = document.createElement('div');
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      binding.connect(session);
+      binding.commit(session);
 
-      expect(() => binding.hydrate(tree, runtime)).toThrow(HydrationError);
+      expect(() => binding.hydrate(target, session)).toThrow(HydrationError);
     });
   });
 
@@ -165,7 +166,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const container = createElement('div', {}, part.node);
       const renderRoot = createElement(
@@ -177,7 +178,7 @@ describe('TemplateBinding', () => {
       );
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((binds, _part, runtime) => {
+        .mockImplementation((binds, _part, context) => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, binds[0], {
@@ -205,100 +206,106 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(runtime);
+            slot.connect(context);
           }
           return { childNodes: [renderRoot], slots };
         });
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(binds1, part, runtime);
-      expect(part.anchorNode).toBe(renderRoot);
-      expect(container.innerHTML).toBe(
-        '<div><div class="foo"></div>bar<!--baz--></div><!---->',
-      );
-      expect(binding['_pendingResult']).toStrictEqual({
-        childNodes: [renderRoot],
-        slots: [
-          expect.objectContaining({
-            value: binds1[0],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds1[1],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds1[2],
-            isConnected: true,
-            isCommitted: true,
-          }),
-        ],
-      });
-      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+        expect(renderSpy).toHaveBeenCalledOnce();
+        expect(renderSpy).toHaveBeenCalledWith(binds1, part, session);
+        expect(part.anchorNode).toBe(renderRoot);
+        expect(container.innerHTML).toBe(
+          '<div><div class="foo"></div>bar<!--baz--></div><!---->',
+        );
+        expect(binding['_pendingResult']).toStrictEqual({
+          childNodes: [renderRoot],
+          slots: [
+            expect.objectContaining({
+              value: binds1[0],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds1[1],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds1[2],
+              isConnected: true,
+              isCommitted: true,
+            }),
+          ],
+        });
+        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+      }
 
-      binding.bind(binds2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(binds2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.anchorNode).toBe(renderRoot);
-      expect(container.innerHTML).toBe(
-        '<div><div class="qux"></div>quux<!--corge--></div><!---->',
-      );
-      expect(binding['_pendingResult']).toStrictEqual({
-        childNodes: [renderRoot],
-        slots: [
-          expect.objectContaining({
-            value: binds2[0],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds2[1],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds2[2],
-            isConnected: true,
-            isCommitted: true,
-          }),
-        ],
-      });
-      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+        expect(renderSpy).toHaveBeenCalledOnce();
+        expect(part.anchorNode).toBe(renderRoot);
+        expect(container.innerHTML).toBe(
+          '<div><div class="qux"></div>quux<!--corge--></div><!---->',
+        );
+        expect(binding['_pendingResult']).toStrictEqual({
+          childNodes: [renderRoot],
+          slots: [
+            expect.objectContaining({
+              value: binds2[0],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds2[1],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds2[2],
+              isConnected: true,
+              isCommitted: true,
+            }),
+          ],
+        });
+        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.anchorNode).toBe(null);
-      expect(container.innerHTML).toBe('<!---->');
-      expect(binding['_pendingResult']).toStrictEqual({
-        childNodes: [renderRoot],
-        slots: [
-          expect.objectContaining({
-            value: binds2[0],
-            isConnected: false,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds2[1],
-            isConnected: false,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds2[2],
-            isConnected: false,
-            isCommitted: true,
-          }),
-        ],
-      });
-      expect(binding['_memoizedResult']).toBe(null);
+        expect(renderSpy).toHaveBeenCalledOnce();
+        expect(part.anchorNode).toBe(null);
+        expect(container.innerHTML).toBe('<!---->');
+        expect(binding['_pendingResult']).toStrictEqual({
+          childNodes: [renderRoot],
+          slots: [
+            expect.objectContaining({
+              value: binds2[0],
+              isConnected: false,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds2[1],
+              isConnected: false,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds2[2],
+              isConnected: false,
+              isCommitted: true,
+            }),
+          ],
+        });
+        expect(binding['_memoizedResult']).toBe(null);
+      }
     });
 
     it('renders a template with multiple root nodes', () => {
@@ -312,7 +319,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const container = createElement('div', {}, part.node);
       const childNodes = [
@@ -349,7 +356,7 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(runtime);
+            slot.connect(session);
           }
           return {
             childNodes,
@@ -357,95 +364,101 @@ describe('TemplateBinding', () => {
           };
         });
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(renderSpy).toHaveBeenCalledWith(binds1, part, runtime);
-      expect(part.anchorNode).toStrictEqual(childNodes[0]);
-      expect(container.innerHTML).toBe(
-        '<!--foo-->bar<div class="baz"></div><!---->',
-      );
-      expect(binding['_pendingResult']).toStrictEqual({
-        childNodes,
-        slots: [
-          expect.objectContaining({
-            value: binds1[0],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds1[1],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds1[2],
-            isConnected: true,
-            isCommitted: true,
-          }),
-        ],
-      });
-      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+        expect(renderSpy).toHaveBeenCalledOnce();
+        expect(renderSpy).toHaveBeenCalledWith(binds1, part, session);
+        expect(part.anchorNode).toStrictEqual(childNodes[0]);
+        expect(container.innerHTML).toBe(
+          '<!--foo-->bar<div class="baz"></div><!---->',
+        );
+        expect(binding['_pendingResult']).toStrictEqual({
+          childNodes,
+          slots: [
+            expect.objectContaining({
+              value: binds1[0],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds1[1],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds1[2],
+              isConnected: true,
+              isCommitted: true,
+            }),
+          ],
+        });
+        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+      }
 
-      binding.bind(binds2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(binds2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.anchorNode).toStrictEqual(childNodes[0]);
-      expect(container.innerHTML).toBe(
-        '<!--qux-->quux<div class="corge"></div><!---->',
-      );
-      expect(binding['_pendingResult']).toStrictEqual({
-        childNodes,
-        slots: [
-          expect.objectContaining({
-            value: binds2[0],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds2[1],
-            isConnected: true,
-            isCommitted: true,
-          }),
-          expect.objectContaining({
-            value: binds2[2],
-            isConnected: true,
-            isCommitted: true,
-          }),
-        ],
-      });
-      expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+        expect(renderSpy).toHaveBeenCalledOnce();
+        expect(part.anchorNode).toStrictEqual(childNodes[0]);
+        expect(container.innerHTML).toBe(
+          '<!--qux-->quux<div class="corge"></div><!---->',
+        );
+        expect(binding['_pendingResult']).toStrictEqual({
+          childNodes,
+          slots: [
+            expect.objectContaining({
+              value: binds2[0],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds2[1],
+              isConnected: true,
+              isCommitted: true,
+            }),
+            expect.objectContaining({
+              value: binds2[2],
+              isConnected: true,
+              isCommitted: true,
+            }),
+          ],
+        });
+        expect(binding['_memoizedResult']).toBe(binding['_pendingResult']);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(renderSpy).toHaveBeenCalledOnce();
-      expect(part.anchorNode).toBe(null);
-      expect(container.innerHTML).toBe('<!---->');
-      expect(binding['_pendingResult']).toStrictEqual({
-        childNodes,
-        slots: [
-          expect.objectContaining({
-            value: binds2[0],
-            isConnected: false,
-            isCommitted: false,
-          }),
-          expect.objectContaining({
-            value: binds2[1],
-            isConnected: false,
-            isCommitted: false,
-          }),
-          expect.objectContaining({
-            value: binds2[2],
-            isConnected: false,
-            isCommitted: true,
-          }),
-        ],
-      });
-      expect(binding['_memoizedResult']).toBe(null);
+        expect(renderSpy).toHaveBeenCalledOnce();
+        expect(part.anchorNode).toBe(null);
+        expect(container.innerHTML).toBe('<!---->');
+        expect(binding['_pendingResult']).toStrictEqual({
+          childNodes,
+          slots: [
+            expect.objectContaining({
+              value: binds2[0],
+              isConnected: false,
+              isCommitted: false,
+            }),
+            expect.objectContaining({
+              value: binds2[1],
+              isConnected: false,
+              isCommitted: false,
+            }),
+            expect.objectContaining({
+              value: binds2[2],
+              isConnected: false,
+              isCommitted: true,
+            }),
+          ],
+        });
+        expect(binding['_memoizedResult']).toBe(null);
+      }
     });
   });
 });

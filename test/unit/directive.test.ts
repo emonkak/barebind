@@ -2,14 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { debugValue } from '@/debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { $toDirective, PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import {
-  MockBackend,
-  MockDirective,
-  MockPrimitive,
-  MockSlot,
-} from '../mocks.js';
+import { MockDirective, MockPrimitive, MockSlot } from '../mocks.js';
+import { createUpdateSession } from '../session-utils.js';
 
 describe('DirectiveSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
@@ -46,9 +41,9 @@ describe('SlotSpecifier', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const bindable = new SlotSpecifier(slotType, value);
-      const directive = bindable[$toDirective](part, runtime);
+      const directive = bindable[$toDirective](part, session);
 
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
@@ -64,9 +59,9 @@ describe('SlotSpecifier', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const bindable = new SlotSpecifier(slotType, value);
-      const directive = bindable[$toDirective](part, runtime);
+      const directive = bindable[$toDirective](part, session);
 
       expect(directive.type).toBe(value.type);
       expect(directive.value).toBe(value.value);

@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
   HTML_NAMESPACE_URI,
   MATH_NAMESPACE_URI,
   SVG_NAMESPACE_URI,
 } from '@/template/template.js';
-import { MockBackend, MockSlot } from '../../mocks.js';
+import { MockSlot } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement, serializeNode } from '../../test-utils.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
@@ -491,14 +491,14 @@ describe('TaggedTemplate', () => {
         ),
         document.createComment('corge'),
       );
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
 
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -616,13 +616,13 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
@@ -644,13 +644,13 @@ describe('TaggedTemplate', () => {
         '(foo, bar, baz)',
         createElement('div', {}, '[qux, quux]'),
       );
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -734,13 +734,13 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
@@ -765,11 +765,11 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
 
       expect(() => {
-        template.hydrate(['foo'], part, tree, runtime);
+        template.hydrate(['foo'], part, target, session);
       }).toThrow('There is no node that the hole indicates.');
     });
 
@@ -796,11 +796,11 @@ describe('TaggedTemplate', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const tree = createHydrationTree(container);
-        const runtime = Runtime.create(new MockBackend());
+        const target = createHydrationTree(container);
+        const session = createUpdateSession();
 
         expect(() => {
-          template.hydrate([], part, tree, runtime);
+          template.hydrate([], part, target, session);
         }).toThrow(HydrationError);
       },
     );
@@ -822,8 +822,8 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const session = createUpdateSession();
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div><!----><label></label><input type="text"></div>',
@@ -935,8 +935,8 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const session = createUpdateSession();
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
       expect(slots).toStrictEqual([]);
@@ -951,8 +951,8 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const session = createUpdateSession();
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '',
@@ -1035,8 +1035,8 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const session = createUpdateSession();
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!---->',
@@ -1089,8 +1089,8 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const session = createUpdateSession();
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
@@ -1113,10 +1113,10 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() => {
-        template.render(['foo'], part, runtime);
+        template.render(['foo'], part, session);
       }).toThrow('There is no node that the hole indicates.');
     });
   });

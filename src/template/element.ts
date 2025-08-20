@@ -43,7 +43,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    targetTree: HydrationTree,
+    target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -53,8 +53,8 @@ export class ElementTemplate<
       type: PartType.Element,
       node: treatNodeName(
         this._name.toUpperCase(),
-        targetTree.nextNode(),
-        targetTree,
+        target.nextNode(),
+        target,
       ) as Element,
     };
     const childrenPart = {
@@ -66,10 +66,10 @@ export class ElementTemplate<
     const elementSlot = context.resolveSlot(binds[0], elementPart);
     const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
-    elementSlot.hydrate(targetTree, context);
-    childrenSlot.hydrate(targetTree, context);
+    elementSlot.hydrate(target, context);
+    childrenSlot.hydrate(target, context);
 
-    replaceMarkerNode(targetTree, childrenPart.node);
+    replaceMarkerNode(target, childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

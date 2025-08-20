@@ -12,7 +12,7 @@ describe('AsyncRoot', () => {
       const backend = new MockBackend();
       const root = AsyncRoot.create(value, container, backend);
 
-      expect(root['_runtime']['_environment'].concurrent).toBe(true);
+      expect(root['_session']['_runtime'].concurrent).toBe(true);
     });
   });
 

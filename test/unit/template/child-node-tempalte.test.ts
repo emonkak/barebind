@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBackend, MockSlot, MockTemplate } from '../../mocks.js';
+import { MockSlot, MockTemplate } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
 describe('ChildNodeTemplate', () => {
@@ -35,14 +35,14 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, document.createComment(''));
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
       const template = new ChildNodeTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -72,11 +72,11 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {});
       const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const template = new ChildNodeTemplate();
 
       expect(() => {
-        template.hydrate(binds, part, tree, runtime);
+        template.hydrate(binds, part, tree, session);
       }).toThrow(HydrationError);
     });
   });
@@ -90,9 +90,9 @@ describe('ChildNodeTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const template = new ChildNodeTemplate();
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes).toStrictEqual([expect.any(Comment)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);

@@ -12,7 +12,7 @@ describe('SyncRoot', () => {
       const backend = new MockBackend();
       const root = SyncRoot.create(value, container, backend);
 
-      expect(root['_runtime']['_environment'].concurrent).toBe(false);
+      expect(root['_session']['_runtime'].concurrent).toBe(false);
     });
   });
 

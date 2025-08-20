@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { MockBackend, MockTemplate } from '../../mocks.js';
+import { MockTemplate } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('EmptyTemplate', () => {
   describe('arity', () => {
@@ -33,14 +33,14 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const tree = createHydrationTree(document.createElement('div'));
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(document.createElement('div'));
+      const session = createUpdateSession();
       const template = new EmptyTemplate();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes).toStrictEqual([]);
@@ -57,9 +57,9 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const template = new EmptyTemplate();
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes).toStrictEqual([]);
       expect(slots).toStrictEqual([]);

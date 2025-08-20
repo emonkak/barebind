@@ -13,14 +13,14 @@ import {
 import { $toDirective, PartType } from '@/internal.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
-import { Runtime } from '@/runtime.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { ElementTemplate } from '@/template/element.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { MockBackend, MockBindable, MockPrimitive } from '../../mocks.js';
+import { MockBindable, MockPrimitive } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement as createDOMElement } from '../../test-utils.js';
 
 describe('createElement()', () => {
@@ -179,8 +179,8 @@ describe('ElementDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = ElementDirective.resolveBinding(props, part, runtime);
+      const session = createUpdateSession();
+      const binding = ElementDirective.resolveBinding(props, part, session);
 
       expect(binding.type).toBe(ElementDirective);
       expect(binding.value).toBe(props);
@@ -195,10 +195,10 @@ describe('ElementDirective', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        ElementDirective.resolveBinding(props, part, runtime),
+        ElementDirective.resolveBinding(props, part, session),
       ).toThrow('ElementDirective must be used in an element part,');
     });
   });
@@ -225,13 +225,15 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(props1)).toBe(false);
-      expect(binding.shouldBind(props2)).toBe(true);
+        expect(binding.shouldBind(props1)).toBe(false);
+        expect(binding.shouldBind(props2)).toBe(true);
+      }
     });
   });
 
@@ -243,17 +245,21 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
     });
 
     it('updates a boolean property', () => {
@@ -264,25 +270,31 @@ describe('ElementBinding', () => {
         node: document.createElement('button'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe(
-        '<button type="button" disabled=""></button>',
-      );
+        expect(part.node.outerHTML).toBe(
+          '<button type="button" disabled=""></button>',
+        );
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<button type="button"></button>');
+        expect(part.node.outerHTML).toBe('<button type="button"></button>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<button></button>');
+        expect(part.node.outerHTML).toBe('<button></button>');
+      }
     });
 
     it('updates a number property', () => {
@@ -293,23 +305,29 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div tabindex="-1"></div>');
+        expect(part.node.outerHTML).toBe('<div tabindex="-1"></div>');
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div tabindex="0"></div>');
+        expect(part.node.outerHTML).toBe('<div tabindex="0"></div>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
     });
 
     it('updates "className" property', () => {
@@ -320,23 +338,29 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div class="foo"></div>');
+        expect(part.node.outerHTML).toBe('<div class="foo"></div>');
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div class=""></div>');
+        expect(part.node.outerHTML).toBe('<div class=""></div>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<div class=""></div>');
+        expect(part.node.outerHTML).toBe('<div class=""></div>');
+      }
     });
 
     it('updates "innerHTML" property', () => {
@@ -347,23 +371,29 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div><span>foo</span></div>');
+        expect(part.node.outerHTML).toBe('<div><span>foo</span></div>');
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
     });
 
     it('updates "textContent" property', () => {
@@ -374,25 +404,31 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe(
-        '<div>&lt;span&gt;foo&lt;/span&gt;</div>',
-      );
+        expect(part.node.outerHTML).toBe(
+          '<div>&lt;span&gt;foo&lt;/span&gt;</div>',
+        );
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
     });
 
     it('updates "checked" property of the input element', () => {
@@ -403,26 +439,32 @@ describe('ElementBinding', () => {
         node: document.createElement('input'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.defaultChecked).toBe(false);
-      expect(part.node.checked).toBe(true);
+        expect(part.node.defaultChecked).toBe(false);
+        expect(part.node.checked).toBe(true);
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.defaultChecked).toBe(false);
-      expect(part.node.checked).toBe(false);
+        expect(part.node.defaultChecked).toBe(false);
+        expect(part.node.checked).toBe(false);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.defaultChecked).toBe(false);
-      expect(part.node.checked).toBe(false);
+        expect(part.node.defaultChecked).toBe(false);
+        expect(part.node.checked).toBe(false);
+      }
     });
 
     it.for(['input', 'output', 'textarea'] as const)(
@@ -435,26 +477,32 @@ describe('ElementBinding', () => {
           node: document.createElement(name),
         };
         const binding = new ElementBinding(props1, part);
-        const runtime = Runtime.create(new MockBackend());
+        const session = createUpdateSession();
 
-        binding.connect(runtime);
-        binding.commit(runtime);
+        SESSION1: {
+          binding.connect(session);
+          binding.commit(session);
 
-        expect(part.node.value).toBe(props1.value);
-        expect(part.node.defaultValue).toBe(props1.defaultValue);
+          expect(part.node.value).toBe(props1.value);
+          expect(part.node.defaultValue).toBe(props1.defaultValue);
+        }
 
-        binding.bind(props2);
-        binding.connect(runtime);
-        binding.commit(runtime);
+        SESSION2: {
+          binding.bind(props2);
+          binding.connect(session);
+          binding.commit(session);
 
-        expect(part.node.value).toBe('');
-        expect(part.node.defaultValue).toBe('');
+          expect(part.node.value).toBe('');
+          expect(part.node.defaultValue).toBe('');
+        }
 
-        binding.disconnect(runtime);
-        binding.rollback(runtime);
+        SESSION3: {
+          binding.disconnect(session);
+          binding.rollback(session);
 
-        expect(part.node.value).toBe('');
-        expect(part.node.defaultValue).toBe('');
+          expect(part.node.value).toBe('');
+          expect(part.node.defaultValue).toBe('');
+        }
       },
     );
 
@@ -470,23 +518,29 @@ describe('ElementBinding', () => {
         ),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.value).toBe(props1.value);
+        expect(part.node.value).toBe(props1.value);
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.value).toBe('');
+        expect(part.node.value).toBe('');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.value).toBe('');
+        expect(part.node.value).toBe('');
+      }
     });
 
     it('updates "htmlFor" property of the label element', () => {
@@ -497,23 +551,29 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.htmlFor).toBe(props1.htmlFor);
+        expect(part.node.htmlFor).toBe(props1.htmlFor);
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.htmlFor).toBe('');
+        expect(part.node.htmlFor).toBe('');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.htmlFor).toBe('');
+        expect(part.node.htmlFor).toBe('');
+      }
     });
 
     it('invokes the ref callback if it has been changed', () => {
@@ -526,35 +586,48 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(props1.ref).toHaveBeenCalledOnce();
+        expect(props2.ref).not.toHaveBeenCalled();
+        expect(cleanup1).not.toHaveBeenCalled();
+        expect(cleanup2).not.toHaveBeenCalled();
+      }
 
-      expect(props1.ref).toHaveBeenCalledOnce();
-      expect(props2.ref).not.toHaveBeenCalled();
-      expect(cleanup1).not.toHaveBeenCalled();
-      expect(cleanup2).not.toHaveBeenCalled();
+      SESSION2: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(props1.ref).toHaveBeenCalledOnce();
+        expect(props2.ref).not.toHaveBeenCalled();
+        expect(cleanup1).not.toHaveBeenCalled();
+        expect(cleanup2).not.toHaveBeenCalled();
+      }
 
-      expect(props1.ref).toHaveBeenCalledOnce();
-      expect(props2.ref).toHaveBeenCalledOnce();
-      expect(cleanup1).toHaveBeenCalledOnce();
-      expect(cleanup2).not.toHaveBeenCalled();
+      SESSION3: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+        expect(props1.ref).toHaveBeenCalledOnce();
+        expect(props2.ref).toHaveBeenCalledOnce();
+        expect(cleanup1).toHaveBeenCalledOnce();
+        expect(cleanup2).not.toHaveBeenCalled();
+      }
 
-      expect(props1.ref).toHaveBeenCalledOnce();
-      expect(props2.ref).toHaveBeenCalledOnce();
-      expect(cleanup1).toHaveBeenCalledOnce();
-      expect(cleanup2).toHaveBeenCalledOnce();
+      SESSION4: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(props1.ref).toHaveBeenCalledOnce();
+        expect(props2.ref).toHaveBeenCalledOnce();
+        expect(cleanup1).toHaveBeenCalledOnce();
+        expect(cleanup2).toHaveBeenCalledOnce();
+      }
     });
 
     it('sets the current value to the ref object', () => {
@@ -565,26 +638,32 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(props1.ref.current).toBe(part.node);
-      expect(props2.ref.current).toBe(null);
+        expect(props1.ref.current).toBe(part.node);
+        expect(props2.ref.current).toBe(null);
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(props1.ref.current).toBe(null);
-      expect(props2.ref.current).toBe(part.node);
+        expect(props1.ref.current).toBe(null);
+        expect(props2.ref.current).toBe(part.node);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(props1.ref.current).toBe(null);
-      expect(props2.ref.current).toBe(null);
+        expect(props1.ref.current).toBe(null);
+        expect(props2.ref.current).toBe(null);
+      }
     });
 
     it('updates styles by the object', () => {
@@ -596,33 +675,41 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe(
-        'color: red; background-color: white;',
-      );
+        expect(part.node.style.cssText).toBe(
+          'color: red; background-color: white;',
+        );
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe(
-        'color: black; border: 1px solid black;',
-      );
+        expect(part.node.style.cssText).toBe(
+          'color: black; border: 1px solid black;',
+        );
+      }
 
-      binding.bind(props3);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.bind(props3);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe('');
+        expect(part.node.style.cssText).toBe('');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION4: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.style.cssText).toBe('');
+        expect(part.node.style.cssText).toBe('');
+      }
     });
 
     it('throws an error if "style" property is not an object', () => {
@@ -632,11 +719,11 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() => {
-        binding.connect(runtime);
-        binding.commit(runtime);
+        binding.connect(session);
+        binding.commit(session);
       }).toThrow('The "style" property expects a object, not a string.');
     });
 
@@ -650,35 +737,46 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
+        expect(removeEventListenerSpy).not.toHaveBeenCalled();
+      }
+
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
+
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).not.toHaveBeenCalled();
+      }
 
       part.node.dispatchEvent(event1);
 
-      expect(addEventListenerSpy).toHaveBeenCalledOnce();
-      expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
-      expect(removeEventListenerSpy).not.toHaveBeenCalled();
       expect(props1.onClick).not.toHaveBeenCalled();
       expect(props2.onClick).toHaveBeenCalledOnce();
       expect(props2.onClick).toHaveBeenCalledWith(event1);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(addEventListenerSpy).toHaveBeenCalledOnce();
+        expect(removeEventListenerSpy).toHaveBeenCalled();
+        expect(removeEventListenerSpy).toHaveBeenCalledWith('click', binding);
+      }
 
       part.node.dispatchEvent(event2);
 
-      expect(addEventListenerSpy).toHaveBeenCalledOnce();
-      expect(removeEventListenerSpy).toHaveBeenCalled();
-      expect(removeEventListenerSpy).toHaveBeenCalledWith('click', binding);
       expect(props1.onClick).not.toHaveBeenCalled();
       expect(props2.onClick).toHaveBeenCalledOnce();
     });
@@ -693,53 +791,68 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
+        expect(addEventListenerSpy).toHaveBeenNthCalledWith(
+          1,
+          'click',
+          binding,
+          props1.onClick,
+        );
+        expect(removeEventListenerSpy).toHaveBeenCalledTimes(0);
+      }
+
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
+
+        expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+        expect(addEventListenerSpy).toHaveBeenNthCalledWith(
+          2,
+          'click',
+          binding,
+          props2.onClick,
+        );
+        expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
+        expect(removeEventListenerSpy).toHaveBeenNthCalledWith(
+          1,
+          'click',
+          binding,
+          props1.onClick,
+        );
+      }
 
       part.node.dispatchEvent(event1);
 
-      expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'click',
-        binding,
-        props1.onClick,
-      );
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'click',
-        binding,
-        props2.onClick,
-      );
-      expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'click',
-        binding,
-        props1.onClick,
-      );
       expect(props1.onClick.handleEvent).not.toHaveBeenCalled();
       expect(props2.onClick.handleEvent).toHaveBeenCalledOnce();
       expect(props2.onClick.handleEvent).toHaveBeenCalledWith(event1);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
+        expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
+        expect(removeEventListenerSpy).toHaveBeenNthCalledWith(
+          2,
+          'click',
+          binding,
+          props2.onClick,
+        );
+      }
 
       part.node.dispatchEvent(event2);
 
-      expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
-      expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
-      expect(removeEventListenerSpy).toHaveBeenCalledWith(
-        'click',
-        binding,
-        props2.onClick,
-      );
       expect(props1.onClick.handleEvent).not.toHaveBeenCalled();
       expect(props2.onClick.handleEvent).toHaveBeenCalledOnce();
     });
@@ -763,25 +876,31 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe(
-        '<div checked="checked" defaultchecked="defaultChecked" defaultvalue="defaultValue" htmlfor="htmlFor" title="title" value="value"></div>',
-      );
+        expect(part.node.outerHTML).toBe(
+          '<div checked="checked" defaultchecked="defaultChecked" defaultvalue="defaultValue" htmlfor="htmlFor" title="title" value="value"></div>',
+        );
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.outerHTML).toBe('<div title="title"></div>');
+        expect(part.node.outerHTML).toBe('<div title="title"></div>');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION3: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.outerHTML).toBe('<div></div>');
+        expect(part.node.outerHTML).toBe('<div></div>');
+      }
     });
   });
 });

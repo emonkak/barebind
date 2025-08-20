@@ -1,18 +1,28 @@
 import { HookType, Lanes, type RenderSessionContext } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
-import { Runtime } from '@/runtime.js';
+import { createRuntime, type RuntimeOptions } from '@/runtime.js';
+import { UpdateSession } from '@/update-session.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
 
-export function createSession(lanes: Lanes = -1): RenderSession {
+export function createRenderSession(
+  lanes: Lanes = -1,
+  options?: RuntimeOptions,
+): RenderSession {
+  const runtime = createRuntime(new MockBackend(), options);
   return new RenderSession(
     lanes,
     [],
     new MockCoroutine(),
-    Runtime.create(new MockBackend()),
+    UpdateSession.create(runtime),
   );
 }
 
-export function disposeSession(session: RenderSession): void {
+export function createUpdateSession(options?: RuntimeOptions): UpdateSession {
+  const runtime = createRuntime(new MockBackend(), options);
+  return UpdateSession.create(runtime);
+}
+
+export function disposeRenderSession(session: RenderSession): void {
   for (let i = session['_hooks'].length - 1; i >= 0; i--) {
     const hook = session['_hooks'][i]!;
     if (
@@ -26,13 +36,13 @@ export function disposeSession(session: RenderSession): void {
   }
 }
 
-export function flushSession(session: RenderSession): void {
+export function flushRenderSession(session: RenderSession): void {
   session.finalize();
   session['_context'].flushSync(Lanes.NoLanes);
   session['_hookIndex'] = 0;
 }
 
-export async function waitForUpdate(
+export async function waitForAll(
   context: RenderSessionContext,
 ): Promise<number> {
   const updateHandles = context.getUpdateHandles();

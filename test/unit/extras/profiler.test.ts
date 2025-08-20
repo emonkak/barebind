@@ -17,7 +17,7 @@ import { MockEffect } from '../../mocks.js';
 
 describe('PerformanceProfiler', () => {
   describe('onRuntimeEvent()', () => {
-    it('collects profiles from runtime events', () => {
+    it('collects profiles from session events', () => {
       const reporter = {
         reportProfile: vi.fn(),
       };

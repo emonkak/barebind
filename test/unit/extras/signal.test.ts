@@ -7,13 +7,12 @@ import {
 } from '@/extras/signal.js';
 import { createHydrationTree } from '@/hydration.js';
 import { $toDirective, HydrationError, Lanes, PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
 import {
-  createSession,
-  disposeSession,
-  flushSession,
-  waitForUpdate,
+  createRenderSession,
+  createUpdateSession,
+  disposeRenderSession,
+  flushRenderSession,
+  waitForAll,
 } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
@@ -33,8 +32,8 @@ describe('SignalDirective', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = SignalDirective.resolveBinding(signal, part, runtime);
+      const session = createUpdateSession();
+      const binding = SignalDirective.resolveBinding(signal, part, session);
 
       expect(binding.type).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
@@ -53,8 +52,8 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = SignalDirective.resolveBinding(signal, part, runtime);
+      const session = createUpdateSession();
+      const binding = SignalDirective.resolveBinding(signal, part, session);
 
       expect(binding.shouldBind(signal)).toBe(true);
     });
@@ -68,11 +67,11 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = SignalDirective.resolveBinding(signal1, part, runtime);
+      const session = createUpdateSession();
+      const binding = SignalDirective.resolveBinding(signal1, part, session);
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      binding.connect(session);
+      binding.commit(session);
 
       expect(binding.shouldBind(signal1)).toBe(false);
       expect(binding.shouldBind(signal2)).toBe(true);
@@ -88,23 +87,23 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        runtime,
+        session,
       ) as SignalBinding<string>;
       const container = createElement('div', {}, part.node);
-      const tree = createHydrationTree(container);
+      const target = createHydrationTree(container);
 
-      binding.hydrate(tree, runtime);
-      binding.commit(runtime);
+      binding.hydrate(target, session);
+      binding.commit(session);
 
       expect(container.innerHTML).toBe(signal.value);
 
       signal.value = 'bar';
 
-      expect(await waitForUpdate(runtime)).toBe(1);
+      expect(await waitForAll(session)).toBe(1);
 
       expect(container.innerHTML).toBe(signal.value);
     });
@@ -117,16 +116,16 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = SignalDirective.resolveBinding(signal, part, runtime);
+      const session = createUpdateSession();
+      const binding = SignalDirective.resolveBinding(signal, part, session);
       const container = createElement('div', {}, part.node);
       const tree = createHydrationTree(container);
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      binding.connect(session);
+      binding.commit(session);
 
       expect(() => {
-        binding.hydrate(tree, runtime);
+        binding.hydrate(tree, session);
       }).toThrow(HydrationError);
     });
   });
@@ -140,22 +139,25 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        runtime,
+        session,
       ) as SignalBinding<string>;
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe(signal.value);
+        expect(part.node.nodeValue).toBe(signal.value);
+      }
 
       signal.value = 'bar';
 
       expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
-      expect(await waitForUpdate(runtime)).toBe(1);
+
+      expect(await waitForAll(session)).toBe(1);
 
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(part.node.nodeValue).toBe(signal.value);
@@ -170,27 +172,34 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const binding = SignalDirective.resolveBinding(
         signal1,
         part,
-        runtime,
+        session,
       ) as SignalBinding<string>;
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.bind(signal2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+        expect(part.node.nodeValue).toBe(signal1.value);
+      }
 
-      expect(part.node.nodeValue).toBe(signal2.value);
+      SESSION2: {
+        binding.bind(signal2);
+        binding.connect(session);
+        binding.commit(session);
+
+        expect(part.node.nodeValue).toBe(signal2.value);
+      }
 
       signal1.value = 'baz';
       signal2.value = 'qux';
 
       expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
-      expect(await waitForUpdate(runtime)).toBe(1);
+
+      expect(await waitForAll(session)).toBe(1);
 
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(part.node.nodeValue).toBe(signal2.value);
@@ -206,25 +215,30 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        runtime,
+        session,
       ) as SignalBinding<string>;
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+        expect(part.node.nodeValue).toBe(signal.value);
+      }
 
-      expect(await waitForUpdate(runtime)).toBe(0);
-      expect(part.node.nodeValue).toBe('');
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(part.node.nodeValue).toBe('');
+      }
 
       signal.value = 'bar';
 
-      expect(await waitForUpdate(runtime)).toBe(0);
+      expect(await waitForAll(session)).toBe(0);
       expect(part.node.nodeValue).toBe('');
     });
   });
@@ -233,7 +247,7 @@ describe('SiganlBinding', () => {
 describe('Signal', () => {
   describe('[$customHook]()', () => {
     it('request an update if the signal value has been changed', async () => {
-      const session = createSession();
+      const session = createRenderSession();
       const signal = new Atom('foo');
 
       SESSION1: {
@@ -244,7 +258,7 @@ describe('Signal', () => {
           signal.value = 'baz';
         });
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       await Promise.resolve();
@@ -258,14 +272,14 @@ describe('Signal', () => {
           signal.value = 'baz';
         });
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       await Promise.resolve();
 
       expect(await session.waitForUpdate()).toBe(0);
 
-      disposeSession(session);
+      disposeRenderSession(session);
 
       signal.value = 'baz';
 

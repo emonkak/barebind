@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
 describe('ClassPrimitive', () => {
@@ -59,8 +58,8 @@ describe('ClassPrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const runtime = Runtime.create(new MockBackend());
-        const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
+        const session = createUpdateSession();
+        const binding = ClassPrimitive.resolveBinding(classes, part, session);
 
         expect(binding.type).toBe(ClassPrimitive);
         expect(binding.value).toBe(classes);
@@ -75,10 +74,10 @@ describe('ClassPrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        ClassPrimitive.resolveBinding(classes, part, runtime),
+        ClassPrimitive.resolveBinding(classes, part, session),
       ).toThrow('ClassPrimitive must be used in a ":class" attribute part,');
     });
   });
@@ -106,20 +105,22 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(classes)).toBe(false);
-      expect(binding.shouldBind(structuredClone(classes))).toBe(false);
-      expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
-      expect(binding.shouldBind({ foo: true, bar: true, baz: false })).toBe(
-        true,
-      );
-      expect(binding.shouldBind(['foo bar'])).toBe(true);
-      expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
-      expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
+        expect(binding.shouldBind(classes)).toBe(false);
+        expect(binding.shouldBind(structuredClone(classes))).toBe(false);
+        expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
+        expect(binding.shouldBind({ foo: true, bar: true, baz: false })).toBe(
+          true,
+        );
+        expect(binding.shouldBind(['foo bar'])).toBe(true);
+        expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
+        expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
+      }
     });
 
     it('returns true if any classes are not the same in the class map', () => {
@@ -130,20 +131,22 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(classes)).toBe(false);
-      expect(binding.shouldBind(structuredClone(classes))).toBe(false);
-      expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
-      expect(binding.shouldBind({ foo: true, bar: true, baz: true })).toBe(
-        true,
-      );
-      expect(binding.shouldBind(['foo bar'])).toBe(true);
-      expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
-      expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
+        expect(binding.shouldBind(classes)).toBe(false);
+        expect(binding.shouldBind(structuredClone(classes))).toBe(false);
+        expect(binding.shouldBind({ foo: true, bar: true })).toBe(true);
+        expect(binding.shouldBind({ foo: true, bar: true, baz: true })).toBe(
+          true,
+        );
+        expect(binding.shouldBind(['foo bar'])).toBe(true);
+        expect(binding.shouldBind(['foo', 'bar'])).toBe(true);
+        expect(binding.shouldBind(['bar', 'foo'])).toBe(true);
+      }
     });
   });
 
@@ -167,24 +170,30 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+        expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+      }
 
-      binding.bind(classes2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(classes2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo quux');
+        expect(part.node.getAttribute('class')).toBe('foo quux');
+      }
 
-      binding.bind(classes1);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.bind(classes1);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+        expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+      }
     });
 
     it('adds only valid class names in class list', () => {
@@ -196,24 +205,30 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+        expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+      }
 
-      binding.bind(classes2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(classes2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo quux');
+        expect(part.node.getAttribute('class')).toBe('foo quux');
+      }
 
-      binding.bind(classes1);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.bind(classes1);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+        expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
+      }
     });
 
     it('adds duplicated classs names correctly', () => {
@@ -225,24 +240,30 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar');
+        expect(part.node.getAttribute('class')).toBe('foo bar');
+      }
 
-      binding.bind(classes2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(classes2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('bar');
+        expect(part.node.getAttribute('class')).toBe('bar');
+      }
 
-      binding.bind(classes1);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.bind(classes1);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo');
+        expect(part.node.getAttribute('class')).toBe('foo');
+      }
     });
 
     it('can preserve preset class names', () => {
@@ -253,12 +274,14 @@ describe('ClassBinding', () => {
         name: 'class',
       };
       const binding = new ClassBinding(classes, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('baz foo bar');
+        expect(part.node.getAttribute('class')).toBe('baz foo bar');
+      }
     });
   });
 
@@ -271,17 +294,21 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.getAttribute('class')).toBe('foo bar');
+        expect(part.node.getAttribute('class')).toBe('foo bar');
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.getAttribute('class')).toBe('');
+        expect(part.node.getAttribute('class')).toBe('');
+      }
     });
   });
 });

@@ -34,7 +34,7 @@ export interface Binding<T> extends ReversibleEffect {
   readonly part: Part;
   shouldBind(value: T): boolean;
   bind(value: T): void;
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void;
+  hydrate(target: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -379,7 +379,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(value: T, context: UpdateContext): boolean;
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void;
+  hydrate(target: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;
 }
@@ -399,7 +399,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: HydrationTree,
+    target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult;
 }

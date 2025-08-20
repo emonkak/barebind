@@ -1,10 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
 describe('TextTemplate', () => {
@@ -38,13 +37,13 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -74,10 +73,10 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {});
       const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() => {
-        template.hydrate(binds, part, tree, runtime);
+        template.hydrate(binds, part, tree, session);
       }).toThrow(HydrationError);
     });
   });
@@ -92,8 +91,8 @@ describe('TextTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const session = createUpdateSession();
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);
       expect(slots).toStrictEqual([

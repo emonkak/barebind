@@ -1,16 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { PartType } from '@/internal.js';
-import { Runtime } from '@/runtime.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {
-  MockBackend,
   MockBinding,
   MockDirective,
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { serializeNode } from '../../test-utils.js';
 
 describe('FragmentTemplate', () => {
@@ -70,8 +69,8 @@ describe('FragmentTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = document.createElement('div');
-      const tree = createHydrationTree(container);
-      const runtime = Runtime.create(new MockBackend());
+      const target = createHydrationTree(container);
+      const session = createUpdateSession();
       const template = new FragmentTemplate(internalTemplates);
 
       const hydrationSpys = internalTemplates.map((template) =>
@@ -96,8 +95,8 @@ describe('FragmentTemplate', () => {
       const { childNodes, slots } = template.hydrate(
         binds,
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -120,17 +119,17 @@ describe('FragmentTemplate', () => {
       expect(hydrationSpys[0]).toHaveBeenCalledWith(
         ['foo'],
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
       expect(hydrationSpys[1]).toHaveBeenCalledOnce();
-      expect(hydrationSpys[1]).toHaveBeenCalledWith([], part, tree, runtime);
+      expect(hydrationSpys[1]).toHaveBeenCalledWith([], part, target, session);
       expect(hydrationSpys[2]).toHaveBeenCalledOnce();
       expect(hydrationSpys[2]).toHaveBeenCalledWith(
         ['bar', 'baz'],
         part,
-        tree,
-        runtime,
+        target,
+        session,
       );
     });
   });
@@ -149,7 +148,7 @@ describe('FragmentTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const template = new FragmentTemplate(internalTemplates);
 
       const renderSpys = internalTemplates.map((template) =>
@@ -171,7 +170,7 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = template.render(binds, part, runtime);
+      const { childNodes, slots } = template.render(binds, part, session);
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!--foo-->',
@@ -190,11 +189,11 @@ describe('FragmentTemplate', () => {
         }),
       ]);
       expect(renderSpys[0]).toHaveBeenCalledOnce();
-      expect(renderSpys[0]).toHaveBeenCalledWith(['foo'], part, runtime);
+      expect(renderSpys[0]).toHaveBeenCalledWith(['foo'], part, session);
       expect(renderSpys[1]).toHaveBeenCalledOnce();
-      expect(renderSpys[1]).toHaveBeenCalledWith([], part, runtime);
+      expect(renderSpys[1]).toHaveBeenCalledWith([], part, session);
       expect(renderSpys[2]).toHaveBeenCalledOnce();
-      expect(renderSpys[2]).toHaveBeenCalledWith(['bar', 'baz'], part, runtime);
+      expect(renderSpys[2]).toHaveBeenCalledWith(['bar', 'baz'], part, session);
     });
   });
 });

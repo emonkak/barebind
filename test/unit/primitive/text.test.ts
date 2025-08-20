@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { TextBinding, TextPrimitive } from '@/primitive/text.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('TextPrimitive', () => {
   describe('name', () => {
@@ -21,8 +20,8 @@ describe('TextPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = TextPrimitive.resolveBinding(value, part, runtime);
+      const session = createUpdateSession();
+      const binding = TextPrimitive.resolveBinding(value, part, session);
 
       expect(binding.type).toBe(TextPrimitive);
       expect(binding.value).toBe(value);
@@ -35,9 +34,9 @@ describe('TextPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
+      expect(() => TextPrimitive.resolveBinding(value, part, session)).toThrow(
         'TextPrimitive must be used in a text part,',
       );
     });
@@ -69,13 +68,15 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(value1)).toBe(false);
-      expect(binding.shouldBind(value2)).toBe(true);
+        expect(binding.shouldBind(value1)).toBe(false);
+        expect(binding.shouldBind(value2)).toBe(true);
+      }
     });
   });
 
@@ -90,18 +91,22 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<string | null>(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.data).toBe('(' + value1 + ')');
+        expect(part.node.data).toBe('(' + value1 + ')');
+      }
 
-      binding.bind(value2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(value2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.data).toBe('()');
+        expect(part.node.data).toBe('()');
+      }
     });
 
     it('sets the string representation of the value to the text node', () => {
@@ -114,18 +119,22 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<number | null>(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe('(123)');
+        expect(part.node.nodeValue).toBe('(123)');
+      }
 
-      binding.bind(value2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(value2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.nodeValue).toBe('()');
+        expect(part.node.nodeValue).toBe('()');
+      }
     });
   });
 
@@ -139,17 +148,21 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.data).toBe(value);
+        expect(part.node.data).toBe(value);
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.data).toBe('');
+        expect(part.node.data).toBe('');
+      }
     });
 
     it('should do nothing if the committed value does not exist', () => {
@@ -161,14 +174,16 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(setNodeValueSpy).not.toHaveBeenCalled();
+        expect(setNodeValueSpy).not.toHaveBeenCalled();
+      }
     });
   });
 });

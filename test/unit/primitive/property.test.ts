@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('PropertyPrimitive', () => {
   describe('name', () => {
@@ -21,8 +20,8 @@ describe('PropertyPrimitive', () => {
         name: 'innerHTML',
         defaultValue: '',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
+      const session = createUpdateSession();
+      const binding = PropertyPrimitive.resolveBinding(value, part, session);
 
       expect(binding.type).toBe(PropertyPrimitive);
       expect(binding.value).toBe(value);
@@ -35,10 +34,10 @@ describe('PropertyPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        PropertyPrimitive.resolveBinding(value, part, runtime),
+        PropertyPrimitive.resolveBinding(value, part, session),
       ).toThrow('PropertyPrimitive must be used in a property part,');
     });
   });
@@ -69,13 +68,15 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(value1)).toBe(false);
-      expect(binding.shouldBind(value2)).toBe(true);
+        expect(binding.shouldBind(value1)).toBe(false);
+        expect(binding.shouldBind(value2)).toBe(true);
+      }
     });
   });
 
@@ -90,18 +91,22 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.innerHTML).toBe(value1);
+        expect(part.node.innerHTML).toBe(value1);
+      }
 
-      binding.bind(value2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(value2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.innerHTML).toBe(value2);
+        expect(part.node.innerHTML).toBe(value2);
+      }
     });
   });
 
@@ -115,15 +120,21 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+        expect(part.node.innerHTML).toBe(value);
+      }
 
-      expect(part.node.innerHTML).toBe('');
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(part.node.innerHTML).toBe('');
+      }
     });
 
     it('should do nothing if the committed value does not exist', () => {
@@ -135,14 +146,16 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const setInnerHTMLSpy = vi.spyOn(part.node, 'innerHTML', 'set');
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(setInnerHTMLSpy).not.toHaveBeenCalled();
+        expect(setInnerHTMLSpy).not.toHaveBeenCalled();
+      }
     });
   });
 });

@@ -35,7 +35,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
     this._pendingValue = value;
   }
 
-  hydrate(_targetTree: HydrationTree, _context: UpdateContext): void {}
+  hydrate(_target: HydrationTree, _context: UpdateContext): void {}
 
   connect(_context: UpdateContext): void {}
 

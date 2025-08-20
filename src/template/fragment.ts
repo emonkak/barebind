@@ -34,7 +34,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     binds: readonly unknown[],
     part: Part.ChildNodePart,
-    targetTree: HydrationTree,
+    target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const childNodes = [];
@@ -46,7 +46,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
       const result = template.hydrate(
         binds.slice(bindIndex, bindIndex + template.arity),
         part,
-        targetTree,
+        target,
         context,
       );
       childNodes.push(...result.childNodes);

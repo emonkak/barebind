@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
 describe('StylePrimitive', () => {
@@ -56,8 +55,8 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const runtime = Runtime.create(new MockBackend());
-        const binding = StylePrimitive.resolveBinding(style, part, runtime);
+        const session = createUpdateSession();
+        const binding = StylePrimitive.resolveBinding(style, part, session);
 
         expect(binding.type).toBe(StylePrimitive);
         expect(binding.value).toBe(style);
@@ -72,9 +71,9 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: 'style',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
+      expect(() => StylePrimitive.resolveBinding(style, part, session)).toThrow(
         'StylePrimitive must be used in a ":style" attribute part,',
       );
     });
@@ -104,13 +103,15 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind({ ...style1 })).toBe(false);
-      expect(binding.shouldBind(style2)).toBe(true);
+        expect(binding.shouldBind({ ...style1 })).toBe(false);
+        expect(binding.shouldBind(style2)).toBe(true);
+      }
     });
   });
 
@@ -133,20 +134,24 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe(
-        '--my-css-variable: 1; color: red; background-color: blue; filter: grayscale(100%);',
-      );
+        expect(part.node.style.cssText).toBe(
+          '--my-css-variable: 1; color: red; background-color: blue; filter: grayscale(100%);',
+        );
+      }
 
-      binding.bind(style2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(style2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe('--my-css-variable: 2;');
+        expect(part.node.style.cssText).toBe('--my-css-variable: 2;');
+      }
     });
 
     it('should preserve preset style properties', () => {
@@ -159,14 +164,16 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe(
-        'background-color: blue; color: red;',
-      );
+        expect(part.node.style.cssText).toBe(
+          'background-color: blue; color: red;',
+        );
+      }
     });
 
     it('should remove preset style properties if it is overwritten and deleted', () => {
@@ -180,18 +187,22 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe('background-color: red;');
+        expect(part.node.style.cssText).toBe('background-color: red;');
+      }
 
-      binding.bind(style2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(style2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe('');
+        expect(part.node.style.cssText).toBe('');
+      }
     });
   });
 
@@ -209,19 +220,23 @@ describe('StyleBinding', () => {
         name: ':class',
       };
       const binding = new StyleBinding(style, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(part.node.style.cssText).toBe(
-        'color: red; background-color: blue;',
-      );
+        expect(part.node.style.cssText).toBe(
+          'color: red; background-color: blue;',
+        );
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(part.node.style.cssText).toBe('');
+        expect(part.node.style.cssText).toBe('');
+      }
     });
   });
 });

@@ -140,7 +140,7 @@ export class ComponentBinding<TProps, TResult>
     this._pendingLanes |= scheduleLanes;
   }
 
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, context: UpdateContext): void {
     if (this._slot !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
@@ -159,7 +159,7 @@ export class ComponentBinding<TProps, TResult>
     );
 
     this._slot = subcontext.resolveSlot(result, this._part);
-    this._slot.hydrate(targetTree, subcontext);
+    this._slot.hydrate(target, subcontext);
 
     this._parentScope = parentScope;
     this._memoizedProps = this._pendingProps;

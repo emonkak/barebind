@@ -21,7 +21,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   hydrate(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    targetTree: HydrationTree,
+    target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -33,9 +33,9 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     };
     const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.hydrate(targetTree, context);
+    childNodeSlot.hydrate(target, context);
 
-    replaceMarkerNode(targetTree, childNodePart.node);
+    replaceMarkerNode(target, childNodePart.node);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

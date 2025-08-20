@@ -8,14 +8,14 @@ import {
 } from '@/extras/hooks.js';
 import { Atom, type Signal } from '@/extras/signal.js';
 import {
-  createSession,
-  disposeSession,
-  flushSession,
+  createRenderSession,
+  disposeRenderSession,
+  flushRenderSession,
 } from '../../session-utils.js';
 
 describe('DeferredValue()', () => {
   it('returns the value deferred until next rendering', async () => {
-    const session = createSession();
+    const session = createRenderSession();
     const value1 = 'foo';
     const value2 = 'bar';
 
@@ -24,7 +24,7 @@ describe('DeferredValue()', () => {
     SESSION1: {
       expect(session.use(DeferredValue(value1))).toBe(value1);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
@@ -34,7 +34,7 @@ describe('DeferredValue()', () => {
     SESSION2: {
       expect(session.use(DeferredValue(value2))).toBe(value1);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(true);
@@ -47,7 +47,7 @@ describe('DeferredValue()', () => {
     SESSION3: {
       expect(session.use(DeferredValue(value2))).toBe(value2);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
@@ -56,7 +56,7 @@ describe('DeferredValue()', () => {
   });
 
   it('returns the initial value if it is given', () => {
-    const session = createSession();
+    const session = createRenderSession();
     const value1 = 'foo';
     const value2 = 'bar';
 
@@ -65,7 +65,7 @@ describe('DeferredValue()', () => {
     SESSION1: {
       expect(session.use(DeferredValue(value2, value1))).toBe(value1);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
@@ -76,7 +76,7 @@ describe('DeferredValue()', () => {
     SESSION2: {
       expect(session.use(DeferredValue(value2, value1))).toBe(value2);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
@@ -85,7 +85,7 @@ describe('DeferredValue()', () => {
 
 describe('LocalAtom()', () => {
   it('returns a custom hook that creates an atom signal with no subscription', async () => {
-    const session = createSession();
+    const session = createRenderSession();
 
     let initialSignal: Atom<number>;
 
@@ -98,7 +98,7 @@ describe('LocalAtom()', () => {
         initialSignal.value++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     await Promise.resolve();
@@ -115,7 +115,7 @@ describe('LocalAtom()', () => {
         signal.value++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     await Promise.resolve();
@@ -132,14 +132,14 @@ describe('LocalAtom()', () => {
         signal.value++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
   });
 });
 
 describe('LocalComputed()', () => {
   it('returns a custom hook that creates a computed signal with no subscription', async () => {
-    const session = createSession();
+    const session = createRenderSession();
     const foo = new Atom(1);
     const bar = new Atom(2);
     const baz = new Atom(3);
@@ -157,7 +157,7 @@ describe('LocalComputed()', () => {
         foo.value++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       initialSignal = signal;
     }
@@ -178,7 +178,7 @@ describe('LocalComputed()', () => {
         foo.value++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     await Promise.resolve();
@@ -197,14 +197,14 @@ describe('LocalComputed()', () => {
         foo.value++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
   });
 });
 
 describe('useEffectEvent()', () => {
   it('returns a stable callback', () => {
-    const session = createSession();
+    const session = createRenderSession();
 
     const callback1 = vi.fn();
     const callback2 = vi.fn();
@@ -213,7 +213,7 @@ describe('useEffectEvent()', () => {
     SESSION1: {
       stableCallback = session.use(EffectEvent(callback1));
 
-      flushSession(session);
+      flushRenderSession(session);
 
       stableCallback();
 
@@ -224,7 +224,7 @@ describe('useEffectEvent()', () => {
     SESSION2: {
       expect(session.use(EffectEvent(callback2))).toBe(stableCallback);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       stableCallback();
 
@@ -236,7 +236,7 @@ describe('useEffectEvent()', () => {
 
 describe('useSyncExternalStore()', () => {
   it('forces the update if the snapshot has been changed when updating the snapshot', async () => {
-    const session = createSession();
+    const session = createRenderSession();
     let count = 0;
 
     const unsubscribe = vi.fn();
@@ -250,7 +250,7 @@ describe('useSyncExternalStore()', () => {
         count++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(true);
@@ -265,7 +265,7 @@ describe('useSyncExternalStore()', () => {
         count++;
       }, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
@@ -273,14 +273,14 @@ describe('useSyncExternalStore()', () => {
     expect(subscribe).toHaveBeenCalledOnce();
     expect(unsubscribe).not.toHaveBeenCalled();
 
-    disposeSession(session);
+    disposeRenderSession(session);
 
     expect(subscribe).toHaveBeenCalledOnce();
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
   it('forces the update if the snapshot has been changed when subscribing the store', async () => {
-    const session = createSession();
+    const session = createRenderSession();
     const subscribers = new Set<() => void>();
     let snapshot = 0;
 
@@ -303,7 +303,7 @@ describe('useSyncExternalStore()', () => {
 
       session.useEffect(notifySubscribers, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(true);
@@ -315,19 +315,19 @@ describe('useSyncExternalStore()', () => {
 
       session.useEffect(notifySubscribers, []);
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
     expect(await session.waitForUpdate()).toBe(0);
 
-    disposeSession(session);
+    disposeRenderSession(session);
 
     expect(subscribers.size).toBe(0);
   });
 
   it('should resubscribe the store if the subscribe function is changed', async () => {
-    const session = createSession();
+    const session = createRenderSession();
 
     const unsubscribe1 = vi.fn();
     const unsubscribe2 = vi.fn();
@@ -341,7 +341,7 @@ describe('useSyncExternalStore()', () => {
         'foo',
       );
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
@@ -356,7 +356,7 @@ describe('useSyncExternalStore()', () => {
         'foo',
       );
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
@@ -371,7 +371,7 @@ describe('useSyncExternalStore()', () => {
         'bar',
       );
 
-      flushSession(session);
+      flushRenderSession(session);
     }
 
     expect(session.isUpdatePending()).toBe(false);
@@ -381,7 +381,7 @@ describe('useSyncExternalStore()', () => {
     expect(unsubscribe1).toHaveBeenCalledTimes(1);
     expect(unsubscribe2).toHaveBeenCalledTimes(0);
 
-    disposeSession(session);
+    disposeRenderSession(session);
 
     expect(subscribe1).toHaveBeenCalledTimes(1);
     expect(subscribe2).toHaveBeenCalledTimes(1);

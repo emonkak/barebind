@@ -34,18 +34,18 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   hydrate(
     binds: readonly [T],
     _part: Part.ChildNodePart,
-    targetTree: HydrationTree,
+    target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const textPart = {
       type: PartType.Text,
-      node: splitText(targetTree),
+      node: splitText(target),
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
-    textSlot.hydrate(targetTree, context);
+    textSlot.hydrate(target, context);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }

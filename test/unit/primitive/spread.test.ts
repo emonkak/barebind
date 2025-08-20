@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend, MockSlot } from '../../mocks.js';
+import { MockSlot } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 import { createElement } from '../../test-utils.js';
 
 describe('SpreadPrimitive', () => {
@@ -51,8 +51,8 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
+      const session = createUpdateSession();
+      const binding = SpreadPrimitive.resolveBinding(props, part, session);
 
       expect(binding.type).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
@@ -67,10 +67,10 @@ describe('SpreadPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        SpreadPrimitive.resolveBinding(props, part, runtime),
+        SpreadPrimitive.resolveBinding(props, part, session),
       ).toThrow('SpreadPrimitive must be used in an element part,');
     });
   });
@@ -97,10 +97,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      binding.connect(session);
+      binding.commit(session);
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -122,10 +122,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
-      const tree = createHydrationTree(createElement('div', {}, part.node));
+      const session = createUpdateSession();
+      const target = createHydrationTree(createElement('div', {}, part.node));
 
-      binding.hydrate(tree, runtime);
+      binding.hydrate(target, session);
 
       const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -206,14 +206,14 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
       const tree = createHydrationTree(createElement('div', {}, part.node));
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      binding.connect(session);
+      binding.commit(session);
 
       expect(() => {
-        binding.hydrate(tree, runtime);
+        binding.hydrate(tree, session);
       }).toThrow(HydrationError);
     });
   });
@@ -237,128 +237,134 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      const slots1 = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+        const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-      expect(slots1).toStrictEqual(
-        Object.fromEntries(
-          Object.entries(props1)
-            .filter(([_key, value]) => value !== undefined)
-            .map(([key]) => [key, expect.any(MockSlot)]),
-        ),
-      );
-      expect(slots1).toStrictEqual({
-        id: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Attribute,
-            name: 'id',
-            node: expect.exact(part.node),
-          },
-          value: props1.id,
-        }),
-        class: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Attribute,
-            name: 'class',
-            node: expect.exact(part.node),
-          },
-          value: props1.class,
-        }),
-        $open: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Live,
-            name: 'open',
-            node: expect.exact(part.node),
-            defaultValue: false,
-          },
-          value: props1.$open,
-        }),
-        '.innerHTML': expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Property,
-            name: 'innerHTML',
-            node: expect.exact(part.node),
-            defaultValue: '',
-          },
-          value: props1['.innerHTML'],
-        }),
-        '@click': expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Event,
-            name: 'click',
-            node: expect.exact(part.node),
-          },
-          value: props1['@click'],
-        }),
-      });
+        expect(slots).toStrictEqual(
+          Object.fromEntries(
+            Object.entries(props1)
+              .filter(([_key, value]) => value !== undefined)
+              .map(([key]) => [key, expect.any(MockSlot)]),
+          ),
+        );
+        expect(slots).toStrictEqual({
+          id: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Attribute,
+              name: 'id',
+              node: expect.exact(part.node),
+            },
+            value: props1.id,
+          }),
+          class: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Attribute,
+              name: 'class',
+              node: expect.exact(part.node),
+            },
+            value: props1.class,
+          }),
+          $open: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Live,
+              name: 'open',
+              node: expect.exact(part.node),
+              defaultValue: false,
+            },
+            value: props1.$open,
+          }),
+          '.innerHTML': expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Property,
+              name: 'innerHTML',
+              node: expect.exact(part.node),
+              defaultValue: '',
+            },
+            value: props1['.innerHTML'],
+          }),
+          '@click': expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Event,
+              name: 'click',
+              node: expect.exact(part.node),
+            },
+            value: props1['@click'],
+          }),
+        });
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-      const slots2 = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(slots1).toStrictEqual({
-        id: expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        class: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Attribute,
-            name: 'class',
-            node: expect.exact(part.node),
-          },
-          value: props1.class,
-        }),
-        $open: expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        '.innerHTML': expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        '@click': expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-      });
-      expect(slots2).toStrictEqual(
-        Object.fromEntries(
-          Object.entries(props2)
-            .filter(([_key, value]) => value !== undefined)
-            .map(([key]) => [key, expect.any(MockSlot)]),
-        ),
-      );
-      expect(slots2).toStrictEqual({
-        class: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Attribute,
-            name: 'class',
-            node: part.node,
-          },
-          value: props1.class,
-        }),
-      });
+        const newSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+
+        expect(oldSlots).toStrictEqual({
+          id: expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          class: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Attribute,
+              name: 'class',
+              node: expect.exact(part.node),
+            },
+            value: props1.class,
+          }),
+          $open: expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          '.innerHTML': expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          '@click': expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+        });
+        expect(newSlots).toStrictEqual(
+          Object.fromEntries(
+            Object.entries(props2)
+              .filter(([_key, value]) => value !== undefined)
+              .map(([key]) => [key, expect.any(MockSlot)]),
+          ),
+        );
+        expect(newSlots).toStrictEqual({
+          class: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Attribute,
+              name: 'class',
+              node: part.node,
+            },
+            value: props1.class,
+          }),
+        });
+      }
     });
   });
 
@@ -370,12 +376,14 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(binding['_memoizedSlots']).toBe(null);
+        expect(binding['_memoizedSlots']).toBe(null);
+      }
     });
 
     it('rollbacks the committed properties', () => {
@@ -391,99 +399,105 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      const initialSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
+        const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-      expect(initialSlots).toStrictEqual(
-        Object.fromEntries(
-          Object.entries(props).map(([key]) => [key, expect.any(MockSlot)]),
-        ),
-      );
-      expect(initialSlots).toStrictEqual({
-        id: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Attribute,
-            name: 'id',
-            node: expect.exact(part.node),
-          },
-          value: props.id,
-        }),
-        class: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Attribute,
-            name: 'class',
-            node: expect.exact(part.node),
-          },
-          value: props.class,
-        }),
-        $open: expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Live,
-            name: 'open',
-            node: expect.exact(part.node),
-            defaultValue: false,
-          },
-          value: props.$open,
-        }),
-        '.innerHTML': expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Property,
-            name: 'innerHTML',
-            node: expect.exact(part.node),
-            defaultValue: '',
-          },
-          value: props['.innerHTML'],
-        }),
-        '@click': expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-          part: {
-            type: PartType.Event,
-            name: 'click',
-            node: expect.exact(part.node),
-          },
-          value: props['@click'],
-        }),
-      });
+        expect(slots).toStrictEqual(
+          Object.fromEntries(
+            Object.entries(props).map(([key]) => [key, expect.any(MockSlot)]),
+          ),
+        );
+        expect(slots).toStrictEqual({
+          id: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Attribute,
+              name: 'id',
+              node: expect.exact(part.node),
+            },
+            value: props.id,
+          }),
+          class: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Attribute,
+              name: 'class',
+              node: expect.exact(part.node),
+            },
+            value: props.class,
+          }),
+          $open: expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Live,
+              name: 'open',
+              node: expect.exact(part.node),
+              defaultValue: false,
+            },
+            value: props.$open,
+          }),
+          '.innerHTML': expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Property,
+              name: 'innerHTML',
+              node: expect.exact(part.node),
+              defaultValue: '',
+            },
+            value: props['.innerHTML'],
+          }),
+          '@click': expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+            part: {
+              type: PartType.Event,
+              name: 'click',
+              node: expect.exact(part.node),
+            },
+            value: props['@click'],
+          }),
+        });
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-      expect(initialSlots).toStrictEqual({
-        id: expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        class: expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        $open: expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        '.innerHTML': expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-        '@click': expect.objectContaining({
-          isConnected: false,
-          isCommitted: false,
-        }),
-      });
-      expect(binding['_memoizedSlots']).toBe(null);
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(slots).toStrictEqual({
+          id: expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          class: expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          $open: expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          '.innerHTML': expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+          '@click': expect.objectContaining({
+            isConnected: false,
+            isCommitted: false,
+          }),
+        });
+        expect(binding['_memoizedSlots']).toBe(null);
+      }
     });
   });
 });

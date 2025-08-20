@@ -2,8 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('AttributePrimitive', () => {
   describe('name', () => {
@@ -20,8 +19,8 @@ describe('AttributePrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = AttributePrimitive.resolveBinding(value, part, runtime);
+      const session = createUpdateSession();
+      const binding = AttributePrimitive.resolveBinding(value, part, session);
 
       expect(binding.type).toBe(AttributePrimitive);
       expect(binding.value).toBe(value);
@@ -34,10 +33,10 @@ describe('AttributePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        AttributePrimitive.resolveBinding(value, part, runtime),
+        AttributePrimitive.resolveBinding(value, part, session),
       ).toThrow('AttributePrimitive must be used in an attribute part,');
     });
   });
@@ -66,13 +65,15 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding(value1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(value1)).toBe(false);
-      expect(binding.shouldBind(value2)).toBe(true);
+        expect(binding.shouldBind(value1)).toBe(false);
+        expect(binding.shouldBind(value2)).toBe(true);
+      }
     });
   });
 
@@ -80,23 +81,29 @@ describe('AttributeBinding', () => {
     it.for([null, undefined])(
       'removes the attribute when the value is null or undefined',
       (value2) => {
-        const value1 = 'foo';
+        const value = 'foo';
         const part = {
           type: PartType.Attribute,
           node: document.createElement('div'),
           name: 'class',
         };
-        const binding = new AttributeBinding<unknown>(value1, part);
-        const runtime = Runtime.create(new MockBackend());
+        const binding = new AttributeBinding<unknown>(value, part);
+        const session = createUpdateSession();
 
-        binding.connect(runtime);
-        binding.commit(runtime);
+        SESSION1: {
+          binding.connect(session);
+          binding.commit(session);
 
-        binding.bind(value2);
-        binding.connect(runtime);
-        binding.commit(runtime);
+          expect(part.node.getAttribute(part.name)).toBe(value);
+        }
 
-        expect(part.node.getAttribute(part.name)).toBe(null);
+        SESSION2: {
+          binding.bind(value2);
+          binding.connect(session);
+          binding.commit(session);
+
+          expect(part.node.getAttribute(part.name)).toBe(null);
+        }
       },
     );
 
@@ -120,12 +127,14 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const runtime = Runtime.create(new MockBackend());
+        const session = createUpdateSession();
 
-        binding.connect(runtime);
-        binding.commit(runtime);
+        SESSION: {
+          binding.connect(session);
+          binding.commit(session);
 
-        expect(part.node.getAttribute(part.name)).toBe(expectedValue);
+          expect(part.node.getAttribute(part.name)).toBe(expectedValue);
+        }
       },
     );
 
@@ -141,12 +150,14 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const runtime = Runtime.create(new MockBackend());
+        const session = createUpdateSession();
 
-        binding.connect(runtime);
-        binding.commit(runtime);
+        SESSION: {
+          binding.connect(session);
+          binding.commit(session);
 
-        expect(part.node.getAttribute(part.name)).toBe(expectedValue);
+          expect(part.node.getAttribute(part.name)).toBe(expectedValue);
+        }
       },
     );
   });
@@ -160,15 +171,21 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+        expect(part.node.getAttribute(part.name)).toBe(value);
+      }
 
-      expect(part.node.getAttribute(part.name)).toBe(null);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
+
+        expect(part.node.getAttribute(part.name)).toBe(null);
+      }
     });
 
     it('should do nothing if the committed value does not exist', () => {
@@ -179,14 +196,16 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       const removeAttributeSpy = vi.spyOn(part.node, 'removeAttribute');
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(removeAttributeSpy).not.toHaveBeenCalled();
+        expect(removeAttributeSpy).not.toHaveBeenCalled();
+      }
     });
   });
 });

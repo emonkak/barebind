@@ -7,12 +7,12 @@ import {
   type RefObject,
 } from '@/internal.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
-import { createSession, flushSession } from '../session-utils.js';
+import { createRenderSession, flushRenderSession } from '../session-utils.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {
     it('returns a bindable with the dynamic HTML template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -29,7 +29,7 @@ describe('RenderSession', () => {
 
   describe('dynamicMath()', () => {
     it('returns a bindable with the dynamic MathML template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -46,7 +46,7 @@ describe('RenderSession', () => {
 
   describe('dynamicSVG()', () => {
     it('returns a bindable with the dynamic SVG template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -65,7 +65,7 @@ describe('RenderSession', () => {
     it.for(['foo', Symbol('bar'), {}])(
       'returns a session value by the key',
       (key) => {
-        const session = createSession();
+        const session = createRenderSession();
 
         expect(session.getContextValue(key)).toBe(undefined);
 
@@ -82,7 +82,7 @@ describe('RenderSession', () => {
 
   describe('finalize()', () => {
     it('denies using a hook after finalize', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       session.finalize();
 
@@ -90,11 +90,11 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       session.useEffect(() => {});
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(() => session.finalize()).toThrow('Unexpected hook type.');
     });
@@ -102,7 +102,7 @@ describe('RenderSession', () => {
 
   describe('forceUpdate()', () => {
     it('schedules the update with the current coroutine', async () => {
-      const session = createSession();
+      const session = createRenderSession();
       const options = { priority: 'background' } as const;
 
       const scheduleUpdateSpy = vi
@@ -126,7 +126,7 @@ describe('RenderSession', () => {
 
   describe('html()', () => {
     it('returns a bindable with the HTML template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.html`<div>Hello, ${'World'}!</div>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -143,7 +143,7 @@ describe('RenderSession', () => {
 
   describe('math()', () => {
     it('returns a bindable with the MathML template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.math`<mi>${'x'}</mi>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -160,7 +160,7 @@ describe('RenderSession', () => {
 
   describe('svg()', () => {
     it('returns a bindable with the SVG template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.svg`<text>Hello, ${'World'}!</text>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -177,7 +177,7 @@ describe('RenderSession', () => {
 
   describe('text()', () => {
     it('returns a bindable with the text template', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const bindable = session.text`<div>Hello, ${'World'}!</div>`;
 
       expect(bindable.type).toBeInstanceOf(MockTemplate);
@@ -194,7 +194,7 @@ describe('RenderSession', () => {
 
   describe('use()', () => {
     it('performs a custom hook function', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const result = 'foo';
       const hook = vi.fn().mockReturnValue(result);
 
@@ -204,7 +204,7 @@ describe('RenderSession', () => {
     });
 
     it('performs a custom hook object', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const result = 'foo';
       const hook = new (class {
         [$customHook]: CustomHookFunction<void>;
@@ -222,26 +222,26 @@ describe('RenderSession', () => {
 
   describe('useCallback()', () => {
     it('returns the memoized callback if dependencies are the same as the previous value', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const callback1 = () => {};
       const callback2 = () => {};
 
       SESSION1: {
         expect(session.useCallback(callback1, ['foo'])).toBe(callback1);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       SESSION2: {
         expect(session.useCallback(callback2, ['foo'])).toBe(callback1);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       SESSION3: {
         expect(session.useCallback(callback2, ['bar'])).toBe(callback2);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
     });
   });
@@ -250,27 +250,28 @@ describe('RenderSession', () => {
     ['useEffect', 'enqueuePassiveEffect'],
     ['useLayoutEffect', 'enqueueLayoutEffect'],
     ['useInsertionEffect', 'enqueueMutationEffect'],
-  ] as const)('useEffect()', (hookMethod, enqueueMethod) => {
+  ] as const)('useEffect()', (hookMethod, key) => {
     it('performs the cleanup function when the callback is changed', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       const cleanup = vi.fn();
       const callback = vi.fn().mockReturnValue(cleanup);
-      const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
+      const enqueueEffectSpy = vi.spyOn(session['_context'], key);
 
       SESSION1: {
         session[hookMethod](callback);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(cleanup).toHaveBeenCalledTimes(0);
+        expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
       }
 
       SESSION2: {
         session[hookMethod](callback);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(callback).toHaveBeenCalledTimes(2);
         expect(cleanup).toHaveBeenCalledTimes(1);
@@ -279,43 +280,40 @@ describe('RenderSession', () => {
     });
 
     it('does not perform the callback function if dependencies are not changed', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       const callback = vi.fn();
-      const enqueueEffectSpy = vi.spyOn(session['_context'], enqueueMethod);
+      const enqueueEffectSpy = vi.spyOn(session['_context'], key);
 
       SESSION1: {
         session[hookMethod](callback, ['foo']);
 
-        flushSession(session);
+        flushRenderSession(session);
 
-        expect(callback).toHaveBeenCalledTimes(1);
         expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
       }
 
       SESSION2: {
         session[hookMethod](callback, ['foo']);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
       }
 
       SESSION3: {
         session[hookMethod](callback, ['bar']);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(callback).toHaveBeenCalledTimes(2);
-        expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
       }
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(() => session[hookMethod](() => {})).toThrow(
         'Unexpected hook type.',
@@ -325,7 +323,7 @@ describe('RenderSession', () => {
 
   describe('useId()', () => {
     it('returns a unique identifier', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       let id1: string;
       let id2: string;
@@ -337,21 +335,21 @@ describe('RenderSession', () => {
         expect(id1).toMatch(/[0-9a-z]+:1/);
         expect(id2).toMatch(/[0-9a-z]+:2/);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       SESSION2: {
         expect(session.useId()).toBe(id1);
         expect(session.useId()).toBe(id2);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(() => session.useId()).toThrow('Unexpected hook type.');
     });
@@ -359,33 +357,33 @@ describe('RenderSession', () => {
 
   describe('useMemo()', () => {
     it('returns the memoized value if dependencies are the same as the previous value', () => {
-      const session = createSession();
+      const session = createRenderSession();
       const value1 = 'foo';
       const value2 = 'bar';
 
       SESSION1: {
         expect(session.useMemo(() => value1, ['foo'])).toBe(value1);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       SESSION2: {
         expect(session.useMemo(() => value2, ['foo'])).toBe(value1);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       SESSION3: {
         expect(session.useMemo(() => value2, ['bar'])).toBe(value2);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(() => session.useMemo(() => null, [])).toThrow(
         'Unexpected hook type.',
@@ -395,7 +393,7 @@ describe('RenderSession', () => {
 
   describe('useReducer()', () => {
     it('schedules the update when the state is changed', async () => {
-      const session = createSession();
+      const session = createRenderSession();
       const reducer = (count: number, n: number) => count + n;
 
       SESSION1: {
@@ -405,7 +403,7 @@ describe('RenderSession', () => {
           increment(1);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(0);
       }
@@ -420,7 +418,7 @@ describe('RenderSession', () => {
           increment(1);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(1);
       }
@@ -430,7 +428,7 @@ describe('RenderSession', () => {
     });
 
     it('should skip the update if the state does not changed', async () => {
-      const session = createSession();
+      const session = createRenderSession();
       const reducer = (count: number, n: number) => count + n;
 
       SESSION1: {
@@ -440,7 +438,7 @@ describe('RenderSession', () => {
           increment(0);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(0);
       }
@@ -450,20 +448,20 @@ describe('RenderSession', () => {
     });
 
     it('returns the initial state by the function', async () => {
-      const session = createSession();
+      const session = createRenderSession();
       const reducer = (count: number, n: number) => count + n;
 
       const [count] = session.useReducer(reducer, () => 0);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(count).toBe(0);
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(() =>
         session.useReducer<number, number>((count, n) => count + n, 0),
@@ -473,7 +471,7 @@ describe('RenderSession', () => {
 
   describe('useRef()', () => {
     it('returns a memoized ref object', () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       let ref: RefObject<string>;
 
@@ -482,20 +480,20 @@ describe('RenderSession', () => {
 
         expect(ref).toStrictEqual({ current: 'foo' });
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       SESSION2: {
         expect(session.useRef('bar')).toBe(ref);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
     });
   });
 
   describe('useState()', () => {
     it('schedules the update when the state is changed', async () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       SESSION1: {
         const [count, setCount] = session.useState(0);
@@ -504,7 +502,7 @@ describe('RenderSession', () => {
           setCount(1);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(0);
       }
@@ -519,7 +517,7 @@ describe('RenderSession', () => {
           setCount(1);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(1);
       }
@@ -529,7 +527,7 @@ describe('RenderSession', () => {
     });
 
     it('should skip the update if the state does not changed', async () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       SESSION1: {
         const [count, setCount] = session.useState(0);
@@ -538,7 +536,7 @@ describe('RenderSession', () => {
           setCount(0);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(0);
       }
@@ -548,7 +546,7 @@ describe('RenderSession', () => {
     });
 
     it('sets a new state from the old one', async () => {
-      const session = createSession();
+      const session = createRenderSession();
 
       SESSION1: {
         const [count, setCount] = session.useState(() => 0);
@@ -559,7 +557,7 @@ describe('RenderSession', () => {
           setCount((count) => count + 1);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(0);
       }
@@ -575,7 +573,7 @@ describe('RenderSession', () => {
           setCount((count) => count + 1);
         }, []);
 
-        flushSession(session);
+        flushRenderSession(session);
 
         expect(count).toBe(1);
       }
@@ -585,7 +583,7 @@ describe('RenderSession', () => {
     });
 
     it('should not return the pending state', async () => {
-      const session = createSession(Lanes.UserBlockingLane);
+      const session = createRenderSession(Lanes.UserBlockingLane);
 
       SESSION1: {
         const [count, setCount, isPending] = session.useState(() => 0);
@@ -597,7 +595,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
         expect(isPending).toBe(false);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       expect(session.isUpdatePending()).toBe(true);
@@ -613,7 +611,7 @@ describe('RenderSession', () => {
         expect(count).toBe(0);
         expect(isPending).toBe(true);
 
-        flushSession(session);
+        flushRenderSession(session);
       }
 
       expect(session.isUpdatePending()).toBe(false);

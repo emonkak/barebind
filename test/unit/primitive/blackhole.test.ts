@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
-import { Runtime } from '@/runtime.js';
-import { MockBackend } from '../../mocks.js';
+import { createUpdateSession } from '../../session-utils.js';
 
 describe('BlackholePrimitive', () => {
   describe('name', () => {
@@ -19,8 +18,8 @@ describe('BlackholePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
+      const session = createUpdateSession();
+      const binding = BlackholePrimitive.resolveBinding(value, part, session);
 
       expect(binding.type).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);
@@ -53,10 +52,12 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
+      }
     });
   });
 
@@ -68,10 +69,12 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION: {
+        binding.disconnect(session);
+        binding.rollback(session);
+      }
     });
   });
 });

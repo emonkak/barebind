@@ -70,7 +70,7 @@ export class MockBinding<T> implements Binding<T> {
     this.value = value;
   }
 
-  hydrate(_targetTree: HydrationTree, _context: UpdateContext): void {
+  hydrate(_target: HydrationTree, _context: UpdateContext): void {
     this.isConnected = true;
   }
 
@@ -154,11 +154,11 @@ export class MockBinding<T> implements Binding<T> {
 export class MockCoroutine implements Coroutine {
   pendingLanes: Lanes = Lanes.NoLanes;
 
-  resume(_flushLanes: Lanes, _context: UpdateContext): void {
+  resume(_lanes: Lanes, _context: UpdateContext): void {
     this.pendingLanes = Lanes.NoLanes;
   }
 
-  suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
+  suspend(scheduleLanes: Lanes): void {
     this.pendingLanes |= scheduleLanes;
   }
 }
@@ -309,8 +309,8 @@ export class MockSlot<T> implements Slot<T> {
     return dirty;
   }
 
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
-    this.binding.hydrate(targetTree, context);
+  hydrate(target: HydrationTree, context: UpdateContext): void {
+    this.binding.hydrate(target, context);
     this.isConnected = true;
   }
 
@@ -375,7 +375,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
-    _targetTree: HydrationTree,
+    _target: HydrationTree,
     _context: UpdateContext,
   ): TemplateResult {
     return {

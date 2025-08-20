@@ -62,8 +62,8 @@ export class StrictSlot<T> implements Slot<T> {
     return this._dirty;
   }
 
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
-    this._binding.hydrate(targetTree, context);
+  hydrate(target: HydrationTree, context: UpdateContext): void {
+    this._binding.hydrate(target, context);
     this._dirty = true;
   }
 

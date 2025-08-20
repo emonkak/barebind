@@ -144,7 +144,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: HydrationTree,
+    target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
     const document = part.node.ownerDocument;
@@ -180,8 +180,8 @@ export class TaggedTemplate<
               type: hole.type,
               node: treatNodeType(
                 Node.ELEMENT_NODE,
-                continuous ? targetTree.currentNode : targetTree.nextNode(),
-                targetTree,
+                continuous ? target.currentNode : target.nextNode(),
+                target,
               ),
               name: hole.name,
             };
@@ -191,7 +191,7 @@ export class TaggedTemplate<
               type: hole.type,
               node: document.createComment(''),
               anchorNode: null,
-              namespaceURI: getNamespaceURI(targetTree.currentNode, this._mode),
+              namespaceURI: getNamespaceURI(target.currentNode, this._mode),
             };
             break;
           case PartType.Element:
@@ -199,8 +199,8 @@ export class TaggedTemplate<
               type: hole.type,
               node: treatNodeType(
                 Node.ELEMENT_NODE,
-                continuous ? targetTree.currentNode : targetTree.nextNode(),
-                targetTree,
+                continuous ? target.currentNode : target.nextNode(),
+                target,
               ),
             };
             break;
@@ -208,8 +208,8 @@ export class TaggedTemplate<
           case PartType.Property: {
             const node = treatNodeType(
               Node.ELEMENT_NODE,
-              continuous ? targetTree.currentNode : targetTree.nextNode(),
-              targetTree,
+              continuous ? target.currentNode : target.nextNode(),
+              target,
             );
             currentPart = {
               type: hole.type,
@@ -222,7 +222,7 @@ export class TaggedTemplate<
           case PartType.Text:
             currentPart = {
               type: hole.type,
-              node: splitText(targetTree),
+              node: splitText(target),
               precedingText: hole.precedingText,
               followingText: hole.followingText,
             };
@@ -230,7 +230,7 @@ export class TaggedTemplate<
         }
 
         const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
-        slot.hydrate(targetTree, context);
+        slot.hydrate(target, context);
 
         slots[holeIndex] = slot;
         lastPartIndex = hole.index;
@@ -240,16 +240,16 @@ export class TaggedTemplate<
 
       if (currentPart !== null) {
         if (currentPart.type === PartType.ChildNode) {
-          replaceMarkerNode(targetTree, currentPart.node);
+          replaceMarkerNode(target, currentPart.node);
           targetNode = currentPart.node;
         } else {
-          targetNode = targetTree.currentNode;
+          targetNode = target.currentNode;
         }
       } else {
         targetNode = treatNodeName(
           sourceNode.nodeName,
-          targetTree.nextNode(),
-          targetTree,
+          target.nextNode(),
+          target,
         );
       }
 

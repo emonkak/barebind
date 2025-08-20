@@ -7,9 +7,9 @@ import {
 import { CurrentHistory } from '@/extras/router/history.js';
 import type { RenderSession } from '@/render-session.js';
 import {
-  createSession,
-  disposeSession,
-  flushSession,
+  createRenderSession,
+  disposeRenderSession,
+  flushRenderSession,
 } from '../../../session-utils.js';
 import { createElement } from '../../../test-utils.js';
 
@@ -19,11 +19,11 @@ describe('BrowserHistory', () => {
   let session!: RenderSession;
 
   beforeEach(() => {
-    session = createSession();
+    session = createRenderSession();
   });
 
   afterEach(() => {
-    disposeSession(session);
+    disposeRenderSession(session);
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -52,13 +52,13 @@ describe('BrowserHistory', () => {
 
       const [location1, navigator1] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigator1.navigate('/articles/456');
 
       const [location2, navigator2] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(pushStateSpy).toHaveBeenCalledOnce();
       expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe('BrowserHistory', () => {
 
       const [location1, navigator1] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigator1.navigate('/foo/bar', {
         replace: true,
@@ -87,7 +87,7 @@ describe('BrowserHistory', () => {
 
       const [location2, navigator2] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(pushStateSpy).not.toHaveBeenCalled();
       expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -104,7 +104,7 @@ describe('BrowserHistory', () => {
 
       const [_location, navigator] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigator.navigate('/articles/foo%2Fbar');
 
@@ -133,8 +133,8 @@ describe('BrowserHistory', () => {
     session.setContextValue(CurrentHistory, [location, navigator]);
     session.use(BrowserHistory);
 
-    flushSession(session);
-    disposeSession(session);
+    flushRenderSession(session);
+    disposeRenderSession(session);
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -181,8 +181,8 @@ describe('BrowserHistory', () => {
       session.setContextValue(CurrentHistory, [location, navigator]);
       session.use(BrowserHistory);
 
-      flushSession(session);
-      disposeSession(session);
+      flushRenderSession(session);
+      disposeRenderSession(session);
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -220,7 +220,7 @@ describe('BrowserHistory', () => {
 
     const [location1] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     document.body.appendChild(element);
     element.click();
@@ -228,7 +228,7 @@ describe('BrowserHistory', () => {
 
     const [location2] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -243,7 +243,7 @@ describe('BrowserHistory', () => {
 
     const [location1] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     document.body.appendChild(element);
     element.dispatchEvent(
@@ -256,7 +256,7 @@ describe('BrowserHistory', () => {
 
     const [location2] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -270,7 +270,7 @@ describe('BrowserHistory', () => {
 
       const [location1] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       navigation!.dispatchEvent(
         Object.assign(new Event('navigate'), {
@@ -287,7 +287,7 @@ describe('BrowserHistory', () => {
 
       const [location2] = session.use(BrowserHistory);
 
-      flushSession(session);
+      flushRenderSession(session);
 
       expect(location2).not.toBe(location1);
       expect(location2.url.toString()).toBe('/foo/bar');
@@ -303,7 +303,7 @@ describe('BrowserHistory', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     history.replaceState(state, '', '/foo/bar');
     dispatchEvent(
@@ -314,7 +314,7 @@ describe('BrowserHistory', () => {
 
     const [location2] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -329,14 +329,14 @@ describe('BrowserHistory', () => {
 
     const [location1] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
     const [location2] = session.use(BrowserHistory);
 
-    flushSession(session);
+    flushRenderSession(session);
 
     expect(location1).toBe(location2);
   });

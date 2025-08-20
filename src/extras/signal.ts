@@ -103,14 +103,14 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._pendingLanes |= scheduleLanes;
   }
 
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, context: UpdateContext): void {
     if (this._subscription !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
       );
     }
 
-    this._slot.hydrate(targetTree, context);
+    this._slot.hydrate(target, context);
     this._subscription = this._subscribeSignal(context);
   }
 

@@ -75,7 +75,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     this._props = props;
   }
 
-  hydrate(targetTree: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, context: UpdateContext): void {
     if (this._memoizedSlots !== null || this._pendingSlots.size > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
@@ -91,7 +91,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
       }
       const part = resolveNamedPart(key, this._part.node);
       const slot = context.resolveSlot(value, part);
-      slot.hydrate(targetTree, context);
+      slot.hydrate(target, context);
       slots.set(key, slot);
     }
 

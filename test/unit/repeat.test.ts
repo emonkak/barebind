@@ -9,10 +9,9 @@ import {
   RepeatDirective,
   type RepeatProps,
 } from '@/repeat.js';
-import { Runtime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { MockBackend } from '../mocks.js';
+import { createUpdateSession } from '../session-utils.js';
 import { allCombinations, createElement, permutations } from '../test-utils.js';
 
 const TEXT_TEMPLATE = new TextTemplate<string>();
@@ -49,8 +48,8 @@ describe('RepeatDirective', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const runtime = Runtime.create(new MockBackend());
-      const binding = RepeatDirective.resolveBinding(props, part, runtime);
+      const session = createUpdateSession();
+      const binding = RepeatDirective.resolveBinding(props, part, session);
 
       expect(binding.type).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
@@ -63,10 +62,10 @@ describe('RepeatDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
       expect(() =>
-        RepeatDirective.resolveBinding(props, part, runtime),
+        RepeatDirective.resolveBinding(props, part, session),
       ).toThrow('RepeatDirective must be used in a child part,');
     });
   });
@@ -97,14 +96,16 @@ describe('RepeatBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new RepeatBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(binding.shouldBind(props1)).toBe(false);
-      expect(binding.shouldBind({ ...props1 })).toBe(false);
-      expect(binding.shouldBind(props2)).toBe(true);
+        expect(binding.shouldBind(props1)).toBe(false);
+        expect(binding.shouldBind({ ...props1 })).toBe(false);
+        expect(binding.shouldBind(props2)).toBe(true);
+      }
     });
   });
 
@@ -134,9 +135,9 @@ describe('RepeatBinding', () => {
       );
       const tree = createHydrationTree(container);
       const binding = new RepeatBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.hydrate(tree, runtime);
+      binding.hydrate(tree, session);
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
@@ -144,7 +145,7 @@ describe('RepeatBinding', () => {
           EMPTY_COMMENT,
       );
 
-      binding.commit(runtime);
+      binding.commit(session);
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
@@ -178,13 +179,13 @@ describe('RepeatBinding', () => {
       );
       const tree = createHydrationTree(container);
       const binding = new RepeatBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      binding.connect(session);
+      binding.commit(session);
 
       expect(() => {
-        binding.hydrate(tree, runtime);
+        binding.hydrate(tree, session);
       }).toThrow(HydrationError);
     });
   });
@@ -218,26 +219,30 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = Runtime.create(new MockBackend());
+          const session = createUpdateSession();
 
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION1: {
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
-              '<!---->',
-          );
-          expect(part.anchorNode?.nodeValue).toBe(combinations1[0]?.value);
+            expect(container.innerHTML).toBe(
+              combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
+                '<!---->',
+            );
+            expect(part.anchorNode?.nodeValue).toBe(combinations1[0]?.value);
+          }
 
-          binding.bind(props2);
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION2: {
+            binding.bind(props2);
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(combinations2[0]?.value);
+            expect(container.innerHTML).toBe(
+              combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(combinations2[0]?.value);
+          }
         }
       }
     });
@@ -276,36 +281,42 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = Runtime.create(new MockBackend());
+          const session = createUpdateSession();
 
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION1: {
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(container.innerHTML).toBe(
+              permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+          }
 
-          binding.bind(props2);
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION2: {
+            binding.bind(props2);
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(permutation2[0]?.value);
+            expect(container.innerHTML).toBe(
+              permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(permutation2[0]?.value);
+          }
 
-          binding.bind(props1);
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION3: {
+            binding.bind(props1);
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(container.innerHTML).toBe(
+              permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+          }
         }
       }
     });
@@ -342,36 +353,42 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const runtime = Runtime.create(new MockBackend());
+          const session = createUpdateSession();
 
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION1: {
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            permutation1.map(({ value }) => `<!--${value}-->`).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(container.innerHTML).toBe(
+              permutation1.map(({ value }) => `<!--${value}-->`).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+          }
 
-          binding.bind(props2);
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION2: {
+            binding.bind(props2);
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            permutation2.map(({ value }) => `<!--${value}-->`).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(permutation2[0]?.value);
+            expect(container.innerHTML).toBe(
+              permutation2.map(({ value }) => `<!--${value}-->`).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(permutation2[0]?.value);
+          }
 
-          binding.bind(props1);
-          binding.connect(runtime);
-          binding.commit(runtime);
+          SESSION3: {
+            binding.bind(props1);
+            binding.connect(session);
+            binding.commit(session);
 
-          expect(container.innerHTML).toBe(
-            permutation1.map(({ value }) => `<!--${value}-->`).join('') +
-              EMPTY_COMMENT,
-          );
-          expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+            expect(container.innerHTML).toBe(
+              permutation1.map(({ value }) => `<!--${value}-->`).join('') +
+                EMPTY_COMMENT,
+            );
+            expect(part.anchorNode?.nodeValue).toBe(permutation1[0]?.value);
+          }
         }
       }
     });
@@ -401,33 +418,39 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(container.innerHTML).toBe(
-        source1.map(toCommentString).join('') + EMPTY_COMMENT,
-      );
-      expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+        expect(container.innerHTML).toBe(
+          source1.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+      }
 
-      binding.bind(props2);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION2: {
+        binding.bind(props2);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(container.innerHTML).toBe(
-        source2.map(toCommentString).join('') + EMPTY_COMMENT,
-      );
-      expect(part.anchorNode?.nodeValue).toBe(source2[0]);
+        expect(container.innerHTML).toBe(
+          source2.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+        expect(part.anchorNode?.nodeValue).toBe(source2[0]);
+      }
 
-      binding.bind(props1);
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.bind(props1);
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(container.innerHTML).toBe(
-        source1.map(toCommentString).join('') + EMPTY_COMMENT,
-      );
-      expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+        expect(container.innerHTML).toBe(
+          source1.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+        expect(part.anchorNode?.nodeValue).toBe(source1[0]);
+      }
     });
   });
 
@@ -445,26 +468,32 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
-      const runtime = Runtime.create(new MockBackend());
+      const session = createUpdateSession();
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION1: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(container.innerHTML).toBe(
-        source.map(toCommentString).join('') + EMPTY_COMMENT,
-      );
+        expect(container.innerHTML).toBe(
+          source.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+      }
 
-      binding.disconnect(runtime);
-      binding.rollback(runtime);
+      SESSION2: {
+        binding.disconnect(session);
+        binding.rollback(session);
 
-      expect(container.innerHTML).toBe(EMPTY_COMMENT);
+        expect(container.innerHTML).toBe(EMPTY_COMMENT);
+      }
 
-      binding.connect(runtime);
-      binding.commit(runtime);
+      SESSION3: {
+        binding.connect(session);
+        binding.commit(session);
 
-      expect(container.innerHTML).toBe(
-        source.map(toCommentString).join('') + EMPTY_COMMENT,
-      );
+        expect(container.innerHTML).toBe(
+          source.map(toCommentString).join('') + EMPTY_COMMENT,
+        );
+      }
     });
   });
 });
