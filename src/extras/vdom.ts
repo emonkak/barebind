@@ -6,7 +6,6 @@ import {
   $toDirective,
   type Bindable,
   type Binding,
-  type CommitContext,
   type Component,
   type Directive,
   type DirectiveContext,
@@ -257,7 +256,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   disconnect(_context: UpdateContext): void {}
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const newProps = this._pendingProps;
     const oldProps = this._memoizedProps ?? ({} as ElementProps);
     const element = this._part.node;
@@ -284,7 +283,7 @@ export class ElementBinding implements Binding<ElementProps> {
     this._memoizedProps = newProps;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     const props = this._memoizedProps;
     const element = this._part.node;
 

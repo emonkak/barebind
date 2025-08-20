@@ -1,4 +1,4 @@
-import type { CommitContext, Effect, Slot } from '../internal.js';
+import type { Effect, Slot } from '../internal.js';
 
 export class MountSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
@@ -10,9 +10,9 @@ export class MountSlot<T> implements Effect {
     this._container = container;
   }
 
-  commit(context: CommitContext): void {
+  commit(): void {
     this._container.appendChild(this._slot.part.node);
-    this._slot.commit(context);
+    this._slot.commit();
   }
 }
 
@@ -26,8 +26,8 @@ export class UnmountSlot<T> implements Effect {
     this._container = container;
   }
 
-  commit(context: CommitContext): void {
-    this._slot.rollback(context);
+  commit(): void {
+    this._slot.rollback();
     this._container.removeChild(this._slot.part.node);
   }
 }

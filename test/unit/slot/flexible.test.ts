@@ -38,41 +38,71 @@ describe('FlexibleSlot', () => {
 
   describe('reconcile()', () => {
     it('updates the binding with a same directive value', () => {
-      const value1 = new DirectiveSpecifier(new MockDirective(), 'foo');
-      const value2 = new DirectiveSpecifier(new MockDirective(), 'bar');
+      const value1 = 'foo';
+      const value2 = 'bar';
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new MockBinding(value1.type, value1.value, part);
+      const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new FlexibleSlot(binding);
       const session = createUpdateSession();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
+      const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(session, 'debugValue');
+      const rollbackSpy = vi.spyOn(binding, 'rollback');
 
-      slot.reconcile(value2, session);
-      slot.commit(session);
+      SESSION1: {
+        slot.connect(session);
+        slot.commit();
 
-      expect(shouldBindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).toHaveBeenCalledWith(value2.value);
-      expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(session);
-      expect(commitSpy).toHaveBeenCalledOnce();
-      expect(commitSpy).toHaveBeenCalledWith(session);
-      expect(debugValueSpy).toHaveBeenCalledOnce();
-      expect(debugValueSpy).toHaveBeenCalledWith(
-        value2.type,
-        value2.value,
-        part,
-      );
-      expect(part.node.data).toBe(value2.value);
+        expect(shouldBindSpy).toHaveBeenCalledTimes(0);
+        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(connectSpy).toHaveBeenCalledTimes(1);
+        expect(connectSpy).toHaveBeenCalledWith(session);
+        expect(disconnectSpy).toHaveBeenCalledTimes(0);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(rollbackSpy).toHaveBeenCalledTimes(0);
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
+      }
+
+      SESSION2: {
+        const dirty = slot.reconcile(value2, session);
+        slot.commit();
+        slot.commit(); // ignore the second commit
+
+        expect(shouldBindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledWith(value2);
+        expect(connectSpy).toHaveBeenCalledTimes(2);
+        expect(connectSpy).toHaveBeenCalledWith(session);
+        expect(disconnectSpy).toHaveBeenCalledTimes(0);
+        expect(commitSpy).toHaveBeenCalledTimes(2);
+        expect(rollbackSpy).toHaveBeenCalledTimes(0);
+        expect(part.node.data).toBe('/MockPrimitive("bar")');
+        expect(dirty).toBe(true);
+      }
+
+      SESSION3: {
+        slot.disconnect(session);
+        slot.rollback();
+        slot.rollback(); // ignore the second rollback
+
+        expect(shouldBindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledWith(value2);
+        expect(connectSpy).toHaveBeenCalledTimes(2);
+        expect(disconnectSpy).toHaveBeenCalledTimes(1);
+        expect(disconnectSpy).toHaveBeenCalledWith(session);
+        expect(commitSpy).toHaveBeenCalledTimes(2);
+        expect(rollbackSpy).toHaveBeenCalledTimes(1);
+        expect(part.node.data).toBe('');
+      }
     });
 
     it('updates the binding with a different directive value', () => {
@@ -93,49 +123,37 @@ describe('FlexibleSlot', () => {
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
       const rollbackSpy = vi.spyOn(binding, 'rollback');
-      const debugValueSpy = vi.spyOn(session, 'debugValue');
-      const undebugValueSpy = vi.spyOn(session, 'undebugValue');
 
-      slot.connect(session);
-      slot.commit(session);
+      SESSION1: {
+        slot.connect(session);
+        slot.commit();
+      }
 
-      slot.reconcile(value2, session);
-      slot.commit(session);
+      SESSION2: {
+        slot.reconcile(value2, session);
+        slot.commit();
+      }
 
-      slot.reconcile(value1, session);
-      slot.commit(session);
+      SESSION3: {
+        slot.reconcile(value1, session);
+        slot.commit();
 
-      expect(bindSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledTimes(2);
-      expect(connectSpy).toHaveBeenCalledWith(session);
-      expect(disconnectSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledWith(session);
-      expect(commitSpy).toHaveBeenCalledTimes(2);
-      expect(commitSpy).toHaveBeenCalledWith(session);
-      expect(rollbackSpy).toHaveBeenCalledOnce();
-      expect(rollbackSpy).toHaveBeenCalledWith(session);
-      expect(debugValueSpy).toHaveBeenCalledTimes(3);
-      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value1, part);
-      expect(debugValueSpy).toHaveBeenCalledWith(
-        value2.type,
-        value2.value,
-        part,
-      );
-      expect(undebugValueSpy).toHaveBeenCalledTimes(2);
-      expect(undebugValueSpy).toHaveBeenCalledWith(MockPrimitive, value1, part);
-      expect(undebugValueSpy).toHaveBeenCalledWith(
-        value2.type,
-        value2.value,
-        part,
-      );
-      expect(slot['_pendingBinding']).toBe(binding);
-      expect(slot['_pendingBinding']).toStrictEqual(
-        expect.objectContaining({
-          isConnected: true,
-          isCommitted: true,
-        }),
-      );
-      expect(part.node.data).toBe(value1);
+        expect(bindSpy).toHaveBeenCalledOnce();
+        expect(connectSpy).toHaveBeenCalledTimes(2);
+        expect(connectSpy).toHaveBeenCalledWith(session);
+        expect(disconnectSpy).toHaveBeenCalledOnce();
+        expect(disconnectSpy).toHaveBeenCalledWith(session);
+        expect(commitSpy).toHaveBeenCalledTimes(2);
+        expect(rollbackSpy).toHaveBeenCalledOnce();
+        expect(slot['_pendingBinding']).toBe(binding);
+        expect(slot['_pendingBinding']).toStrictEqual(
+          expect.objectContaining({
+            isConnected: true,
+            isCommitted: true,
+          }),
+        );
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
+      }
     });
 
     it('updates the binding only if it is dirty', () => {
@@ -150,157 +168,39 @@ describe('FlexibleSlot', () => {
       const slot = new FlexibleSlot(binding);
       const session = createUpdateSession();
 
-      const shouldBindSpy = vi
-        .spyOn(binding, 'shouldBind')
-        .mockReturnValue(false);
+      const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
-      const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(session, 'debugValue');
-
-      expect(slot.reconcile(value, session)).toBe(false);
-      slot.commit(session);
-
-      expect(shouldBindSpy).toHaveBeenCalledOnce();
-      expect(bindSpy).not.toHaveBeenCalled();
-      expect(connectSpy).not.toHaveBeenCalled();
-      expect(commitSpy).not.toHaveBeenCalled();
-      expect(debugValueSpy).not.toHaveBeenCalled();
-      expect(part.node.data).toBe('');
-    });
-  });
-
-  describe('hydrate()', () => {
-    it('makes the binding able to commit', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new FlexibleSlot(binding);
-      const target = createHydrationTree(document.createElement('div'));
-      const session = createUpdateSession();
-
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(session, 'debugValue');
 
-      slot.hydrate(target, session);
-      slot.commit(session);
+      SESSION1: {
+        const target = createHydrationTree(document.createElement('div'));
 
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(target, session);
-      expect(commitSpy).toHaveBeenCalledOnce();
-      expect(commitSpy).toHaveBeenCalledWith(session);
-      expect(debugValueSpy).toHaveBeenCalledOnce();
-      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
+        slot.hydrate(target, session);
+        slot.commit();
 
-      slot.commit(session);
+        expect(shouldBindSpy).toHaveBeenCalledTimes(0);
+        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(connectSpy).toHaveBeenCalledTimes(0);
+        expect(hydrateSpy).toHaveBeenCalledTimes(1);
+        expect(hydrateSpy).toHaveBeenCalledWith(target, session);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
+      }
 
-      expect(commitSpy).toHaveBeenCalledOnce();
-      expect(part.node.data).toBe(value);
-    });
-  });
+      SESSION2: {
+        const dirty = slot.reconcile(value, session);
+        slot.commit();
 
-  describe('connect()', () => {
-    it('makes the binding able to commit', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new FlexibleSlot(binding);
-      const session = createUpdateSession();
-
-      const connectSpy = vi.spyOn(binding, 'connect');
-      const commitSpy = vi.spyOn(binding, 'commit');
-      const debugValueSpy = vi.spyOn(session, 'debugValue');
-
-      slot.connect(session);
-      slot.commit(session);
-
-      expect(connectSpy).toHaveBeenCalledOnce();
-      expect(connectSpy).toHaveBeenCalledWith(session);
-      expect(commitSpy).toHaveBeenCalledOnce();
-      expect(commitSpy).toHaveBeenCalledWith(session);
-      expect(debugValueSpy).toHaveBeenCalledOnce();
-      expect(debugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
-
-      slot.commit(session);
-
-      expect(commitSpy).toHaveBeenCalledOnce();
-      expect(debugValueSpy).toHaveBeenCalledOnce();
-      expect(part.node.data).toBe(value);
-    });
-  });
-
-  describe('disconnect()', () => {
-    it('makes the binding able to rollback', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new FlexibleSlot(binding);
-      const session = createUpdateSession();
-
-      const disconnectSpy = vi.spyOn(binding, 'disconnect');
-      const rollbackSpy = vi.spyOn(binding, 'rollback');
-      const undebugValueSpy = vi.spyOn(session, 'undebugValue');
-
-      slot.connect(session);
-      slot.commit(session);
-
-      slot.disconnect(session);
-      slot.rollback(session);
-
-      expect(disconnectSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledWith(session);
-      expect(rollbackSpy).toHaveBeenCalledOnce();
-      expect(rollbackSpy).toHaveBeenCalledWith(session);
-      expect(undebugValueSpy).toHaveBeenCalledOnce();
-      expect(undebugValueSpy).toHaveBeenCalledWith(MockPrimitive, value, part);
-
-      slot.rollback(session);
-
-      expect(rollbackSpy).toHaveBeenCalledOnce();
-      expect(undebugValueSpy).toHaveBeenCalledOnce();
-      expect(part.node.data).toBe('');
-    });
-
-    it('not make the binding able to rollback if the binding is not committed', () => {
-      const value = 'foo';
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new MockBinding(MockPrimitive, value, part);
-      const slot = new FlexibleSlot(binding);
-      const session = createUpdateSession();
-
-      const disconnectSpy = vi.spyOn(binding, 'disconnect');
-      const rollbackSpy = vi.spyOn(binding, 'rollback');
-      const undebugValueSpy = vi.spyOn(session, 'undebugValue');
-
-      slot.disconnect(session);
-      slot.rollback(session);
-
-      expect(disconnectSpy).toHaveBeenCalledOnce();
-      expect(disconnectSpy).toHaveBeenCalledWith(session);
-      expect(rollbackSpy).not.toHaveBeenCalled();
-      expect(undebugValueSpy).not.toHaveBeenCalled();
-      expect(part.node.data).toBe('');
+        expect(shouldBindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(connectSpy).toHaveBeenCalledTimes(0);
+        expect(hydrateSpy).toHaveBeenCalledTimes(1);
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(part.node.data).toBe('/MockPrimitive("foo")');
+        expect(dirty).toBe(false);
+      }
     });
   });
 });

@@ -2,7 +2,6 @@
 
 import {
   type Backend,
-  type CommitContext,
   CommitPhase,
   type Effect,
   type Part,
@@ -32,14 +31,10 @@ export class ServerBackend implements Backend {
     this._templateFactory = new OptimizedTemplateFactory(document);
   }
 
-  commitEffects(
-    effects: Effect[],
-    phase: CommitPhase,
-    context: CommitContext,
-  ): void {
+  commitEffects(effects: Effect[], phase: CommitPhase): void {
     if (phase === CommitPhase.Mutation) {
       for (let i = 0, l = effects.length; i < l; i++) {
-        effects[i]!.commit(context);
+        effects[i]!.commit();
       }
     }
   }

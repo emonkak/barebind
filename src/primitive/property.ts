@@ -2,7 +2,6 @@ import { formatPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
-  type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
@@ -40,13 +39,13 @@ export class PropertyBinding<T> extends PrimitiveBinding<T, Part.PropertyPart> {
     return !Object.is(value, this._memoizedValue);
   }
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const { node, name } = this._part;
     (node as any)[name] = this._pendingValue;
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     if (this._memoizedValue !== noValue) {
       const { node, name, defaultValue } = this._part;
       (node as any)[name] = defaultValue;

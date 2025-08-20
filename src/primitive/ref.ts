@@ -3,7 +3,6 @@ import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type Cleanup,
-  type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
@@ -64,7 +63,7 @@ export class RefBinding extends PrimitiveBinding<
     return ref !== this._memoizedValue;
   }
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const newRef = this._pendingValue;
     const oldRef = this._memoizedValue;
 
@@ -90,7 +89,7 @@ export class RefBinding extends PrimitiveBinding<
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     const ref = this._memoizedValue;
 
     if (ref != null) {

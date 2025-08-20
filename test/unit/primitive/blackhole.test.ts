@@ -56,7 +56,7 @@ describe('BlackholeBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
       }
     });
   });
@@ -73,7 +73,7 @@ describe('BlackholeBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
       }
     });
   });

@@ -1,10 +1,9 @@
-import { formatPart } from '../debug/part.js';
+import { debugPart, formatPart, undebugPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
-  type CommitContext,
   type DirectiveType,
   type HydrationTree,
   type Part,
@@ -77,37 +76,29 @@ export class StrictSlot<T> implements Slot<T> {
     this._dirty = true;
   }
 
-  commit(context: CommitContext): void {
+  commit(): void {
     if (!this._dirty) {
       return;
     }
 
     DEBUG: {
-      context.debugValue(
-        this._binding.type,
-        this._binding.value,
-        this._binding.part,
-      );
+      debugPart(this._binding.part, this._binding.type, this._binding.value);
     }
 
-    this._binding.commit(context);
+    this._binding.commit();
 
     this._dirty = false;
   }
 
-  rollback(context: CommitContext): void {
+  rollback(): void {
     if (!this._dirty) {
       return;
     }
 
-    this._binding.rollback(context);
+    this._binding.rollback();
 
     DEBUG: {
-      context.undebugValue(
-        this._binding.type,
-        this._binding.value,
-        this._binding.part,
-      );
+      undebugPart(this._binding.part, this._binding.type);
     }
 
     this._dirty = false;

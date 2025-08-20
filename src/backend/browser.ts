@@ -2,7 +2,6 @@
 
 import {
   type Backend,
-  type CommitContext,
   type CommitPhase,
   type Effect,
   type Part,
@@ -34,13 +33,9 @@ export class BrowserBackend implements Backend {
     this._templateFactory = new OptimizedTemplateFactory(document);
   }
 
-  commitEffects(
-    effects: Effect[],
-    _phase: CommitPhase,
-    context: CommitContext,
-  ): void {
+  commitEffects(effects: Effect[], _phase: CommitPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(context);
+      effects[i]!.commit();
     }
   }
 

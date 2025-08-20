@@ -2,7 +2,6 @@ import { formatPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
-  type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
@@ -36,7 +35,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
     return true;
   }
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const value = this._pendingValue;
     const { node, name } = this._part;
     const currentValue = node[name as keyof Element];
@@ -46,7 +45,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
     }
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     const { node, name, defaultValue } = this._part;
     (node as any)[name] = defaultValue;
   }

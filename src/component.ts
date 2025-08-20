@@ -2,7 +2,6 @@ import { DirectiveSpecifier } from './directive.js';
 import {
   type Bindable,
   type Binding,
-  type CommitContext,
   type Component,
   type Coroutine,
   createScope,
@@ -191,12 +190,12 @@ export class ComponentBinding<TProps, TResult>
     this._hooks = [];
   }
 
-  commit(context: CommitContext): void {
-    this._slot?.commit(context);
+  commit(): void {
+    this._slot?.commit();
   }
 
-  rollback(context: CommitContext): void {
-    this._slot?.rollback(context);
+  rollback(): void {
+    this._slot?.rollback();
   }
 }
 

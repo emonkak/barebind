@@ -8,11 +8,7 @@ export const $customHook: unique symbol = Symbol('$customHook');
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
 export interface Backend {
-  commitEffects(
-    effects: Effect[],
-    phase: CommitPhase,
-    context: CommitContext,
-  ): void;
+  commitEffects(effects: Effect[], phase: CommitPhase): void;
   getCurrentPriority(): TaskPriority;
   getTemplateFactory(): TemplateFactory;
   requestCallback(
@@ -57,11 +53,6 @@ export const BoundaryType = {
 export type BoundaryType = (typeof BoundaryType)[keyof typeof BoundaryType];
 
 export type Cleanup = () => void;
-
-export interface CommitContext {
-  debugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void;
-  undebugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void;
-}
 
 export const CommitPhase = {
   Mutation: 0,
@@ -108,7 +99,7 @@ export interface DirectiveType<T> {
 }
 
 export interface Effect {
-  commit(context: CommitContext): void;
+  commit(): void;
 }
 
 export type HydrationTree = TreeWalker;
@@ -366,7 +357,7 @@ export interface RequestCallbackOptions {
 }
 
 export interface ReversibleEffect extends Effect {
-  rollback(context: CommitContext): void;
+  rollback(): void;
 }
 
 export interface Scope {

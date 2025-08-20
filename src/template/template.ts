@@ -3,7 +3,6 @@ import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type Binding,
-  type CommitContext,
   type DirectiveContext,
   type Effect,
   getStartNode,
@@ -154,7 +153,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     }
   }
 
-  commit(context: CommitContext): void {
+  commit(): void {
     if (this._pendingResult !== null) {
       const { childNodes, slots } = this._pendingResult;
 
@@ -163,7 +162,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.commit(context);
+        slots[i]!.commit();
       }
 
       this._part.anchorNode = getAnchorNode(this._pendingResult);
@@ -172,7 +171,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     this._memoizedResult = this._pendingResult;
   }
 
-  rollback(context: CommitContext): void {
+  rollback(): void {
     if (this._memoizedResult !== null) {
       const { childNodes, slots } = this._memoizedResult;
 
@@ -185,7 +184,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
           childNodes.includes(slot.part.node)
         ) {
           // This binding is mounted as a child of the root, so we must rollback it.
-          slot.rollback(context);
+          slot.rollback();
         }
       }
 

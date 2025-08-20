@@ -100,7 +100,7 @@ describe('RepeatBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(props1)).toBe(false);
         expect(binding.shouldBind({ ...props1 })).toBe(false);
@@ -145,7 +145,7 @@ describe('RepeatBinding', () => {
           EMPTY_COMMENT,
       );
 
-      binding.commit(session);
+      binding.commit();
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
@@ -182,7 +182,7 @@ describe('RepeatBinding', () => {
       const session = createUpdateSession();
 
       binding.connect(session);
-      binding.commit(session);
+      binding.commit();
 
       expect(() => {
         binding.hydrate(tree, session);
@@ -223,7 +223,7 @@ describe('RepeatBinding', () => {
 
           SESSION1: {
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -235,7 +235,7 @@ describe('RepeatBinding', () => {
           SESSION2: {
             binding.bind(props2);
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -285,7 +285,7 @@ describe('RepeatBinding', () => {
 
           SESSION1: {
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -297,7 +297,7 @@ describe('RepeatBinding', () => {
           SESSION2: {
             binding.bind(props2);
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -309,7 +309,7 @@ describe('RepeatBinding', () => {
           SESSION3: {
             binding.bind(props1);
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -357,7 +357,7 @@ describe('RepeatBinding', () => {
 
           SESSION1: {
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => `<!--${value}-->`).join('') +
@@ -369,7 +369,7 @@ describe('RepeatBinding', () => {
           SESSION2: {
             binding.bind(props2);
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               permutation2.map(({ value }) => `<!--${value}-->`).join('') +
@@ -381,7 +381,7 @@ describe('RepeatBinding', () => {
           SESSION3: {
             binding.bind(props1);
             binding.connect(session);
-            binding.commit(session);
+            binding.commit();
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => `<!--${value}-->`).join('') +
@@ -422,7 +422,7 @@ describe('RepeatBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -433,7 +433,7 @@ describe('RepeatBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(container.innerHTML).toBe(
           source2.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -444,7 +444,7 @@ describe('RepeatBinding', () => {
       SESSION3: {
         binding.bind(props1);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -472,7 +472,7 @@ describe('RepeatBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(container.innerHTML).toBe(
           source.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -481,14 +481,14 @@ describe('RepeatBinding', () => {
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(container.innerHTML).toBe(EMPTY_COMMENT);
       }
 
       SESSION3: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(container.innerHTML).toBe(
           source.map(toCommentString).join('') + EMPTY_COMMENT,

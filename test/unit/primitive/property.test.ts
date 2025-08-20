@@ -72,7 +72,7 @@ describe('PropertyBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -95,7 +95,7 @@ describe('PropertyBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.innerHTML).toBe(value1);
       }
@@ -103,7 +103,7 @@ describe('PropertyBinding', () => {
       SESSION2: {
         binding.bind(value2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.innerHTML).toBe(value2);
       }
@@ -124,14 +124,14 @@ describe('PropertyBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.innerHTML).toBe(value);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.innerHTML).toBe('');
       }
@@ -152,7 +152,7 @@ describe('PropertyBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(setInnerHTMLSpy).not.toHaveBeenCalled();
       }

@@ -109,7 +109,7 @@ describe('ClassBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(classes)).toBe(false);
         expect(binding.shouldBind(structuredClone(classes))).toBe(false);
@@ -135,7 +135,7 @@ describe('ClassBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(classes)).toBe(false);
         expect(binding.shouldBind(structuredClone(classes))).toBe(false);
@@ -174,7 +174,7 @@ describe('ClassBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
@@ -182,7 +182,7 @@ describe('ClassBinding', () => {
       SESSION2: {
         binding.bind(classes2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo quux');
       }
@@ -190,7 +190,7 @@ describe('ClassBinding', () => {
       SESSION3: {
         binding.bind(classes1);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
@@ -209,7 +209,7 @@ describe('ClassBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
@@ -217,7 +217,7 @@ describe('ClassBinding', () => {
       SESSION2: {
         binding.bind(classes2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo quux');
       }
@@ -225,7 +225,7 @@ describe('ClassBinding', () => {
       SESSION3: {
         binding.bind(classes1);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
@@ -244,7 +244,7 @@ describe('ClassBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo bar');
       }
@@ -252,7 +252,7 @@ describe('ClassBinding', () => {
       SESSION2: {
         binding.bind(classes2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('bar');
       }
@@ -260,7 +260,7 @@ describe('ClassBinding', () => {
       SESSION3: {
         binding.bind(classes1);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo');
       }
@@ -278,7 +278,7 @@ describe('ClassBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('baz foo bar');
       }
@@ -298,14 +298,14 @@ describe('ClassBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute('class')).toBe('foo bar');
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.getAttribute('class')).toBe('');
       }

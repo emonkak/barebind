@@ -212,7 +212,7 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -337,7 +337,7 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
         session.flushSync(Lanes.NoLanes);
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);

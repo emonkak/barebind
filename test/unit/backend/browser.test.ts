@@ -16,7 +16,6 @@ import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { OptimizedTemplateFactory } from '@/template-factory.js';
-import { MockCommitContext } from '../../mocks.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -57,13 +56,11 @@ describe('BrowserBackend', () => {
         },
       ];
       const backend = new BrowserBackend();
-      const context = new MockCommitContext();
 
-      backend.commitEffects(effects, phase, context);
+      backend.commitEffects(effects, phase);
 
       for (const effect of effects) {
         expect(effect.commit).toHaveBeenCalledOnce();
-        expect(effect.commit).toHaveBeenCalledWith(context);
       }
     });
   });

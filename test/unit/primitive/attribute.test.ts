@@ -69,7 +69,7 @@ describe('AttributeBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -92,7 +92,7 @@ describe('AttributeBinding', () => {
 
         SESSION1: {
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(part.node.getAttribute(part.name)).toBe(value);
         }
@@ -100,7 +100,7 @@ describe('AttributeBinding', () => {
         SESSION2: {
           binding.bind(value2);
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(part.node.getAttribute(part.name)).toBe(null);
         }
@@ -131,7 +131,7 @@ describe('AttributeBinding', () => {
 
         SESSION: {
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(part.node.getAttribute(part.name)).toBe(expectedValue);
         }
@@ -154,7 +154,7 @@ describe('AttributeBinding', () => {
 
         SESSION: {
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(part.node.getAttribute(part.name)).toBe(expectedValue);
         }
@@ -175,14 +175,14 @@ describe('AttributeBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.getAttribute(part.name)).toBe(value);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.getAttribute(part.name)).toBe(null);
       }
@@ -202,7 +202,7 @@ describe('AttributeBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(removeAttributeSpy).not.toHaveBeenCalled();
       }

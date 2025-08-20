@@ -104,7 +104,7 @@ describe('EventBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(handler1)).toBe(false);
         expect(binding.shouldBind(handler2)).toBe(true);
@@ -130,7 +130,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -146,7 +146,7 @@ describe('EventBinding', () => {
       SESSION2: {
         binding.bind(handler2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -177,7 +177,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
         expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -197,7 +197,7 @@ describe('EventBinding', () => {
       SESSION2: {
         binding.bind(handler2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
         expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -240,7 +240,7 @@ describe('EventBinding', () => {
 
         SESSION1: {
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(addEventListenerSpy).toHaveBeenCalledOnce();
           expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -254,7 +254,7 @@ describe('EventBinding', () => {
         SESSION2: {
           binding.bind(handler2);
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(addEventListenerSpy).toHaveBeenCalledOnce();
           expect(removeEventListenerSpy).toHaveBeenCalledOnce();
@@ -284,7 +284,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(addEventListenerSpy).not.toHaveBeenCalled();
         expect(removeEventListenerSpy).not.toHaveBeenCalled();
@@ -306,7 +306,7 @@ describe('EventBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -315,7 +315,7 @@ describe('EventBinding', () => {
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).toHaveBeenCalledOnce();

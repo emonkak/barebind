@@ -3,7 +3,6 @@ import { formatPart } from '../debug/part.js';
 import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
-  type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
@@ -68,7 +67,7 @@ export class ClassBinding extends PrimitiveBinding<
     return !shallowEqual(classMap, this._memoizedValue);
   }
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const { classList } = this._part.node;
 
     updateClasses(
@@ -80,7 +79,7 @@ export class ClassBinding extends PrimitiveBinding<
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     const { classList } = this._part.node;
 
     updateClasses(classList, {}, this._memoizedValue as ClassMap);

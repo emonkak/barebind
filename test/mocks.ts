@@ -6,7 +6,6 @@ import {
   type Backend,
   type Bindable,
   type Binding,
-  type CommitContext,
   type CommitPhase,
   type Coroutine,
   type Directive,
@@ -91,7 +90,13 @@ export class MockBinding<T> implements Binding<T> {
         );
         break;
       case PartType.ChildNode:
-        this.part.node.nodeValue = this.value?.toString() ?? null;
+        // For part debugging, update comments only if the data is empty.
+        if (
+          this.part.node.data === '' ||
+          this.part.node.data === this.memoizedValue
+        ) {
+          this.part.node.data = this.value?.toString() ?? '';
+        }
         break;
       case PartType.Element:
         for (const name in this.value) {
@@ -141,8 +146,12 @@ export class MockBinding<T> implements Binding<T> {
         );
         break;
       case PartType.ChildNode:
+        if (this.part.node.data === this.memoizedValue) {
+          this.part.node.data = '';
+        }
+        break;
       case PartType.Text:
-        this.part.node.nodeValue = null;
+        this.part.node.data = '';
         break;
     }
 
@@ -192,31 +201,13 @@ export const MockPrimitive = {
 };
 
 export class MockEffect implements Effect {
-  commit(_context: CommitContext): void {}
-}
-
-export class MockCommitContext implements CommitContext {
-  debugValue(
-    _type: DirectiveType<unknown>,
-    _value: unknown,
-    _part: Part,
-  ): void {}
-
-  undebugValue(
-    _type: DirectiveType<unknown>,
-    _value: unknown,
-    _part: Part,
-  ): void {}
+  commit(): void {}
 }
 
 export class MockBackend implements Backend {
-  commitEffects(
-    effects: Effect[],
-    _phase: CommitPhase,
-    context: CommitContext,
-  ): void {
+  commitEffects(effects: Effect[], _phase: CommitPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit(context);
+      effects[i]!.commit();
     }
   }
 
@@ -324,13 +315,13 @@ export class MockSlot<T> implements Slot<T> {
     this.isConnected = false;
   }
 
-  commit(context: CommitContext): void {
-    this.binding.commit(context);
+  commit(): void {
+    this.binding.commit();
     this.isCommitted = true;
   }
 
-  rollback(context: CommitContext): void {
-    this.binding.rollback(context);
+  rollback(): void {
+    this.binding.rollback();
     this.isCommitted = false;
   }
 }

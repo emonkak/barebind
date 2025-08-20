@@ -2,7 +2,6 @@ import { formatPart } from '../debug/part.js';
 import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
-  type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
@@ -64,7 +63,7 @@ export class EventBinding extends PrimitiveBinding<
     return handler !== this._memoizedValue;
   }
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const newHandler = this._pendingValue;
     const oldHandler = this._memoizedValue;
 
@@ -85,7 +84,7 @@ export class EventBinding extends PrimitiveBinding<
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     const handler = this._memoizedValue;
 
     if (handler != null) {

@@ -23,51 +23,6 @@ import { createUpdateSession, waitForAll } from '../session-utils.js';
 import { getPromiseState, templateLiteral } from '../test-utils.js';
 
 describe('Runtime', () => {
-  describe('debugValue()', () => {
-    it('sets the debug information for the value in child node part', () => {
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const session = createUpdateSession();
-
-      session.debugValue(new MockDirective('FirstDirective'), 'foo', part);
-      expect(part.node.data).toBe('/FirstDirective("foo")');
-
-      session.debugValue(new MockDirective('FirstDirective'), 'bar', part);
-      expect(part.node.data).toBe('/FirstDirective("bar")');
-
-      session.debugValue(new MockDirective('SecondDirective'), 'baz', part);
-      expect(part.node.data).toBe('/FirstDirective("bar")');
-
-      session.undebugValue(new MockDirective('FirstDirective'), 'bar', part);
-      expect(part.node.data).toBe('');
-
-      session.debugValue(new MockDirective('SecondDirective'), 'baz', part);
-      expect(part.node.data).toBe('/SecondDirective("baz")');
-    });
-
-    it('should do nothing if the part is not a child node part', () => {
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const session = createUpdateSession();
-
-      session.debugValue(new MockDirective('FirstDirective'), 'foo', part);
-
-      expect(part.node.data).toBe('');
-
-      session.undebugValue(new MockDirective('FirstDirective'), 'bar', part);
-
-      expect(part.node.data).toBe('');
-    });
-  });
-
   describe('expandLiterals()', () => {
     it('expands literals in template values', () => {
       const { strings, values } =
@@ -138,11 +93,8 @@ describe('Runtime', () => {
         expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-        expect(mutationEffect.commit).toHaveBeenCalledWith(session);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
-        expect(layoutEffect.commit).toHaveBeenCalledWith(session);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(passiveEffect.commit).toHaveBeenCalledWith(session);
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
@@ -216,11 +168,8 @@ describe('Runtime', () => {
         expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
-        expect(mutationEffect.commit).toHaveBeenCalledWith(session);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
-        expect(layoutEffect.commit).toHaveBeenCalledWith(session);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(2);
-        expect(passiveEffect.commit).toHaveBeenCalledWith(session);
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
@@ -339,11 +288,8 @@ describe('Runtime', () => {
         expect(resume2Spy).toHaveBeenCalledTimes(1);
         expect(resume2Spy).toHaveBeenCalledWith(lanes, session);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
-        expect(mutationEffect.commit).toHaveBeenCalledWith(session);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
-        expect(layoutEffect.commit).toHaveBeenCalledWith(session);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
-        expect(passiveEffect.commit).toHaveBeenCalledWith(session);
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',
@@ -412,11 +358,8 @@ describe('Runtime', () => {
         expect(resume2Spy).toHaveBeenCalledTimes(2);
         expect(resume2Spy).toHaveBeenCalledWith(lanes, session);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
-        expect(mutationEffect.commit).toHaveBeenCalledWith(session);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
-        expect(layoutEffect.commit).toHaveBeenCalledWith(session);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(2);
-        expect(passiveEffect.commit).toHaveBeenCalledWith(session);
         expect(observer.flushEvents()).toStrictEqual([
           {
             type: 'UPDATE_START',

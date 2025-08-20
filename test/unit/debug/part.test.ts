@@ -1,10 +1,55 @@
 import { describe, expect, it } from 'vitest';
-import { formatPart } from '@/debug/part.js';
+
+import { debugPart, formatPart, undebugPart } from '@/debug/part.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
+import { MockDirective } from '../../mocks.js';
 import { createElement } from '../../test-utils.js';
 
 const MAKRER = '[[PART IS IN HERE!]]';
+
+describe('debugPart()', () => {
+  it('sets the debug information for the value in child node part', () => {
+    const part = {
+      type: PartType.ChildNode,
+      node: document.createComment(''),
+      anchorNode: null,
+      namespaceURI: HTML_NAMESPACE_URI,
+    };
+
+    debugPart(part, new MockDirective('FirstDirective'), 'foo');
+    expect(part.node.data).toBe('/FirstDirective("foo")');
+
+    debugPart(part, new MockDirective('FirstDirective'), 'bar');
+    expect(part.node.data).toBe('/FirstDirective("bar")');
+
+    debugPart(part, new MockDirective('SecondDirective'), 'baz');
+    expect(part.node.data).toBe('/FirstDirective("bar")');
+
+    undebugPart(part, new MockDirective('FirstDirective'));
+    expect(part.node.data).toBe('');
+
+    debugPart(part, new MockDirective('SecondDirective'), 'baz');
+    expect(part.node.data).toBe('/SecondDirective("baz")');
+  });
+
+  it('should do nothing if the part is not a child node part', () => {
+    const part = {
+      type: PartType.Text,
+      node: document.createTextNode(''),
+      precedingText: '',
+      followingText: '',
+    };
+
+    debugPart(part, new MockDirective('FirstDirective'), 'foo');
+
+    expect(part.node.data).toBe('');
+
+    undebugPart(part, new MockDirective('FirstDirective'));
+
+    expect(part.node.data).toBe('');
+  });
+});
 
 describe('formatPart()', () => {
   it('reports where an AttributePart is inserted', () => {

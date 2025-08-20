@@ -107,7 +107,7 @@ describe('StyleBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind({ ...style1 })).toBe(false);
         expect(binding.shouldBind(style2)).toBe(true);
@@ -138,7 +138,7 @@ describe('StyleBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe(
           '--my-css-variable: 1; color: red; background-color: blue; filter: grayscale(100%);',
@@ -148,7 +148,7 @@ describe('StyleBinding', () => {
       SESSION2: {
         binding.bind(style2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe('--my-css-variable: 2;');
       }
@@ -168,7 +168,7 @@ describe('StyleBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe(
           'background-color: blue; color: red;',
@@ -191,7 +191,7 @@ describe('StyleBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe('background-color: red;');
       }
@@ -199,7 +199,7 @@ describe('StyleBinding', () => {
       SESSION2: {
         binding.bind(style2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe('');
       }
@@ -224,7 +224,7 @@ describe('StyleBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe(
           'color: red; background-color: blue;',
@@ -233,7 +233,7 @@ describe('StyleBinding', () => {
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.style.cssText).toBe('');
       }

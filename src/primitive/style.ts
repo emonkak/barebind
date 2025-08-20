@@ -3,7 +3,6 @@ import { formatPart } from '../debug/part.js';
 import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
-  type CommitContext,
   type DirectiveContext,
   type Part,
   PartType,
@@ -70,7 +69,7 @@ export class StyleBinding extends PrimitiveBinding<
     return !shallowEqual(props, this._memoizedValue);
   }
 
-  commit(_context: CommitContext): void {
+  commit(): void {
     const newProps = this._pendingValue;
     const oldProps = this._memoizedValue;
     const { style } = this._part.node as
@@ -83,7 +82,7 @@ export class StyleBinding extends PrimitiveBinding<
     this._memoizedValue = this._pendingValue;
   }
 
-  rollback(_context: CommitContext): void {
+  rollback(): void {
     const props = this._memoizedValue;
     const { style } = this._part.node as
       | HTMLElement

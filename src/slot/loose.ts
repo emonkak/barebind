@@ -1,8 +1,8 @@
+import { debugPart, undebugPart } from '../debug/part.js';
 import { SlotSpecifier } from '../directive.js';
 import {
   areDirectiveTypesEqual,
   type Binding,
-  type CommitContext,
   type DirectiveType,
   type HydrationTree,
   type Part,
@@ -79,7 +79,7 @@ export class LooseSlot<T> implements Slot<T> {
     this._dirty = true;
   }
 
-  commit(context: CommitContext): void {
+  commit(): void {
     if (!this._dirty) {
       return;
     }
@@ -89,29 +89,25 @@ export class LooseSlot<T> implements Slot<T> {
 
     if (oldBinding !== newBinding) {
       if (oldBinding !== null) {
-        oldBinding.rollback(context);
+        oldBinding.rollback();
 
         DEBUG: {
-          context.undebugValue(
-            oldBinding.type,
-            oldBinding.value,
-            oldBinding.part,
-          );
+          undebugPart(oldBinding.part, oldBinding.type);
         }
       }
     }
 
     DEBUG: {
-      context.debugValue(newBinding.type, newBinding.value, newBinding.part);
+      debugPart(newBinding.part, newBinding.type, newBinding.value);
     }
 
-    newBinding.commit(context);
+    newBinding.commit();
 
     this._memoizedBinding = newBinding;
     this._dirty = false;
   }
 
-  rollback(context: CommitContext): void {
+  rollback(): void {
     if (!this._dirty) {
       return;
     }
@@ -119,10 +115,10 @@ export class LooseSlot<T> implements Slot<T> {
     const binding = this._memoizedBinding;
 
     if (binding !== null) {
-      binding.rollback(context);
+      binding.rollback();
 
       DEBUG: {
-        context.undebugValue(binding.type, binding.value, binding.part);
+        undebugPart(binding.part, binding.type);
       }
     }
 

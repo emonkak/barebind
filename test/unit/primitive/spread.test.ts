@@ -100,7 +100,7 @@ describe('SpreadBinding', () => {
       const session = createUpdateSession();
 
       binding.connect(session);
-      binding.commit(session);
+      binding.commit();
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -210,7 +210,7 @@ describe('SpreadBinding', () => {
       const tree = createHydrationTree(createElement('div', {}, part.node));
 
       binding.connect(session);
-      binding.commit(session);
+      binding.commit();
 
       expect(() => {
         binding.hydrate(tree, session);
@@ -241,7 +241,7 @@ describe('SpreadBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -313,7 +313,7 @@ describe('SpreadBinding', () => {
 
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         const newSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -380,7 +380,7 @@ describe('SpreadBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(binding['_memoizedSlots']).toBe(null);
       }
@@ -403,7 +403,7 @@ describe('SpreadBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -472,7 +472,7 @@ describe('SpreadBinding', () => {
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(slots).toStrictEqual({
           id: expect.objectContaining({

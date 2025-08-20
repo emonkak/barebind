@@ -91,7 +91,7 @@ describe('TemplateBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(binds1)).toBe(false);
         expect(binding.shouldBind(binds2)).toBe(true);
@@ -126,7 +126,7 @@ describe('TemplateBinding', () => {
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe('foo<!---->');
 
-      binding.commit(session);
+      binding.commit();
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(part.anchorNode).toBe(container.firstChild);
@@ -148,7 +148,7 @@ describe('TemplateBinding', () => {
       const session = createUpdateSession();
 
       binding.connect(session);
-      binding.commit(session);
+      binding.commit();
 
       expect(() => binding.hydrate(target, session)).toThrow(HydrationError);
     });
@@ -213,7 +213,7 @@ describe('TemplateBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(renderSpy).toHaveBeenCalledWith(binds1, part, session);
@@ -247,7 +247,7 @@ describe('TemplateBinding', () => {
       SESSION2: {
         binding.bind(binds2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.anchorNode).toBe(renderRoot);
@@ -279,7 +279,7 @@ describe('TemplateBinding', () => {
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.anchorNode).toBe(null);
@@ -366,7 +366,7 @@ describe('TemplateBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(renderSpy).toHaveBeenCalledWith(binds1, part, session);
@@ -400,7 +400,7 @@ describe('TemplateBinding', () => {
       SESSION2: {
         binding.bind(binds2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.anchorNode).toStrictEqual(childNodes[0]);
@@ -432,7 +432,7 @@ describe('TemplateBinding', () => {
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.anchorNode).toBe(null);

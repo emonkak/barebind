@@ -229,7 +229,7 @@ describe('ElementBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(props1)).toBe(false);
         expect(binding.shouldBind(props2)).toBe(true);
@@ -249,14 +249,14 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -274,7 +274,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe(
           '<button type="button" disabled=""></button>',
@@ -284,14 +284,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<button type="button"></button>');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<button></button>');
       }
@@ -309,7 +309,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div tabindex="-1"></div>');
       }
@@ -317,14 +317,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div tabindex="0"></div>');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -342,7 +342,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div class="foo"></div>');
       }
@@ -350,14 +350,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div class=""></div>');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<div class=""></div>');
       }
@@ -375,7 +375,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div><span>foo</span></div>');
       }
@@ -383,14 +383,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -408,7 +408,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe(
           '<div>&lt;span&gt;foo&lt;/span&gt;</div>',
@@ -418,14 +418,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -443,7 +443,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.defaultChecked).toBe(false);
         expect(part.node.checked).toBe(true);
@@ -452,7 +452,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.defaultChecked).toBe(false);
         expect(part.node.checked).toBe(false);
@@ -460,7 +460,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.defaultChecked).toBe(false);
         expect(part.node.checked).toBe(false);
@@ -481,7 +481,7 @@ describe('ElementBinding', () => {
 
         SESSION1: {
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(part.node.value).toBe(props1.value);
           expect(part.node.defaultValue).toBe(props1.defaultValue);
@@ -490,7 +490,7 @@ describe('ElementBinding', () => {
         SESSION2: {
           binding.bind(props2);
           binding.connect(session);
-          binding.commit(session);
+          binding.commit();
 
           expect(part.node.value).toBe('');
           expect(part.node.defaultValue).toBe('');
@@ -498,7 +498,7 @@ describe('ElementBinding', () => {
 
         SESSION3: {
           binding.disconnect(session);
-          binding.rollback(session);
+          binding.rollback();
 
           expect(part.node.value).toBe('');
           expect(part.node.defaultValue).toBe('');
@@ -522,7 +522,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.value).toBe(props1.value);
       }
@@ -530,14 +530,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.value).toBe('');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.value).toBe('');
       }
@@ -555,7 +555,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.htmlFor).toBe(props1.htmlFor);
       }
@@ -563,14 +563,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.htmlFor).toBe('');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.htmlFor).toBe('');
       }
@@ -590,7 +590,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).not.toHaveBeenCalled();
@@ -600,7 +600,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).not.toHaveBeenCalled();
@@ -611,7 +611,7 @@ describe('ElementBinding', () => {
       SESSION3: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).toHaveBeenCalledOnce();
@@ -621,7 +621,7 @@ describe('ElementBinding', () => {
 
       SESSION4: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).toHaveBeenCalledOnce();
@@ -642,7 +642,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(props1.ref.current).toBe(part.node);
         expect(props2.ref.current).toBe(null);
@@ -651,7 +651,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(props1.ref.current).toBe(null);
         expect(props2.ref.current).toBe(part.node);
@@ -659,7 +659,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(props1.ref.current).toBe(null);
         expect(props2.ref.current).toBe(null);
@@ -679,7 +679,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe(
           'color: red; background-color: white;',
@@ -689,7 +689,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe(
           'color: black; border: 1px solid black;',
@@ -699,14 +699,14 @@ describe('ElementBinding', () => {
       SESSION3: {
         binding.bind(props3);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.style.cssText).toBe('');
       }
 
       SESSION4: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.style.cssText).toBe('');
       }
@@ -723,7 +723,7 @@ describe('ElementBinding', () => {
 
       expect(() => {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
       }).toThrow('The "style" property expects a object, not a string.');
     });
 
@@ -744,7 +744,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -754,7 +754,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).not.toHaveBeenCalled();
@@ -768,7 +768,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).toHaveBeenCalled();
@@ -798,7 +798,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
         expect(addEventListenerSpy).toHaveBeenNthCalledWith(
@@ -813,7 +813,7 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
         expect(addEventListenerSpy).toHaveBeenNthCalledWith(
@@ -839,7 +839,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
         expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
@@ -880,7 +880,7 @@ describe('ElementBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe(
           '<div checked="checked" defaultchecked="defaultChecked" defaultvalue="defaultValue" htmlfor="htmlFor" title="title" value="value"></div>',
@@ -890,14 +890,14 @@ describe('ElementBinding', () => {
       SESSION2: {
         binding.bind(props2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.outerHTML).toBe('<div title="title"></div>');
       }
 
       SESSION3: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }

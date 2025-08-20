@@ -1,6 +1,5 @@
 import type {
   Binding,
-  CommitContext,
   HydrationTree,
   Part,
   Primitive,
@@ -41,7 +40,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   disconnect(_context: UpdateContext): void {}
 
-  abstract commit(_context: CommitContext): void;
+  abstract commit(): void;
 
-  abstract rollback(_context: CommitContext): void;
+  abstract rollback(): void;
 }

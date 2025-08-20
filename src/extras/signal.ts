@@ -3,7 +3,6 @@ import {
   $toDirective,
   type Bindable,
   type Binding,
-  type CommitContext,
   type Coroutine,
   type CustomHookObject,
   type Directive,
@@ -133,12 +132,12 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription = null;
   }
 
-  commit(context: CommitContext): void {
-    this._slot.commit(context);
+  commit(): void {
+    this._slot.commit();
   }
 
-  rollback(context: CommitContext): void {
-    this._slot.rollback(context);
+  rollback(): void {
+    this._slot.rollback();
   }
 
   private _subscribeSignal(context: UpdateContext): Subscription {

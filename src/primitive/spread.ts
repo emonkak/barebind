@@ -3,7 +3,6 @@ import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type Binding,
-  type CommitContext,
   type DirectiveContext,
   HydrationError,
   type HydrationTree,
@@ -136,26 +135,26 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     }
   }
 
-  commit(context: CommitContext): void {
+  commit(): void {
     if (this._memoizedSlots !== null) {
       for (const [name, slot] of this._memoizedSlots.entries()) {
         if (!this._pendingSlots.has(name)) {
-          slot.rollback(context);
+          slot.rollback();
         }
       }
     }
 
     for (const binding of this._pendingSlots.values()) {
-      binding.commit(context);
+      binding.commit();
     }
 
     this._memoizedSlots = this._pendingSlots;
   }
 
-  rollback(context: CommitContext): void {
+  rollback(): void {
     if (this._memoizedSlots !== null) {
       for (const binding of this._memoizedSlots.values()) {
-        binding.rollback(context);
+        binding.rollback();
       }
 
       this._memoizedSlots = null;

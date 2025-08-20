@@ -104,7 +104,7 @@ describe('RefBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(ref1)).toBe(false);
         expect(binding.shouldBind(ref2)).toBe(true);
@@ -126,7 +126,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(ref1.current).toBe(part.node);
         expect(ref2.current).toBe(null);
@@ -135,7 +135,7 @@ describe('RefBinding', () => {
       SESSION2: {
         binding.bind(ref2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(ref1.current).toBe(null);
         expect(ref2.current).toBe(part.node);
@@ -144,7 +144,7 @@ describe('RefBinding', () => {
       SESSION3: {
         binding.bind(null);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(ref1.current).toBe(null);
         expect(ref2.current).toBe(null);
@@ -166,7 +166,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(cleanup1).not.toHaveBeenCalled();
         expect(cleanup2).not.toHaveBeenCalled();
@@ -177,7 +177,7 @@ describe('RefBinding', () => {
 
       SESSION2: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(cleanup1).not.toHaveBeenCalled();
         expect(cleanup2).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe('RefBinding', () => {
       SESSION3: {
         binding.bind(ref2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(cleanup1).toHaveBeenCalledOnce();
         expect(cleanup2).not.toHaveBeenCalled();
@@ -200,7 +200,7 @@ describe('RefBinding', () => {
       SESSION4: {
         binding.bind(null);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(cleanup1).toHaveBeenCalledOnce();
         expect(cleanup2).toHaveBeenCalledOnce();
@@ -223,7 +223,7 @@ describe('RefBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(ref).not.toHaveBeenCalled();
       }
@@ -241,14 +241,14 @@ describe('RefBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(ref.current).toBe(part.node);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(ref.current).toBe(null);
       }
@@ -267,7 +267,7 @@ describe('RefBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(cleanup).not.toHaveBeenCalled();
         expect(ref).toHaveBeenCalledOnce();
@@ -276,7 +276,7 @@ describe('RefBinding', () => {
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(cleanup).toHaveBeenCalledOnce();
         expect(ref).toHaveBeenCalledOnce();

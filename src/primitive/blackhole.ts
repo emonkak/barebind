@@ -1,9 +1,4 @@
-import type {
-  CommitContext,
-  DirectiveContext,
-  Part,
-  Primitive,
-} from '../internal.js';
+import type { DirectiveContext, Part, Primitive } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
 export const BlackholePrimitive: Primitive<any> = {
@@ -26,7 +21,7 @@ export class BlackholeBinding<T> extends PrimitiveBinding<T, Part> {
     return false;
   }
 
-  commit(_context: CommitContext): void {}
+  commit(): void {}
 
-  rollback(_context: CommitContext): void {}
+  rollback(): void {}
 }

@@ -71,7 +71,7 @@ describe('SiganlBinding', () => {
       const binding = SignalDirective.resolveBinding(signal1, part, session);
 
       binding.connect(session);
-      binding.commit(session);
+      binding.commit();
 
       expect(binding.shouldBind(signal1)).toBe(false);
       expect(binding.shouldBind(signal2)).toBe(true);
@@ -97,7 +97,7 @@ describe('SiganlBinding', () => {
       const target = createHydrationTree(container);
 
       binding.hydrate(target, session);
-      binding.commit(session);
+      binding.commit();
 
       expect(container.innerHTML).toBe(signal.value);
 
@@ -122,7 +122,7 @@ describe('SiganlBinding', () => {
       const tree = createHydrationTree(container);
 
       binding.connect(session);
-      binding.commit(session);
+      binding.commit();
 
       expect(() => {
         binding.hydrate(tree, session);
@@ -148,7 +148,7 @@ describe('SiganlBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(signal.value);
       }
@@ -181,7 +181,7 @@ describe('SiganlBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(signal1.value);
       }
@@ -189,7 +189,7 @@ describe('SiganlBinding', () => {
       SESSION2: {
         binding.bind(signal2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(signal2.value);
       }
@@ -224,14 +224,14 @@ describe('SiganlBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(signal.value);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.nodeValue).toBe('');
       }

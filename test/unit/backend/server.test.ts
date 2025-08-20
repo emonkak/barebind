@@ -14,7 +14,6 @@ import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { OptimizedTemplateFactory } from '@/template-factory.js';
-import { MockCommitContext } from '../../mocks.js';
 
 describe('ServerBackend', () => {
   describe('commitEffects()', () => {
@@ -35,14 +34,12 @@ describe('ServerBackend', () => {
         },
       ];
       const backend = new ServerBackend(document);
-      const context = new MockCommitContext();
 
-      backend.commitEffects(mutationEffects, CommitPhase.Mutation, context);
-      backend.commitEffects(layoutEffects, CommitPhase.Layout, context);
-      backend.commitEffects(passiveEffects, CommitPhase.Layout, context);
+      backend.commitEffects(mutationEffects, CommitPhase.Mutation);
+      backend.commitEffects(layoutEffects, CommitPhase.Layout);
+      backend.commitEffects(passiveEffects, CommitPhase.Passive);
 
       expect(mutationEffects[0].commit).toHaveBeenCalledOnce();
-      expect(mutationEffects[0].commit).toHaveBeenCalledWith(context);
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(layoutEffects[0].commit).not.toHaveBeenCalled();
       expect(passiveEffects[0].commit).not.toHaveBeenCalled();

@@ -3,7 +3,6 @@
 import { formatValue } from './debug/value.js';
 import {
   $toDirective,
-  type CommitContext,
   CommitPhase,
   type Component,
   type Coroutine,
@@ -41,7 +40,7 @@ interface UpdateFrame {
   passiveEffects: Effect[];
 }
 
-export class UpdateSession implements CommitContext, UpdateContext {
+export class UpdateSession implements UpdateContext {
   private readonly _frame: UpdateFrame;
 
   private readonly _scope: Scope;
@@ -72,16 +71,6 @@ export class UpdateSession implements CommitContext, UpdateContext {
     return () => {
       observers.remove(node);
     };
-  }
-
-  debugValue(type: DirectiveType<unknown>, value: unknown, part: Part): void {
-    if (
-      part.type === PartType.ChildNode &&
-      (part.node.data === '' ||
-        part.node.data.startsWith('/' + type.name + '('))
-    ) {
-      part.node.data = `/${type.name}(${formatValue(value)})`;
-    }
   }
 
   enqueueCoroutine(coroutine: Coroutine): void {
@@ -388,19 +377,6 @@ export class UpdateSession implements CommitContext, UpdateContext {
     return updateHandleNode.value;
   }
 
-  undebugValue(
-    type: DirectiveType<unknown>,
-    _value: unknown,
-    part: Part,
-  ): void {
-    if (
-      part.type === PartType.ChildNode &&
-      part.node.data.startsWith('/' + type.name + '(')
-    ) {
-      part.node.data = '';
-    }
-  }
-
   private _commitEffects(effects: Effect[], phase: CommitPhase): void {
     const { backend, observers } = this._runtime;
 
@@ -413,7 +389,7 @@ export class UpdateSession implements CommitContext, UpdateContext {
       });
     }
 
-    backend.commitEffects(effects, phase, this);
+    backend.commitEffects(effects, phase);
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {

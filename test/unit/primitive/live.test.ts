@@ -75,7 +75,7 @@ describe('LiveBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(setValueSpy).toHaveBeenCalledOnce();
         expect(setValueSpy).toHaveBeenCalledWith(value);
@@ -83,7 +83,7 @@ describe('LiveBinding', () => {
 
       SESSION2: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(setValueSpy).toHaveBeenCalledOnce();
         expect(setValueSpy).toHaveBeenCalledWith(value);
@@ -105,14 +105,14 @@ describe('LiveBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.value).toBe(value);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.value).toBe('');
       }

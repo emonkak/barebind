@@ -72,7 +72,7 @@ describe('TextBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -95,7 +95,7 @@ describe('TextBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.data).toBe('(' + value1 + ')');
       }
@@ -103,7 +103,7 @@ describe('TextBinding', () => {
       SESSION2: {
         binding.bind(value2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.data).toBe('()');
       }
@@ -123,7 +123,7 @@ describe('TextBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe('(123)');
       }
@@ -131,7 +131,7 @@ describe('TextBinding', () => {
       SESSION2: {
         binding.bind(value2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe('()');
       }
@@ -152,14 +152,14 @@ describe('TextBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.data).toBe(value);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.data).toBe('');
       }
@@ -180,7 +180,7 @@ describe('TextBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(setNodeValueSpy).not.toHaveBeenCalled();
       }

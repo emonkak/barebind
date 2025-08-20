@@ -6,7 +6,6 @@ import { DirectiveSpecifier } from './directive.js';
 import { replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
-  type CommitContext,
   type DirectiveContext,
   type DirectiveType,
   getStartNode,
@@ -246,14 +245,14 @@ export class RepeatBinding<TSource, TKey, TValue>
     }
   }
 
-  commit(context: CommitContext): void {
+  commit(): void {
     for (let i = 0, l = this._pendingOperations.length; i < l; i++) {
       const operation = this._pendingOperations[i]!;
       switch (operation.type) {
         case OPERATION_INSERT: {
           const { item, referenceItem } = operation;
           insertItem(item, referenceItem, this._part);
-          item.value.commit(context);
+          item.value.commit();
           break;
         }
         case OPERATION_MOVE: {
@@ -264,17 +263,17 @@ export class RepeatBinding<TSource, TKey, TValue>
         case OPERATION_MOVE_AND_UPDATE: {
           const { item, referenceItem } = operation;
           moveItem(item, referenceItem, this._part);
-          item.value.commit(context);
+          item.value.commit();
           break;
         }
         case OPERATION_UPDATE: {
           const { item } = operation;
-          item.value.commit(context);
+          item.value.commit();
           break;
         }
         case OPERATION_REMOVE: {
           const { item } = operation;
-          item.value.rollback(context);
+          item.value.rollback();
           item.value.part.node.remove();
           break;
         }
@@ -286,11 +285,11 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._pendingOperations = [];
   }
 
-  rollback(context: CommitContext): void {
+  rollback(): void {
     if (this._memoizedItems !== null) {
       for (let i = this._memoizedItems.length - 1; i >= 0; i--) {
         const item = this._memoizedItems[i]!;
-        item.value.rollback(context);
+        item.value.rollback();
         item.value.part.node.remove();
       }
     }

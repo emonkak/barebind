@@ -73,7 +73,7 @@ describe('CommentBinding', () => {
 
       SESSION: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -96,7 +96,7 @@ describe('CommentBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(value1);
       }
@@ -104,7 +104,7 @@ describe('CommentBinding', () => {
       SESSION2: {
         binding.bind(value2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe('');
       }
@@ -124,7 +124,7 @@ describe('CommentBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(value1.toString());
       }
@@ -132,7 +132,7 @@ describe('CommentBinding', () => {
       SESSION2: {
         binding.bind(value2);
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe('');
       }
@@ -153,14 +153,14 @@ describe('CommentBinding', () => {
 
       SESSION1: {
         binding.connect(session);
-        binding.commit(session);
+        binding.commit();
 
         expect(part.node.nodeValue).toBe(value);
       }
 
       SESSION2: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(part.node.nodeValue).toBe('');
       }
@@ -181,7 +181,7 @@ describe('CommentBinding', () => {
 
       SESSION: {
         binding.disconnect(session);
-        binding.rollback(session);
+        binding.rollback();
 
         expect(setNodeValueSpy).not.toHaveBeenCalled();
       }
