@@ -77,7 +77,7 @@ type StrictEqual<TLhs, TRhs> = (<T>() => T extends TLhs ? 1 : 2) extends <
 export class Reactive<T> extends Signal<T> {
   private readonly _container: ReactiveContainer<T>;
 
-  private readonly _options: ReactiveOptions | undefined;
+  private readonly _shallow: boolean;
 
   static from<T>(source: T, options?: ReactiveOptions): Reactive<T> {
     return new Reactive(toReactiveContainer(source, 0), options);
@@ -85,11 +85,11 @@ export class Reactive<T> extends Signal<T> {
 
   private constructor(
     container: ReactiveContainer<T>,
-    options?: ReactiveOptions,
+    options: ReactiveOptions = {},
   ) {
     super();
     this._container = container;
-    this._options = options;
+    this._shallow = options.shallow ?? false;
   }
 
   get value(): T {
@@ -161,7 +161,7 @@ export class Reactive<T> extends Signal<T> {
   subscribe(subscriber: Subscriber): Subscription {
     const container = this._container;
 
-    if (this._options?.shallow) {
+    if (this._shallow) {
       return container.source.subscribe(() => {
         if (!(container.flags & FLAG_DIRTY)) {
           subscriber();
