@@ -1,6 +1,6 @@
 import { shallowEqual } from '../compare.js';
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
+import { formatPart } from '../debug/part.js';
+import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type CommitContext,
@@ -33,8 +33,8 @@ export const StylePrimitive: Primitive<StyleProperties> = {
   ensureValue(value: unknown, part: Part): asserts value is StyleProperties {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of StylePrimitive must be an object, but got ${debugValue(value)}.\n` +
-          debugPart(part, markUsedValue(value)),
+        `The value of StylePrimitive must be an object, but got ${formatValue(value)}.\n` +
+          formatPart(part, markUsedValue(value)),
       );
     }
   },
@@ -49,7 +49,7 @@ export const StylePrimitive: Primitive<StyleProperties> = {
     ) {
       throw new Error(
         'StylePrimitive must be used in a ":style" attribute part, but it is used here in:\n' +
-          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new StyleBinding(props, part);

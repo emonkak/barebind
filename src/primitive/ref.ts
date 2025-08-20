@@ -1,5 +1,5 @@
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
+import { formatPart } from '../debug/part.js';
+import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type Cleanup,
@@ -25,8 +25,8 @@ export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
   ): asserts value is Nullable<ElementRef> {
     if (value != null && !isElementRef(value)) {
       throw new Error(
-        `The value of RefPrimitive must be a function, object, null or undefined, but got ${debugValue(value)}.\n` +
-          debugPart(part, markUsedValue(value)),
+        `The value of RefPrimitive must be a function, object, null or undefined, but got ${formatValue(value)}.\n` +
+          formatPart(part, markUsedValue(value)),
       );
     }
   },
@@ -41,7 +41,7 @@ export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
     ) {
       throw new Error(
         'RefPrimitive must be used in ":ref" attribute part, but it is used here in:\n' +
-          debugPart(part, markUsedValue(new DirectiveSpecifier(this, ref))),
+          formatPart(part, markUsedValue(new DirectiveSpecifier(this, ref))),
       );
     }
     return new RefBinding(ref, part);

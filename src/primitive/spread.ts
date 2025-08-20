@@ -1,5 +1,5 @@
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
+import { formatPart } from '../debug/part.js';
+import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type Binding,
@@ -21,8 +21,8 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
     if (!isSpreadProps(value)) {
       throw new Error(
-        `The value of SpreadPrimitive must be an object, but got ${debugValue(value)}.\n` +
-          debugPart(part, markUsedValue(value)),
+        `The value of SpreadPrimitive must be an object, but got ${formatValue(value)}.\n` +
+          formatPart(part, markUsedValue(value)),
       );
     }
   },
@@ -34,7 +34,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
     if (part.type !== PartType.Element) {
       throw new Error(
         'SpreadPrimitive must be used in an element part, but it is used here:\n' +
-          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new SpreadBinding(props, part);

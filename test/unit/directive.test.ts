@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { debugValue } from '@/debug/value.js';
+import { formatValue } from '@/debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { $toDirective, PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -25,7 +25,7 @@ describe('DirectiveSpecifier', () => {
       const value = 'foo';
       const bindable = new DirectiveSpecifier(type, value);
 
-      expect(debugValue(bindable)).toBe('MockDirective("foo")');
+      expect(formatValue(bindable)).toBe('MockDirective("foo")');
     });
   });
 });
@@ -75,7 +75,7 @@ describe('SlotSpecifier', () => {
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const bindable = new SlotSpecifier(slotType, value);
 
-      expect(debugValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
+      expect(formatValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
     });
   });
 });

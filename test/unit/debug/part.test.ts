@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { debugPart } from '@/debug/part.js';
+import { formatPart } from '@/debug/part.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { createElement } from '../../test-utils.js';
 
 const MAKRER = '[[PART IS IN HERE!]]';
 
-describe('debugPart()', () => {
+describe('formatPart()', () => {
   it('reports where an AttributePart is inserted', () => {
     const part = {
       type: PartType.Attribute,
@@ -14,7 +14,7 @@ describe('debugPart()', () => {
       node: createElement('input', { type: 'text' }),
     };
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `<input type="text" class=[[PART IS IN HERE!]]>`,
     );
 
@@ -26,7 +26,7 @@ describe('debugPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -63,7 +63,7 @@ describe('debugPart()', () => {
       ),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <!DOCTYPE html>
 <html>
@@ -97,7 +97,7 @@ describe('debugPart()', () => {
       ),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div id="foo">
   <span>
@@ -125,7 +125,7 @@ describe('debugPart()', () => {
       namespaceURI: HTML_NAMESPACE_URI,
     };
 
-    expect(debugPart(part, MAKRER)).toBe(`[[PART IS IN HERE!]]<!---->`);
+    expect(formatPart(part, MAKRER)).toBe(`[[PART IS IN HERE!]]<!---->`);
 
     createElement(
       'div',
@@ -135,7 +135,7 @@ describe('debugPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -160,7 +160,7 @@ describe('debugPart()', () => {
       node: document.createElement('div'),
     };
 
-    expect(debugPart(part, MAKRER)).toBe(`<div [[PART IS IN HERE!]]></div>`);
+    expect(formatPart(part, MAKRER)).toBe(`<div [[PART IS IN HERE!]]></div>`);
 
     createElement(
       'div',
@@ -170,7 +170,7 @@ describe('debugPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -196,7 +196,7 @@ describe('debugPart()', () => {
       node: createElement('button', { type: 'button' }),
     };
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `<button type="button" @click=[[PART IS IN HERE!]]></button>`,
     );
 
@@ -208,7 +208,7 @@ describe('debugPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -235,7 +235,7 @@ describe('debugPart()', () => {
       defaultValue: '',
     };
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `<input type="text" $value=[[PART IS IN HERE!]]>`,
     );
 
@@ -247,7 +247,7 @@ describe('debugPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -274,7 +274,7 @@ describe('debugPart()', () => {
       defaultValue: '',
     };
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `<input type="text" .value=[[PART IS IN HERE!]]>`,
     );
 
@@ -286,7 +286,7 @@ describe('debugPart()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -314,7 +314,7 @@ describe('debugPart()', () => {
       followingText: '',
     };
 
-    expect(debugPart(part, MAKRER)).toBe(`[[PART IS IN HERE!]]foo`);
+    expect(formatPart(part, MAKRER)).toBe(`[[PART IS IN HERE!]]foo`);
 
     createElement(
       'div',
@@ -330,7 +330,7 @@ describe('debugPart()', () => {
       createElement('span', {}, document.createTextNode('qux')),
     );
 
-    expect(debugPart(part, MAKRER)).toBe(
+    expect(formatPart(part, MAKRER)).toBe(
       `
 <div>
   <span>

@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   $debug,
   type Debuggable,
-  debugValue,
+  formatValue,
   markUsedValue,
 } from '@/debug/value.js';
 
-describe('debugValue()', () => {
+describe('formatValue()', () => {
   const x = {};
   const circlerValue = { x: {} };
   circlerValue.x = circlerValue;
@@ -52,7 +52,7 @@ describe('debugValue()', () => {
   ])(
     'returns a string representation of the value',
     (value, expectedString) => {
-      expect(debugValue(value)).toBe(expectedString);
+      expect(formatValue(value)).toBe(expectedString);
     },
   );
 });

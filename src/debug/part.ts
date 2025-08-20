@@ -1,7 +1,7 @@
 import { type Part, PartType } from '../internal.js';
-import { debugNode } from './node.js';
+import { formatNode } from './node.js';
 
-export function debugPart(part: Part, marker: string): string {
+export function formatPart(part: Part, marker: string): string {
   switch (part.type) {
     case PartType.Attribute:
       marker = part.name + '=' + marker;
@@ -16,5 +16,5 @@ export function debugPart(part: Part, marker: string): string {
       marker = '.' + part.name + '=' + marker;
       break;
   }
-  return debugNode(part.node, marker);
+  return formatNode(part.node, marker);
 }

@@ -12,7 +12,7 @@ export interface DebugValueContext {
   seenObjects: object[];
 }
 
-export function debugValue(
+export function formatValue(
   value: unknown,
   context: DebugValueContext = {
     maxDepth: 2,
@@ -43,7 +43,7 @@ export function debugValue(
       context.seenObjects.push(value);
       try {
         if (isDebuggable(value)) {
-          return value[$debug]((v) => debugValue(v, context));
+          return value[$debug]((v) => formatValue(v, context));
         }
         switch (value.constructor) {
           case Array:
@@ -56,7 +56,7 @@ export function debugValue(
             return (
               '[' +
               (value as unknown[])
-                .map((v) => debugValue(v, context))
+                .map((v) => formatValue(v, context))
                 .join(', ') +
               ']'
             );
@@ -79,7 +79,7 @@ export function debugValue(
                           ? k
                           : JSON.stringify(k)) +
                         ': ' +
-                        debugValue(v, context),
+                        formatValue(v, context),
                     )
                     .join(', ') +
                   ' }'
@@ -97,7 +97,7 @@ export function debugValue(
 }
 
 export function markUsedValue(value: unknown): string {
-  return `[[${debugValue(value)} IS USED IN HERE!]]`;
+  return `[[${formatValue(value)} IS USED IN HERE!]]`;
 }
 
 function isDebuggable(value: {}): value is Debuggable {

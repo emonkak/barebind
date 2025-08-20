@@ -1,4 +1,4 @@
-import { debugPart } from '../debug/part.js';
+import { formatPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '../directive.js';
 import {
@@ -44,7 +44,7 @@ export class StrictSlot<T> implements Slot<T> {
     if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
       throw new Error(
         `The directive must be ${this._binding.type.name} in this slot, but got ${directive.type.name}.\n` +
-          debugPart(
+          formatPart(
             this._binding.part,
             markUsedValue(
               new DirectiveSpecifier(directive.type, directive.value),

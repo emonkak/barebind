@@ -1,6 +1,6 @@
 import { shallowEqual } from '../compare.js';
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
+import { formatPart } from '../debug/part.js';
+import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type CommitContext,
@@ -28,8 +28,8 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
   ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
     if (!(typeof value === 'object' && value !== null)) {
       throw new Error(
-        `The value of ClassPrimitive must be an object, but got ${debugValue(value)}.\n` +
-          debugPart(part, markUsedValue(value)),
+        `The value of ClassPrimitive must be an object, but got ${formatValue(value)}.\n` +
+          formatPart(part, markUsedValue(value)),
       );
     }
   },
@@ -44,7 +44,7 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
     ) {
       throw new Error(
         'ClassPrimitive must be used in a ":class" attribute part, but it is used here:\n' +
-          debugPart(
+          formatPart(
             part,
             markUsedValue(new DirectiveSpecifier(this, classMap)),
           ),

@@ -1,4 +1,4 @@
-import { debugNode } from './debug/node.js';
+import { formatNode } from './debug/node.js';
 import { HydrationError, type HydrationTree } from './internal.js';
 
 interface NodeTypeMap {
@@ -49,7 +49,7 @@ export function treatNodeName(
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
       `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName ?? 'null'}:\n` +
-        debugNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
+        formatNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
     );
   }
 
@@ -64,7 +64,7 @@ export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
   if (node === null || node.nodeType !== expectedType) {
     throw new HydrationError(
       `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType ?? 'null'}:\n` +
-        debugNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
+        formatNode(tree.currentNode, '[[MISMATCH IN HERE!]]'),
     );
   }
 

@@ -1,6 +1,6 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
-import { debugPart } from './debug/part.js';
+import { formatPart } from './debug/part.js';
 import { markUsedValue } from './debug/value.js';
 import { DirectiveSpecifier } from './directive.js';
 import { replaceMarkerNode } from './hydration.js';
@@ -87,7 +87,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         'RepeatDirective must be used in a child part, but it is used here in:\n' +
-          debugPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
       );
     }
     return new RepeatBinding(props, part);

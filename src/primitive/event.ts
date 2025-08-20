@@ -1,5 +1,5 @@
-import { debugPart } from '../debug/part.js';
-import { debugValue, markUsedValue } from '../debug/value.js';
+import { formatPart } from '../debug/part.js';
+import { formatValue, markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
   type CommitContext,
@@ -27,8 +27,8 @@ export const EventPrimitive: Primitive<EventHandler> = {
   ensureValue(value: unknown, part: Part): asserts value is EventHandler {
     if (!isEventHandler(value)) {
       throw new Error(
-        `The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined, but got ${debugValue(value)}.\n` +
-          debugPart(part, markUsedValue(value)),
+        `The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined, but got ${formatValue(value)}.\n` +
+          formatPart(part, markUsedValue(value)),
       );
     }
   },
@@ -40,7 +40,10 @@ export const EventPrimitive: Primitive<EventHandler> = {
     if (part.type !== PartType.Event) {
       throw new Error(
         'EventPrimitive must be used in an event part, but it is used here:\n' +
-          debugPart(part, markUsedValue(new DirectiveSpecifier(this, handler))),
+          formatPart(
+            part,
+            markUsedValue(new DirectiveSpecifier(this, handler)),
+          ),
       );
     }
     return new EventBinding(handler, part);

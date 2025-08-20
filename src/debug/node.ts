@@ -3,7 +3,7 @@ const INDENT_STRING = '  ';
 // Minimum complexity score required to make a node identifiable.
 const COMPLEXITY_THRESHOLD = 10;
 
-export function debugNode(node: Node, marker: string): string {
+export function formatNode(node: Node, marker: string): string {
   const annotatedLines = annotateNode(node, marker);
   const precedingLines: string[] = [];
   const followingLines: string[] = [];

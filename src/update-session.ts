@@ -1,6 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { debugValue } from './debug/value.js';
+import { formatValue } from './debug/value.js';
 import {
   $toDirective,
   type CommitContext,
@@ -81,7 +81,7 @@ export class UpdateSession implements CommitContext, UpdateContext {
       (part.node.data === '' ||
         part.node.data.startsWith('/' + type.name + '('))
     ) {
-      part.node.data = `/${type.name}(${debugValue(value)})`;
+      part.node.data = `/${type.name}(${formatValue(value)})`;
     }
   }
 

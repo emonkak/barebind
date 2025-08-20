@@ -1,5 +1,5 @@
-import { debugNode } from '../debug/node.js';
-import { debugPart } from '../debug/part.js';
+import { formatNode } from '../debug/node.js';
+import { formatPart } from '../debug/part.js';
 import {
   replaceMarkerNode,
   splitText,
@@ -418,7 +418,7 @@ function parseAttribtues(
         if (rawName.toLowerCase() !== name) {
           throw new Error(
             `The attribute name must be "${name}", but got "${rawName}". There may be a unclosed tag or a duplicate attribute:\n` +
-              debugPart(
+              formatPart(
                 { type: PartType.Attribute, name, node: element },
                 ERROR_MAKER,
               ),
@@ -461,7 +461,7 @@ function parseAttribtues(
         if (name.includes(marker)) {
           throw new Error(
             'Expressions are not allowed as an attribute name:\n' +
-              debugPart(
+              formatPart(
                 {
                   type: PartType.Attribute,
                   name,
@@ -475,7 +475,7 @@ function parseAttribtues(
         if (value.includes(marker)) {
           throw new Error(
             'Expressions inside an attribute must make up the entire attribute value:\n' +
-              debugPart(
+              formatPart(
                 {
                   type: PartType.Attribute,
                   name,
@@ -514,7 +514,7 @@ function parseChildren(
           if ((currentNode as Element).localName.includes(marker)) {
             throw new Error(
               'Expressions are not allowed as a tag name:\n' +
-                debugPart(
+                formatPart(
                   { type: PartType.Element, node: currentNode as Element },
                   ERROR_MAKER,
                 ),
@@ -546,7 +546,7 @@ function parseChildren(
             if ((currentNode as Comment).data.includes(marker)) {
               throw new Error(
                 'Expressions inside a comment must make up the entire comment value:\n' +
-                  debugNode(currentNode, ERROR_MAKER),
+                  formatNode(currentNode, ERROR_MAKER),
               );
             }
           }

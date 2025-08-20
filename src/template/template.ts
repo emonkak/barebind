@@ -1,4 +1,4 @@
-import { debugPart } from '../debug/part.js';
+import { formatPart } from '../debug/part.js';
 import { markUsedValue } from '../debug/value.js';
 import { DirectiveSpecifier } from '../directive.js';
 import {
@@ -53,7 +53,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
     if (part.type !== PartType.ChildNode) {
       throw new Error(
         `${this.constructor.name} must be used in a child node part, but it is used here in:\n` +
-          debugPart(part, markUsedValue(new DirectiveSpecifier(this, binds))),
+          formatPart(part, markUsedValue(new DirectiveSpecifier(this, binds))),
       );
     }
 

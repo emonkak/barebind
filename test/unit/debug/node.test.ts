@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { debugNode } from '@/debug/node.js';
+import { formatNode } from '@/debug/node.js';
 import { createElement } from '../../test-utils.js';
 
 const MAKRER = '[[NODE IS IN HERE!]]';
 
-describe('debugNode()', () => {
+describe('formatNode()', () => {
   it('reports where a text node', () => {
     const node = document.createTextNode('foo');
 
-    expect(debugNode(node, MAKRER)).toBe('[[NODE IS IN HERE!]]foo');
+    expect(formatNode(node, MAKRER)).toBe('[[NODE IS IN HERE!]]foo');
 
     createElement(
       'div',
@@ -18,7 +18,7 @@ describe('debugNode()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugNode(node, MAKRER)).toBe(
+    expect(formatNode(node, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -40,7 +40,7 @@ describe('debugNode()', () => {
   it('reports where a comment node', () => {
     const node = document.createComment('foo');
 
-    expect(debugNode(node, MAKRER)).toBe('[[NODE IS IN HERE!]]<!--foo-->');
+    expect(formatNode(node, MAKRER)).toBe('[[NODE IS IN HERE!]]<!--foo-->');
 
     createElement(
       'div',
@@ -50,7 +50,7 @@ describe('debugNode()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugNode(node, MAKRER)).toBe(
+    expect(formatNode(node, MAKRER)).toBe(
       `
 <div>
   <span>
@@ -72,7 +72,7 @@ describe('debugNode()', () => {
   it('reports where an element node', () => {
     const node = createElement('mark', {}, 'foo');
 
-    expect(debugNode(node, MAKRER)).toBe(
+    expect(formatNode(node, MAKRER)).toBe(
       `
 <mark [[NODE IS IN HERE!]]>
   foo
@@ -88,7 +88,7 @@ describe('debugNode()', () => {
       createElement('span', {}, 'qux'),
     );
 
-    expect(debugNode(node, MAKRER)).toBe(
+    expect(formatNode(node, MAKRER)).toBe(
       `
 <div>
   <span>
