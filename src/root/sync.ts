@@ -1,6 +1,10 @@
 import { createHydrationTree, replaceMarkerNode } from '../hydration.js';
-import { type Backend, Lanes, PartType, type Slot } from '../internal.js';
-import { createRuntime, type RuntimeObserver } from '../runtime.js';
+import { Lanes, PartType, type Slot } from '../internal.js';
+import {
+  createRuntime,
+  type RuntimeBackend,
+  type RuntimeObserver,
+} from '../runtime.js';
 import { UpdateSession } from '../update-session.js';
 import { MountSlot, UnmountSlot } from './root.js';
 
@@ -14,7 +18,7 @@ export class SyncRoot<T> {
   static create<T>(
     value: T,
     container: Element,
-    backend: Backend,
+    backend: RuntimeBackend,
   ): SyncRoot<T> {
     const runtime = createRuntime(backend, { concurrent: false });
     const session = UpdateSession.create(runtime);

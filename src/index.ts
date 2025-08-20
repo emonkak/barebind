@@ -24,7 +24,11 @@ export {
 } from './repeat.js';
 export { AsyncRoot } from './root/async.js';
 export { SyncRoot } from './root/sync.js';
-export type { RuntimeEvent, RuntimeObserver } from './runtime.js';
+export type {
+  RuntimeBackend,
+  RuntimeEvent,
+  RuntimeObserver,
+} from './runtime.js';
 export { Flexible } from './slot/flexible.js';
 export { Loose } from './slot/loose.js';
 export { Strict } from './slot/strict.js';

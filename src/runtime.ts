@@ -1,18 +1,22 @@
 import type {
-  Backend,
   CommitPhase,
   Component,
   Effect,
   Lanes,
+  Part,
+  Primitive,
   RenderContext,
+  RequestCallbackOptions,
+  SlotType,
   Template,
+  TemplateFactory,
   UpdateHandle,
 } from './internal.js';
 import { LinkedList } from './linked-list.js';
 import { TemplateLiteralPreprocessor } from './template-literal.js';
 
 export interface Runtime {
-  backend: Backend;
+  backend: RuntimeBackend;
   cachedTemplates: WeakMap<readonly string[], Template<readonly unknown[]>>;
   concurrent: boolean;
   identifierCount: number;
@@ -21,6 +25,20 @@ export interface Runtime {
   templatePlaceholder: string;
   updateCount: number;
   updateHandles: LinkedList<UpdateHandle>;
+}
+
+export interface RuntimeBackend {
+  commitEffects(effects: Effect[], phase: CommitPhase): void;
+  getCurrentPriority(): TaskPriority;
+  getTemplateFactory(): TemplateFactory;
+  requestCallback(
+    callback: () => Promise<void> | void,
+    options?: RequestCallbackOptions,
+  ): Promise<void>;
+  resolvePrimitive(value: unknown, part: Part): Primitive<unknown>;
+  resolveSlotType(value: unknown, part: Part): SlotType;
+  startViewTransition(callback: () => void | Promise<void>): Promise<void>;
+  yieldToMain(): Promise<void>;
 }
 
 export type RuntimeEvent =
@@ -56,7 +74,7 @@ export interface RuntimeOptions {
 }
 
 export function createRuntime(
-  backend: Backend,
+  backend: RuntimeBackend,
   options: RuntimeOptions = {},
 ): Runtime {
   return {

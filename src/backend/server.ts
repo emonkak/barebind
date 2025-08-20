@@ -1,7 +1,6 @@
 /// <reference path="../../typings/scheduler.d.ts" />
 
 import {
-  type Backend,
   CommitPhase,
   type Effect,
   type Part,
@@ -20,11 +19,12 @@ import { PropertyPrimitive } from '../primitive/property.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
+import type { RuntimeBackend } from '../runtime.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
 import { OptimizedTemplateFactory } from '../template-factory.js';
 
-export class ServerBackend implements Backend {
+export class ServerBackend implements RuntimeBackend {
   private readonly _templateFactory: OptimizedTemplateFactory;
 
   constructor(document: Document) {

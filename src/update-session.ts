@@ -1,6 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { formatValue } from './debug/value.js';
 import {
   $toDirective,
   CommitPhase,
@@ -8,7 +7,6 @@ import {
   type Coroutine,
   createScope,
   type Directive,
-  type DirectiveType,
   type Effect,
   getFlushLanesFromOptions,
   getScheduleLanesFromOptions,
@@ -16,7 +14,6 @@ import {
   isBindable,
   Lanes,
   type Part,
-  PartType,
   type Primitive,
   type Scope,
   type Slot,

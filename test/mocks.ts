@@ -3,7 +3,6 @@
 import {
   $toDirective,
   areDirectiveTypesEqual,
-  type Backend,
   type Bindable,
   type Binding,
   type CommitPhase,
@@ -27,7 +26,11 @@ import {
   type UnwrapBindable,
   type UpdateContext,
 } from '@/internal.js';
-import type { RuntimeEvent, RuntimeObserver } from '@/runtime.js';
+import type {
+  RuntimeBackend,
+  RuntimeEvent,
+  RuntimeObserver,
+} from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
 
 export class MockBindable<T> implements Bindable<T> {
@@ -204,7 +207,7 @@ export class MockEffect implements Effect {
   commit(): void {}
 }
 
-export class MockBackend implements Backend {
+export class MockBackend implements RuntimeBackend {
   commitEffects(effects: Effect[], _phase: CommitPhase): void {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit();
