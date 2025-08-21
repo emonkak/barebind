@@ -10,11 +10,11 @@ import {
   type Effect,
   getFlushLanesFromOptions,
   getScheduleLanesFromOptions,
-  type Hook,
   isBindable,
   Lanes,
   type Part,
   type Primitive,
+  type RenderState,
   type Scope,
   type Slot,
   type Template,
@@ -268,12 +268,12 @@ export class UpdateSession implements UpdateContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    hooks: Hook[],
+    state: RenderState,
     coroutine: Coroutine,
   ): TResult {
     const { id } = this._frame;
     const { observers } = this._runtime;
-    const session = new RenderSession(hooks, coroutine, this);
+    const session = new RenderSession(state, coroutine, this);
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
@@ -364,14 +364,12 @@ export class UpdateSession implements UpdateContext {
       }
     }
 
-    coroutine.suspend(scheduleLanes);
-
     const updateHandleNode = updateHandles.pushBack({
       coroutine,
       lanes: scheduleLanes,
       promise: backend.requestCallback(async () => {
         try {
-          if ((coroutine.pendingLanes & scheduleLanes) !== scheduleLanes) {
+          if ((coroutine.pendingLanes & scheduleLanes) === Lanes.NoLanes) {
             return;
           }
 

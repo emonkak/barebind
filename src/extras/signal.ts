@@ -98,10 +98,6 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._pendingLanes = Lanes.NoLanes;
   }
 
-  suspend(scheduleLanes: Lanes): void {
-    this._pendingLanes |= scheduleLanes;
-  }
-
   hydrate(target: HydrationTree, context: UpdateContext): void {
     if (this._subscription !== null) {
       throw new HydrationError(
@@ -142,7 +138,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscribeSignal(context: UpdateContext): Subscription {
     return this._signal.subscribe(() => {
-      context.scheduleUpdate(this);
+      const { lanes } = context.scheduleUpdate(this);
+      this._pendingLanes |= lanes;
     });
   }
 }

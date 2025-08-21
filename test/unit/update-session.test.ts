@@ -1,12 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createComponent } from '@/component.js';
-import {
-  $toDirective,
-  CommitPhase,
-  type Hook,
-  Lanes,
-  PartType,
-} from '@/internal.js';
+import { $toDirective, CommitPhase, Lanes, PartType } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { createRuntime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -506,7 +500,7 @@ describe('UpdateSession', () => {
     it('renders a component with the new render session', () => {
       const component = createComponent(() => null);
       const props = {};
-      const hooks: Hook[] = [];
+      const state = { hooks: [], pendingLanes: Lanes.NoLanes };
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const session = createUpdateSession();
@@ -518,7 +512,7 @@ describe('UpdateSession', () => {
       const result = session.renderComponent(
         component,
         props,
-        hooks,
+        state,
         coroutine,
       );
 
@@ -526,7 +520,7 @@ describe('UpdateSession', () => {
       expect(renderSpy).toHaveBeenCalledWith(
         props,
         expect.objectContaining({
-          _hooks: expect.exact(hooks),
+          _state: expect.exact(state),
           _coroutine: expect.exact(coroutine),
           _context: expect.exact(session),
         }),
@@ -682,7 +676,9 @@ describe('UpdateSession', () => {
     const concurrentLane = concurrent ? Lanes.ConcurrentLane : Lanes.NoLanes;
 
     it('schedules the update with the current priority of the backend', async () => {
-      const coroutine = new MockCoroutine();
+      const coroutine = new MockCoroutine(
+        Lanes.UserBlockingLane | concurrentLane,
+      );
       const session = createUpdateSession(-1, { concurrent });
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
@@ -704,7 +700,12 @@ describe('UpdateSession', () => {
     });
 
     it('schedules as a different update if the lanes are different', async () => {
-      const coroutine = new MockCoroutine();
+      const coroutine = new MockCoroutine(
+        Lanes.UserBlockingLane |
+          Lanes.BackgroundLane |
+          Lanes.ViewTransitionLane |
+          concurrentLane,
+      );
       const session = createUpdateSession();
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
@@ -716,36 +717,50 @@ describe('UpdateSession', () => {
       const task2 = session.scheduleUpdate(coroutine, {
         priority: 'background',
         concurrent,
+        viewTransition: true,
       });
       const task3 = session.scheduleUpdate(coroutine, {
         priority: 'background',
         concurrent,
-        viewTransition: true,
       });
 
       expect(task1.lanes).toBe(Lanes.UserBlockingLane | concurrentLane);
-      expect(task2.lanes).toBe(Lanes.BackgroundLane | concurrentLane);
-      expect(task3.lanes).toBe(
+      expect(task2.lanes).toBe(
         Lanes.BackgroundLane | Lanes.ViewTransitionLane | concurrentLane,
       );
+      expect(task3.lanes).toBe(Lanes.BackgroundLane | concurrentLane);
 
       expect(await waitForAll(session)).toBe(3);
       expect(await getPromiseState(task1.promise)).toBe('fulfilled');
       expect(await getPromiseState(task2.promise)).toBe('fulfilled');
       expect(await getPromiseState(task3.promise)).toBe('fulfilled');
 
-      expect(resumeSpy).toHaveBeenCalledOnce();
+      expect(resumeSpy).toHaveBeenCalledTimes(2);
       expect(resumeSpy).toHaveBeenCalledWith(expect.not.exact(session));
-      expect(resumeSpy).toHaveBeenCalledWith(
+      expect(resumeSpy).toHaveBeenNthCalledWith(
+        1,
         expect.objectContaining({
           lanes: Lanes.UserBlockingLane | concurrentLane,
+        }),
+      );
+      expect(resumeSpy).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          lanes:
+            Lanes.UserBlockingLane |
+            Lanes.UserVisibleLane |
+            Lanes.BackgroundLane |
+            Lanes.ViewTransitionLane |
+            concurrentLane,
         }),
       );
     });
 
     it('returns the pending task scheduled in the same lane', async () => {
-      const coroutine = new MockCoroutine();
-      const session = createUpdateSession();
+      const coroutine = new MockCoroutine(
+        Lanes.UserBlockingLane | concurrentLane,
+      );
+      const session = createUpdateSession(-1);
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 

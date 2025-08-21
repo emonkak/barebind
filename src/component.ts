@@ -14,6 +14,7 @@ import {
   Lanes,
   type Part,
   type RenderContext,
+  type RenderState,
   type Scope,
   type Slot,
   type UpdateContext,
@@ -58,15 +59,13 @@ export class ComponentBinding<TProps, TResult>
 
   private _memoizedProps: TProps | null = null;
 
-  private _slot: Slot<TResult> | null = null;
-
   private readonly _part: Part;
 
-  private _hooks: Hook[] = [];
-
-  private _pendingLanes: Lanes = Lanes.NoLanes;
+  private _slot: Slot<TResult> | null = null;
 
   private _parentScope: Scope | null = null;
+
+  private _state: RenderState = { hooks: [], pendingLanes: Lanes.NoLanes };
 
   constructor(
     component: Component<TProps, TResult>,
@@ -91,7 +90,7 @@ export class ComponentBinding<TProps, TResult>
   }
 
   get pendingLanes(): Lanes {
-    return this._pendingLanes;
+    return this._state.pendingLanes;
   }
 
   shouldBind(props: TProps): boolean {
@@ -111,7 +110,7 @@ export class ComponentBinding<TProps, TResult>
     const result = subcontext.renderComponent(
       this._component,
       this._pendingProps,
-      this._hooks,
+      this._state,
       this,
     );
     // When the scope level is the same, the binding is the update root.
@@ -130,12 +129,8 @@ export class ComponentBinding<TProps, TResult>
       context.enqueueMutationEffect(this._slot);
     }
 
-    this._pendingLanes &= ~context.lanes;
     this._memoizedProps = this._pendingProps;
-  }
-
-  suspend(scheduleLanes: Lanes): void {
-    this._pendingLanes |= scheduleLanes;
+    this._state.pendingLanes &= ~context.lanes;
   }
 
   hydrate(target: HydrationTree, context: UpdateContext): void {
@@ -151,7 +146,7 @@ export class ComponentBinding<TProps, TResult>
     const result = subcontext.renderComponent(
       this._component,
       this._pendingProps,
-      this._hooks,
+      this._state,
       this,
     );
 
@@ -168,9 +163,11 @@ export class ComponentBinding<TProps, TResult>
   }
 
   disconnect(context: UpdateContext): void {
+    const { hooks } = this._state;
+
     // Hooks must be cleaned in reverse order.
-    for (let i = this._hooks.length - 1; i >= 0; i--) {
-      const hook = this._hooks[i]!;
+    for (let i = hooks.length - 1; i >= 0; i--) {
+      const hook = hooks[i]!;
       switch (hook.type) {
         case HookType.Effect:
           context.enqueuePassiveEffect(new FinalizeEffectHook(hook));
@@ -185,7 +182,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._slot?.disconnect(context);
-    this._hooks = [];
+    this._state.hooks = [];
   }
 
   commit(): void {

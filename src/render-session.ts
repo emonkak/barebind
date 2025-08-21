@@ -14,6 +14,7 @@ import {
   type RefObject,
   type RenderContext,
   type RenderSessionContext,
+  type RenderState,
   setContextValue,
   type TemplateMode,
   type UpdateHandle,
@@ -22,7 +23,7 @@ import {
 } from './internal.js';
 
 export class RenderSession implements RenderContext {
-  private readonly _hooks: Hook[];
+  private readonly _state: RenderState;
 
   private readonly _coroutine: Coroutine;
 
@@ -31,11 +32,11 @@ export class RenderSession implements RenderContext {
   private _hookIndex = 0;
 
   constructor(
-    hooks: Hook[],
+    state: RenderState,
     coroutine: Coroutine,
     context: RenderSessionContext,
   ) {
-    this._hooks = hooks;
+    this._state = state;
     this._coroutine = coroutine;
     this._context = context;
   }
@@ -62,22 +63,25 @@ export class RenderSession implements RenderContext {
   }
 
   finalize(): void {
-    const currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.FinalizerHook>(HookType.Finalizer, currentHook);
     } else {
-      this._hooks.push({ type: HookType.Finalizer });
+      hooks.push({ type: HookType.Finalizer });
 
       // Refuse to use new hooks after finalization.
-      Object.freeze(this._hooks);
+      Object.freeze(hooks);
     }
 
     this._hookIndex++;
   }
 
   forceUpdate(options?: UpdateOptions): UpdateHandle {
-    return this._context.scheduleUpdate(this._coroutine, options);
+    const handle = this._context.scheduleUpdate(this._coroutine, options);
+    this._state.pendingLanes |= handle.lanes;
+    return handle;
   }
 
   getContextValue(key: unknown): unknown {
@@ -151,7 +155,8 @@ export class RenderSession implements RenderContext {
   }
 
   useId(): string {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.IdHook>(HookType.Id, currentHook);
@@ -160,7 +165,7 @@ export class RenderSession implements RenderContext {
         type: HookType.Id,
         id: this._context.nextIdentifier(),
       };
-      this._hooks.push(currentHook);
+      hooks.push(currentHook);
     }
 
     this._hookIndex++;
@@ -183,7 +188,8 @@ export class RenderSession implements RenderContext {
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.MemoHook<T>>(HookType.Memo, currentHook);
@@ -198,7 +204,7 @@ export class RenderSession implements RenderContext {
         value: factory(),
         dependencies,
       };
-      this._hooks.push(currentHook);
+      hooks.push(currentHook);
     }
 
     this._hookIndex++;
@@ -214,15 +220,19 @@ export class RenderSession implements RenderContext {
     dispatch: (action: TAction, options?: UpdateOptions) => void,
     isPending: boolean,
   ] {
-    let currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    let currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.ReducerHook<TState, TAction>>(
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._context.lanes) === currentHook.lanes) {
-        currentHook.lanes = Lanes.NoLanes;
+      if (
+        (currentHook.pendingLanes & this._context.lanes) ===
+        currentHook.pendingLanes
+      ) {
+        currentHook.pendingLanes = Lanes.NoLanes;
         currentHook.memoizedState = currentHook.pendingState;
       }
       currentHook.reducer = reducer;
@@ -231,23 +241,23 @@ export class RenderSession implements RenderContext {
         typeof initialState === 'function' ? initialState() : initialState;
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
-        lanes: Lanes.NoLanes,
         reducer,
-        pendingState: state,
-        memoizedState: state,
         dispatch: (action: TAction, options?: UpdateOptions) => {
           const prevState = hook.memoizedState;
           const nextState = hook.reducer(prevState, action);
 
           if (!Object.is(nextState, prevState)) {
             const { lanes } = this.forceUpdate(options);
+            hook.pendingLanes |= lanes;
             hook.pendingState = nextState;
-            hook.lanes |= lanes;
           }
         },
+        pendingLanes: Lanes.NoLanes,
+        pendingState: state,
+        memoizedState: state,
       };
       currentHook = hook;
-      this._hooks.push(hook);
+      hooks.push(hook);
     }
 
     this._hookIndex++;
@@ -255,7 +265,7 @@ export class RenderSession implements RenderContext {
     return [
       currentHook.memoizedState,
       currentHook.dispatch,
-      currentHook.lanes !== Lanes.NoLanes,
+      currentHook.pendingLanes !== Lanes.NoLanes,
     ];
   }
 
@@ -319,7 +329,8 @@ export class RenderSession implements RenderContext {
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
   ): void {
-    const currentHook = this._hooks[this._hookIndex];
+    const { hooks } = this._state;
+    const currentHook = hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
@@ -335,7 +346,7 @@ export class RenderSession implements RenderContext {
         dependencies,
         cleanup: undefined,
       };
-      this._hooks.push(hook);
+      hooks.push(hook);
       enqueueEffect(hook, this._context);
     }
 

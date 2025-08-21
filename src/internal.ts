@@ -58,7 +58,6 @@ export interface Component<TProps, TResult = unknown>
 export interface Coroutine {
   get pendingLanes(): Lanes;
   resume(context: UpdateContext): void;
-  suspend(scheduleLanes: Lanes): void;
 }
 
 export type CustomHookFunction<T> = (context: HookContext) => T;
@@ -127,11 +126,11 @@ export namespace Hook {
 
   export interface ReducerHook<TState, TAction> {
     type: typeof HookType.Reducer;
-    lanes: Lanes;
     reducer: (state: TState, action: TAction) => TState;
+    dispatch: (action: TAction) => void;
+    pendingLanes: Lanes;
     pendingState: TState;
     memoizedState: TState;
-    dispatch: (action: TAction) => void;
   }
 }
 
@@ -195,11 +194,11 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 // biome-ignore format: Align lane flags
 export const Lanes = {
   NoLanes:            0,
-  UserBlockingLane:   0b1,
-  UserVisibleLane:    0b10,
-  BackgroundLane:     0b100,
-  ConcurrentLane:     0b1000,
-  ViewTransitionLane: 0b10000,
+  ConcurrentLane:     0b1,
+  ViewTransitionLane: 0b10,
+  UserBlockingLane:   0b100,
+  UserVisibleLane:    0b1000,
+  BackgroundLane:     0b10000,
 } as const;
 
 export type Lanes = number;
@@ -339,6 +338,11 @@ export interface RenderSessionContext {
   scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
+export interface RenderState {
+  hooks: Hook[];
+  pendingLanes: Lanes;
+}
+
 export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
@@ -406,7 +410,7 @@ export interface UpdateContext extends DirectiveContext, RenderSessionContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    hooks: Hook[],
+    state: RenderState,
     coroutine: Coroutine,
   ): TResult;
 }

@@ -6,12 +6,14 @@ import { MockBackend, MockCoroutine } from './mocks.js';
 
 export function createRenderSession(
   lanes: Lanes = -1,
+  pendingLanes: Lanes = Lanes.UserBlockingLane,
   options?: RuntimeOptions,
 ): RenderSession {
   const runtime = createRuntime(new MockBackend(), options);
+  const coroutine = new MockCoroutine(pendingLanes);
   return new RenderSession(
-    [],
-    new MockCoroutine(),
+    coroutine,
+    coroutine,
     UpdateSession.create(lanes, runtime),
   );
 }
@@ -25,8 +27,10 @@ export function createUpdateSession(
 }
 
 export function disposeRenderSession(session: RenderSession): void {
-  for (let i = session['_hooks'].length - 1; i >= 0; i--) {
-    const hook = session['_hooks'][i]!;
+  const { hooks } = session['_state'];
+
+  for (let i = hooks.length - 1; i >= 0; i--) {
+    const hook = hooks[i]!;
     if (
       hook.type === HookType.Effect ||
       hook.type === HookType.LayoutEffect ||

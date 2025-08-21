@@ -11,6 +11,7 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
+  type Hook,
   type HydrationTree,
   Lanes,
   type Part,
@@ -96,14 +97,14 @@ export class MockBinding<T> implements Binding<T> {
         // For part debugging, update comments only if the data is empty.
         if (
           this.part.node.data === '' ||
-          this.part.node.data === this.memoizedValue
+          this.part.node.data === toString(this.memoizedValue)
         ) {
-          this.part.node.data = this.value?.toString() ?? '';
+          this.part.node.data = toString(this.value);
         }
         break;
       case PartType.Element:
         for (const name in this.value) {
-          this.part.node.setAttribute(name, this.value[name]?.toString() ?? '');
+          this.part.node.setAttribute(name, toString(this.value[name]));
         }
         break;
       case PartType.Live:
@@ -119,7 +120,7 @@ export class MockBinding<T> implements Binding<T> {
       case PartType.Text:
         this.part.node.data =
           this.part.precedingText +
-          (this.value?.toString() ?? '') +
+          toString(this.value) +
           this.part.followingText;
         break;
     }
@@ -164,14 +165,16 @@ export class MockBinding<T> implements Binding<T> {
 }
 
 export class MockCoroutine implements Coroutine {
-  pendingLanes: Lanes = Lanes.NoLanes;
+  hooks: Hook[] = [];
 
-  resume(_context: UpdateContext): void {
-    this.pendingLanes = Lanes.NoLanes;
+  pendingLanes: Lanes;
+
+  constructor(pendingLanes: Lanes = Lanes.NoLanes) {
+    this.pendingLanes = pendingLanes;
   }
 
-  suspend(scheduleLanes: Lanes): void {
-    this.pendingLanes |= scheduleLanes;
+  resume(context: UpdateContext): void {
+    this.pendingLanes &= ~context.lanes;
   }
 }
 
@@ -388,4 +391,8 @@ export class MockTemplateFactory implements TemplateFactory {
   ): Template<readonly unknown[]> {
     return new MockTemplate(strings, binds, placeholder, mode);
   }
+}
+
+function toString(value: unknown): string {
+  return value?.toString() ?? '';
 }

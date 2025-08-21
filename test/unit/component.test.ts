@@ -133,8 +133,7 @@ describe('ComponentBinding', () => {
   describe('resume()', () => {
     it('clears pending lanes', async () => {
       const props = {
-        greet: 'Hello',
-        name: 'foo',
+        initialCount: 100,
       };
       const part = {
         type: PartType.ChildNode,
@@ -142,36 +141,29 @@ describe('ComponentBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const binding = new ComponentBinding(Greet, props, part);
+      const binding = new ComponentBinding(Increment, props, part);
       const session = createUpdateSession(Lanes.UserBlockingLane);
 
       const commitSpy = vi.spyOn(binding, 'commit');
 
       SESSION1: {
-        binding.suspend(Lanes.UserBlockingLane);
-
-        expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
-
         session.enqueueCoroutine(binding);
         session.enqueueMutationEffect(binding);
         session.flushSync();
 
-        expect(commitSpy).toHaveBeenCalled();
-        expect(binding.pendingLanes).toBe(Lanes.NoLanes);
-        expect(part.node.nodeValue).toBe('Hello, foo!');
+        expect(commitSpy).toHaveBeenCalledTimes(1);
+        expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
+        expect(part.node.nodeValue).toBe('100');
       }
 
       SESSION2: {
-        binding.suspend(Lanes.UserBlockingLane);
-
-        expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
-
         session.enqueueCoroutine(binding);
+        session.enqueueMutationEffect(binding);
         session.flushSync();
 
-        expect(commitSpy).toHaveBeenCalled();
+        expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
-        expect(part.node.nodeValue).toBe('Hello, foo!');
+        expect(part.node.nodeValue).toBe('101');
       }
     });
   });
@@ -419,4 +411,21 @@ const EnqueueEffect = createComponent(function EnqueueEffect(
   }, [callback, cleanup]);
 
   return '3 effects are enqueued';
+});
+
+interface IncrementProps {
+  initialCount: number;
+}
+
+const Increment = createComponent(function Increment(
+  { initialCount }: IncrementProps,
+  context: RenderContext,
+): unknown {
+  const [count, setCount] = context.useState(initialCount);
+
+  context.useEffect(() => {
+    setCount((count) => count + 1);
+  }, []);
+
+  return count;
 });
