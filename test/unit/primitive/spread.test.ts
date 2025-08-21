@@ -3,8 +3,11 @@ import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { MockSlot } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement } from '../../test-utils.js';
+import {
+  createElement,
+  createRuntime,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 describe('SpreadPrimitive', () => {
   describe('name', () => {
@@ -51,8 +54,8 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
-      const binding = SpreadPrimitive.resolveBinding(props, part, session);
+      const context = createRuntime();
+      const binding = SpreadPrimitive.resolveBinding(props, part, context);
 
       expect(binding.type).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
@@ -67,10 +70,10 @@ describe('SpreadPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        SpreadPrimitive.resolveBinding(props, part, session),
+        SpreadPrimitive.resolveBinding(props, part, context),
       ).toThrow('SpreadPrimitive must be used in an element part,');
     });
   });
@@ -97,10 +100,12 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
-      binding.connect(session);
-      binding.commit();
+      helper.startSession((context) => {
+        binding.connect(context);
+        binding.commit();
+      });
 
       expect(binding.shouldBind(props1)).toBe(false);
       expect(binding.shouldBind(props2)).toBe(true);
@@ -122,10 +127,13 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const session = createUpdateSession();
-      const target = createHydrationTree(createElement('div', {}, part.node));
+      const container = createElement('div', {}, part.node);
+      const target = createHydrationTree(container);
+      const helper = new UpdateHelper();
 
-      binding.hydrate(target, session);
+      helper.startSession((context) => {
+        binding.hydrate(target, context);
+      });
 
       const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -206,14 +214,19 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const session = createUpdateSession();
-      const tree = createHydrationTree(createElement('div', {}, part.node));
+      const container = createElement('div', {}, part.node);
+      const target = createHydrationTree(container);
+      const helper = new UpdateHelper();
 
-      binding.connect(session);
-      binding.commit();
+      helper.startSession((context) => {
+        binding.connect(context);
+        binding.commit();
+      });
 
       expect(() => {
-        binding.hydrate(tree, session);
+        helper.startSession((context) => {
+          binding.hydrate(target, context);
+        });
       }).toThrow(HydrationError);
     });
   });
@@ -237,11 +250,13 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -311,9 +326,11 @@ describe('SpreadBinding', () => {
       SESSION2: {
         const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         const newSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -376,11 +393,13 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(binding['_memoizedSlots']).toBe(null);
       }
@@ -399,11 +418,13 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
@@ -471,8 +492,10 @@ describe('SpreadBinding', () => {
       SESSION2: {
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(slots).toStrictEqual({
           id: expect.objectContaining({

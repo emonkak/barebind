@@ -1,3 +1,4 @@
+import { LinkedList } from '../collections/linked-list.js';
 import {
   $customHook,
   $toDirective,
@@ -16,7 +17,6 @@ import {
   type Slot,
   type UpdateContext,
 } from '../internal.js';
-import { LinkedList } from '../linked-list.js';
 
 export type Subscriber = () => void;
 
@@ -77,6 +77,10 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._pendingLanes;
   }
 
+  set pendingLanes(pendingLanes: Lanes) {
+    this._pendingLanes = pendingLanes;
+  }
+
   shouldBind(signal: Signal<T>): boolean {
     return this._subscription === null || signal !== this._signal;
   }
@@ -92,7 +96,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   resume(context: UpdateContext): void {
     if (this._slot.reconcile(this._signal.value, context)) {
-      context.enqueueMutationEffect(this._slot);
+      context.frame.mutationEffects.push(this._slot);
     }
     this._memoizedVersion = this._signal.version;
     this._pendingLanes = Lanes.NoLanes;
@@ -137,9 +141,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   private _subscribeSignal(context: UpdateContext): Subscription {
+    const { runtime } = context;
     return this._signal.subscribe(() => {
-      const { lanes } = context.scheduleUpdate(this);
-      this._pendingLanes |= lanes;
+      runtime.scheduleUpdate(this);
     });
   }
 }

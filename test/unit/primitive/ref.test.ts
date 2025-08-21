@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('RefPrimitive', () => {
   describe('name', () => {
@@ -54,8 +54,8 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: attributeName,
       };
-      const session = createUpdateSession();
-      const binding = RefPrimitive.resolveBinding(ref, part, session);
+      const context = createRuntime();
+      const binding = RefPrimitive.resolveBinding(ref, part, context);
 
       expect(binding.type).toBe(RefPrimitive);
       expect(binding.value).toBe(ref);
@@ -68,9 +68,9 @@ describe('RefPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
-      expect(() => RefPrimitive.resolveBinding(ref, part, session)).toThrow(
+      expect(() => RefPrimitive.resolveBinding(ref, part, context)).toThrow(
         'RefPrimitive must be used in ":ref" attribute part,',
       );
     });
@@ -100,11 +100,13 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(ref1)).toBe(false);
         expect(binding.shouldBind(ref2)).toBe(true);
@@ -122,29 +124,35 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(ref1.current).toBe(part.node);
         expect(ref2.current).toBe(null);
       }
 
       SESSION2: {
-        binding.bind(ref2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(ref2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(ref1.current).toBe(null);
         expect(ref2.current).toBe(part.node);
       }
 
       SESSION3: {
-        binding.bind(null);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(null);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(ref1.current).toBe(null);
         expect(ref2.current).toBe(null);
@@ -162,11 +170,13 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(cleanup1).not.toHaveBeenCalled();
         expect(cleanup2).not.toHaveBeenCalled();
@@ -176,8 +186,10 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(cleanup1).not.toHaveBeenCalled();
         expect(cleanup2).not.toHaveBeenCalled();
@@ -186,9 +198,11 @@ describe('RefBinding', () => {
       }
 
       SESSION3: {
-        binding.bind(ref2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(ref2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(cleanup1).toHaveBeenCalledOnce();
         expect(cleanup2).not.toHaveBeenCalled();
@@ -198,9 +212,11 @@ describe('RefBinding', () => {
       }
 
       SESSION4: {
-        binding.bind(null);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(null);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(cleanup1).toHaveBeenCalledOnce();
         expect(cleanup2).toHaveBeenCalledOnce();
@@ -219,11 +235,13 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(ref).not.toHaveBeenCalled();
       }
@@ -237,18 +255,22 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(ref.current).toBe(part.node);
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(ref.current).toBe(null);
       }
@@ -263,11 +285,13 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(cleanup).not.toHaveBeenCalled();
         expect(ref).toHaveBeenCalledOnce();
@@ -275,8 +299,10 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(cleanup).toHaveBeenCalledOnce();
         expect(ref).toHaveBeenCalledOnce();

@@ -5,7 +5,7 @@ import { EmptyTemplate } from '@/template/empty.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import { TextTemplate } from '@/template/text.js';
 import { OptimizedTemplateFactory } from '@/template-factory.js';
-import { templateLiteral } from '../test-utils.js';
+import { templateLiteral } from '../test-helpers.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 

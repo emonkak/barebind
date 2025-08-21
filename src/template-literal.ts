@@ -10,7 +10,7 @@ export class Literal extends String {}
 
 export interface TemplateLiteral<T> {
   strings: readonly string[];
-  values: T[];
+  values: readonly T[];
 }
 
 export class TemplateLiteralPreprocessor {

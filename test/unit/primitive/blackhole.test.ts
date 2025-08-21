@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('BlackholePrimitive', () => {
   describe('name', () => {
@@ -18,8 +18,8 @@ describe('BlackholePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
-      const binding = BlackholePrimitive.resolveBinding(value, part, session);
+      const context = createRuntime();
+      const binding = BlackholePrimitive.resolveBinding(value, part, context);
 
       expect(binding.type).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);
@@ -52,11 +52,13 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
       }
     });
   });
@@ -69,11 +71,13 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
       }
     });
   });

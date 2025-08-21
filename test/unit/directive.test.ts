@@ -4,7 +4,7 @@ import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { $toDirective, PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockDirective, MockPrimitive, MockSlot } from '../mocks.js';
-import { createUpdateSession } from '../session-utils.js';
+import { createRuntime } from '../test-helpers.js';
 
 describe('DirectiveSpecifier', () => {
   describe('[$toDirectiveElement]()', () => {
@@ -41,9 +41,9 @@ describe('SlotSpecifier', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
       const bindable = new SlotSpecifier(slotType, value);
-      const directive = bindable[$toDirective](part, session);
+      const directive = bindable[$toDirective](part, context);
 
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
@@ -59,9 +59,9 @@ describe('SlotSpecifier', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
       const bindable = new SlotSpecifier(slotType, value);
-      const directive = bindable[$toDirective](part, session);
+      const directive = bindable[$toDirective](part, context);
 
       expect(directive.type).toBe(value.type);
       expect(directive.value).toBe(value.value);

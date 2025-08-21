@@ -20,8 +20,11 @@ import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import { MockBindable, MockPrimitive } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement as createDOMElement } from '../../test-utils.js';
+import {
+  createElement as createDOMElement,
+  createRuntime,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 describe('createElement()', () => {
   it('constructs the new VElement with normalized properties', () => {
@@ -179,8 +182,8 @@ describe('ElementDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
-      const binding = ElementDirective.resolveBinding(props, part, session);
+      const context = createRuntime();
+      const binding = ElementDirective.resolveBinding(props, part, context);
 
       expect(binding.type).toBe(ElementDirective);
       expect(binding.value).toBe(props);
@@ -195,10 +198,10 @@ describe('ElementDirective', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        ElementDirective.resolveBinding(props, part, session),
+        ElementDirective.resolveBinding(props, part, context),
       ).toThrow('ElementDirective must be used in an element part,');
     });
   });
@@ -225,11 +228,13 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(props1)).toBe(false);
         expect(binding.shouldBind(props2)).toBe(true);
@@ -245,18 +250,22 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -270,11 +279,13 @@ describe('ElementBinding', () => {
         node: document.createElement('button'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe(
           '<button type="button" disabled=""></button>',
@@ -282,16 +293,20 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<button type="button"></button>');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<button></button>');
       }
@@ -305,26 +320,32 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div tabindex="-1"></div>');
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div tabindex="0"></div>');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -338,26 +359,31 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
-
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
         expect(part.node.outerHTML).toBe('<div class="foo"></div>');
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div class=""></div>');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<div class=""></div>');
       }
@@ -371,26 +397,32 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div><span>foo</span></div>');
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -404,11 +436,13 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe(
           '<div>&lt;span&gt;foo&lt;/span&gt;</div>',
@@ -416,16 +450,20 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }
@@ -439,28 +477,34 @@ describe('ElementBinding', () => {
         node: document.createElement('input'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.defaultChecked).toBe(false);
         expect(part.node.checked).toBe(true);
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.defaultChecked).toBe(false);
         expect(part.node.checked).toBe(false);
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.defaultChecked).toBe(false);
         expect(part.node.checked).toBe(false);
@@ -477,28 +521,34 @@ describe('ElementBinding', () => {
           node: document.createElement(name),
         };
         const binding = new ElementBinding(props1, part);
-        const session = createUpdateSession();
+        const helper = new UpdateHelper();
 
         SESSION1: {
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(part.node.value).toBe(props1.value);
           expect(part.node.defaultValue).toBe(props1.defaultValue);
         }
 
         SESSION2: {
-          binding.bind(props2);
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.bind(props2);
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(part.node.value).toBe('');
           expect(part.node.defaultValue).toBe('');
         }
 
         SESSION3: {
-          binding.disconnect(session);
-          binding.rollback();
+          helper.startSession((context) => {
+            binding.disconnect(context);
+            binding.rollback();
+          });
 
           expect(part.node.value).toBe('');
           expect(part.node.defaultValue).toBe('');
@@ -518,26 +568,32 @@ describe('ElementBinding', () => {
         ),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.value).toBe(props1.value);
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.value).toBe('');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.value).toBe('');
       }
@@ -551,26 +607,32 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.htmlFor).toBe(props1.htmlFor);
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.htmlFor).toBe('');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.htmlFor).toBe('');
       }
@@ -586,11 +648,13 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).not.toHaveBeenCalled();
@@ -599,8 +663,10 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).not.toHaveBeenCalled();
@@ -609,9 +675,11 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).toHaveBeenCalledOnce();
@@ -620,8 +688,10 @@ describe('ElementBinding', () => {
       }
 
       SESSION4: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(props1.ref).toHaveBeenCalledOnce();
         expect(props2.ref).toHaveBeenCalledOnce();
@@ -638,28 +708,34 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(props1.ref.current).toBe(part.node);
         expect(props2.ref.current).toBe(null);
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(props1.ref.current).toBe(null);
         expect(props2.ref.current).toBe(part.node);
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(props1.ref.current).toBe(null);
         expect(props2.ref.current).toBe(null);
@@ -675,11 +751,13 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe(
           'color: red; background-color: white;',
@@ -687,9 +765,11 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe(
           'color: black; border: 1px solid black;',
@@ -697,16 +777,20 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        binding.bind(props3);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props3);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe('');
       }
 
       SESSION4: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.style.cssText).toBe('');
       }
@@ -719,11 +803,13 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       expect(() => {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
       }).toThrow('The "style" property expects a object, not a string.');
     });
 
@@ -737,14 +823,16 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -752,9 +840,11 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).not.toHaveBeenCalled();
@@ -767,8 +857,10 @@ describe('ElementBinding', () => {
       expect(props2.onClick).toHaveBeenCalledWith(event1);
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).toHaveBeenCalled();
@@ -791,14 +883,16 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
         expect(addEventListenerSpy).toHaveBeenNthCalledWith(
@@ -811,9 +905,11 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
         expect(addEventListenerSpy).toHaveBeenNthCalledWith(
@@ -838,8 +934,10 @@ describe('ElementBinding', () => {
       expect(props2.onClick.handleEvent).toHaveBeenCalledWith(event1);
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
         expect(removeEventListenerSpy).toHaveBeenCalledTimes(2);
@@ -876,11 +974,13 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe(
           '<div checked="checked" defaultchecked="defaultChecked" defaultvalue="defaultValue" htmlfor="htmlFor" title="title" value="value"></div>',
@@ -888,16 +988,20 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.outerHTML).toBe('<div title="title"></div>');
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.outerHTML).toBe('<div></div>');
       }

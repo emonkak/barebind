@@ -4,7 +4,7 @@ import { PartType } from '@/internal.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockTemplate } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { UpdateHelper } from '../../test-helpers.js';
 
 describe('EmptyTemplate', () => {
   describe('arity', () => {
@@ -26,6 +26,7 @@ describe('EmptyTemplate', () => {
 
   describe('hydrate()', () => {
     it('hydrates an empty tree', () => {
+      const template = new EmptyTemplate();
       const binds = [] as const;
       const part = {
         type: PartType.ChildNode,
@@ -34,14 +35,11 @@ describe('EmptyTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const target = createHydrationTree(document.createElement('div'));
-      const session = createUpdateSession();
-      const template = new EmptyTemplate();
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
@@ -50,6 +48,7 @@ describe('EmptyTemplate', () => {
 
   describe('render()', () => {
     it('renders an empty tree', () => {
+      const template = new EmptyTemplate();
       const binds = [] as const;
       const part = {
         type: PartType.ChildNode,
@@ -57,9 +56,11 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const template = new EmptyTemplate();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes).toStrictEqual([]);
       expect(slots).toStrictEqual([]);

@@ -4,8 +4,7 @@ import { HydrationError, PartType } from '@/internal.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot, MockTemplate } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement } from '../../test-utils.js';
+import { createElement, UpdateHelper } from '../../test-helpers.js';
 
 describe('ChildNodeTemplate', () => {
   describe('arity', () => {
@@ -27,6 +26,7 @@ describe('ChildNodeTemplate', () => {
 
   describe('hydrate()', () => {
     it('hydrates a tree containing a comment node', () => {
+      const template = new ChildNodeTemplate();
       const binds = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -36,14 +36,11 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {}, document.createComment(''));
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const template = new ChildNodeTemplate();
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);
@@ -63,6 +60,7 @@ describe('ChildNodeTemplate', () => {
     });
 
     it('should throw the error if there is a tree mismatch', () => {
+      const template = new ChildNodeTemplate();
       const binds = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -72,17 +70,19 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {});
       const tree = createHydrationTree(container);
-      const session = createUpdateSession();
-      const template = new ChildNodeTemplate();
+      const helper = new UpdateHelper();
 
       expect(() => {
-        template.hydrate(binds, part, tree, session);
+        helper.startSession((context) => {
+          template.hydrate(binds, part, tree, context);
+        });
       }).toThrow(HydrationError);
     });
   });
 
   describe('render()', () => {
     it('renders a template containing a child node part', () => {
+      const template = new ChildNodeTemplate();
       const binds = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -90,9 +90,11 @@ describe('ChildNodeTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const template = new ChildNodeTemplate();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes).toStrictEqual([expect.any(Comment)]);
       expect(slots).toStrictEqual([expect.any(MockSlot)]);

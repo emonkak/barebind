@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { EventBinding, EventPrimitive } from '@/primitive/event.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('EventPrimitive', () => {
   describe('name', () => {
@@ -54,8 +54,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       };
-      const session = createUpdateSession();
-      const binding = EventPrimitive.resolveBinding(handler, part, session);
+      const context = createRuntime();
+      const binding = EventPrimitive.resolveBinding(handler, part, context);
 
       expect(binding.type).toBe(EventPrimitive);
       expect(binding.value).toBe(handler);
@@ -68,10 +68,10 @@ describe('EventPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        EventPrimitive.resolveBinding(handler, part, session),
+        EventPrimitive.resolveBinding(handler, part, context),
       ).toThrow('EventPrimitive must be used in an event part,');
     });
   });
@@ -100,11 +100,13 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(handler1)).toBe(false);
         expect(binding.shouldBind(handler2)).toBe(true);
@@ -122,15 +124,17 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -144,9 +148,11 @@ describe('EventBinding', () => {
       expect(handler2).not.toHaveBeenCalled();
 
       SESSION2: {
-        binding.bind(handler2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(handler2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -169,15 +175,17 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
         expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -195,9 +203,11 @@ describe('EventBinding', () => {
       expect(handler2.handleEvent).not.toHaveBeenCalled();
 
       SESSION2: {
-        binding.bind(handler2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(handler2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
         expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -230,7 +240,7 @@ describe('EventBinding', () => {
           name: 'click',
         };
         const binding = new EventBinding(handler1, part);
-        const session = createUpdateSession();
+        const helper = new UpdateHelper();
 
         const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
         const removeEventListenerSpy = vi.spyOn(
@@ -239,8 +249,10 @@ describe('EventBinding', () => {
         );
 
         SESSION1: {
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(addEventListenerSpy).toHaveBeenCalledOnce();
           expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -252,9 +264,11 @@ describe('EventBinding', () => {
         }
 
         SESSION2: {
-          binding.bind(handler2);
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.bind(handler2);
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(addEventListenerSpy).toHaveBeenCalledOnce();
           expect(removeEventListenerSpy).toHaveBeenCalledOnce();
@@ -277,14 +291,16 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(addEventListenerSpy).not.toHaveBeenCalled();
         expect(removeEventListenerSpy).not.toHaveBeenCalled();
@@ -299,14 +315,16 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(addEventListenerSpy).toHaveBeenCalledWith('click', binding);
@@ -314,8 +332,10 @@ describe('EventBinding', () => {
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(addEventListenerSpy).toHaveBeenCalledOnce();
         expect(removeEventListenerSpy).toHaveBeenCalledOnce();

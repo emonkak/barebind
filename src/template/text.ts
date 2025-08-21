@@ -43,7 +43,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
-    const textSlot = context.resolveSlot(binds[0], textPart);
+    const textSlot = context.runtime.resolveSlot(binds[0], textPart);
 
     textSlot.hydrate(target, context);
 
@@ -62,7 +62,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
       precedingText: this._precedingText,
       followingText: this._followingText,
     };
-    const textSlot = context.resolveSlot(binds[0], textPart);
+    const textSlot = context.runtime.resolveSlot(binds[0], textPart);
 
     textSlot.connect(context);
 

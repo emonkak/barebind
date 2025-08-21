@@ -146,6 +146,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       );
     }
 
+    const { runtime } = context;
     const document = this._part.node.ownerDocument;
     const sourceItems = generateItems(this._props);
     const targetItems: Item<TKey, Slot<TValue>>[] = new Array(
@@ -160,7 +161,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         anchorNode: null,
         namespaceURI: this._part.namespaceURI,
       };
-      const slot = context.resolveSlot(value, part);
+      const slot = runtime.resolveSlot(value, part);
 
       slot.hydrate(target, context);
 
@@ -178,6 +179,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   }
 
   connect(context: UpdateContext): void {
+    const { runtime } = context;
     const document = this._part.node.ownerDocument;
     const targetItems = this._pendingItems;
     const sourceItems = generateItems(this._props);
@@ -190,7 +192,7 @@ export class RepeatBinding<TSource, TKey, TValue>
           anchorNode: null,
           namespaceURI: this._part.namespaceURI,
         };
-        const slot = context.resolveSlot(value, part);
+        const slot = runtime.resolveSlot(value, part);
         const item = {
           key,
           value: slot,

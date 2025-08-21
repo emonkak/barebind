@@ -19,8 +19,8 @@ export function BrowserHistory(
     setLocation: (newLocation: HistoryLocation) => void;
   }>(() => {
     const setLocation = (newLocation: HistoryLocation) => {
-      context.forceUpdate();
       historyState.location = newLocation;
+      context.forceUpdate({ mode: 'sequential' });
     };
     return {
       location: {

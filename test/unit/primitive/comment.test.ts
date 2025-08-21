@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('CommentPrimitive', () => {
   describe('name', () => {
@@ -21,8 +21,8 @@ describe('CommentPrimitive', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const binding = CommentPrimitive.resolveBinding(value, part, session);
+      const context = createRuntime();
+      const binding = CommentPrimitive.resolveBinding(value, part, context);
 
       expect(binding.type).toBe(CommentPrimitive);
       expect(binding.value).toBe(value);
@@ -35,10 +35,10 @@ describe('CommentPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        CommentPrimitive.resolveBinding(value, part, session),
+        CommentPrimitive.resolveBinding(value, part, context),
       ).toThrow('CommentPrimitive must be used in a child node,');
     });
   });
@@ -69,11 +69,13 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -92,19 +94,23 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding<string | null>(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe(value1);
       }
 
       SESSION2: {
-        binding.bind(value2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(value2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe('');
       }
@@ -120,19 +126,23 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding<number | null>(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe(value1.toString());
       }
 
       SESSION2: {
-        binding.bind(value2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(value2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe('');
       }
@@ -149,18 +159,22 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe(value);
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.nodeValue).toBe('');
       }
@@ -175,13 +189,15 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(setNodeValueSpy).not.toHaveBeenCalled();
       }

@@ -38,7 +38,10 @@ export class StrictSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): boolean {
-    const directive = context.resolveDirective(value, this._binding.part);
+    const directive = context.runtime.resolveDirective(
+      value,
+      this._binding.part,
+    );
 
     if (!areDirectiveTypesEqual(this._binding.type, directive.type)) {
       throw new Error(

@@ -1,10 +1,10 @@
 import {
-  AsyncRoot,
   BrowserBackend,
   createComponent,
   Literal,
   type RenderContext,
   Repeat,
+  Root,
   shallowEqual,
 } from 'barebind';
 import { ConsoleReporter, PerformanceProfiler } from 'barebind/extras/profiler';
@@ -342,7 +342,7 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const root = AsyncRoot.create(App({}), document.body, new BrowserBackend());
+const root = Root.create(App({}), document.body, new BrowserBackend());
 
 root.observe(new PerformanceProfiler(new ConsoleReporter()));
 

@@ -6,23 +6,17 @@ import {
 } from '@/extras/router/history.js';
 import { ScrollRestration } from '@/extras/router/scroll-restration.js';
 import { RelativeURL } from '@/extras/router/url.js';
-import type { RenderSession } from '@/render-session.js';
-import {
-  createRenderSession,
-  disposeRenderSession,
-  flushRenderSession,
-} from '../../../session-utils.js';
-import { createElement } from '../../../test-utils.js';
+import { createElement, RenderHelper } from '../../../test-helpers.js';
 
 describe('ScrollRestration', () => {
-  let session!: RenderSession;
+  let helper!: RenderHelper;
 
   beforeEach(() => {
-    session = createRenderSession();
+    helper = new RenderHelper();
   });
 
   afterEach(() => {
-    disposeRenderSession(session);
+    helper.finalizeHooks();
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
@@ -39,10 +33,10 @@ describe('ScrollRestration', () => {
 
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(ScrollRestration);
-
-      flushRenderSession(session);
+      helper.startSession((context) => {
+        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.use(ScrollRestration);
+      });
 
       expect(scrollToSpy).toHaveBeenCalled();
       expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
@@ -61,10 +55,10 @@ describe('ScrollRestration', () => {
 
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(ScrollRestration);
-
-      disposeRenderSession(session);
+      helper.startSession((context) => {
+        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.use(ScrollRestration);
+      });
 
       expect(scrollToSpy).not.toHaveBeenCalled();
     },
@@ -77,17 +71,19 @@ describe('ScrollRestration', () => {
       navigationType: 'push',
     };
     const navigator = createMockNavigator();
-
     const element = createElement('div', {
       id: 'foo',
     });
+
     const scrollIntoViewSpy = vi.spyOn(element, 'scrollIntoView');
 
-    session.setContextValue(CurrentHistory, [location, navigator]);
-    session.use(ScrollRestration);
-
     document.body.appendChild(element);
-    flushRenderSession(session);
+
+    helper.startSession((context) => {
+      context.setContextValue(CurrentHistory, [location, navigator]);
+      context.use(ScrollRestration);
+    });
+
     document.body.removeChild(element);
 
     expect(scrollIntoViewSpy).toHaveBeenCalled();
@@ -95,23 +91,18 @@ describe('ScrollRestration', () => {
 
   it('scrolls to the top if there is not the element indicating hash', () => {
     const location: HistoryLocation = {
-      url: RelativeURL.fromString('#bar'),
+      url: RelativeURL.fromString('#foo'),
       state: null,
       navigationType: 'push',
     };
     const navigator = createMockNavigator();
 
-    const element = createElement('div', {
-      id: 'foo',
-    });
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
-    session.setContextValue(CurrentHistory, [location, navigator]);
-    session.use(ScrollRestration);
-
-    document.body.appendChild(element);
-    flushRenderSession(session);
-    document.body.removeChild(element);
+    helper.startSession((context) => {
+      context.setContextValue(CurrentHistory, [location, navigator]);
+      context.use(ScrollRestration);
+    });
 
     expect(scrollToSpy).toHaveBeenCalled();
     expect(scrollToSpy).toHaveBeenCalledWith(0, 0);
@@ -133,11 +124,12 @@ describe('ScrollRestration', () => {
         'removeEventListener',
       );
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(ScrollRestration);
+      helper.startSession((context) => {
+        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.use(ScrollRestration);
+      });
 
-      flushRenderSession(session);
-      disposeRenderSession(session);
+      helper.finalizeHooks();
 
       expect(addEventListenerSpy).toHaveBeenCalledOnce();
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -170,10 +162,10 @@ describe('ScrollRestration', () => {
         scroll: vi.fn(),
       });
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(ScrollRestration);
-
-      flushRenderSession(session);
+      helper.startSession((context) => {
+        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.use(ScrollRestration);
+      });
 
       navigation!.dispatchEvent(event);
 
@@ -206,10 +198,10 @@ describe('ScrollRestration', () => {
         scroll: vi.fn(),
       });
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(ScrollRestration);
-
-      flushRenderSession(session);
+      helper.startSession((context) => {
+        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.use(ScrollRestration);
+      });
 
       navigation!.dispatchEvent(event);
 
@@ -232,10 +224,10 @@ describe('ScrollRestration', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    session.setContextValue(CurrentHistory, [location, navigator]);
-    session.use(ScrollRestration);
-
-    flushRenderSession(session);
+    helper.startSession((context) => {
+      context.setContextValue(CurrentHistory, [location, navigator]);
+      context.use(ScrollRestration);
+    });
 
     expect(history.scrollRestoration).toBe('auto');
   });

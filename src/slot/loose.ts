@@ -39,7 +39,7 @@ export class LooseSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): boolean {
-    const directive = context.resolveDirective(
+    const directive = context.runtime.resolveDirective(
       value,
       this._pendingBinding.part,
     );
@@ -55,7 +55,7 @@ export class LooseSlot<T> implements Slot<T> {
       this._pendingBinding = directive.type.resolveBinding(
         directive.value,
         this._pendingBinding.part,
-        context,
+        context.runtime,
       );
       this._pendingBinding.connect(context);
       this._dirty = true;

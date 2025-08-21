@@ -5,7 +5,7 @@ import {
   combination,
   factorial,
   permutations,
-} from './test-utils.js';
+} from './test-helpers.js';
 
 describe('factorial()', () => {
   it('calculates n! result', () => {

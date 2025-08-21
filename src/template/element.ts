@@ -63,8 +63,8 @@ export class ElementTemplate<
       anchorNode: null,
       namespaceURI,
     };
-    const elementSlot = context.resolveSlot(binds[0], elementPart);
-    const childrenSlot = context.resolveSlot(binds[1], childrenPart);
+    const elementSlot = context.runtime.resolveSlot(binds[0], elementPart);
+    const childrenSlot = context.runtime.resolveSlot(binds[1], childrenPart);
 
     elementSlot.hydrate(target, context);
     childrenSlot.hydrate(target, context);
@@ -95,8 +95,8 @@ export class ElementTemplate<
       anchorNode: null,
       namespaceURI,
     };
-    const elementSlot = context.resolveSlot(binds[0], elementPart);
-    const childrenSlot = context.resolveSlot(binds[1], childrenPart);
+    const elementSlot = context.runtime.resolveSlot(binds[0], elementPart);
+    const childrenSlot = context.runtime.resolveSlot(binds[1], childrenPart);
 
     elementPart.node.appendChild(childrenPart.node);
 

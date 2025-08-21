@@ -13,6 +13,7 @@ export {
   type RefCallback,
   type RefObject,
   type RenderContext,
+  type ScheduleOptions as UpdateOptions,
 } from './internal.js';
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
@@ -22,9 +23,9 @@ export {
   Repeat,
   type RepeatProps,
 } from './repeat.js';
-export { AsyncRoot } from './root/async.js';
-export { SyncRoot } from './root/sync.js';
+export { Root } from './root.js';
 export type {
+  Runtime,
   RuntimeBackend,
   RuntimeEvent,
   RuntimeObserver,

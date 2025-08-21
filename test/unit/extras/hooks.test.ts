@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { LinkedList } from '@/collections/linked-list.js';
 import {
   DeferredValue,
   EffectEvent,
@@ -7,227 +8,189 @@ import {
   SyncEnternalStore,
 } from '@/extras/hooks.js';
 import { Atom, type Signal } from '@/extras/signal.js';
-import {
-  createRenderSession,
-  disposeRenderSession,
-  flushRenderSession,
-} from '../../session-utils.js';
+import type { RenderContext } from '@/internal.js';
+import { RenderHelper } from '../../test-helpers.js';
 
 describe('DeferredValue()', () => {
   it('returns the value deferred until next rendering', async () => {
-    const session = createRenderSession();
-    const value1 = 'foo';
-    const value2 = 'bar';
-
-    const scheduleUpdateSpy = vi.spyOn(session['_context'], 'scheduleUpdate');
+    const helper = new RenderHelper();
 
     SESSION1: {
-      expect(session.use(DeferredValue(value1))).toBe(value1);
+      const callback = vi.fn((context) => {
+        return context.use(DeferredValue('foo'));
+      });
 
-      flushRenderSession(session);
+      helper.startSession(callback);
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveReturnedWith('foo');
     }
 
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
-    expect(scheduleUpdateSpy).not.toHaveBeenCalled();
+    await Promise.resolve();
+
+    expect(await helper.waitForAll()).toBe(0);
 
     SESSION2: {
-      expect(session.use(DeferredValue(value2))).toBe(value1);
+      const callback = vi.fn((context) => {
+        return context.use(DeferredValue('bar'));
+      });
 
-      flushRenderSession(session);
+      helper.startSession(callback);
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveReturnedWith('foo');
     }
 
-    expect(session.isUpdatePending()).toBe(true);
-    expect(await session.waitForUpdate()).toBe(1);
-    expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-    expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
-      priority: 'background',
-    });
+    await Promise.resolve();
 
-    SESSION3: {
-      expect(session.use(DeferredValue(value2))).toBe(value2);
+    expect(await helper.waitForAll()).toBe(1);
 
-      flushRenderSession(session);
+    SESSION2: {
+      const callback = vi.fn((context) => {
+        return context.use(DeferredValue('bar'));
+      });
+
+      helper.startSession(callback);
+
+      expect(callback).toHaveBeenCalledOnce();
+      expect(callback).toHaveReturnedWith('bar');
     }
 
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
-    expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
+    await Promise.resolve();
+
+    expect(await helper.waitForAll()).toBe(0);
   });
 
-  it('returns the initial value if it is given', () => {
-    const session = createRenderSession();
-    const value1 = 'foo';
-    const value2 = 'bar';
-
-    const scheduleUpdateSpy = vi.spyOn(session['_context'], 'scheduleUpdate');
-
-    SESSION1: {
-      expect(session.use(DeferredValue(value2, value1))).toBe(value1);
-
-      flushRenderSession(session);
-    }
-
-    expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-    expect(scheduleUpdateSpy).toHaveBeenCalledWith(session['_coroutine'], {
-      priority: 'background',
+  it('returns the initial value if it is given', async () => {
+    const helper = new RenderHelper();
+    const callback = vi.fn((context) => {
+      return context.use(DeferredValue('foo', 'bar'));
     });
 
-    SESSION2: {
-      expect(session.use(DeferredValue(value2, value1))).toBe(value2);
+    SESSION1: {
+      helper.startSession(callback);
 
-      flushRenderSession(session);
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveReturnedWith('bar');
     }
 
-    expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
+    await Promise.resolve();
+
+    expect(await helper.waitForAll()).toBe(1);
+
+    SESSION2: {
+      helper.startSession(callback);
+
+      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveReturnedWith('foo');
+    }
+
+    await Promise.resolve();
+
+    expect(await helper.waitForAll()).toBe(0);
   });
 });
 
 describe('LocalAtom()', () => {
   it('returns a custom hook that creates an atom signal with no subscription', async () => {
-    const session = createRenderSession();
+    const callback = (context: RenderContext) => {
+      const signal = context.use(LocalAtom(100));
 
-    let initialSignal: Atom<number>;
+      context.useEffect(() => {
+        signal.value++;
+      });
+
+      return signal;
+    };
+    const helper = new RenderHelper();
+
+    let stableSignal: Signal<number>;
 
     SESSION1: {
-      initialSignal = session.use(LocalAtom(100));
+      stableSignal = helper.startSession(callback);
 
-      expect(initialSignal.value).toBe(100);
-
-      session.useEffect(() => {
-        initialSignal.value++;
-      }, []);
-
-      flushRenderSession(session);
+      expect(stableSignal.value).toBe(101);
     }
-
-    await Promise.resolve();
-
-    expect(await session.waitForUpdate()).toBe(0);
 
     SESSION2: {
-      const signal = session.use(LocalAtom(100));
+      const signal = helper.startSession(callback);
 
-      expect(signal).toBe(initialSignal);
-      expect(signal.value).toBe(101);
-
-      session.useEffect(() => {
-        signal.value++;
-      }, []);
-
-      flushRenderSession(session);
-    }
-
-    await Promise.resolve();
-
-    expect(await session.waitForUpdate()).toBe(0);
-
-    SESSION3: {
-      const signal = session.use(LocalAtom(200));
-
-      expect(signal).toBe(initialSignal);
-      expect(signal.value).toBe(101);
-
-      session.useEffect(() => {
-        signal.value++;
-      }, []);
-
-      flushRenderSession(session);
+      expect(signal).toBe(stableSignal);
+      expect(signal.value).toBe(102);
     }
   });
 });
 
 describe('LocalComputed()', () => {
   it('returns a custom hook that creates a computed signal with no subscription', async () => {
-    const session = createRenderSession();
     const foo = new Atom(1);
     const bar = new Atom(2);
     const baz = new Atom(3);
+    const callback = (context: RenderContext) => {
+      const signal = context.use(
+        LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
+      );
 
-    let initialSignal: Signal<number>;
+      context.useEffect(() => {
+        foo.value++;
+      });
+
+      return signal;
+    };
+    const helper = new RenderHelper();
+
+    let stableSignal: Signal<number>;
 
     SESSION1: {
-      const signal = session.use(
-        LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
-      );
+      stableSignal = helper.startSession(callback);
 
-      expect(signal.value).toBe(6);
-
-      session.useEffect(() => {
-        foo.value++;
-      }, []);
-
-      flushRenderSession(session);
-
-      initialSignal = signal;
+      expect(stableSignal.value).toBe(7);
     }
-
-    await Promise.resolve();
-
-    expect(await session.waitForUpdate()).toBe(0);
 
     SESSION2: {
-      const signal = session.use(
-        LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
-      );
+      const signal = helper.startSession(callback);
 
-      expect(signal).toBe(initialSignal);
-      expect(signal.value).toBe(7);
-
-      session.useEffect(() => {
-        foo.value++;
-      }, []);
-
-      flushRenderSession(session);
-    }
-
-    await Promise.resolve();
-
-    expect(await session.waitForUpdate()).toBe(0);
-
-    SESSION3: {
-      const signal = session.use(
-        LocalComputed((foo, bar) => foo + bar, [foo, bar]),
-      );
-
-      expect(signal).not.toBe(initialSignal);
-      expect(signal.value).toBe(4);
-
-      session.useEffect(() => {
-        foo.value++;
-      }, []);
-
-      flushRenderSession(session);
+      expect(signal).toBe(stableSignal);
+      expect(signal.value).toBe(8);
     }
   });
 });
 
 describe('useEffectEvent()', () => {
   it('returns a stable callback', () => {
-    const session = createRenderSession();
+    const helper = new RenderHelper();
 
     const callback1 = vi.fn();
     const callback2 = vi.fn();
     let stableCallback: () => void;
 
     SESSION1: {
-      stableCallback = session.use(EffectEvent(callback1));
+      stableCallback = helper.startSession((context) => {
+        const callback = context.use(EffectEvent(callback1));
 
-      flushRenderSession(session);
+        context.useEffect(() => {
+          callback();
+        });
 
-      stableCallback();
+        return callback;
+      });
 
       expect(callback1).toHaveBeenCalledOnce();
       expect(callback2).not.toHaveBeenCalled();
     }
 
-    SESSION2: {
-      expect(session.use(EffectEvent(callback2))).toBe(stableCallback);
+    SESSION1: {
+      const callback = helper.startSession((context) => {
+        const callback = context.use(EffectEvent(callback2));
 
-      flushRenderSession(session);
+        context.useEffect(() => {
+          callback();
+        });
 
-      stableCallback();
+        return callback;
+      });
 
+      expect(callback).toBe(stableCallback);
       expect(callback1).toHaveBeenCalledOnce();
       expect(callback2).toHaveBeenCalledOnce();
     }
@@ -236,98 +199,97 @@ describe('useEffectEvent()', () => {
 
 describe('useSyncExternalStore()', () => {
   it('forces the update if the snapshot has been changed when updating the snapshot', async () => {
-    const session = createRenderSession();
+    const helper = new RenderHelper();
     let count = 0;
 
+    const callback = vi.fn((context: RenderContext) => {
+      const snapshot = context.use(SyncEnternalStore(subscribe, getSnapshot));
+
+      context.useInsertionEffect(() => {
+        count++;
+      }, []);
+
+      return snapshot;
+    });
     const unsubscribe = vi.fn();
     const subscribe = vi.fn().mockReturnValue(unsubscribe);
     const getSnapshot = () => count;
 
     SESSION1: {
-      expect(session.use(SyncEnternalStore(subscribe, getSnapshot))).toBe(0);
+      helper.startSession(callback);
 
-      session.useInsertionEffect(() => {
-        count++;
-      }, []);
-
-      flushRenderSession(session);
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveNthReturnedWith(1, 0);
+      expect(callback).toHaveNthReturnedWith(2, 1);
+      expect(subscribe).toHaveBeenCalledOnce();
+      expect(unsubscribe).not.toHaveBeenCalled();
     }
-
-    expect(session.isUpdatePending()).toBe(true);
-    expect(await session.waitForUpdate()).toBe(1);
-    expect(subscribe).toHaveBeenCalledOnce();
-    expect(unsubscribe).not.toHaveBeenCalled();
 
     SESSION2: {
-      expect(session.use(SyncEnternalStore(subscribe, getSnapshot))).toBe(1);
+      helper.startSession(callback);
 
-      session.useInsertionEffect(() => {
-        count++;
-      }, []);
-
-      flushRenderSession(session);
+      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveNthReturnedWith(3, 1);
+      expect(subscribe).toHaveBeenCalledOnce();
+      expect(unsubscribe).not.toHaveBeenCalled();
     }
 
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
-    expect(subscribe).toHaveBeenCalledOnce();
-    expect(unsubscribe).not.toHaveBeenCalled();
-
-    disposeRenderSession(session);
+    helper.finalizeHooks();
 
     expect(subscribe).toHaveBeenCalledOnce();
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
   it('forces the update if the snapshot has been changed when subscribing the store', async () => {
-    const session = createRenderSession();
-    const subscribers = new Set<() => void>();
-    let snapshot = 0;
+    const helper = new RenderHelper();
+    const subscribers = new LinkedList<() => void>();
+    let count = 0;
 
+    const callback = vi.fn((context: RenderContext) => {
+      const snapshot = context.use(SyncEnternalStore(subscribe, getSnapshot));
+
+      context.useEffect(notifySubscribers, []);
+
+      return snapshot;
+    });
     const subscribe = (subscriber: () => void) => {
-      subscribers.add(subscriber);
+      const node = subscribers.pushBack(subscriber);
       return () => {
-        subscribers.delete(subscriber);
+        subscribers.remove(node);
       };
     };
-    const getSnapshot = () => snapshot;
+    const getSnapshot = () => count;
     const notifySubscribers = () => {
-      snapshot++;
+      count++;
       for (const subscriber of subscribers) {
         subscriber();
       }
     };
 
     SESSION1: {
-      expect(session.use(SyncEnternalStore(subscribe, getSnapshot))).toBe(0);
+      helper.startSession(callback);
 
-      session.useEffect(notifySubscribers, []);
-
-      flushRenderSession(session);
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveNthReturnedWith(1, 0);
+      expect(callback).toHaveNthReturnedWith(2, 1);
+      expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
-
-    expect(session.isUpdatePending()).toBe(true);
-    expect(await session.waitForUpdate()).toBe(1);
-    expect(subscribers.size).toBe(1);
 
     SESSION2: {
-      expect(session.use(SyncEnternalStore(subscribe, getSnapshot))).toBe(1);
+      helper.startSession(callback);
 
-      session.useEffect(notifySubscribers, []);
-
-      flushRenderSession(session);
+      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveNthReturnedWith(3, 1);
+      expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
 
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
+    helper.finalizeHooks();
 
-    disposeRenderSession(session);
-
-    expect(subscribers.size).toBe(0);
+    expect(Array.from(subscribers)).toStrictEqual([]);
   });
 
   it('should resubscribe the store if the subscribe function is changed', async () => {
-    const session = createRenderSession();
+    const helper = new RenderHelper();
 
     const unsubscribe1 = vi.fn();
     const unsubscribe2 = vi.fn();
@@ -337,51 +299,42 @@ describe('useSyncExternalStore()', () => {
     const getSnapshot2 = () => 'bar';
 
     SESSION1: {
-      expect(session.use(SyncEnternalStore(subscribe1, getSnapshot1))).toBe(
-        'foo',
-      );
+      const snapshot = helper.startSession((context) => {
+        return context.use(SyncEnternalStore(subscribe1, getSnapshot1));
+      });
 
-      flushRenderSession(session);
+      expect(snapshot).toBe('foo');
+      expect(subscribe1).toHaveBeenCalledTimes(1);
+      expect(subscribe2).toHaveBeenCalledTimes(0);
+      expect(unsubscribe1).toHaveBeenCalledTimes(0);
+      expect(unsubscribe2).toHaveBeenCalledTimes(0);
     }
-
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
-    expect(subscribe1).toHaveBeenCalledTimes(1);
-    expect(subscribe2).toHaveBeenCalledTimes(0);
-    expect(unsubscribe1).toHaveBeenCalledTimes(0);
-    expect(unsubscribe2).toHaveBeenCalledTimes(0);
 
     SESSION2: {
-      expect(session.use(SyncEnternalStore(subscribe2, getSnapshot1))).toBe(
-        'foo',
-      );
+      const snapshot = helper.startSession((context) => {
+        return context.use(SyncEnternalStore(subscribe2, getSnapshot1));
+      });
 
-      flushRenderSession(session);
+      expect(snapshot).toBe('foo');
+      expect(subscribe1).toHaveBeenCalledTimes(1);
+      expect(subscribe2).toHaveBeenCalledTimes(1);
+      expect(unsubscribe1).toHaveBeenCalledTimes(1);
+      expect(unsubscribe2).toHaveBeenCalledTimes(0);
     }
-
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
-    expect(subscribe1).toHaveBeenCalledTimes(1);
-    expect(subscribe2).toHaveBeenCalledTimes(1);
-    expect(unsubscribe1).toHaveBeenCalledTimes(1);
-    expect(unsubscribe2).toHaveBeenCalledTimes(0);
 
     SESSION3: {
-      expect(session.use(SyncEnternalStore(subscribe2, getSnapshot2))).toBe(
-        'bar',
-      );
+      const snapshot = helper.startSession((context) => {
+        return context.use(SyncEnternalStore(subscribe2, getSnapshot2));
+      });
 
-      flushRenderSession(session);
+      expect(snapshot).toBe('bar');
+      expect(subscribe1).toHaveBeenCalledTimes(1);
+      expect(subscribe2).toHaveBeenCalledTimes(1);
+      expect(unsubscribe1).toHaveBeenCalledTimes(1);
+      expect(unsubscribe2).toHaveBeenCalledTimes(0);
     }
 
-    expect(session.isUpdatePending()).toBe(false);
-    expect(await session.waitForUpdate()).toBe(0);
-    expect(subscribe1).toHaveBeenCalledTimes(1);
-    expect(subscribe2).toHaveBeenCalledTimes(1);
-    expect(unsubscribe1).toHaveBeenCalledTimes(1);
-    expect(unsubscribe2).toHaveBeenCalledTimes(0);
-
-    disposeRenderSession(session);
+    helper.finalizeHooks();
 
     expect(subscribe1).toHaveBeenCalledTimes(1);
     expect(subscribe2).toHaveBeenCalledTimes(1);

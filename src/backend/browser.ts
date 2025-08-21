@@ -7,6 +7,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
+  type ScheduleOptions,
   type SlotType,
   type TemplateFactory,
 } from '../internal.js';
@@ -21,7 +22,7 @@ import { RefPrimitive } from '../primitive/ref.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
-import type { RuntimeBackend } from '../runtime.js';
+import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
 import { OptimizedTemplateFactory } from '../template-factory.js';
@@ -73,7 +74,7 @@ export class BrowserBackend implements RuntimeBackend {
             if (typeof requestIdleCallback === 'function') {
               requestIdleCallback(resolve);
             } else {
-              setTimeout(resolve);
+              setTimeout(resolve, 1);
             }
             break;
           }
@@ -81,6 +82,17 @@ export class BrowserBackend implements RuntimeBackend {
             setTimeout(resolve);
         }
       }).then(callback);
+    }
+  }
+
+  requestUpdate(
+    callback: (flushUpdate: (runtime: Runtime) => void) => void,
+    options: ScheduleOptions,
+  ): Promise<void> {
+    if (options.mode === 'sequential') {
+      return Promise.resolve().then(() => callback(flushUpdate));
+    } else {
+      return this.requestCallback(() => callback(flushUpdate), options);
     }
   }
 
@@ -124,7 +136,7 @@ export class BrowserBackend implements RuntimeBackend {
     }
   }
 
-  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
+  startViewTransition(callback: () => Promise<void> | void): Promise<void> {
     if (typeof document.startViewTransition === 'function') {
       return document.startViewTransition(callback).finished;
     } else {
@@ -141,6 +153,10 @@ export class BrowserBackend implements RuntimeBackend {
       });
     }
   }
+}
+
+function flushUpdate(runtime: Runtime): Promise<void> {
+  return runtime.flushAsync();
 }
 
 function isContinuousEvent(event: Event): boolean {

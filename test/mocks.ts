@@ -11,13 +11,13 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type Hook,
   type HydrationTree,
   Lanes,
   type Part,
   PartType,
   type Primitive,
   type RequestCallbackOptions,
+  type ScheduleOptions,
   type Slot,
   type SlotType,
   type Template,
@@ -28,11 +28,65 @@ import {
   type UpdateContext,
 } from '@/internal.js';
 import type {
+  Runtime,
   RuntimeBackend,
   RuntimeEvent,
   RuntimeObserver,
 } from '@/runtime.js';
 import { AbstractTemplate } from '@/template/template.js';
+
+export class MockBackend implements RuntimeBackend {
+  commitEffects(effects: Effect[], _phase: CommitPhase): void {
+    for (let i = 0, l = effects.length; i < l; i++) {
+      effects[i]!.commit();
+    }
+  }
+
+  getCurrentPriority(): TaskPriority {
+    return 'user-blocking';
+  }
+
+  getTemplateFactory(): TemplateFactory {
+    return new MockTemplateFactory();
+  }
+
+  requestCallback(
+    callback: () => Promise<void> | void,
+    _options?: RequestCallbackOptions,
+  ): Promise<void> {
+    return Promise.resolve().then(callback);
+  }
+
+  requestUpdate(
+    callback: (flushUpdate: (runtime: Runtime) => void) => void,
+    options: ScheduleOptions,
+  ): Promise<void> {
+    if (options.mode === 'prioritized') {
+      return Promise.resolve().then(() => {
+        return callback(flushUpdate);
+      });
+    } else {
+      callback(flushUpdate);
+      return Promise.resolve();
+    }
+  }
+
+  resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
+    return MockPrimitive;
+  }
+
+  resolveSlotType(_value: unknown, _part: Part): SlotType {
+    return MockSlot;
+  }
+
+  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
+    return Promise.resolve().then(callback);
+  }
+
+  yieldToMain(): Promise<void> {
+    return Promise.resolve();
+  }
+}
 
 export class MockBindable<T> implements Bindable<T> {
   directive: Directive<T>;
@@ -97,14 +151,14 @@ export class MockBinding<T> implements Binding<T> {
         // For part debugging, update comments only if the data is empty.
         if (
           this.part.node.data === '' ||
-          this.part.node.data === toString(this.memoizedValue)
+          this.part.node.data === stringify(this.memoizedValue)
         ) {
-          this.part.node.data = toString(this.value);
+          this.part.node.data = stringify(this.value);
         }
         break;
       case PartType.Element:
         for (const name in this.value) {
-          this.part.node.setAttribute(name, toString(this.value[name]));
+          this.part.node.setAttribute(name, stringify(this.value[name]));
         }
         break;
       case PartType.Live:
@@ -120,7 +174,7 @@ export class MockBinding<T> implements Binding<T> {
       case PartType.Text:
         this.part.node.data =
           this.part.precedingText +
-          toString(this.value) +
+          stringify(this.value) +
           this.part.followingText;
         break;
     }
@@ -164,17 +218,31 @@ export class MockBinding<T> implements Binding<T> {
   }
 }
 
-export class MockCoroutine implements Coroutine {
-  hooks: Hook[] = [];
+export class MockCoroutine<T> implements Coroutine {
+  callback: (context: UpdateContext) => T;
 
   pendingLanes: Lanes;
 
-  constructor(pendingLanes: Lanes = Lanes.NoLanes) {
+  returnValue: T | undefined;
+
+  thrownError: unknown;
+
+  constructor(
+    callback: (context: UpdateContext) => T,
+    pendingLanes: Lanes = Lanes.AllLanes,
+  ) {
+    this.callback = callback;
     this.pendingLanes = pendingLanes;
   }
 
   resume(context: UpdateContext): void {
-    this.pendingLanes &= ~context.lanes;
+    const { callback } = this;
+    try {
+      this.returnValue = callback(context);
+    } catch (error) {
+      this.thrownError = error;
+    }
+    this.pendingLanes &= ~context.frame.lanes;
   }
 }
 
@@ -210,46 +278,7 @@ export class MockEffect implements Effect {
   commit(): void {}
 }
 
-export class MockBackend implements RuntimeBackend {
-  commitEffects(effects: Effect[], _phase: CommitPhase): void {
-    for (let i = 0, l = effects.length; i < l; i++) {
-      effects[i]!.commit();
-    }
-  }
-
-  getCurrentPriority(): TaskPriority {
-    return 'user-blocking';
-  }
-
-  getTemplateFactory(): TemplateFactory {
-    return new MockTemplateFactory();
-  }
-
-  requestCallback(
-    callback: () => Promise<void> | void,
-    _options?: RequestCallbackOptions,
-  ): Promise<void> {
-    return Promise.resolve().then(callback);
-  }
-
-  resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
-    return MockPrimitive;
-  }
-
-  resolveSlotType(_value: unknown, _part: Part): SlotType {
-    return MockSlot;
-  }
-
-  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
-    return Promise.resolve().then(callback);
-  }
-
-  yieldToMain(): Promise<void> {
-    return Promise.resolve();
-  }
-}
-
-export class MockRuntimeObserver implements RuntimeObserver {
+export class MockObserver implements RuntimeObserver {
   private _events: RuntimeEvent[] = [];
 
   onRuntimeEvent(event: RuntimeEvent): void {
@@ -287,7 +316,10 @@ export class MockSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, context: UpdateContext): boolean {
-    const directive = context.resolveDirective(value, this.binding.part);
+    const directive = context.runtime.resolveDirective(
+      value,
+      this.binding.part,
+    );
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(
@@ -393,6 +425,12 @@ export class MockTemplateFactory implements TemplateFactory {
   }
 }
 
-function toString(value: unknown): string {
+function flushUpdate(runtime: Runtime): Promise<void> {
+  return Promise.resolve().then(() => {
+    runtime.flushSync();
+  });
+}
+
+function stringify(value: unknown): string {
   return value?.toString() ?? '';
 }

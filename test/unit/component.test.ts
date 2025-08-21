@@ -9,10 +9,15 @@ import {
   PartType,
   type RenderContext,
 } from '@/internal.js';
+import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot } from '../mocks.js';
-import { createRenderSession, createUpdateSession } from '../session-utils.js';
-import { createElement } from '../test-utils.js';
+import {
+  createElement,
+  createRuntime,
+  RenderHelper,
+  UpdateHelper,
+} from '../test-helpers.js';
 
 describe('createComponent()', () => {
   it('returns a directive with props', () => {
@@ -39,12 +44,14 @@ describe('createComponent()', () => {
       const render = vi.fn(() => null);
       const component = createComponent(render);
       const props = {};
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      component.render(props, session);
+      helper.startSession((context) => {
+        component.render(props, context);
+      });
 
       expect(render).toHaveBeenCalledOnce();
-      expect(render).toHaveBeenCalledWith(props, session);
+      expect(render).toHaveBeenCalledWith(props, expect.any(RenderSession));
     });
   });
 
@@ -82,8 +89,8 @@ describe('createComponent()', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const binding = Greet.resolveBinding(props, part, session);
+      const context = createRuntime();
+      const binding = Greet.resolveBinding(props, part, context);
 
       expect(binding.type).toBe(Greet);
       expect(binding.value).toBe(props);
@@ -117,12 +124,13 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
-      SESSION: {
-        binding.connect(session);
-        session.enqueueCoroutine(binding);
-        session.flushSync();
+      SESSION1: {
+        helper.startSession((context) => {
+          binding.connect(context);
+          context.frame.pendingCoroutines.push(binding);
+        });
 
         expect(binding.shouldBind(props1)).toBe(false);
         expect(binding.shouldBind(props2)).toBe(true);
@@ -142,24 +150,39 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Increment, props, part);
-      const session = createUpdateSession(Lanes.UserBlockingLane);
+      const helper = new UpdateHelper();
 
       const commitSpy = vi.spyOn(binding, 'commit');
 
+      binding.pendingLanes = Lanes.UserBlockingLane;
+
       SESSION1: {
-        session.enqueueCoroutine(binding);
-        session.enqueueMutationEffect(binding);
-        session.flushSync();
+        helper.startSession(
+          (context) => {
+            context.frame.pendingCoroutines.push(binding);
+            context.frame.mutationEffects.push(binding);
+          },
+          { priority: 'user-blocking' },
+        );
 
         expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
+        expect(binding.pendingLanes).toBe(Lanes.NoLanes);
         expect(part.node.nodeValue).toBe('100');
       }
 
+      await Promise.resolve();
+
+      expect(binding.pendingLanes).toBe(
+        Lanes.DefaultLane | Lanes.UserBlockingLane,
+      );
+
+      expect(await helper.waitForAll()).toBe(1);
+
       SESSION2: {
-        session.enqueueCoroutine(binding);
-        session.enqueueMutationEffect(binding);
-        session.flushSync();
+        helper.startSession((context) => {
+          context.frame.pendingCoroutines.push(binding);
+          context.frame.mutationEffects.push(binding);
+        });
 
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -182,14 +205,15 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(Greet, props, part);
       const container = createElement('div', {}, part.node);
-      const tree = createHydrationTree(container);
-      const session = createUpdateSession();
+      const target = createHydrationTree(container);
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.hydrate(tree, session);
-        session.enqueueCoroutine(binding);
-        session.enqueueMutationEffect(binding);
-        session.flushSync();
+        helper.startSession((context) => {
+          binding.hydrate(target, context);
+          context.frame.pendingCoroutines.push(binding);
+          context.frame.mutationEffects.push(binding);
+        });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -203,8 +227,10 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -230,15 +256,20 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props, part);
-      const container = document.createElement('div');
-      const tree = createHydrationTree(container);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
-      session.enqueueCoroutine(binding);
-      session.enqueueMutationEffect(binding);
-      session.flushSync();
+      helper.startSession((context) => {
+        context.frame.pendingCoroutines.push(binding);
+        context.frame.mutationEffects.push(binding);
+      });
 
-      expect(() => binding.hydrate(tree, session)).toThrow(HydrationError);
+      expect(() => {
+        helper.startSession((context) => {
+          const container = document.createElement('div');
+          const target = createHydrationTree(container);
+          binding.hydrate(target, context);
+        });
+      }).toThrow(HydrationError);
     });
   });
 
@@ -259,12 +290,13 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        session.enqueueMutationEffect(binding);
-        session.flushSync();
+        helper.startSession((context) => {
+          binding.connect(context);
+          context.frame.pendingCoroutines.push(binding);
+        });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -278,10 +310,11 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        session.enqueueMutationEffect(binding);
-        session.flushSync();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          context.frame.mutationEffects.push(binding);
+        });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -309,12 +342,13 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(EnqueueEffect, props, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        session.enqueueMutationEffect(binding);
-        session.flushSync();
+        helper.startSession((context) => {
+          binding.connect(context);
+          context.frame.mutationEffects.push(binding);
+        });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -328,9 +362,10 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
-        session.flushSync();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -380,6 +415,25 @@ const Memo = createComponent(
   },
 );
 
+interface IncrementProps {
+  initialCount: number;
+}
+
+const Increment = createComponent(function Increment(
+  { initialCount }: IncrementProps,
+  context: RenderContext,
+): unknown {
+  const [count, setCount] = context.useState(initialCount);
+
+  context.useEffect(() => {
+    queueMicrotask(() => {
+      setCount((count) => count + 1);
+    });
+  }, []);
+
+  return count;
+});
+
 interface EnqueueEffectProps {
   callback: (phase: CommitPhase) => void;
   cleanup: (phase: CommitPhase) => void;
@@ -411,21 +465,4 @@ const EnqueueEffect = createComponent(function EnqueueEffect(
   }, [callback, cleanup]);
 
   return '3 effects are enqueued';
-});
-
-interface IncrementProps {
-  initialCount: number;
-}
-
-const Increment = createComponent(function Increment(
-  { initialCount }: IncrementProps,
-  context: RenderContext,
-): unknown {
-  const [count, setCount] = context.useState(initialCount);
-
-  context.useEffect(() => {
-    setCount((count) => count + 1);
-  }, []);
-
-  return count;
 });

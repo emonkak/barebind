@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('AttributePrimitive', () => {
   describe('name', () => {
@@ -19,8 +19,8 @@ describe('AttributePrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const session = createUpdateSession();
-      const binding = AttributePrimitive.resolveBinding(value, part, session);
+      const context = createRuntime();
+      const binding = AttributePrimitive.resolveBinding(value, part, context);
 
       expect(binding.type).toBe(AttributePrimitive);
       expect(binding.value).toBe(value);
@@ -33,10 +33,10 @@ describe('AttributePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        AttributePrimitive.resolveBinding(value, part, session),
+        AttributePrimitive.resolveBinding(value, part, context),
       ).toThrow('AttributePrimitive must be used in an attribute part,');
     });
   });
@@ -65,11 +65,13 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -88,19 +90,23 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding<unknown>(value, part);
-        const session = createUpdateSession();
+        const helper = new UpdateHelper();
 
         SESSION1: {
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(part.node.getAttribute(part.name)).toBe(value);
         }
 
         SESSION2: {
-          binding.bind(value2);
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.bind(value2);
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(part.node.getAttribute(part.name)).toBe(null);
         }
@@ -127,11 +133,13 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const session = createUpdateSession();
+        const helper = new UpdateHelper();
 
         SESSION: {
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(part.node.getAttribute(part.name)).toBe(expectedValue);
         }
@@ -150,11 +158,13 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const session = createUpdateSession();
+        const helper = new UpdateHelper();
 
         SESSION: {
-          binding.connect(session);
-          binding.commit();
+          helper.startSession((context) => {
+            binding.connect(context);
+            binding.commit();
+          });
 
           expect(part.node.getAttribute(part.name)).toBe(expectedValue);
         }
@@ -171,18 +181,22 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute(part.name)).toBe(value);
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.getAttribute(part.name)).toBe(null);
       }
@@ -196,13 +210,15 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const removeAttributeSpy = vi.spyOn(part.node, 'removeAttribute');
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(removeAttributeSpy).not.toHaveBeenCalled();
       }

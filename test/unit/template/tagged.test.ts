@@ -8,8 +8,11 @@ import {
   SVG_NAMESPACE_URI,
 } from '@/template/template.js';
 import { MockSlot } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement, serializeNode } from '../../test-utils.js';
+import {
+  createElement,
+  serializeNode,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
 
@@ -492,14 +495,11 @@ describe('TaggedTemplate', () => {
         document.createComment('corge'),
       );
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div class="foo"><!----><label for="quux">baz</label><input type="text" id="quux"></div>',
@@ -617,13 +617,11 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, 'foo'),
       );
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
       expect(slots).toStrictEqual([]);
@@ -645,13 +643,11 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, '[qux, quux]'),
       );
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '(foo, bar, baz)',
@@ -735,13 +731,11 @@ describe('TaggedTemplate', () => {
       };
       const container = createElement('div', {});
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
@@ -766,10 +760,12 @@ describe('TaggedTemplate', () => {
       };
       const container = createElement('div', {}, 'foo');
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       expect(() => {
-        template.hydrate(['foo'], part, target, session);
+        helper.startSession((context) => {
+          return template.hydrate(['foo'], part, target, context);
+        });
       }).toThrow('There is no node that the hole indicates.');
     });
 
@@ -797,10 +793,12 @@ describe('TaggedTemplate', () => {
           namespaceURI: HTML_NAMESPACE_URI,
         };
         const target = createHydrationTree(container);
-        const session = createUpdateSession();
+        const helper = new UpdateHelper();
 
         expect(() => {
-          template.hydrate([], part, target, session);
+          helper.startSession((context) => {
+            return template.hydrate([], part, target, context);
+          });
         }).toThrow(HydrationError);
       },
     );
@@ -822,8 +820,11 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div><!----><label></label><input type="text"></div>',
@@ -935,8 +936,11 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual(['<div>foo</div>']);
       expect(slots).toStrictEqual([]);
@@ -951,8 +955,11 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '',
@@ -1035,8 +1042,11 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!---->',
@@ -1089,8 +1099,11 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([]);
       expect(slots).toStrictEqual([]);
@@ -1113,10 +1126,12 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       expect(() => {
-        template.render(['foo'], part, session);
+        helper.startSession((context) => {
+          return template.render(['foo'], part, context);
+        });
       }).toThrow('There is no node that the hole indicates.');
     });
   });

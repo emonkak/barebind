@@ -63,7 +63,7 @@ describe('Reactive', () => {
 
     it('returns a snapshot with the update applied', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
@@ -80,7 +80,7 @@ describe('Reactive', () => {
 
       expect(snapshot).toBeInstanceOf(TodoState);
       expect(snapshot.todos).toStrictEqual([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: true },
         { id: 2, title: 'baz', completed: false },
       ]);
@@ -144,7 +144,7 @@ describe('Reactive', () => {
   describe('diff()', () => {
     it('returns a list of changed properties', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
@@ -182,7 +182,7 @@ describe('Reactive', () => {
   describe('get()', () => {
     it('returns a computed reactive is calculated from dependent values', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
@@ -195,7 +195,7 @@ describe('Reactive', () => {
         { id: 1, title: 'bar', completed: false },
       ]);
       expect(visibleTodos$.value).toStrictEqual([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
 
@@ -209,7 +209,7 @@ describe('Reactive', () => {
         { id: 2, title: 'baz', completed: false },
       ]);
       expect(visibleTodos$.value).toStrictEqual([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
       ]);
     });
 
@@ -228,7 +228,7 @@ describe('Reactive', () => {
   describe('mutate()', () => {
     it('mutates the state by mutation methods', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
@@ -242,7 +242,7 @@ describe('Reactive', () => {
 
       expect(snapshot).toBeInstanceOf(TodoState);
       expect(snapshot.todos).toStrictEqual([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
         { id: 2, title: 'baz', completed: false },
       ]);
@@ -312,7 +312,7 @@ describe('Reactive', () => {
   describe('subscribe()', () => {
     it('subscribes for deep updates', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);
@@ -334,7 +334,7 @@ describe('Reactive', () => {
 
     it('subscribes only for shallow updates', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState, { shallow: true });
@@ -356,7 +356,7 @@ describe('Reactive', () => {
 
     it('do not notify subscribers of updates when the subscription is unsubscribed', () => {
       const initialState = new TodoState([
-        { id: 0, title: 'foo', completed: true },
+        { id: 1, title: 'foo', completed: true },
         { id: 1, title: 'bar', completed: false },
       ]);
       const state$ = Reactive.from(initialState);

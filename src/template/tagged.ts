@@ -147,6 +147,7 @@ export class TaggedTemplate<
     target: HydrationTree,
     context: UpdateContext,
   ): TemplateResult {
+    const { runtime } = context;
     const document = part.node.ownerDocument;
     const fragment = this._template.content;
     const sourceTree = createTreeWalker(fragment);
@@ -229,7 +230,7 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
+        const slot = runtime.resolveSlot(binds[holeIndex]!, currentPart!);
         slot.hydrate(target, context);
 
         slots[holeIndex] = slot;
@@ -272,6 +273,7 @@ export class TaggedTemplate<
     part: Part.ChildNodePart,
     context: UpdateContext,
   ): TemplateResult {
+    const { runtime } = context;
     const document = part.node.ownerDocument;
     const fragment = document.importNode(this._template.content, true);
     const holes = this._holes;
@@ -336,7 +338,7 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = context.resolveSlot(binds[i]!, currentPart);
+        const slot = runtime.resolveSlot(binds[i]!, currentPart);
         slot.connect(context);
 
         slots[i] = slot;

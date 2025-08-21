@@ -1,6 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import type { LinkedList } from './linked-list.js';
 import type { Literal, TemplateLiteral } from './template-literal.js';
 
 export const $customHook: unique symbol = Symbol('$customHook');
@@ -56,7 +55,7 @@ export interface Component<TProps, TResult = unknown>
 }
 
 export interface Coroutine {
-  get pendingLanes(): Lanes;
+  pendingLanes: Lanes;
   resume(context: UpdateContext): void;
 }
 
@@ -135,7 +134,7 @@ export namespace Hook {
 }
 
 export interface HookContext {
-  forceUpdate(options?: UpdateOptions): UpdateHandle;
+  forceUpdate(options?: ScheduleOptions): UpdateHandle;
   getContextValue(key: unknown): unknown;
   isUpdatePending(): boolean;
   setContextValue(key: unknown, value: unknown): void;
@@ -163,7 +162,7 @@ export interface HookContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: UpdateOptions) => void,
+    dispatch: (action: TAction, options?: ScheduleOptions) => void,
     isPending: boolean,
   ];
   useRef<T>(initialValue: T): RefObject<T>;
@@ -171,7 +170,7 @@ export interface HookContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+    setState: (newState: NewState<TState>, options?: ScheduleOptions) => void,
     isPending: boolean,
   ];
   waitForUpdate(): Promise<number>;
@@ -194,7 +193,8 @@ export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 // biome-ignore format: Align lane flags
 export const Lanes = {
   NoLanes:            0,
-  ConcurrentLane:     0b1,
+  AllLanes:           -1,
+  DefaultLane:        0b1,
   ViewTransitionLane: 0b10,
   UserBlockingLane:   0b100,
   UserVisibleLane:    0b1000,
@@ -316,28 +316,6 @@ export interface RenderContext extends HookContext {
   ): Bindable<readonly unknown[]>;
 }
 
-export interface RenderSessionContext {
-  get lanes(): Lanes;
-  get scope(): Scope;
-  get updateHandles(): LinkedList<UpdateHandle>;
-  enqueueCoroutine(coroutine: Coroutine): void;
-  enqueueLayoutEffect(effect: Effect): void;
-  enqueueMutationEffect(effect: Effect): void;
-  enqueuePassiveEffect(effect: Effect): void;
-  expandLiterals<T>(
-    strings: TemplateStringsArray,
-    values: readonly (T | Literal)[],
-  ): TemplateLiteral<T>;
-  flushSync(lanes: Lanes): void;
-  nextIdentifier(): string;
-  resolveTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
-  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
-}
-
 export interface RenderState {
   hooks: Hook[];
   pendingLanes: Lanes;
@@ -351,10 +329,41 @@ export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
 
+export type ScheduleMode = 'auto' | 'prioritized' | 'sequential';
+
+export interface ScheduleOptions {
+  mode?: ScheduleMode;
+  priority?: TaskPriority;
+  silent?: boolean;
+  viewTransition?: boolean;
+}
+
 export interface Scope {
-  readonly level: number;
   readonly parent: Scope | null;
   readonly boundaries: Boundary[];
+}
+
+export interface SessionContext extends DirectiveContext {
+  getPendingTasks(): UpdateTask[];
+  expandLiterals<T>(
+    strings: TemplateStringsArray,
+    values: readonly (T | Literal)[],
+  ): TemplateLiteral<T>;
+  nextIdentifier(): string;
+  renderComponent<TProps, TResult>(
+    component: Component<TProps, TResult>,
+    props: TProps,
+    hooks: Hook[],
+    coroutine: Coroutine,
+    frame: UpdateFrame,
+    scope: Scope,
+  ): TResult;
+  resolveTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
+  scheduleUpdate(coroutine: Coroutine, options?: ScheduleOptions): UpdateHandle;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -405,27 +414,31 @@ export interface TemplateResult {
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
-export interface UpdateContext extends DirectiveContext, RenderSessionContext {
-  enterScope(scope: Scope): UpdateContext;
-  renderComponent<TProps, TResult>(
-    component: Component<TProps, TResult>,
-    props: TProps,
-    state: RenderState,
-    coroutine: Coroutine,
-  ): TResult;
+export interface UpdateContext {
+  frame: UpdateFrame;
+  scope: Scope;
+  runtime: SessionContext;
 }
 
-export interface UpdateOptions {
-  concurrent?: boolean;
-  priority?: TaskPriority;
-  viewTransition?: boolean;
+export interface UpdateFrame {
+  id: number;
+  lanes: Lanes;
+  pendingCoroutines: Coroutine[];
+  mutationEffects: Effect[];
+  layoutEffects: Effect[];
+  passiveEffects: Effect[];
 }
 
 export interface UpdateHandle {
+  lanes: Lanes;
+  finished: Promise<void>;
+  scheduled: Promise<void>;
+}
+
+export interface UpdateTask {
   coroutine: Coroutine;
   lanes: Lanes;
-  promise: Promise<void>;
-  running: boolean;
+  continuation: PromiseWithResolvers<void>;
 }
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
@@ -443,12 +456,22 @@ export function areDirectiveTypesEqual(
 /**
  * @internal
  */
-export function createScope(parent: Scope | null): Scope {
+export function createScope(parent: Scope | null = null): Scope {
   return {
-    level: parent !== null ? parent.level + 1 : 0,
     parent: parent,
     boundaries: [],
   };
+}
+
+/**
+ * @internal
+ */
+export function createUpdateContext(
+  frame: UpdateFrame,
+  scope: Scope,
+  runtime: SessionContext,
+): UpdateContext {
+  return { frame, scope, runtime };
 }
 
 /**
@@ -474,8 +497,8 @@ export function getContextValue(scope: Scope, key: unknown): unknown {
 /**
  * @internal
  */
-export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes = Lanes.NoLanes;
+export function getFlushLanesFromOptions(options: ScheduleOptions): Lanes {
+  let lanes = Lanes.DefaultLane;
 
   switch (options.priority) {
     case 'user-blocking':
@@ -488,10 +511,6 @@ export function getFlushLanesFromOptions(options: UpdateOptions): Lanes {
       lanes |=
         Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane;
       break;
-  }
-
-  if (options.concurrent) {
-    lanes |= Lanes.ConcurrentLane;
   }
 
   if (options.viewTransition) {
@@ -519,8 +538,8 @@ export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
 /**
  * @internal
  */
-export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
-  let lanes = Lanes.NoLanes;
+export function getScheduleLanesFromOptions(options: ScheduleOptions): Lanes {
+  let lanes = Lanes.DefaultLane;
 
   switch (options.priority) {
     case 'user-blocking':
@@ -532,10 +551,6 @@ export function getScheduleLanesFromOptions(options: UpdateOptions): Lanes {
     case 'background':
       lanes |= Lanes.BackgroundLane;
       break;
-  }
-
-  if (options.concurrent) {
-    lanes |= Lanes.ConcurrentLane;
   }
 
   if (options.viewTransition) {

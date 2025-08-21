@@ -10,8 +10,8 @@ import {
   isBindable,
   Lanes,
   PartType,
+  type ScheduleOptions,
   setContextValue,
-  type UpdateOptions,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
@@ -30,17 +30,16 @@ describe('areDirectiveTypesEqual()', () => {
 
 describe('getContextValue()', () => {
   it('returns the own entry value', () => {
-    const scope = createScope(null);
+    const scope = createScope();
 
     setContextValue(scope, 'foo', 1);
 
     expect(getContextValue(scope, 'foo')).toBe(1);
     expect(getContextValue(scope, 'bar')).toBe(undefined);
-    expect(scope.level).toBe(0);
   });
 
   it('returns the inherited entry value', () => {
-    const parentScope = createScope(null);
+    const parentScope = createScope();
     const childScope = createScope(parentScope);
 
     setContextValue(parentScope, 'foo', 1);
@@ -50,53 +49,51 @@ describe('getContextValue()', () => {
     expect(getContextValue(parentScope, 'foo')).toBe(1);
     expect(getContextValue(parentScope, 'bar')).toBe(2);
     expect(getContextValue(parentScope, 'baz')).toBe(undefined);
-    expect(parentScope.level).toBe(0);
 
     expect(getContextValue(childScope, 'foo')).toBe(3);
     expect(getContextValue(childScope, 'bar')).toBe(2);
     expect(getContextValue(childScope, 'baz')).toBe(undefined);
-    expect(childScope.level).toBe(1);
   });
 });
 
 describe('getFlushLanesFromOptions()', () => {
   it.each([
-    [{}, Lanes.NoLanes],
-    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
+    [{}, Lanes.DefaultLane],
+    [{ priority: 'user-blocking' }, Lanes.DefaultLane | Lanes.UserBlockingLane],
     [
       { priority: 'user-visible' },
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane,
+      Lanes.DefaultLane | Lanes.UserBlockingLane | Lanes.UserVisibleLane,
     ],
     [
       { priority: 'background' },
 
-      Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane,
-    ],
-    [
-      { concurrent: true, viewTransition: true },
-      Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-blocking', concurrent: true, viewTransition: true },
-
-      Lanes.UserBlockingLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', concurrent: true, viewTransition: true },
-      Lanes.UserBlockingLane |
+      Lanes.DefaultLane |
+        Lanes.UserBlockingLane |
         Lanes.UserVisibleLane |
-        Lanes.ConcurrentLane |
+        Lanes.BackgroundLane,
+    ],
+    [{ viewTransition: true }, Lanes.DefaultLane | Lanes.ViewTransitionLane],
+    [
+      { priority: 'user-blocking', viewTransition: true },
+
+      Lanes.DefaultLane | Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
+    ],
+    [
+      { priority: 'user-visible', viewTransition: true },
+      Lanes.DefaultLane |
+        Lanes.UserBlockingLane |
+        Lanes.UserVisibleLane |
         Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'background', concurrent: true, viewTransition: true },
-      Lanes.UserBlockingLane |
+      { priority: 'background', viewTransition: true },
+      Lanes.DefaultLane |
+        Lanes.UserBlockingLane |
         Lanes.UserVisibleLane |
         Lanes.BackgroundLane |
-        Lanes.ConcurrentLane |
         Lanes.ViewTransitionLane,
     ],
-  ] as [UpdateOptions, Lanes][])(
+  ] as [ScheduleOptions, Lanes][])(
     'returns the lanes for flush',
     (options, lanes) => {
       expect(getFlushLanesFromOptions(options)).toBe(lanes);
@@ -107,24 +104,24 @@ describe('getFlushLanesFromOptions()', () => {
 
 describe('getScheduleLanesFromOptions()', () => {
   it.each([
-    [{}, Lanes.NoLanes],
-    [{ priority: 'user-blocking' }, Lanes.UserBlockingLane],
-    [{ priority: 'user-visible' }, Lanes.UserVisibleLane],
-    [{ priority: 'background' }, Lanes.BackgroundLane],
-    [{ viewTransition: true }, Lanes.ViewTransitionLane],
+    [{}, Lanes.DefaultLane],
+    [{ priority: 'user-blocking' }, Lanes.DefaultLane | Lanes.UserBlockingLane],
+    [{ priority: 'user-visible' }, Lanes.DefaultLane | Lanes.UserVisibleLane],
+    [{ priority: 'background' }, Lanes.DefaultLane | Lanes.BackgroundLane],
+    [{ viewTransition: true }, Lanes.DefaultLane | Lanes.ViewTransitionLane],
     [
-      { priority: 'user-blocking', concurrent: true, viewTransition: true },
-      Lanes.UserBlockingLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
+      { priority: 'user-blocking', viewTransition: true },
+      Lanes.DefaultLane | Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'user-visible', concurrent: true, viewTransition: true },
-      Lanes.UserVisibleLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
+      { priority: 'user-visible', viewTransition: true },
+      Lanes.DefaultLane | Lanes.UserVisibleLane | Lanes.ViewTransitionLane,
     ],
     [
-      { priority: 'background', concurrent: true, viewTransition: true },
-      Lanes.BackgroundLane | Lanes.ConcurrentLane | Lanes.ViewTransitionLane,
+      { priority: 'background', viewTransition: true },
+      Lanes.DefaultLane | Lanes.BackgroundLane | Lanes.ViewTransitionLane,
     ],
-  ] as [UpdateOptions, Lanes][])(
+  ] as [ScheduleOptions, Lanes][])(
     'returns lanes for schedule',
     (options, lanes) => {
       expect(getScheduleLanesFromOptions(options)).toBe(lanes);

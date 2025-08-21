@@ -12,6 +12,7 @@ import { RefPrimitive } from '@/primitive/ref.js';
 import { SpreadPrimitive } from '@/primitive/spread.js';
 import { StylePrimitive } from '@/primitive/style.js';
 import { TextPrimitive } from '@/primitive/text.js';
+import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -214,7 +215,7 @@ describe('BrowserBackend', () => {
 
       expect(callback).toHaveBeenCalledTimes(2);
       expect(setTimeoutSpy).toHaveBeenCalledTimes(2);
-      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
+      expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function), 1);
     });
 
     it('should schedule a callback with "background" priority using requestIdleCallback()', async () => {
@@ -235,6 +236,51 @@ describe('BrowserBackend', () => {
       expect(callback).toHaveBeenCalledOnce();
       expect(requestIdleCallbackSpy).toHaveBeenCalledOnce();
       expect(requestIdleCallbackSpy).toHaveBeenCalledWith(expect.any(Function));
+    });
+  });
+
+  describe('requestUpdate()', () => {
+    it('schedules updates asynchronously', async () => {
+      const backend = new BrowserBackend(document);
+      const runtime = new Runtime(backend);
+
+      const flushAsyncSpy = vi.spyOn(runtime, 'flushAsync');
+
+      await backend.requestUpdate(
+        async (flushUpdate) => flushUpdate(runtime),
+        {},
+      );
+
+      expect(flushAsyncSpy).toHaveBeenCalledOnce();
+    });
+
+    it('schedules updates synchronously', async () => {
+      const backend = new BrowserBackend(document);
+      const runtime = new Runtime(backend);
+
+      const flushAsyncSpy = vi.spyOn(runtime, 'flushAsync');
+
+      await backend.requestUpdate(async (flushUpdate) => flushUpdate(runtime), {
+        mode: 'sequential',
+      });
+
+      expect(flushAsyncSpy).toHaveBeenCalledOnce();
+    });
+
+    it('handles an error that occurs during flushing', async () => {
+      const backend = new BrowserBackend(document);
+      const runtime = new Runtime(backend);
+
+      const flushAsyncSpy = vi
+        .spyOn(runtime, 'flushAsync')
+        .mockImplementation(() => {
+          return Promise.reject();
+        });
+
+      await expect(
+        backend.requestUpdate(async (flushUpdate) => flushUpdate(runtime), {}),
+      ).rejects.toThrow();
+      expect(flushAsyncSpy).toHaveBeenCalledOnce();
     });
   });
 

@@ -81,6 +81,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
       );
     }
 
+    const { runtime } = context;
     const slots = new Map();
 
     for (const key of Object.keys(this._props)) {
@@ -89,7 +90,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
         continue;
       }
       const part = resolveNamedPart(key, this._part.node);
-      const slot = context.resolveSlot(value, part);
+      const slot = runtime.resolveSlot(value, part);
       slot.hydrate(target, context);
       slots.set(key, slot);
     }
@@ -99,6 +100,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
   }
 
   connect(context: UpdateContext): void {
+    const { runtime } = context;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
 
@@ -118,7 +120,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
         slot.reconcile(value, context);
       } else {
         const part = resolveNamedPart(key, this._part.node);
-        slot = context.resolveSlot(value, part);
+        slot = runtime.resolveSlot(value, part);
         slot.connect(context);
       }
       newSlots.set(key, slot);

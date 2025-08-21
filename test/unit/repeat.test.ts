@@ -11,8 +11,13 @@ import {
 } from '@/repeat.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { createUpdateSession } from '../session-utils.js';
-import { allCombinations, createElement, permutations } from '../test-utils.js';
+import {
+  allCombinations,
+  createElement,
+  createRuntime,
+  permutations,
+  UpdateHelper,
+} from '../test-helpers.js';
 
 const TEXT_TEMPLATE = new TextTemplate<string>();
 
@@ -48,8 +53,8 @@ describe('RepeatDirective', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const binding = RepeatDirective.resolveBinding(props, part, session);
+      const context = createRuntime();
+      const binding = RepeatDirective.resolveBinding(props, part, context);
 
       expect(binding.type).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
@@ -62,10 +67,10 @@ describe('RepeatDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        RepeatDirective.resolveBinding(props, part, session),
+        RepeatDirective.resolveBinding(props, part, context),
       ).toThrow('RepeatDirective must be used in a child part,');
     });
   });
@@ -96,11 +101,13 @@ describe('RepeatBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new RepeatBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(props1)).toBe(false);
         expect(binding.shouldBind({ ...props1 })).toBe(false);
@@ -122,6 +129,7 @@ describe('RepeatBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
+      const binding = new RepeatBinding(props, part);
       const container = createElement(
         'div',
         {},
@@ -133,19 +141,13 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const tree = createHydrationTree(container);
-      const binding = new RepeatBinding(props, part);
-      const session = createUpdateSession();
+      const target = createHydrationTree(container);
+      const helper = new UpdateHelper();
 
-      binding.hydrate(tree, session);
-
-      expect(part.anchorNode).toBe(container.firstChild);
-      expect(container.innerHTML).toBe(
-        source.map((element) => element + EMPTY_COMMENT).join('') +
-          EMPTY_COMMENT,
-      );
-
-      binding.commit();
+      helper.startSession((context) => {
+        binding.hydrate(target, context);
+        binding.commit();
+      });
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
@@ -166,6 +168,7 @@ describe('RepeatBinding', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
+      const binding = new RepeatBinding(props, part);
       const container = createElement(
         'div',
         {},
@@ -177,15 +180,20 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const tree = createHydrationTree(container);
-      const binding = new RepeatBinding(props, part);
-      const session = createUpdateSession();
+      const target = createHydrationTree(container);
+      const helper = new UpdateHelper();
 
-      binding.connect(session);
-      binding.commit();
+      SESSION: {
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
+      }
 
       expect(() => {
-        binding.hydrate(tree, session);
+        helper.startSession((context) => {
+          binding.hydrate(target, context);
+        });
       }).toThrow(HydrationError);
     });
   });
@@ -219,11 +227,13 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const session = createUpdateSession();
+          const helper = new UpdateHelper();
 
           SESSION1: {
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               combinations1.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -233,9 +243,11 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            binding.bind(props2);
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.bind(props2);
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               combinations2.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -281,11 +293,13 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const session = createUpdateSession();
+          const helper = new UpdateHelper();
 
           SESSION1: {
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -295,9 +309,11 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            binding.bind(props2);
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.bind(props2);
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               permutation2.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -307,9 +323,11 @@ describe('RepeatBinding', () => {
           }
 
           SESSION3: {
-            binding.bind(props1);
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.bind(props1);
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => value + EMPTY_COMMENT).join('') +
@@ -353,11 +371,13 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const session = createUpdateSession();
+          const helper = new UpdateHelper();
 
           SESSION1: {
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => `<!--${value}-->`).join('') +
@@ -367,9 +387,11 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            binding.bind(props2);
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.bind(props2);
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               permutation2.map(({ value }) => `<!--${value}-->`).join('') +
@@ -379,9 +401,11 @@ describe('RepeatBinding', () => {
           }
 
           SESSION3: {
-            binding.bind(props1);
-            binding.connect(session);
-            binding.commit();
+            helper.startSession((context) => {
+              binding.bind(props1);
+              binding.connect(context);
+              binding.commit();
+            });
 
             expect(container.innerHTML).toBe(
               permutation1.map(({ value }) => `<!--${value}-->`).join('') +
@@ -418,11 +442,13 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -431,9 +457,11 @@ describe('RepeatBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(props2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(container.innerHTML).toBe(
           source2.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -442,9 +470,11 @@ describe('RepeatBinding', () => {
       }
 
       SESSION3: {
-        binding.bind(props1);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(props1);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(container.innerHTML).toBe(
           source1.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -468,11 +498,13 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(container.innerHTML).toBe(
           source.map(toCommentString).join('') + EMPTY_COMMENT,
@@ -480,15 +512,19 @@ describe('RepeatBinding', () => {
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(container.innerHTML).toBe(EMPTY_COMMENT);
       }
 
       SESSION3: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(container.innerHTML).toBe(
           source.map(toCommentString).join('') + EMPTY_COMMENT,

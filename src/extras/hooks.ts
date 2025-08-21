@@ -6,13 +6,15 @@ export function DeferredValue<T>(
   initialValue?: InitialState<T>,
 ): CustomHookFunction<T> {
   return (context) => {
-    const [deferredValue, setDeferredValue] = context.useReducer<T, T>(
-      (_state, value) => value,
-      initialValue ?? (() => value),
+    const [deferredValue, setDeferredValue] = context.useState(
+      initialValue ?? ((() => value) as InitialState<T>),
     );
 
     context.useLayoutEffect(() => {
-      setDeferredValue(value, { priority: 'background' });
+      setDeferredValue(() => value, {
+        mode: 'prioritized',
+        priority: 'background',
+      });
     }, [value]);
 
     return deferredValue;
@@ -64,14 +66,11 @@ export function SyncEnternalStore<TSnapshot>(
 ): CustomHookFunction<void> {
   return (context) => {
     const snapshot = getSnapshot();
-    const store = context.useMemo(
-      () => ({ getSnapshot, memoizedSnapshot: snapshot }),
-      [],
-    );
+    const store = context.useMemo(() => ({ getSnapshot, snapshot }), []);
 
     context.useLayoutEffect(() => {
       store.getSnapshot = getSnapshot;
-      store.memoizedSnapshot = snapshot;
+      store.snapshot = snapshot;
 
       if (!Object.is(getSnapshot(), snapshot)) {
         context.forceUpdate();
@@ -80,7 +79,7 @@ export function SyncEnternalStore<TSnapshot>(
 
     context.useEffect(() => {
       const checkForChanges = () => {
-        if (!Object.is(store.getSnapshot(), store.memoizedSnapshot)) {
+        if (!Object.is(store.getSnapshot(), store.snapshot)) {
           context.forceUpdate();
         }
       };

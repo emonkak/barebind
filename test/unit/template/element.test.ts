@@ -1,10 +1,14 @@
 import { describe, expect, it } from 'vitest';
+
 import { createHydrationTree } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { Element, ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement, serializeNode } from '../../test-utils.js';
+import {
+  createElement,
+  serializeNode,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 describe('Element()', () => {
   it('returns a new DirectiveSpecifier with the element', () => {
@@ -39,6 +43,7 @@ describe('ElementTemplate', () => {
 
   describe('hydrate()', () => {
     it('hydrates a tree containing a element', () => {
+      const template = new ElementTemplate('div');
       const binds = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -52,14 +57,11 @@ describe('ElementTemplate', () => {
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const template = new ElementTemplate('div');
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes).toStrictEqual([container.firstChild]);
       expect(slots).toStrictEqual([
@@ -89,6 +91,7 @@ describe('ElementTemplate', () => {
 
   describe('render()', () => {
     it('renders an HTML element', () => {
+      const template = new ElementTemplate('div');
       const binds = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -96,9 +99,11 @@ describe('ElementTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const template = new ElementTemplate('div');
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<div><!----></div>',
@@ -131,6 +136,7 @@ describe('ElementTemplate', () => {
     });
 
     it('renders an SVG element', () => {
+      const template = new ElementTemplate('svg');
       const binds = [{ class: 'foo' }, 'bar'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -138,9 +144,11 @@ describe('ElementTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const template = new ElementTemplate('svg');
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<svg><!----></svg>',

@@ -1,10 +1,10 @@
-import { AsyncRoot, BrowserBackend } from 'barebind';
+import { BrowserBackend, Root } from 'barebind';
 import { ConsoleReporter, PerformanceProfiler } from 'barebind/extras/profiler';
 
 import { App } from './App.js';
 import { AppStore } from './store.js';
 
-const root = AsyncRoot.create(
+const root = Root.create(
   App({
     store: new AppStore(),
   }),

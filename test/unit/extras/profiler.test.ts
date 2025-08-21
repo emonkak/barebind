@@ -32,70 +32,70 @@ describe('PerformanceProfiler', () => {
       const events: RuntimeEvent[] = [
         {
           type: 'UPDATE_START',
-          id: 0,
+          id: 1,
           lanes: Lanes.UserBlockingLane,
         },
         {
           type: 'RENDER_START',
-          id: 0,
+          id: 1,
         },
         {
           type: 'COMPONENT_RENDER_START',
-          id: 0,
+          id: 1,
           component,
           props: {},
           context: {} as RenderContext,
         },
         {
           type: 'COMPONENT_RENDER_END',
-          id: 0,
+          id: 1,
           component,
           props: {},
           context: {} as RenderContext,
         },
         {
           type: 'RENDER_END',
-          id: 0,
+          id: 1,
         },
         {
           type: 'COMMIT_START',
-          id: 0,
+          id: 1,
           phase: CommitPhase.Mutation,
           effects: mutationEffects,
         },
         {
           type: 'COMMIT_END',
-          id: 0,
+          id: 1,
           phase: CommitPhase.Mutation,
           effects: mutationEffects,
         },
         {
           type: 'COMMIT_START',
-          id: 0,
+          id: 1,
           phase: CommitPhase.Layout,
           effects: layoutEffects,
         },
         {
           type: 'COMMIT_END',
-          id: 0,
+          id: 1,
           phase: CommitPhase.Layout,
           effects: layoutEffects,
         },
         {
           type: 'COMMIT_START',
-          id: 0,
+          id: 1,
           phase: CommitPhase.Passive,
           effects: passiveEffects,
         },
         {
           type: 'COMMIT_END',
-          id: 0,
+          id: 1,
           phase: CommitPhase.Passive,
           effects: passiveEffects,
         },
         {
           type: 'UPDATE_END',
-          id: 0,
+          id: 1,
           lanes: Lanes.UserBlockingLane,
         },
       ];
@@ -106,7 +106,7 @@ describe('PerformanceProfiler', () => {
 
       expect(reporter.reportProfile).toHaveBeenCalledOnce();
       expect(reporter.reportProfile).toHaveBeenCalledWith({
-        id: 0,
+        id: 1,
         updateMeasurement: {
           startTime: expect.any(Number),
           duration: expect.any(Number),
@@ -148,7 +148,7 @@ describe('ConsoleReporter', () => {
     it.each([
       [
         {
-          id: 0,
+          id: 1,
           updateMeasurement: null,
           renderMeasurement: null,
           componentMeasurements: [],
@@ -160,7 +160,7 @@ describe('ConsoleReporter', () => {
       ],
       [
         {
-          id: 0,
+          id: 1,
           updateMeasurement: {
             startTime: 0,
             duration: 10,
@@ -172,11 +172,11 @@ describe('ConsoleReporter', () => {
           layoutMeasurement: null,
           passiveMeasurement: null,
         },
-        [['group', 'Transition #0 without priority in %c10ms'], ['groupEnd']],
+        [['group', 'Transition #1 without priority in %c10ms'], ['groupEnd']],
       ],
       [
         {
-          id: 0,
+          id: 1,
           updateMeasurement: {
             startTime: 0,
             duration: 10,
@@ -210,7 +210,7 @@ describe('ConsoleReporter', () => {
           },
         },
         [
-          ['group', 'Update #0 with user-blocking priority in %c10ms'],
+          ['group', 'Update #1 with user-blocking priority in %c10ms'],
           [
             'groupCollapsed',
             '%cRENDER PHASE:%c 1 component(s) rendered in %c4ms',

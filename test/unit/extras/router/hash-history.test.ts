@@ -5,25 +5,19 @@ import {
 } from '@/extras/router/hash-history.js';
 import { CurrentHistory } from '@/extras/router/history.js';
 import { RelativeURL } from '@/extras/router/url.js';
-import type { RenderSession } from '@/render-session.js';
-import {
-  createRenderSession,
-  disposeRenderSession,
-  flushRenderSession,
-} from '../../../session-utils.js';
-import { createElement } from '../../../test-utils.js';
+import { createElement, RenderHelper } from '../../../test-helpers.js';
 
 describe('HashHistory', () => {
   const originalURL = location.href;
   const originalState = history.state;
-  let session!: RenderSession;
+  let helper!: RenderHelper;
 
   beforeEach(() => {
-    session = createRenderSession();
+    helper = new RenderHelper();
   });
 
   afterEach(() => {
-    disposeRenderSession(session);
+    helper.finalizeHooks();
     history.replaceState(originalState, '', originalURL);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -35,11 +29,11 @@ describe('HashHistory', () => {
 
       history.replaceState(state, '', '#/articles/foo%2Fbar');
 
-      const [location, { getCurrentURL }] = session.use(HashHistory);
+      const [location, navigator] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
-      flushRenderSession(session);
-
-      expect(getCurrentURL().toString()).toBe('/articles/foo%2Fbar');
+      expect(navigator.getCurrentURL().toString()).toBe('/articles/foo%2Fbar');
       expect(window.location.hash).toBe('#/articles/foo%2Fbar');
       expect(history.state).toStrictEqual(state);
       expect(location.url.toString()).toBe('/articles/foo%2Fbar');
@@ -51,15 +45,15 @@ describe('HashHistory', () => {
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator] = session.use(HashHistory);
+      const [location1, navigator1] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
-      flushRenderSession(session);
+      navigator1.navigate('/articles/foo%2Fbar');
 
-      navigator.navigate('/articles/foo%2Fbar');
-
-      const [location2] = session.use(HashHistory);
-
-      flushRenderSession(session);
+      const [location2, navigator2] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
       expect(pushStateSpy).toHaveBeenCalledOnce();
       expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -67,6 +61,7 @@ describe('HashHistory', () => {
       expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
       expect(location2.state).toBe(history.state);
       expect(location2.navigationType).toBe('push');
+      expect(navigator1).toBe(navigator2);
     });
 
     it('replaces with a new location', () => {
@@ -75,18 +70,18 @@ describe('HashHistory', () => {
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator] = session.use(HashHistory);
+      const [location1, navigator1] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
-      flushRenderSession(session);
-
-      navigator.navigate('/articles/foo%2Fbar', {
+      navigator1.navigate('/articles/foo%2Fbar', {
         replace: true,
         state,
       });
 
-      const [location2] = session.use(HashHistory);
-
-      flushRenderSession(session);
+      const [location2, navigator2] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
       expect(pushStateSpy).not.toHaveBeenCalled();
       expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -94,31 +89,32 @@ describe('HashHistory', () => {
       expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
       expect(location2.state).toBe(state);
       expect(location2.navigationType).toBe('replace');
+      expect(navigator1).toBe(navigator2);
     });
 
     it('waits for navigation transition', async () => {
-      const resumeSpy = vi.spyOn(session['_coroutine'], 'resume');
-
-      const [_location, navigator] = session.use(HashHistory);
-
-      flushRenderSession(session);
+      const [_location, navigator] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
       navigator.navigate('/articles/foo%2Fbar');
 
       expect(navigator.isTransitionPending()).toBe(true);
       expect(await navigator.waitForTransition()).toBe(1);
-      expect(resumeSpy).toHaveBeenCalledOnce();
 
       expect(navigator.isTransitionPending()).toBe(false);
       expect(await navigator.waitForTransition()).toBe(0);
-      expect(resumeSpy).toHaveBeenCalledOnce();
     });
   });
 
   it('registers the current history state', () => {
-    const currentHistory = session.use(HashHistory);
+    const { hashHistory, currentHistory } = helper.startSession((context) => {
+      const hashHistory = context.use(HashHistory);
+      const currentHistory = context.use(CurrentHistory);
+      return { hashHistory, currentHistory };
+    });
 
-    expect(session.use(CurrentHistory)).toBe(currentHistory);
+    expect(currentHistory).toBe(hashHistory);
   });
 
   it('registers event listeners for "click", and "hashchange"', () => {
@@ -127,11 +123,11 @@ describe('HashHistory', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    session.setContextValue(CurrentHistory, [location, navigator]);
-    session.use(HashHistory);
+    helper.startSession((context) => {
+      context.use(HashHistory);
+    });
 
-    flushRenderSession(session);
-    disposeRenderSession(session);
+    helper.finalizeHooks();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -167,11 +163,11 @@ describe('HashHistory', () => {
         'removeEventListener',
       );
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(HashHistory);
+      helper.startSession((context) => {
+        context.use(HashHistory);
+      });
 
-      flushRenderSession(session);
-      disposeRenderSession(session);
+      helper.finalizeHooks();
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -197,19 +193,18 @@ describe('HashHistory', () => {
   );
 
   it('should update the state when the link is clicked', () => {
+    const [location1] = helper.startSession((context) => {
+      return context.use(HashHistory);
+    });
+
     const element = createElement('a', { href: '#/articles/foo%2Fbar' });
-
-    const [location1] = session.use(HashHistory);
-
-    flushRenderSession(session);
-
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
 
-    const [location2] = session.use(HashHistory);
-
-    flushRenderSession(session);
+    const [location2] = helper.startSession((context) => {
+      return context.use(HashHistory);
+    });
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
@@ -220,9 +215,9 @@ describe('HashHistory', () => {
   it.runIf(typeof navigation === 'object')(
     'should update the location when NavigateEvent is received',
     () => {
-      const [location1] = session.use(HashHistory);
-
-      flushRenderSession(session);
+      const [location1] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
       navigation!.dispatchEvent(
         Object.assign(new Event('navigate'), {
@@ -236,9 +231,9 @@ describe('HashHistory', () => {
         } as NavigateEventInit),
       );
 
-      const [location2] = session.use(HashHistory);
-
-      flushRenderSession(session);
+      const [location2] = helper.startSession((context) => {
+        return context.use(HashHistory);
+      });
 
       expect(location2).not.toBe(location1);
       expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
@@ -246,11 +241,11 @@ describe('HashHistory', () => {
   );
 
   it('should update the location when HashChangeEvent is received', () => {
-    const [location1] = session.use(HashHistory);
-
     vi.stubGlobal('navigation', undefined);
 
-    flushRenderSession(session);
+    const [location1] = helper.startSession((context) => {
+      return context.use(HashHistory);
+    });
 
     dispatchEvent(
       new HashChangeEvent('hashchange', {
@@ -259,9 +254,9 @@ describe('HashHistory', () => {
       }),
     );
 
-    const [location2] = session.use(HashHistory);
-
-    flushRenderSession(session);
+    const [location2] = helper.startSession((context) => {
+      return context.use(HashHistory);
+    });
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/articles/foo%2Fbar');

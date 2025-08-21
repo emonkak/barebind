@@ -3,8 +3,7 @@ import { createHydrationTree } from '@/hydration.js';
 import { HydrationError, PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement } from '../../test-utils.js';
+import { createElement, UpdateHelper } from '../../test-helpers.js';
 
 describe('TextTemplate', () => {
   describe('arity', () => {
@@ -38,13 +37,11 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {}, 'foo');
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
       expect(slots).toStrictEqual([
@@ -73,10 +70,12 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {});
       const tree = createHydrationTree(container);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       expect(() => {
-        template.hydrate(binds, part, tree, session);
+        helper.startSession((context) => {
+          template.hydrate(binds, part, tree, context);
+        });
       }).toThrow(HydrationError);
     });
   });
@@ -91,8 +90,11 @@ describe('TextTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const { childNodes, slots } = template.render(binds, part, session);
+      const helper = new UpdateHelper();
+
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);
       expect(slots).toStrictEqual([

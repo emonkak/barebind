@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement } from '../../test-utils.js';
+import {
+  createElement,
+  createRuntime,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 describe('ClassPrimitive', () => {
   describe('name', () => {
@@ -58,8 +61,8 @@ describe('ClassPrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const session = createUpdateSession();
-        const binding = ClassPrimitive.resolveBinding(classes, part, session);
+        const context = createRuntime();
+        const binding = ClassPrimitive.resolveBinding(classes, part, context);
 
         expect(binding.type).toBe(ClassPrimitive);
         expect(binding.value).toBe(classes);
@@ -74,10 +77,10 @@ describe('ClassPrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        ClassPrimitive.resolveBinding(classes, part, session),
+        ClassPrimitive.resolveBinding(classes, part, context),
       ).toThrow('ClassPrimitive must be used in a ":class" attribute part,');
     });
   });
@@ -105,11 +108,13 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(classes)).toBe(false);
         expect(binding.shouldBind(structuredClone(classes))).toBe(false);
@@ -131,11 +136,13 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(classes)).toBe(false);
         expect(binding.shouldBind(structuredClone(classes))).toBe(false);
@@ -170,27 +177,33 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
 
       SESSION2: {
-        binding.bind(classes2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(classes2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo quux');
       }
 
       SESSION3: {
-        binding.bind(classes1);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(classes1);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
@@ -205,27 +218,33 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
 
       SESSION2: {
-        binding.bind(classes2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(classes2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo quux');
       }
 
       SESSION3: {
-        binding.bind(classes1);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(classes1);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo bar baz qux');
       }
@@ -240,27 +259,33 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo bar');
       }
 
       SESSION2: {
-        binding.bind(classes2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(classes2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('bar');
       }
 
       SESSION3: {
-        binding.bind(classes1);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(classes1);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo');
       }
@@ -274,11 +299,13 @@ describe('ClassBinding', () => {
         name: 'class',
       };
       const binding = new ClassBinding(classes, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('baz foo bar');
       }
@@ -294,18 +321,22 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.getAttribute('class')).toBe('foo bar');
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.getAttribute('class')).toBe('');
       }

@@ -5,25 +5,19 @@ import {
   createLinkClickHandler,
 } from '@/extras/router/browser-history.js';
 import { CurrentHistory } from '@/extras/router/history.js';
-import type { RenderSession } from '@/render-session.js';
-import {
-  createRenderSession,
-  disposeRenderSession,
-  flushRenderSession,
-} from '../../../session-utils.js';
-import { createElement } from '../../../test-utils.js';
+import { createElement, RenderHelper } from '../../../test-helpers.js';
 
 describe('BrowserHistory', () => {
   const originalUrl = location.href;
   const originalState = history.state;
-  let session!: RenderSession;
+  let helper!: RenderHelper;
 
   beforeEach(() => {
-    session = createRenderSession();
+    helper = new RenderHelper();
   });
 
   afterEach(() => {
-    disposeRenderSession(session);
+    helper.finalizeHooks();
     history.replaceState(originalState, '', originalUrl);
     vi.restoreAllMocks();
     vi.unstubAllGlobals();
@@ -35,7 +29,9 @@ describe('BrowserHistory', () => {
 
       history.replaceState(state, '', '/foo/bar');
 
-      const [location, navigator] = session.use(BrowserHistory);
+      const [location, navigator] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       expect(location.url.toString()).toBe('/foo/bar');
       expect(location.state).toStrictEqual(state);
@@ -50,15 +46,15 @@ describe('BrowserHistory', () => {
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator1] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [location1, navigator1] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       navigator1.navigate('/articles/456');
 
-      const [location2, navigator2] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [location2, navigator2] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       expect(pushStateSpy).toHaveBeenCalledOnce();
       expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -76,18 +72,18 @@ describe('BrowserHistory', () => {
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator1] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [location1, navigator1] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       navigator1.navigate('/foo/bar', {
         replace: true,
         state,
       });
 
-      const [location2, navigator2] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [location2, navigator2] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       expect(pushStateSpy).not.toHaveBeenCalled();
       expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -100,28 +96,30 @@ describe('BrowserHistory', () => {
     });
 
     it('waits for navigation transition', async () => {
-      const resumeSpy = vi.spyOn(session['_coroutine'], 'resume');
-
-      const [_location, navigator] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [_location, navigator] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       navigator.navigate('/articles/foo%2Fbar');
 
       expect(navigator.isTransitionPending()).toBe(true);
       expect(await navigator.waitForTransition()).toBe(1);
-      expect(resumeSpy).toHaveBeenCalledOnce();
 
       expect(navigator.isTransitionPending()).toBe(false);
       expect(await navigator.waitForTransition()).toBe(0);
-      expect(resumeSpy).toHaveBeenCalledOnce();
     });
   });
 
-  it('registers the current history state', () => {
-    const currentHistory = session.use(BrowserHistory);
+  it('registers the current history', () => {
+    const { browserHistory, currentHistory } = helper.startSession(
+      (context) => {
+        const browserHistory = context.use(BrowserHistory);
+        const currentHistory = context.use(CurrentHistory);
+        return { browserHistory, currentHistory };
+      },
+    );
 
-    expect(session.use(CurrentHistory)).toBe(currentHistory);
+    expect(currentHistory).toBe(browserHistory);
   });
 
   it('registers event listeners for "click", "submit" and "popstate"', () => {
@@ -130,11 +128,11 @@ describe('BrowserHistory', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    session.setContextValue(CurrentHistory, [location, navigator]);
-    session.use(BrowserHistory);
+    helper.startSession((context) => {
+      context.use(BrowserHistory);
+    });
 
-    flushRenderSession(session);
-    disposeRenderSession(session);
+    helper.finalizeHooks();
 
     expect(addEventListenerSpy).toHaveBeenCalledTimes(3);
     expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -178,11 +176,11 @@ describe('BrowserHistory', () => {
         'removeEventListener',
       );
 
-      session.setContextValue(CurrentHistory, [location, navigator]);
-      session.use(BrowserHistory);
+      helper.startSession((context) => {
+        context.use(BrowserHistory);
+      });
 
-      flushRenderSession(session);
-      disposeRenderSession(session);
+      helper.finalizeHooks();
 
       expect(addEventListenerSpy).toHaveBeenCalledTimes(2);
       expect(addEventListenerSpy).toHaveBeenCalledWith(
@@ -216,19 +214,18 @@ describe('BrowserHistory', () => {
   );
 
   it('should update the state when the link is clicked', () => {
+    const [location1] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
+
     const element = createElement('a', { href: '/foo/bar' });
-
-    const [location1] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
-
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
 
-    const [location2] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
+    const [location2] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -236,15 +233,14 @@ describe('BrowserHistory', () => {
   });
 
   it('should update the state when the form is submitted', () => {
+    const [location1] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
+
     const element = createElement('form', {
       method: 'GET',
       action: '/foo/bar',
     });
-
-    const [location1] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
-
     document.body.appendChild(element);
     element.dispatchEvent(
       new SubmitEvent('submit', {
@@ -254,9 +250,9 @@ describe('BrowserHistory', () => {
     );
     document.body.removeChild(element);
 
-    const [location2] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
+    const [location2] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -268,9 +264,9 @@ describe('BrowserHistory', () => {
     () => {
       const state = { key: 'foo' };
 
-      const [location1] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [location1] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       navigation!.dispatchEvent(
         Object.assign(new Event('navigate'), {
@@ -285,9 +281,9 @@ describe('BrowserHistory', () => {
         } as NavigateEventInit),
       );
 
-      const [location2] = session.use(BrowserHistory);
-
-      flushRenderSession(session);
+      const [location2] = helper.startSession((context) => {
+        return context.use(BrowserHistory);
+      });
 
       expect(location2).not.toBe(location1);
       expect(location2.url.toString()).toBe('/foo/bar');
@@ -299,11 +295,11 @@ describe('BrowserHistory', () => {
   it('should update the location when PopStateEvent is received', () => {
     const state = { key: 'foo' };
 
-    const [location1] = session.use(BrowserHistory);
-
     vi.stubGlobal('navigation', undefined);
 
-    flushRenderSession(session);
+    const [location1] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
 
     history.replaceState(state, '', '/foo/bar');
     dispatchEvent(
@@ -312,9 +308,9 @@ describe('BrowserHistory', () => {
       }),
     );
 
-    const [location2] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
+    const [location2] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -327,16 +323,16 @@ describe('BrowserHistory', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    const [location1] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
+    const [location1] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
 
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
-    const [location2] = session.use(BrowserHistory);
-
-    flushRenderSession(session);
+    const [location2] = helper.startSession((context) => {
+      return context.use(BrowserHistory);
+    });
 
     expect(location1).toBe(location2);
   });

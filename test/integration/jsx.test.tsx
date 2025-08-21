@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
-import { SyncRoot } from '@/root/sync.js';
-import { stripComments } from '../test-utils.js';
+import { Root } from '@/root.js';
+import { stripComments } from '../test-helpers.js';
 
-test('render a component returning virtual DOM', () => {
+test('render a component returning virtual DOM', async () => {
   const value1 = App({
     footerItems: [],
     greet: 'Hello',
@@ -31,9 +31,9 @@ test('render a component returning virtual DOM', () => {
     name: 'Alternative world',
   });
   const container = document.createElement('div');
-  const root = SyncRoot.create(value1, container, new BrowserBackend());
+  const root = Root.create(value1, container, new BrowserBackend());
 
-  root.mount();
+  await root.mount();
 
   const items = [...container.querySelectorAll('li')];
 
@@ -42,7 +42,7 @@ test('render a component returning virtual DOM', () => {
   );
   expect(items).toHaveLength(3);
 
-  root.update(value2);
+  await root.update(value2);
 
   expect(stripComments(container).innerHTML).toBe(
     '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
@@ -54,7 +54,7 @@ test('render a component returning virtual DOM', () => {
     expect.exact(items[0]),
   ]);
 
-  root.unmount();
+  await root.unmount();
 
   expect(container.innerHTML).toBe('');
 });

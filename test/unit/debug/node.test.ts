@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatNode } from '@/debug/node.js';
-import { createElement } from '../../test-utils.js';
+import { createElement } from '../../test-helpers.js';
 
 const MAKRER = '[[NODE IS IN HERE!]]';
 

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('LivePrimitive', () => {
   describe('name', () => {
@@ -20,8 +20,8 @@ describe('LivePrimitive', () => {
         name: 'value',
         defaultValue: '',
       };
-      const session = createUpdateSession();
-      const binding = LivePrimitive.resolveBinding(value, part, session);
+      const context = createRuntime();
+      const binding = LivePrimitive.resolveBinding(value, part, context);
 
       expect(binding.type).toBe(LivePrimitive);
       expect(binding.value).toBe(value);
@@ -34,9 +34,9 @@ describe('LivePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('textarea'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
-      expect(() => LivePrimitive.resolveBinding(value, part, session)).toThrow(
+      expect(() => LivePrimitive.resolveBinding(value, part, context)).toThrow(
         'LivePrimitive must be used in a live part,',
       );
     });
@@ -69,21 +69,25 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(setValueSpy).toHaveBeenCalledOnce();
         expect(setValueSpy).toHaveBeenCalledWith(value);
       }
 
       SESSION2: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(setValueSpy).toHaveBeenCalledOnce();
         expect(setValueSpy).toHaveBeenCalledWith(value);
@@ -101,18 +105,22 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.value).toBe(value);
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.value).toBe('');
       }

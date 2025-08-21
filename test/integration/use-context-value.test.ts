@@ -2,10 +2,10 @@ import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
-import { SyncRoot } from '@/root/sync.js';
-import { createElement, stripComments } from '../test-utils.js';
+import { Root } from '@/root.js';
+import { createElement, stripComments } from '../test-helpers.js';
 
-test('hydrate a component using a context value', () => {
+test('hydrate a component using a context value', async () => {
   const value = Parent({
     greet: 'Hello',
     name: 'foo',
@@ -23,20 +23,20 @@ test('hydrate a component using a context value', () => {
     ),
     document.createComment(''),
   );
-  const root = SyncRoot.create(value, container, new BrowserBackend());
+  const root = Root.create(value, container, new BrowserBackend());
 
-  root.hydrate();
+  await root.hydrate();
 
   expect(stripComments(container).innerHTML).toBe(
     '<div>Hello, <strong>foo</strong>!</div>',
   );
 
-  root.unmount();
+  await root.unmount();
 
   expect(container.innerHTML).toBe('');
 });
 
-test('render a component using a context value', () => {
+test('render a component using a context value', async () => {
   const value1 = Parent({
     greet: 'Hello',
     name: 'foo',
@@ -46,21 +46,21 @@ test('render a component using a context value', () => {
     name: 'bar',
   });
   const container = document.createElement('div');
-  const root = SyncRoot.create(value1, container, new BrowserBackend());
+  const root = Root.create(value1, container, new BrowserBackend());
 
-  root.mount();
+  await root.mount();
 
   expect(stripComments(container).innerHTML).toBe(
     '<div>Hello, <strong>foo</strong>!</div>',
   );
 
-  root.update(value2);
+  await root.update(value2);
 
   expect(stripComments(container).innerHTML).toBe(
     '<div>Chao, <strong>bar</strong>!</div>',
   );
 
-  root.unmount();
+  await root.unmount();
 
   expect(container.innerHTML).toBe('');
 });

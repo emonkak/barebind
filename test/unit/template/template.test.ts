@@ -14,8 +14,11 @@ import {
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement } from '../../test-utils.js';
+import {
+  createElement,
+  createRuntime,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 describe('AbstractTemplate', () => {
   describe('name', () => {
@@ -28,6 +31,7 @@ describe('AbstractTemplate', () => {
 
   describe('resolveBinding()', () => {
     it('constructs a new TemplateBinding', () => {
+      const template = new MockTemplate();
       const binds = ['foo'] as const;
       const part = {
         type: PartType.ChildNode,
@@ -35,9 +39,8 @@ describe('AbstractTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const template = new MockTemplate();
-      const binding = template.resolveBinding(binds, part, session);
+      const context = createRuntime();
+      const binding = template.resolveBinding(binds, part, context);
 
       expect(binding.type).toBe(template);
       expect(binding.value).toBe(binds);
@@ -45,15 +48,15 @@ describe('AbstractTemplate', () => {
     });
 
     it('should throw the error if the part is not child part', () => {
+      const template = new MockTemplate();
       const binds = ['foo'] as const;
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
-      const template = new MockTemplate();
+      const context = createRuntime();
 
-      expect(() => template.resolveBinding(binds, part, session)).toThrow(
+      expect(() => template.resolveBinding(binds, part, context)).toThrow(
         'MockTemplate must be used in a child node part,',
       );
     });
@@ -87,11 +90,13 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(binds1)).toBe(false);
         expect(binding.shouldBind(binds2)).toBe(true);
@@ -112,23 +117,25 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         childNodes: [container.firstChild!],
         slots: [],
       });
 
-      binding.hydrate(target, session);
+      helper.startSession((context) => {
+        binding.hydrate(target, context);
+        binding.commit();
+      });
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(binds, part, target, session);
-      expect(part.anchorNode).toBe(container.firstChild);
-      expect(container.innerHTML).toBe('foo<!---->');
-
-      binding.commit();
-
-      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(hydrateSpy).toHaveBeenCalledWith(
+        binds,
+        part,
+        target,
+        expect.any(Object),
+      );
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe('foo<!---->');
     });
@@ -145,12 +152,18 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = document.createElement('div');
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
-      binding.connect(session);
-      binding.commit();
+      helper.startSession((context) => {
+        binding.connect(context);
+        binding.commit();
+      });
 
-      expect(() => binding.hydrate(target, session)).toThrow(HydrationError);
+      expect(() => {
+        helper.startSession((context) => {
+          binding.hydrate(target, context);
+        });
+      }).toThrow(HydrationError);
     });
   });
 
@@ -166,16 +179,17 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const container = createElement('div', {}, part.node);
-      const renderRoot = createElement(
+      const fragment = createElement(
         'div',
         {},
         createElement('div'),
         '',
         document.createComment(''),
       );
+
       const renderSpy = vi
         .spyOn(template, 'render')
         .mockImplementation((binds, _part, context) => {
@@ -183,14 +197,14 @@ describe('TemplateBinding', () => {
             new MockSlot(
               new MockBinding(MockPrimitive, binds[0], {
                 type: PartType.Attribute,
-                node: renderRoot.firstChild as Element,
+                node: fragment.firstChild as Element,
                 name: 'class',
               }),
             ),
             new MockSlot(
               new MockBinding(MockPrimitive, binds[1], {
                 type: PartType.Text,
-                node: renderRoot.firstChild!.nextSibling as Text,
+                node: fragment.firstChild!.nextSibling as Text,
                 precedingText: '',
                 followingText: '',
               }),
@@ -198,8 +212,7 @@ describe('TemplateBinding', () => {
             new MockSlot(
               new MockBinding(MockPrimitive, binds[2], {
                 type: PartType.ChildNode,
-                node: renderRoot.firstChild!.nextSibling!
-                  .nextSibling as Comment,
+                node: fragment.firstChild!.nextSibling!.nextSibling as Comment,
                 anchorNode: null,
                 namespaceURI: HTML_NAMESPACE_URI,
               }),
@@ -208,21 +221,27 @@ describe('TemplateBinding', () => {
           for (const slot of slots) {
             slot.connect(context);
           }
-          return { childNodes: [renderRoot], slots };
+          return { childNodes: [fragment], slots };
         });
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(renderSpy).toHaveBeenCalledWith(binds1, part, session);
-        expect(part.anchorNode).toBe(renderRoot);
+        expect(renderSpy).toHaveBeenCalledWith(
+          binds1,
+          part,
+          expect.any(Object),
+        );
+        expect(part.anchorNode).toBe(fragment);
         expect(container.innerHTML).toBe(
           '<div><div class="foo"></div>bar<!--baz--></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: [renderRoot],
+          childNodes: [fragment],
           slots: [
             expect.objectContaining({
               value: binds1[0],
@@ -245,17 +264,19 @@ describe('TemplateBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(binds2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(binds2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(part.anchorNode).toBe(renderRoot);
+        expect(part.anchorNode).toBe(fragment);
         expect(container.innerHTML).toBe(
           '<div><div class="qux"></div>quux<!--corge--></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: [renderRoot],
+          childNodes: [fragment],
           slots: [
             expect.objectContaining({
               value: binds2[0],
@@ -278,14 +299,16 @@ describe('TemplateBinding', () => {
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.anchorNode).toBe(null);
         expect(container.innerHTML).toBe('<!---->');
         expect(binding['_pendingResult']).toStrictEqual({
-          childNodes: [renderRoot],
+          childNodes: [fragment],
           slots: [
             expect.objectContaining({
               value: binds2[0],
@@ -319,22 +342,23 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const container = createElement('div', {}, part.node);
-      const childNodes = [
+      const fragment = [
         document.createComment(''),
         document.createTextNode(''),
         document.createElement('div'),
       ] as const;
+
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((binds) => {
+        .mockImplementation((binds, _part, context) => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, binds[0], {
                 type: PartType.ChildNode,
-                node: childNodes[0],
+                node: fragment[0],
                 anchorNode: null,
                 namespaceURI: HTML_NAMESPACE_URI,
               }),
@@ -342,7 +366,7 @@ describe('TemplateBinding', () => {
             new MockSlot(
               new MockBinding(MockPrimitive, binds[1], {
                 type: PartType.Text,
-                node: childNodes[1],
+                node: fragment[1],
                 precedingText: '',
                 followingText: '',
               }),
@@ -350,32 +374,38 @@ describe('TemplateBinding', () => {
             new MockSlot(
               new MockBinding(MockPrimitive, binds[2], {
                 type: PartType.Attribute,
-                node: childNodes[2],
+                node: fragment[2],
                 name: 'class',
               }),
             ),
           ];
           for (const slot of slots) {
-            slot.connect(session);
+            slot.connect(context);
           }
           return {
-            childNodes,
+            childNodes: fragment,
             slots,
           };
         });
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(renderSpy).toHaveBeenCalledWith(binds1, part, session);
-        expect(part.anchorNode).toStrictEqual(childNodes[0]);
+        expect(renderSpy).toHaveBeenCalledWith(
+          binds1,
+          part,
+          expect.any(Object),
+        );
+        expect(part.anchorNode).toStrictEqual(fragment[0]);
         expect(container.innerHTML).toBe(
           '<!--foo-->bar<div class="baz"></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          childNodes,
+          childNodes: fragment,
           slots: [
             expect.objectContaining({
               value: binds1[0],
@@ -398,17 +428,19 @@ describe('TemplateBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(binds2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(binds2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(renderSpy).toHaveBeenCalledOnce();
-        expect(part.anchorNode).toStrictEqual(childNodes[0]);
+        expect(part.anchorNode).toStrictEqual(fragment[0]);
         expect(container.innerHTML).toBe(
           '<!--qux-->quux<div class="corge"></div><!---->',
         );
         expect(binding['_pendingResult']).toStrictEqual({
-          childNodes,
+          childNodes: fragment,
           slots: [
             expect.objectContaining({
               value: binds2[0],
@@ -431,14 +463,16 @@ describe('TemplateBinding', () => {
       }
 
       SESSION3: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(renderSpy).toHaveBeenCalledOnce();
         expect(part.anchorNode).toBe(null);
         expect(container.innerHTML).toBe('<!---->');
         expect(binding['_pendingResult']).toStrictEqual({
-          childNodes,
+          childNodes: fragment,
           slots: [
             expect.objectContaining({
               value: binds2[0],

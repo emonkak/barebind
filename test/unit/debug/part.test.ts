@@ -4,7 +4,7 @@ import { debugPart, formatPart, undebugPart } from '@/debug/part.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockDirective } from '../../mocks.js';
-import { createElement } from '../../test-utils.js';
+import { createElement } from '../../test-helpers.js';
 
 const MAKRER = '[[PART IS IN HERE!]]';
 

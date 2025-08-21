@@ -5,7 +5,7 @@ import { PartType } from '@/internal.js';
 import { Flexible, FlexibleSlot } from '@/slot/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { UpdateHelper } from '../../test-helpers.js';
 
 describe('Flexible()', () => {
   it('creates a SlotElement with FlexibleSlot', () => {
@@ -48,7 +48,7 @@ describe('FlexibleSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new FlexibleSlot(binding);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -58,13 +58,14 @@ describe('FlexibleSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        slot.connect(session);
-        slot.commit();
+        helper.startSession((context) => {
+          slot.connect(context);
+          slot.commit();
+        });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
         expect(bindSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
-        expect(connectSpy).toHaveBeenCalledWith(session);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
@@ -72,15 +73,17 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION2: {
-        const dirty = slot.reconcile(value2, session);
-        slot.commit();
-        slot.commit(); // ignore the second commit
+        const dirty = helper.startSession((context) => {
+          const dirty = slot.reconcile(value2, context);
+          slot.commit();
+          slot.commit(); // ignore the second commit
+          return dirty;
+        });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
         expect(bindSpy).toHaveBeenCalledTimes(1);
         expect(bindSpy).toHaveBeenCalledWith(value2);
         expect(connectSpy).toHaveBeenCalledTimes(2);
-        expect(connectSpy).toHaveBeenCalledWith(session);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
@@ -89,16 +92,17 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION3: {
-        slot.disconnect(session);
-        slot.rollback();
-        slot.rollback(); // ignore the second rollback
+        helper.startSession((context) => {
+          slot.disconnect(context);
+          slot.rollback();
+          slot.rollback(); // ignore the second rollback
+        });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
         expect(bindSpy).toHaveBeenCalledTimes(1);
         expect(bindSpy).toHaveBeenCalledWith(value2);
         expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(1);
-        expect(disconnectSpy).toHaveBeenCalledWith(session);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('');
@@ -116,7 +120,7 @@ describe('FlexibleSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new FlexibleSlot(binding);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
@@ -125,24 +129,28 @@ describe('FlexibleSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        slot.connect(session);
-        slot.commit();
+        helper.startSession((context) => {
+          slot.connect(context);
+          slot.commit();
+        });
       }
 
       SESSION2: {
-        slot.reconcile(value2, session);
-        slot.commit();
+        helper.startSession((context) => {
+          slot.reconcile(value2, context);
+          slot.commit();
+        });
       }
 
       SESSION3: {
-        slot.reconcile(value1, session);
-        slot.commit();
+        helper.startSession((context) => {
+          slot.reconcile(value1, context);
+          slot.commit();
+        });
 
         expect(bindSpy).toHaveBeenCalledOnce();
         expect(connectSpy).toHaveBeenCalledTimes(2);
-        expect(connectSpy).toHaveBeenCalledWith(session);
         expect(disconnectSpy).toHaveBeenCalledOnce();
-        expect(disconnectSpy).toHaveBeenCalledWith(session);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledOnce();
         expect(slot['_pendingBinding']).toBe(binding);
@@ -166,7 +174,7 @@ describe('FlexibleSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new FlexibleSlot(binding);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const bindSpy = vi.spyOn(binding, 'bind');
@@ -177,21 +185,25 @@ describe('FlexibleSlot', () => {
       SESSION1: {
         const target = createHydrationTree(document.createElement('div'));
 
-        slot.hydrate(target, session);
-        slot.commit();
+        helper.startSession((context) => {
+          slot.hydrate(target, context);
+          slot.commit();
+        });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
         expect(bindSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(0);
         expect(hydrateSpy).toHaveBeenCalledTimes(1);
-        expect(hydrateSpy).toHaveBeenCalledWith(target, session);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
 
       SESSION2: {
-        const dirty = slot.reconcile(value, session);
-        slot.commit();
+        const dirty = helper.startSession((context) => {
+          const dirty = slot.reconcile(value, context);
+          slot.commit();
+          return dirty;
+        });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
         expect(bindSpy).toHaveBeenCalledTimes(0);

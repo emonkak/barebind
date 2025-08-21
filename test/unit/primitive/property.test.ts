@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('PropertyPrimitive', () => {
   describe('name', () => {
@@ -20,8 +20,8 @@ describe('PropertyPrimitive', () => {
         name: 'innerHTML',
         defaultValue: '',
       };
-      const session = createUpdateSession();
-      const binding = PropertyPrimitive.resolveBinding(value, part, session);
+      const context = createRuntime();
+      const binding = PropertyPrimitive.resolveBinding(value, part, context);
 
       expect(binding.type).toBe(PropertyPrimitive);
       expect(binding.value).toBe(value);
@@ -34,10 +34,10 @@ describe('PropertyPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
       expect(() =>
-        PropertyPrimitive.resolveBinding(value, part, session),
+        PropertyPrimitive.resolveBinding(value, part, context),
       ).toThrow('PropertyPrimitive must be used in a property part,');
     });
   });
@@ -68,11 +68,13 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -91,19 +93,23 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.innerHTML).toBe(value1);
       }
 
       SESSION2: {
-        binding.bind(value2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(value2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.innerHTML).toBe(value2);
       }
@@ -120,18 +126,22 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.innerHTML).toBe(value);
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.innerHTML).toBe('');
       }
@@ -146,13 +156,15 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const setInnerHTMLSpy = vi.spyOn(part.node, 'innerHTML', 'set');
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(setInnerHTMLSpy).not.toHaveBeenCalled();
       }

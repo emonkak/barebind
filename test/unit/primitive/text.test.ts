@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { TextBinding, TextPrimitive } from '@/primitive/text.js';
-import { createUpdateSession } from '../../session-utils.js';
+import { createRuntime, UpdateHelper } from '../../test-helpers.js';
 
 describe('TextPrimitive', () => {
   describe('name', () => {
@@ -20,8 +20,8 @@ describe('TextPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const session = createUpdateSession();
-      const binding = TextPrimitive.resolveBinding(value, part, session);
+      const context = createRuntime();
+      const binding = TextPrimitive.resolveBinding(value, part, context);
 
       expect(binding.type).toBe(TextPrimitive);
       expect(binding.value).toBe(value);
@@ -34,9 +34,9 @@ describe('TextPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
-      expect(() => TextPrimitive.resolveBinding(value, part, session)).toThrow(
+      expect(() => TextPrimitive.resolveBinding(value, part, context)).toThrow(
         'TextPrimitive must be used in a text part,',
       );
     });
@@ -68,11 +68,13 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind(value1)).toBe(false);
         expect(binding.shouldBind(value2)).toBe(true);
@@ -91,19 +93,23 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<string | null>(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.data).toBe('(' + value1 + ')');
       }
 
       SESSION2: {
-        binding.bind(value2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(value2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.data).toBe('()');
       }
@@ -119,19 +125,23 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<number | null>(value1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe('(123)');
       }
 
       SESSION2: {
-        binding.bind(value2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(value2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.nodeValue).toBe('()');
       }
@@ -148,18 +158,22 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.data).toBe(value);
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.data).toBe('');
       }
@@ -174,13 +188,15 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       SESSION: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(setNodeValueSpy).not.toHaveBeenCalled();
       }

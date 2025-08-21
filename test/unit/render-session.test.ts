@@ -1,621 +1,671 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   $customHook,
-  type CustomHookFunction,
-  Lanes,
+  CommitPhase,
   type RefObject,
+  type RenderContext,
 } from '@/internal.js';
+import { RenderSession } from '@/render-session.js';
 import { Literal } from '@/template-literal.js';
-import { MockCoroutine, MockTemplate } from '../mocks.js';
-import { createRenderSession, flushRenderSession } from '../session-utils.js';
+import { MockTemplate } from '../mocks.js';
+import { RenderHelper } from '../test-helpers.js';
 
 describe('RenderSession', () => {
   describe('dynamicHTML()', () => {
     it('returns a bindable with the dynamic HTML template', () => {
-      const session = createRenderSession();
-      const bindable = session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) =>
+          context.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
           binds: ['World'],
           mode: 'html',
         }),
       );
-      expect(bindable.value).toStrictEqual(['World']);
+      expect(directive.value).toStrictEqual(['World']);
     });
   });
 
   describe('dynamicMath()', () => {
     it('returns a bindable with the dynamic MathML template', () => {
-      const session = createRenderSession();
-      const bindable = session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) =>
+          context.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<mi>', '</mi>'],
           binds: ['x'],
           mode: 'math',
         }),
       );
-      expect(bindable.value).toStrictEqual(['x']);
+      expect(directive.value).toStrictEqual(['x']);
     });
   });
 
   describe('dynamicSVG()', () => {
     it('returns a bindable with the dynamic SVG template', () => {
-      const session = createRenderSession();
-      const bindable = session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) =>
+          context.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<text>Hello, ', '!</text>'],
           binds: ['World'],
           mode: 'svg',
         }),
       );
-      expect(bindable.value).toStrictEqual(['World']);
+      expect(directive.value).toStrictEqual(['World']);
     });
   });
 
   describe('getContextValue()', () => {
-    it.for(['foo', Symbol('bar'), {}])(
-      'returns a session value by the key',
-      (key) => {
-        const session = createRenderSession();
+    it('returns the context value corresponding to the key', () => {
+      const helper = new RenderHelper();
 
-        expect(session.getContextValue(key)).toBe(undefined);
+      SESSION: {
+        const value = helper.startSession((context) => {
+          context.setContextValue('foo', 123);
 
-        session.setContextValue(key, 123);
+          return context.getContextValue('foo');
+        });
 
-        expect(session.getContextValue(key)).toBe(123);
+        expect(value).toBe(123);
+      }
+    });
 
-        session.setContextValue(key, 456);
+    it('returns undefined if the context value is not definied', () => {
+      const helper = new RenderHelper();
 
-        expect(session.getContextValue(key)).toBe(456);
-      },
-    );
+      SESSION: {
+        const value = helper.startSession((context) => {
+          return context.getContextValue('foo');
+        });
+
+        expect(value).toBe(undefined);
+      }
+    });
+
+    it('throws an error when trying to get a context value outside of rendering', () => {
+      const helper = new RenderHelper();
+
+      expect(() => {
+        const context = helper.startSession((context) => context);
+        context.setContextValue('foo', 123);
+      }).toThrow('Context values can only be set during rendering.');
+
+      expect(() => {
+        const context = helper.startSession((context) => context);
+        context.getContextValue('foo');
+      }).toThrow('Context values are only avaiable during rendering.');
+    });
+
+    it('throws an error when trying to get set a context value outside of rendering', () => {
+      const helper = new RenderHelper();
+
+      expect(() => {
+        const context = helper.startSession((context) => context);
+        context.setContextValue('foo', 123);
+      }).toThrow('Context values can only be set during rendering.');
+
+      expect(() => {
+        const context = helper.startSession((context) => context);
+        context.getContextValue('foo');
+      }).toThrow('Context values are only avaiable during rendering.');
+    });
   });
 
   describe('finalize()', () => {
     it('denies using a hook after finalize', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
+      const context = helper.startSession((context) => {
+        return context;
+      });
 
-      session.finalize();
-
-      expect(() => session.useState(0)).toThrow();
+      expect(() => context.useState(0)).toThrow();
     });
 
-    it('throws an error if given a different type of hook', () => {
-      const session = createRenderSession();
+    it('throws an error if a different type of hook is given', () => {
+      const helper = new RenderHelper();
 
-      session.useEffect(() => {});
+      helper.startSession((context) => {
+        context.useEffect(() => {});
+      });
 
-      flushRenderSession(session);
-
-      expect(() => session.finalize()).toThrow('Unexpected hook type.');
+      expect(() => {
+        helper.startSession((context) => {
+          context.finalize();
+        });
+      }).toThrow('Unexpected hook type.');
     });
   });
 
   describe('forceUpdate()', () => {
-    it('schedules the update with the current coroutine', async () => {
-      const session = createRenderSession();
-      const options = { priority: 'background' } as const;
+    it('schedules an update with the current coroutine', async () => {
+      const helper = new RenderHelper();
 
-      const scheduleUpdateSpy = vi
-        .spyOn(session['_context'], 'scheduleUpdate')
-        .mockImplementation(() => ({
-          coroutine: new MockCoroutine(),
-          lanes: Lanes.BackgroundLane,
-          running: false,
-          promise: Promise.resolve(),
-        }));
+      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
 
-      await session.forceUpdate(options).promise;
+      helper.startSession((context) => {
+        context.useEffect(() => {
+          context.forceUpdate({ priority: 'background' });
+        }, []);
+      });
 
-      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
-      expect(scheduleUpdateSpy).toHaveBeenCalledWith(
-        session['_coroutine'],
-        options,
-      );
+      expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
+      expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(2, helper.coroutine, {
+        priority: 'background',
+      });
     });
   });
 
   describe('html()', () => {
     it('returns a bindable with the HTML template', () => {
-      const session = createRenderSession();
-      const bindable = session.html`<div>Hello, ${'World'}!</div>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) => context.html`<div>Hello, ${'World'}!</div>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
           binds: ['World'],
           mode: 'html',
         }),
       );
-      expect(bindable.value).toStrictEqual(['World']);
+      expect(directive.value).toStrictEqual(['World']);
     });
   });
 
   describe('math()', () => {
     it('returns a bindable with the MathML template', () => {
-      const session = createRenderSession();
-      const bindable = session.math`<mi>${'x'}</mi>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) => context.math`<mi>${'x'}</mi>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<mi>', '</mi>'],
           binds: ['x'],
           mode: 'math',
         }),
       );
-      expect(bindable.value).toStrictEqual(['x']);
+      expect(directive.value).toStrictEqual(['x']);
     });
   });
 
   describe('svg()', () => {
     it('returns a bindable with the SVG template', () => {
-      const session = createRenderSession();
-      const bindable = session.svg`<text>Hello, ${'World'}!</text>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) => context.svg`<text>Hello, ${'World'}!</text>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<text>Hello, ', '!</text>'],
           binds: ['World'],
           mode: 'svg',
         }),
       );
-      expect(bindable.value).toStrictEqual(['World']);
+      expect(directive.value).toStrictEqual(['World']);
     });
   });
 
   describe('text()', () => {
     it('returns a bindable with the text template', () => {
-      const session = createRenderSession();
-      const bindable = session.text`<div>Hello, ${'World'}!</div>`;
+      const helper = new RenderHelper();
+      const directive = helper.startSession(
+        (context) => context.text`<div>Hello, ${'World'}!</div>`,
+      );
 
-      expect(bindable.type).toBeInstanceOf(MockTemplate);
-      expect(bindable.type).toStrictEqual(
+      expect(directive.type).toBeInstanceOf(MockTemplate);
+      expect(directive.type).toStrictEqual(
         expect.objectContaining({
           strings: ['<div>Hello, ', '!</div>'],
           binds: ['World'],
           mode: 'textarea',
         }),
       );
-      expect(bindable.value).toStrictEqual(['World']);
+      expect(directive.value).toStrictEqual(['World']);
     });
   });
 
   describe('use()', () => {
     it('performs a custom hook function', () => {
-      const session = createRenderSession();
-      const result = 'foo';
-      const hook = vi.fn().mockReturnValue(result);
+      const helper = new RenderHelper();
+      const hook = vi.fn().mockReturnValue('foo');
 
-      expect(session.use(hook)).toBe(result);
+      const result = helper.startSession((context) => context.use(hook));
+
+      expect(result).toBe('foo');
       expect(hook).toHaveBeenCalledOnce();
-      expect(hook).toHaveBeenCalledWith(session);
+      expect(hook).toHaveBeenCalledWith(expect.any(RenderSession));
     });
 
     it('performs a custom hook object', () => {
-      const session = createRenderSession();
-      const result = 'foo';
-      const hook = new (class {
-        [$customHook]: CustomHookFunction<void>;
+      const helper = new RenderHelper();
+      const hook = {
+        [$customHook]: vi.fn().mockReturnValue('foo'),
+      };
 
-        constructor(curstomHook: CustomHookFunction<void>) {
-          this[$customHook] = curstomHook;
-        }
-      })(vi.fn().mockReturnValue(result));
+      const result = helper.startSession((context) => context.use(hook));
 
-      expect(session.use(hook)).toBe(result);
+      expect(result).toBe('foo');
       expect(hook[$customHook]).toHaveBeenCalledOnce();
-      expect(hook[$customHook]).toHaveBeenCalledWith(session);
+      expect(hook[$customHook]).toHaveBeenCalledWith(expect.any(RenderSession));
     });
   });
 
   describe('useCallback()', () => {
     it('returns the memoized callback if dependencies are the same as the previous value', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
       const callback1 = () => {};
       const callback2 = () => {};
 
       SESSION1: {
-        expect(session.useCallback(callback1, ['foo'])).toBe(callback1);
+        const callback = helper.startSession((context) => {
+          return context.useCallback(callback1, ['foo']);
+        });
 
-        flushRenderSession(session);
+        expect(callback).toBe(callback1);
       }
 
       SESSION2: {
-        expect(session.useCallback(callback2, ['foo'])).toBe(callback1);
+        const callback = helper.startSession((context) => {
+          return context.useCallback(callback2, ['foo']);
+        });
 
-        flushRenderSession(session);
+        expect(callback).toBe(callback1);
       }
 
       SESSION3: {
-        expect(session.useCallback(callback2, ['bar'])).toBe(callback2);
+        const callback = helper.startSession((context) => {
+          return context.useCallback(callback2, ['bar']);
+        });
 
-        flushRenderSession(session);
+        expect(callback).toBe(callback2);
       }
     });
   });
 
   describe.each([
-    ['useEffect', 'enqueuePassiveEffect'],
-    ['useLayoutEffect', 'enqueueLayoutEffect'],
-    ['useInsertionEffect', 'enqueueMutationEffect'],
-  ] as const)('useEffect()', (hookMethod, key) => {
-    it('performs the cleanup function when the callback is changed', () => {
-      const session = createRenderSession();
+    ['useEffect', CommitPhase.Passive],
+    ['useLayoutEffect', CommitPhase.Layout],
+    ['useInsertionEffect', CommitPhase.Mutation],
+  ] as const)('useEffect()', (hookName, phase) => {
+    it('cleans up the previous effect', () => {
+      const helper = new RenderHelper();
 
       const cleanup = vi.fn();
       const callback = vi.fn().mockReturnValue(cleanup);
-      const enqueueEffectSpy = vi.spyOn(session['_context'], key);
+      const commitEffectsSpy = vi.spyOn(
+        helper.runtime['_backend'],
+        'commitEffects',
+      );
 
       SESSION1: {
-        session[hookMethod](callback);
-
-        flushRenderSession(session);
+        helper.startSession((context) => {
+          context[hookName](callback);
+        });
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(cleanup).toHaveBeenCalledTimes(0);
-        expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+        expect(commitEffectsSpy).toHaveBeenCalledTimes(1);
+        expect(commitEffectsSpy).toHaveBeenCalledWith(
+          [expect.any(Object)],
+          phase,
+        );
       }
 
       SESSION2: {
-        session[hookMethod](callback);
-
-        flushRenderSession(session);
+        helper.startSession((context) => {
+          context[hookName](callback);
+        });
 
         expect(callback).toHaveBeenCalledTimes(2);
         expect(cleanup).toHaveBeenCalledTimes(1);
-        expect(enqueueEffectSpy).toHaveBeenCalledTimes(2);
+        expect(commitEffectsSpy).toHaveBeenCalledTimes(2);
+        expect(commitEffectsSpy).toHaveBeenCalledWith(
+          [expect.any(Object)],
+          phase,
+        );
       }
     });
 
     it('does not perform the callback function if dependencies are not changed', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
       const callback = vi.fn();
-      const enqueueEffectSpy = vi.spyOn(session['_context'], key);
+      const commitEffectsSpy = vi.spyOn(
+        helper.runtime['_backend'],
+        'commitEffects',
+      );
 
       SESSION1: {
-        session[hookMethod](callback, ['foo']);
+        helper.startSession((context) => {
+          context[hookName](callback, ['foo']);
+        });
 
-        flushRenderSession(session);
-
-        expect(enqueueEffectSpy).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(commitEffectsSpy).toHaveBeenCalledTimes(1);
+        expect(commitEffectsSpy).toHaveBeenCalledWith(
+          [expect.any(Object)],
+          phase,
+        );
       }
 
       SESSION2: {
-        session[hookMethod](callback, ['foo']);
-
-        flushRenderSession(session);
+        helper.startSession((context) => {
+          context[hookName](callback, ['foo']);
+        });
 
         expect(callback).toHaveBeenCalledTimes(1);
+        expect(commitEffectsSpy).toHaveBeenCalledTimes(1);
       }
 
       SESSION3: {
-        session[hookMethod](callback, ['bar']);
-
-        flushRenderSession(session);
+        helper.startSession((context) => {
+          context[hookName](callback, ['bar']);
+        });
 
         expect(callback).toHaveBeenCalledTimes(2);
+        expect(commitEffectsSpy).toHaveBeenCalledTimes(2);
+        expect(commitEffectsSpy).toHaveBeenCalledWith(
+          [expect.any(Object)],
+          phase,
+        );
       }
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      flushRenderSession(session);
+      helper.startSession(() => {});
 
-      expect(() => session[hookMethod](() => {})).toThrow(
-        'Unexpected hook type.',
-      );
+      expect(() => {
+        helper.startSession((context) => {
+          context[hookName](() => {});
+        });
+      }).toThrow('Unexpected hook type.');
     });
   });
 
   describe('useId()', () => {
     it('returns a unique identifier', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      let id1: string;
-      let id2: string;
+      let stableId1: string;
+      let stableId2: string;
 
       SESSION1: {
-        id1 = session.useId();
-        id2 = session.useId();
+        [stableId1, stableId2] = helper.startSession((context) => {
+          return [context.useId(), context.useId()];
+        });
 
-        expect(id1).toMatch(/[0-9a-z]+:1/);
-        expect(id2).toMatch(/[0-9a-z]+:2/);
-
-        flushRenderSession(session);
+        expect(stableId1).toMatch(/[0-9a-z]+:1/);
+        expect(stableId2).toMatch(/[0-9a-z]+:2/);
       }
 
       SESSION2: {
-        expect(session.useId()).toBe(id1);
-        expect(session.useId()).toBe(id2);
+        const [id1, id2] = helper.startSession((context) => {
+          return [context.useId(), context.useId()];
+        });
 
-        flushRenderSession(session);
+        expect(id1).toBe(stableId1);
+        expect(id2).toBe(stableId2);
       }
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      flushRenderSession(session);
+      helper.startSession(() => {});
 
-      expect(() => session.useId()).toThrow('Unexpected hook type.');
+      expect(() => {
+        helper.startSession((context) => {
+          context.useId();
+        });
+      }).toThrow('Unexpected hook type.');
     });
   });
 
   describe('useMemo()', () => {
     it('returns the memoized value if dependencies are the same as the previous value', () => {
-      const session = createRenderSession();
-      const value1 = 'foo';
-      const value2 = 'bar';
+      const helper = new RenderHelper();
 
       SESSION1: {
-        expect(session.useMemo(() => value1, ['foo'])).toBe(value1);
+        const value = helper.startSession((context) =>
+          context.useMemo(() => 'foo', ['foo']),
+        );
 
-        flushRenderSession(session);
+        expect(value).toBe('foo');
       }
 
       SESSION2: {
-        expect(session.useMemo(() => value2, ['foo'])).toBe(value1);
+        const value = helper.startSession((context) =>
+          context.useMemo(() => 'bar', ['foo']),
+        );
 
-        flushRenderSession(session);
+        expect(value).toBe('foo');
       }
 
       SESSION3: {
-        expect(session.useMemo(() => value2, ['bar'])).toBe(value2);
+        const value = helper.startSession((context) =>
+          context.useMemo(() => 'bar', ['bar']),
+        );
 
-        flushRenderSession(session);
+        expect(value).toBe('bar');
       }
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      flushRenderSession(session);
+      helper.startSession(() => {});
 
-      expect(() => session.useMemo(() => null, [])).toThrow(
-        'Unexpected hook type.',
-      );
+      expect(() => {
+        helper.startSession((context) => {
+          context.useMemo(() => null, []);
+        });
+      }).toThrow('Unexpected hook type.');
     });
   });
 
   describe('useReducer()', () => {
     it('schedules the update when the state is changed', async () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
       const reducer = (count: number, n: number) => count + n;
+      const callback = vi.fn((context: RenderContext) => {
+        const [count, increment] = context.useReducer(reducer, 0);
 
-      SESSION1: {
-        const [count, increment] = session.useReducer(reducer, 0);
-
-        session.useEffect(() => {
+        context.useEffect(() => {
           increment(1);
         }, []);
 
-        flushRenderSession(session);
+        return count;
+      });
 
-        expect(count).toBe(0);
-      }
+      SESSION: {
+        const count = helper.startSession(callback);
 
-      expect(session.isUpdatePending()).toBe(true);
-      expect(await session.waitForUpdate()).toBe(1);
-
-      SESSION2: {
-        const [count, increment] = session.useReducer(reducer, 0);
-
-        session.useEffect(() => {
-          increment(1);
-        }, []);
-
-        flushRenderSession(session);
-
+        expect(callback).toHaveBeenCalledTimes(2);
         expect(count).toBe(1);
       }
-
-      expect(session.isUpdatePending()).toBe(false);
-      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('should skip the update if the state does not changed', async () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
       const reducer = (count: number, n: number) => count + n;
+      const callback = vi.fn((context: RenderContext) => {
+        const [count, increment] = context.useReducer(reducer, 0);
 
-      SESSION1: {
-        const [count, increment] = session.useReducer(reducer, 0);
-
-        session.useEffect(() => {
+        context.useEffect(() => {
           increment(0);
         }, []);
 
-        flushRenderSession(session);
+        return count;
+      });
+
+      SESSION: {
+        const count = helper.startSession(callback);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(count).toBe(0);
+      }
+    });
+
+    it('returns an initial state by the function', async () => {
+      const helper = new RenderHelper();
+      const reducer = (count: number, n: number) => count + n;
+
+      SESSION: {
+        const count = helper.startSession((context) => {
+          const [count] = context.useReducer(reducer, () => 0);
+          return count;
+        });
 
         expect(count).toBe(0);
       }
-
-      expect(session.isUpdatePending()).toBe(false);
-      expect(await session.waitForUpdate()).toBe(0);
-    });
-
-    it('returns the initial state by the function', async () => {
-      const session = createRenderSession();
-      const reducer = (count: number, n: number) => count + n;
-
-      const [count] = session.useReducer(reducer, () => 0);
-
-      flushRenderSession(session);
-
-      expect(count).toBe(0);
     });
 
     it('throws an error if given a different type of hook', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      flushRenderSession(session);
+      helper.startSession(() => {});
 
-      expect(() =>
-        session.useReducer<number, number>((count, n) => count + n, 0),
-      ).toThrow('Unexpected hook type.');
+      expect(() => {
+        helper.startSession((context) => {
+          context.useReducer<number, number>((count, n) => count + n, 0);
+        });
+      }).toThrow('Unexpected hook type.');
     });
   });
 
   describe('useRef()', () => {
     it('returns a memoized ref object', () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
 
-      let ref: RefObject<string>;
+      let stableRef: RefObject<string>;
 
       SESSION1: {
-        ref = session.useRef('foo');
+        stableRef = helper.startSession((context) => context.useRef('foo'));
 
-        expect(ref).toStrictEqual({ current: 'foo' });
-
-        flushRenderSession(session);
+        expect(stableRef).toStrictEqual({ current: 'foo' });
       }
 
       SESSION2: {
-        expect(session.useRef('bar')).toBe(ref);
+        const ref = helper.startSession((context) => context.useRef('bar'));
 
-        flushRenderSession(session);
+        expect(ref).toStrictEqual(stableRef);
       }
     });
   });
 
   describe('useState()', () => {
     it('schedules the update when the state is changed', async () => {
-      const session = createRenderSession();
+      const helper = new RenderHelper();
+      const callback = vi.fn((context: RenderContext) => {
+        const [count, setCount] = context.useState(0);
+
+        context.useEffect(() => {
+          setCount(1);
+        }, []);
+
+        return count;
+      });
 
       SESSION1: {
-        const [count, setCount] = session.useState(0);
+        const count = helper.startSession(callback);
 
-        session.useEffect(() => {
-          setCount(1);
-        }, []);
-
-        flushRenderSession(session);
-
-        expect(count).toBe(0);
-      }
-
-      expect(session.isUpdatePending()).toBe(true);
-      expect(await session.waitForUpdate()).toBe(1);
-
-      SESSION2: {
-        const [count, setCount] = session.useState(0);
-
-        session.useEffect(() => {
-          setCount(1);
-        }, []);
-
-        flushRenderSession(session);
-
+        expect(callback).toHaveBeenCalledTimes(2);
         expect(count).toBe(1);
       }
 
-      expect(session.isUpdatePending()).toBe(false);
-      expect(await session.waitForUpdate()).toBe(0);
-    });
-
-    it('should skip the update if the state does not changed', async () => {
-      const session = createRenderSession();
-
       SESSION1: {
-        const [count, setCount] = session.useState(0);
+        const count = helper.startSession(callback);
 
-        session.useEffect(() => {
-          setCount(0);
-        }, []);
-
-        flushRenderSession(session);
-
-        expect(count).toBe(0);
+        expect(callback).toHaveBeenCalledTimes(3);
+        expect(count).toBe(1);
       }
-
-      expect(session.isUpdatePending()).toBe(false);
-      expect(await session.waitForUpdate()).toBe(0);
     });
 
-    it('sets a new state from the old one', async () => {
-      const session = createRenderSession();
+    it('calculates a new state from the previous state', async () => {
+      const helper = new RenderHelper();
+      const callback = vi.fn((context: RenderContext) => {
+        const [count, setCount] = context.useState(() => 0);
 
-      SESSION1: {
-        const [count, setCount] = session.useState(() => 0);
-
-        session.useEffect(() => {
+        context.useEffect(() => {
           // Call twice and the result is the same.
           setCount((count) => count + 1);
           setCount((count) => count + 1);
         }, []);
 
-        flushRenderSession(session);
+        return count;
+      });
 
-        expect(count).toBe(0);
-      }
-
-      expect(session.isUpdatePending()).toBe(true);
-      expect(await session.waitForUpdate()).toBe(1);
-
-      SESSION2: {
-        const [count, setCount] = session.useState(0);
-
-        session.useEffect(() => {
-          setCount((count) => count + 1);
-          setCount((count) => count + 1);
-        }, []);
-
-        flushRenderSession(session);
+      SESSION: {
+        const count = helper.startSession(callback);
 
         expect(count).toBe(1);
+        expect(callback).toHaveBeenCalledTimes(2);
       }
-
-      expect(session.isUpdatePending()).toBe(false);
-      expect(await session.waitForUpdate()).toBe(0);
     });
 
     it('should not return the pending state', async () => {
-      const session = createRenderSession(Lanes.UserBlockingLane);
+      const helper = new RenderHelper();
+      const callback = vi.fn((context: RenderContext) => {
+        const [count, setCount, isPending] = context.useState(() => 0);
+
+        context.useEffect(() => {
+          queueMicrotask(() => {
+            setCount(1, { mode: 'prioritized', priority: 'background' });
+          });
+        }, []);
+
+        return [count, isPending];
+      });
 
       SESSION1: {
-        const [count, setCount, isPending] = session.useState(() => 0);
+        helper.startSession(callback);
 
-        session.useEffect(() => {
-          setCount(1, { priority: 'background' });
-        }, []);
-
-        expect(count).toBe(0);
-        expect(isPending).toBe(false);
-
-        flushRenderSession(session);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveNthReturnedWith(1, [0, false]);
       }
 
-      expect(session.isUpdatePending()).toBe(true);
-      expect(await session.waitForUpdate()).toBe(1);
+      await Promise.resolve();
 
       SESSION2: {
-        const [count, setCount, isPending] = session.useState(0);
+        helper.startSession(callback);
 
-        session.useEffect(() => {
-          setCount(1, { priority: 'background' });
-        }, []);
-
-        expect(count).toBe(0);
-        expect(isPending).toBe(true);
-
-        flushRenderSession(session);
+        expect(callback).toHaveBeenCalledTimes(2);
+        expect(callback).toHaveNthReturnedWith(2, [0, true]);
       }
 
-      expect(session.isUpdatePending()).toBe(false);
-      expect(await session.waitForUpdate()).toBe(0);
+      await Promise.resolve();
+
+      SESSION3: {
+        helper.startSession(callback, { priority: 'background' });
+
+        expect(callback).toHaveBeenCalledTimes(3);
+        expect(callback).toHaveNthReturnedWith(3, [1, false]);
+      }
     });
   });
 });

@@ -7,6 +7,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
+  type ScheduleOptions,
   type SlotType,
   type TemplateFactory,
 } from '../internal.js';
@@ -19,7 +20,7 @@ import { PropertyPrimitive } from '../primitive/property.js';
 import { SpreadPrimitive } from '../primitive/spread.js';
 import { StylePrimitive } from '../primitive/style.js';
 import { TextPrimitive } from '../primitive/text.js';
-import type { RuntimeBackend } from '../runtime.js';
+import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
 import { OptimizedTemplateFactory } from '../template-factory.js';
@@ -54,6 +55,13 @@ export class ServerBackend implements RuntimeBackend {
     return new Promise((resolve) => {
       setTimeout(resolve);
     }).then(callback);
+  }
+
+  requestUpdate(
+    callback: (flushUpdate: (runtime: Runtime) => void) => void,
+    _options: ScheduleOptions,
+  ): Promise<void> {
+    return Promise.resolve().then(() => callback(flushUpdate));
   }
 
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
@@ -94,7 +102,7 @@ export class ServerBackend implements RuntimeBackend {
     }
   }
 
-  startViewTransition(callback: () => void | Promise<void>): Promise<void> {
+  startViewTransition(callback: () => Promise<void> | void): Promise<void> {
     return Promise.resolve().then(callback);
   }
 
@@ -103,4 +111,8 @@ export class ServerBackend implements RuntimeBackend {
       setTimeout(resolve);
     });
   }
+}
+
+function flushUpdate(runtime: Runtime): void {
+  runtime.flushSync();
 }

@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { createElement } from '../../test-utils.js';
+import {
+  createElement,
+  createRuntime,
+  UpdateHelper,
+} from '../../test-helpers.js';
 
 describe('StylePrimitive', () => {
   describe('name', () => {
@@ -55,8 +58,8 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const session = createUpdateSession();
-        const binding = StylePrimitive.resolveBinding(style, part, session);
+        const context = createRuntime();
+        const binding = StylePrimitive.resolveBinding(style, part, context);
 
         expect(binding.type).toBe(StylePrimitive);
         expect(binding.value).toBe(style);
@@ -71,9 +74,9 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: 'style',
       };
-      const session = createUpdateSession();
+      const context = createRuntime();
 
-      expect(() => StylePrimitive.resolveBinding(style, part, session)).toThrow(
+      expect(() => StylePrimitive.resolveBinding(style, part, context)).toThrow(
         'StylePrimitive must be used in a ":style" attribute part,',
       );
     });
@@ -103,11 +106,13 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(binding.shouldBind({ ...style1 })).toBe(false);
         expect(binding.shouldBind(style2)).toBe(true);
@@ -134,11 +139,13 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe(
           '--my-css-variable: 1; color: red; background-color: blue; filter: grayscale(100%);',
@@ -146,9 +153,11 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        binding.bind(style2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(style2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe('--my-css-variable: 2;');
       }
@@ -164,11 +173,13 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe(
           'background-color: blue; color: red;',
@@ -187,19 +198,23 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe('background-color: red;');
       }
 
       SESSION2: {
-        binding.bind(style2);
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.bind(style2);
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe('');
       }
@@ -220,11 +235,13 @@ describe('StyleBinding', () => {
         name: ':class',
       };
       const binding = new StyleBinding(style, part);
-      const session = createUpdateSession();
+      const helper = new UpdateHelper();
 
       SESSION1: {
-        binding.connect(session);
-        binding.commit();
+        helper.startSession((context) => {
+          binding.connect(context);
+          binding.commit();
+        });
 
         expect(part.node.style.cssText).toBe(
           'color: red; background-color: blue;',
@@ -232,8 +249,10 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        binding.disconnect(session);
-        binding.rollback();
+        helper.startSession((context) => {
+          binding.disconnect(context);
+          binding.rollback();
+        });
 
         expect(part.node.style.cssText).toBe('');
       }

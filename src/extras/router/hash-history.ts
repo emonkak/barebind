@@ -19,9 +19,9 @@ export function HashHistory(
     navigator: HistoryNavigator;
     setLocation: (newLocation: HistoryLocation) => void;
   }>(() => {
-    const setLocation = (newLocation: HistoryLocation) => {
-      context.forceUpdate();
+    const setLocation = (newLocation: HistoryLocation): void => {
       historyState.location = newLocation;
+      context.forceUpdate({ mode: 'sequential' });
     };
     return {
       location: {

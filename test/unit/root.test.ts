@@ -1,27 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Lanes } from '@/internal.js';
-import { AsyncRoot } from '@/root/async.js';
-import { MockBackend } from '../../mocks.js';
-import { createElement } from '../../test-utils.js';
+import { Root } from '@/root.js';
+import { MockBackend } from '../mocks.js';
+import { createElement } from '../test-helpers.js';
 
-describe('AsyncRoot', () => {
-  describe('static create()', () => {
-    it('returns a AsyncRoot with concurrent mode', () => {
-      const value = 'foo';
-      const container = document.createElement('div');
-      const backend = new MockBackend();
-      const root = AsyncRoot.create(value, container, backend);
-
-      expect(root['_session']['_runtime'].concurrent).toBe(true);
-    });
-  });
-
+describe('Root', () => {
   describe('observe()', () => {
     it('registers an observer to the runtime', async () => {
       const value = 'foo';
       const container = document.createElement('div');
       const backend = new MockBackend();
-      const root = AsyncRoot.create(value, container, backend);
+      const root = Root.create(value, container, backend);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -31,13 +20,13 @@ describe('AsyncRoot', () => {
       expect(observer.onRuntimeEvent).toHaveBeenCalled();
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_START',
-        id: 0,
-        lanes: Lanes.ConcurrentLane,
+        id: 1,
+        lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
       });
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
         type: 'UPDATE_END',
-        id: 0,
-        lanes: Lanes.ConcurrentLane,
+        id: 1,
+        lanes: Lanes.DefaultLane | Lanes.UserBlockingLane,
       });
 
       const callCount = observer.onRuntimeEvent.mock.calls.length;
@@ -55,7 +44,7 @@ describe('AsyncRoot', () => {
       const value2 = 'bar';
       const container = document.createElement('div');
       const backend = new MockBackend();
-      const root = AsyncRoot.create(value1, container, backend);
+      const root = Root.create(value1, container, backend);
 
       await root.mount();
 
@@ -77,7 +66,7 @@ describe('AsyncRoot', () => {
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
       const backend = new MockBackend();
-      const root = AsyncRoot.create(value1, container, backend);
+      const root = Root.create(value1, container, backend);
 
       await root.hydrate();
 

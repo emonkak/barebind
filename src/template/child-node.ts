@@ -31,7 +31,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
+    const childNodeSlot = context.runtime.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.hydrate(target, context);
 
@@ -52,7 +52,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
+    const childNodeSlot = context.runtime.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.connect(context);
 

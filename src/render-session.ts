@@ -4,6 +4,7 @@ import {
   $customHook,
   type Cleanup,
   type Coroutine,
+  createScope,
   type Effect,
   getContextValue,
   type Hook,
@@ -13,32 +14,52 @@ import {
   type NewState,
   type RefObject,
   type RenderContext,
-  type RenderSessionContext,
-  type RenderState,
+  type ScheduleOptions,
+  type Scope,
+  type SessionContext,
   setContextValue,
   type TemplateMode,
+  type UpdateFrame,
   type UpdateHandle,
-  type UpdateOptions,
   type Usable,
 } from './internal.js';
 
+const DETACHED_FRAME: UpdateFrame = {
+  id: -1,
+  lanes: Lanes.NoLanes,
+  pendingCoroutines: [],
+  mutationEffects: [],
+  layoutEffects: [],
+  passiveEffects: [],
+};
+
+const DETACHED_SCOPE = createScope();
+
 export class RenderSession implements RenderContext {
-  private readonly _state: RenderState;
+  private readonly _hooks: Hook[];
 
   private readonly _coroutine: Coroutine;
 
-  private readonly _context: RenderSessionContext;
+  private _frame: UpdateFrame;
+
+  private _scope: Scope;
+
+  private readonly _runtime: SessionContext;
 
   private _hookIndex = 0;
 
   constructor(
-    state: RenderState,
+    hooks: Hook[],
     coroutine: Coroutine,
-    context: RenderSessionContext,
+    frame: UpdateFrame,
+    scope: Scope,
+    runtime: SessionContext,
   ) {
-    this._state = state;
+    this._hooks = hooks;
     this._coroutine = coroutine;
-    this._context = context;
+    this._frame = frame;
+    this._scope = scope;
+    this._runtime = runtime;
   }
 
   dynamicHTML(
@@ -63,29 +84,32 @@ export class RenderSession implements RenderContext {
   }
 
   finalize(): void {
-    const { hooks } = this._state;
-    const currentHook = hooks[this._hookIndex];
+    const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.FinalizerHook>(HookType.Finalizer, currentHook);
     } else {
-      hooks.push({ type: HookType.Finalizer });
+      this._hooks.push({ type: HookType.Finalizer });
 
       // Refuse to use new hooks after finalization.
-      Object.freeze(hooks);
+      Object.freeze(this._hooks);
     }
 
+    this._frame = DETACHED_FRAME;
+    this._scope = DETACHED_SCOPE;
     this._hookIndex++;
   }
 
-  forceUpdate(options?: UpdateOptions): UpdateHandle {
-    const handle = this._context.scheduleUpdate(this._coroutine, options);
-    this._state.pendingLanes |= handle.lanes;
-    return handle;
+  forceUpdate(options?: ScheduleOptions): UpdateHandle {
+    return this._runtime.scheduleUpdate(this._coroutine, options);
   }
 
   getContextValue(key: unknown): unknown {
-    return getContextValue(this._context.scope, key);
+    if (this._scope === DETACHED_SCOPE) {
+      throw new Error('Context values are only avaiable during rendering.');
+    }
+
+    return getContextValue(this._scope, key);
   }
 
   html(
@@ -96,10 +120,11 @@ export class RenderSession implements RenderContext {
   }
 
   isUpdatePending(): boolean {
-    const { updateHandles } = this._context;
+    const pendingTasks = this._runtime.getPendingTasks();
 
-    for (let node = updateHandles.front(); node !== null; node = node.next) {
-      if (node.value.coroutine === this._coroutine) {
+    for (let i = 0, l = pendingTasks.length; i < l; i++) {
+      const pendingTask = pendingTasks[i]!;
+      if (pendingTask.coroutine === this._coroutine) {
         return true;
       }
     }
@@ -115,7 +140,11 @@ export class RenderSession implements RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    setContextValue(this._context.scope, key, value);
+    if (this._scope === DETACHED_SCOPE) {
+      throw new Error('Context values can only be set during rendering.');
+    }
+
+    setContextValue(this._scope, key, value);
   }
 
   svg(
@@ -155,17 +184,16 @@ export class RenderSession implements RenderContext {
   }
 
   useId(): string {
-    const { hooks } = this._state;
-    let currentHook = hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.IdHook>(HookType.Id, currentHook);
     } else {
       currentHook = {
         type: HookType.Id,
-        id: this._context.nextIdentifier(),
+        id: this._runtime.nextIdentifier(),
       };
-      hooks.push(currentHook);
+      this._hooks.push(currentHook);
     }
 
     this._hookIndex++;
@@ -188,8 +216,7 @@ export class RenderSession implements RenderContext {
   }
 
   useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T {
-    const { hooks } = this._state;
-    let currentHook = hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.MemoHook<T>>(HookType.Memo, currentHook);
@@ -204,7 +231,7 @@ export class RenderSession implements RenderContext {
         value: factory(),
         dependencies,
       };
-      hooks.push(currentHook);
+      this._hooks.push(currentHook);
     }
 
     this._hookIndex++;
@@ -217,11 +244,10 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: UpdateOptions) => void,
+    dispatch: (action: TAction, options?: ScheduleOptions) => void,
     isPending: boolean,
   ] {
-    const { hooks } = this._state;
-    let currentHook = hooks[this._hookIndex];
+    let currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.ReducerHook<TState, TAction>>(
@@ -229,7 +255,7 @@ export class RenderSession implements RenderContext {
         currentHook,
       );
       if (
-        (currentHook.pendingLanes & this._context.lanes) ===
+        (currentHook.pendingLanes & this._frame.lanes) ===
         currentHook.pendingLanes
       ) {
         currentHook.pendingLanes = Lanes.NoLanes;
@@ -242,13 +268,13 @@ export class RenderSession implements RenderContext {
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         reducer,
-        dispatch: (action: TAction, options?: UpdateOptions) => {
+        dispatch: (action: TAction, options?: ScheduleOptions) => {
           const prevState = hook.memoizedState;
           const nextState = hook.reducer(prevState, action);
 
           if (!Object.is(nextState, prevState)) {
             const { lanes } = this.forceUpdate(options);
-            hook.pendingLanes |= lanes;
+            hook.pendingLanes = lanes;
             hook.pendingState = nextState;
           }
         },
@@ -257,7 +283,7 @@ export class RenderSession implements RenderContext {
         memoizedState: state,
       };
       currentHook = hook;
-      hooks.push(hook);
+      this._hooks.push(hook);
     }
 
     this._hookIndex++;
@@ -277,7 +303,7 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
+    setState: (newState: NewState<TState>, options?: ScheduleOptions) => void,
     isPending: boolean,
   ] {
     return this.useReducer(
@@ -288,12 +314,13 @@ export class RenderSession implements RenderContext {
   }
 
   async waitForUpdate(): Promise<number> {
-    const { updateHandles } = this._context;
+    const pendingTasks = this._runtime.getPendingTasks();
     const promises: Promise<void>[] = [];
 
-    for (let node = updateHandles.front(); node !== null; node = node.next) {
-      if (node.value.coroutine === this._coroutine) {
-        promises.push(node.value.promise);
+    for (let i = 0, l = pendingTasks.length; i < l; i++) {
+      const pendingTask = pendingTasks[i]!;
+      if (pendingTask.coroutine === this._coroutine) {
+        promises.push(pendingTask.continuation.promise);
       }
     }
 
@@ -306,8 +333,8 @@ export class RenderSession implements RenderContext {
     mode: TemplateMode,
   ): DirectiveSpecifier<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
-      this._context.expandLiterals(strings, binds);
-    const template = this._context.resolveTemplate(
+      this._runtime.expandLiterals(strings, binds);
+    const template = this._runtime.resolveTemplate(
       expandedStrings,
       expandedBinds as unknown[],
       mode,
@@ -320,7 +347,7 @@ export class RenderSession implements RenderContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveSpecifier<readonly unknown[]> {
-    const template = this._context.resolveTemplate(strings, binds, mode);
+    const template = this._runtime.resolveTemplate(strings, binds, mode);
     return new DirectiveSpecifier(template, binds);
   }
 
@@ -329,13 +356,12 @@ export class RenderSession implements RenderContext {
     dependencies: readonly unknown[] | null,
     type: Hook.EffectHook['type'],
   ): void {
-    const { hooks } = this._state;
-    const currentHook = hooks[this._hookIndex];
+    const currentHook = this._hooks[this._hookIndex];
 
     if (currentHook !== undefined) {
       ensureHookType<Hook.EffectHook>(type, currentHook);
       if (areDependenciesChanged(dependencies, currentHook.dependencies)) {
-        enqueueEffect(currentHook, this._context);
+        enqueueEffect(this._frame, currentHook);
       }
       currentHook.callback = callback;
       currentHook.dependencies = dependencies;
@@ -346,8 +372,8 @@ export class RenderSession implements RenderContext {
         dependencies,
         cleanup: undefined,
       };
-      hooks.push(hook);
-      enqueueEffect(hook, this._context);
+      this._hooks.push(hook);
+      enqueueEffect(this._frame, hook);
     }
 
     this._hookIndex++;
@@ -379,20 +405,17 @@ function areDependenciesChanged(
   );
 }
 
-function enqueueEffect(
-  hook: Hook.EffectHook,
-  context: RenderSessionContext,
-): void {
+function enqueueEffect(frame: UpdateFrame, hook: Hook.EffectHook): void {
   const effect = new InvokeEffectHook(hook);
   switch (hook.type) {
     case HookType.Effect:
-      context.enqueuePassiveEffect(effect);
+      frame.passiveEffects.push(effect);
       break;
     case HookType.LayoutEffect:
-      context.enqueueLayoutEffect(effect);
+      frame.layoutEffects.push(effect);
       break;
     case HookType.InsertionEffect:
-      context.enqueueMutationEffect(effect);
+      frame.mutationEffects.push(effect);
       break;
   }
 }

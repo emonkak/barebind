@@ -9,8 +9,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
-import { createUpdateSession } from '../../session-utils.js';
-import { serializeNode } from '../../test-utils.js';
+import { serializeNode, UpdateHelper } from '../../test-helpers.js';
 
 describe('FragmentTemplate', () => {
   describe('arity', () => {
@@ -56,12 +55,13 @@ describe('FragmentTemplate', () => {
 
   describe('hydrate()', () => {
     it('delegate hydration to internal templates', () => {
-      const binds = ['foo', 'bar', 'baz'];
-      const internalTemplates = [
+      const innerTemplates = [
         new MockTemplate(['[', ']'], ['foo']),
         new MockTemplate(),
         new MockTemplate(['[', ', ', ']'], ['bar', 'baz']),
       ] as const;
+      const template = new FragmentTemplate(innerTemplates);
+      const binds = ['foo', 'bar', 'baz'];
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
@@ -70,10 +70,9 @@ describe('FragmentTemplate', () => {
       };
       const container = document.createElement('div');
       const target = createHydrationTree(container);
-      const session = createUpdateSession();
-      const template = new FragmentTemplate(internalTemplates);
+      const helper = new UpdateHelper();
 
-      const hydrationSpys = internalTemplates.map((template) =>
+      const hydrationSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'hydrate').mockImplementation(() => {
           const part = {
             type: PartType.ChildNode,
@@ -92,12 +91,9 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = template.hydrate(
-        binds,
-        part,
-        target,
-        session,
-      );
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.hydrate(binds, part, target, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!--foo-->',
@@ -120,38 +116,43 @@ describe('FragmentTemplate', () => {
         ['foo'],
         part,
         target,
-        session,
+        expect.any(Object),
       );
       expect(hydrationSpys[1]).toHaveBeenCalledOnce();
-      expect(hydrationSpys[1]).toHaveBeenCalledWith([], part, target, session);
+      expect(hydrationSpys[1]).toHaveBeenCalledWith(
+        [],
+        part,
+        target,
+        expect.any(Object),
+      );
       expect(hydrationSpys[2]).toHaveBeenCalledOnce();
       expect(hydrationSpys[2]).toHaveBeenCalledWith(
         ['bar', 'baz'],
         part,
         target,
-        session,
+        expect.any(Object),
       );
     });
   });
 
   describe('render()', () => {
     it('delegate rendering to internal templates', () => {
-      const binds = ['foo', 'bar', 'baz'];
-      const internalTemplates = [
+      const innerTemplates = [
         new MockTemplate(['[', ']'], ['foo']),
         new MockTemplate(),
         new MockTemplate(['[', ', ', ']'], ['bar', 'baz']),
       ] as const;
+      const template = new FragmentTemplate(innerTemplates);
+      const binds = ['foo', 'bar', 'baz'];
       const part = {
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const session = createUpdateSession();
-      const template = new FragmentTemplate(internalTemplates);
+      const helper = new UpdateHelper();
 
-      const renderSpys = internalTemplates.map((template) =>
+      const renderSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'render').mockImplementation(() => {
           const part = {
             type: PartType.ChildNode,
@@ -170,7 +171,9 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = template.render(binds, part, session);
+      const { childNodes, slots } = helper.startSession((context) => {
+        return template.render(binds, part, context);
+      });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
         '<!--foo-->',
@@ -189,11 +192,19 @@ describe('FragmentTemplate', () => {
         }),
       ]);
       expect(renderSpys[0]).toHaveBeenCalledOnce();
-      expect(renderSpys[0]).toHaveBeenCalledWith(['foo'], part, session);
+      expect(renderSpys[0]).toHaveBeenCalledWith(
+        ['foo'],
+        part,
+        expect.any(Object),
+      );
       expect(renderSpys[1]).toHaveBeenCalledOnce();
-      expect(renderSpys[1]).toHaveBeenCalledWith([], part, session);
+      expect(renderSpys[1]).toHaveBeenCalledWith([], part, expect.any(Object));
       expect(renderSpys[2]).toHaveBeenCalledOnce();
-      expect(renderSpys[2]).toHaveBeenCalledWith(['bar', 'baz'], part, session);
+      expect(renderSpys[2]).toHaveBeenCalledWith(
+        ['bar', 'baz'],
+        part,
+        expect.any(Object),
+      );
     });
   });
 });
