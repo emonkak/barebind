@@ -57,8 +57,8 @@ export interface Component<TProps, TResult = unknown>
 
 export interface Coroutine {
   get pendingLanes(): Lanes;
-  resume(flushLanes: Lanes, context: UpdateContext): void;
-  suspend(scheduleLanes: Lanes, context: UpdateContext): void;
+  resume(context: UpdateContext): void;
+  suspend(scheduleLanes: Lanes): void;
 }
 
 export type CustomHookFunction<T> = (context: HookContext) => T;
@@ -318,6 +318,9 @@ export interface RenderContext extends HookContext {
 }
 
 export interface RenderSessionContext {
+  get lanes(): Lanes;
+  get scope(): Scope;
+  get updateHandles(): LinkedList<UpdateHandle>;
   enqueueCoroutine(coroutine: Coroutine): void;
   enqueueLayoutEffect(effect: Effect): void;
   enqueueMutationEffect(effect: Effect): void;
@@ -327,8 +330,6 @@ export interface RenderSessionContext {
     values: readonly (T | Literal)[],
   ): TemplateLiteral<T>;
   flushSync(lanes: Lanes): void;
-  getCurrentScope(): Scope;
-  getUpdateHandles(): LinkedList<UpdateHandle>;
   nextIdentifier(): string;
   resolveTemplate(
     strings: readonly string[],
@@ -405,7 +406,6 @@ export interface UpdateContext extends DirectiveContext, RenderSessionContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    lanes: Lanes,
     hooks: Hook[],
     coroutine: Coroutine,
   ): TResult;

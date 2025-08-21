@@ -166,7 +166,7 @@ export class MockBinding<T> implements Binding<T> {
 export class MockCoroutine implements Coroutine {
   pendingLanes: Lanes = Lanes.NoLanes;
 
-  resume(_lanes: Lanes, _context: UpdateContext): void {
+  resume(_context: UpdateContext): void {
     this.pendingLanes = Lanes.NoLanes;
   }
 

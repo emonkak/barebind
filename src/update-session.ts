@@ -31,6 +31,7 @@ import type { Literal, TemplateLiteral } from './template-literal.js';
 
 interface UpdateFrame {
   id: number;
+  lanes: Lanes;
   pendingCoroutines: Coroutine[];
   mutationEffects: Effect[];
   layoutEffects: Effect[];
@@ -44,9 +45,10 @@ export class UpdateSession implements UpdateContext {
 
   private readonly _runtime: Runtime;
 
-  static create(runtime: Runtime): UpdateSession {
+  static create(lanes: Lanes, runtime: Runtime): UpdateSession {
     const frame: UpdateFrame = {
       id: 0,
+      lanes,
       pendingCoroutines: [],
       mutationEffects: [],
       layoutEffects: [],
@@ -60,6 +62,18 @@ export class UpdateSession implements UpdateContext {
     this._frame = frame;
     this._scope = scope;
     this._runtime = runtime;
+  }
+
+  get lanes(): Lanes {
+    return this._frame.lanes;
+  }
+
+  get scope(): Scope {
+    return this._scope;
+  }
+
+  get updateHandles(): LinkedList<UpdateHandle> {
+    return this._runtime.updateHandles;
   }
 
   addObserver(observer: RuntimeObserver): () => void {
@@ -97,13 +111,14 @@ export class UpdateSession implements UpdateContext {
     return this._runtime.templateLiteralPreprocessor.process(strings, values);
   }
 
-  async flushAsync(lanes: Lanes): Promise<void> {
+  async flushAsync(): Promise<void> {
+    const { id, lanes } = this._frame;
     const { backend, observers } = this._runtime;
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'UPDATE_START',
-        id: this._frame.id,
+        id,
         lanes,
       });
     }
@@ -112,7 +127,7 @@ export class UpdateSession implements UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_START',
-          id: this._frame.id,
+          id,
         });
       }
 
@@ -121,7 +136,7 @@ export class UpdateSession implements UpdateContext {
           const coroutines = consumeCoroutines(this._frame);
 
           for (let i = 0, l = coroutines.length; i < l; i++) {
-            coroutines[i]!.resume(lanes, this);
+            coroutines[i]!.resume(this);
           }
 
           if (this._frame.pendingCoroutines.length === 0) {
@@ -134,7 +149,7 @@ export class UpdateSession implements UpdateContext {
         if (!observers.isEmpty()) {
           notifyObservers(observers, {
             type: 'RENDER_END',
-            id: this._frame.id,
+            id,
           });
         }
       }
@@ -145,8 +160,13 @@ export class UpdateSession implements UpdateContext {
 
       if (mutationEffects.length > 0 || layoutEffects.length > 0) {
         const callback = () => {
-          this._commitEffects(mutationEffects, CommitPhase.Mutation);
-          this._commitEffects(layoutEffects, CommitPhase.Layout);
+          if (mutationEffects.length > 0) {
+            this._commitEffects(mutationEffects, CommitPhase.Mutation);
+          }
+
+          if (layoutEffects.length > 0) {
+            this._commitEffects(layoutEffects, CommitPhase.Layout);
+          }
         };
 
         if (lanes & Lanes.ViewTransitionLane) {
@@ -170,20 +190,21 @@ export class UpdateSession implements UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'UPDATE_END',
-          id: this._frame.id,
+          id,
           lanes,
         });
       }
     }
   }
 
-  flushSync(lanes: Lanes): void {
+  flushSync(): void {
+    const { id, lanes } = this._frame;
     const { observers } = this._runtime;
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'UPDATE_START',
-        id: this._frame.id,
+        id,
         lanes,
       });
     }
@@ -192,7 +213,7 @@ export class UpdateSession implements UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_START',
-          id: this._frame.id,
+          id,
         });
       }
 
@@ -200,14 +221,14 @@ export class UpdateSession implements UpdateContext {
         const coroutines = consumeCoroutines(this._frame);
 
         for (let i = 0, l = coroutines.length; i < l; i++) {
-          coroutines[i]!.resume(lanes, this);
+          coroutines[i]!.resume(this);
         }
       } while (this._frame.pendingCoroutines.length > 0);
 
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'RENDER_END',
-          id: this._frame.id,
+          id,
         });
       }
 
@@ -215,26 +236,26 @@ export class UpdateSession implements UpdateContext {
         this._frame,
       );
 
-      this._commitEffects(mutationEffects, CommitPhase.Mutation);
-      this._commitEffects(layoutEffects, CommitPhase.Layout);
-      this._commitEffects(passiveEffects, CommitPhase.Passive);
+      if (mutationEffects.length > 0) {
+        this._commitEffects(mutationEffects, CommitPhase.Mutation);
+      }
+
+      if (layoutEffects.length > 0) {
+        this._commitEffects(layoutEffects, CommitPhase.Layout);
+      }
+
+      if (passiveEffects.length > 0) {
+        this._commitEffects(passiveEffects, CommitPhase.Passive);
+      }
     } finally {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'UPDATE_END',
-          id: this._frame.id,
+          id,
           lanes,
         });
       }
     }
-  }
-
-  getCurrentScope(): Scope {
-    return this._scope;
-  }
-
-  getUpdateHandles(): LinkedList<UpdateHandle> {
-    return this._runtime.updateHandles;
   }
 
   nextIdentifier(): string {
@@ -247,17 +268,17 @@ export class UpdateSession implements UpdateContext {
   renderComponent<TProps, TResult>(
     component: Component<TProps, TResult>,
     props: TProps,
-    lanes: Lanes,
     hooks: Hook[],
     coroutine: Coroutine,
   ): TResult {
+    const { id } = this._frame;
     const { observers } = this._runtime;
-    const session = new RenderSession(lanes, hooks, coroutine, this);
+    const session = new RenderSession(hooks, coroutine, this);
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'COMPONENT_RENDER_START',
-        id: this._frame.id,
+        id,
         component,
         props,
         context: session,
@@ -272,7 +293,7 @@ export class UpdateSession implements UpdateContext {
       if (!observers.isEmpty()) {
         notifyObservers(observers, {
           type: 'COMPONENT_RENDER_END',
-          id: this._frame.id,
+          id,
           component,
           props,
           context: session,
@@ -343,7 +364,7 @@ export class UpdateSession implements UpdateContext {
       }
     }
 
-    coroutine.suspend(scheduleLanes, this);
+    coroutine.suspend(scheduleLanes);
 
     const updateHandleNode = updateHandles.pushBack({
       coroutine,
@@ -356,13 +377,13 @@ export class UpdateSession implements UpdateContext {
 
           updateHandleNode.value.running = true;
 
-          const subcontext = this._enterFrame(coroutine);
-          const flushLanes = getFlushLanesFromOptions(completeOptions);
+          const lanes = getFlushLanesFromOptions(completeOptions);
+          const subcontext = this._enterFrame(lanes, coroutine);
 
           if (completeOptions.concurrent) {
-            await subcontext.flushAsync(flushLanes);
+            await subcontext.flushAsync();
           } else {
-            subcontext.flushSync(flushLanes);
+            subcontext.flushSync();
           }
         } finally {
           updateHandles.remove(updateHandleNode);
@@ -375,40 +396,44 @@ export class UpdateSession implements UpdateContext {
   }
 
   private _commitEffects(effects: Effect[], phase: CommitPhase): void {
+    const { id } = this._frame;
     const { backend, observers } = this._runtime;
 
     if (!observers.isEmpty()) {
       notifyObservers(observers, {
         type: 'COMMIT_START',
-        id: this._frame.id,
+        id,
         effects,
         phase,
       });
     }
 
-    backend.commitEffects(effects, phase);
-
-    if (!observers.isEmpty()) {
-      notifyObservers(observers, {
-        type: 'COMMIT_END',
-        id: this._frame.id,
-        effects,
-        phase,
-      });
+    try {
+      backend.commitEffects(effects, phase);
+    } finally {
+      if (!observers.isEmpty()) {
+        notifyObservers(observers, {
+          type: 'COMMIT_END',
+          id,
+          effects,
+          phase,
+        });
+      }
     }
   }
 
-  private _enterFrame(coroutine: Coroutine): UpdateSession {
-    const updateCount = incrementIdentifier(this._runtime.updateCount);
+  private _enterFrame(lanes: Lanes, coroutine: Coroutine): UpdateSession {
+    const updateCount = (this._runtime.updateCount = incrementIdentifier(
+      this._runtime.updateCount,
+    ));
     const frame: UpdateFrame = {
       id: updateCount,
+      lanes,
       pendingCoroutines: [coroutine],
       mutationEffects: [],
       layoutEffects: [],
       passiveEffects: [],
     };
-
-    this._runtime.updateCount = updateCount;
 
     return new UpdateSession(frame, this._scope, this._runtime);
   }

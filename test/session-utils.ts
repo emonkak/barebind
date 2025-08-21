@@ -10,16 +10,18 @@ export function createRenderSession(
 ): RenderSession {
   const runtime = createRuntime(new MockBackend(), options);
   return new RenderSession(
-    lanes,
     [],
     new MockCoroutine(),
-    UpdateSession.create(runtime),
+    UpdateSession.create(lanes, runtime),
   );
 }
 
-export function createUpdateSession(options?: RuntimeOptions): UpdateSession {
+export function createUpdateSession(
+  lanes: Lanes = -1,
+  options?: RuntimeOptions,
+): UpdateSession {
   const runtime = createRuntime(new MockBackend(), options);
-  return UpdateSession.create(runtime);
+  return UpdateSession.create(lanes, runtime);
 }
 
 export function disposeRenderSession(session: RenderSession): void {
@@ -45,7 +47,7 @@ export function flushRenderSession(session: RenderSession): void {
 export async function waitForAll(
   context: RenderSessionContext,
 ): Promise<number> {
-  const updateHandles = context.getUpdateHandles();
+  const updateHandles = context.updateHandles;
   const promises = Array.from(
     updateHandles,
     (updateHandle) => updateHandle.promise,

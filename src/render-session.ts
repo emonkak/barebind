@@ -22,8 +22,6 @@ import {
 } from './internal.js';
 
 export class RenderSession implements RenderContext {
-  private readonly _lanes: Lanes;
-
   private readonly _hooks: Hook[];
 
   private readonly _coroutine: Coroutine;
@@ -33,12 +31,10 @@ export class RenderSession implements RenderContext {
   private _hookIndex = 0;
 
   constructor(
-    lanes: Lanes,
     hooks: Hook[],
     coroutine: Coroutine,
     context: RenderSessionContext,
   ) {
-    this._lanes = lanes;
     this._hooks = hooks;
     this._coroutine = coroutine;
     this._context = context;
@@ -85,7 +81,7 @@ export class RenderSession implements RenderContext {
   }
 
   getContextValue(key: unknown): unknown {
-    return getContextValue(this._context.getCurrentScope(), key);
+    return getContextValue(this._context.scope, key);
   }
 
   html(
@@ -96,7 +92,7 @@ export class RenderSession implements RenderContext {
   }
 
   isUpdatePending(): boolean {
-    const updateHandles = this._context.getUpdateHandles();
+    const { updateHandles } = this._context;
 
     for (let node = updateHandles.front(); node !== null; node = node.next) {
       if (node.value.coroutine === this._coroutine) {
@@ -115,7 +111,7 @@ export class RenderSession implements RenderContext {
   }
 
   setContextValue(key: unknown, value: unknown): void {
-    setContextValue(this._context.getCurrentScope(), key, value);
+    setContextValue(this._context.scope, key, value);
   }
 
   svg(
@@ -225,7 +221,7 @@ export class RenderSession implements RenderContext {
         HookType.Reducer,
         currentHook,
       );
-      if ((currentHook.lanes & this._lanes) === currentHook.lanes) {
+      if ((currentHook.lanes & this._context.lanes) === currentHook.lanes) {
         currentHook.lanes = Lanes.NoLanes;
         currentHook.memoizedState = currentHook.pendingState;
       }
@@ -282,7 +278,7 @@ export class RenderSession implements RenderContext {
   }
 
   async waitForUpdate(): Promise<number> {
-    const updateHandles = this._context.getUpdateHandles();
+    const { updateHandles } = this._context;
     const promises: Promise<void>[] = [];
 
     for (let node = updateHandles.front(); node !== null; node = node.next) {

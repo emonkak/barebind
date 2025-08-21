@@ -8,9 +8,12 @@ import {
   PartType,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
+import { createRuntime } from '@/runtime.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { Literal } from '@/template-literal.js';
+import { UpdateSession } from '@/update-session.js';
 import {
+  MockBackend,
   MockBindable,
   MockCoroutine,
   MockDirective,
@@ -22,7 +25,7 @@ import {
 import { createUpdateSession, waitForAll } from '../session-utils.js';
 import { getPromiseState, templateLiteral } from '../test-utils.js';
 
-describe('Runtime', () => {
+describe('UpdateSession', () => {
   describe('expandLiterals()', () => {
     it('expands literals in template values', () => {
       const { strings, values } =
@@ -50,46 +53,36 @@ describe('Runtime', () => {
       const passiveEffect = {
         commit: vi.fn(),
       };
-      const coroutine = new MockCoroutine();
-      const subcoroutine = new MockCoroutine();
+      const runtime = createRuntime(new MockBackend());
       const observer = new MockRuntimeObserver();
-      const session = createUpdateSession();
-      const unobserve = session.addObserver(observer);
 
-      const resume1Spy = vi
-        .spyOn(coroutine, 'resume')
-        .mockImplementation((lanes, context) => {
-          session.enqueueCoroutine(subcoroutine);
-          MockCoroutine.prototype.resume.call(coroutine, lanes, context);
-        });
-      const resume2Spy = vi
-        .spyOn(subcoroutine, 'resume')
-        .mockImplementation((lanes, context) => {
-          session.enqueueMutationEffect(mutationEffect);
-          session.enqueueLayoutEffect(layoutEffect);
-          session.enqueuePassiveEffect(passiveEffect);
-          MockCoroutine.prototype.resume.call(coroutine, lanes, context);
-        });
-      const requestCallbackSpy = vi.spyOn(
-        session['_runtime'].backend,
-        'requestCallback',
-      );
+      const requestCallbackSpy = vi.spyOn(runtime.backend, 'requestCallback');
       const startViewTransitionSpy = vi.spyOn(
-        session['_runtime'].backend,
+        runtime.backend,
         'startViewTransition',
       );
 
+      runtime.observers.pushBack(observer);
+
       SESSION1: {
         const lanes = Lanes.UserBlockingLane | Lanes.ConcurrentLane;
+        const coroutine = new MockCoroutine();
+        const session = UpdateSession.create(lanes, runtime);
+
+        const resumeSpy = vi
+          .spyOn(coroutine, 'resume')
+          .mockImplementation((context) => {
+            session.enqueueMutationEffect(mutationEffect);
+            session.enqueueLayoutEffect(layoutEffect);
+            session.enqueuePassiveEffect(passiveEffect);
+            MockCoroutine.prototype.resume.call(coroutine, context);
+          });
 
         session.enqueueCoroutine(coroutine);
+        await session.flushAsync();
 
-        await session.flushAsync(lanes);
-
-        expect(resume1Spy).toHaveBeenCalledTimes(1);
-        expect(resume1Spy).toHaveBeenCalledWith(lanes, session);
-        expect(resume2Spy).toHaveBeenCalledTimes(1);
-        expect(resume2Spy).toHaveBeenCalledWith(lanes, session);
+        expect(resumeSpy).toHaveBeenCalledOnce();
+        expect(resumeSpy).toHaveBeenCalledWith(session);
         expect(requestCallbackSpy).toHaveBeenCalledTimes(2);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(0);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
@@ -158,13 +151,32 @@ describe('Runtime', () => {
           Lanes.BackgroundLane |
           Lanes.ViewTransitionLane |
           Lanes.ConcurrentLane;
+        const coroutine = new MockCoroutine();
+        const subcoroutine = new MockCoroutine();
+        const session = UpdateSession.create(lanes, runtime);
 
-        session.enqueueCoroutine(subcoroutine);
-        await session.flushAsync(lanes);
+        const resume1Spy = vi
+          .spyOn(coroutine, 'resume')
+          .mockImplementation((context) => {
+            session.enqueueCoroutine(subcoroutine);
+            MockCoroutine.prototype.resume.call(coroutine, context);
+          });
+        const resume2Spy = vi
+          .spyOn(subcoroutine, 'resume')
+          .mockImplementation((context) => {
+            session.enqueueMutationEffect(mutationEffect);
+            session.enqueueLayoutEffect(layoutEffect);
+            session.enqueuePassiveEffect(passiveEffect);
+            MockCoroutine.prototype.resume.call(coroutine, context);
+          });
 
-        expect(resume1Spy).toHaveBeenCalledTimes(1);
-        expect(resume2Spy).toHaveBeenCalledTimes(2);
-        expect(resume2Spy).toHaveBeenCalledWith(lanes, session);
+        session.enqueueCoroutine(coroutine);
+        await session.flushAsync();
+
+        expect(resume1Spy).toHaveBeenCalledOnce();
+        expect(resume1Spy).toHaveBeenCalledWith(session);
+        expect(resume2Spy).toHaveBeenCalledOnce();
+        expect(resume2Spy).toHaveBeenCalledWith(session);
         expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
@@ -229,18 +241,36 @@ describe('Runtime', () => {
       }
 
       SESSION3: {
-        unobserve();
+        const lanes = Lanes.NoLanes;
+        const session = UpdateSession.create(lanes, runtime);
 
-        await session.flushAsync(Lanes.NoLanes);
+        await session.flushAsync();
 
         expect(requestCallbackSpy).toHaveBeenCalledTimes(3);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
-        expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
-        expect(coroutine.resume).toHaveBeenCalledTimes(1);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(2);
-        expect(observer.flushEvents()).toStrictEqual([]);
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'UPDATE_START',
+            id: 0,
+            lanes,
+          },
+          {
+            type: 'RENDER_START',
+            id: 0,
+          },
+          {
+            type: 'RENDER_END',
+            id: 0,
+          },
+          {
+            type: 'UPDATE_END',
+            id: 0,
+            lanes,
+          },
+        ]);
       }
     });
   });
@@ -256,37 +286,30 @@ describe('Runtime', () => {
       const passiveEffect = {
         commit: vi.fn(),
       };
-      const coroutine = new MockCoroutine();
-      const subcoroutine = new MockCoroutine();
+      const runtime = createRuntime(new MockBackend());
       const observer = new MockRuntimeObserver();
-      const session = createUpdateSession();
-      const unobserve = session.addObserver(observer);
 
-      const resume1Spy = vi
-        .spyOn(coroutine, 'resume')
-        .mockImplementation((lanes, context) => {
-          context.enqueueCoroutine(subcoroutine);
-          MockCoroutine.prototype.resume.call(coroutine, lanes, context);
-        });
-      const resume2Spy = vi
-        .spyOn(subcoroutine, 'resume')
-        .mockImplementation((lanes, context) => {
-          context.enqueueMutationEffect(mutationEffect);
-          context.enqueueLayoutEffect(layoutEffect);
-          context.enqueuePassiveEffect(passiveEffect);
-          MockCoroutine.prototype.resume.call(coroutine, lanes, context);
-        });
+      runtime.observers.pushBack(observer);
 
       SESSION1: {
-        const lanes = Lanes.UserBlockingLane;
+        const lanes = Lanes.UserBlockingLane | Lanes.ConcurrentLane;
+        const coroutine = new MockCoroutine();
+        const session = UpdateSession.create(lanes, runtime);
+
+        const resumeSpy = vi
+          .spyOn(coroutine, 'resume')
+          .mockImplementation((context) => {
+            context.enqueueMutationEffect(mutationEffect);
+            context.enqueueLayoutEffect(layoutEffect);
+            context.enqueuePassiveEffect(passiveEffect);
+            MockCoroutine.prototype.resume.call(coroutine, context);
+          });
 
         session.enqueueCoroutine(coroutine);
-        session.flushSync(lanes);
+        session.flushSync();
 
-        expect(resume1Spy).toHaveBeenCalledTimes(1);
-        expect(resume1Spy).toHaveBeenCalledWith(lanes, session);
-        expect(resume2Spy).toHaveBeenCalledTimes(1);
-        expect(resume2Spy).toHaveBeenCalledWith(lanes, session);
+        expect(resumeSpy).toHaveBeenCalledOnce();
+        expect(resumeSpy).toHaveBeenCalledWith(session);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(1);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(1);
@@ -350,13 +373,32 @@ describe('Runtime', () => {
 
       SESSION2: {
         const lanes = Lanes.BackgroundLane;
+        const coroutine = new MockCoroutine();
+        const subcoroutine = new MockCoroutine();
+        const session = UpdateSession.create(lanes, runtime);
 
-        session.enqueueCoroutine(subcoroutine);
-        session.flushSync(lanes);
+        const resume1Spy = vi
+          .spyOn(coroutine, 'resume')
+          .mockImplementation((context) => {
+            context.enqueueCoroutine(subcoroutine);
+            MockCoroutine.prototype.resume.call(coroutine, context);
+          });
+        const resume2Spy = vi
+          .spyOn(subcoroutine, 'resume')
+          .mockImplementation((context) => {
+            context.enqueueMutationEffect(mutationEffect);
+            context.enqueueLayoutEffect(layoutEffect);
+            context.enqueuePassiveEffect(passiveEffect);
+            MockCoroutine.prototype.resume.call(coroutine, context);
+          });
 
-        expect(resume1Spy).toHaveBeenCalledTimes(1);
-        expect(resume2Spy).toHaveBeenCalledTimes(2);
-        expect(resume2Spy).toHaveBeenCalledWith(lanes, session);
+        session.enqueueCoroutine(coroutine);
+        session.flushSync();
+
+        expect(resume1Spy).toHaveBeenCalledOnce();
+        expect(resume1Spy).toHaveBeenCalledWith(session);
+        expect(resume2Spy).toHaveBeenCalledOnce();
+        expect(resume2Spy).toHaveBeenCalledWith(session);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(2);
@@ -419,15 +461,34 @@ describe('Runtime', () => {
       }
 
       SESSION3: {
-        unobserve();
+        const lanes = Lanes.NoLanes;
+        const session = UpdateSession.create(lanes, runtime);
 
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
-        expect(subcoroutine.resume).toHaveBeenCalledTimes(2);
-        expect(coroutine.resume).toHaveBeenCalledTimes(1);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(2);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
         expect(passiveEffect.commit).toHaveBeenCalledTimes(2);
+        expect(observer.flushEvents()).toStrictEqual([
+          {
+            type: 'UPDATE_START',
+            id: 0,
+            lanes,
+          },
+          {
+            type: 'RENDER_START',
+            id: 0,
+          },
+          {
+            type: 'RENDER_END',
+            id: 0,
+          },
+          {
+            type: 'UPDATE_END',
+            id: 0,
+            lanes,
+          },
+        ]);
       }
     });
   });
@@ -446,7 +507,6 @@ describe('Runtime', () => {
       const component = createComponent(() => null);
       const props = {};
       const hooks: Hook[] = [];
-      const lanes = Lanes.UserBlockingLane;
       const coroutine = new MockCoroutine();
       const observer = new MockRuntimeObserver();
       const session = createUpdateSession();
@@ -458,7 +518,6 @@ describe('Runtime', () => {
       const result = session.renderComponent(
         component,
         props,
-        lanes,
         hooks,
         coroutine,
       );
@@ -467,7 +526,6 @@ describe('Runtime', () => {
       expect(renderSpy).toHaveBeenCalledWith(
         props,
         expect.objectContaining({
-          _lanes: expect.exact(lanes),
           _hooks: expect.exact(hooks),
           _coroutine: expect.exact(coroutine),
           _context: expect.exact(session),
@@ -625,7 +683,7 @@ describe('Runtime', () => {
 
     it('schedules the update with the current priority of the backend', async () => {
       const coroutine = new MockCoroutine();
-      const session = createUpdateSession({ concurrent });
+      const session = createUpdateSession(-1, { concurrent });
 
       const resumeSpy = vi.spyOn(coroutine, 'resume');
 
@@ -637,9 +695,11 @@ describe('Runtime', () => {
       expect(await getPromiseState(task.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
+      expect(resumeSpy).toHaveBeenCalledWith(expect.not.exact(session));
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.UserBlockingLane | concurrentLane,
-        expect.not.exact(session),
+        expect.objectContaining({
+          lanes: Lanes.UserBlockingLane | concurrentLane,
+        }),
       );
     });
 
@@ -675,9 +735,11 @@ describe('Runtime', () => {
       expect(await getPromiseState(task3.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
+      expect(resumeSpy).toHaveBeenCalledWith(expect.not.exact(session));
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.UserBlockingLane | concurrentLane,
-        expect.not.exact(session),
+        expect.objectContaining({
+          lanes: Lanes.UserBlockingLane | concurrentLane,
+        }),
       );
     });
 
@@ -705,9 +767,11 @@ describe('Runtime', () => {
       expect(await getPromiseState(task.promise)).toBe('fulfilled');
 
       expect(resumeSpy).toHaveBeenCalledOnce();
+      expect(resumeSpy).toHaveBeenCalledWith(expect.not.exact(session));
       expect(resumeSpy).toHaveBeenCalledWith(
-        Lanes.UserBlockingLane | concurrentLane,
-        expect.not.exact(session),
+        expect.objectContaining({
+          lanes: Lanes.UserBlockingLane | concurrentLane,
+        }),
       );
     });
   });

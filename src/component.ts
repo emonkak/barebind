@@ -105,18 +105,17 @@ export class ComponentBinding<TProps, TResult>
     this._pendingProps = props;
   }
 
-  resume(flushLanes: Lanes, context: UpdateContext): void {
+  resume(context: UpdateContext): void {
     const scope = createScope(this._parentScope);
     const subcontext = context.enterScope(scope);
     const result = subcontext.renderComponent(
       this._component,
       this._pendingProps,
-      flushLanes,
       this._hooks,
       this,
     );
     // When the scope level is the same, the binding is the update root.
-    let shouldCommit = context.getCurrentScope().level === scope.level;
+    let shouldCommit = context.scope.level === scope.level;
 
     if (this._slot !== null) {
       if (!this._slot.reconcile(result, subcontext)) {
@@ -131,11 +130,11 @@ export class ComponentBinding<TProps, TResult>
       context.enqueueMutationEffect(this._slot);
     }
 
-    this._pendingLanes &= ~flushLanes;
+    this._pendingLanes &= ~context.lanes;
     this._memoizedProps = this._pendingProps;
   }
 
-  suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
+  suspend(scheduleLanes: Lanes): void {
     this._pendingLanes |= scheduleLanes;
   }
 
@@ -146,13 +145,12 @@ export class ComponentBinding<TProps, TResult>
       );
     }
 
-    const parentScope = context.getCurrentScope();
+    const parentScope = context.scope;
     const scope = createScope(parentScope);
     const subcontext = context.enterScope(scope);
     const result = subcontext.renderComponent(
       this._component,
       this._pendingProps,
-      Lanes.NoLanes,
       this._hooks,
       this,
     );
@@ -166,7 +164,7 @@ export class ComponentBinding<TProps, TResult>
 
   connect(context: UpdateContext): void {
     context.enqueueCoroutine(this);
-    this._parentScope = context.getCurrentScope();
+    this._parentScope = context.scope;
   }
 
   disconnect(context: UpdateContext): void {

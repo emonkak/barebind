@@ -21,7 +21,7 @@ export class AsyncRoot<T> {
     backend: RuntimeBackend,
   ): AsyncRoot<T> {
     const runtime = createRuntime(backend, { concurrent: true });
-    const session = UpdateSession.create(runtime);
+    const session = UpdateSession.create(Lanes.ConcurrentLane, runtime);
     const part = {
       type: PartType.ChildNode,
       node: container.ownerDocument.createComment(''),
@@ -56,7 +56,7 @@ export class AsyncRoot<T> {
     this._session.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    return this._session.flushAsync(Lanes.ConcurrentLane);
+    return this._session.flushAsync();
   }
 
   mount(): Promise<void> {
@@ -64,13 +64,13 @@ export class AsyncRoot<T> {
     this._session.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    return this._session.flushAsync(Lanes.ConcurrentLane);
+    return this._session.flushAsync();
   }
 
   update(value: T): Promise<void> {
     this._slot.reconcile(value, this._session);
     this._session.enqueueMutationEffect(this._slot);
-    return this._session.flushAsync(Lanes.ConcurrentLane);
+    return this._session.flushAsync();
   }
 
   unmount(): Promise<void> {
@@ -78,6 +78,6 @@ export class AsyncRoot<T> {
     this._session.enqueueMutationEffect(
       new UnmountSlot(this._slot, this._container),
     );
-    return this._session.flushAsync(Lanes.ConcurrentLane);
+    return this._session.flushAsync();
   }
 }

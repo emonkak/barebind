@@ -122,7 +122,7 @@ describe('ComponentBinding', () => {
       SESSION: {
         binding.connect(session);
         session.enqueueCoroutine(binding);
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
         expect(binding.shouldBind(props1)).toBe(false);
         expect(binding.shouldBind(props2)).toBe(true);
@@ -143,18 +143,18 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props, part);
-      const session = createUpdateSession();
+      const session = createUpdateSession(Lanes.UserBlockingLane);
 
       const commitSpy = vi.spyOn(binding, 'commit');
 
       SESSION1: {
-        binding.suspend(Lanes.UserBlockingLane, session);
+        binding.suspend(Lanes.UserBlockingLane);
 
         expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
 
         session.enqueueCoroutine(binding);
         session.enqueueMutationEffect(binding);
-        session.flushSync(Lanes.UserBlockingLane);
+        session.flushSync();
 
         expect(commitSpy).toHaveBeenCalled();
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -162,12 +162,12 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        binding.suspend(Lanes.UserBlockingLane, session);
+        binding.suspend(Lanes.UserBlockingLane);
 
         expect(binding.pendingLanes).toBe(Lanes.UserBlockingLane);
 
         session.enqueueCoroutine(binding);
-        session.flushSync(Lanes.UserBlockingLane);
+        session.flushSync();
 
         expect(commitSpy).toHaveBeenCalled();
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
@@ -197,7 +197,7 @@ describe('ComponentBinding', () => {
         binding.hydrate(tree, session);
         session.enqueueCoroutine(binding);
         session.enqueueMutationEffect(binding);
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -244,7 +244,7 @@ describe('ComponentBinding', () => {
 
       session.enqueueCoroutine(binding);
       session.enqueueMutationEffect(binding);
-      session.flushSync(Lanes.NoLanes);
+      session.flushSync();
 
       expect(() => binding.hydrate(tree, session)).toThrow(HydrationError);
     });
@@ -272,7 +272,7 @@ describe('ComponentBinding', () => {
       SESSION1: {
         binding.connect(session);
         session.enqueueMutationEffect(binding);
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -289,7 +289,7 @@ describe('ComponentBinding', () => {
         binding.bind(props2);
         binding.connect(session);
         session.enqueueMutationEffect(binding);
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -322,7 +322,7 @@ describe('ComponentBinding', () => {
       SESSION1: {
         binding.connect(session);
         session.enqueueMutationEffect(binding);
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(
@@ -338,7 +338,7 @@ describe('ComponentBinding', () => {
       SESSION2: {
         binding.disconnect(session);
         binding.rollback();
-        session.flushSync(Lanes.NoLanes);
+        session.flushSync();
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
         expect(binding['_slot']).toStrictEqual(

@@ -21,7 +21,7 @@ export class SyncRoot<T> {
     backend: RuntimeBackend,
   ): SyncRoot<T> {
     const runtime = createRuntime(backend, { concurrent: false });
-    const session = UpdateSession.create(runtime);
+    const session = UpdateSession.create(Lanes.NoLanes, runtime);
     const part = {
       type: PartType.ChildNode,
       node: container.ownerDocument.createComment(''),
@@ -53,7 +53,7 @@ export class SyncRoot<T> {
     this._session.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    this._session.flushSync(Lanes.NoLanes);
+    this._session.flushSync();
   }
 
   mount(): void {
@@ -61,13 +61,13 @@ export class SyncRoot<T> {
     this._session.enqueueMutationEffect(
       new MountSlot(this._slot, this._container),
     );
-    this._session.flushSync(Lanes.NoLanes);
+    this._session.flushSync();
   }
 
   update(value: T): void {
     this._slot.reconcile(value, this._session);
     this._session.enqueueMutationEffect(this._slot);
-    this._session.flushSync(Lanes.NoLanes);
+    this._session.flushSync();
   }
 
   unmount(): void {
@@ -75,6 +75,6 @@ export class SyncRoot<T> {
     this._session.enqueueMutationEffect(
       new UnmountSlot(this._slot, this._container),
     );
-    this._session.flushSync(Lanes.NoLanes);
+    this._session.flushSync();
   }
 }

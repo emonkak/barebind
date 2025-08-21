@@ -90,7 +90,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._memoizedVersion = -1;
   }
 
-  resume(_flushLanes: Lanes, context: UpdateContext): void {
+  resume(context: UpdateContext): void {
     if (this._slot.reconcile(this._signal.value, context)) {
       context.enqueueMutationEffect(this._slot);
     }
@@ -98,7 +98,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._pendingLanes = Lanes.NoLanes;
   }
 
-  suspend(scheduleLanes: Lanes, _context: UpdateContext): void {
+  suspend(scheduleLanes: Lanes): void {
     this._pendingLanes |= scheduleLanes;
   }
 
