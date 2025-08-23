@@ -101,6 +101,8 @@ describe('Runtime', () => {
 
         await runtime.flushAsync();
 
+        expect(runtime.getPendingTasks()).toStrictEqual([]);
+
         await handle.finished;
 
         expect(requestCallbackSpy).toHaveBeenCalledTimes(1);
@@ -181,6 +183,8 @@ describe('Runtime', () => {
         ]);
 
         await runtime.flushAsync();
+
+        expect(runtime.getPendingTasks()).toStrictEqual([]);
 
         await handle.finished;
 
@@ -331,6 +335,8 @@ describe('Runtime', () => {
 
         runtime.flushSync();
 
+        expect(runtime.getPendingTasks()).toStrictEqual([]);
+
         await handle.finished;
 
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
@@ -421,6 +427,8 @@ describe('Runtime', () => {
         ]);
 
         runtime.flushSync();
+
+        expect(runtime.getPendingTasks()).toStrictEqual([]);
 
         await handle.finished;
 
