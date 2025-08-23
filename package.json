@@ -37,7 +37,7 @@
     "clean": "rm -fr coverage lib",
     "clean:all": "pnpm run --include-workspace-root --recursive --parallel clean",
     "lint": "biome ci",
-    "ci": "pnpm run clean:all && pnpm run build:all && pnpm run lint && pnpm test --coverage",
+    "ci": "pnpm run clean:all && pnpm run lint && pnpm run build:all && pnpm test --coverage",
     "test": "vitest run",
     "watch": "tsc --build --watch --preserveWatchOutput",
     "watch:all": "pnpm run --include-workspace-root --recursive --parallel watch"
