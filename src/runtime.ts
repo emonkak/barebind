@@ -132,7 +132,7 @@ export class Runtime implements SessionContext {
   async flushAsync(): Promise<void> {
     for (
       let pendingTask: UpdateTask | undefined;
-      (pendingTask = this._pendingTasks.front()?.value);
+      (pendingTask = this._pendingTasks.front()?.value) !== undefined;
       this._pendingTasks.popFront()
     ) {
       const { coroutine, lanes, continuation } = pendingTask;
@@ -162,29 +162,27 @@ export class Runtime implements SessionContext {
           });
         }
 
-        try {
-          const context = createUpdateContext(frame, scope, this);
+        const context = createUpdateContext(frame, scope, this);
 
-          while (true) {
-            const coroutines = consumeCoroutines(frame);
+        while (true) {
+          const coroutines = consumeCoroutines(frame);
 
-            for (let i = 0, l = coroutines.length; i < l; i++) {
-              coroutines[i]!.resume(context);
-            }
-
-            if (frame.pendingCoroutines.length === 0) {
-              break;
-            }
-
-            await this._backend.yieldToMain();
+          for (let i = 0, l = coroutines.length; i < l; i++) {
+            coroutines[i]!.resume(context);
           }
-        } finally {
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_END',
-              id,
-            });
+
+          if (frame.pendingCoroutines.length === 0) {
+            break;
           }
+
+          await this._backend.yieldToMain();
+        }
+
+        if (!this._observers.isEmpty()) {
+          notifyObservers(this._observers, {
+            type: 'RENDER_END',
+            id,
+          });
         }
 
         const { mutationEffects, layoutEffects, passiveEffects } =
@@ -241,7 +239,7 @@ export class Runtime implements SessionContext {
   flushSync(): void {
     for (
       let pendingTask: UpdateTask | undefined;
-      (pendingTask = this._pendingTasks.front()?.value);
+      (pendingTask = this._pendingTasks.front()?.value) !== undefined;
       this._pendingTasks.popFront()
     ) {
       const { coroutine, lanes, continuation } = pendingTask;
@@ -264,34 +262,32 @@ export class Runtime implements SessionContext {
           });
         }
 
-        try {
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_START',
-              id,
-            });
+        if (!this._observers.isEmpty()) {
+          notifyObservers(this._observers, {
+            type: 'RENDER_START',
+            id,
+          });
+        }
+
+        const context = createUpdateContext(frame, scope, this);
+
+        while (true) {
+          const coroutines = consumeCoroutines(frame);
+
+          for (let i = 0, l = coroutines.length; i < l; i++) {
+            coroutines[i]!.resume(context);
           }
 
-          const context = createUpdateContext(frame, scope, this);
-
-          while (true) {
-            const coroutines = consumeCoroutines(frame);
-
-            for (let i = 0, l = coroutines.length; i < l; i++) {
-              coroutines[i]!.resume(context);
-            }
-
-            if (frame.pendingCoroutines.length === 0) {
-              break;
-            }
+          if (frame.pendingCoroutines.length === 0) {
+            break;
           }
-        } finally {
-          if (!this._observers.isEmpty()) {
-            notifyObservers(this._observers, {
-              type: 'RENDER_END',
-              id,
-            });
-          }
+        }
+
+        if (!this._observers.isEmpty()) {
+          notifyObservers(this._observers, {
+            type: 'RENDER_END',
+            id,
+          });
         }
 
         const { mutationEffects, layoutEffects, passiveEffects } =
@@ -356,21 +352,21 @@ export class Runtime implements SessionContext {
       });
     }
 
-    try {
-      const result = component.render(props, context);
-      context.finalize();
-      return result;
-    } finally {
-      if (!this._observers.isEmpty()) {
-        notifyObservers(this._observers, {
-          type: 'COMPONENT_RENDER_END',
-          id,
-          component,
-          props,
-          context,
-        });
-      }
+    const result = component.render(props, context);
+
+    context.finalize();
+
+    if (!this._observers.isEmpty()) {
+      notifyObservers(this._observers, {
+        type: 'COMPONENT_RENDER_END',
+        id,
+        component,
+        props,
+        context,
+      });
     }
+
+    return result;
   }
 
   resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>> {
@@ -464,17 +460,15 @@ export class Runtime implements SessionContext {
       });
     }
 
-    try {
-      this._backend.commitEffects(effects, phase);
-    } finally {
-      if (!this._observers.isEmpty()) {
-        notifyObservers(this._observers, {
-          type: 'COMMIT_END',
-          id,
-          effects,
-          phase,
-        });
-      }
+    this._backend.commitEffects(effects, phase);
+
+    if (!this._observers.isEmpty()) {
+      notifyObservers(this._observers, {
+        type: 'COMMIT_END',
+        id,
+        effects,
+        phase,
+      });
     }
   }
 }
