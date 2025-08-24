@@ -497,32 +497,6 @@ export function getContextValue(scope: Scope, key: unknown): unknown {
 /**
  * @internal
  */
-export function getFlushLanesFromOptions(options: ScheduleOptions): Lanes {
-  let lanes = Lanes.DefaultLane;
-
-  switch (options.priority) {
-    case 'user-blocking':
-      lanes |= Lanes.UserBlockingLane;
-      break;
-    case 'user-visible':
-      lanes |= Lanes.UserBlockingLane | Lanes.UserVisibleLane;
-      break;
-    case 'background':
-      lanes |=
-        Lanes.UserBlockingLane | Lanes.UserVisibleLane | Lanes.BackgroundLane;
-      break;
-  }
-
-  if (options.viewTransition) {
-    lanes |= Lanes.ViewTransitionLane;
-  }
-
-  return lanes;
-}
-
-/**
- * @internal
- */
 export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
   if (lanes & Lanes.BackgroundLane) {
     return 'background';
@@ -538,7 +512,7 @@ export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
 /**
  * @internal
  */
-export function getScheduleLanesFromOptions(options: ScheduleOptions): Lanes {
+export function getLanesFromOptions(options: ScheduleOptions): Lanes {
   let lanes = Lanes.DefaultLane;
 
   switch (options.priority) {

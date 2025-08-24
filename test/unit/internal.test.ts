@@ -3,9 +3,8 @@ import {
   areDirectiveTypesEqual,
   createScope,
   getContextValue,
-  getFlushLanesFromOptions,
+  getLanesFromOptions,
   getPriorityFromLanes,
-  getScheduleLanesFromOptions,
   getStartNode,
   isBindable,
   Lanes,
@@ -56,53 +55,7 @@ describe('getContextValue()', () => {
   });
 });
 
-describe('getFlushLanesFromOptions()', () => {
-  it.each([
-    [{}, Lanes.DefaultLane],
-    [{ priority: 'user-blocking' }, Lanes.DefaultLane | Lanes.UserBlockingLane],
-    [
-      { priority: 'user-visible' },
-      Lanes.DefaultLane | Lanes.UserBlockingLane | Lanes.UserVisibleLane,
-    ],
-    [
-      { priority: 'background' },
-
-      Lanes.DefaultLane |
-        Lanes.UserBlockingLane |
-        Lanes.UserVisibleLane |
-        Lanes.BackgroundLane,
-    ],
-    [{ viewTransition: true }, Lanes.DefaultLane | Lanes.ViewTransitionLane],
-    [
-      { priority: 'user-blocking', viewTransition: true },
-
-      Lanes.DefaultLane | Lanes.UserBlockingLane | Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'user-visible', viewTransition: true },
-      Lanes.DefaultLane |
-        Lanes.UserBlockingLane |
-        Lanes.UserVisibleLane |
-        Lanes.ViewTransitionLane,
-    ],
-    [
-      { priority: 'background', viewTransition: true },
-      Lanes.DefaultLane |
-        Lanes.UserBlockingLane |
-        Lanes.UserVisibleLane |
-        Lanes.BackgroundLane |
-        Lanes.ViewTransitionLane,
-    ],
-  ] as [ScheduleOptions, Lanes][])(
-    'returns the lanes for flush',
-    (options, lanes) => {
-      expect(getFlushLanesFromOptions(options)).toBe(lanes);
-      expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
-    },
-  );
-});
-
-describe('getScheduleLanesFromOptions()', () => {
+describe('getLanesFromOptions()', () => {
   it.each([
     [{}, Lanes.DefaultLane],
     [{ priority: 'user-blocking' }, Lanes.DefaultLane | Lanes.UserBlockingLane],
@@ -124,7 +77,7 @@ describe('getScheduleLanesFromOptions()', () => {
   ] as [ScheduleOptions, Lanes][])(
     'returns lanes for schedule',
     (options, lanes) => {
-      expect(getScheduleLanesFromOptions(options)).toBe(lanes);
+      expect(getLanesFromOptions(options)).toBe(lanes);
       expect(getPriorityFromLanes(lanes)).toBe(options.priority ?? null);
     },
   );

@@ -8,8 +8,7 @@ import {
   createUpdateContext,
   type Directive,
   type Effect,
-  getFlushLanesFromOptions,
-  getScheduleLanesFromOptions,
+  getLanesFromOptions,
   type Hook,
   isBindable,
   Lanes,
@@ -417,8 +416,7 @@ export class Runtime implements SessionContext {
       silent: options.silent ?? false,
       viewTransition: options.viewTransition ?? false,
     };
-    const lanes = getFlushLanesFromOptions(completeOptions);
-    const scheduleLanes = getScheduleLanesFromOptions(completeOptions);
+    const lanes = getLanesFromOptions(completeOptions);
     const continuation = Promise.withResolvers<void>();
     const pendingTask: UpdateTask = {
       coroutine,
@@ -426,7 +424,7 @@ export class Runtime implements SessionContext {
       continuation,
     };
 
-    coroutine.pendingLanes |= scheduleLanes;
+    coroutine.pendingLanes |= lanes;
 
     const scheduled = this._backend.requestUpdate((flushUpdate) => {
       const shouldFlush =
@@ -440,7 +438,7 @@ export class Runtime implements SessionContext {
     }, completeOptions);
 
     return {
-      lanes: scheduleLanes,
+      lanes,
       finished: continuation.promise,
       scheduled,
     };

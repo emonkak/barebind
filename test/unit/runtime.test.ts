@@ -177,7 +177,6 @@ describe('Runtime', () => {
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
-              Lanes.UserBlockingLane |
               Lanes.ViewTransitionLane,
           }),
         ]);
@@ -200,7 +199,6 @@ describe('Runtime', () => {
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
-              Lanes.UserBlockingLane |
               Lanes.ViewTransitionLane,
           },
           {
@@ -241,7 +239,6 @@ describe('Runtime', () => {
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
-              Lanes.UserBlockingLane |
               Lanes.ViewTransitionLane,
           },
         ]);
@@ -421,7 +418,6 @@ describe('Runtime', () => {
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
-              Lanes.UserBlockingLane |
               Lanes.ViewTransitionLane,
           }),
         ]);
@@ -442,7 +438,6 @@ describe('Runtime', () => {
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
-              Lanes.UserBlockingLane |
               Lanes.ViewTransitionLane,
           },
           {
@@ -483,7 +478,6 @@ describe('Runtime', () => {
             lanes:
               Lanes.DefaultLane |
               Lanes.UserVisibleLane |
-              Lanes.UserBlockingLane |
               Lanes.ViewTransitionLane,
           },
         ]);
