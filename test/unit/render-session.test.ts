@@ -634,9 +634,7 @@ describe('RenderSession', () => {
         const [count, setCount, isPending] = context.useState(() => 0);
 
         context.useEffect(() => {
-          queueMicrotask(() => {
-            setCount(1, { mode: 'prioritized', priority: 'background' });
-          });
+          setCount(1, { mode: 'prioritized', priority: 'background' });
         }, []);
 
         return [count, isPending];
@@ -649,8 +647,6 @@ describe('RenderSession', () => {
         expect(callback).toHaveNthReturnedWith(1, [0, false]);
       }
 
-      await Promise.resolve();
-
       SESSION2: {
         helper.startSession(callback);
 
@@ -660,12 +656,8 @@ describe('RenderSession', () => {
 
       await Promise.resolve();
 
-      SESSION3: {
-        helper.startSession(callback, { priority: 'background' });
-
-        expect(callback).toHaveBeenCalledTimes(3);
-        expect(callback).toHaveNthReturnedWith(3, [1, false]);
-      }
+      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveNthReturnedWith(3, [1, false]);
     });
   });
 });

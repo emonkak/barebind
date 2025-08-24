@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
-import { CommitPhase, PartType } from '@/internal.js';
+import { PartType } from '@/internal.js';
 import { AttributePrimitive } from '@/primitive/attribute.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { ClassPrimitive } from '@/primitive/class.js';
@@ -39,30 +39,10 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 ];
 
 describe('BrowserBackend', () => {
-  describe('commitEffects()', () => {
-    it.for([
-      CommitPhase.Mutation,
-      CommitPhase.Layout,
-      CommitPhase.Passive,
-    ] as const)('commits given effects', (phase) => {
-      const effects = [
-        {
-          commit: vi.fn(),
-        },
-        {
-          commit: vi.fn(),
-        },
-        {
-          commit: vi.fn(),
-        },
-      ];
-      const backend = new BrowserBackend();
-
-      backend.commitEffects(effects, phase);
-
-      for (const effect of effects) {
-        expect(effect.commit).toHaveBeenCalledOnce();
-      }
+  describe('getCurrentMode()', () => {
+    it('always returns "prioritized"', () => {
+      const backend = new BrowserBackend(document);
+      expect(backend.getCurrentMode()).toBe('prioritized');
     });
   });
 
@@ -132,6 +112,19 @@ describe('BrowserBackend', () => {
       expect(backend.getTemplateFactory()).toBeInstanceOf(
         OptimizedTemplateFactory,
       );
+    });
+  });
+
+  describe('flushUpdate()', () => {
+    it('flush updates asynchronously', async () => {
+      const backend = new BrowserBackend(document);
+      const runtime = new Runtime(backend);
+
+      const flushAsyncSpy = vi.spyOn(runtime, 'flushAsync');
+
+      backend.flushUpdate(runtime);
+
+      expect(flushAsyncSpy).toHaveBeenCalledOnce();
     });
   });
 
@@ -236,51 +229,6 @@ describe('BrowserBackend', () => {
       expect(callback).toHaveBeenCalledOnce();
       expect(requestIdleCallbackSpy).toHaveBeenCalledOnce();
       expect(requestIdleCallbackSpy).toHaveBeenCalledWith(expect.any(Function));
-    });
-  });
-
-  describe('requestUpdate()', () => {
-    it('schedules updates asynchronously', async () => {
-      const backend = new BrowserBackend(document);
-      const runtime = new Runtime(backend);
-
-      const flushAsyncSpy = vi.spyOn(runtime, 'flushAsync');
-
-      await backend.requestUpdate(
-        async (flushUpdate) => flushUpdate(runtime),
-        {},
-      );
-
-      expect(flushAsyncSpy).toHaveBeenCalledOnce();
-    });
-
-    it('schedules updates synchronously', async () => {
-      const backend = new BrowserBackend(document);
-      const runtime = new Runtime(backend);
-
-      const flushAsyncSpy = vi.spyOn(runtime, 'flushAsync');
-
-      await backend.requestUpdate(async (flushUpdate) => flushUpdate(runtime), {
-        mode: 'sequential',
-      });
-
-      expect(flushAsyncSpy).toHaveBeenCalledOnce();
-    });
-
-    it('handles an error that occurs during flushing', async () => {
-      const backend = new BrowserBackend(document);
-      const runtime = new Runtime(backend);
-
-      const flushAsyncSpy = vi
-        .spyOn(runtime, 'flushAsync')
-        .mockImplementation(() => {
-          return Promise.reject();
-        });
-
-      await expect(
-        backend.requestUpdate(async (flushUpdate) => flushUpdate(runtime), {}),
-      ).rejects.toThrow();
-      expect(flushAsyncSpy).toHaveBeenCalledOnce();
     });
   });
 

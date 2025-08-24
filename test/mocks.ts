@@ -17,7 +17,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type ScheduleOptions,
+  type ScheduleMode,
   type Slot,
   type SlotType,
   type Template,
@@ -42,6 +42,14 @@ export class MockBackend implements RuntimeBackend {
     }
   }
 
+  flushUpdate(runtime: Runtime): void {
+    runtime.flushSync();
+  }
+
+  getCurrentMode(): ScheduleMode {
+    return 'sequential';
+  }
+
   getCurrentPriority(): TaskPriority {
     return 'user-blocking';
   }
@@ -55,20 +63,6 @@ export class MockBackend implements RuntimeBackend {
     _options?: RequestCallbackOptions,
   ): Promise<void> {
     return Promise.resolve().then(callback);
-  }
-
-  requestUpdate(
-    callback: (flushUpdate: (runtime: Runtime) => void) => void,
-    options: ScheduleOptions,
-  ): Promise<void> {
-    if (options.mode === 'prioritized') {
-      return Promise.resolve().then(() => {
-        return callback(flushUpdate);
-      });
-    } else {
-      callback(flushUpdate);
-      return Promise.resolve();
-    }
   }
 
   resolvePrimitive(_value: unknown, _part: Part): Primitive<unknown> {
@@ -423,12 +417,6 @@ export class MockTemplateFactory implements TemplateFactory {
   ): Template<readonly unknown[]> {
     return new MockTemplate(strings, binds, placeholder, mode);
   }
-}
-
-function flushUpdate(runtime: Runtime): Promise<void> {
-  return Promise.resolve().then(() => {
-    runtime.flushSync();
-  });
 }
 
 function stringify(value: unknown): string {

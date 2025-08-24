@@ -7,7 +7,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type ScheduleOptions,
+  type ScheduleMode,
   type SlotType,
   type TemplateFactory,
 } from '../internal.js';
@@ -38,6 +38,14 @@ export class BrowserBackend implements RuntimeBackend {
     for (let i = 0, l = effects.length; i < l; i++) {
       effects[i]!.commit();
     }
+  }
+
+  flushUpdate(runtime: Runtime): void {
+    runtime.flushAsync();
+  }
+
+  getCurrentMode(): ScheduleMode {
+    return 'prioritized';
   }
 
   getCurrentPriority(): TaskPriority {
@@ -82,17 +90,6 @@ export class BrowserBackend implements RuntimeBackend {
             setTimeout(resolve);
         }
       }).then(callback);
-    }
-  }
-
-  requestUpdate(
-    callback: (flushUpdate: (runtime: Runtime) => void) => void,
-    options: ScheduleOptions,
-  ): Promise<void> {
-    if (options.mode === 'sequential') {
-      return Promise.resolve().then(() => callback(flushUpdate));
-    } else {
-      return this.requestCallback(() => callback(flushUpdate), options);
     }
   }
 
@@ -153,10 +150,6 @@ export class BrowserBackend implements RuntimeBackend {
       });
     }
   }
-}
-
-function flushUpdate(runtime: Runtime): Promise<void> {
-  return runtime.flushAsync();
 }
 
 function isContinuousEvent(event: Event): boolean {

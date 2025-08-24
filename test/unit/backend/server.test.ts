@@ -47,6 +47,13 @@ describe('ServerBackend', () => {
     });
   });
 
+  describe('getCurrentMode()', () => {
+    it('always returns "sequential"', () => {
+      const backend = new ServerBackend(document);
+      expect(backend.getCurrentMode()).toBe('sequential');
+    });
+  });
+
   describe('getCurrentPriority()', () => {
     it('always returns "user-blocking"', () => {
       const backend = new ServerBackend(document);
@@ -61,6 +68,19 @@ describe('ServerBackend', () => {
       expect(backend.getTemplateFactory()).toBeInstanceOf(
         OptimizedTemplateFactory,
       );
+    });
+  });
+
+  describe('flushUpdate()', () => {
+    it('flush updates synchronously', async () => {
+      const backend = new ServerBackend(document);
+      const runtime = new Runtime(backend);
+
+      const flushSyncSpy = vi.spyOn(runtime, 'flushSync');
+
+      backend.flushUpdate(runtime);
+
+      expect(flushSyncSpy).toHaveBeenCalledOnce();
     });
   });
 
@@ -95,42 +115,6 @@ describe('ServerBackend', () => {
         expect(setTimeoutSpy).toHaveBeenCalledWith(expect.any(Function));
       },
     );
-  });
-
-  describe('requestUpdate()', () => {
-    it('schedules updates synchronously', async () => {
-      const backend = new ServerBackend(document);
-      const runtime = new Runtime(backend);
-
-      const flushAsyncSpy = vi
-        .spyOn(runtime, 'flushSync')
-        .mockImplementation(() => {
-          return Promise.resolve();
-        });
-
-      await backend.requestUpdate(
-        async (flushUpdate) => flushUpdate(runtime),
-        {},
-      );
-
-      expect(flushAsyncSpy).toHaveBeenCalledOnce();
-    });
-
-    it('handles an error that occurs during flushing', async () => {
-      const backend = new ServerBackend(document);
-      const runtime = new Runtime(backend);
-
-      const flushAsyncSpy = vi
-        .spyOn(runtime, 'flushSync')
-        .mockImplementation(() => {
-          throw new Error();
-        });
-
-      await expect(
-        backend.requestUpdate(async (flushUpdate) => flushUpdate(runtime), {}),
-      ).rejects.toThrow();
-      expect(flushAsyncSpy).toHaveBeenCalledOnce();
-    });
   });
 
   describe('resolvePrimitive()', () => {

@@ -7,7 +7,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type ScheduleOptions,
+  type ScheduleMode,
   type SlotType,
   type TemplateFactory,
 } from '../internal.js';
@@ -40,6 +40,14 @@ export class ServerBackend implements RuntimeBackend {
     }
   }
 
+  flushUpdate(runtime: Runtime): void {
+    runtime.flushSync();
+  }
+
+  getCurrentMode(): ScheduleMode {
+    return 'sequential';
+  }
+
   getCurrentPriority(): TaskPriority {
     return 'user-blocking';
   }
@@ -55,13 +63,6 @@ export class ServerBackend implements RuntimeBackend {
     return new Promise((resolve) => {
       setTimeout(resolve);
     }).then(callback);
-  }
-
-  requestUpdate(
-    callback: (flushUpdate: (runtime: Runtime) => void) => void,
-    _options: ScheduleOptions,
-  ): Promise<void> {
-    return Promise.resolve().then(() => callback(flushUpdate));
   }
 
   resolvePrimitive(value: unknown, part: Part): Primitive<unknown> {
@@ -111,8 +112,4 @@ export class ServerBackend implements RuntimeBackend {
       setTimeout(resolve);
     });
   }
-}
-
-function flushUpdate(runtime: Runtime): void {
-  runtime.flushSync();
 }

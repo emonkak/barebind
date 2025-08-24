@@ -329,7 +329,7 @@ export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
 
-export type ScheduleMode = 'auto' | 'prioritized' | 'sequential';
+export type ScheduleMode = 'prioritized' | 'sequential';
 
 export interface ScheduleOptions {
   mode?: ScheduleMode;

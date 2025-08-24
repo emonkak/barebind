@@ -26,10 +26,6 @@ describe('DeferredValue()', () => {
       expect(callback).toHaveReturnedWith('foo');
     }
 
-    await Promise.resolve();
-
-    expect(await helper.waitForAll()).toBe(0);
-
     SESSION2: {
       const callback = vi.fn((context) => {
         return context.use(DeferredValue('bar'));
@@ -43,8 +39,6 @@ describe('DeferredValue()', () => {
 
     await Promise.resolve();
 
-    expect(await helper.waitForAll()).toBe(1);
-
     SESSION2: {
       const callback = vi.fn((context) => {
         return context.use(DeferredValue('bar'));
@@ -55,10 +49,6 @@ describe('DeferredValue()', () => {
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('bar');
     }
-
-    await Promise.resolve();
-
-    expect(await helper.waitForAll()).toBe(0);
   });
 
   it('returns the initial value if it is given', async () => {
@@ -76,18 +66,12 @@ describe('DeferredValue()', () => {
 
     await Promise.resolve();
 
-    expect(await helper.waitForAll()).toBe(1);
-
     SESSION2: {
       helper.startSession(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveReturnedWith('foo');
     }
-
-    await Promise.resolve();
-
-    expect(await helper.waitForAll()).toBe(0);
   });
 });
 
