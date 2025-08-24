@@ -2,7 +2,7 @@ interface OwnedNode<T> {
   value: T;
   prev: OwnedNode<T> | null;
   next: OwnedNode<T> | null;
-  ownership: Symbol | null;
+  ownership: symbol | null;
 }
 
 export namespace LinkedList {
@@ -10,7 +10,7 @@ export namespace LinkedList {
     readonly value: T;
     readonly prev: Node<T> | null;
     readonly next: Node<T> | null;
-    readonly ownership: Symbol | null;
+    readonly ownership: symbol | null;
   }
 }
 
@@ -129,7 +129,7 @@ export class LinkedList<T> implements Iterable<T> {
 
 function isOwnedNode<T>(
   node: LinkedList.Node<T>,
-  ownership: Symbol,
+  ownership: symbol,
 ): node is OwnedNode<T> {
   return node.ownership === ownership;
 }
