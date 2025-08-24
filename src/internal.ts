@@ -86,10 +86,6 @@ export interface Effect {
   commit(): void;
 }
 
-export type HydrationTree = TreeWalker;
-
-export class HydrationError extends Error {}
-
 export type Hook =
   | Hook.FinalizerHook
   | Hook.EffectHook
@@ -187,6 +183,10 @@ export const HookType = {
 } as const;
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
+
+export class HydrationError extends Error {}
+
+export type HydrationTree = TreeWalker;
 
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
