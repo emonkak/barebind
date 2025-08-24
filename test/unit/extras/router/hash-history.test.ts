@@ -3,7 +3,10 @@ import {
   createHashClickHandler,
   HashHistory,
 } from '@/extras/router/hash-history.js';
-import { CurrentHistory } from '@/extras/router/history.js';
+import {
+  CurrentHistory,
+  type HistoryNavigator,
+} from '@/extras/router/history.js';
 import { RelativeURL } from '@/extras/router/url.js';
 import type { RenderContext } from '@/internal.js';
 import { createElement, RenderHelper } from '../../../test-helpers.js';
@@ -51,24 +54,37 @@ describe('HashHistory()', () => {
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator1] = helper.startSession(callback);
+      let stableNavigator: HistoryNavigator;
 
-      navigator1.navigate('/articles/foo%2Fbar');
+      SESSION1: {
+        const [location, navigator] = helper.startSession(callback);
+
+        expect(location.url.toString()).toBe('/');
+        expect(location.state).toBe(originalState);
+        expect(location.navigationType).toBe(null);
+
+        stableNavigator = navigator;
+      }
+
+      stableNavigator.navigate('/articles/foo%2Fbar');
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
         mode: 'sequential',
         viewTransition: true,
       });
 
-      const [location2, navigator2] = helper.startSession(callback);
+      SESSION2: {
+        const [location, navigator] = helper.startSession(callback);
 
-      expect(pushStateSpy).toHaveBeenCalledOnce();
-      expect(replaceStateSpy).not.toHaveBeenCalled();
-      expect(location2).not.toBe(location1);
-      expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
-      expect(location2.state).toBe(history.state);
-      expect(location2.navigationType).toBe('push');
-      expect(navigator1).toBe(navigator2);
+        expect(pushStateSpy).toHaveBeenCalledOnce();
+        expect(replaceStateSpy).not.toHaveBeenCalled();
+        expect(location.url.toString()).toBe('/articles/foo%2Fbar');
+        expect(location.state).toBe(history.state);
+        expect(location.navigationType).toBe('push');
+        expect(navigator).toBe(stableNavigator);
+      }
+
+      expect(scheduleUpdateSpy).toHaveBeenCalledTimes(3);
     });
 
     it('replaces with a new location', () => {
@@ -81,9 +97,19 @@ describe('HashHistory()', () => {
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator1] = helper.startSession(callback);
+      let stableNavigator: HistoryNavigator;
 
-      navigator1.navigate('/articles/foo%2Fbar', {
+      SESSION1: {
+        const [location, navigator] = helper.startSession(callback);
+
+        expect(location.url.toString()).toBe('/');
+        expect(location.state).toBe(originalState);
+        expect(location.navigationType).toBe(null);
+
+        stableNavigator = navigator;
+      }
+
+      stableNavigator.navigate('/articles/foo%2Fbar', {
         replace: true,
         state,
       });
@@ -93,15 +119,18 @@ describe('HashHistory()', () => {
         viewTransition: true,
       });
 
-      const [location2, navigator2] = helper.startSession(callback);
+      SESSION2: {
+        const [location, navigator] = helper.startSession(callback);
 
-      expect(pushStateSpy).not.toHaveBeenCalled();
-      expect(replaceStateSpy).toHaveBeenCalledOnce();
-      expect(location2).not.toBe(location1);
-      expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
-      expect(location2.state).toBe(state);
-      expect(location2.navigationType).toBe('replace');
-      expect(navigator1).toBe(navigator2);
+        expect(pushStateSpy).not.toHaveBeenCalled();
+        expect(replaceStateSpy).toHaveBeenCalledOnce();
+        expect(location.url.toString()).toBe('/articles/foo%2Fbar');
+        expect(location.state).toBe(state);
+        expect(location.navigationType).toBe('replace');
+        expect(navigator).toBe(stableNavigator);
+      }
+
+      expect(scheduleUpdateSpy).toHaveBeenCalledTimes(3);
     });
 
     it('waits for navigation transition', async () => {
@@ -112,9 +141,11 @@ describe('HashHistory()', () => {
       navigator.navigate('/articles/foo%2Fbar');
 
       expect(navigator.isTransitionPending()).toBe(true);
+
       expect(await navigator.waitForTransition()).toBe(1);
 
       expect(navigator.isTransitionPending()).toBe(false);
+
       expect(await navigator.waitForTransition()).toBe(0);
     });
   });
@@ -135,9 +166,11 @@ describe('HashHistory()', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    helper.startSession((context) => {
-      context.use(HashHistory());
-    });
+    SESSION: {
+      helper.startSession((context) => {
+        context.use(HashHistory());
+      });
+    }
 
     helper.finalizeHooks();
 
@@ -175,9 +208,11 @@ describe('HashHistory()', () => {
         'removeEventListener',
       );
 
-      helper.startSession((context) => {
-        context.use(HashHistory());
-      });
+      SESSION: {
+        helper.startSession((context) => {
+          context.use(HashHistory());
+        });
+      }
 
       helper.finalizeHooks();
 
@@ -209,9 +244,11 @@ describe('HashHistory()', () => {
       return context.use(HashHistory({ viewTransition: true }));
     };
 
-    const [location1] = helper.startSession(callback);
-
     const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+
+    SESSION1: {
+      helper.startSession(callback);
+    }
 
     const element = createElement('a', { href: '#/articles/foo%2Fbar' });
     document.body.appendChild(element);
@@ -223,14 +260,16 @@ describe('HashHistory()', () => {
       viewTransition: true,
     });
 
-    const [location2] = helper.startSession((context) => {
-      return context.use(HashHistory({ viewTransition: true }));
-    });
+    SESSION2: {
+      const [location] = helper.startSession((context) => {
+        return context.use(HashHistory({ viewTransition: true }));
+      });
+      expect(location.url.toString()).toBe('/articles/foo%2Fbar');
+      expect(location.state).toBe(null);
+      expect(location.navigationType).toBe('push');
+    }
 
-    expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
-    expect(location2.state).toBe(null);
-    expect(location2.navigationType).toBe('push');
+    expect(scheduleUpdateSpy).toHaveBeenCalledTimes(3);
   });
 
   it.runIf(typeof navigation === 'object')(
@@ -240,9 +279,11 @@ describe('HashHistory()', () => {
         return context.use(HashHistory({ viewTransition: true }));
       };
 
-      const [location1] = helper.startSession(callback);
-
       const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+
+      SESSION1: {
+        helper.startSession(callback);
+      }
 
       navigation!.dispatchEvent(
         Object.assign(new Event('navigate'), {
@@ -253,6 +294,7 @@ describe('HashHistory()', () => {
               return null;
             },
           },
+          navigationType: 'push',
         } as NavigateEventInit),
       );
 
@@ -261,10 +303,17 @@ describe('HashHistory()', () => {
         viewTransition: true,
       });
 
-      const [location2] = helper.startSession(callback);
+      SESSION2: {
+        const [location] = helper.startSession((context) => {
+          return context.use(HashHistory({ viewTransition: true }));
+        });
 
-      expect(location2).not.toBe(location1);
-      expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
+        expect(location.url.toString()).toBe('/articles/foo%2Fbar');
+        expect(location.state).toBe(null);
+        expect(location.navigationType).toBe('push');
+      }
+
+      expect(scheduleUpdateSpy).toHaveBeenCalledTimes(3);
     },
   );
 
@@ -277,7 +326,9 @@ describe('HashHistory()', () => {
 
     vi.stubGlobal('navigation', undefined);
 
-    const [location1] = helper.startSession(callback);
+    SESSION1: {
+      helper.startSession(callback);
+    }
 
     dispatchEvent(
       new HashChangeEvent('hashchange', {
@@ -291,10 +342,15 @@ describe('HashHistory()', () => {
       viewTransition: true,
     });
 
-    const [location2] = helper.startSession(callback);
+    SESSION2: {
+      const [location] = helper.startSession(callback);
 
-    expect(location2).not.toBe(location1);
-    expect(location2.url.toString()).toBe('/articles/foo%2Fbar');
+      expect(location.url.toString()).toBe('/articles/foo%2Fbar');
+      expect(location.state).toBe(null);
+      expect(location.navigationType).toBe('traverse');
+    }
+
+    expect(scheduleUpdateSpy).toHaveBeenCalledTimes(3);
   });
 });
 
