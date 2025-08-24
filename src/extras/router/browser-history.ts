@@ -10,6 +10,10 @@ import {
 } from './history.js';
 import { RelativeURL } from './url.js';
 
+const DEFAULT_OPTIONS: ScheduleOptions = {
+  mode: 'sequential',
+};
+
 export function BrowserHistory(
   options?: ScheduleOptions,
 ): CustomHookFunction<readonly [HistoryLocation, HistoryNavigator]> {
@@ -31,7 +35,7 @@ export function BrowserHistory(
               state,
               navigationType: replace ? 'replace' : 'push',
             },
-            { mode: 'sequential', ...options },
+            { ...DEFAULT_OPTIONS, ...options },
           );
 
           if (replace) {
@@ -65,7 +69,7 @@ export function BrowserHistory(
                 state: event.destination.getState(),
                 navigationType: 'traverse',
               },
-              { mode: 'sequential', ...options },
+              { ...DEFAULT_OPTIONS, ...options },
             );
           }
         };
@@ -97,7 +101,7 @@ export function BrowserHistory(
               state: event.state,
               navigationType: 'traverse',
             },
-            { mode: 'sequential', ...options },
+            { ...DEFAULT_OPTIONS, ...options },
           );
         };
 
