@@ -1,7 +1,7 @@
 /// <reference types="navigation-api-types" />
 
 import type { CustomHookFunction, HookContext } from '../../internal.js';
-import { CurrentHistory, trimHash } from './history.js';
+import { CurrentHistory, truncateHashMark } from './history.js';
 
 export function ScrollRestration(): CustomHookFunction<void> {
   return (context: HookContext) => {
@@ -53,7 +53,7 @@ export function ScrollRestration(): CustomHookFunction<void> {
 
 function resetScrollPosition(hash: string): void {
   if (hash !== '') {
-    const id = trimHash(hash);
+    const id = truncateHashMark(hash);
     const element = document.getElementById(id);
 
     if (element !== null) {
