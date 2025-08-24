@@ -66,10 +66,6 @@ export class RenderHelper {
     }
     return this.coroutine.returnValue!;
   }
-
-  async waitForAll(): Promise<number> {
-    return waitForAll(this.runtime);
-  }
 }
 
 export class UpdateHelper {
@@ -92,10 +88,6 @@ export class UpdateHelper {
       throw coroutine.thrownError;
     }
     return coroutine.returnValue!;
-  }
-
-  async waitForAll(): Promise<number> {
-    return waitForAll(this.runtime);
   }
 }
 
@@ -243,12 +235,4 @@ export function templateLiteral(
   ...values: readonly unknown[]
 ): { strings: TemplateStringsArray; values: readonly unknown[] } {
   return { strings, values };
-}
-
-async function waitForAll(runtime: Runtime): Promise<number> {
-  const promises = Array.from(
-    runtime.getPendingTasks(),
-    (pendingTask) => pendingTask.continuation.promise,
-  );
-  return (await Promise.allSettled(promises)).length;
 }

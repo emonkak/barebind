@@ -143,7 +143,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   private _subscribeSignal(context: UpdateContext): Subscription {
     const { runtime } = context;
     return this._signal.subscribe(() => {
-      runtime.scheduleUpdate(this, { immediate: true });
+      runtime.scheduleUpdate(this);
     });
   }
 }
@@ -157,18 +157,18 @@ export abstract class Signal<T>
 
   [$customHook](context: HookContext): T {
     const value = this.value;
-    const snapshot = context.useMemo(() => ({ value }), []);
+    const snapshot = context.useRef(value);
 
     context.useLayoutEffect(() => {
-      snapshot.value = value;
+      snapshot.current = value;
     }, [value]);
 
     context.useEffect(() => {
       // The guard for batch updates with microtasks.
       let guard = true;
       const checkForChanges = () => {
-        if (!Object.is(this.value, snapshot.value)) {
-          context.forceUpdate({ immediate: true });
+        if (!Object.is(this.value, snapshot.current)) {
+          context.forceUpdate();
         }
         guard = false;
       };

@@ -115,7 +115,8 @@ describe('SiganlBinding', () => {
         Lanes.DefaultLane | Lanes.UserBlockingLane,
       );
 
-      expect(await helper.waitForAll()).toBe(1);
+      await Promise.resolve(); // wait dirty checking
+      await Promise.resolve(); // wait scheduling
 
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(container.innerHTML).toBe('bar');
@@ -184,7 +185,8 @@ describe('SiganlBinding', () => {
         Lanes.DefaultLane | Lanes.UserBlockingLane,
       );
 
-      expect(await helper.waitForAll()).toBe(1);
+      await Promise.resolve(); // wait dirty checking
+      await Promise.resolve(); // wait scheduling
 
       expect(binding.pendingLanes).toBe(Lanes.NoLanes);
       expect(part.node.nodeValue).toBe(signal.value);
@@ -228,8 +230,8 @@ describe('SiganlBinding', () => {
       signal1.value = 'baz';
       signal2.value = 'qux';
 
-      await Promise.resolve();
-      await helper.waitForAll();
+      await Promise.resolve(); // wait dirty checking
+      await Promise.resolve(); // wait scheduling
 
       expect(part.node.nodeValue).toBe('qux');
     });
@@ -271,7 +273,9 @@ describe('SiganlBinding', () => {
 
       signal.value = 'bar';
 
-      expect(await helper.waitForAll()).toBe(0);
+      await Promise.resolve(); // wait dirty checking
+      await Promise.resolve(); // wait scheduling
+
       expect(part.node.nodeValue).toBe('');
     });
   });
@@ -296,31 +300,29 @@ describe('Signal', () => {
       SESSION1: {
         helper.startSession(callback);
 
-        await Promise.resolve();
-
-        expect(await helper.waitForAll()).toBe(1);
-
-        expect(callback).toHaveBeenCalledTimes(2);
-        expect(callback).toHaveNthReturnedWith(1, 'foo');
-        expect(callback).toHaveNthReturnedWith(2, 'baz');
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveLastReturnedWith('foo');
       }
+
+      await Promise.resolve(); // wait dirty checking
+      await Promise.resolve(); // wait scheduling
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveLastReturnedWith('baz');
 
       signal.value = 'qux';
 
-      await Promise.resolve();
+      await Promise.resolve(); // wait dirty checking
+      await Promise.resolve(); // wait scheduling
 
-      SESSION2: {
-        helper.startSession(callback);
-
-        expect(callback).toHaveBeenCalledTimes(3);
-        expect(callback).toHaveNthReturnedWith(3, 'qux');
-      }
+      expect(callback).toHaveBeenCalledTimes(3);
+      expect(callback).toHaveLastReturnedWith('qux');
 
       helper.finalizeHooks();
 
-      signal.value = 'baz';
+      signal.value = 'quux';
 
-      expect(await helper.waitForAll()).toBe(0);
+      expect(callback).toHaveBeenCalledTimes(3);
     });
   });
 
