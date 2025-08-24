@@ -4,6 +4,7 @@ import {
   type Effect,
   Lanes,
   PartType,
+  type ScheduleOptions,
   type Slot,
 } from './internal.js';
 import {
@@ -11,6 +12,10 @@ import {
   type RuntimeBackend,
   type RuntimeObserver,
 } from './runtime.js';
+
+const DEFAULT_OPTIONS: ScheduleOptions = {
+  immediate: true,
+};
 
 export class Root<T> {
   private readonly _slot: Slot<T>;
@@ -45,7 +50,7 @@ export class Root<T> {
     return this._runtime.addObserver(observer);
   }
 
-  hydrate(): Promise<void> {
+  hydrate(options?: ScheduleOptions): Promise<void> {
     const coroutine: Coroutine = {
       resume: (context) => {
         const target = createHydrationTree(this._container);
@@ -58,10 +63,13 @@ export class Root<T> {
       },
       pendingLanes: Lanes.DefaultLane,
     };
-    return this._runtime.scheduleUpdate(coroutine).finished;
+    return this._runtime.scheduleUpdate(coroutine, {
+      ...DEFAULT_OPTIONS,
+      ...options,
+    }).finished;
   }
 
-  mount(): Promise<void> {
+  mount(options?: ScheduleOptions): Promise<void> {
     const coroutine: Coroutine = {
       resume: (context) => {
         this._slot.connect(context);
@@ -72,10 +80,13 @@ export class Root<T> {
       },
       pendingLanes: Lanes.DefaultLane,
     };
-    return this._runtime.scheduleUpdate(coroutine).finished;
+    return this._runtime.scheduleUpdate(coroutine, {
+      ...DEFAULT_OPTIONS,
+      ...options,
+    }).finished;
   }
 
-  update(value: T): Promise<void> {
+  update(value: T, options?: ScheduleOptions): Promise<void> {
     const coroutine: Coroutine = {
       resume: (context) => {
         this._slot.reconcile(value, context);
@@ -84,10 +95,13 @@ export class Root<T> {
       },
       pendingLanes: Lanes.DefaultLane,
     };
-    return this._runtime.scheduleUpdate(coroutine).finished;
+    return this._runtime.scheduleUpdate(coroutine, {
+      ...DEFAULT_OPTIONS,
+      ...options,
+    }).finished;
   }
 
-  unmount(): Promise<void> {
+  unmount(options?: ScheduleOptions): Promise<void> {
     const coroutine: Coroutine = {
       resume: (context) => {
         this._slot.disconnect(context);
@@ -98,7 +112,10 @@ export class Root<T> {
       },
       pendingLanes: Lanes.DefaultLane,
     };
-    return this._runtime.scheduleUpdate(coroutine).finished;
+    return this._runtime.scheduleUpdate(coroutine, {
+      ...DEFAULT_OPTIONS,
+      ...options,
+    }).finished;
   }
 }
 
