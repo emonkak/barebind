@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { LinkedList } from '@/collections/linked-list.js';
 import {
   DeferredValue,
-  EffectEvent,
+  EventCallback,
   LocalAtom,
   LocalComputed,
   SyncEnternalStore,
@@ -140,7 +140,7 @@ describe('LocalComputed()', () => {
   });
 });
 
-describe('useEffectEvent()', () => {
+describe('useEventCallback()', () => {
   it('returns a stable callback', () => {
     const helper = new RenderHelper();
 
@@ -150,7 +150,7 @@ describe('useEffectEvent()', () => {
 
     SESSION1: {
       stableCallback = helper.startSession((context) => {
-        const callback = context.use(EffectEvent(callback1));
+        const callback = context.use(EventCallback(callback1));
 
         context.useEffect(() => {
           callback();
@@ -165,7 +165,7 @@ describe('useEffectEvent()', () => {
 
     SESSION1: {
       const callback = helper.startSession((context) => {
-        const callback = context.use(EffectEvent(callback2));
+        const callback = context.use(EventCallback(callback2));
 
         context.useEffect(() => {
           callback();
