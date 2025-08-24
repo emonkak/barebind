@@ -9,7 +9,7 @@ import {
   isInternalLink,
   truncateHashMark,
 } from './history.js';
-import { RelativeURL } from './url.js';
+import { RelativeURL } from './relative-url.js';
 
 const DEFAULT_OPTIONS: ScheduleOptions = {
   mode: 'sequential',

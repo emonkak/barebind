@@ -1,4 +1,4 @@
-import type { RelativeURL } from './url.js';
+import type { RelativeURL } from './relative-url.js';
 
 export interface Route<
   TResult,

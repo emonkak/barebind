@@ -5,6 +5,7 @@ export {
   type HistoryLocation,
   type HistoryNavigator,
 } from './router/history.js';
+export { RelativeURL } from './router/relative-url.js';
 export {
   type Handler,
   integer,
@@ -17,4 +18,3 @@ export {
   wildcard,
 } from './router/router.js';
 export { ScrollRestration } from './router/scroll-restration.js';
-export { RelativeURL } from './router/url.js';

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-
+import { RelativeURL } from '@/extras/router/relative-url.js';
 import {
   integer,
   Router,
@@ -7,7 +7,6 @@ import {
   route,
   wildcard,
 } from '@/extras/router/router.js';
-import { RelativeURL } from '@/extras/router/url.js';
 
 describe('Router', () => {
   const basicRouter = new Router([

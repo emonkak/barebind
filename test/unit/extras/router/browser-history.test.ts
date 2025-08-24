@@ -8,7 +8,7 @@ import {
   CurrentHistory,
   type HistoryNavigator,
 } from '@/extras/router/history.js';
-import { RelativeURL } from '@/extras/router/url.js';
+import { RelativeURL } from '@/extras/router/relative-url.js';
 import type { RenderContext } from '@/internal.js';
 import { createElement, RenderHelper } from '../../../test-helpers.js';
 
