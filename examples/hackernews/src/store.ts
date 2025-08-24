@@ -77,9 +77,9 @@ export interface UserState {
 
 export class AppStore implements CustomHookObject<void> {
   static [$customHook](context: HookContext): AppStore {
-    const state = context.getContextValue(this);
-    if (!(state instanceof this)) {
-      throw new Error(`${this.name} is not registered in this context.`);
+    const state = context.getContextValue(AppStore);
+    if (!(state instanceof AppStore)) {
+      throw new Error(`${AppStore.name} is not registered in this context.`);
     }
     return state;
   }

@@ -14,7 +14,6 @@
     "rules": {
       "complexity": {
         "noBannedTypes": "off",
-        "noThisInStatic": "off",
         "useLiteralKeys": "off"
       },
       "correctness": {
