@@ -8,7 +8,7 @@ import { ScrollRestration } from '@/extras/router/scroll-restration.js';
 import { RelativeURL } from '@/extras/router/url.js';
 import { createElement, RenderHelper } from '../../../test-helpers.js';
 
-describe('ScrollRestration', () => {
+describe('ScrollRestration()', () => {
   let helper!: RenderHelper;
 
   beforeEach(() => {
@@ -35,7 +35,7 @@ describe('ScrollRestration', () => {
 
       helper.startSession((context) => {
         context.setContextValue(CurrentHistory, [location, navigator]);
-        context.use(ScrollRestration);
+        context.use(ScrollRestration());
       });
 
       expect(scrollToSpy).toHaveBeenCalled();
@@ -57,7 +57,7 @@ describe('ScrollRestration', () => {
 
       helper.startSession((context) => {
         context.setContextValue(CurrentHistory, [location, navigator]);
-        context.use(ScrollRestration);
+        context.use(ScrollRestration());
       });
 
       expect(scrollToSpy).not.toHaveBeenCalled();
@@ -81,7 +81,7 @@ describe('ScrollRestration', () => {
 
     helper.startSession((context) => {
       context.setContextValue(CurrentHistory, [location, navigator]);
-      context.use(ScrollRestration);
+      context.use(ScrollRestration());
     });
 
     document.body.removeChild(element);
@@ -101,7 +101,7 @@ describe('ScrollRestration', () => {
 
     helper.startSession((context) => {
       context.setContextValue(CurrentHistory, [location, navigator]);
-      context.use(ScrollRestration);
+      context.use(ScrollRestration());
     });
 
     expect(scrollToSpy).toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe('ScrollRestration', () => {
 
       helper.startSession((context) => {
         context.setContextValue(CurrentHistory, [location, navigator]);
-        context.use(ScrollRestration);
+        context.use(ScrollRestration());
       });
 
       helper.finalizeHooks();
@@ -164,7 +164,7 @@ describe('ScrollRestration', () => {
 
       helper.startSession((context) => {
         context.setContextValue(CurrentHistory, [location, navigator]);
-        context.use(ScrollRestration);
+        context.use(ScrollRestration());
       });
 
       navigation!.dispatchEvent(event);
@@ -200,7 +200,7 @@ describe('ScrollRestration', () => {
 
       helper.startSession((context) => {
         context.setContextValue(CurrentHistory, [location, navigator]);
-        context.use(ScrollRestration);
+        context.use(ScrollRestration());
       });
 
       navigation!.dispatchEvent(event);
@@ -226,7 +226,7 @@ describe('ScrollRestration', () => {
 
     helper.startSession((context) => {
       context.setContextValue(CurrentHistory, [location, navigator]);
-      context.use(ScrollRestration);
+      context.use(ScrollRestration());
     });
 
     expect(history.scrollRestoration).toBe('auto');

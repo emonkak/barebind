@@ -14,14 +14,14 @@ export const App = createComponent(function App(
   { store }: AppProps,
   $: RenderContext,
 ): unknown {
-  const [location] = $.use(HashHistory);
+  const [location] = $.use(HashHistory({ viewTransition: true }));
   const page =
     router.handle(location.url, location.state) ??
     NotFound({ url: location.url });
 
   $.use(store);
 
-  $.use(ScrollRestration);
+  $.use(ScrollRestration());
 
   return $.html`
     <header class="header">

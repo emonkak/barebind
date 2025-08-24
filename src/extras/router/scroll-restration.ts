@@ -1,52 +1,54 @@
 /// <reference types="navigation-api-types" />
 
-import type { HookContext } from '../../internal.js';
+import type { CustomHookFunction, HookContext } from '../../internal.js';
 import { CurrentHistory, trimHash } from './history.js';
 
-export function ScrollRestration(context: HookContext): void {
-  const [location, navigator] = context.use(CurrentHistory);
+export function ScrollRestration(): CustomHookFunction<void> {
+  return (context: HookContext) => {
+    const [location, navigator] = context.use(CurrentHistory);
 
-  context.useLayoutEffect(() => {
-    const originalScrollRestoration = history.scrollRestoration;
+    context.useLayoutEffect(() => {
+      const originalScrollRestoration = history.scrollRestoration;
 
-    if (typeof navigation === 'object') {
-      const handleNavigate = (event: NavigateEvent) => {
-        if (!event.canIntercept || !navigator.isTransitionPending()) {
-          return;
-        }
+      if (typeof navigation === 'object') {
+        const handleNavigate = (event: NavigateEvent) => {
+          if (!event.canIntercept || !navigator.isTransitionPending()) {
+            return;
+          }
 
-        event.intercept({
-          async handler() {
-            await navigator.waitForTransition();
-            event.scroll();
-          },
-        });
-      };
+          event.intercept({
+            async handler() {
+              await navigator.waitForTransition();
+              event.scroll();
+            },
+          });
+        };
 
-      history.scrollRestoration = 'manual';
-      navigation.addEventListener('navigate', handleNavigate);
+        history.scrollRestoration = 'manual';
+        navigation.addEventListener('navigate', handleNavigate);
 
-      return () => {
-        history.scrollRestoration = originalScrollRestoration;
-        navigation.removeEventListener('navigate', handleNavigate);
-      };
-    } else {
-      history.scrollRestoration = 'auto';
+        return () => {
+          history.scrollRestoration = originalScrollRestoration;
+          navigation.removeEventListener('navigate', handleNavigate);
+        };
+      } else {
+        history.scrollRestoration = 'auto';
 
-      return () => {
-        history.scrollRestoration = originalScrollRestoration;
-      };
-    }
-  }, []);
+        return () => {
+          history.scrollRestoration = originalScrollRestoration;
+        };
+      }
+    }, []);
 
-  context.useLayoutEffect(() => {
-    if (
-      location.navigationType === 'push' ||
-      location.navigationType === 'replace'
-    ) {
-      resetScrollPosition(location.url.hash);
-    }
-  }, [location]);
+    context.useLayoutEffect(() => {
+      if (
+        location.navigationType === 'push' ||
+        location.navigationType === 'replace'
+      ) {
+        resetScrollPosition(location.url.hash);
+      }
+    }, [location]);
+  };
 }
 
 function resetScrollPosition(hash: string): void {

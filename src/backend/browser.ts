@@ -138,7 +138,7 @@ export class BrowserBackend implements RuntimeBackend {
 
   startViewTransition(callback: () => Promise<void> | void): Promise<void> {
     if (typeof document.startViewTransition === 'function') {
-      return document.startViewTransition(callback).finished;
+      return document.startViewTransition(callback).ready;
     } else {
       return Promise.resolve().then(callback);
     }

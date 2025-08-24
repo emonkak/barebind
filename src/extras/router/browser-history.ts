@@ -1,6 +1,6 @@
 /// <reference types="navigation-api-types" />
 
-import type { HookContext } from '../../internal.js';
+import type { CustomHookFunction, ScheduleOptions } from '../../internal.js';
 import {
   anyModifiersArePressed,
   CurrentHistory,
@@ -11,32 +11,28 @@ import {
 import { RelativeURL } from './url.js';
 
 export function BrowserHistory(
-  context: HookContext,
-): readonly [HistoryLocation, HistoryNavigator] {
-  const historyState = context.useMemo<{
-    location: HistoryLocation;
-    navigator: HistoryNavigator;
-    setLocation: (newLocation: HistoryLocation) => void;
-  }>(() => {
-    const setLocation = (newLocation: HistoryLocation) => {
-      historyState.location = newLocation;
-      context.forceUpdate({ mode: 'sequential' });
-    };
-    return {
-      location: {
-        url: RelativeURL.fromURL(window.location),
-        state: history.state,
-        navigationType: null,
-      },
-      navigator: {
+  options?: ScheduleOptions,
+): CustomHookFunction<readonly [HistoryLocation, HistoryNavigator]> {
+  return (context) => {
+    const [location, setLocation] = context.useState<HistoryLocation>(() => ({
+      url: RelativeURL.fromURL(window.location),
+      state: history.state,
+      navigationType: null,
+    }));
+
+    const navigator = context.useMemo<HistoryNavigator>(
+      () => ({
         getCurrentURL: () => RelativeURL.fromURL(window.location),
         isTransitionPending: () => context.isUpdatePending(),
         navigate: (url, { replace = false, state = null } = {}) => {
-          setLocation({
-            url: RelativeURL.from(url),
-            state,
-            navigationType: replace ? 'replace' : 'push',
-          });
+          setLocation(
+            {
+              url: RelativeURL.from(url),
+              state,
+              navigationType: replace ? 'replace' : 'push',
+            },
+            { mode: 'sequential', ...options },
+          );
 
           if (replace) {
             history.replaceState(state, '', url.toString());
@@ -47,79 +43,82 @@ export function BrowserHistory(
         async waitForTransition(): Promise<number> {
           return context.waitForUpdate();
         },
-      },
-      setLocation,
-    };
-  }, []);
+      }),
+      [],
+    );
 
-  context.useLayoutEffect(() => {
-    const handleClick = createLinkClickHandler(historyState.navigator);
-    const handleSubmit = createFormSubmitHandler(historyState.navigator);
+    context.useLayoutEffect(() => {
+      const handleClick = createLinkClickHandler(navigator);
+      const handleSubmit = createFormSubmitHandler(navigator);
 
-    if (typeof navigation === 'object') {
-      const handleNavigate = (event: NavigateEvent) => {
-        if (!event.hashChange) {
-          // Ignore an event when the hash has only changed.
-          return;
-        }
+      if (typeof navigation === 'object') {
+        const handleNavigate = (event: NavigateEvent) => {
+          if (!event.hashChange) {
+            // Ignore an event when the hash has only changed.
+            return;
+          }
 
-        if (event.navigationType === 'traverse') {
-          historyState.setLocation({
-            url: RelativeURL.fromString(event.destination.url),
-            state: event.destination.getState(),
-            navigationType: 'traverse',
-          });
-        }
-      };
+          if (event.navigationType === 'traverse') {
+            setLocation(
+              {
+                url: RelativeURL.fromString(event.destination.url),
+                state: event.destination.getState(),
+                navigationType: 'traverse',
+              },
+              { mode: 'sequential', ...options },
+            );
+          }
+        };
 
-      addEventListener('click', handleClick);
-      addEventListener('submit', handleSubmit);
-      navigation.addEventListener('navigate', handleNavigate);
+        addEventListener('click', handleClick);
+        addEventListener('submit', handleSubmit);
+        navigation.addEventListener('navigate', handleNavigate);
 
-      return () => {
-        removeEventListener('click', handleClick);
-        removeEventListener('submit', handleSubmit);
-        navigation.removeEventListener('navigate', handleNavigate);
-      };
-    } else {
-      const handlePopState = (event: PopStateEvent) => {
-        const { url } = historyState.location;
+        return () => {
+          removeEventListener('click', handleClick);
+          removeEventListener('submit', handleSubmit);
+          navigation.removeEventListener('navigate', handleNavigate);
+        };
+      } else {
+        const handlePopState = (event: PopStateEvent) => {
+          const { url } = location;
 
-        if (
-          url.pathname === window.location.pathname &&
-          url.search === window.location.search
-        ) {
-          // Ignore an event when the hash has only changed.
-          return;
-        }
+          if (
+            url.pathname === window.location.pathname &&
+            url.search === window.location.search
+          ) {
+            // Ignore an event when the hash has only changed.
+            return;
+          }
 
-        historyState.setLocation({
-          url: RelativeURL.fromURL(window.location),
-          state: event.state,
-          navigationType: 'traverse',
-        });
-      };
+          setLocation(
+            {
+              url: RelativeURL.fromURL(window.location),
+              state: event.state,
+              navigationType: 'traverse',
+            },
+            { mode: 'sequential', ...options },
+          );
+        };
 
-      addEventListener('click', handleClick);
-      addEventListener('submit', handleSubmit);
-      addEventListener('popstate', handlePopState);
+        addEventListener('click', handleClick);
+        addEventListener('submit', handleSubmit);
+        addEventListener('popstate', handlePopState);
 
-      return () => {
-        removeEventListener('click', handleClick);
-        removeEventListener('submit', handleSubmit);
-        removeEventListener('popstate', handlePopState);
-      };
-    }
-  }, []);
+        return () => {
+          removeEventListener('click', handleClick);
+          removeEventListener('submit', handleSubmit);
+          removeEventListener('popstate', handlePopState);
+        };
+      }
+    }, []);
 
-  const currentHistory = [
-    historyState.location,
-    historyState.navigator,
-  ] as const;
+    const currentHistory = [location, navigator] as const;
 
-  context.setContextValue(CurrentHistory, currentHistory);
+    context.setContextValue(CurrentHistory, currentHistory);
 
-  return currentHistory;
+    return currentHistory;
+  };
 }
 
 export function createLinkClickHandler({

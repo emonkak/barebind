@@ -5,9 +5,10 @@ import {
   createLinkClickHandler,
 } from '@/extras/router/browser-history.js';
 import { CurrentHistory } from '@/extras/router/history.js';
+import type { RenderContext } from '@/internal.js';
 import { createElement, RenderHelper } from '../../../test-helpers.js';
 
-describe('BrowserHistory', () => {
+describe('BrowserHistory()', () => {
   const originalUrl = location.href;
   const originalState = history.state;
   let helper!: RenderHelper;
@@ -30,7 +31,7 @@ describe('BrowserHistory', () => {
       history.replaceState(state, '', '/foo/bar');
 
       const [location, navigator] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
+        return context.use(BrowserHistory());
       });
 
       expect(location.url.toString()).toBe('/foo/bar');
@@ -43,18 +44,24 @@ describe('BrowserHistory', () => {
     });
 
     it('pushes a new location', () => {
+      const callback = (context: RenderContext) => {
+        return context.use(BrowserHistory({ viewTransition: true }));
+      };
+
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
+      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
 
-      const [location1, navigator1] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
-      });
+      const [location1, navigator1] = helper.startSession(callback);
 
       navigator1.navigate('/articles/456');
 
-      const [location2, navigator2] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
+      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
+        mode: 'sequential',
+        viewTransition: true,
       });
+
+      const [location2, navigator2] = helper.startSession(callback);
 
       expect(pushStateSpy).toHaveBeenCalledOnce();
       expect(replaceStateSpy).not.toHaveBeenCalled();
@@ -68,22 +75,27 @@ describe('BrowserHistory', () => {
 
     it('replaces with a new location', () => {
       const state = { key: 'foo' };
+      const callback = (context: RenderContext) => {
+        return context.use(BrowserHistory({ viewTransition: true }));
+      };
 
+      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
       const pushStateSpy = vi.spyOn(history, 'pushState');
       const replaceStateSpy = vi.spyOn(history, 'replaceState');
 
-      const [location1, navigator1] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
-      });
+      const [location1, navigator1] = helper.startSession(callback);
 
       navigator1.navigate('/foo/bar', {
         replace: true,
         state,
       });
 
-      const [location2, navigator2] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
+      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
+        mode: 'sequential',
+        viewTransition: true,
       });
+
+      const [location2, navigator2] = helper.startSession(callback);
 
       expect(pushStateSpy).not.toHaveBeenCalled();
       expect(replaceStateSpy).toHaveBeenCalledOnce();
@@ -97,7 +109,7 @@ describe('BrowserHistory', () => {
 
     it('waits for navigation transition', async () => {
       const [_location, navigator] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
+        return context.use(BrowserHistory());
       });
 
       navigator.navigate('/articles/foo%2Fbar');
@@ -113,7 +125,7 @@ describe('BrowserHistory', () => {
   it('registers the current history', () => {
     const { browserHistory, currentHistory } = helper.startSession(
       (context) => {
-        const browserHistory = context.use(BrowserHistory);
+        const browserHistory = context.use(BrowserHistory());
         const currentHistory = context.use(CurrentHistory);
         return { browserHistory, currentHistory };
       },
@@ -129,7 +141,7 @@ describe('BrowserHistory', () => {
     vi.stubGlobal('navigation', undefined);
 
     helper.startSession((context) => {
-      context.use(BrowserHistory);
+      context.use(BrowserHistory());
     });
 
     helper.finalizeHooks();
@@ -177,7 +189,7 @@ describe('BrowserHistory', () => {
       );
 
       helper.startSession((context) => {
-        context.use(BrowserHistory);
+        context.use(BrowserHistory());
       });
 
       helper.finalizeHooks();
@@ -214,18 +226,25 @@ describe('BrowserHistory', () => {
   );
 
   it('should update the state when the link is clicked', () => {
-    const [location1] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
-    });
+    const callback = (context: RenderContext) => {
+      return context.use(BrowserHistory({ viewTransition: true }));
+    };
+
+    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+
+    const [location1] = helper.startSession(callback);
 
     const element = createElement('a', { href: '/foo/bar' });
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
 
-    const [location2] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
+    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
+      mode: 'sequential',
+      viewTransition: true,
     });
+
+    const [location2] = helper.startSession(callback);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -233,9 +252,13 @@ describe('BrowserHistory', () => {
   });
 
   it('should update the state when the form is submitted', () => {
-    const [location1] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
-    });
+    const callback = (context: RenderContext) => {
+      return context.use(BrowserHistory({ viewTransition: true }));
+    };
+
+    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+
+    const [location1] = helper.startSession(callback);
 
     const element = createElement('form', {
       method: 'GET',
@@ -250,9 +273,12 @@ describe('BrowserHistory', () => {
     );
     document.body.removeChild(element);
 
-    const [location2] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
+    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
+      mode: 'sequential',
+      viewTransition: true,
     });
+
+    const [location2] = helper.startSession(callback);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -263,10 +289,13 @@ describe('BrowserHistory', () => {
     'should update the location when NavigateEvent is received',
     () => {
       const state = { key: 'foo' };
+      const callback = (context: RenderContext) => {
+        return context.use(BrowserHistory({ viewTransition: true }));
+      };
 
-      const [location1] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
-      });
+      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+
+      const [location1] = helper.startSession(callback);
 
       navigation!.dispatchEvent(
         Object.assign(new Event('navigate'), {
@@ -281,9 +310,12 @@ describe('BrowserHistory', () => {
         } as NavigateEventInit),
       );
 
-      const [location2] = helper.startSession((context) => {
-        return context.use(BrowserHistory);
+      expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
+        mode: 'sequential',
+        viewTransition: true,
       });
+
+      const [location2] = helper.startSession(callback);
 
       expect(location2).not.toBe(location1);
       expect(location2.url.toString()).toBe('/foo/bar');
@@ -294,12 +326,15 @@ describe('BrowserHistory', () => {
 
   it('should update the location when PopStateEvent is received', () => {
     const state = { key: 'foo' };
+    const callback = (context: RenderContext) => {
+      return context.use(BrowserHistory({ viewTransition: true }));
+    };
+
+    const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
 
     vi.stubGlobal('navigation', undefined);
 
-    const [location1] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
-    });
+    const [location1] = helper.startSession(callback);
 
     history.replaceState(state, '', '/foo/bar');
     dispatchEvent(
@@ -308,9 +343,12 @@ describe('BrowserHistory', () => {
       }),
     );
 
-    const [location2] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
+    expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
+      mode: 'sequential',
+      viewTransition: true,
     });
+
+    const [location2] = helper.startSession(callback);
 
     expect(location2).not.toBe(location1);
     expect(location2.url.toString()).toBe('/foo/bar');
@@ -320,19 +358,18 @@ describe('BrowserHistory', () => {
 
   it('should not update the location when only the hash has been changed', () => {
     const state = { key: 'foo' };
+    const callback = (context: RenderContext) => {
+      return context.use(BrowserHistory({ viewTransition: true }));
+    };
 
     vi.stubGlobal('navigation', undefined);
 
-    const [location1] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
-    });
+    const [location1] = helper.startSession(callback);
 
     history.replaceState(state, '', '#foo');
     dispatchEvent(new PopStateEvent('popstate', { state }));
 
-    const [location2] = helper.startSession((context) => {
-      return context.use(BrowserHistory);
-    });
+    const [location2] = helper.startSession(callback);
 
     expect(location1).toBe(location2);
   });
