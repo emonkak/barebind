@@ -180,36 +180,37 @@ interface ListProps {
   onUp: (index: number, isFirst: boolean, isLast: boolean) => void;
 }
 
-const List = createComponent(function List(
-  { items, onUp, onDown, onDelete }: ListProps,
-  $: RenderContext,
-): unknown {
-  const itemsList = $.useMemo(
-    () =>
-      Repeat({
-        source: items,
-        keySelector: (item) => item,
-        valueSelector: (item, index) =>
-          Item({
-            index,
-            isFirst: index === 0,
-            isLast: index + 1 === items.length,
-            label: item,
-            onUp,
-            onDown,
-            onDelete,
-          }),
-      }),
-    [items],
-  );
+const List = createComponent(
+  function List(
+    { items, onUp, onDown, onDelete }: ListProps,
+    $: RenderContext,
+  ): unknown {
+    const itemsList = Repeat({
+      source: items,
+      keySelector: (item) => item,
+      valueSelector: (item, index) =>
+        Item({
+          index,
+          isFirst: index === 0,
+          isLast: index + 1 === items.length,
+          label: item,
+          onUp,
+          onDown,
+          onDelete,
+        }),
+    });
 
-  return $.html`
-    <div class="List">
-      <h1>List</h1>
-      <ol><${itemsList}></ol>
-    </div>
-  `;
-});
+    return $.html`
+      <div class="List">
+        <h1>List</h1>
+        <ol>
+          <${itemsList}>
+        </ol>
+      </div>
+    `;
+  },
+  { shouldSkipUpdate: shallowEqual },
+);
 
 interface ItemProps {
   index: number;
@@ -238,10 +239,10 @@ const Item = createComponent(
 
     return $.html`
       <li>
-        <span>${label}</span>
         <button type="button" disabled=${isFirst} @click=${handleUp}>↑</button>
         <button type="button" disabled=${isLast} @click=${handleDown}>↓</button>
         <button type="button" @click=${handleDelete}>Delete</button>
+        <span>${label}</span>
       </li>
     `;
   },
