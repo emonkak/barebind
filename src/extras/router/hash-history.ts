@@ -12,7 +12,7 @@ import {
 import { RelativeURL } from './relative-url.js';
 
 const DEFAULT_OPTIONS: ScheduleOptions = {
-  mode: 'sequential',
+  immediate: true,
 };
 
 export function HashHistory(

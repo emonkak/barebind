@@ -75,7 +75,7 @@ describe('BrowserHistory()', () => {
       stableNavigator.navigate('/articles/456');
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-        mode: 'sequential',
+        immediate: true,
         viewTransition: true,
       });
 
@@ -124,7 +124,7 @@ describe('BrowserHistory()', () => {
       });
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-        mode: 'sequential',
+        immediate: true,
         viewTransition: true,
       });
 
@@ -281,7 +281,7 @@ describe('BrowserHistory()', () => {
     document.body.removeChild(element);
 
     expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-      mode: 'sequential',
+      immediate: true,
       viewTransition: true,
     });
 
@@ -320,7 +320,7 @@ describe('BrowserHistory()', () => {
     document.body.removeChild(element);
 
     expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-      mode: 'sequential',
+      immediate: true,
       viewTransition: true,
     });
 
@@ -362,7 +362,7 @@ describe('BrowserHistory()', () => {
       );
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-        mode: 'sequential',
+        immediate: true,
         viewTransition: true,
       });
 
@@ -400,7 +400,7 @@ describe('BrowserHistory()', () => {
     );
 
     expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-      mode: 'sequential',
+      immediate: true,
       viewTransition: true,
     });
 

@@ -154,7 +154,7 @@ describe('ComponentBinding', () => {
 
       const commitSpy = vi.spyOn(binding, 'commit');
 
-      binding.pendingLanes = Lanes.UserBlockingLane;
+      binding.pendingLanes = Lanes.NoLanes;
 
       SESSION1: {
         helper.startSession(
@@ -166,17 +166,13 @@ describe('ComponentBinding', () => {
         );
 
         expect(commitSpy).toHaveBeenCalledTimes(1);
-        expect(binding.pendingLanes).toBe(Lanes.NoLanes);
+        expect(binding.pendingLanes).toBe(
+          Lanes.DefaultLane | Lanes.UserBlockingLane,
+        );
         expect(part.node.nodeValue).toBe('100');
       }
 
       await Promise.resolve();
-
-      expect(binding.pendingLanes).toBe(
-        Lanes.DefaultLane | Lanes.UserBlockingLane,
-      );
-
-      expect(await helper.waitForAll()).toBe(1);
 
       SESSION2: {
         helper.startSession((context) => {
@@ -426,9 +422,7 @@ const Increment = createComponent(function Increment(
   const [count, setCount] = context.useState(initialCount);
 
   context.useEffect(() => {
-    queueMicrotask(() => {
-      setCount((count) => count + 1);
-    });
+    setCount((count) => count + 1);
   }, []);
 
   return count;

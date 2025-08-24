@@ -7,7 +7,6 @@ import {
   type Hook,
   Lanes,
   PartType,
-  type ScheduleMode,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -76,18 +75,16 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          mode: 'prioritized',
           priority: 'user-blocking',
           silent: true,
         });
 
         runtime.scheduleUpdate(coroutine, {
-          mode: 'prioritized',
           priority: 'user-blocking',
           silent: true,
         });
 
-        await handle.scheduled;
+        await handle.ready;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -172,6 +169,8 @@ describe('Runtime', () => {
           silent: true,
         });
 
+        await handle.ready;
+
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
             coroutine,
@@ -188,7 +187,7 @@ describe('Runtime', () => {
 
         await handle.finished;
 
-        expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
+        expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
@@ -250,7 +249,7 @@ describe('Runtime', () => {
 
         await runtime.flushAsync();
 
-        expect(requestCallbackSpy).toHaveBeenCalledTimes(4);
+        expect(requestCallbackSpy).toHaveBeenCalledTimes(5);
         expect(startViewTransitionSpy).toHaveBeenCalledTimes(1);
         expect(mutationEffect.commit).toHaveBeenCalledTimes(1);
         expect(layoutEffect.commit).toHaveBeenCalledTimes(2);
@@ -275,6 +274,8 @@ describe('Runtime', () => {
         const handle = runtime.scheduleUpdate(coroutine, {
           silent: true,
         });
+
+        await handle.ready;
 
         await runtime.flushAsync();
 
@@ -307,18 +308,16 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          mode: 'prioritized',
           priority: 'user-blocking',
           silent: true,
         });
 
         runtime.scheduleUpdate(coroutine, {
-          mode: 'prioritized',
           priority: 'user-blocking',
           silent: true,
         });
 
-        await handle.scheduled;
+        await handle.ready;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -412,6 +411,8 @@ describe('Runtime', () => {
           viewTransition: true,
           silent: true,
         });
+
+        await handle.ready;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -692,17 +693,6 @@ describe('Runtime', () => {
       );
 
       expect(runtime.resolveTemplate(strings, binds, mode)).toBe(template);
-    });
-  });
-
-  describe('scheduleUpdate', () => {
-    it('throws an error if the mode is invalid', () => {
-      const runtime = createRuntime();
-      const coroutine = new MockCoroutine(() => {});
-
-      expect(() => {
-        runtime.scheduleUpdate(coroutine, { mode: '' as ScheduleMode });
-      }).toThrow();
     });
   });
 });

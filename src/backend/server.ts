@@ -7,7 +7,6 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type ScheduleMode,
   type SlotType,
   type TemplateFactory,
 } from '../internal.js';
@@ -42,10 +41,6 @@ export class ServerBackend implements RuntimeBackend {
 
   flushUpdate(runtime: Runtime): void {
     runtime.flushSync();
-  }
-
-  getCurrentMode(): ScheduleMode {
-    return 'sequential';
   }
 
   getCurrentPriority(): TaskPriority {

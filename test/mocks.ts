@@ -17,7 +17,6 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type ScheduleMode,
   type Slot,
   type SlotType,
   type Template,
@@ -44,10 +43,6 @@ export class MockBackend implements RuntimeBackend {
 
   flushUpdate(runtime: Runtime): void {
     runtime.flushSync();
-  }
-
-  getCurrentMode(): ScheduleMode {
-    return 'sequential';
   }
 
   getCurrentPriority(): TaskPriority {

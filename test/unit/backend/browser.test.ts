@@ -39,13 +39,6 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 ];
 
 describe('BrowserBackend', () => {
-  describe('getCurrentMode()', () => {
-    it('always returns "prioritized"', () => {
-      const backend = new BrowserBackend(document);
-      expect(backend.getCurrentMode()).toBe('prioritized');
-    });
-  });
-
   describe('getCurrentPriority()', () => {
     afterEach(() => {
       vi.restoreAllMocks();

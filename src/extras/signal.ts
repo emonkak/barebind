@@ -143,7 +143,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   private _subscribeSignal(context: UpdateContext): Subscription {
     const { runtime } = context;
     return this._signal.subscribe(() => {
-      runtime.scheduleUpdate(this);
+      runtime.scheduleUpdate(this, { immediate: true });
     });
   }
 }
@@ -168,7 +168,7 @@ export abstract class Signal<T>
       let guard = true;
       const checkForChanges = () => {
         if (!Object.is(this.value, snapshot.value)) {
-          context.forceUpdate();
+          context.forceUpdate({ immediate: true });
         }
         guard = false;
       };

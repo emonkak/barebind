@@ -503,11 +503,16 @@ describe('RenderSession', () => {
       });
 
       SESSION: {
-        const count = helper.startSession(callback);
+        helper.startSession(callback);
 
-        expect(callback).toHaveBeenCalledTimes(2);
-        expect(count).toBe(1);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveLastReturnedWith(0);
       }
+
+      await Promise.resolve();
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveLastReturnedWith(1);
     });
 
     it('should skip the update if the state does not changed', async () => {
@@ -524,11 +529,15 @@ describe('RenderSession', () => {
       });
 
       SESSION: {
-        const count = helper.startSession(callback);
+        helper.startSession(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
-        expect(count).toBe(0);
+        expect(callback).toHaveLastReturnedWith(0);
       }
+
+      await Promise.resolve();
+
+      expect(callback).toHaveBeenCalledTimes(1);
     });
 
     it('returns an initial state by the function', async () => {
@@ -592,18 +601,16 @@ describe('RenderSession', () => {
       });
 
       SESSION1: {
-        const count = helper.startSession(callback);
+        helper.startSession(callback);
 
-        expect(callback).toHaveBeenCalledTimes(2);
-        expect(count).toBe(1);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveLastReturnedWith(0);
       }
 
-      SESSION1: {
-        const count = helper.startSession(callback);
+      await Promise.resolve();
 
-        expect(callback).toHaveBeenCalledTimes(3);
-        expect(count).toBe(1);
-      }
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveLastReturnedWith(1);
     });
 
     it('calculates a new state from the previous state', async () => {
@@ -621,11 +628,16 @@ describe('RenderSession', () => {
       });
 
       SESSION: {
-        const count = helper.startSession(callback);
+        helper.startSession(callback);
 
-        expect(count).toBe(1);
-        expect(callback).toHaveBeenCalledTimes(2);
+        expect(callback).toHaveBeenCalledTimes(1);
+        expect(callback).toHaveLastReturnedWith(0);
       }
+
+      await Promise.resolve();
+
+      expect(callback).toHaveBeenCalledTimes(2);
+      expect(callback).toHaveLastReturnedWith(1);
     });
 
     it('should not return the pending state', async () => {
@@ -634,7 +646,7 @@ describe('RenderSession', () => {
         const [count, setCount, isPending] = context.useState(() => 0);
 
         context.useEffect(() => {
-          setCount(1, { mode: 'prioritized', priority: 'background' });
+          setCount(1, { priority: 'background' });
         }, []);
 
         return [count, isPending];

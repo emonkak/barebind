@@ -69,7 +69,7 @@ describe('HashHistory()', () => {
       stableNavigator.navigate('/articles/foo%2Fbar');
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-        mode: 'sequential',
+        immediate: true,
         viewTransition: true,
       });
 
@@ -115,7 +115,7 @@ describe('HashHistory()', () => {
       });
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-        mode: 'sequential',
+        immediate: true,
         viewTransition: true,
       });
 
@@ -256,7 +256,7 @@ describe('HashHistory()', () => {
     document.body.removeChild(element);
 
     expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-      mode: 'sequential',
+      immediate: true,
       viewTransition: true,
     });
 
@@ -299,7 +299,7 @@ describe('HashHistory()', () => {
       );
 
       expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-        mode: 'sequential',
+        immediate: true,
         viewTransition: true,
       });
 
@@ -338,7 +338,7 @@ describe('HashHistory()', () => {
     );
 
     expect(scheduleUpdateSpy).toHaveBeenLastCalledWith(helper.coroutine, {
-      mode: 'sequential',
+      immediate: true,
       viewTransition: true,
     });
 

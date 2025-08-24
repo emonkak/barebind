@@ -55,6 +55,7 @@ export class RenderHelper {
     this.coroutine.pendingLanes = Lanes.AllLanes;
     this.runtime
       .scheduleUpdate(this.coroutine, {
+        immediate: true,
         silent: true,
         ...options,
       })
@@ -84,7 +85,7 @@ export class UpdateHelper {
   ): T {
     const coroutine = new MockCoroutine(callback);
     this.runtime
-      .scheduleUpdate(coroutine, { silent: true, ...options })
+      .scheduleUpdate(coroutine, { immediate: true, silent: true, ...options })
       .finished.catch(() => {});
     this.runtime.flushSync();
     if (coroutine.thrownError !== undefined) {

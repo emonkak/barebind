@@ -202,18 +202,24 @@ describe('useSyncExternalStore()', () => {
     SESSION1: {
       helper.startSession(callback);
 
-      expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback).toHaveNthReturnedWith(1, 0);
-      expect(callback).toHaveNthReturnedWith(2, 1);
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveLastReturnedWith(0);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
     }
+
+    await Promise.resolve();
+
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).toHaveLastReturnedWith(1);
+    expect(subscribe).toHaveBeenCalledOnce();
+    expect(unsubscribe).not.toHaveBeenCalled();
 
     SESSION2: {
       helper.startSession(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
-      expect(callback).toHaveNthReturnedWith(3, 1);
+      expect(callback).toHaveLastReturnedWith(1);
       expect(subscribe).toHaveBeenCalledOnce();
       expect(unsubscribe).not.toHaveBeenCalled();
     }
@@ -253,22 +259,28 @@ describe('useSyncExternalStore()', () => {
     SESSION1: {
       helper.startSession(callback);
 
-      expect(callback).toHaveBeenCalledTimes(2);
-      expect(callback).toHaveNthReturnedWith(1, 0);
-      expect(callback).toHaveNthReturnedWith(2, 1);
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveLastReturnedWith(0);
       expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
+
+    await Promise.resolve();
+
+    expect(callback).toHaveBeenCalledTimes(2);
+    expect(callback).toHaveLastReturnedWith(1);
+    expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
 
     SESSION2: {
       helper.startSession(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
-      expect(callback).toHaveNthReturnedWith(3, 1);
+      expect(callback).toHaveLastReturnedWith(1);
       expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
 
     helper.finalizeHooks();
 
+    expect(callback).toHaveBeenCalledTimes(3);
     expect(Array.from(subscribers)).toStrictEqual([]);
   });
 

@@ -16,7 +16,6 @@ import {
   type Primitive,
   type RenderContext,
   type RequestCallbackOptions,
-  type ScheduleMode,
   type ScheduleOptions,
   type Scope,
   type SessionContext,
@@ -39,7 +38,6 @@ import {
 
 export interface RuntimeBackend {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
-  getCurrentMode(): ScheduleMode;
   getCurrentPriority(): TaskPriority;
   getTemplateFactory(): TemplateFactory;
   flushUpdate(runtime: Runtime): void;
@@ -410,7 +408,7 @@ export class Runtime implements SessionContext {
     options: ScheduleOptions = {},
   ): UpdateHandle {
     options = {
-      mode: options.mode ?? this._backend.getCurrentMode(),
+      immediate: options.immediate ?? false,
       priority: options.priority ?? this._backend.getCurrentPriority(),
       silent: options.silent ?? false,
       viewTransition: options.viewTransition ?? false,
@@ -426,46 +424,36 @@ export class Runtime implements SessionContext {
 
     coroutine.pendingLanes |= lanes;
 
-    let scheduled: Promise<void>;
+    let ready: Promise<void>;
 
-    switch (options.mode) {
-      case 'prioritized':
-        scheduled = this._backend.requestCallback(() => {
-          const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
+    if (options.immediate) {
+      const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
 
-          this._pendingTasks.pushBack(pendingTask);
+      this._pendingTasks.pushBack(pendingTask);
 
-          if (shouldFlush) {
-            this._backend.flushUpdate(this);
-          }
-        }, options);
-        break;
+      ready = Promise.resolve();
 
-      case 'sequential': {
+      if (shouldFlush) {
+        queueMicrotask(() => {
+          this._backend.flushUpdate(this);
+        });
+      }
+    } else {
+      ready = this._backend.requestCallback(() => {
         const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
 
         this._pendingTasks.pushBack(pendingTask);
 
         if (shouldFlush) {
-          queueMicrotask(() => {
-            this._backend.flushUpdate(this);
-          });
+          this._backend.flushUpdate(this);
         }
-
-        scheduled = Promise.resolve();
-        break;
-      }
-
-      default:
-        throw new Error(
-          'Invalid schedule mode: ' + JSON.stringify(options.mode),
-        );
+      }, options);
     }
 
     return {
       lanes,
       finished: continuation.promise,
-      scheduled,
+      ready,
     };
   }
 

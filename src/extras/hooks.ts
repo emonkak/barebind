@@ -12,7 +12,6 @@ export function DeferredValue<T>(
 
     context.useLayoutEffect(() => {
       setDeferredValue(() => value, {
-        mode: 'prioritized',
         priority: 'background',
       });
     }, [value]);

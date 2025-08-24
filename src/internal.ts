@@ -329,10 +329,8 @@ export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
 
-export type ScheduleMode = 'prioritized' | 'sequential';
-
 export interface ScheduleOptions {
-  mode?: ScheduleMode;
+  immediate?: boolean;
   priority?: TaskPriority;
   silent?: boolean;
   viewTransition?: boolean;
@@ -432,7 +430,7 @@ export interface UpdateFrame {
 export interface UpdateHandle {
   lanes: Lanes;
   finished: Promise<void>;
-  scheduled: Promise<void>;
+  ready: Promise<void>;
 }
 
 export interface UpdateTask {

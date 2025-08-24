@@ -47,13 +47,6 @@ describe('ServerBackend', () => {
     });
   });
 
-  describe('getCurrentMode()', () => {
-    it('always returns "sequential"', () => {
-      const backend = new ServerBackend(document);
-      expect(backend.getCurrentMode()).toBe('sequential');
-    });
-  });
-
   describe('getCurrentPriority()', () => {
     it('always returns "user-blocking"', () => {
       const backend = new ServerBackend(document);
