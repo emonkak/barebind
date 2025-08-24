@@ -17,12 +17,10 @@
         "useLiteralKeys": "off"
       },
       "correctness": {
-        "noSelfAssign": "off",
         "noUnusedLabels": "off"
       },
       "style": {
         "noNonNullAssertion": "off",
-        "noUselessElse": "off",
         "useTemplate": "off"
       },
       "suspicious": {
@@ -54,6 +52,16 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["test/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noSelfAssign": "off"
           }
         }
       }
