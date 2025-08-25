@@ -149,9 +149,7 @@ export class Runtime implements SessionContext {
             id,
             lanes,
           });
-        }
 
-        if (!this._observers.isEmpty()) {
           notifyObservers(this._observers, {
             type: 'RENDER_START',
             id,
@@ -256,9 +254,7 @@ export class Runtime implements SessionContext {
             id,
             lanes,
           });
-        }
 
-        if (!this._observers.isEmpty()) {
           notifyObservers(this._observers, {
             type: 'RENDER_START',
             id,
