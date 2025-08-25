@@ -66,7 +66,8 @@ interface HasCleanup {
   [$cleanup]?: Cleanup | void;
 }
 
-interface TemplateSpecifier<TBinds extends readonly unknown[]> {
+interface TemplateDirective<TBinds extends readonly unknown[]>
+  extends Directive<TBinds> {
   type: Template<TBinds>;
   value: TBinds;
 }
@@ -572,7 +573,7 @@ function resolveElement(
   type: string,
   props: { children?: unknown },
   hasStaticChildren: boolean,
-): TemplateSpecifier<readonly [unknown, unknown]> {
+): TemplateDirective<readonly [unknown, unknown]> {
   const element = new DirectiveSpecifier(ElementDirective, props);
   const children = Array.isArray(props.children)
     ? hasStaticChildren
