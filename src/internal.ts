@@ -478,8 +478,9 @@ export function createUpdateContext(
 export function getContextValue(scope: Scope, key: unknown): unknown {
   let currentScope: Scope | null = scope;
   do {
-    for (let i = currentScope.boundaries.length - 1; i >= 0; i--) {
-      const boudary = currentScope.boundaries[i]!;
+    const { boundaries } = currentScope;
+    for (let i = boundaries.length - 1; i >= 0; i--) {
+      const boudary = boundaries[i]!;
       if (
         boudary.type === BoundaryType.Context &&
         Object.is(boudary.key, key)
