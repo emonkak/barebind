@@ -65,7 +65,6 @@ export class FlexibleSlot<T> implements Slot<T> {
         reservedBinding.bind(directive.value);
         reservedBinding.connect(context);
         this._pendingBinding = reservedBinding;
-        this._dirty = true;
       } else {
         this._pendingBinding = directive.type.resolveBinding(
           directive.value,
@@ -73,8 +72,9 @@ export class FlexibleSlot<T> implements Slot<T> {
           context.runtime,
         );
         this._pendingBinding.connect(context);
-        this._dirty = true;
       }
+
+      this._dirty = true;
     }
 
     return this._dirty;
