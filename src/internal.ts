@@ -456,7 +456,7 @@ export function areDirectiveTypesEqual(
  */
 export function createScope(parent: Scope | null = null): Scope {
   return {
-    parent: parent,
+    parent,
     boundaries: [],
   };
 }
