@@ -12,13 +12,13 @@ import { PrimitiveBinding } from './primitive.js';
 
 export type ClassSpecifier = ClassList | ClassMap;
 
-type ClassList = readonly ClassAtom[];
+type ClassList = readonly ClassValue[];
 
 interface ClassMap {
-  readonly [key: string]: ClassAtom;
+  readonly [key: string]: ClassValue;
 }
 
-type ClassAtom = boolean | string | null | undefined;
+type ClassValue = boolean | string | null | undefined;
 
 const CLASS_SEPARATOR_PATTERN = /\s+/;
 
@@ -91,7 +91,7 @@ export class ClassBinding extends PrimitiveBinding<
 function toggleClass(
   classList: DOMTokenList,
   key: string,
-  value: ClassAtom,
+  value: ClassValue,
   enabled: boolean,
 ): void {
   let classInput: string;
