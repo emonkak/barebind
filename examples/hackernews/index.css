@@ -74,7 +74,7 @@ a {
 
 @media (max-width: 600px) {
   .header .inner {
-    padding: 15px;
+    padding-inline: 15px;
   }
 
   .header a {
