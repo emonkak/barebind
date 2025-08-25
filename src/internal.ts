@@ -21,22 +21,6 @@ export interface Binding<T> extends ReversibleEffect {
   disconnect(context: UpdateContext): void;
 }
 
-export type Boundary = Boundary.ContextBoundary;
-
-export namespace Boundary {
-  export interface ContextBoundary {
-    type: typeof BoundaryType.Context;
-    key: unknown;
-    value: unknown;
-  }
-}
-
-export const BoundaryType = {
-  Context: 0,
-} as const;
-
-export type BoundaryType = (typeof BoundaryType)[keyof typeof BoundaryType];
-
 export type Cleanup = () => void;
 
 export const CommitPhase = {
@@ -338,7 +322,7 @@ export interface ScheduleOptions {
 
 export interface Scope {
   readonly parent: Scope | null;
-  readonly boundaries: Boundary[];
+  readonly contexts: SharedContext[];
 }
 
 export interface SessionContext extends DirectiveContext {
@@ -362,6 +346,11 @@ export interface SessionContext extends DirectiveContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: ScheduleOptions): UpdateHandle;
+}
+
+export interface SharedContext {
+  key: unknown;
+  value: unknown;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -457,7 +446,7 @@ export function areDirectiveTypesEqual(
 export function createScope(parent: Scope | null = null): Scope {
   return {
     parent,
-    boundaries: [],
+    contexts: [],
   };
 }
 
@@ -478,14 +467,11 @@ export function createUpdateContext(
 export function getContextValue(scope: Scope, key: unknown): unknown {
   let currentScope: Scope | null = scope;
   do {
-    const { boundaries } = currentScope;
-    for (let i = boundaries.length - 1; i >= 0; i--) {
-      const boudary = boundaries[i]!;
-      if (
-        boudary.type === BoundaryType.Context &&
-        Object.is(boudary.key, key)
-      ) {
-        return boudary.value;
+    const { contexts } = currentScope;
+    for (let i = contexts.length - 1; i >= 0; i--) {
+      const context = contexts[i]!;
+      if (Object.is(context.key, key)) {
+        return context.value;
       }
     }
     currentScope = currentScope.parent;
@@ -557,5 +543,5 @@ export function setContextValue(
   key: unknown,
   value: unknown,
 ): void {
-  scope.boundaries.push({ type: BoundaryType.Context, key, value });
+  scope.contexts.push({ key, value });
 }
