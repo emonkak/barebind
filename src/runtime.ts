@@ -424,14 +424,14 @@ export class Runtime implements SessionContext {
 
     coroutine.pendingLanes |= lanes;
 
-    let ready: Promise<void>;
+    let scheduled: Promise<void>;
 
     if (options.immediate) {
       const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
 
       this._pendingTasks.pushBack(pendingTask);
 
-      ready = Promise.resolve();
+      scheduled = Promise.resolve();
 
       if (shouldFlush) {
         queueMicrotask(() => {
@@ -439,7 +439,7 @@ export class Runtime implements SessionContext {
         });
       }
     } else {
-      ready = this._backend.requestCallback(() => {
+      scheduled = this._backend.requestCallback(() => {
         const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
 
         this._pendingTasks.pushBack(pendingTask);
@@ -452,8 +452,8 @@ export class Runtime implements SessionContext {
 
     return {
       lanes,
+      scheduled,
       finished: continuation.promise,
-      ready,
     };
   }
 

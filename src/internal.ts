@@ -429,8 +429,8 @@ export interface UpdateFrame {
 
 export interface UpdateHandle {
   lanes: Lanes;
+  scheduled: Promise<void>;
   finished: Promise<void>;
-  ready: Promise<void>;
 }
 
 export interface UpdateTask {

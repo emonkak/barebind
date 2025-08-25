@@ -84,7 +84,7 @@ describe('Runtime', () => {
           silent: true,
         });
 
-        await handle.ready;
+        await handle.scheduled;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -169,7 +169,7 @@ describe('Runtime', () => {
           silent: true,
         });
 
-        await handle.ready;
+        await handle.scheduled;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -275,7 +275,7 @@ describe('Runtime', () => {
           silent: true,
         });
 
-        await handle.ready;
+        await handle.scheduled;
 
         await runtime.flushAsync();
 
@@ -317,7 +317,7 @@ describe('Runtime', () => {
           silent: true,
         });
 
-        await handle.ready;
+        await handle.scheduled;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
@@ -412,7 +412,7 @@ describe('Runtime', () => {
           silent: true,
         });
 
-        await handle.ready;
+        await handle.scheduled;
 
         expect(runtime.getPendingTasks()).toStrictEqual([
           expect.objectContaining({
