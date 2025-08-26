@@ -318,8 +318,9 @@ export class Runtime implements SessionContext {
 
   nextIdentifier(): string {
     const prefix = this._templatePlaceholder;
-    const id = incrementIdentifier(this._identifierCount);
-    this._identifierCount = id;
+    const id = (this._identifierCount = incrementIdentifier(
+      this._identifierCount,
+    ));
     return prefix + ':' + id;
   }
 
