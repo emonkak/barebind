@@ -13,7 +13,7 @@ describe('Loose()', () => {
     const bindable = Loose(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.slotType).toBe(LooseSlot);
+    expect(bindable.type).toBe(LooseSlot);
   });
 });
 

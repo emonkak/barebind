@@ -33,7 +33,7 @@ describe('DirectiveSpecifier', () => {
 describe('SlotSpecifier', () => {
   describe('[$toDirective]()', () => {
     it('returns a directive element with the primitive value', () => {
-      const slotType = MockSlot;
+      const type = MockSlot;
       const value = 'foo';
       const part = {
         type: PartType.ChildNode,
@@ -42,16 +42,16 @@ describe('SlotSpecifier', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const context = createRuntime();
-      const bindable = new SlotSpecifier(slotType, value);
+      const bindable = new SlotSpecifier(type, value);
       const directive = bindable[$toDirective](part, context);
 
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
-      expect(directive.slotType).toBe(slotType);
+      expect(directive.slotType).toBe(type);
     });
 
     it('returns a directive element with the bindable value', () => {
-      const slotType = MockSlot;
+      const type = MockSlot;
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
       const part = {
         type: PartType.ChildNode,
@@ -60,20 +60,20 @@ describe('SlotSpecifier', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const context = createRuntime();
-      const bindable = new SlotSpecifier(slotType, value);
+      const bindable = new SlotSpecifier(type, value);
       const directive = bindable[$toDirective](part, context);
 
       expect(directive.type).toBe(value.type);
       expect(directive.value).toBe(value.value);
-      expect(directive.slotType).toBe(slotType);
+      expect(directive.slotType).toBe(type);
     });
   });
 
   describe('[$inspect]()', () => {
     it('returns a string representation of the value', () => {
-      const slotType = MockSlot;
+      const type = MockSlot;
       const value = new DirectiveSpecifier(new MockDirective(), 'foo');
-      const bindable = new SlotSpecifier(slotType, value);
+      const bindable = new SlotSpecifier(type, value);
 
       expect(formatValue(bindable)).toBe('MockSlot(MockDirective("foo"))');
     });

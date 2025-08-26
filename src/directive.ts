@@ -7,9 +7,12 @@ import {
   type DirectiveType,
   type Part,
   type SlotType,
+  type UnwrapBindable,
 } from './internal.js';
 
-export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
+export class DirectiveSpecifier<T>
+  implements Bindable<T>, Debuggable, Directive<T>
+{
   readonly type: DirectiveType<T>;
 
   readonly value: T;
@@ -28,22 +31,27 @@ export class DirectiveSpecifier<T> implements Bindable<T>, Debuggable {
   }
 }
 
-export class SlotSpecifier<T> implements Bindable, Debuggable {
-  readonly slotType: SlotType;
+export class SlotSpecifier<T>
+  implements Bindable<UnwrapBindable<T>>, Debuggable
+{
+  readonly type: SlotType;
 
   readonly value: T;
 
-  constructor(slotType: SlotType, value: T) {
-    this.slotType = slotType;
+  constructor(type: SlotType, value: T) {
+    this.type = type;
     this.value = value;
   }
 
   [$debug](format: (value: unknown) => string): string {
-    return this.slotType.name + '(' + format(this.value) + ')';
+    return this.type.name + '(' + format(this.value) + ')';
   }
 
-  [$toDirective](part: Part, context: DirectiveContext): Directive<unknown> {
-    const { value, slotType } = this;
+  [$toDirective](
+    part: Part,
+    context: DirectiveContext,
+  ): Directive<UnwrapBindable<T>> {
+    const { value, type: slotType } = this;
     const directive = context.resolveDirective(value, part);
     return { ...directive, slotType };
   }

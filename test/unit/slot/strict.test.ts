@@ -14,7 +14,7 @@ describe('Strcit()', () => {
     const bindable = Strict(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.slotType).toBe(StrictSlot);
+    expect(bindable.type).toBe(StrictSlot);
   });
 });
 

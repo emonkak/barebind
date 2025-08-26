@@ -13,7 +13,7 @@ describe('Flexible()', () => {
     const bindable = Flexible(value);
 
     expect(bindable.value).toBe(value);
-    expect(bindable.slotType).toBe(FlexibleSlot);
+    expect(bindable.type).toBe(FlexibleSlot);
   });
 });
 
