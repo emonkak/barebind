@@ -3,6 +3,7 @@ import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
+  type Coroutine,
   createScope,
   type Hook,
   Lanes,
@@ -260,16 +261,16 @@ describe('Runtime', () => {
 
     it('handles an error that occurs during flushing', async () => {
       const runtime = createRuntime();
-      const error = {};
+      const error = new Error();
 
       SESSION: {
-        const coroutine = new MockCoroutine((context) => {
-          context.frame.mutationEffects.push({
-            commit() {
-              throw error;
-            },
-          });
-        });
+        const coroutine: Coroutine = {
+          parentScope: null,
+          pendingLanes: Lanes.NoLanes,
+          resume() {
+            throw error;
+          },
+        };
 
         const handle = runtime.scheduleUpdate(coroutine, {
           silent: true,
@@ -279,7 +280,7 @@ describe('Runtime', () => {
 
         await runtime.flushAsync();
 
-        await expect(handle.finished).rejects.toThrow();
+        await expect(handle.finished).rejects.toThrow(error);
       }
     });
   });
@@ -499,20 +500,20 @@ describe('Runtime', () => {
 
     it('handles an error that occurs during flushing', async () => {
       const runtime = createRuntime();
-      const error = {};
+      const error = new Error();
 
       SESSION: {
-        const coroutine = new MockCoroutine((context) => {
-          context.frame.mutationEffects.push({
-            commit() {
-              throw error;
-            },
-          });
-        });
+        const coroutine: Coroutine = {
+          parentScope: null,
+          pendingLanes: Lanes.NoLanes,
+          resume() {
+            throw error;
+          },
+        };
 
         await expect(
           runtime.scheduleUpdate(coroutine).finished,
-        ).rejects.toThrow();
+        ).rejects.toThrow(error);
       }
     });
   });

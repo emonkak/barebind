@@ -13,7 +13,7 @@ import { MockBackend, MockCoroutine } from './mocks.js';
 export class RenderHelper {
   readonly runtime;
 
-  coroutine: MockCoroutine<any> = new MockCoroutine(() => {});
+  readonly coroutine: MockCoroutine<any> = new MockCoroutine(() => {});
 
   hooks: Hook[] = [];
 

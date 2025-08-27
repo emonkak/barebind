@@ -17,6 +17,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
+  type Scope,
   type Slot,
   type SlotType,
   type Template,
@@ -210,18 +211,16 @@ export class MockBinding<T> implements Binding<T> {
 export class MockCoroutine<T> implements Coroutine {
   callback: (context: UpdateContext) => T;
 
-  pendingLanes: Lanes;
+  parentScope: Scope | null = null;
+
+  pendingLanes: Lanes = Lanes.AllLanes;
 
   returnValue: T | undefined;
 
   thrownError: unknown;
 
-  constructor(
-    callback: (context: UpdateContext) => T,
-    pendingLanes: Lanes = Lanes.AllLanes,
-  ) {
+  constructor(callback: (context: UpdateContext) => T) {
     this.callback = callback;
-    this.pendingLanes = pendingLanes;
   }
 
   resume(context: UpdateContext): void {

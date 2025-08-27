@@ -10,6 +10,7 @@ import {
   type Effect,
   getLanesFromOptions,
   type Hook,
+  handleError,
   isBindable,
   Lanes,
   type Part,
@@ -143,40 +144,49 @@ export class Runtime implements SessionContext {
       const scope = createScope();
 
       try {
-        if (!this._observers.isEmpty()) {
+        try {
           notifyObservers(this._observers, {
             type: 'UPDATE_START',
             id,
             lanes,
           });
 
-          notifyObservers(this._observers, {
-            type: 'RENDER_START',
-            id,
-          });
-        }
-
-        const context = createUpdateContext(frame, scope, this);
-
-        while (true) {
-          const coroutines = consumeCoroutines(frame);
-
-          for (let i = 0, l = coroutines.length; i < l; i++) {
-            coroutines[i]!.resume(context);
+          if (!this._observers.isEmpty()) {
+            notifyObservers(this._observers, {
+              type: 'RENDER_START',
+              id,
+            });
           }
 
-          if (frame.pendingCoroutines.length === 0) {
-            break;
+          const context = createUpdateContext(frame, scope, this);
+
+          while (true) {
+            const coroutines = consumeCoroutines(frame);
+
+            for (let i = 0, l = coroutines.length; i < l; i++) {
+              const coroutine = coroutines[i]!;
+              try {
+                coroutine.resume(context);
+              } catch (error) {
+                handleError(coroutine.parentScope ?? scope, error);
+              }
+            }
+
+            if (frame.pendingCoroutines.length === 0) {
+              break;
+            }
+
+            await this._backend.yieldToMain();
           }
+        } finally {
+          frame.lanes = Lanes.NoLanes;
 
-          await this._backend.yieldToMain();
-        }
-
-        if (!this._observers.isEmpty()) {
-          notifyObservers(this._observers, {
-            type: 'RENDER_END',
-            id,
-          });
+          if (!this._observers.isEmpty()) {
+            notifyObservers(this._observers, {
+              type: 'RENDER_END',
+              id,
+            });
+          }
         }
 
         const { mutationEffects, layoutEffects, passiveEffects } =
@@ -248,38 +258,47 @@ export class Runtime implements SessionContext {
       const scope = createScope();
 
       try {
-        if (!this._observers.isEmpty()) {
-          notifyObservers(this._observers, {
-            type: 'UPDATE_START',
-            id,
-            lanes,
-          });
+        try {
+          if (!this._observers.isEmpty()) {
+            notifyObservers(this._observers, {
+              type: 'UPDATE_START',
+              id,
+              lanes,
+            });
 
-          notifyObservers(this._observers, {
-            type: 'RENDER_START',
-            id,
-          });
-        }
-
-        const context = createUpdateContext(frame, scope, this);
-
-        while (true) {
-          const coroutines = consumeCoroutines(frame);
-
-          for (let i = 0, l = coroutines.length; i < l; i++) {
-            coroutines[i]!.resume(context);
+            notifyObservers(this._observers, {
+              type: 'RENDER_START',
+              id,
+            });
           }
 
-          if (frame.pendingCoroutines.length === 0) {
-            break;
-          }
-        }
+          const context = createUpdateContext(frame, scope, this);
 
-        if (!this._observers.isEmpty()) {
-          notifyObservers(this._observers, {
-            type: 'RENDER_END',
-            id,
-          });
+          while (true) {
+            const coroutines = consumeCoroutines(frame);
+
+            for (let i = 0, l = coroutines.length; i < l; i++) {
+              const coroutine = coroutines[i]!;
+              try {
+                coroutine.resume(context);
+              } catch (error) {
+                handleError(coroutine.parentScope ?? scope, error);
+              }
+            }
+
+            if (frame.pendingCoroutines.length === 0) {
+              break;
+            }
+          }
+        } finally {
+          frame.lanes = Lanes.NoLanes;
+
+          if (!this._observers.isEmpty()) {
+            notifyObservers(this._observers, {
+              type: 'RENDER_END',
+              id,
+            });
+          }
         }
 
         const { mutationEffects, layoutEffects, passiveEffects } =
@@ -335,31 +354,33 @@ export class Runtime implements SessionContext {
     const { id } = frame;
     const context = new RenderSession(hooks, coroutine, frame, scope, this);
 
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMPONENT_RENDER_START',
-        id,
-        component,
-        props,
-        context,
-      });
+    try {
+      if (!this._observers.isEmpty()) {
+        notifyObservers(this._observers, {
+          type: 'COMPONENT_RENDER_START',
+          id,
+          component,
+          props,
+          context,
+        });
+      }
+
+      const result = component.render(props, context);
+
+      context.finalize();
+
+      return result;
+    } finally {
+      if (!this._observers.isEmpty()) {
+        notifyObservers(this._observers, {
+          type: 'COMPONENT_RENDER_END',
+          id,
+          component,
+          props,
+          context,
+        });
+      }
     }
-
-    const result = component.render(props, context);
-
-    context.finalize();
-
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMPONENT_RENDER_END',
-        id,
-        component,
-        props,
-        context,
-      });
-    }
-
-    return result;
   }
 
   resolveDirective<T>(value: T, part: Part): Directive<UnwrapBindable<T>> {
@@ -459,24 +480,26 @@ export class Runtime implements SessionContext {
     effects: Effect[],
     phase: CommitPhase,
   ): void {
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMMIT_START',
-        id,
-        effects,
-        phase,
-      });
-    }
+    try {
+      if (!this._observers.isEmpty()) {
+        notifyObservers(this._observers, {
+          type: 'COMMIT_START',
+          id,
+          effects,
+          phase,
+        });
+      }
 
-    this._backend.commitEffects(effects, phase);
-
-    if (!this._observers.isEmpty()) {
-      notifyObservers(this._observers, {
-        type: 'COMMIT_END',
-        id,
-        effects,
-        phase,
-      });
+      this._backend.commitEffects(effects, phase);
+    } finally {
+      if (!this._observers.isEmpty()) {
+        notifyObservers(this._observers, {
+          type: 'COMMIT_END',
+          id,
+          effects,
+          phase,
+        });
+      }
     }
   }
 }

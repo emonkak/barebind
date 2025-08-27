@@ -21,6 +21,28 @@ export interface Binding<T> extends ReversibleEffect {
   disconnect(context: UpdateContext): void;
 }
 
+export type Boundary = Boundary.SharedContextBoundary | Boundary.ErrorBoundary;
+
+export namespace Boundary {
+  export interface SharedContextBoundary {
+    type: typeof BoundaryType.SharedContext;
+    next: Boundary | null;
+    key: unknown;
+    value: unknown;
+  }
+
+  export interface ErrorBoundary {
+    type: typeof BoundaryType.Error;
+    next: Boundary | null;
+    handler: ErrorHandler;
+  }
+}
+
+export const BoundaryType = {
+  SharedContext: 0,
+  Error: 1,
+} as const;
+
 export type Cleanup = () => void;
 
 export const CommitPhase = {
@@ -39,6 +61,7 @@ export interface Component<TProps, TResult = unknown>
 }
 
 export interface Coroutine {
+  parentScope: Scope | null;
   pendingLanes: Lanes;
   resume(context: UpdateContext): void;
 }
@@ -69,6 +92,11 @@ export interface DirectiveType<T> {
 export interface Effect {
   commit(): void;
 }
+
+export type ErrorHandler = (
+  error: unknown,
+  handle: (erorr: unknown) => void,
+) => void;
 
 export type Hook =
   | Hook.FinalizerHook
@@ -114,6 +142,7 @@ export namespace Hook {
 }
 
 export interface HookContext {
+  catchError(handler: ErrorHandler): void;
   forceUpdate(options?: ScheduleOptions): UpdateHandle;
   getSharedContext(key: unknown): unknown;
   isUpdatePending(): boolean;
@@ -321,8 +350,8 @@ export interface ScheduleOptions {
 }
 
 export interface Scope {
-  readonly parent: Scope | null;
-  readonly contexts: SharedContext[];
+  parent: Scope | null;
+  boundary: Boundary | null;
 }
 
 export interface SessionContext extends DirectiveContext {
@@ -346,11 +375,6 @@ export interface SessionContext extends DirectiveContext {
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
   scheduleUpdate(coroutine: Coroutine, options?: ScheduleOptions): UpdateHandle;
-}
-
-export interface SharedContext {
-  key: unknown;
-  value: unknown;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -433,6 +457,13 @@ export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 /**
  * @internal
  */
+export function addErrorHandler(scope: Scope, handler: ErrorHandler): void {
+  scope.boundary = { type: BoundaryType.Error, next: scope.boundary, handler };
+}
+
+/**
+ * @internal
+ */
 export function areDirectiveTypesEqual(
   x: DirectiveType<unknown>,
   y: DirectiveType<unknown>,
@@ -446,7 +477,7 @@ export function areDirectiveTypesEqual(
 export function createScope(parent: Scope | null = null): Scope {
   return {
     parent,
-    contexts: [],
+    boundary: null,
   };
 }
 
@@ -467,11 +498,16 @@ export function createUpdateContext(
 export function getSharedContext(scope: Scope, key: unknown): unknown {
   let currentScope: Scope | null = scope;
   do {
-    const { contexts } = currentScope;
-    for (let i = contexts.length - 1; i >= 0; i--) {
-      const context = contexts[i]!;
-      if (Object.is(context.key, key)) {
-        return context.value;
+    for (
+      let boundary = currentScope.boundary;
+      boundary !== null;
+      boundary = boundary.next
+    ) {
+      if (
+        boundary.type === BoundaryType.SharedContext &&
+        Object.is(boundary.key, key)
+      ) {
+        return boundary.value;
       }
     }
     currentScope = currentScope.parent;
@@ -531,6 +567,36 @@ export function getStartNode(part: Part): ChildNode {
 /**
  * @internal
  */
+export function handleError(scope: Scope, error: unknown): void {
+  let currentScope = scope;
+  let currentBoundary = scope.boundary;
+
+  const handle = (error: unknown) => {
+    while (true) {
+      while (currentBoundary !== null) {
+        const boundary = currentBoundary;
+        currentBoundary = currentBoundary.next;
+        if (boundary.type === BoundaryType.Error) {
+          const { handler } = boundary;
+          handler(error, handle);
+          return;
+        }
+      }
+      const { parent } = currentScope;
+      if (parent === null) {
+        throw error;
+      }
+      currentScope = parent;
+      currentBoundary = parent.boundary;
+    }
+  };
+
+  handle(error);
+}
+
+/**
+ * @internal
+ */
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
 }
@@ -543,5 +609,10 @@ export function setSharedContext(
   key: unknown,
   value: unknown,
 ): void {
-  scope.contexts.push({ key, value });
+  scope.boundary = {
+    type: BoundaryType.SharedContext,
+    next: scope.boundary,
+    key,
+    value,
+  };
 }

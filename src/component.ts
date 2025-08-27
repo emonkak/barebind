@@ -63,9 +63,9 @@ export class ComponentBinding<TProps, TResult>
 
   private _slot: Slot<TResult> | null = null;
 
-  private _parentScope: Scope | null = null;
-
   private _hooks: Hook[] = [];
+
+  private _parentScope: Scope | null = null;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -89,6 +89,10 @@ export class ComponentBinding<TProps, TResult>
 
   get part(): Part {
     return this._part;
+  }
+
+  get parentScope(): Scope | null {
+    return this._parentScope;
   }
 
   get pendingLanes(): Lanes {

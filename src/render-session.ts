@@ -2,10 +2,11 @@ import { sequentialEqual } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
 import {
   $customHook,
+  addErrorHandler,
   type Cleanup,
   type Coroutine,
-  createScope,
   type Effect,
+  type ErrorHandler,
   getSharedContext,
   type Hook,
   HookType,
@@ -24,17 +25,6 @@ import {
   type Usable,
 } from './internal.js';
 
-const DETACHED_FRAME: UpdateFrame = {
-  id: -1,
-  lanes: Lanes.NoLanes,
-  pendingCoroutines: [],
-  mutationEffects: [],
-  layoutEffects: [],
-  passiveEffects: [],
-};
-
-const DETACHED_SCOPE = createScope();
-
 export class RenderSession implements RenderContext {
   private readonly _hooks: Hook[];
 
@@ -42,7 +32,7 @@ export class RenderSession implements RenderContext {
 
   private _frame: UpdateFrame;
 
-  private _scope: Scope;
+  private _scope: Scope | null;
 
   private readonly _runtime: SessionContext;
 
@@ -60,6 +50,14 @@ export class RenderSession implements RenderContext {
     this._frame = frame;
     this._scope = scope;
     this._runtime = runtime;
+  }
+
+  catchError(handler: ErrorHandler): void {
+    if (this._scope === null) {
+      throw new Error('Error handlers can only be added during rendering.');
+    }
+
+    addErrorHandler(this._scope, handler);
   }
 
   dynamicHTML(
@@ -95,17 +93,27 @@ export class RenderSession implements RenderContext {
       Object.freeze(this._hooks);
     }
 
-    this._frame = DETACHED_FRAME;
-    this._scope = DETACHED_SCOPE;
+    this._scope = null;
     this._hookIndex++;
   }
 
   forceUpdate(options?: ScheduleOptions): UpdateHandle {
+    if (this._frame.lanes !== Lanes.NoLanes) {
+      const runningTask = this._runtime.getPendingTasks().at(-1);
+      if (runningTask !== undefined) {
+        this._frame.pendingCoroutines.push(this._coroutine);
+        return {
+          lanes: runningTask.lanes,
+          scheduled: Promise.resolve(),
+          finished: runningTask.continuation.promise,
+        };
+      }
+    }
     return this._runtime.scheduleUpdate(this._coroutine, options);
   }
 
   getSharedContext(key: unknown): unknown {
-    if (this._scope === DETACHED_SCOPE) {
+    if (this._scope === null) {
       throw new Error('Shared contexts are only available during rendering.');
     }
 
@@ -140,7 +148,7 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext(key: unknown, value: unknown): void {
-    if (this._scope === DETACHED_SCOPE) {
+    if (this._scope === null) {
       throw new Error('Shared contexts can only be set during rendering.');
     }
 

@@ -14,6 +14,7 @@ import {
   type HydrationTree,
   Lanes,
   type Part,
+  type Scope,
   type Slot,
   type UpdateContext,
 } from '../internal.js';
@@ -53,6 +54,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscription: Subscription | null = null;
 
+  private _parentScope: Scope | null = null;
+
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
   constructor(signal: Signal<T>, slot: Slot<T>) {
@@ -71,6 +74,10 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   get part(): Part {
     return this._slot.part;
+  }
+
+  get parentScope(): Scope | null {
+    return this._parentScope;
   }
 
   get pendingLanes(): Lanes {
@@ -124,6 +131,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     }
 
     this._subscription ??= this._subscribeSignal(context);
+    this._parentScope = context.scope;
   }
 
   disconnect(context: UpdateContext): void {

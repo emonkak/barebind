@@ -11,6 +11,17 @@ import { MockTemplate } from '../mocks.js';
 import { RenderHelper } from '../test-helpers.js';
 
 describe('RenderSession', () => {
+  describe('catchError()', () => {
+    it('throws an error when trying to add an error handler outside of rendering', () => {
+      const helper = new RenderHelper();
+
+      expect(() => {
+        const context = helper.startSession((context) => context);
+        context.catchError(() => {});
+      }).toThrow('Error handlers can only be added during rendering.');
+    });
+  });
+
   describe('dynamicHTML()', () => {
     it('returns a bindable with the dynamic HTML template', () => {
       const helper = new RenderHelper();
@@ -72,7 +83,7 @@ describe('RenderSession', () => {
   });
 
   describe('getSharedContext()', () => {
-    it('returns the context value corresponding to the key', () => {
+    it('returns the shared context corresponding to the key', () => {
       const helper = new RenderHelper();
 
       SESSION: {
@@ -86,7 +97,7 @@ describe('RenderSession', () => {
       }
     });
 
-    it('returns undefined if the context value is not definied', () => {
+    it('returns undefined if the shared context is not definied', () => {
       const helper = new RenderHelper();
 
       SESSION: {
@@ -98,7 +109,7 @@ describe('RenderSession', () => {
       }
     });
 
-    it('throws an error when trying to get a context value outside of rendering', () => {
+    it('throws an error when trying to get a shared context outside of rendering', () => {
       const helper = new RenderHelper();
 
       expect(() => {
@@ -107,7 +118,7 @@ describe('RenderSession', () => {
       }).toThrow('Shared contexts are only available during rendering.');
     });
 
-    it('throws an error when trying to set a context value outside of rendering', () => {
+    it('throws an error when trying to set a shared context outside of rendering', () => {
       const helper = new RenderHelper();
 
       expect(() => {
@@ -158,6 +169,25 @@ describe('RenderSession', () => {
       expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(2, helper.coroutine, {
         priority: 'background',
       });
+    });
+
+    it('renders the session again if rendering is running', async () => {
+      const helper = new RenderHelper();
+
+      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+
+      const count = helper.startSession((context) => {
+        const [count, setCount] = context.useState(0);
+
+        if (count === 0) {
+          setCount(count + 1);
+        }
+
+        return count;
+      });
+
+      expect(scheduleUpdateSpy).toHaveBeenCalledOnce();
+      expect(count).toBe(1);
     });
   });
 

@@ -53,6 +53,8 @@ export class Root<T> {
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
+      parentScope: null,
+      pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         const target = createHydrationTree(this._container);
         this._slot.hydrate(target, context);
@@ -62,7 +64,6 @@ export class Root<T> {
         );
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
-      pendingLanes: Lanes.DefaultLane,
     };
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
@@ -72,6 +73,8 @@ export class Root<T> {
 
   mount(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
+      parentScope: null,
+      pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         this._slot.connect(context);
         context.frame.mutationEffects.push(
@@ -79,7 +82,6 @@ export class Root<T> {
         );
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
-      pendingLanes: Lanes.DefaultLane,
     };
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
@@ -89,12 +91,13 @@ export class Root<T> {
 
   update(value: T, options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
+      parentScope: null,
+      pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         this._slot.reconcile(value, context);
         context.frame.mutationEffects.push(this._slot);
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
-      pendingLanes: Lanes.DefaultLane,
     };
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
@@ -104,6 +107,8 @@ export class Root<T> {
 
   unmount(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
+      parentScope: null,
+      pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         this._slot.disconnect(context);
         context.frame.mutationEffects.push(
@@ -111,7 +116,6 @@ export class Root<T> {
         );
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
-      pendingLanes: Lanes.DefaultLane,
     };
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
