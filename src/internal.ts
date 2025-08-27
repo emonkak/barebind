@@ -115,9 +115,9 @@ export namespace Hook {
 
 export interface HookContext {
   forceUpdate(options?: ScheduleOptions): UpdateHandle;
-  getContextValue(key: unknown): unknown;
+  getSharedContext(key: unknown): unknown;
   isUpdatePending(): boolean;
-  setContextValue(key: unknown, value: unknown): void;
+  setSharedContext(key: unknown, value: unknown): void;
   use<T>(usable: Usable<T>): T;
   useCallback<TCallback extends (...args: any[]) => any>(
     callback: TCallback,
@@ -464,7 +464,7 @@ export function createUpdateContext(
 /**
  * @internal
  */
-export function getContextValue(scope: Scope, key: unknown): unknown {
+export function getSharedContext(scope: Scope, key: unknown): unknown {
   let currentScope: Scope | null = scope;
   do {
     const { contexts } = currentScope;
@@ -538,7 +538,7 @@ export function isBindable(value: unknown): value is Bindable {
 /**
  * @internal
  */
-export function setContextValue(
+export function setSharedContext(
   scope: Scope,
   key: unknown,
   value: unknown,

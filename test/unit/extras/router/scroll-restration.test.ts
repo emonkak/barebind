@@ -34,7 +34,7 @@ describe('ScrollRestration()', () => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       helper.startSession((context) => {
-        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.setSharedContext(CurrentHistory, [location, navigator]);
         context.use(ScrollRestration());
       });
 
@@ -56,7 +56,7 @@ describe('ScrollRestration()', () => {
       const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
       helper.startSession((context) => {
-        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.setSharedContext(CurrentHistory, [location, navigator]);
         context.use(ScrollRestration());
       });
 
@@ -80,7 +80,7 @@ describe('ScrollRestration()', () => {
     document.body.appendChild(element);
 
     helper.startSession((context) => {
-      context.setContextValue(CurrentHistory, [location, navigator]);
+      context.setSharedContext(CurrentHistory, [location, navigator]);
       context.use(ScrollRestration());
     });
 
@@ -100,7 +100,7 @@ describe('ScrollRestration()', () => {
     const scrollToSpy = vi.spyOn(window, 'scrollTo');
 
     helper.startSession((context) => {
-      context.setContextValue(CurrentHistory, [location, navigator]);
+      context.setSharedContext(CurrentHistory, [location, navigator]);
       context.use(ScrollRestration());
     });
 
@@ -125,7 +125,7 @@ describe('ScrollRestration()', () => {
       );
 
       helper.startSession((context) => {
-        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.setSharedContext(CurrentHistory, [location, navigator]);
         context.use(ScrollRestration());
       });
 
@@ -163,7 +163,7 @@ describe('ScrollRestration()', () => {
       });
 
       helper.startSession((context) => {
-        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.setSharedContext(CurrentHistory, [location, navigator]);
         context.use(ScrollRestration());
       });
 
@@ -199,7 +199,7 @@ describe('ScrollRestration()', () => {
       });
 
       helper.startSession((context) => {
-        context.setContextValue(CurrentHistory, [location, navigator]);
+        context.setSharedContext(CurrentHistory, [location, navigator]);
         context.use(ScrollRestration());
       });
 
@@ -225,7 +225,7 @@ describe('ScrollRestration()', () => {
     vi.stubGlobal('navigation', undefined);
 
     helper.startSession((context) => {
-      context.setContextValue(CurrentHistory, [location, navigator]);
+      context.setSharedContext(CurrentHistory, [location, navigator]);
       context.use(ScrollRestration());
     });
 

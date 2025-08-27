@@ -77,7 +77,7 @@ export interface UserState {
 
 export class AppStore implements CustomHookObject<void> {
   static [$customHook](context: HookContext): AppStore {
-    const state = context.getContextValue(AppStore);
+    const state = context.getSharedContext(AppStore);
     if (!(state instanceof AppStore)) {
       throw new Error(`${AppStore.name} is not registered in this context.`);
     }
@@ -104,7 +104,7 @@ export class AppStore implements CustomHookObject<void> {
   });
 
   [$customHook](context: HookContext): void {
-    context.setContextValue(this.constructor, this);
+    context.setSharedContext(this.constructor, this);
   }
 
   async fetchItem(id: number): Promise<void> {

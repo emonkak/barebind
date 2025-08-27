@@ -37,7 +37,10 @@ const App = createComponent(function App(_props: {}, $: RenderContext) {
     resevedItems: ITEM_LABELS.slice(4),
   });
 
-  $.setContextValue(ENV_CONTEXT, `${state.items.length} item(s) are available`);
+  $.setSharedContext(
+    ENV_CONTEXT,
+    `${state.items.length} item(s) are available`,
+  );
 
   const handleIncrement = $.useCallback(() => {
     count$.value += 1;
@@ -143,7 +146,7 @@ const Dashboard = createComponent(function Dashboard(
   { count$ }: DashboardProps,
   $: RenderContext,
 ): unknown {
-  const env = $.getContextValue(ENV_CONTEXT);
+  const env = $.getSharedContext(ENV_CONTEXT);
   const countElementRef = $.useRef<Element | null>(null);
   const count = $.use(count$);
 

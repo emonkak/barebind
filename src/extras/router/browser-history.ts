@@ -119,7 +119,7 @@ export function BrowserHistory(
 
     const currentHistory = [location, navigator] as const;
 
-    context.setContextValue(CurrentHistory, currentHistory);
+    context.setSharedContext(CurrentHistory, currentHistory);
 
     return currentHistory;
   };

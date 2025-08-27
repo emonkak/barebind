@@ -74,7 +74,7 @@ const Parent = createComponent(function Parent(
   { name, greet }: ParentProps,
   context: RenderContext,
 ): unknown {
-  context.setContextValue('greet', greet);
+  context.setSharedContext('greet', greet);
 
   return context.html`<div><${Child({ name })}></div>`;
 });
@@ -87,7 +87,7 @@ const Child = createComponent(function Child(
   { name }: ChildProps,
   context: RenderContext,
 ): unknown {
-  const greet = context.getContextValue('greet');
+  const greet = context.getSharedContext('greet');
 
   return context.html`${greet}, <strong>${name}</strong>!`;
 });

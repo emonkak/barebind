@@ -71,15 +71,15 @@ describe('RenderSession', () => {
     });
   });
 
-  describe('getContextValue()', () => {
+  describe('getSharedContext()', () => {
     it('returns the context value corresponding to the key', () => {
       const helper = new RenderHelper();
 
       SESSION: {
         const value = helper.startSession((context) => {
-          context.setContextValue('foo', 123);
+          context.setSharedContext('foo', 123);
 
-          return context.getContextValue('foo');
+          return context.getSharedContext('foo');
         });
 
         expect(value).toBe(123);
@@ -91,7 +91,7 @@ describe('RenderSession', () => {
 
       SESSION: {
         const value = helper.startSession((context) => {
-          return context.getContextValue('foo');
+          return context.getSharedContext('foo');
         });
 
         expect(value).toBe(undefined);
@@ -103,27 +103,17 @@ describe('RenderSession', () => {
 
       expect(() => {
         const context = helper.startSession((context) => context);
-        context.setContextValue('foo', 123);
-      }).toThrow('Context values can only be set during rendering.');
-
-      expect(() => {
-        const context = helper.startSession((context) => context);
-        context.getContextValue('foo');
-      }).toThrow('Context values are only avaiable during rendering.');
+        context.getSharedContext('foo');
+      }).toThrow('Shared contexts are only available during rendering.');
     });
 
-    it('throws an error when trying to get set a context value outside of rendering', () => {
+    it('throws an error when trying to set a context value outside of rendering', () => {
       const helper = new RenderHelper();
 
       expect(() => {
         const context = helper.startSession((context) => context);
-        context.setContextValue('foo', 123);
-      }).toThrow('Context values can only be set during rendering.');
-
-      expect(() => {
-        const context = helper.startSession((context) => context);
-        context.getContextValue('foo');
-      }).toThrow('Context values are only avaiable during rendering.');
+        context.setSharedContext('foo', 123);
+      }).toThrow('Shared contexts can only be set during rendering.');
     });
   });
 

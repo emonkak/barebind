@@ -27,7 +27,7 @@ export interface NavigateOptions {
 export function CurrentHistory(
   context: HookContext,
 ): readonly [HistoryLocation, HistoryNavigator] {
-  const value = context.getContextValue(CurrentHistory);
+  const value = context.getSharedContext(CurrentHistory);
 
   if (value === undefined) {
     throw new Error(

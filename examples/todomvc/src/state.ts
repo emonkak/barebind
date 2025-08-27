@@ -15,7 +15,7 @@ export class TodoState {
   filter: TodoFilter = 'all';
 
   static [$customHook](context: HookContext): Reactive<TodoState> {
-    const state = context.getContextValue(TodoState);
+    const state = context.getSharedContext(TodoState);
     if (!(state instanceof Reactive && state.value instanceof TodoState)) {
       throw new Error(`${TodoState.name} is not registered in this context.`);
     }
@@ -23,7 +23,7 @@ export class TodoState {
   }
 
   [$customHook](context: HookContext): void {
-    context.setContextValue(this.constructor, Reactive.from(this));
+    context.setSharedContext(this.constructor, Reactive.from(this));
   }
 
   get activeTodos(): readonly Todo[] {

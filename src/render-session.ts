@@ -6,7 +6,7 @@ import {
   type Coroutine,
   createScope,
   type Effect,
-  getContextValue,
+  getSharedContext,
   type Hook,
   HookType,
   type InitialState,
@@ -17,7 +17,7 @@ import {
   type ScheduleOptions,
   type Scope,
   type SessionContext,
-  setContextValue,
+  setSharedContext,
   type TemplateMode,
   type UpdateFrame,
   type UpdateHandle,
@@ -104,12 +104,12 @@ export class RenderSession implements RenderContext {
     return this._runtime.scheduleUpdate(this._coroutine, options);
   }
 
-  getContextValue(key: unknown): unknown {
+  getSharedContext(key: unknown): unknown {
     if (this._scope === DETACHED_SCOPE) {
-      throw new Error('Context values are only avaiable during rendering.');
+      throw new Error('Shared contexts are only available during rendering.');
     }
 
-    return getContextValue(this._scope, key);
+    return getSharedContext(this._scope, key);
   }
 
   html(
@@ -139,12 +139,12 @@ export class RenderSession implements RenderContext {
     return this._template(strings, binds, 'math');
   }
 
-  setContextValue(key: unknown, value: unknown): void {
+  setSharedContext(key: unknown, value: unknown): void {
     if (this._scope === DETACHED_SCOPE) {
-      throw new Error('Context values can only be set during rendering.');
+      throw new Error('Shared contexts can only be set during rendering.');
     }
 
-    setContextValue(this._scope, key, value);
+    setSharedContext(this._scope, key, value);
   }
 
   svg(
