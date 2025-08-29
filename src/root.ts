@@ -10,10 +10,6 @@ import {
   type UpdateHandle,
 } from './internal.js';
 
-const DEFAULT_OPTIONS: ScheduleOptions = {
-  immediate: true,
-};
-
 export class Root<T> {
   private readonly _slot: Slot<T>;
 
@@ -61,7 +57,7 @@ export class Root<T> {
       },
     };
     return this._runtime.scheduleUpdate(coroutine, {
-      ...DEFAULT_OPTIONS,
+      immediate: true,
       ...options,
     });
   }
@@ -79,7 +75,7 @@ export class Root<T> {
       },
     };
     return this._runtime.scheduleUpdate(coroutine, {
-      ...DEFAULT_OPTIONS,
+      immediate: true,
       ...options,
     });
   }
@@ -95,7 +91,7 @@ export class Root<T> {
       },
     };
     return this._runtime.scheduleUpdate(coroutine, {
-      ...DEFAULT_OPTIONS,
+      immediate: true,
       ...options,
     });
   }
@@ -113,7 +109,7 @@ export class Root<T> {
       },
     };
     return this._runtime.scheduleUpdate(coroutine, {
-      ...DEFAULT_OPTIONS,
+      immediate: true,
       ...options,
     });
   }
