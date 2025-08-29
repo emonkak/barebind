@@ -15,12 +15,12 @@ import {
   type NewState,
   type RefObject,
   type RenderContext,
+  type RenderFrame,
   type ScheduleOptions,
   type Scope,
   type SessionContext,
   setSharedContext,
   type TemplateMode,
-  type UpdateFrame,
   type UpdateHandle,
   type Usable,
 } from './internal.js';
@@ -30,7 +30,7 @@ export class RenderSession implements RenderContext {
 
   private readonly _coroutine: Coroutine;
 
-  private _frame: UpdateFrame;
+  private readonly _frame: RenderFrame;
 
   private _scope: Scope | null;
 
@@ -41,7 +41,7 @@ export class RenderSession implements RenderContext {
   constructor(
     hooks: Hook[],
     coroutine: Coroutine,
-    frame: UpdateFrame,
+    frame: RenderFrame,
     scope: Scope,
     runtime: SessionContext,
   ) {
@@ -413,7 +413,7 @@ function areDependenciesChanged(
   );
 }
 
-function enqueueEffect(frame: UpdateFrame, hook: Hook.EffectHook): void {
+function enqueueEffect(frame: RenderFrame, hook: Hook.EffectHook): void {
   const effect = new InvokeEffectHook(hook);
   switch (hook.type) {
     case HookType.Effect:

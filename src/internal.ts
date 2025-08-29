@@ -328,6 +328,15 @@ export interface RenderContext extends HookContext {
   ): Bindable<readonly unknown[]>;
 }
 
+export interface RenderFrame {
+  id: number;
+  lanes: Lanes;
+  pendingCoroutines: Coroutine[];
+  mutationEffects: Effect[];
+  layoutEffects: Effect[];
+  passiveEffects: Effect[];
+}
+
 export interface RenderState {
   hooks: Hook[];
   pendingLanes: Lanes;
@@ -365,7 +374,7 @@ export interface SessionContext extends DirectiveContext {
     props: TProps,
     hooks: Hook[],
     coroutine: Coroutine,
-    frame: UpdateFrame,
+    frame: RenderFrame,
     scope: Scope,
   ): TResult;
   resolveTemplate(
@@ -425,18 +434,9 @@ export interface TemplateResult {
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
 export interface UpdateContext {
-  frame: UpdateFrame;
+  frame: RenderFrame;
   scope: Scope;
   runtime: SessionContext;
-}
-
-export interface UpdateFrame {
-  id: number;
-  lanes: Lanes;
-  pendingCoroutines: Coroutine[];
-  mutationEffects: Effect[];
-  layoutEffects: Effect[];
-  passiveEffects: Effect[];
 }
 
 export interface UpdateHandle {
@@ -484,7 +484,7 @@ export function createScope(parent: Scope | null = null): Scope {
  * @internal
  */
 export function createUpdateContext(
-  frame: UpdateFrame,
+  frame: RenderFrame,
   scope: Scope,
   runtime: SessionContext,
 ): UpdateContext {

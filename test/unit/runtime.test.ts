@@ -21,8 +21,8 @@ import {
   MockTemplate,
 } from '../mocks.js';
 import {
+  createRenderFrame,
   createRuntime,
-  createUpdateFrame,
   templateLiteral,
 } from '../test-helpers.js';
 
@@ -524,7 +524,7 @@ describe('Runtime', () => {
       const props = {};
       const hooks: Hook[] = [];
       const coroutine = new MockCoroutine();
-      const frame = createUpdateFrame(1, Lanes.AllLanes);
+      const frame = createRenderFrame(1, Lanes.AllLanes);
       const scope = createScope();
       const observer = new MockObserver();
       const runtime = createRuntime();

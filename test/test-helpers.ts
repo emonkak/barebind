@@ -4,9 +4,9 @@ import {
   type Hook,
   HookType,
   type Lanes,
+  type RenderFrame,
   type ScheduleOptions,
   type UpdateContext,
-  type UpdateFrame,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
@@ -174,7 +174,7 @@ export function createRuntime(options?: RuntimeOptions): Runtime {
   return new Runtime(new MockBackend(), options);
 }
 
-export function createUpdateFrame(id: number, lanes: Lanes): UpdateFrame {
+export function createRenderFrame(id: number, lanes: Lanes): RenderFrame {
   return {
     id,
     lanes,

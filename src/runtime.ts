@@ -16,6 +16,7 @@ import {
   type Part,
   type Primitive,
   type RenderContext,
+  type RenderFrame,
   type RequestCallbackOptions,
   type ScheduleOptions,
   type Scope,
@@ -26,7 +27,6 @@ import {
   type TemplateFactory,
   type TemplateMode,
   type UnwrapBindable,
-  type UpdateFrame,
   type UpdateHandle,
   type UpdateTask,
 } from './internal.js';
@@ -140,7 +140,7 @@ export class Runtime implements SessionContext {
       }
 
       const id = (this._updateCount = incrementIdentifier(this._updateCount));
-      const frame = createUpdateFrame(id, lanes, coroutine);
+      const frame = createRenderFrame(id, lanes, coroutine);
       const scope = createScope();
 
       try {
@@ -256,7 +256,7 @@ export class Runtime implements SessionContext {
       }
 
       const id = (this._updateCount = incrementIdentifier(this._updateCount));
-      const frame = createUpdateFrame(id, lanes, coroutine);
+      const frame = createRenderFrame(id, lanes, coroutine);
       const scope = createScope();
 
       try {
@@ -352,7 +352,7 @@ export class Runtime implements SessionContext {
     props: TProps,
     hooks: Hook[],
     coroutine: Coroutine,
-    frame: UpdateFrame,
+    frame: RenderFrame,
     scope: Scope,
   ): TResult {
     const { id } = frame;
@@ -504,11 +504,11 @@ export class Runtime implements SessionContext {
   }
 }
 
-function createUpdateFrame(
+function createRenderFrame(
   id: number,
   lanes: Lanes,
   coroutine: Coroutine,
-): UpdateFrame {
+): RenderFrame {
   return {
     id,
     lanes,
@@ -519,15 +519,15 @@ function createUpdateFrame(
   };
 }
 
-function consumeCoroutines(frame: UpdateFrame): Coroutine[] {
+function consumeCoroutines(frame: RenderFrame): Coroutine[] {
   const { pendingCoroutines } = frame;
   frame.pendingCoroutines = [];
   return pendingCoroutines;
 }
 
 function consumeEffects(
-  frame: UpdateFrame,
-): Pick<UpdateFrame, 'mutationEffects' | 'layoutEffects' | 'passiveEffects'> {
+  frame: RenderFrame,
+): Pick<RenderFrame, 'mutationEffects' | 'layoutEffects' | 'passiveEffects'> {
   const { mutationEffects, layoutEffects, passiveEffects } = frame;
   frame.mutationEffects = [];
   frame.layoutEffects = [];
