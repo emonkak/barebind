@@ -39,7 +39,7 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
 ];
 
 describe('BrowserBackend', () => {
-  describe('getCurrentPriority()', () => {
+  describe('getTaskPriority()', () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
@@ -52,7 +52,7 @@ describe('BrowserBackend', () => {
           .spyOn(window, 'event', 'get')
           .mockReturnValue(new CustomEvent(eventType));
 
-        expect(backend.getCurrentPriority()).toBe('user-visible');
+        expect(backend.getTaskPriority()).toBe('user-visible');
         expect(getEventSpy).toHaveBeenCalled();
       },
     );
@@ -63,7 +63,7 @@ describe('BrowserBackend', () => {
         .spyOn(window, 'event', 'get')
         .mockReturnValue(new MouseEvent('click'));
 
-      expect(backend.getCurrentPriority()).toBe('user-blocking');
+      expect(backend.getTaskPriority()).toBe('user-blocking');
       expect(getEventSpy).toHaveBeenCalled();
     });
 
@@ -77,7 +77,7 @@ describe('BrowserBackend', () => {
         .spyOn(document, 'readyState', 'get')
         .mockReturnValue('complete');
 
-      expect(backend.getCurrentPriority()).toBe('background');
+      expect(backend.getTaskPriority()).toBe('background');
       expect(getEventSpy).toHaveBeenCalledOnce();
       expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });
@@ -92,7 +92,7 @@ describe('BrowserBackend', () => {
         .spyOn(document, 'readyState', 'get')
         .mockReturnValue('interactive');
 
-      expect(backend.getCurrentPriority()).toBe('user-blocking');
+      expect(backend.getTaskPriority()).toBe('user-blocking');
       expect(getEventSpy).toHaveBeenCalledOnce();
       expect(getDocumentReadyState).toHaveBeenCalledOnce();
     });

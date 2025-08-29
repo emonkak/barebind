@@ -46,7 +46,7 @@ export class MockBackend implements RuntimeBackend {
     runtime.flushSync();
   }
 
-  getCurrentPriority(): TaskPriority {
+  getTaskPriority(): TaskPriority {
     return 'user-blocking';
   }
 

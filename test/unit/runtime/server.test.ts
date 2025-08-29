@@ -47,10 +47,10 @@ describe('ServerBackend', () => {
     });
   });
 
-  describe('getCurrentPriority()', () => {
+  describe('getTaskPriority()', () => {
     it('always returns "user-blocking"', () => {
       const backend = new ServerBackend(document);
-      expect(backend.getCurrentPriority()).toBe('user-blocking');
+      expect(backend.getTaskPriority()).toBe('user-blocking');
     });
   });
 

@@ -39,7 +39,7 @@ import {
 
 export interface RuntimeBackend {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
-  getCurrentPriority(): TaskPriority;
+  getTaskPriority(): TaskPriority;
   getTemplateFactory(): TemplateFactory;
   flushUpdate(runtime: Runtime): void;
   requestCallback(
@@ -429,7 +429,7 @@ export class Runtime implements SessionContext {
   ): UpdateHandle {
     options = {
       immediate: options.immediate ?? false,
-      priority: options.priority ?? this._backend.getCurrentPriority(),
+      priority: options.priority ?? this._backend.getTaskPriority(),
       silent: options.silent ?? false,
       viewTransition: options.viewTransition ?? false,
     } satisfies Required<ScheduleOptions>;
