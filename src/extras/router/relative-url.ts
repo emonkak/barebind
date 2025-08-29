@@ -43,9 +43,12 @@ export class RelativeURL {
 
   constructor(pathname: string, search: URLSearchParamsInput = '', hash = '') {
     this.pathname = pathname;
-    // URLSearchParams must be read-only to make RelativeURL immutable.
-    this.searchParams = Object.freeze(new URLSearchParams(search));
+    this.searchParams = new URLSearchParams(search);
     this.hash = hash;
+    DEBUG: {
+      Object.freeze(this);
+      Object.freeze(this.searchParams);
+    }
   }
 
   get search(): string {

@@ -134,6 +134,9 @@ export class VElement<TProps extends {} = {}> implements Bindable<unknown> {
     this.props = props;
     this.key = key;
     this.hasStaticChildren = hasStaticChildren;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   [$toDirective](): Directive<unknown> {
@@ -153,6 +156,9 @@ export class VFragment implements Bindable<RepeatProps<VNode>> {
 
   constructor(children: readonly VNode[]) {
     this.children = children;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   [$toDirective](): Directive<RepeatProps<VNode>> {
@@ -172,6 +178,9 @@ export class VStaticFragment implements Bindable<unknown> {
 
   constructor(children: readonly VNode[]) {
     this.children = children;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   [$toDirective](): Directive<unknown> {

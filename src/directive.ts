@@ -20,6 +20,9 @@ export class DirectiveSpecifier<T>
   constructor(type: DirectiveType<T>, value: T) {
     this.type = type;
     this.value = value;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   [$debug](format: (value: unknown) => string): string {
@@ -41,6 +44,9 @@ export class SlotSpecifier<T>
   constructor(type: SlotType, value: T) {
     this.type = type;
     this.value = value;
+    DEBUG: {
+      Object.freeze(this);
+    }
   }
 
   [$debug](format: (value: unknown) => string): string {
