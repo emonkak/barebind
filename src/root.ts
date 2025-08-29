@@ -6,6 +6,7 @@ import {
   PartType,
   type ScheduleOptions,
   type Slot,
+  type UpdateHandle,
 } from './internal.js';
 import {
   Runtime,
@@ -50,7 +51,7 @@ export class Root<T> {
     return this._runtime.addObserver(observer);
   }
 
-  hydrate(options?: ScheduleOptions): Promise<void> {
+  hydrate(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
       resume: (context) => {
         const target = createHydrationTree(this._container);
@@ -66,10 +67,10 @@ export class Root<T> {
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
       ...options,
-    }).finished;
+    });
   }
 
-  mount(options?: ScheduleOptions): Promise<void> {
+  mount(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
       resume: (context) => {
         this._slot.connect(context);
@@ -83,10 +84,10 @@ export class Root<T> {
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
       ...options,
-    }).finished;
+    });
   }
 
-  update(value: T, options?: ScheduleOptions): Promise<void> {
+  update(value: T, options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
       resume: (context) => {
         this._slot.reconcile(value, context);
@@ -98,10 +99,10 @@ export class Root<T> {
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
       ...options,
-    }).finished;
+    });
   }
 
-  unmount(options?: ScheduleOptions): Promise<void> {
+  unmount(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
       resume: (context) => {
         this._slot.disconnect(context);
@@ -115,7 +116,7 @@ export class Root<T> {
     return this._runtime.scheduleUpdate(coroutine, {
       ...DEFAULT_OPTIONS,
       ...options,
-    }).finished;
+    });
   }
 }
 

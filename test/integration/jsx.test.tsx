@@ -33,7 +33,7 @@ test('render a component returning virtual DOM', async () => {
   const container = document.createElement('div');
   const root = Root.create(value1, container, new BrowserBackend());
 
-  await root.mount();
+  await root.mount().finished;
 
   const items = [...container.querySelectorAll('li')];
 
@@ -42,7 +42,7 @@ test('render a component returning virtual DOM', async () => {
   );
   expect(items).toHaveLength(3);
 
-  await root.update(value2);
+  await root.update(value2).finished;
 
   expect(stripComments(container).innerHTML).toBe(
     '<div><ul><li>qux</li><li>baz</li><li>bar</li><li>foo</li></ul><p>Chao, Alternative world!</p><dt>foo</dt><dd>bar</dd><dt>baz</dt><dd>qux</dd></div>',
@@ -54,7 +54,7 @@ test('render a component returning virtual DOM', async () => {
     expect.exact(items[0]),
   ]);
 
-  await root.unmount();
+  await root.unmount().finished;
 
   expect(container.innerHTML).toBe('');
 });

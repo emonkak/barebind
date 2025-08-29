@@ -15,7 +15,7 @@ describe('Root', () => {
 
       const unsubscribe = root.observe(observer);
 
-      await root.mount();
+      await root.mount().finished;
 
       expect(observer.onRuntimeEvent).toHaveBeenCalled();
       expect(observer.onRuntimeEvent).toHaveBeenCalledWith({
@@ -32,7 +32,7 @@ describe('Root', () => {
       const callCount = observer.onRuntimeEvent.mock.calls.length;
 
       unsubscribe();
-      await root.unmount();
+      await root.unmount().finished;
 
       expect(observer.onRuntimeEvent).toHaveBeenCalledTimes(callCount);
     });
@@ -46,15 +46,15 @@ describe('Root', () => {
       const backend = new MockBackend();
       const root = Root.create(value1, container, backend);
 
-      await root.mount();
+      await root.mount().finished;
 
       expect(container.innerHTML).toBe('<!--foo-->');
 
-      await root.update(value2);
+      await root.update(value2).finished;
 
       expect(container.innerHTML).toBe('<!--bar-->');
 
-      await root.unmount();
+      await root.unmount().finished;
 
       expect(container.innerHTML).toBe('');
     });
@@ -68,15 +68,15 @@ describe('Root', () => {
       const backend = new MockBackend();
       const root = Root.create(value1, container, backend);
 
-      await root.hydrate();
+      await root.hydrate().finished;
 
       expect(container.innerHTML).toBe('<!--foo-->');
 
-      await root.update(value2);
+      await root.update(value2).finished;
 
       expect(container.innerHTML).toBe('<!--bar-->');
 
-      await root.unmount();
+      await root.unmount().finished;
 
       expect(container.innerHTML).toBe('');
     });
