@@ -96,7 +96,7 @@ export class Reactive<T> extends Signal<T> {
     return getSnapshot(this._container);
   }
 
-  set value(source: T) {
+  set value(value: T) {
     if (!(this._container.source instanceof Atom)) {
       throw new TypeError('Cannot set value on a read-only value.');
     }
@@ -106,7 +106,7 @@ export class Reactive<T> extends Signal<T> {
     // We must clear the dirty flag for shallow subscription before set the new
     // source.
     this._container.flags &= ~FLAG_DIRTY;
-    this._container.source.value = source;
+    this._container.source.value = value;
   }
 
   get version(): number {

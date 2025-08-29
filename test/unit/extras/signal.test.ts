@@ -219,7 +219,7 @@ describe('SiganlBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(signal2);
+          binding.value = signal2;
           binding.connect(context);
           binding.commit();
         });

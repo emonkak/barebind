@@ -327,7 +327,7 @@ describe('SpreadBinding', () => {
         const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });

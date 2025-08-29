@@ -106,7 +106,7 @@ describe('PropertyBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(value2);
+          binding.value = value2;
           binding.connect(context);
           binding.commit();
         });

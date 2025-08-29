@@ -52,7 +52,7 @@ describe('StrictSlot', () => {
       const helper = new UpdateHelper();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const bindSpy = vi.spyOn(binding, 'bind');
+      const setValueSpy = vi.spyOn(binding, 'value', 'set');
       const connectSpy = vi.spyOn(binding, 'connect');
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -65,7 +65,7 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
-        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(setValueSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
@@ -82,8 +82,8 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledWith(value2);
+        expect(setValueSpy).toHaveBeenCalledTimes(1);
+        expect(setValueSpy).toHaveBeenCalledWith(value2);
         expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
@@ -100,8 +100,8 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledWith(value2);
+        expect(setValueSpy).toHaveBeenCalledTimes(1);
+        expect(setValueSpy).toHaveBeenCalledWith(value2);
         expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
@@ -123,7 +123,7 @@ describe('StrictSlot', () => {
       const helper = new UpdateHelper();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const bindSpy = vi.spyOn(binding, 'bind');
+      const setValueSpy = vi.spyOn(binding, 'value', 'set');
       const connectSpy = vi.spyOn(binding, 'connect');
       const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -137,7 +137,7 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
-        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(setValueSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(0);
         expect(hydrateSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
@@ -152,7 +152,7 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(setValueSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(0);
         expect(hydrateSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);

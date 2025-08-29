@@ -12,10 +12,9 @@ export interface Bindable<T = unknown> {
 
 export interface Binding<T> extends ReversibleEffect {
   readonly type: DirectiveType<T>;
-  readonly value: T;
+  value: T;
   readonly part: Part;
   shouldBind(value: T): boolean;
-  bind(value: T): void;
   hydrate(target: HydrationTree, context: UpdateContext): void;
   connect(context: UpdateContext): void;
   disconnect(context: UpdateContext): void;

@@ -36,8 +36,8 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
   }
 
   commit(): void {
-    const value = this._pendingValue;
-    const { node, name } = this._part;
+    const value = this.value;
+    const { node, name } = this.part;
     const currentValue = node[name as keyof Element];
 
     if (!Object.is(currentValue, value)) {
@@ -46,7 +46,7 @@ export class LiveBinding<T> extends PrimitiveBinding<T, Part.LivePart> {
   }
 
   rollback(): void {
-    const { node, name, defaultValue } = this._part;
+    const { node, name, defaultValue } = this.part;
     (node as any)[name] = defaultValue;
   }
 }

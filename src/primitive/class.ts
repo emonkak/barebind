@@ -68,19 +68,19 @@ export class ClassBinding extends PrimitiveBinding<
   }
 
   commit(): void {
-    const { classList } = this._part.node;
+    const { classList } = this.part.node;
 
     updateClasses(
       classList,
-      this._pendingValue as ClassMap,
+      this.value as ClassMap,
       this._memoizedValue as ClassMap,
     );
 
-    this._memoizedValue = this._pendingValue;
+    this._memoizedValue = this.value;
   }
 
   rollback(): void {
-    const { classList } = this._part.node;
+    const { classList } = this.part.node;
 
     updateClasses(classList, {}, this._memoizedValue as ClassMap);
 

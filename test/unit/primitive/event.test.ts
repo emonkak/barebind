@@ -149,7 +149,7 @@ describe('EventBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(handler2);
+          binding.value = handler2;
           binding.connect(context);
           binding.commit();
         });
@@ -204,7 +204,7 @@ describe('EventBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(handler2);
+          binding.value = handler2;
           binding.connect(context);
           binding.commit();
         });
@@ -265,7 +265,7 @@ describe('EventBinding', () => {
 
         SESSION2: {
           helper.startSession((context) => {
-            binding.bind(handler2);
+            binding.value = handler2;
             binding.connect(context);
             binding.commit();
           });

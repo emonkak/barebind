@@ -307,7 +307,7 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           context.frame.mutationEffects.push(binding);
         });

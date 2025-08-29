@@ -63,13 +63,13 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
 export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect
 {
-  private readonly _template: Template<TBinds>;
+  readonly type: Template<TBinds>;
 
-  private _pendingBinds: TBinds;
+  value: TBinds;
 
-  private _memoizedBinds: TBinds | null = null;
+  readonly part: Part.ChildNodePart;
 
-  private readonly _part: Part.ChildNodePart;
+  private _memoizedValue: TBinds | null = null;
 
   private _pendingResult: TemplateResult | null = null;
 
@@ -80,29 +80,13 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     binds: TBinds,
     part: Part.ChildNodePart,
   ) {
-    this._template = template;
-    this._pendingBinds = binds;
-    this._part = part;
+    this.type = template;
+    this.value = binds;
+    this.part = part;
   }
 
-  get type(): Template<TBinds> {
-    return this._template;
-  }
-
-  get value(): TBinds {
-    return this._pendingBinds;
-  }
-
-  get part(): Part.ChildNodePart {
-    return this._part;
-  }
-
-  shouldBind(binds: TBinds): boolean {
-    return this._memoizedBinds === null || binds !== this._memoizedBinds;
-  }
-
-  bind(binds: TBinds): void {
-    this._pendingBinds = binds;
+  shouldBind(value: TBinds): boolean {
+    return this._memoizedValue === null || value !== this._memoizedValue;
   }
 
   hydrate(target: HydrationTree, context: UpdateContext): void {
@@ -112,15 +96,10 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       );
     }
 
-    const result = this._template.hydrate(
-      this._pendingBinds,
-      this._part,
-      target,
-      context,
-    );
+    const result = this.type.hydrate(this.value, this.part, target, context);
 
-    this._part.anchorNode = getAnchorNode(result);
-    this._memoizedBinds = this._pendingBinds;
+    this.part.anchorNode = getAnchorNode(result);
+    this._memoizedValue = this.value;
     this._pendingResult = result;
     this._memoizedResult = result;
   }
@@ -130,17 +109,13 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this._pendingBinds[i]!, context);
+        slots[i]!.reconcile(this.value[i]!, context);
       }
     } else {
-      this._pendingResult = this._template.render(
-        this._pendingBinds,
-        this._part,
-        context,
-      );
+      this._pendingResult = this.type.render(this.value, this.part, context);
     }
 
-    this._memoizedBinds = this._pendingBinds;
+    this._memoizedValue = this.value;
   }
 
   disconnect(context: UpdateContext): void {
@@ -158,14 +133,14 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       const { childNodes, slots } = this._pendingResult;
 
       if (this._memoizedResult === null) {
-        this._part.node.before(...childNodes);
+        this.part.node.before(...childNodes);
       }
 
       for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.commit();
       }
 
-      this._part.anchorNode = getAnchorNode(this._pendingResult);
+      this.part.anchorNode = getAnchorNode(this._pendingResult);
     }
 
     this._memoizedResult = this._pendingResult;
@@ -193,7 +168,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
     }
 
-    this._part.anchorNode = null;
+    this.part.anchorNode = null;
     this._memoizedResult = null;
   }
 }

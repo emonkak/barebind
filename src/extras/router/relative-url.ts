@@ -7,11 +7,11 @@ export interface URLLike {
 type URLSearchParamsInput = ConstructorParameters<typeof URLSearchParams>[0];
 
 export class RelativeURL {
-  private readonly _pathname: string;
+  readonly pathname: string;
 
-  private readonly _searchParams: URLSearchParams;
+  readonly searchParams: URLSearchParams;
 
-  private readonly _hash: string;
+  readonly hash: string;
 
   static from(value: string | RelativeURL | URLLike): RelativeURL {
     if (value instanceof RelativeURL) {
@@ -42,28 +42,16 @@ export class RelativeURL {
   }
 
   constructor(pathname: string, search: URLSearchParamsInput = '', hash = '') {
-    this._pathname = pathname;
+    this.pathname = pathname;
     // URLSearchParams must be read-only to make RelativeURL immutable.
-    this._searchParams = Object.freeze(new URLSearchParams(search));
-    this._hash = hash;
-  }
-
-  get pathname(): string {
-    return this._pathname;
+    this.searchParams = Object.freeze(new URLSearchParams(search));
+    this.hash = hash;
   }
 
   get search(): string {
-    return this._searchParams.size > 0
-      ? '?' + decodeURIComponent(this._searchParams.toString())
+    return this.searchParams.size > 0
+      ? '?' + decodeURIComponent(this.searchParams.toString())
       : '';
-  }
-
-  get searchParams(): URLSearchParams {
-    return this._searchParams;
-  }
-
-  get hash(): string {
-    return this._hash;
   }
 
   toJSON(): string {
@@ -71,7 +59,7 @@ export class RelativeURL {
   }
 
   toString(): string {
-    return this._pathname + this.search + this._hash;
+    return this.pathname + this.search + this.hash;
   }
 
   toURL(base: string | URL): URL {

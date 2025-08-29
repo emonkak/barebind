@@ -9,30 +9,18 @@ import type {
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>
 {
-  protected _pendingValue: TValue;
+  value: TValue;
 
-  protected readonly _part: TPart;
+  readonly part: TPart;
 
   constructor(value: TValue, part: TPart) {
-    this._pendingValue = value;
-    this._part = part;
+    this.value = value;
+    this.part = part;
   }
 
   abstract get type(): Primitive<TValue>;
 
-  get value(): TValue {
-    return this._pendingValue;
-  }
-
-  get part(): TPart {
-    return this._part;
-  }
-
   abstract shouldBind(value: TValue): boolean;
-
-  bind(value: TValue): void {
-    this._pendingValue = value;
-  }
 
   hydrate(_target: HydrationTree, _context: UpdateContext): void {}
 

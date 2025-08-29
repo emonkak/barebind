@@ -31,10 +31,10 @@ describe('TaggedTemplate', () => {
         <dialog class="dialog" id=${0} $open=${2} .innerHTML=${1} @click=${3}></dialog>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<dialog class="dialog"></dialog>',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Live, name: 'open', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
@@ -47,10 +47,10 @@ describe('TaggedTemplate', () => {
         <dialog class="dialog" id="${0}" $open="${2}" .innerHTML="${1}" @click="${3}"></dialog>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<dialog class="dialog"></dialog>',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Live, name: 'open', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
@@ -63,10 +63,10 @@ describe('TaggedTemplate', () => {
         <dialog class="dialog" id='${0}' $open='${2}' .innerHTML='${1}' @click='${3}'></dialog>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<dialog class="dialog"></dialog>',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Live, name: 'open', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
@@ -79,10 +79,10 @@ describe('TaggedTemplate', () => {
         <dialog class="dialog" id="${0}" $open= "${2}" .innerHTML ="${1}" @click = "${3}"></dialog>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<dialog class="dialog"></dialog>',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'id', index: 0 },
         { type: PartType.Live, name: 'open', index: 0 },
         { type: PartType.Property, name: 'innerHTML', index: 0 },
@@ -98,10 +98,8 @@ describe('TaggedTemplate', () => {
         <${3} />
       `;
 
-      expect(template['_template'].innerHTML).toBe(
-        '<!----><!----><!----><!---->',
-      );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.innerHTML).toBe('<!----><!----><!----><!---->');
+      expect(template.holes).toStrictEqual([
         { type: PartType.ChildNode, index: 0 },
         { type: PartType.ChildNode, index: 1 },
         { type: PartType.ChildNode, index: 2 },
@@ -116,10 +114,10 @@ describe('TaggedTemplate', () => {
         <div id="foo" ${2} class="bar"></div>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<div id="foo"></div><div id="foo"></div><div id="foo" class="bar"></div>',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.Element, index: 0 },
         { type: PartType.Element, index: 1 },
         { type: PartType.Element, index: 2 },
@@ -134,10 +132,8 @@ describe('TaggedTemplate', () => {
         </ul>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
-        '<ul><li></li><li></li></ul>',
-      );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.innerHTML).toBe('<ul><li></li><li></li></ul>');
+      expect(template.holes).toStrictEqual([
         {
           type: PartType.Text,
           index: 2,
@@ -165,10 +161,10 @@ describe('TaggedTemplate', () => {
         </div>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<div>  </div><div></div><div></div><div></div><div></div>',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         {
           type: PartType.Text,
           index: 3,
@@ -229,10 +225,10 @@ describe('TaggedTemplate', () => {
         <!-- ${3} /-->
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<!----><!----><!----><!----><!---->',
       );
-      expect(template['_holes']).toStrictEqual([
+      expect(template.holes).toStrictEqual([
         { type: PartType.ChildNode, index: 1 },
         { type: PartType.ChildNode, index: 2 },
         { type: PartType.ChildNode, index: 3 },
@@ -243,8 +239,8 @@ describe('TaggedTemplate', () => {
     it('should parse a HTML template with holes inside tags with leading spaces', () => {
       const { template } = html` < ${0}>< ${1}/> `;
 
-      expect(template['_template'].innerHTML).toBe('');
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.innerHTML).toBe('');
+      expect(template.holes).toStrictEqual([
         {
           type: PartType.Text,
           index: 0,
@@ -263,8 +259,8 @@ describe('TaggedTemplate', () => {
     it('should parse a HTML template with holes on the root', () => {
       const { template } = html` ${0} ${1} `;
 
-      expect(template['_template'].innerHTML).toBe('');
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.innerHTML).toBe('');
+      expect(template.holes).toStrictEqual([
         {
           type: PartType.Text,
           index: 0,
@@ -283,8 +279,8 @@ describe('TaggedTemplate', () => {
     it('should parse a HTML template without holes', () => {
       const { template } = html` foo `;
 
-      expect(template['_template'].innerHTML).toBe(' foo ');
-      expect(template['_holes']).toStrictEqual([]);
+      expect(template.template.innerHTML).toBe(' foo ');
+      expect(template.holes).toStrictEqual([]);
     });
 
     it('should parse a SVG template with holes inside attributes', () => {
@@ -292,13 +288,13 @@ describe('TaggedTemplate', () => {
         <circle fill="black" cx=${0} cy=${1} r=${2} />
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<circle fill="black"></circle>',
       );
-      expect(
-        template['_template'].content.firstElementChild?.namespaceURI,
-      ).toBe(SVG_NAMESPACE_URI);
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.content.firstElementChild?.namespaceURI).toBe(
+        SVG_NAMESPACE_URI,
+      );
+      expect(template.holes).toStrictEqual([
         { type: PartType.Attribute, name: 'cx', index: 0 },
         { type: PartType.Attribute, name: 'cy', index: 0 },
         { type: PartType.Attribute, name: 'r', index: 0 },
@@ -310,13 +306,13 @@ describe('TaggedTemplate', () => {
         <msup><mi>${0}</mi><mn>${1}</mn></msup>
       `;
 
-      expect(template['_template'].innerHTML).toBe(
+      expect(template.template.innerHTML).toBe(
         '<msup><mi></mi><mn></mn></msup>',
       );
-      expect(
-        template['_template'].content.firstElementChild?.namespaceURI,
-      ).toBe(MATH_NAMESPACE_URI);
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.content.firstElementChild?.namespaceURI).toBe(
+        MATH_NAMESPACE_URI,
+      );
+      expect(template.holes).toStrictEqual([
         {
           type: PartType.Text,
           index: 2,
@@ -337,8 +333,8 @@ describe('TaggedTemplate', () => {
         <div><!--Hello-->, ${0}</div>
       `;
 
-      expect(template['_template'].innerHTML).toBe('');
-      expect(template['_holes']).toStrictEqual([
+      expect(template.template.innerHTML).toBe('');
+      expect(template.holes).toStrictEqual([
         {
           type: PartType.Text,
           index: 0,

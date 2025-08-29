@@ -190,7 +190,7 @@ describe('ClassBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(classes2);
+          binding.value = classes2;
           binding.connect(context);
           binding.commit();
         });
@@ -200,7 +200,7 @@ describe('ClassBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(classes1);
+          binding.value = classes1;
           binding.connect(context);
           binding.commit();
         });
@@ -231,7 +231,7 @@ describe('ClassBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(classes2);
+          binding.value = classes2;
           binding.connect(context);
           binding.commit();
         });
@@ -241,7 +241,7 @@ describe('ClassBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(classes1);
+          binding.value = classes1;
           binding.connect(context);
           binding.commit();
         });
@@ -272,7 +272,7 @@ describe('ClassBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(classes2);
+          binding.value = classes2;
           binding.connect(context);
           binding.commit();
         });
@@ -282,7 +282,7 @@ describe('ClassBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(classes1);
+          binding.value = classes1;
           binding.connect(context);
           binding.commit();
         });

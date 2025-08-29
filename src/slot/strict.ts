@@ -56,7 +56,7 @@ export class StrictSlot<T> implements Slot<T> {
     }
 
     if (this._dirty || this._binding.shouldBind(directive.value)) {
-      this._binding.bind(directive.value);
+      this._binding.value = directive.value;
       this._binding.connect(context);
       this._dirty = true;
     }

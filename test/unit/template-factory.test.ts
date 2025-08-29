@@ -24,10 +24,10 @@ describe('OptimizedTemplateFactory', () => {
       );
 
       expect(template).toBeInstanceOf(TaggedTemplate);
-      expect((template as TaggedTemplate)['_template'].innerHTML).toBe(
+      expect((template as TaggedTemplate)['template'].innerHTML).toBe(
         '<div></div>',
       );
-      expect((template as TaggedTemplate)['_holes']).toStrictEqual([
+      expect((template as TaggedTemplate)['holes']).toStrictEqual([
         {
           type: PartType.Text,
           index: 1,
@@ -94,8 +94,8 @@ describe('OptimizedTemplateFactory', () => {
         ) as TextTemplate;
 
         expect(template).toBeInstanceOf(TextTemplate);
-        expect(template['_precedingText']).toBe(strings[0]);
-        expect(template['_followingText']).toBe(strings[1]);
+        expect(template.precedingText).toBe(strings[0]);
+        expect(template.followingText).toBe(strings[1]);
       },
     );
   });

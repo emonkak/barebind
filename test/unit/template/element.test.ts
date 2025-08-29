@@ -17,7 +17,7 @@ describe('Element()', () => {
     const bindable = Element('div', props, children);
 
     expect(bindable.type).toBeInstanceOf(ElementTemplate);
-    expect((bindable.type as ElementTemplate)['_name']).toBe('div');
+    expect((bindable.type as ElementTemplate).tagName).toBe('div');
     expect(bindable.value).toStrictEqual([props, children]);
   });
 });

@@ -120,11 +120,11 @@ export class TaggedTemplate<
     return new TaggedTemplate(template, holes, mode);
   }
 
-  private readonly _template: HTMLTemplateElement;
+  readonly template: HTMLTemplateElement;
 
-  private readonly _holes: Hole[];
+  readonly holes: Hole[];
 
-  private readonly _mode: TemplateMode;
+  readonly mode: TemplateMode;
 
   constructor(
     template: HTMLTemplateElement,
@@ -132,13 +132,13 @@ export class TaggedTemplate<
     mode: TemplateMode,
   ) {
     super();
-    this._template = template;
-    this._holes = holes;
-    this._mode = mode;
+    this.template = template;
+    this.holes = holes;
+    this.mode = mode;
   }
 
   get arity(): number {
-    return this._holes.length;
+    return this.holes.length;
   }
 
   hydrate(
@@ -149,9 +149,9 @@ export class TaggedTemplate<
   ): TemplateResult {
     const { runtime } = context;
     const document = part.node.ownerDocument;
-    const fragment = this._template.content;
+    const fragment = this.template.content;
     const sourceTree = createTreeWalker(fragment);
-    const holes = this._holes;
+    const holes = this.holes;
     const totalHoles = holes.length;
     const childNodes: ChildNode[] = [];
     const slots: Slot<unknown>[] = new Array(totalHoles);
@@ -192,7 +192,7 @@ export class TaggedTemplate<
               type: hole.type,
               node: document.createComment(''),
               anchorNode: null,
-              namespaceURI: getNamespaceURI(target.currentNode, this._mode),
+              namespaceURI: getNamespaceURI(target.currentNode, this.mode),
             };
             break;
           case PartType.Element:
@@ -275,8 +275,8 @@ export class TaggedTemplate<
   ): TemplateResult {
     const { runtime } = context;
     const document = part.node.ownerDocument;
-    const fragment = document.importNode(this._template.content, true);
-    const holes = this._holes;
+    const fragment = document.importNode(this.template.content, true);
+    const holes = this.holes;
     const slots: Slot<unknown>[] = new Array(holes.length);
 
     if (holes.length > 0) {
@@ -310,7 +310,7 @@ export class TaggedTemplate<
               type: hole.type,
               node: sourceTree.currentNode as Comment,
               anchorNode: null,
-              namespaceURI: getNamespaceURI(sourceTree.currentNode, this._mode),
+              namespaceURI: getNamespaceURI(sourceTree.currentNode, this.mode),
             };
             break;
           case PartType.Element:

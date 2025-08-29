@@ -53,74 +53,46 @@ export function createComponent<TProps, TResult = unknown>(
 export class ComponentBinding<TProps, TResult>
   implements Binding<TProps>, Coroutine
 {
-  private readonly _component: Component<TProps, TResult>;
+  readonly type: Component<TProps, TResult>;
 
-  private _pendingProps: TProps;
+  value: TProps;
 
-  private _memoizedProps: TProps | null = null;
+  part: Part;
 
-  private readonly _part: Part;
+  parentScope: Scope | null = null;
+
+  pendingLanes: Lanes = Lanes.NoLanes;
+
+  private _memoizedValue: TProps | null = null;
 
   private _slot: Slot<TResult> | null = null;
 
   private _hooks: Hook[] = [];
-
-  private _parentScope: Scope | null = null;
-
-  private _pendingLanes: Lanes = Lanes.NoLanes;
 
   constructor(
     component: Component<TProps, TResult>,
     props: TProps,
     part: Part,
   ) {
-    this._component = component;
-    this._pendingProps = props;
-    this._part = part;
+    this.type = component;
+    this.value = props;
+    this.part = part;
   }
 
-  get type(): Component<TProps, TResult> {
-    return this._component;
-  }
-
-  get value(): TProps {
-    return this._pendingProps;
-  }
-
-  get part(): Part {
-    return this._part;
-  }
-
-  get parentScope(): Scope | null {
-    return this._parentScope;
-  }
-
-  get pendingLanes(): Lanes {
-    return this._pendingLanes;
-  }
-
-  set pendingLanes(pendingLanes: Lanes) {
-    this._pendingLanes |= pendingLanes;
-  }
-
-  shouldBind(props: TProps): boolean {
+  shouldBind(value: TProps): boolean {
     return (
-      this._memoizedProps === null ||
-      !this._component.shouldSkipUpdate(props, this._memoizedProps)
+      this._memoizedValue === null ||
+      !this.type.shouldSkipUpdate(value, this._memoizedValue)
     );
-  }
-
-  bind(props: TProps): void {
-    this._pendingProps = props;
   }
 
   resume(context: UpdateContext): void {
     const { frame, runtime } = context;
-    const scope = createScope(this._parentScope);
+    const scope = createScope(this.parentScope);
     const subcontext = createUpdateContext(frame, scope, runtime);
     const result = runtime.renderComponent(
-      this._component,
-      this._pendingProps,
+      this.type,
+      this.value,
       this._hooks,
       this,
       frame,
@@ -133,7 +105,7 @@ export class ComponentBinding<TProps, TResult>
         shouldCommit = false;
       }
     } else {
-      this._slot = runtime.resolveSlot(result, this._part);
+      this._slot = runtime.resolveSlot(result, this.part);
       this._slot.connect(subcontext);
     }
 
@@ -141,8 +113,8 @@ export class ComponentBinding<TProps, TResult>
       frame.mutationEffects.push(this._slot);
     }
 
-    this._memoizedProps = this._pendingProps;
-    this._pendingLanes &= ~frame.lanes;
+    this._memoizedValue = this.value;
+    this.pendingLanes &= ~frame.lanes;
   }
 
   hydrate(target: HydrationTree, context: UpdateContext): void {
@@ -156,24 +128,24 @@ export class ComponentBinding<TProps, TResult>
     const scope = createScope(parentScope);
     const subcontext = createUpdateContext(frame, scope, runtime);
     const result = runtime.renderComponent(
-      this._component,
-      this._pendingProps,
+      this.type,
+      this.value,
       this._hooks,
       this,
       frame,
       scope,
     );
 
-    this._slot = runtime.resolveSlot(result, this._part);
+    this._slot = runtime.resolveSlot(result, this.part);
     this._slot.hydrate(target, subcontext);
 
-    this._parentScope = parentScope;
-    this._memoizedProps = this._pendingProps;
+    this.parentScope = parentScope;
+    this._memoizedValue = this.value;
   }
 
   connect(context: UpdateContext): void {
     context.frame.pendingCoroutines.push(this);
-    this._parentScope = context.scope;
+    this.parentScope = context.scope;
   }
 
   disconnect(context: UpdateContext): void {
@@ -197,7 +169,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.disconnect(context);
     this._hooks = [];
-    this._pendingLanes = Lanes.NoLanes;
+    this.pendingLanes = Lanes.NoLanes;
   }
 
   commit(): void {

@@ -65,26 +65,26 @@ export class StyleBinding extends PrimitiveBinding<
     return StylePrimitive;
   }
 
-  shouldBind(props: StyleProperties): boolean {
-    return !shallowEqual(props, this._memoizedValue);
+  shouldBind(value: StyleProperties): boolean {
+    return !shallowEqual(value, this._memoizedValue);
   }
 
   commit(): void {
-    const newProps = this._pendingValue;
+    const newProps = this.value;
     const oldProps = this._memoizedValue;
-    const { style } = this._part.node as
+    const { style } = this.part.node as
       | HTMLElement
       | MathMLElement
       | SVGElement;
 
     updateStyles(style, newProps, oldProps);
 
-    this._memoizedValue = this._pendingValue;
+    this._memoizedValue = this.value;
   }
 
   rollback(): void {
     const props = this._memoizedValue;
-    const { style } = this._part.node as
+    const { style } = this.part.node as
       | HTMLElement
       | MathMLElement
       | SVGElement;

@@ -249,31 +249,31 @@ describe('ConsoleReporter', () => {
 type Log = [keyof ConsoleLogger, ...unknown[]];
 
 class MockLogger implements ConsoleLogger {
-  private _logs: Log[] = [];
+  logs: Log[] = [];
 
   flush(): Log[] {
-    const logs = this._logs;
-    this._logs = [];
+    const logs = this.logs;
+    this.logs = [];
     return logs;
   }
 
   group(...args: unknown[]): void {
-    this._logs.push(['group', args[0]]);
+    this.logs.push(['group', args[0]]);
   }
 
   groupCollapsed(...args: unknown[]): void {
-    this._logs.push(['groupCollapsed', args[0]]);
+    this.logs.push(['groupCollapsed', args[0]]);
   }
 
   groupEnd(): void {
-    this._logs.push(['groupEnd']);
+    this.logs.push(['groupEnd']);
   }
 
   log(...args: unknown[]): void {
-    this._logs.push(['log', args[0]]);
+    this.logs.push(['log', args[0]]);
   }
 
   table(...args: unknown[]): void {
-    this._logs.push(['table', args[0]]);
+    this.logs.push(['table', args[0]]);
   }
 }

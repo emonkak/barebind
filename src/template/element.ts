@@ -25,11 +25,11 @@ export class ElementTemplate<
   TProps = unknown,
   TChildren = unknown,
 > extends AbstractTemplate<readonly [TProps, TChildren]> {
-  private readonly _name: string;
+  readonly tagName: string;
 
-  constructor(name: string) {
+  constructor(tagName: string) {
     super();
-    this._name = name;
+    this.tagName = tagName;
   }
 
   get arity(): 2 {
@@ -37,7 +37,7 @@ export class ElementTemplate<
   }
 
   equals(other: DirectiveType<unknown>): boolean {
-    return other instanceof ElementTemplate && other._name === this._name;
+    return other instanceof ElementTemplate && other.tagName === this.tagName;
   }
 
   hydrate(
@@ -48,11 +48,11 @@ export class ElementTemplate<
   ): TemplateResult {
     const document = part.node.ownerDocument;
     const namespaceURI =
-      getNamespaceURIByTagName(this._name) ?? part.namespaceURI;
+      getNamespaceURIByTagName(this.tagName) ?? part.namespaceURI;
     const elementPart = {
       type: PartType.Element,
       node: treatNodeName(
-        this._name.toUpperCase(),
+        this.tagName.toUpperCase(),
         target.nextNode(),
         target,
       ) as Element,
@@ -84,10 +84,10 @@ export class ElementTemplate<
   ): TemplateResult {
     const document = part.node.ownerDocument;
     const namespaceURI =
-      getNamespaceURIByTagName(this._name) ?? part.namespaceURI;
+      getNamespaceURIByTagName(this.tagName) ?? part.namespaceURI;
     const elementPart = {
       type: PartType.Element,
-      node: document.createElementNS(namespaceURI, this._name),
+      node: document.createElementNS(namespaceURI, this.tagName),
     };
     const childrenPart = {
       type: PartType.ChildNode,

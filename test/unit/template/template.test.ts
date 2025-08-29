@@ -265,7 +265,7 @@ describe('TemplateBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(binds2);
+          binding.value = binds2;
           binding.connect(context);
           binding.commit();
         });
@@ -429,7 +429,7 @@ describe('TemplateBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(binds2);
+          binding.value = binds2;
           binding.connect(context);
           binding.commit();
         });

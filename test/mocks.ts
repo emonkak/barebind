@@ -93,7 +93,7 @@ export class MockBindable<T> implements Bindable<T> {
 export class MockBinding<T> implements Binding<T> {
   readonly type: DirectiveType<T>;
 
-  value: T;
+  pendingValue: T;
 
   memoizedValue: T | null = null;
 
@@ -105,16 +105,20 @@ export class MockBinding<T> implements Binding<T> {
 
   constructor(type: DirectiveType<T>, value: T, part: Part) {
     this.type = type;
-    this.value = value;
+    this.pendingValue = value;
     this.part = part;
+  }
+
+  get value(): T {
+    return this.pendingValue;
+  }
+
+  set value(value: T) {
+    this.pendingValue = value;
   }
 
   shouldBind(value: T): boolean {
     return !Object.is(value, this.memoizedValue);
-  }
-
-  bind(value: T): void {
-    this.value = value;
   }
 
   hydrate(_target: HydrationTree, _context: UpdateContext): void {
@@ -267,15 +271,15 @@ export class MockEffect implements Effect {
 }
 
 export class MockObserver implements RuntimeObserver {
-  private _events: RuntimeEvent[] = [];
+  events: RuntimeEvent[] = [];
 
   onRuntimeEvent(event: RuntimeEvent): void {
-    this._events.push(event);
+    this.events.push(event);
   }
 
   flushEvents(): RuntimeEvent[] {
-    const events = this._events;
-    this._events = [];
+    const events = this.events;
+    this.events = [];
     return events;
   }
 }
@@ -318,7 +322,7 @@ export class MockSlot<T> implements Slot<T> {
     const dirty = this.binding.shouldBind(directive.value);
 
     if (dirty) {
-      this.binding.bind(directive.value);
+      this.binding.value = directive.value;
       this.binding.connect(context);
       this.isConnected = true;
     }

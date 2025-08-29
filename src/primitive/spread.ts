@@ -41,37 +41,25 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
 };
 
 export class SpreadBinding implements Binding<SpreadProperties> {
-  private _props: SpreadProperties;
+  value: SpreadProperties;
 
-  private readonly _part: Part.ElementPart;
+  readonly part: Part.ElementPart;
 
   private _pendingSlots: Map<string, Slot<unknown>> = new Map();
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
-  constructor(props: SpreadProperties, part: Part.ElementPart) {
-    this._props = props;
-    this._part = part;
+  constructor(value: SpreadProperties, part: Part.ElementPart) {
+    this.value = value;
+    this.part = part;
   }
 
   get type(): Primitive<SpreadProperties> {
     return SpreadPrimitive;
   }
 
-  get value(): SpreadProperties {
-    return this._props;
-  }
-
-  get part(): Part.ElementPart {
-    return this._part;
-  }
-
-  shouldBind(props: SpreadProperties): boolean {
-    return this._memoizedSlots === null || props !== this._props;
-  }
-
-  bind(props: SpreadProperties): void {
-    this._props = props;
+  shouldBind(value: SpreadProperties): boolean {
+    return this._memoizedSlots === null || value !== this.value;
   }
 
   hydrate(target: HydrationTree, context: UpdateContext): void {
@@ -84,12 +72,12 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     const { runtime } = context;
     const slots = new Map();
 
-    for (const key of Object.keys(this._props)) {
-      const value = this._props[key];
+    for (const key of Object.keys(this.value)) {
+      const value = this.value[key];
       if (value === undefined) {
         continue;
       }
-      const part = resolveNamedPart(key, this._part.node);
+      const part = resolveNamedPart(key, this.part.node);
       const slot = runtime.resolveSlot(value, part);
       slot.hydrate(target, context);
       slots.set(key, slot);
@@ -105,13 +93,13 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     const newSlots = new Map();
 
     for (const [key, slot] of oldSlots.entries()) {
-      if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
+      if (!Object.hasOwn(this.value, key) || this.value[key] === undefined) {
         slot.disconnect(context);
       }
     }
 
-    for (const key of Object.keys(this._props)) {
-      const value = this._props[key];
+    for (const key of Object.keys(this.value)) {
+      const value = this.value[key];
       if (value === undefined) {
         continue;
       }
@@ -119,7 +107,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
       if (slot !== undefined) {
         slot.reconcile(value, context);
       } else {
-        const part = resolveNamedPart(key, this._part.node);
+        const part = resolveNamedPart(key, this.part.node);
         slot = runtime.resolveSlot(value, part);
         slot.connect(context);
       }

@@ -154,7 +154,7 @@ describe('StyleBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(style2);
+          binding.value = style2;
           binding.connect(context);
           binding.commit();
         });
@@ -211,7 +211,7 @@ describe('StyleBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(style2);
+          binding.value = style2;
           binding.connect(context);
           binding.commit();
         });

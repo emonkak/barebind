@@ -244,7 +244,7 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             helper.startSession((context) => {
-              binding.bind(props2);
+              binding.value = props2;
               binding.connect(context);
               binding.commit();
             });
@@ -310,7 +310,7 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             helper.startSession((context) => {
-              binding.bind(props2);
+              binding.value = props2;
               binding.connect(context);
               binding.commit();
             });
@@ -324,7 +324,7 @@ describe('RepeatBinding', () => {
 
           SESSION3: {
             helper.startSession((context) => {
-              binding.bind(props1);
+              binding.value = props1;
               binding.connect(context);
               binding.commit();
             });
@@ -388,7 +388,7 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             helper.startSession((context) => {
-              binding.bind(props2);
+              binding.value = props2;
               binding.connect(context);
               binding.commit();
             });
@@ -402,7 +402,7 @@ describe('RepeatBinding', () => {
 
           SESSION3: {
             helper.startSession((context) => {
-              binding.bind(props1);
+              binding.value = props1;
               binding.connect(context);
               binding.commit();
             });
@@ -458,7 +458,7 @@ describe('RepeatBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -471,7 +471,7 @@ describe('RepeatBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(props1);
+          binding.value = props1;
           binding.connect(context);
           binding.commit();
         });

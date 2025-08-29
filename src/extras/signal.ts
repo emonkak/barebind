@@ -46,22 +46,22 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
  * @internal
  */
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
-  private _signal: Signal<T>;
+  parentScope: Scope | null = null;
 
-  private readonly _slot: Slot<T>;
+  pendingLanes: Lanes = Lanes.NoLanes;
+
+  private _value: Signal<T>;
 
   private _memoizedVersion: number;
 
+  private readonly _slot: Slot<T>;
+
   private _subscription: Subscription | null = null;
 
-  private _parentScope: Scope | null = null;
-
-  private _pendingLanes: Lanes = Lanes.NoLanes;
-
-  constructor(signal: Signal<T>, slot: Slot<T>) {
-    this._signal = signal;
+  constructor(value: Signal<T>, slot: Slot<T>) {
+    this._value = value;
+    this._memoizedVersion = value.version;
     this._slot = slot;
-    this._memoizedVersion = signal.version;
   }
 
   get type(): DirectiveType<Signal<T>> {
@@ -69,44 +69,32 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   get value(): Signal<T> {
-    return this._signal;
+    return this._value;
+  }
+
+  set value(value: Signal<T>) {
+    if (this._subscription !== null) {
+      this._subscription();
+      this._subscription = null;
+    }
+    this._value = value;
+    this._memoizedVersion = -1;
   }
 
   get part(): Part {
     return this._slot.part;
   }
 
-  get parentScope(): Scope | null {
-    return this._parentScope;
-  }
-
-  get pendingLanes(): Lanes {
-    return this._pendingLanes;
-  }
-
-  set pendingLanes(pendingLanes: Lanes) {
-    this._pendingLanes = pendingLanes;
-  }
-
-  shouldBind(signal: Signal<T>): boolean {
-    return this._subscription === null || signal !== this._signal;
-  }
-
-  bind(signal: Signal<T>): void {
-    if (this._subscription !== null) {
-      this._subscription();
-      this._subscription = null;
-    }
-    this._signal = signal;
-    this._memoizedVersion = -1;
+  shouldBind(value: Signal<T>): boolean {
+    return this._subscription === null || value !== this._value;
   }
 
   resume(context: UpdateContext): void {
-    if (this._slot.reconcile(this._signal.value, context)) {
+    if (this._slot.reconcile(this._value.value, context)) {
       context.frame.mutationEffects.push(this._slot);
     }
-    this._memoizedVersion = this._signal.version;
-    this._pendingLanes = Lanes.NoLanes;
+    this._memoizedVersion = this._value.version;
+    this.pendingLanes = Lanes.NoLanes;
   }
 
   hydrate(target: HydrationTree, context: UpdateContext): void {
@@ -121,17 +109,17 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   connect(context: UpdateContext): void {
-    const currentVersion = this._signal.version;
+    const currentVersion = this._value.version;
 
     if (this._memoizedVersion < currentVersion) {
-      this._slot.reconcile(this._signal.value, context);
+      this._slot.reconcile(this._value.value, context);
       this._memoizedVersion = currentVersion;
     } else {
       this._slot.connect(context);
     }
 
     this._subscription ??= this._subscribeSignal(context);
-    this._parentScope = context.scope;
+    this.parentScope = context.scope;
   }
 
   disconnect(context: UpdateContext): void {
@@ -150,7 +138,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscribeSignal(context: UpdateContext): Subscription {
     const { runtime } = context;
-    return this._signal.subscribe(() => {
+    return this._value.subscribe(() => {
       runtime.scheduleUpdate(this);
     });
   }
@@ -212,7 +200,7 @@ export class Atom<T> extends Signal<T> {
 
   private _version: number;
 
-  private readonly _subscribers = new LinkedList<Subscriber>();
+  private _subscribers = new LinkedList<Subscriber>();
 
   constructor(initialValue: T);
   /**
@@ -229,8 +217,8 @@ export class Atom<T> extends Signal<T> {
     return this._value;
   }
 
-  set value(newValue: T) {
-    this._value = newValue;
+  set value(value: T) {
+    this._value = value;
     this.touch();
   }
 

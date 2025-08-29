@@ -294,7 +294,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -333,7 +333,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -371,7 +371,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -410,7 +410,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -451,7 +451,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -491,7 +491,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -535,7 +535,7 @@ describe('ElementBinding', () => {
 
         SESSION2: {
           helper.startSession((context) => {
-            binding.bind(props2);
+            binding.value = props2;
             binding.connect(context);
             binding.commit();
           });
@@ -581,7 +581,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -620,7 +620,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -676,7 +676,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -722,7 +722,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -766,7 +766,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -778,7 +778,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(props3);
+          binding.value = props3;
           binding.connect(context);
           binding.commit();
         });
@@ -841,7 +841,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -906,7 +906,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });
@@ -989,7 +989,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(props2);
+          binding.value = props2;
           binding.connect(context);
           binding.commit();
         });

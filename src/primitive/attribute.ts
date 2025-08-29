@@ -41,8 +41,8 @@ export class AttributeBinding<T> extends PrimitiveBinding<
   }
 
   commit(): void {
-    const { node, name } = this._part;
-    const value = this._pendingValue;
+    const { node, name } = this.part;
+    const value = this.value;
 
     switch (typeof value) {
       case 'string':
@@ -59,12 +59,12 @@ export class AttributeBinding<T> extends PrimitiveBinding<
         }
     }
 
-    this._memoizedValue = this._pendingValue;
+    this._memoizedValue = this.value;
   }
 
   rollback(): void {
     if (this._memoizedValue !== null) {
-      const { node, name } = this._part;
+      const { node, name } = this.part;
       node.removeAttribute(name);
       this._memoizedValue = null;
     }

@@ -215,40 +215,28 @@ export class VStaticFragment implements Bindable<unknown> {
  * @internal
  */
 export class ElementBinding implements Binding<ElementProps> {
-  private _pendingProps: ElementProps;
+  value: ElementProps;
 
-  private _memoizedProps: ElementProps | null = null;
+  readonly part: Part.ElementPart;
 
-  private readonly _part: Part.ElementPart;
+  private _memoizedValue: ElementProps | null = null;
 
   private readonly _listenerMap: Map<string, EventListenerWithOptions> =
     new Map();
 
   constructor(props: ElementProps, part: Part.ElementPart) {
-    this._pendingProps = props;
-    this._part = part;
+    this.value = props;
+    this.part = part;
   }
 
   get type(): DirectiveType<ElementProps> {
     return ElementDirective as DirectiveType<ElementProps>;
   }
 
-  get value(): ElementProps {
-    return this._pendingProps;
-  }
-
-  get part(): Part.ElementPart {
-    return this._part;
-  }
-
-  shouldBind(props: ElementProps): boolean {
+  shouldBind(value: ElementProps): boolean {
     return (
-      this._memoizedProps === null || !shallowEqual(this._memoizedProps, props)
+      this._memoizedValue === null || !shallowEqual(this._memoizedValue, value)
     );
-  }
-
-  bind(props: ElementProps): void {
-    this._pendingProps = props;
   }
 
   hydrate(_target: HydrationTree, _context: UpdateContext): void {}
@@ -258,9 +246,9 @@ export class ElementBinding implements Binding<ElementProps> {
   disconnect(_context: UpdateContext): void {}
 
   commit(): void {
-    const newProps = this._pendingProps;
-    const oldProps = this._memoizedProps ?? ({} as ElementProps);
-    const element = this._part.node;
+    const newProps = this.value;
+    const oldProps = this._memoizedValue ?? ({} as ElementProps);
+    const element = this.part.node;
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
@@ -281,12 +269,12 @@ export class ElementBinding implements Binding<ElementProps> {
       );
     }
 
-    this._memoizedProps = newProps;
+    this._memoizedValue = newProps;
   }
 
   rollback(): void {
-    const props = this._memoizedProps;
-    const element = this._part.node;
+    const props = this._memoizedValue;
+    const element = this.part.node;
 
     if (props !== null) {
       for (const key of Object.keys(props)) {
@@ -294,7 +282,7 @@ export class ElementBinding implements Binding<ElementProps> {
       }
     }
 
-    this._memoizedProps = null;
+    this._memoizedValue = null;
   }
 
   handleEvent(event: Event): void {
@@ -312,9 +300,9 @@ export class ElementBinding implements Binding<ElementProps> {
     listener: EventListenerWithOptions,
   ): void {
     if (typeof listener === 'function') {
-      this._part.node.addEventListener(type, this);
+      this.part.node.addEventListener(type, this);
     } else {
-      this._part.node.addEventListener(type, this, listener);
+      this.part.node.addEventListener(type, this, listener);
     }
   }
 
@@ -387,9 +375,9 @@ export class ElementBinding implements Binding<ElementProps> {
     listener: EventListenerWithOptions,
   ): void {
     if (typeof listener === 'function') {
-      this._part.node.removeEventListener(type, this);
+      this.part.node.removeEventListener(type, this);
     } else {
-      this._part.node.removeEventListener(type, this, listener);
+      this.part.node.removeEventListener(type, this, listener);
     }
   }
 

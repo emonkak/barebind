@@ -138,7 +138,7 @@ describe('RefBinding', () => {
 
       SESSION2: {
         helper.startSession((context) => {
-          binding.bind(ref2);
+          binding.value = ref2;
           binding.connect(context);
           binding.commit();
         });
@@ -149,7 +149,7 @@ describe('RefBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(null);
+          binding.value = null;
           binding.connect(context);
           binding.commit();
         });
@@ -199,7 +199,7 @@ describe('RefBinding', () => {
 
       SESSION3: {
         helper.startSession((context) => {
-          binding.bind(ref2);
+          binding.value = ref2;
           binding.connect(context);
           binding.commit();
         });
@@ -213,7 +213,7 @@ describe('RefBinding', () => {
 
       SESSION4: {
         helper.startSession((context) => {
-          binding.bind(null);
+          binding.value = null;
           binding.connect(context);
           binding.commit();
         });

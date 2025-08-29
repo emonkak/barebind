@@ -59,12 +59,12 @@ export class RefBinding extends PrimitiveBinding<
     return RefPrimitive;
   }
 
-  shouldBind(ref: Nullable<ElementRef>): boolean {
-    return ref !== this._memoizedValue;
+  shouldBind(value: Nullable<ElementRef>): boolean {
+    return value !== this._memoizedValue;
   }
 
   commit(): void {
-    const newRef = this._pendingValue;
+    const newRef = this.value;
     const oldRef = this._memoizedValue;
 
     if (newRef !== oldRef) {
@@ -79,14 +79,14 @@ export class RefBinding extends PrimitiveBinding<
 
       if (newRef != null) {
         if (typeof newRef === 'function') {
-          this._memoizedCleanup = newRef(this._part.node);
+          this._memoizedCleanup = newRef(this.part.node);
         } else {
-          newRef.current = this._part.node;
+          newRef.current = this.part.node;
         }
       }
     }
 
-    this._memoizedValue = this._pendingValue;
+    this._memoizedValue = this.value;
   }
 
   rollback(): void {
