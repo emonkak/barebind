@@ -5,10 +5,10 @@ import {
   Lanes,
   PartType,
   type ScheduleOptions,
+  type SessionContext,
   type Slot,
   type UpdateHandle,
 } from './internal.js';
-import type { Runtime, RuntimeObserver } from './runtime.js';
 
 const DEFAULT_OPTIONS: ScheduleOptions = {
   immediate: true,
@@ -19,9 +19,13 @@ export class Root<T> {
 
   private readonly _container: Element;
 
-  private readonly _runtime: Runtime;
+  private readonly _runtime: SessionContext;
 
-  static create<T>(value: T, container: Element, runtime: Runtime): Root<T> {
+  static create<T>(
+    value: T,
+    container: Element,
+    runtime: SessionContext,
+  ): Root<T> {
     const part = {
       type: PartType.ChildNode,
       node: container.ownerDocument.createComment(''),
@@ -32,14 +36,14 @@ export class Root<T> {
     return new Root(slot, container, runtime);
   }
 
-  private constructor(slot: Slot<T>, container: Element, runtime: Runtime) {
+  private constructor(
+    slot: Slot<T>,
+    container: Element,
+    runtime: SessionContext,
+  ) {
     this._slot = slot;
     this._container = container;
     this._runtime = runtime;
-  }
-
-  observe(observer: RuntimeObserver): () => void {
-    return this._runtime.addObserver(observer);
   }
 
   hydrate(options?: ScheduleOptions): UpdateHandle {

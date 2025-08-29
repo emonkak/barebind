@@ -347,12 +347,9 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const root = Root.create(
-  App({}),
-  document.body,
-  new Runtime(new BrowserBackend()),
-);
+const runtime = new Runtime(new BrowserBackend());
+const root = Root.create(App({}), document.body, runtime);
 
-root.observe(new PerformanceProfiler(new ConsoleReporter()));
+runtime.addObserver(new PerformanceProfiler(new ConsoleReporter()));
 
 root.mount();
