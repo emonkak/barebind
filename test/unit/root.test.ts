@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Lanes } from '@/internal.js';
 import { Root } from '@/root.js';
+import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../mocks.js';
 import { createElement } from '../test-helpers.js';
 
@@ -9,8 +10,8 @@ describe('Root', () => {
     it('registers an observer to the runtime', async () => {
       const value = 'foo';
       const container = document.createElement('div');
-      const backend = new MockBackend();
-      const root = Root.create(value, container, backend);
+      const runtime = new Runtime(new MockBackend());
+      const root = Root.create(value, container, runtime);
       const observer = { onRuntimeEvent: vi.fn() };
 
       const unsubscribe = root.observe(observer);
@@ -43,8 +44,8 @@ describe('Root', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = document.createElement('div');
-      const backend = new MockBackend();
-      const root = Root.create(value1, container, backend);
+      const runtime = new Runtime(new MockBackend());
+      const root = Root.create(value1, container, runtime);
 
       await root.mount().finished;
 
@@ -65,8 +66,8 @@ describe('Root', () => {
       const value1 = 'foo';
       const value2 = 'bar';
       const container = createElement('div', {}, document.createComment(''));
-      const backend = new MockBackend();
-      const root = Root.create(value1, container, backend);
+      const runtime = new Runtime(new MockBackend());
+      const root = Root.create(value1, container, runtime);
 
       await root.hydrate().finished;
 

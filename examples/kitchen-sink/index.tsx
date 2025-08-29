@@ -5,6 +5,7 @@ import {
   type RenderContext,
   Repeat,
   Root,
+  Runtime,
   shallowEqual,
 } from 'barebind';
 import { ConsoleReporter, PerformanceProfiler } from 'barebind/extras/profiler';
@@ -346,7 +347,11 @@ function shuffle<T>(elements: T[]): T[] {
   return elements;
 }
 
-const root = Root.create(App({}), document.body, new BrowserBackend());
+const root = Root.create(
+  App({}),
+  document.body,
+  new Runtime(new BrowserBackend()),
+);
 
 root.observe(new PerformanceProfiler(new ConsoleReporter()));
 

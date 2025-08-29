@@ -3,6 +3,7 @@ import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
 import { Root } from '@/root.js';
+import { Runtime } from '@/runtime.js';
 import { createElement, stripComments } from '../test-helpers.js';
 
 test('hydrate a component using a context value', async () => {
@@ -22,7 +23,7 @@ test('hydrate a component using a context value', async () => {
       document.createComment(''),
     ),
   );
-  const root = Root.create(value, container, new BrowserBackend());
+  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
   await root.hydrate().finished;
 
@@ -45,7 +46,11 @@ test('render a component using a context value', async () => {
     name: 'bar',
   });
   const container = document.createElement('div');
-  const root = Root.create(value1, container, new BrowserBackend());
+  const root = Root.create(
+    value1,
+    container,
+    new Runtime(new BrowserBackend()),
+  );
 
   await root.mount().finished;
 

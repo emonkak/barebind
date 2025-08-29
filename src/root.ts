@@ -8,11 +8,7 @@ import {
   type Slot,
   type UpdateHandle,
 } from './internal.js';
-import {
-  Runtime,
-  type RuntimeBackend,
-  type RuntimeObserver,
-} from './runtime.js';
+import type { Runtime, RuntimeObserver } from './runtime.js';
 
 const DEFAULT_OPTIONS: ScheduleOptions = {
   immediate: true,
@@ -25,12 +21,7 @@ export class Root<T> {
 
   private readonly _runtime: Runtime;
 
-  static create<T>(
-    value: T,
-    container: Element,
-    backend: RuntimeBackend,
-  ): Root<T> {
-    const runtime = new Runtime(backend);
+  static create<T>(value: T, container: Element, runtime: Runtime): Root<T> {
     const part = {
       type: PartType.ChildNode,
       node: container.ownerDocument.createComment(''),

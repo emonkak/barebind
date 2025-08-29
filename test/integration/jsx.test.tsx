@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
 import { Root } from '@/root.js';
+import { Runtime } from '@/runtime.js';
 import { stripComments } from '../test-helpers.js';
 
 test('render a component returning virtual DOM', async () => {
@@ -31,7 +32,11 @@ test('render a component returning virtual DOM', async () => {
     name: 'Alternative world',
   });
   const container = document.createElement('div');
-  const root = Root.create(value1, container, new BrowserBackend());
+  const root = Root.create(
+    value1,
+    container,
+    new Runtime(new BrowserBackend()),
+  );
 
   await root.mount().finished;
 

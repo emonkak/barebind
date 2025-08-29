@@ -3,12 +3,13 @@ import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
 import { Root } from '@/root.js';
+import { Runtime } from '@/runtime.js';
 import { stripComments } from '../test-helpers.js';
 
 test('catches an error during rendering', async () => {
   const value = App({});
   const container = document.createElement('div');
-  const root = Root.create(value, container, new BrowserBackend());
+  const root = Root.create(value, container, new Runtime(new BrowserBackend()));
 
   await root.mount().finished;
 

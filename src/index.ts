@@ -24,11 +24,11 @@ export {
   type RepeatProps,
 } from './repeat.js';
 export { Root } from './root.js';
-export type {
+export {
   Runtime,
-  RuntimeBackend,
-  RuntimeEvent,
-  RuntimeObserver,
+  type RuntimeBackend,
+  type RuntimeEvent,
+  type RuntimeObserver,
 } from './runtime.js';
 export { Flexible } from './slot/flexible.js';
 export { Loose } from './slot/loose.js';

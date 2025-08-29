@@ -1,4 +1,4 @@
-import { BrowserBackend, Root } from 'barebind';
+import { BrowserBackend, Root, Runtime } from 'barebind';
 import { ConsoleReporter, PerformanceProfiler } from 'barebind/extras/profiler';
 
 import { App } from './App.js';
@@ -9,7 +9,7 @@ const root = Root.create(
     store: new AppStore(),
   }),
   document.body,
-  new BrowserBackend(),
+  new Runtime(new BrowserBackend()),
 );
 
 root.observe(new PerformanceProfiler(new ConsoleReporter()));
