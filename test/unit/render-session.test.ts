@@ -2,16 +2,51 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   $customHook,
   CommitPhase,
+  type Hook,
   type RefObject,
   type RenderContext,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Literal } from '@/template-literal.js';
-import { MockTemplate } from '../mocks.js';
-import { RenderHelper } from '../test-helpers.js';
+import { MockCoroutine, MockTemplate } from '../mocks.js';
+import { RenderHelper, UpdateHelper } from '../test-helpers.js';
 
 describe('RenderSession', () => {
   describe('catchError()', () => {
+    it('adds an error handler', () => {
+      const handler = vi.fn();
+      const error = {};
+      const helper = new UpdateHelper();
+
+      SESSION: {
+        helper.startSession(function (context) {
+          const hooks: Hook[] = [];
+          const session = new RenderSession(
+            hooks,
+            this,
+            context.frame,
+            context.scope,
+            helper.runtime,
+          );
+
+          session.catchError(handler);
+
+          session.catchError((error, handle) => {
+            handle(error);
+          });
+
+          context.frame.pendingCoroutines.push(
+            new MockCoroutine(() => {
+              throw error;
+            }),
+          );
+        });
+
+        expect(handler).toHaveBeenCalledOnce();
+        expect(handler).toHaveBeenCalledWith(error, expect.any(Function));
+      }
+    });
+
     it('throws an error when trying to add an error handler outside of rendering', () => {
       const helper = new RenderHelper();
 
@@ -166,9 +201,13 @@ describe('RenderSession', () => {
       });
 
       expect(scheduleUpdateSpy).toHaveBeenCalledTimes(2);
-      expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(2, helper.coroutine, {
-        priority: 'background',
-      });
+      expect(scheduleUpdateSpy).toHaveBeenNthCalledWith(
+        2,
+        expect.any(MockCoroutine),
+        {
+          priority: 'background',
+        },
+      );
     });
 
     it('renders the session again if rendering is running', async () => {

@@ -1,7 +1,9 @@
 import {
+  addErrorHandler,
+  type Coroutine,
   type Hook,
   HookType,
-  Lanes,
+  type Lanes,
   type ScheduleOptions,
   type UpdateContext,
   type UpdateFrame,
@@ -12,8 +14,6 @@ import { MockBackend, MockCoroutine } from './mocks.js';
 
 export class RenderHelper {
   readonly runtime;
-
-  readonly coroutine: MockCoroutine<any> = new MockCoroutine(() => {});
 
   hooks: Hook[] = [];
 
@@ -40,31 +40,38 @@ export class RenderHelper {
     callback: (context: RenderSession) => T,
     options: ScheduleOptions = {},
   ): T {
-    this.coroutine.callback = (context) => {
+    const coroutine = new MockCoroutine((context) => {
       const session = new RenderSession(
         this.hooks,
-        this.coroutine,
+        coroutine,
         context.frame,
         context.scope,
         this.runtime,
       );
-      const result = callback(session);
+      addErrorHandler(context.scope, (error) => {
+        thrownError = error;
+      });
+      returnValue = callback(session);
       session.finalize();
-      return result;
-    };
-    this.coroutine.pendingLanes = Lanes.AllLanes;
+    });
+    let returnValue: T;
+    let thrownError: unknown;
+
     this.runtime
-      .scheduleUpdate(this.coroutine, {
+      .scheduleUpdate(coroutine, {
         immediate: true,
         silent: true,
         ...options,
       })
       .finished.catch(() => {});
+
     this.runtime.flushSync();
-    if (this.coroutine.thrownError !== undefined) {
-      throw this.coroutine.thrownError;
+
+    if (thrownError !== undefined) {
+      throw thrownError;
     }
-    return this.coroutine.returnValue!;
+
+    return returnValue!;
   }
 }
 
@@ -76,18 +83,29 @@ export class UpdateHelper {
   }
 
   startSession<T>(
-    callback: (context: UpdateContext) => T,
+    callback: (this: Coroutine, context: UpdateContext) => T,
     options: ScheduleOptions = {},
   ): T {
-    const coroutine = new MockCoroutine(callback);
+    const coroutine = new MockCoroutine(function (context) {
+      addErrorHandler(context.scope, (error) => {
+        thrownError = error;
+      });
+      returnValue = callback.call(this, context);
+    });
+    let returnValue: T;
+    let thrownError: unknown;
+
     this.runtime
       .scheduleUpdate(coroutine, { immediate: true, silent: true, ...options })
       .finished.catch(() => {});
+
     this.runtime.flushSync();
-    if (coroutine.thrownError !== undefined) {
-      throw coroutine.thrownError;
+
+    if (thrownError !== undefined) {
+      throw thrownError;
     }
-    return coroutine.returnValue!;
+
+    return returnValue!;
   }
 }
 

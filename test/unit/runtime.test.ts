@@ -3,7 +3,6 @@ import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
-  type Coroutine,
   createScope,
   type Hook,
   Lanes,
@@ -264,13 +263,9 @@ describe('Runtime', () => {
       const error = new Error();
 
       SESSION: {
-        const coroutine: Coroutine = {
-          scope: null,
-          pendingLanes: Lanes.NoLanes,
-          resume() {
-            throw error;
-          },
-        };
+        const coroutine = new MockCoroutine(() => {
+          throw error;
+        });
 
         const handle = runtime.scheduleUpdate(coroutine, {
           silent: true,
@@ -503,13 +498,9 @@ describe('Runtime', () => {
       const error = new Error();
 
       SESSION: {
-        const coroutine: Coroutine = {
-          scope: null,
-          pendingLanes: Lanes.NoLanes,
-          resume() {
-            throw error;
-          },
-        };
+        const coroutine = new MockCoroutine(() => {
+          throw error;
+        });
 
         await expect(
           runtime.scheduleUpdate(coroutine).finished,
@@ -532,7 +523,7 @@ describe('Runtime', () => {
       const component = createComponent(() => null);
       const props = {};
       const hooks: Hook[] = [];
-      const coroutine = new MockCoroutine(() => {});
+      const coroutine = new MockCoroutine();
       const frame = createUpdateFrame(1, Lanes.AllLanes);
       const scope = createScope();
       const observer = new MockObserver();

@@ -212,28 +212,21 @@ export class MockBinding<T> implements Binding<T> {
   }
 }
 
-export class MockCoroutine<T> implements Coroutine {
-  callback: (context: UpdateContext) => T;
+export class MockCoroutine implements Coroutine {
+  callback: (this: Coroutine, context: UpdateContext) => void;
 
   scope: Scope | null = null;
 
   pendingLanes: Lanes = Lanes.AllLanes;
 
-  returnValue: T | undefined;
-
-  thrownError: unknown;
-
-  constructor(callback: (context: UpdateContext) => T) {
+  constructor(
+    callback: (this: Coroutine, context: UpdateContext) => void = () => {},
+  ) {
     this.callback = callback;
   }
 
   resume(context: UpdateContext): void {
-    const { callback } = this;
-    try {
-      this.returnValue = callback(context);
-    } catch (error) {
-      this.thrownError = error;
-    }
+    this.callback(context);
     this.pendingLanes &= ~context.frame.lanes;
   }
 }
