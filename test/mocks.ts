@@ -215,7 +215,7 @@ export class MockBinding<T> implements Binding<T> {
 export class MockCoroutine<T> implements Coroutine {
   callback: (context: UpdateContext) => T;
 
-  parentScope: Scope | null = null;
+  scope: Scope | null = null;
 
   pendingLanes: Lanes = Lanes.AllLanes;
 

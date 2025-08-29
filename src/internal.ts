@@ -60,7 +60,7 @@ export interface Component<TProps, TResult = unknown>
 }
 
 export interface Coroutine {
-  parentScope: Scope | null;
+  readonly scope: Scope | null;
   pendingLanes: Lanes;
   resume(context: UpdateContext): void;
 }

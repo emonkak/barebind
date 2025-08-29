@@ -59,7 +59,7 @@ export class ComponentBinding<TProps, TResult>
 
   part: Part;
 
-  parentScope: Scope | null = null;
+  scope: Scope | null = null;
 
   pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -88,15 +88,15 @@ export class ComponentBinding<TProps, TResult>
 
   resume(context: UpdateContext): void {
     const { frame, runtime } = context;
-    const scope = createScope(this.parentScope);
-    const subcontext = createUpdateContext(frame, scope, runtime);
+    const subscope = createScope(this.scope);
+    const subcontext = createUpdateContext(frame, subscope, runtime);
     const result = runtime.renderComponent(
       this.type,
       this.value,
       this._hooks,
       this,
       frame,
-      scope,
+      subscope,
     );
     let shouldCommit = frame.mutationEffects.length === 0;
 
@@ -113,8 +113,8 @@ export class ComponentBinding<TProps, TResult>
       frame.mutationEffects.push(this._slot);
     }
 
-    this._memoizedValue = this.value;
     this.pendingLanes &= ~frame.lanes;
+    this._memoizedValue = this.value;
   }
 
   hydrate(target: HydrationTree, context: UpdateContext): void {
@@ -124,28 +124,28 @@ export class ComponentBinding<TProps, TResult>
       );
     }
 
-    const { frame, scope: parentScope, runtime } = context;
-    const scope = createScope(parentScope);
-    const subcontext = createUpdateContext(frame, scope, runtime);
+    const { frame, scope, runtime } = context;
+    const subscope = createScope(scope);
+    const subcontext = createUpdateContext(frame, subscope, runtime);
     const result = runtime.renderComponent(
       this.type,
       this.value,
       this._hooks,
       this,
       frame,
-      scope,
+      subscope,
     );
 
     this._slot = runtime.resolveSlot(result, this.part);
     this._slot.hydrate(target, subcontext);
 
-    this.parentScope = parentScope;
+    this.scope = scope;
     this._memoizedValue = this.value;
   }
 
   connect(context: UpdateContext): void {
     context.frame.pendingCoroutines.push(this);
-    this.parentScope = context.scope;
+    this.scope = context.scope;
   }
 
   disconnect(context: UpdateContext): void {
@@ -168,8 +168,9 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._slot?.disconnect(context);
-    this._hooks = [];
+
     this.pendingLanes = Lanes.NoLanes;
+    this._hooks = [];
   }
 
   commit(): void {

@@ -46,7 +46,7 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
  * @internal
  */
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
-  parentScope: Scope | null = null;
+  scope: Scope | null = null;
 
   pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -119,7 +119,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     }
 
     this._subscription ??= this._subscribeSignal(context);
-    this.parentScope = context.scope;
+    this.scope = context.scope;
   }
 
   disconnect(context: UpdateContext): void {

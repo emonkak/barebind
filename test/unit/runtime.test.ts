@@ -265,7 +265,7 @@ describe('Runtime', () => {
 
       SESSION: {
         const coroutine: Coroutine = {
-          parentScope: null,
+          scope: null,
           pendingLanes: Lanes.NoLanes,
           resume() {
             throw error;
@@ -504,7 +504,7 @@ describe('Runtime', () => {
 
       SESSION: {
         const coroutine: Coroutine = {
-          parentScope: null,
+          scope: null,
           pendingLanes: Lanes.NoLanes,
           resume() {
             throw error;

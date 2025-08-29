@@ -53,7 +53,7 @@ export class Root<T> {
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
-      parentScope: null,
+      scope: null,
       pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         const target = createHydrationTree(this._container);
@@ -73,7 +73,7 @@ export class Root<T> {
 
   mount(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
-      parentScope: null,
+      scope: null,
       pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         this._slot.connect(context);
@@ -91,7 +91,7 @@ export class Root<T> {
 
   update(value: T, options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
-      parentScope: null,
+      scope: null,
       pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         this._slot.reconcile(value, context);
@@ -107,7 +107,7 @@ export class Root<T> {
 
   unmount(options?: ScheduleOptions): UpdateHandle {
     const coroutine: Coroutine = {
-      parentScope: null,
+      scope: null,
       pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
         this._slot.disconnect(context);
