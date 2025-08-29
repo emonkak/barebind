@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest';
-import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
 import { Root } from '@/root.js';
+import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
 import { stripComments } from '../test-helpers.js';
 

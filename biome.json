@@ -37,7 +37,7 @@
     {
       "includes": [
         "src/**",
-        "!src/backend/browser.ts",
+        "!src/runtime/browser.ts",
         "!src/extras/router/*.ts"
       ],
       "linter": {

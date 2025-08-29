@@ -1,5 +1,3 @@
-export { BrowserBackend } from './backend/browser.js';
-export { ServerBackend } from './backend/server.js';
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
 export {
@@ -24,6 +22,8 @@ export {
   type RepeatProps,
 } from './repeat.js';
 export { Root } from './root.js';
+export { BrowserBackend } from './runtime/browser.js';
+export { ServerBackend } from './runtime/server.js';
 export {
   Runtime,
   type RuntimeBackend,

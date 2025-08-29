@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
-import { BrowserBackend } from '@/backend/browser.js';
 import { createComponent } from '@/component.js';
 import { Root } from '@/root.js';
+import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
 import { stripComments } from '../test-helpers.js';
 
