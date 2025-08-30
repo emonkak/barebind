@@ -212,7 +212,7 @@ export class ConsoleReporter implements PerformanceReporter {
       this._logger.groupEnd();
     }
 
-    if (mutationMeasurement !== null && mutationMeasurement.totalEffects > 0) {
+    if (mutationMeasurement !== null) {
       this._logger.log(
         `%cMUTATION PHASE:%c ${mutationMeasurement.totalEffects} effect(s) committed in %c${mutationMeasurement.duration}ms`,
         MUTATION_PHASE_STYLE,
@@ -221,7 +221,7 @@ export class ConsoleReporter implements PerformanceReporter {
       );
     }
 
-    if (layoutMeasurement !== null && layoutMeasurement.totalEffects > 0) {
+    if (layoutMeasurement !== null) {
       this._logger.log(
         `%cLAYOUT PHASE:%c ${layoutMeasurement.totalEffects} effect(s) committed in %c${layoutMeasurement.duration}ms`,
         LAYOUT_PHASE_STYLE,
@@ -230,7 +230,7 @@ export class ConsoleReporter implements PerformanceReporter {
       );
     }
 
-    if (passiveMeasurement !== null && passiveMeasurement.totalEffects > 0) {
+    if (passiveMeasurement !== null) {
       this._logger.log(
         `%cPASSIVE PHASE:%c ${passiveMeasurement.totalEffects} effect(s) committed in %c${passiveMeasurement.duration}ms`,
         PASSIVE_PHASE_STYLE,
