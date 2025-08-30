@@ -335,11 +335,6 @@ export interface RenderFrame {
   passiveEffects: Effect[];
 }
 
-export interface RenderState {
-  hooks: Hook[];
-  pendingLanes: Lanes;
-}
-
 export interface RequestCallbackOptions {
   priority?: TaskPriority;
 }
