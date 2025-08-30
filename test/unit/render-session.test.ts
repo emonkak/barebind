@@ -117,6 +117,20 @@ describe('RenderSession', () => {
     });
   });
 
+  describe('getSessionContext()', () => {
+    it('returns the runtime as a SessionContext', () => {
+      const helper = new RenderHelper();
+
+      SESSION: {
+        const context = helper.startSession((context) => {
+          return context.getSessionContext();
+        });
+
+        expect(context).toBe(helper.runtime);
+      }
+    });
+  });
+
   describe('getSharedContext()', () => {
     it('returns the shared context corresponding to the key', () => {
       const helper = new RenderHelper();

@@ -112,6 +112,10 @@ export class RenderSession implements RenderContext {
     return this._context.scheduleUpdate(this._coroutine, options);
   }
 
+  getSessionContext(): SessionContext {
+    return this._context;
+  }
+
   getSharedContext(key: unknown): unknown {
     if (this._scope === null) {
       throw new Error('Shared contexts are only available during rendering.');

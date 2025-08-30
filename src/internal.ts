@@ -268,6 +268,7 @@ export interface RenderContext {
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
   forceUpdate(options?: ScheduleOptions): UpdateHandle;
+  getSessionContext(): SessionContext;
   getSharedContext(key: unknown): unknown;
   html(
     strings: TemplateStringsArray,
