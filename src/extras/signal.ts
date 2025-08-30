@@ -9,7 +9,7 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  type HookContext,
+  type RenderContext,
   HydrationError,
   type HydrationTree,
   Lanes,
@@ -151,7 +151,7 @@ export abstract class Signal<T>
 
   abstract get version(): number;
 
-  [$customHook](context: HookContext): T {
+  [$customHook](context: RenderContext): T {
     const value = this.value;
     const snapshot = context.useRef(value);
 

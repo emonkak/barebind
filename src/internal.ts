@@ -65,10 +65,10 @@ export interface Coroutine {
   resume(context: UpdateContext): void;
 }
 
-export type CustomHookFunction<T> = (context: HookContext) => T;
+export type CustomHookFunction<T> = (context: RenderContext) => T;
 
 export interface CustomHookObject<T> {
-  [$customHook](context: HookContext): T;
+  [$customHook](context: RenderContext): T;
 }
 
 export interface Directive<T> {
@@ -138,50 +138,6 @@ export namespace Hook {
     pendingState: TState;
     memoizedState: TState;
   }
-}
-
-export interface HookContext {
-  catchError(handler: ErrorHandler): void;
-  forceUpdate(options?: ScheduleOptions): UpdateHandle;
-  getSharedContext(key: unknown): unknown;
-  isUpdatePending(): boolean;
-  setSharedContext(key: unknown, value: unknown): void;
-  use<T>(usable: Usable<T>): T;
-  useCallback<TCallback extends (...args: any[]) => any>(
-    callback: TCallback,
-    dependencies: readonly unknown[],
-  ): TCallback;
-  useEffect(
-    callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
-  ): void;
-  useId(): string;
-  useInsertionEffect(
-    callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
-  ): void;
-  useLayoutEffect(
-    callback: () => Cleanup | void,
-    dependencies?: readonly unknown[],
-  ): void;
-  useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
-  useReducer<TState, TAction>(
-    reducer: (state: TState, action: TAction) => TState,
-    initialState: InitialState<TState>,
-  ): [
-    state: TState,
-    dispatch: (action: TAction, options?: ScheduleOptions) => void,
-    isPending: boolean,
-  ];
-  useRef<T>(initialValue: T): RefObject<T>;
-  useState<TState>(
-    initialState: InitialState<TState>,
-  ): [
-    state: TState,
-    setState: (newState: NewState<TState>, options?: ScheduleOptions) => void,
-    isPending: boolean,
-  ];
-  waitForUpdate(): Promise<number>;
 }
 
 export const HookType = {
@@ -297,7 +253,8 @@ export interface RefObject<T> {
   current: T;
 }
 
-export interface RenderContext extends HookContext {
+export interface RenderContext {
+  catchError(handler: ErrorHandler): void;
   dynamicHTML(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
@@ -310,14 +267,18 @@ export interface RenderContext extends HookContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
+  forceUpdate(options?: ScheduleOptions): UpdateHandle;
+  getSharedContext(key: unknown): unknown;
   html(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
+  isUpdatePending(): boolean;
   math(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
+  setSharedContext(key: unknown, value: unknown): void;
   svg(
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
@@ -326,6 +287,42 @@ export interface RenderContext extends HookContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
+  use<T>(usable: Usable<T>): T;
+  useCallback<TCallback extends (...args: any[]) => any>(
+    callback: TCallback,
+    dependencies: readonly unknown[],
+  ): TCallback;
+  useEffect(
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
+  ): void;
+  useId(): string;
+  useInsertionEffect(
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
+  ): void;
+  useLayoutEffect(
+    callback: () => Cleanup | void,
+    dependencies?: readonly unknown[],
+  ): void;
+  useMemo<T>(factory: () => T, dependencies: readonly unknown[]): T;
+  useReducer<TState, TAction>(
+    reducer: (state: TState, action: TAction) => TState,
+    initialState: InitialState<TState>,
+  ): [
+    state: TState,
+    dispatch: (action: TAction, options?: ScheduleOptions) => void,
+    isPending: boolean,
+  ];
+  useRef<T>(initialValue: T): RefObject<T>;
+  useState<TState>(
+    initialState: InitialState<TState>,
+  ): [
+    state: TState,
+    setState: (newState: NewState<TState>, options?: ScheduleOptions) => void,
+    isPending: boolean,
+  ];
+  waitForUpdate(): Promise<number>;
 }
 
 export interface RenderFrame {

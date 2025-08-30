@@ -1,4 +1,8 @@
-import { $customHook, type CustomHookObject, type HookContext } from 'barebind';
+import {
+  $customHook,
+  type CustomHookObject,
+  type RenderContext,
+} from 'barebind';
 import { Reactive } from 'barebind/extras/reactive';
 
 const STORY_API_ORIGIN = 'https://node-hnapi.herokuapp.com';
@@ -76,7 +80,7 @@ export interface UserState {
 }
 
 export class AppStore implements CustomHookObject<void> {
-  static [$customHook](context: HookContext): AppStore {
+  static [$customHook](context: RenderContext): AppStore {
     const state = context.getSharedContext(AppStore);
     if (!(state instanceof AppStore)) {
       throw new Error(`${AppStore.name} is not registered in this context.`);
@@ -103,7 +107,7 @@ export class AppStore implements CustomHookObject<void> {
     error: null,
   });
 
-  [$customHook](context: HookContext): void {
+  [$customHook](context: RenderContext): void {
     context.setSharedContext(this.constructor, this);
   }
 

@@ -1,4 +1,4 @@
-import { $customHook, type HookContext } from 'barebind';
+import { $customHook, type RenderContext } from 'barebind';
 import { Reactive } from 'barebind/extras/reactive';
 
 export interface Todo {
@@ -14,7 +14,7 @@ export class TodoState {
 
   filter: TodoFilter = 'all';
 
-  static [$customHook](context: HookContext): Reactive<TodoState> {
+  static [$customHook](context: RenderContext): Reactive<TodoState> {
     const state = context.getSharedContext(TodoState);
     if (!(state instanceof Reactive && state.value instanceof TodoState)) {
       throw new Error(`${TodoState.name} is not registered in this context.`);
@@ -22,7 +22,7 @@ export class TodoState {
     return state;
   }
 
-  [$customHook](context: HookContext): void {
+  [$customHook](context: RenderContext): void {
     context.setSharedContext(this.constructor, Reactive.from(this));
   }
 

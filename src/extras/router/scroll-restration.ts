@@ -1,10 +1,10 @@
 /// <reference types="navigation-api-types" />
 
-import type { CustomHookFunction, HookContext } from '../../internal.js';
+import type { CustomHookFunction, RenderContext } from '../../internal.js';
 import { CurrentHistory, truncateHashMark } from './history.js';
 
 export function ScrollRestration(): CustomHookFunction<void> {
-  return (context: HookContext) => {
+  return (context: RenderContext) => {
     const [location, navigator] = context.use(CurrentHistory);
 
     context.useLayoutEffect(() => {

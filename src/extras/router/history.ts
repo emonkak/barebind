@@ -1,4 +1,4 @@
-import type { HookContext } from '../../internal.js';
+import type { RenderContext } from '../../internal.js';
 import type { RelativeURL } from './relative-url.js';
 
 export interface HistoryLocation {
@@ -25,7 +25,7 @@ export interface NavigateOptions {
 }
 
 export function CurrentHistory(
-  context: HookContext,
+  context: RenderContext,
 ): readonly [HistoryLocation, HistoryNavigator] {
   const value = context.getSharedContext(CurrentHistory);
 

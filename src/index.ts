@@ -6,7 +6,6 @@ export {
   type Component,
   type CustomHookFunction,
   type CustomHookObject,
-  type HookContext,
   HydrationError,
   type RefCallback,
   type RefObject,
