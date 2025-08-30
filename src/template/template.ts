@@ -7,7 +7,7 @@ import {
   type Effect,
   getStartNode,
   HydrationError,
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
   type Template,
@@ -40,7 +40,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    target: HydrationTree,
+    target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult;
 
@@ -89,7 +89,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._memoizedValue === null || value !== this._memoizedValue;
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._pendingResult !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',

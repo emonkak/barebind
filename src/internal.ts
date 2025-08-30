@@ -1,5 +1,6 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
+import { formatNode } from './debug/node.js';
 import type { Literal, TemplateLiteral } from './template-literal.js';
 
 export const $customHook: unique symbol = Symbol('$customHook');
@@ -15,7 +16,7 @@ export interface Binding<T> extends ReversibleEffect {
   value: T;
   readonly part: Part;
   shouldBind(value: T): boolean;
-  hydrate(target: HydrationTree, session: UpdateSession): void;
+  hydrate(target: HydrationTarget, session: UpdateSession): void;
   connect(session: UpdateSession): void;
   disconnect(session: UpdateSession): void;
 }
@@ -154,7 +155,7 @@ export type HookType = (typeof HookType)[keyof typeof HookType];
 
 export class HydrationError extends Error {}
 
-export type HydrationTree = TreeWalker;
+export type HydrationTarget = TreeWalker;
 
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
@@ -383,7 +384,7 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(value: T, session: UpdateSession): boolean;
-  hydrate(target: HydrationTree, session: UpdateSession): void;
+  hydrate(target: HydrationTarget, session: UpdateSession): void;
   connect(session: UpdateSession): void;
   disconnect(session: UpdateSession): void;
 }
@@ -403,7 +404,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    target: HydrationTree,
+    target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult;
 }
@@ -446,6 +447,12 @@ export interface UpdateTask {
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
+interface NodeTypeMap {
+  [Node.COMMENT_NODE]: Comment;
+  [Node.ELEMENT_NODE]: Element;
+  [Node.TEXT_NODE]: Text;
+}
+
 /**
  * @internal
  */
@@ -461,6 +468,16 @@ export function areDirectiveTypesEqual(
   y: DirectiveType<unknown>,
 ): boolean {
   return x.equals?.(y) ?? x === y;
+}
+
+/**
+ * @internal
+ */
+export function createHydrationTarget(container: Element): HydrationTarget {
+  return container.ownerDocument.createTreeWalker(
+    container,
+    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
+  );
 }
 
 /**
@@ -487,44 +504,6 @@ export function createUpdateSession(
 /**
  * @internal
  */
-export function getSharedContext(scope: Scope, key: unknown): unknown {
-  let currentScope: Scope | null = scope;
-  do {
-    for (
-      let boundary = currentScope.boundary;
-      boundary !== null;
-      boundary = boundary.next
-    ) {
-      if (
-        boundary.type === BoundaryType.SharedContext &&
-        Object.is(boundary.key, key)
-      ) {
-        return boundary.value;
-      }
-    }
-    currentScope = currentScope.parent;
-  } while (currentScope !== null);
-  return undefined;
-}
-
-/**
- * @internal
- */
-export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
-  if (lanes & Lanes.BackgroundLane) {
-    return 'background';
-  } else if (lanes & Lanes.UserVisibleLane) {
-    return 'user-visible';
-  } else if (lanes & Lanes.UserBlockingLane) {
-    return 'user-blocking';
-  } else {
-    return null;
-  }
-}
-
-/**
- * @internal
- */
 export function getLanesFromOptions(options: ScheduleOptions): Lanes {
   let lanes = Lanes.DefaultLane;
 
@@ -545,6 +524,44 @@ export function getLanesFromOptions(options: ScheduleOptions): Lanes {
   }
 
   return lanes;
+}
+
+/**
+ * @internal
+ */
+export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
+  if (lanes & Lanes.BackgroundLane) {
+    return 'background';
+  } else if (lanes & Lanes.UserVisibleLane) {
+    return 'user-visible';
+  } else if (lanes & Lanes.UserBlockingLane) {
+    return 'user-blocking';
+  } else {
+    return null;
+  }
+}
+
+/**
+ * @internal
+ */
+export function getSharedContext(scope: Scope, key: unknown): unknown {
+  let currentScope: Scope | null = scope;
+  do {
+    for (
+      let boundary = currentScope.boundary;
+      boundary !== null;
+      boundary = boundary.next
+    ) {
+      if (
+        boundary.type === BoundaryType.SharedContext &&
+        Object.is(boundary.key, key)
+      ) {
+        return boundary.value;
+      }
+    }
+    currentScope = currentScope.parent;
+  } while (currentScope !== null);
+  return undefined;
 }
 
 /**
@@ -596,6 +613,19 @@ export function isBindable(value: unknown): value is Bindable {
 /**
  * @internal
  */
+export function replaceMarkerNode(
+  target: HydrationTarget,
+  markerNode: Comment,
+): void {
+  treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
+    markerNode,
+  );
+  target.currentNode = markerNode;
+}
+
+/**
+ * @internal
+ */
 export function setSharedContext(
   scope: Scope,
   key: unknown,
@@ -607,4 +637,60 @@ export function setSharedContext(
     key,
     value,
   };
+}
+
+/**
+ * @internal
+ */
+export function splitText(target: HydrationTarget): Text {
+  const previousNode = target.currentNode;
+  const currentNode = target.nextNode();
+
+  if (
+    previousNode instanceof Text &&
+    (currentNode === null || currentNode.previousSibling === previousNode)
+  ) {
+    const splittedText = previousNode.ownerDocument.createTextNode('');
+    previousNode.after(splittedText);
+    target.currentNode = splittedText;
+    return splittedText;
+  } else {
+    return treatNodeType(Node.TEXT_NODE, currentNode, target);
+  }
+}
+
+/**
+ * @internal
+ */
+export function treatNodeName(
+  expectedName: string,
+  node: Node | null,
+  target: HydrationTarget,
+): Node {
+  if (node === null || node.nodeName !== expectedName) {
+    throw new HydrationError(
+      `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}:\n` +
+        formatNode(target.currentNode, '[[MISMATCH IN HERE!]]'),
+    );
+  }
+
+  return node;
+}
+
+/**
+ * @internal
+ */
+export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
+  expectedType: TExpectedType,
+  node: Node | null,
+  target: HydrationTarget,
+): NodeTypeMap[TExpectedType] {
+  if (node === null || node.nodeType !== expectedType) {
+    throw new HydrationError(
+      `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}:\n` +
+        formatNode(target.currentNode, '[[MISMATCH IN HERE!]]'),
+    );
+  }
+
+  return node as NodeTypeMap[TExpectedType];
 }

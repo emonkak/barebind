@@ -1,9 +1,9 @@
-import { replaceMarkerNode } from '../hydration.js';
 import {
   type DirectiveType,
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
+  replaceMarkerNode,
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';
@@ -21,7 +21,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   hydrate(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    target: HydrationTree,
+    target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
     const document = part.node.ownerDocument;

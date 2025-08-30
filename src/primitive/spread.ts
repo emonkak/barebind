@@ -5,7 +5,7 @@ import {
   type Binding,
   type DirectiveContext,
   HydrationError,
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
   type Primitive,
@@ -62,7 +62,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     return this._memoizedSlots === null || value !== this.value;
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._memoizedSlots !== null || this._pendingSlots.size > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',

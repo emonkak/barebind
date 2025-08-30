@@ -4,7 +4,7 @@ import {
   areDirectiveTypesEqual,
   type Binding,
   type DirectiveType,
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   type Slot,
   type UnwrapBindable,
@@ -65,7 +65,7 @@ export class LooseSlot<T> implements Slot<T> {
     return this._dirty;
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     this._pendingBinding.hydrate(target, session);
     this._dirty = true;
   }

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createHydrationTree } from '@/hydration.js';
-import { PartType } from '@/internal.js';
+import { createHydrationTarget, PartType } from '@/internal.js';
 import { Element, ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import {
@@ -56,7 +55,7 @@ describe('ElementTemplate', () => {
         {},
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       const { childNodes, slots } = helper.startSession((context) => {

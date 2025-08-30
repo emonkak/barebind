@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { CurrentHistory } from '@/extras/router/history.js';
 import { RenderHelper } from '../../../test-helpers.js';
 

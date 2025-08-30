@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { formatValue } from '@/debug/value.js';
 import { DirectiveSpecifier, SlotSpecifier } from '@/directive.js';
 import { $toDirective, PartType } from '@/internal.js';

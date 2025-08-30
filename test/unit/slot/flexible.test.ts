@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTree } from '@/hydration.js';
-import { PartType } from '@/internal.js';
+import { createHydrationTarget, PartType } from '@/internal.js';
 import { Flexible, FlexibleSlot } from '@/slot/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
@@ -183,7 +183,7 @@ describe('FlexibleSlot', () => {
       const commitSpy = vi.spyOn(binding, 'commit');
 
       SESSION1: {
-        const target = createHydrationTree(document.createElement('div'));
+        const target = createHydrationTarget(document.createElement('div'));
 
         helper.startSession((context) => {
           slot.hydrate(target, context);

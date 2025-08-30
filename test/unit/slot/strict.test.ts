@@ -1,8 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTree } from '@/hydration.js';
-import { PartType } from '@/internal.js';
+import { createHydrationTarget, PartType } from '@/internal.js';
 import { Strict, StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
@@ -129,7 +128,7 @@ describe('StrictSlot', () => {
       const commitSpy = vi.spyOn(binding, 'commit');
 
       SESSION1: {
-        const target = createHydrationTree(document.createElement('div'));
+        const target = createHydrationTarget(document.createElement('div'));
 
         helper.startSession((context) => {
           slot.hydrate(target, context);

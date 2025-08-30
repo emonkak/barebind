@@ -1,18 +1,16 @@
 import { formatNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
-  replaceMarkerNode,
-  splitText,
-  treatNodeName,
-  treatNodeType,
-} from '../hydration.js';
-import {
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
+  replaceMarkerNode,
   type Slot,
+  splitText,
   type TemplateMode,
   type TemplateResult,
+  treatNodeName,
+  treatNodeType,
   type UpdateSession,
 } from '../internal.js';
 import {
@@ -144,7 +142,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    target: HydrationTree,
+    target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;

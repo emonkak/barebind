@@ -1,12 +1,18 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import {
   Atom,
   Computed,
   type SignalBinding,
   SignalDirective,
 } from '@/extras/signal.js';
-import { createHydrationTree } from '@/hydration.js';
-import { $toDirective, HydrationError, Lanes, PartType } from '@/internal.js';
+import {
+  $toDirective,
+  createHydrationTarget,
+  HydrationError,
+  Lanes,
+  PartType,
+} from '@/internal.js';
 import {
   createElement,
   createRuntime,
@@ -98,7 +104,7 @@ describe('SiganlBinding', () => {
         helper.runtime,
       ) as SignalBinding<string>;
       const container = createElement('div', {}, part.node);
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
 
       SESSION: {
         helper.startSession((context) => {
@@ -137,7 +143,7 @@ describe('SiganlBinding', () => {
         helper.runtime,
       );
       const container = createElement('div', {}, part.node);
-      const tree = createHydrationTree(container);
+      const target = createHydrationTarget(container);
 
       SESSION: {
         helper.startSession((context) => {
@@ -148,7 +154,7 @@ describe('SiganlBinding', () => {
 
       expect(() => {
         helper.startSession((context) => {
-          binding.hydrate(tree, context);
+          binding.hydrate(target, context);
         });
       }).toThrow(HydrationError);
     });

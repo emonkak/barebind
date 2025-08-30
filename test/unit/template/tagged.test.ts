@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTree } from '@/hydration.js';
-import { HydrationError, PartType } from '@/internal.js';
+
+import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
   HTML_NAMESPACE_URI,
@@ -490,7 +490,7 @@ describe('TaggedTemplate', () => {
         ),
         document.createComment('corge'),
       );
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       const { childNodes, slots } = helper.startSession((context) => {
@@ -612,7 +612,7 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       const { childNodes, slots } = helper.startSession((context) => {
@@ -638,7 +638,7 @@ describe('TaggedTemplate', () => {
         '(foo, bar, baz)',
         createElement('div', {}, '[qux, quux]'),
       );
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       const { childNodes, slots } = helper.startSession((context) => {
@@ -726,7 +726,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       const { childNodes, slots } = helper.startSession((context) => {
@@ -755,7 +755,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       expect(() => {
@@ -788,7 +788,7 @@ describe('TaggedTemplate', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const target = createHydrationTree(container);
+        const target = createHydrationTarget(container);
         const helper = new UpdateHelper();
 
         expect(() => {

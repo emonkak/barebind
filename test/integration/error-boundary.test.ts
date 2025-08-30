@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+
 import { createComponent } from '@/component.js';
 import type { RenderContext } from '@/internal.js';
 import { Root } from '@/root.js';

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { formatNode } from '@/debug/node.js';
 import { createElement } from '../../test-helpers.js';
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTree } from '@/hydration.js';
-import { HydrationError, PartType } from '@/internal.js';
+
+import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { MockSlot } from '../../mocks.js';
 import {
@@ -128,7 +128,7 @@ describe('SpreadBinding', () => {
       };
       const binding = new SpreadBinding(props, part);
       const container = createElement('div', {}, part.node);
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       helper.startSession((context) => {
@@ -215,7 +215,7 @@ describe('SpreadBinding', () => {
       };
       const binding = new SpreadBinding(props, part);
       const container = createElement('div', {}, part.node);
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       helper.startSession((context) => {

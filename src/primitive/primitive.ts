@@ -1,6 +1,6 @@
 import type {
   Binding,
-  HydrationTree,
+  HydrationTarget,
   Part,
   Primitive,
   UpdateSession,
@@ -22,7 +22,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   abstract shouldBind(value: TValue): boolean;
 
-  hydrate(_target: HydrationTree, _session: UpdateSession): void {}
+  hydrate(_target: HydrationTarget, _session: UpdateSession): void {}
 
   connect(_session: UpdateSession): void {}
 

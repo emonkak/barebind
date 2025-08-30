@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { Root } from '@/root.js';
 import { Runtime } from '@/runtime.js';
 import { MockBackend } from '../mocks.js';

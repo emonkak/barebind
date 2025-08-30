@@ -11,7 +11,7 @@ import {
   type Hook,
   HookType,
   HydrationError,
-  type HydrationTree,
+  type HydrationTarget,
   Lanes,
   type Part,
   type RenderContext,
@@ -117,7 +117,7 @@ export class ComponentBinding<TProps, TResult>
     this._memoizedValue = this.value;
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._slot !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',

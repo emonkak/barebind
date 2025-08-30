@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTree } from '@/hydration.js';
-import { HydrationError, PartType } from '@/internal.js';
+
+import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import { createElement, UpdateHelper } from '../../test-helpers.js';
@@ -36,7 +36,7 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       const { childNodes, slots } = helper.startSession((context) => {
@@ -69,12 +69,12 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const tree = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       expect(() => {
         helper.startSession((context) => {
-          template.hydrate(binds, part, tree, context);
+          template.hydrate(binds, part, target, context);
         });
       }).toThrow(HydrationError);
     });

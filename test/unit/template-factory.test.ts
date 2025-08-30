@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { PartType } from '@/internal.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { EmptyTemplate } from '@/template/empty.js';

@@ -1,11 +1,12 @@
 import { DirectiveSpecifier } from '../directive.js';
-import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
+  replaceMarkerNode,
   type TemplateResult,
+  treatNodeName,
   type UpdateSession,
 } from '../internal.js';
 import {
@@ -43,7 +44,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    target: HydrationTree,
+    target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;

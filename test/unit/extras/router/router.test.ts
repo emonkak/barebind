@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { RelativeURL } from '@/extras/router/relative-url.js';
 import {
   integer,

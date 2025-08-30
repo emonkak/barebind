@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { Literal, TemplateLiteralPreprocessor } from '@/template-literal.js';
 import { templateLiteral } from '../test-helpers.js';
 

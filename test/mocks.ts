@@ -11,7 +11,7 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type HydrationTree,
+  type HydrationTarget,
   Lanes,
   type Part,
   PartType,
@@ -121,7 +121,7 @@ export class MockBinding<T> implements Binding<T> {
     return !Object.is(value, this.memoizedValue);
   }
 
-  hydrate(_target: HydrationTree, _session: UpdateSession): void {
+  hydrate(_target: HydrationTarget, _session: UpdateSession): void {
     this.isConnected = true;
   }
 
@@ -323,7 +323,7 @@ export class MockSlot<T> implements Slot<T> {
     return dirty;
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     this.binding.hydrate(target, session);
     this.isConnected = true;
   }
@@ -389,7 +389,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
-    _target: HydrationTree,
+    _target: HydrationTarget,
     _session: UpdateSession,
   ): TemplateResult {
     return {

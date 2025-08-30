@@ -10,7 +10,7 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  type HydrationTree,
+  type HydrationTarget,
   isBindable,
   type Part,
   PartType,
@@ -248,7 +248,7 @@ export class ElementBinding implements Binding<ElementProps> {
     );
   }
 
-  hydrate(_target: HydrationTree, _session: UpdateSession): void {}
+  hydrate(_target: HydrationTarget, _session: UpdateSession): void {}
 
   connect(_session: UpdateSession): void {}
 

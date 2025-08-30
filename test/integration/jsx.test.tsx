@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+
 import { createComponent } from '@/component.js';
 import { Root } from '@/root.js';
 import { BrowserBackend } from '@/runtime/browser.js';

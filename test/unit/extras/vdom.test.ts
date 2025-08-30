@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
 import {

@@ -139,7 +139,7 @@ export class Runtime implements SessionContext {
         continue;
       }
 
-      const id = (this._updateCount = incrementIdentifier(this._updateCount));
+      const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const scope = createScope();
 
@@ -255,7 +255,7 @@ export class Runtime implements SessionContext {
         continue;
       }
 
-      const id = (this._updateCount = incrementIdentifier(this._updateCount));
+      const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const scope = createScope();
 
@@ -341,9 +341,7 @@ export class Runtime implements SessionContext {
 
   nextIdentifier(): string {
     const prefix = this._templatePlaceholder;
-    const id = (this._identifierCount = incrementIdentifier(
-      this._identifierCount,
-    ));
+    const id = (this._identifierCount = incrementCount(this._identifierCount));
     return prefix + ':' + id;
   }
 
@@ -545,8 +543,8 @@ function generateRandomString(length: number): string {
   ).join('');
 }
 
-function incrementIdentifier(id: number): number {
-  return (id % Number.MAX_SAFE_INTEGER) + 1;
+function incrementCount(count: number): number {
+  return (count % Number.MAX_SAFE_INTEGER) + 1;
 }
 
 function notifyObservers(

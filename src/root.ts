@@ -1,9 +1,10 @@
-import { createHydrationTree, replaceMarkerNode } from './hydration.js';
 import {
   type Coroutine,
+  createHydrationTarget,
   type Effect,
   Lanes,
   PartType,
+  replaceMarkerNode,
   type ScheduleOptions,
   type SessionContext,
   type Slot,
@@ -47,7 +48,7 @@ export class Root<T> {
       scope: null,
       pendingLanes: Lanes.DefaultLane,
       resume: (context) => {
-        const target = createHydrationTree(this._container);
+        const target = createHydrationTarget(this._container);
         this._slot.hydrate(target, context);
         replaceMarkerNode(target, this._slot.part.node as Comment);
         context.frame.mutationEffects.push(

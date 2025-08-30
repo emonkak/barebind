@@ -1,6 +1,6 @@
 import type {
   DirectiveType,
-  HydrationTree,
+  HydrationTarget,
   Part,
   TemplateResult,
   UpdateSession,
@@ -19,7 +19,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
   hydrate(
     _binds: readonly [],
     _part: Part.ChildNodePart,
-    _target: HydrationTree,
+    _target: HydrationTarget,
     _session: UpdateSession,
   ): TemplateResult {
     return { childNodes: [], slots: [] };

@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTree } from '@/hydration.js';
-import { HydrationError, type Part, PartType } from '@/internal.js';
+import {
+  createHydrationTarget,
+  HydrationError,
+  type Part,
+  PartType,
+} from '@/internal.js';
 import {
   moveChildNodes,
   Repeat,
@@ -141,7 +146,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       helper.startSession((context) => {
@@ -180,7 +185,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       SESSION: {

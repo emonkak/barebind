@@ -1,8 +1,8 @@
-import { splitText } from '../hydration.js';
 import {
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
+  splitText,
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';
@@ -34,7 +34,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   hydrate(
     binds: readonly [T],
     _part: Part.ChildNodePart,
-    target: HydrationTree,
+    target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
     const textPart = {

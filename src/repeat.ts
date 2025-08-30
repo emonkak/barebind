@@ -3,16 +3,16 @@
 import { formatPart } from './debug/part.js';
 import { markUsedValue } from './debug/value.js';
 import { DirectiveSpecifier } from './directive.js';
-import { replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
   getStartNode,
   HydrationError,
-  type HydrationTree,
+  type HydrationTarget,
   type Part,
   PartType,
+  replaceMarkerNode,
   type Slot,
   type UpdateSession,
 } from './internal.js';
@@ -127,7 +127,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     );
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._memoizedItems !== null || this._pendingItems.length > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',

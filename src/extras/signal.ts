@@ -10,7 +10,7 @@ import {
   type DirectiveContext,
   type DirectiveType,
   HydrationError,
-  type HydrationTree,
+  type HydrationTarget,
   Lanes,
   type Part,
   type RenderContext,
@@ -97,7 +97,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this.pendingLanes = Lanes.NoLanes;
   }
 
-  hydrate(target: HydrationTree, session: UpdateSession): void {
+  hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._subscription !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',

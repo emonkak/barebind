@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { ComponentBinding, createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTree } from '@/hydration.js';
 import {
   CommitPhase,
+  createHydrationTarget,
   HydrationError,
   Lanes,
   PartType,
@@ -201,7 +202,7 @@ describe('ComponentBinding', () => {
       };
       const binding = new ComponentBinding(Greet, props, part);
       const container = createElement('div', {}, part.node);
-      const target = createHydrationTree(container);
+      const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
       SESSION1: {
@@ -262,7 +263,7 @@ describe('ComponentBinding', () => {
       expect(() => {
         helper.startSession((context) => {
           const container = document.createElement('div');
-          const target = createHydrationTree(container);
+          const target = createHydrationTarget(container);
           binding.hydrate(target, context);
         });
       }).toThrow(HydrationError);
