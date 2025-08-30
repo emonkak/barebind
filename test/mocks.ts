@@ -25,7 +25,7 @@ import {
   type TemplateMode,
   type TemplateResult,
   type UnwrapBindable,
-  type UpdateContext,
+  type UpdateSession,
 } from '@/internal.js';
 import type {
   Runtime,
@@ -121,15 +121,15 @@ export class MockBinding<T> implements Binding<T> {
     return !Object.is(value, this.memoizedValue);
   }
 
-  hydrate(_target: HydrationTree, _context: UpdateContext): void {
+  hydrate(_target: HydrationTree, _session: UpdateSession): void {
     this.isConnected = true;
   }
 
-  connect(_context: UpdateContext): void {
+  connect(_session: UpdateSession): void {
     this.isConnected = true;
   }
 
-  disconnect(_context: UpdateContext): void {
+  disconnect(_session: UpdateSession): void {
     this.isConnected = false;
   }
 
@@ -213,21 +213,21 @@ export class MockBinding<T> implements Binding<T> {
 }
 
 export class MockCoroutine implements Coroutine {
-  callback: (this: Coroutine, context: UpdateContext) => void;
+  callback: (this: Coroutine, session: UpdateSession) => void;
 
   scope: Scope | null = null;
 
   pendingLanes: Lanes = Lanes.AllLanes;
 
   constructor(
-    callback: (this: Coroutine, context: UpdateContext) => void = () => {},
+    callback: (this: Coroutine, session: UpdateSession) => void = () => {},
   ) {
     this.callback = callback;
   }
 
-  resume(context: UpdateContext): void {
-    this.callback(context);
-    this.pendingLanes &= ~context.frame.lanes;
+  resume(session: UpdateSession): void {
+    this.callback(session);
+    this.pendingLanes &= ~session.frame.lanes;
   }
 }
 
@@ -300,8 +300,8 @@ export class MockSlot<T> implements Slot<T> {
     return this.binding.part;
   }
 
-  reconcile(value: T, context: UpdateContext): boolean {
-    const directive = context.runtime.resolveDirective(
+  reconcile(value: T, session: UpdateSession): boolean {
+    const directive = session.context.resolveDirective(
       value,
       this.binding.part,
     );
@@ -316,25 +316,25 @@ export class MockSlot<T> implements Slot<T> {
 
     if (dirty) {
       this.binding.value = directive.value;
-      this.binding.connect(context);
+      this.binding.connect(session);
       this.isConnected = true;
     }
 
     return dirty;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
-    this.binding.hydrate(target, context);
+  hydrate(target: HydrationTree, session: UpdateSession): void {
+    this.binding.hydrate(target, session);
     this.isConnected = true;
   }
 
-  connect(context: UpdateContext): void {
-    this.binding.connect(context);
+  connect(session: UpdateSession): void {
+    this.binding.connect(session);
     this.isConnected = true;
   }
 
-  disconnect(context: UpdateContext): void {
-    this.binding.disconnect(context);
+  disconnect(session: UpdateSession): void {
+    this.binding.disconnect(session);
     this.isConnected = false;
   }
 
@@ -378,7 +378,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   render(
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
-    _context: UpdateContext,
+    _session: UpdateSession,
   ): TemplateResult {
     return {
       childNodes: [],
@@ -390,7 +390,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
     _target: HydrationTree,
-    _context: UpdateContext,
+    _session: UpdateSession,
   ): TemplateResult {
     return {
       childNodes: [],

@@ -8,7 +8,7 @@ import {
   type Part,
   type Slot,
   type UnwrapBindable,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 
 export function Loose<T>(value: T): SlotSpecifier<T> {
@@ -38,8 +38,9 @@ export class LooseSlot<T> implements Slot<T> {
     return this._pendingBinding.part;
   }
 
-  reconcile(value: T, context: UpdateContext): boolean {
-    const directive = context.runtime.resolveDirective(
+  reconcile(value: T, session: UpdateSession): boolean {
+    const { context } = session;
+    const directive = context.resolveDirective(
       value,
       this._pendingBinding.part,
     );
@@ -47,35 +48,35 @@ export class LooseSlot<T> implements Slot<T> {
     if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
       if (this._dirty || this._pendingBinding.shouldBind(directive.value)) {
         this._pendingBinding.value = directive.value;
-        this._pendingBinding.connect(context);
+        this._pendingBinding.connect(session);
         this._dirty = true;
       }
     } else {
-      this._pendingBinding.disconnect(context);
+      this._pendingBinding.disconnect(session);
       this._pendingBinding = directive.type.resolveBinding(
         directive.value,
         this._pendingBinding.part,
-        context.runtime,
+        context,
       );
-      this._pendingBinding.connect(context);
+      this._pendingBinding.connect(session);
       this._dirty = true;
     }
 
     return this._dirty;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
-    this._pendingBinding.hydrate(target, context);
+  hydrate(target: HydrationTree, session: UpdateSession): void {
+    this._pendingBinding.hydrate(target, session);
     this._dirty = true;
   }
 
-  connect(context: UpdateContext): void {
-    this._pendingBinding.connect(context);
+  connect(session: UpdateSession): void {
+    this._pendingBinding.connect(session);
     this._dirty = true;
   }
 
-  disconnect(context: UpdateContext): void {
-    this._pendingBinding.disconnect(context);
+  disconnect(session: UpdateSession): void {
+    this._pendingBinding.disconnect(session);
     this._dirty = true;
   }
 

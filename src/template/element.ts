@@ -6,7 +6,7 @@ import {
   type Part,
   PartType,
   type TemplateResult,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 import {
   AbstractTemplate,
@@ -44,8 +44,9 @@ export class ElementTemplate<
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
+    const { context } = session;
     const document = part.node.ownerDocument;
     const namespaceURI =
       getNamespaceURIByTagName(this.tagName) ?? part.namespaceURI;
@@ -63,11 +64,11 @@ export class ElementTemplate<
       anchorNode: null,
       namespaceURI,
     };
-    const elementSlot = context.runtime.resolveSlot(binds[0], elementPart);
-    const childrenSlot = context.runtime.resolveSlot(binds[1], childrenPart);
+    const elementSlot = context.resolveSlot(binds[0], elementPart);
+    const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
-    elementSlot.hydrate(target, context);
-    childrenSlot.hydrate(target, context);
+    elementSlot.hydrate(target, session);
+    childrenSlot.hydrate(target, session);
 
     replaceMarkerNode(target, childrenPart.node);
 
@@ -80,8 +81,9 @@ export class ElementTemplate<
   render(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
+    const { context } = session;
     const document = part.node.ownerDocument;
     const namespaceURI =
       getNamespaceURIByTagName(this.tagName) ?? part.namespaceURI;
@@ -95,13 +97,13 @@ export class ElementTemplate<
       anchorNode: null,
       namespaceURI,
     };
-    const elementSlot = context.runtime.resolveSlot(binds[0], elementPart);
-    const childrenSlot = context.runtime.resolveSlot(binds[1], childrenPart);
+    const elementSlot = context.resolveSlot(binds[0], elementPart);
+    const childrenSlot = context.resolveSlot(binds[1], childrenPart);
 
     elementPart.node.appendChild(childrenPart.node);
 
-    elementSlot.connect(context);
-    childrenSlot.connect(context);
+    elementSlot.connect(session);
+    childrenSlot.connect(session);
 
     return {
       childNodes: [elementPart.node],

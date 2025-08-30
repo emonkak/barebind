@@ -5,7 +5,7 @@ import {
   type Component,
   type Coroutine,
   createScope,
-  createUpdateContext,
+  createUpdateSession,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -17,7 +17,7 @@ import {
   type RenderContext,
   type Scope,
   type Slot,
-  type UpdateContext,
+  type UpdateSession,
 } from './internal.js';
 
 export interface ComponentOptions<TProps> {
@@ -86,11 +86,11 @@ export class ComponentBinding<TProps, TResult>
     );
   }
 
-  resume(context: UpdateContext): void {
-    const { frame, runtime } = context;
+  resume(session: UpdateSession): void {
+    const { frame, context } = session;
     const subscope = createScope(this.scope);
-    const subcontext = createUpdateContext(frame, subscope, runtime);
-    const result = runtime.renderComponent(
+    const subsession = createUpdateSession(frame, subscope, context);
+    const result = context.renderComponent(
       this.type,
       this.value,
       this._hooks,
@@ -101,12 +101,12 @@ export class ComponentBinding<TProps, TResult>
     let shouldCommit = frame.mutationEffects.length === 0;
 
     if (this._slot !== null) {
-      if (!this._slot.reconcile(result, subcontext)) {
+      if (!this._slot.reconcile(result, subsession)) {
         shouldCommit = false;
       }
     } else {
-      this._slot = runtime.resolveSlot(result, this.part);
-      this._slot.connect(subcontext);
+      this._slot = context.resolveSlot(result, this.part);
+      this._slot.connect(subsession);
     }
 
     if (shouldCommit) {
@@ -117,17 +117,17 @@ export class ComponentBinding<TProps, TResult>
     this._memoizedValue = this.value;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, session: UpdateSession): void {
     if (this._slot !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
       );
     }
 
-    const { frame, scope, runtime } = context;
+    const { frame, scope, context } = session;
     const subscope = createScope(scope);
-    const subcontext = createUpdateContext(frame, subscope, runtime);
-    const result = runtime.renderComponent(
+    const subsession = createUpdateSession(frame, subscope, context);
+    const result = context.renderComponent(
       this.type,
       this.value,
       this._hooks,
@@ -136,20 +136,20 @@ export class ComponentBinding<TProps, TResult>
       subscope,
     );
 
-    this._slot = runtime.resolveSlot(result, this.part);
-    this._slot.hydrate(target, subcontext);
+    this._slot = context.resolveSlot(result, this.part);
+    this._slot.hydrate(target, subsession);
 
     this.scope = scope;
     this._memoizedValue = this.value;
   }
 
-  connect(context: UpdateContext): void {
-    context.frame.pendingCoroutines.push(this);
-    this.scope = context.scope;
+  connect(session: UpdateSession): void {
+    session.frame.pendingCoroutines.push(this);
+    this.scope = session.scope;
   }
 
-  disconnect(context: UpdateContext): void {
-    const { frame } = context;
+  disconnect(session: UpdateSession): void {
+    const { frame } = session;
 
     // Hooks must be cleaned in reverse order.
     for (let i = this._hooks.length - 1; i >= 0; i--) {
@@ -167,7 +167,7 @@ export class ComponentBinding<TProps, TResult>
       }
     }
 
-    this._slot?.disconnect(context);
+    this._slot?.disconnect(session);
 
     this.pendingLanes = Lanes.NoLanes;
     this._hooks = [];

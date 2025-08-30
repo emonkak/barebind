@@ -20,8 +20,8 @@ describe('LivePrimitive', () => {
         name: 'value',
         defaultValue: '',
       };
-      const context = createRuntime();
-      const binding = LivePrimitive.resolveBinding(value, part, context);
+      const runtime = createRuntime();
+      const binding = LivePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(LivePrimitive);
       expect(binding.value).toBe(value);
@@ -34,9 +34,9 @@ describe('LivePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('textarea'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
-      expect(() => LivePrimitive.resolveBinding(value, part, context)).toThrow(
+      expect(() => LivePrimitive.resolveBinding(value, part, runtime)).toThrow(
         'LivePrimitive must be used in a live part,',
       );
     });

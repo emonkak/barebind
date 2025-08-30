@@ -15,12 +15,12 @@ export class Root<T> {
 
   private readonly _container: Element;
 
-  private readonly _runtime: SessionContext;
+  private readonly _context: SessionContext;
 
   static create<T>(
     value: T,
     container: Element,
-    runtime: SessionContext,
+    context: SessionContext,
   ): Root<T> {
     const part = {
       type: PartType.ChildNode,
@@ -28,18 +28,18 @@ export class Root<T> {
       anchorNode: null,
       namespaceURI: container.namespaceURI,
     };
-    const slot = runtime.resolveSlot(value, part);
-    return new Root(slot, container, runtime);
+    const slot = context.resolveSlot(value, part);
+    return new Root(slot, container, context);
   }
 
   private constructor(
     slot: Slot<T>,
     container: Element,
-    runtime: SessionContext,
+    context: SessionContext,
   ) {
     this._slot = slot;
     this._container = container;
-    this._runtime = runtime;
+    this._context = context;
   }
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
@@ -56,7 +56,7 @@ export class Root<T> {
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
     };
-    return this._runtime.scheduleUpdate(coroutine, {
+    return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
     });
@@ -74,7 +74,7 @@ export class Root<T> {
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
     };
-    return this._runtime.scheduleUpdate(coroutine, {
+    return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
     });
@@ -90,7 +90,7 @@ export class Root<T> {
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
     };
-    return this._runtime.scheduleUpdate(coroutine, {
+    return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
     });
@@ -108,7 +108,7 @@ export class Root<T> {
         coroutine.pendingLanes &= ~context.frame.lanes;
       },
     };
-    return this._runtime.scheduleUpdate(coroutine, {
+    return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
     });

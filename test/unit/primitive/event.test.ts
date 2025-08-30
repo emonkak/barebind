@@ -54,8 +54,8 @@ describe('EventPrimitive', () => {
         node: document.createElement('div'),
         name: 'click',
       };
-      const context = createRuntime();
-      const binding = EventPrimitive.resolveBinding(handler, part, context);
+      const runtime = createRuntime();
+      const binding = EventPrimitive.resolveBinding(handler, part, runtime);
 
       expect(binding.type).toBe(EventPrimitive);
       expect(binding.value).toBe(handler);
@@ -68,10 +68,10 @@ describe('EventPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
       expect(() =>
-        EventPrimitive.resolveBinding(handler, part, context),
+        EventPrimitive.resolveBinding(handler, part, runtime),
       ).toThrow('EventPrimitive must be used in an event part,');
     });
   });

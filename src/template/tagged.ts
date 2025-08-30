@@ -13,7 +13,7 @@ import {
   type Slot,
   type TemplateMode,
   type TemplateResult,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 import {
   AbstractTemplate,
@@ -145,9 +145,9 @@ export class TaggedTemplate<
     binds: TBinds,
     part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
-    const { runtime } = context;
+    const { context } = session;
     const document = part.node.ownerDocument;
     const fragment = this.template.content;
     const sourceTree = createTreeWalker(fragment);
@@ -230,8 +230,8 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = runtime.resolveSlot(binds[holeIndex]!, currentPart!);
-        slot.hydrate(target, context);
+        const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
+        slot.hydrate(target, session);
 
         slots[holeIndex] = slot;
         lastPartIndex = hole.index;
@@ -271,9 +271,9 @@ export class TaggedTemplate<
   render(
     binds: TBinds,
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
-    const { runtime } = context;
+    const { context } = session;
     const document = part.node.ownerDocument;
     const fragment = document.importNode(this.template.content, true);
     const holes = this.holes;
@@ -338,8 +338,8 @@ export class TaggedTemplate<
             break;
         }
 
-        const slot = runtime.resolveSlot(binds[i]!, currentPart);
-        slot.connect(context);
+        const slot = context.resolveSlot(binds[i]!, currentPart);
+        slot.connect(session);
 
         slots[i] = slot;
       }

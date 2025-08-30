@@ -166,9 +166,7 @@ describe('RenderSession', () => {
   describe('finalize()', () => {
     it('denies using a hook after finalize', () => {
       const helper = new RenderHelper();
-      const context = helper.startSession((context) => {
-        return context;
-      });
+      const context = helper.startSession((context) => context);
 
       expect(() => context.useState(0)).toThrow();
     });

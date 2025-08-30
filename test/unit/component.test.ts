@@ -89,8 +89,8 @@ describe('createComponent()', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const context = createRuntime();
-      const binding = Greet.resolveBinding(props, part, context);
+      const runtime = createRuntime();
+      const binding = Greet.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(Greet);
       expect(binding.value).toBe(props);

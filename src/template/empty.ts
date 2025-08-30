@@ -3,7 +3,7 @@ import type {
   HydrationTree,
   Part,
   TemplateResult,
-  UpdateContext,
+  UpdateSession,
 } from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
@@ -20,7 +20,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
     _binds: readonly [],
     _part: Part.ChildNodePart,
     _target: HydrationTree,
-    _context: UpdateContext,
+    _session: UpdateSession,
   ): TemplateResult {
     return { childNodes: [], slots: [] };
   }
@@ -28,7 +28,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
   render(
     _binds: readonly [],
     _part: Part.ChildNodePart,
-    _context: UpdateContext,
+    _session: UpdateSession,
   ): TemplateResult {
     return { childNodes: [], slots: [] };
   }

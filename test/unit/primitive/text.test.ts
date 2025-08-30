@@ -20,8 +20,8 @@ describe('TextPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const context = createRuntime();
-      const binding = TextPrimitive.resolveBinding(value, part, context);
+      const runtime = createRuntime();
+      const binding = TextPrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(TextPrimitive);
       expect(binding.value).toBe(value);
@@ -34,9 +34,9 @@ describe('TextPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
-      expect(() => TextPrimitive.resolveBinding(value, part, context)).toThrow(
+      expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
         'TextPrimitive must be used in a text part,',
       );
     });

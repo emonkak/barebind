@@ -15,7 +15,7 @@ import {
   type Part,
   PartType,
   type Template,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
 import { type StyleProperties, updateStyles } from '../primitive/style.js';
@@ -248,11 +248,11 @@ export class ElementBinding implements Binding<ElementProps> {
     );
   }
 
-  hydrate(_target: HydrationTree, _context: UpdateContext): void {}
+  hydrate(_target: HydrationTree, _session: UpdateSession): void {}
 
-  connect(_context: UpdateContext): void {}
+  connect(_session: UpdateSession): void {}
 
-  disconnect(_context: UpdateContext): void {}
+  disconnect(_session: UpdateSession): void {}
 
   commit(): void {
     const newProps = this.value;

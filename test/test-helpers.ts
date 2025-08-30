@@ -6,14 +6,14 @@ import {
   type Lanes,
   type RenderFrame,
   type ScheduleOptions,
-  type UpdateContext,
+  type UpdateSession,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
 
 export class RenderHelper {
-  readonly runtime;
+  readonly runtime: Runtime;
 
   hooks: Hook[] = [];
 
@@ -83,7 +83,7 @@ export class UpdateHelper {
   }
 
   startSession<T>(
-    callback: (this: Coroutine, context: UpdateContext) => T,
+    callback: (this: Coroutine, session: UpdateSession) => T,
     options: ScheduleOptions = {},
   ): T {
     const coroutine = new MockCoroutine(function (context) {

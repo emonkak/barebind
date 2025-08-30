@@ -9,7 +9,7 @@ import {
   type Part,
   type Slot,
   type UnwrapBindable,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 
 export function Strict<T>(value: T): SlotSpecifier<T> {
@@ -37,8 +37,8 @@ export class StrictSlot<T> implements Slot<T> {
     return this._binding.part;
   }
 
-  reconcile(value: T, context: UpdateContext): boolean {
-    const directive = context.runtime.resolveDirective(
+  reconcile(value: T, session: UpdateSession): boolean {
+    const directive = session.context.resolveDirective(
       value,
       this._binding.part,
     );
@@ -57,25 +57,25 @@ export class StrictSlot<T> implements Slot<T> {
 
     if (this._dirty || this._binding.shouldBind(directive.value)) {
       this._binding.value = directive.value;
-      this._binding.connect(context);
+      this._binding.connect(session);
       this._dirty = true;
     }
 
     return this._dirty;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
-    this._binding.hydrate(target, context);
+  hydrate(target: HydrationTree, session: UpdateSession): void {
+    this._binding.hydrate(target, session);
     this._dirty = true;
   }
 
-  connect(context: UpdateContext): void {
-    this._binding.connect(context);
+  connect(session: UpdateSession): void {
+    this._binding.connect(session);
     this._dirty = true;
   }
 
-  disconnect(context: UpdateContext): void {
-    this._binding.disconnect(context);
+  disconnect(session: UpdateSession): void {
+    this._binding.disconnect(session);
     this._dirty = true;
   }
 

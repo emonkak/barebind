@@ -14,7 +14,7 @@ import {
   type Part,
   PartType,
   type Slot,
-  type UpdateContext,
+  type UpdateSession,
 } from './internal.js';
 
 const OPERATION_INSERT = 0;
@@ -81,7 +81,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   resolveBinding<TSource, TKey, TValue>(
     props: RepeatProps<TSource, TKey, TValue>,
     part: Part,
-    _context: DirectiveContext,
+    _session: DirectiveContext,
   ): RepeatBinding<TSource, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -127,14 +127,14 @@ export class RepeatBinding<TSource, TKey, TValue>
     );
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, session: UpdateSession): void {
     if (this._memoizedItems !== null || this._pendingItems.length > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
       );
     }
 
-    const { runtime } = context;
+    const { context } = session;
     const document = this.part.node.ownerDocument;
     const sourceItems = generateItems(this.value);
     const targetItems: Item<TKey, Slot<TValue>>[] = new Array(
@@ -149,9 +149,9 @@ export class RepeatBinding<TSource, TKey, TValue>
         anchorNode: null,
         namespaceURI: this.part.namespaceURI,
       };
-      const slot = runtime.resolveSlot(value, part);
+      const slot = context.resolveSlot(value, part);
 
-      slot.hydrate(target, context);
+      slot.hydrate(target, session);
 
       replaceMarkerNode(target, part.node);
 
@@ -166,8 +166,8 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._memoizedItems = targetItems;
   }
 
-  connect(context: UpdateContext): void {
-    const { runtime } = context;
+  connect(session: UpdateSession): void {
+    const { context } = session;
     const document = this.part.node.ownerDocument;
     const targetItems = this._pendingItems;
     const sourceItems = generateItems(this.value);
@@ -180,12 +180,12 @@ export class RepeatBinding<TSource, TKey, TValue>
           anchorNode: null,
           namespaceURI: this.part.namespaceURI,
         };
-        const slot = runtime.resolveSlot(value, part);
+        const slot = context.resolveSlot(value, part);
         const item = {
           key,
           value: slot,
         };
-        slot.connect(context);
+        slot.connect(session);
         this._pendingOperations.push({
           type: OPERATION_INSERT,
           item,
@@ -194,7 +194,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         return item;
       },
       update: (item, { value }) => {
-        if (item.value.reconcile(value, context)) {
+        if (item.value.reconcile(value, session)) {
           this._pendingOperations.push({
             type: OPERATION_UPDATE,
             item,
@@ -203,7 +203,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         return item;
       },
       move: (item, { value }, referenceItem) => {
-        if (item.value.reconcile(value, context)) {
+        if (item.value.reconcile(value, session)) {
           this._pendingOperations.push({
             type: OPERATION_MOVE_AND_UPDATE,
             item,
@@ -219,7 +219,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         return item;
       },
       remove: (item) => {
-        item.value.disconnect(context);
+        item.value.disconnect(session);
         this._pendingOperations.push({
           type: OPERATION_REMOVE,
           item,
@@ -228,10 +228,10 @@ export class RepeatBinding<TSource, TKey, TValue>
     });
   }
 
-  disconnect(context: UpdateContext): void {
+  disconnect(session: UpdateSession): void {
     for (let i = this._pendingItems.length - 1; i >= 0; i--) {
       const { value } = this._pendingItems[i]!;
-      value.disconnect(context);
+      value.disconnect(session);
     }
   }
 

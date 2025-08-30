@@ -39,8 +39,8 @@ describe('AbstractTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const context = createRuntime();
-      const binding = template.resolveBinding(binds, part, context);
+      const runtime = createRuntime();
+      const binding = template.resolveBinding(binds, part, runtime);
 
       expect(binding.type).toBe(template);
       expect(binding.value).toBe(binds);
@@ -54,9 +54,9 @@ describe('AbstractTemplate', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
-      expect(() => template.resolveBinding(binds, part, context)).toThrow(
+      expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
         'MockTemplate must be used in a child node part,',
       );
     });

@@ -3,7 +3,7 @@ import type {
   HydrationTree,
   Part,
   Primitive,
-  UpdateContext,
+  UpdateSession,
 } from '../internal.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
@@ -22,11 +22,11 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   abstract shouldBind(value: TValue): boolean;
 
-  hydrate(_target: HydrationTree, _context: UpdateContext): void {}
+  hydrate(_target: HydrationTree, _session: UpdateSession): void {}
 
-  connect(_context: UpdateContext): void {}
+  connect(_session: UpdateSession): void {}
 
-  disconnect(_context: UpdateContext): void {}
+  disconnect(_session: UpdateSession): void {}
 
   abstract commit(): void;
 

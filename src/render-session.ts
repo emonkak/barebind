@@ -34,7 +34,7 @@ export class RenderSession implements RenderContext {
 
   private _scope: Scope | null;
 
-  private readonly _runtime: SessionContext;
+  private readonly _context: SessionContext;
 
   private _hookIndex = 0;
 
@@ -43,13 +43,13 @@ export class RenderSession implements RenderContext {
     coroutine: Coroutine,
     frame: RenderFrame,
     scope: Scope,
-    runtime: SessionContext,
+    context: SessionContext,
   ) {
     this._hooks = hooks;
     this._coroutine = coroutine;
     this._frame = frame;
     this._scope = scope;
-    this._runtime = runtime;
+    this._context = context;
   }
 
   catchError(handler: ErrorHandler): void {
@@ -99,7 +99,7 @@ export class RenderSession implements RenderContext {
 
   forceUpdate(options?: ScheduleOptions): UpdateHandle {
     if (this._frame.lanes !== Lanes.NoLanes) {
-      const runningTask = this._runtime.getPendingTasks().at(-1);
+      const runningTask = this._context.getPendingTasks().at(-1);
       if (runningTask !== undefined) {
         this._frame.pendingCoroutines.push(this._coroutine);
         return {
@@ -109,7 +109,7 @@ export class RenderSession implements RenderContext {
         };
       }
     }
-    return this._runtime.scheduleUpdate(this._coroutine, options);
+    return this._context.scheduleUpdate(this._coroutine, options);
   }
 
   getSharedContext(key: unknown): unknown {
@@ -128,7 +128,7 @@ export class RenderSession implements RenderContext {
   }
 
   isUpdatePending(): boolean {
-    const pendingTasks = this._runtime.getPendingTasks();
+    const pendingTasks = this._context.getPendingTasks();
 
     for (let i = 0, l = pendingTasks.length; i < l; i++) {
       const pendingTask = pendingTasks[i]!;
@@ -199,7 +199,7 @@ export class RenderSession implements RenderContext {
     } else {
       currentHook = {
         type: HookType.Id,
-        id: this._runtime.nextIdentifier(),
+        id: this._context.nextIdentifier(),
       };
       this._hooks.push(currentHook);
     }
@@ -322,7 +322,7 @@ export class RenderSession implements RenderContext {
   }
 
   async waitForUpdate(): Promise<number> {
-    const pendingTasks = this._runtime.getPendingTasks();
+    const pendingTasks = this._context.getPendingTasks();
     const promises: Promise<void>[] = [];
 
     for (let i = 0, l = pendingTasks.length; i < l; i++) {
@@ -341,8 +341,8 @@ export class RenderSession implements RenderContext {
     mode: TemplateMode,
   ): DirectiveSpecifier<readonly unknown[]> {
     const { strings: expandedStrings, values: expandedBinds } =
-      this._runtime.expandLiterals(strings, binds);
-    const template = this._runtime.resolveTemplate(
+      this._context.expandLiterals(strings, binds);
+    const template = this._context.resolveTemplate(
       expandedStrings,
       expandedBinds as unknown[],
       mode,
@@ -355,7 +355,7 @@ export class RenderSession implements RenderContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): DirectiveSpecifier<readonly unknown[]> {
-    const template = this._runtime.resolveTemplate(strings, binds, mode);
+    const template = this._context.resolveTemplate(strings, binds, mode);
     return new DirectiveSpecifier(template, binds);
   }
 

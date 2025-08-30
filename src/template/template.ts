@@ -12,7 +12,7 @@ import {
   PartType,
   type Template,
   type TemplateResult,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 
 export const HTML_NAMESPACE_URI = 'http://www.w3.org/1999/xhtml';
@@ -34,20 +34,20 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract render(
     binds: TBinds,
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult;
 
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult;
 
   resolveBinding(
     binds: TBinds,
     part: Part,
-    _context: DirectiveContext,
+    _session: DirectiveContext,
   ): Binding<TBinds> {
     if (part.type !== PartType.ChildNode) {
       throw new Error(
@@ -89,14 +89,14 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._memoizedValue === null || value !== this._memoizedValue;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, session: UpdateSession): void {
     if (this._pendingResult !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
       );
     }
 
-    const result = this.type.hydrate(this.value, this.part, target, context);
+    const result = this.type.hydrate(this.value, this.part, target, session);
 
     this.part.anchorNode = getAnchorNode(result);
     this._memoizedValue = this.value;
@@ -104,26 +104,26 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     this._memoizedResult = result;
   }
 
-  connect(context: UpdateContext): void {
+  connect(session: UpdateSession): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this.value[i]!, context);
+        slots[i]!.reconcile(this.value[i]!, session);
       }
     } else {
-      this._pendingResult = this.type.render(this.value, this.part, context);
+      this._pendingResult = this.type.render(this.value, this.part, session);
     }
 
     this._memoizedValue = this.value;
   }
 
-  disconnect(context: UpdateContext): void {
+  disconnect(session: UpdateSession): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
       for (let i = slots.length - 1; i >= 0; i--) {
-        slots[i]!.disconnect(context);
+        slots[i]!.disconnect(session);
       }
     }
   }

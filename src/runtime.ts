@@ -5,7 +5,7 @@ import {
   type Component,
   type Coroutine,
   createScope,
-  createUpdateContext,
+  createUpdateSession,
   type Directive,
   type Effect,
   getLanesFromOptions,
@@ -160,7 +160,7 @@ export class Runtime implements SessionContext {
             });
           }
 
-          const context = createUpdateContext(frame, scope, this);
+          const session = createUpdateSession(frame, scope, this);
 
           while (true) {
             const coroutines = consumeCoroutines(frame);
@@ -168,7 +168,7 @@ export class Runtime implements SessionContext {
             for (let i = 0, l = coroutines.length; i < l; i++) {
               const coroutine = coroutines[i]!;
               try {
-                coroutine.resume(context);
+                coroutine.resume(session);
               } catch (error) {
                 handleError(coroutine.scope ?? scope, error);
               }
@@ -276,7 +276,7 @@ export class Runtime implements SessionContext {
             });
           }
 
-          const context = createUpdateContext(frame, scope, this);
+          const session = createUpdateSession(frame, scope, this);
 
           while (true) {
             const coroutines = consumeCoroutines(frame);
@@ -284,7 +284,7 @@ export class Runtime implements SessionContext {
             for (let i = 0, l = coroutines.length; i < l; i++) {
               const coroutine = coroutines[i]!;
               try {
-                coroutine.resume(context);
+                coroutine.resume(session);
               } catch (error) {
                 handleError(coroutine.scope ?? scope, error);
               }
@@ -356,7 +356,7 @@ export class Runtime implements SessionContext {
     scope: Scope,
   ): TResult {
     const { id } = frame;
-    const context = new RenderSession(hooks, coroutine, frame, scope, this);
+    const session = new RenderSession(hooks, coroutine, frame, scope, this);
 
     if (!this._observers.isEmpty()) {
       notifyObservers(this._observers, {
@@ -364,13 +364,13 @@ export class Runtime implements SessionContext {
         id,
         component,
         props,
-        context,
+        context: session,
       });
     }
 
-    const result = component.render(props, context);
+    const result = component.render(props, session);
 
-    context.finalize();
+    session.finalize();
 
     if (!this._observers.isEmpty()) {
       notifyObservers(this._observers, {
@@ -378,7 +378,7 @@ export class Runtime implements SessionContext {
         id,
         component,
         props,
-        context,
+        context: session,
       });
     }
 

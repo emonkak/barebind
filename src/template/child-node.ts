@@ -5,7 +5,7 @@ import {
   type Part,
   PartType,
   type TemplateResult,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
@@ -22,7 +22,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     binds: readonly [unknown],
     part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
     const document = part.node.ownerDocument;
     const childNodePart = {
@@ -31,9 +31,9 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = context.runtime.resolveSlot(binds[0], childNodePart);
+    const childNodeSlot = session.context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.hydrate(target, context);
+    childNodeSlot.hydrate(target, session);
 
     replaceMarkerNode(target, childNodePart.node);
 
@@ -43,7 +43,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   render(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
     const document = part.node.ownerDocument;
     const childNodePart = {
@@ -52,9 +52,9 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = context.runtime.resolveSlot(binds[0], childNodePart);
+    const childNodeSlot = session.context.resolveSlot(binds[0], childNodePart);
 
-    childNodeSlot.connect(context);
+    childNodeSlot.connect(session);
 
     return { childNodes: [childNodePart.node], slots: [childNodeSlot] };
   }

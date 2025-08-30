@@ -54,8 +54,8 @@ describe('RefPrimitive', () => {
         node: document.createElement('div'),
         name: attributeName,
       };
-      const context = createRuntime();
-      const binding = RefPrimitive.resolveBinding(ref, part, context);
+      const runtime = createRuntime();
+      const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
       expect(binding.type).toBe(RefPrimitive);
       expect(binding.value).toBe(ref);
@@ -68,9 +68,9 @@ describe('RefPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
-      expect(() => RefPrimitive.resolveBinding(ref, part, context)).toThrow(
+      expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
         'RefPrimitive must be used in ":ref" attribute part,',
       );
     });

@@ -54,8 +54,8 @@ describe('SpreadPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
-      const binding = SpreadPrimitive.resolveBinding(props, part, context);
+      const runtime = createRuntime();
+      const binding = SpreadPrimitive.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(SpreadPrimitive);
       expect(binding.value).toBe(props);
@@ -70,10 +70,10 @@ describe('SpreadPrimitive', () => {
         precedingText: '',
         followingText: '',
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
       expect(() =>
-        SpreadPrimitive.resolveBinding(props, part, context),
+        SpreadPrimitive.resolveBinding(props, part, runtime),
       ).toThrow('SpreadPrimitive must be used in an element part,');
     });
   });

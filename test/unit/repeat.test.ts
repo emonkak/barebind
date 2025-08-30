@@ -53,8 +53,8 @@ describe('RepeatDirective', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const context = createRuntime();
-      const binding = RepeatDirective.resolveBinding(props, part, context);
+      const runtime = createRuntime();
+      const binding = RepeatDirective.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(RepeatDirective);
       expect(binding.value).toBe(props);
@@ -67,10 +67,10 @@ describe('RepeatDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
       expect(() =>
-        RepeatDirective.resolveBinding(props, part, context),
+        RepeatDirective.resolveBinding(props, part, runtime),
       ).toThrow('RepeatDirective must be used in a child part,');
     });
   });

@@ -18,8 +18,8 @@ describe('BlackholePrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
-      const binding = BlackholePrimitive.resolveBinding(value, part, context);
+      const runtime = createRuntime();
+      const binding = BlackholePrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(BlackholePrimitive);
       expect(binding.value).toBe(value);

@@ -41,9 +41,9 @@ describe('SlotSpecifier', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
       const bindable = new SlotSpecifier(type, value);
-      const directive = bindable[$toDirective](part, context);
+      const directive = bindable[$toDirective](part, runtime);
 
       expect(directive.type).toBe(MockPrimitive);
       expect(directive.value).toBe(value);
@@ -59,9 +59,9 @@ describe('SlotSpecifier', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
       const bindable = new SlotSpecifier(type, value);
-      const directive = bindable[$toDirective](part, context);
+      const directive = bindable[$toDirective](part, runtime);
 
       expect(directive.type).toBe(value.type);
       expect(directive.value).toBe(value.value);

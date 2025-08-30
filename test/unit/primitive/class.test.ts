@@ -61,8 +61,8 @@ describe('ClassPrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const context = createRuntime();
-        const binding = ClassPrimitive.resolveBinding(classes, part, context);
+        const runtime = createRuntime();
+        const binding = ClassPrimitive.resolveBinding(classes, part, runtime);
 
         expect(binding.type).toBe(ClassPrimitive);
         expect(binding.value).toBe(classes);
@@ -77,10 +77,10 @@ describe('ClassPrimitive', () => {
         node: document.createElement('div'),
         name: 'class',
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
       expect(() =>
-        ClassPrimitive.resolveBinding(classes, part, context),
+        ClassPrimitive.resolveBinding(classes, part, runtime),
       ).toThrow('ClassPrimitive must be used in a ":class" attribute part,');
     });
   });

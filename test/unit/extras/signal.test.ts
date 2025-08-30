@@ -30,8 +30,8 @@ describe('SignalDirective', () => {
         precedingText: '',
         followingText: '',
       };
-      const context = createRuntime();
-      const binding = SignalDirective.resolveBinding(signal, part, context);
+      const runtime = createRuntime();
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.type).toBe(SignalDirective);
       expect(binding.value).toBe(signal);
@@ -50,8 +50,8 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const context = createRuntime();
-      const binding = SignalDirective.resolveBinding(signal, part, context);
+      const runtime = createRuntime();
+      const binding = SignalDirective.resolveBinding(signal, part, runtime);
 
       expect(binding.shouldBind(signal)).toBe(true);
     });

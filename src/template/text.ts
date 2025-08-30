@@ -4,7 +4,7 @@ import {
   type Part,
   PartType,
   type TemplateResult,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
@@ -35,7 +35,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     binds: readonly [T],
     _part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
     const textPart = {
       type: PartType.Text,
@@ -43,9 +43,9 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
       precedingText: this.precedingText,
       followingText: this.followingText,
     };
-    const textSlot = context.runtime.resolveSlot(binds[0], textPart);
+    const textSlot = session.context.resolveSlot(binds[0], textPart);
 
-    textSlot.hydrate(target, context);
+    textSlot.hydrate(target, session);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }
@@ -53,7 +53,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   render(
     binds: readonly [T],
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
     const document = part.node.ownerDocument;
     const textPart = {
@@ -62,9 +62,9 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
       precedingText: this.precedingText,
       followingText: this.followingText,
     };
-    const textSlot = context.runtime.resolveSlot(binds[0], textPart);
+    const textSlot = session.context.resolveSlot(binds[0], textPart);
 
-    textSlot.connect(context);
+    textSlot.connect(session);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }

@@ -15,9 +15,9 @@ export interface Binding<T> extends ReversibleEffect {
   value: T;
   readonly part: Part;
   shouldBind(value: T): boolean;
-  hydrate(target: HydrationTree, context: UpdateContext): void;
-  connect(context: UpdateContext): void;
-  disconnect(context: UpdateContext): void;
+  hydrate(target: HydrationTree, session: UpdateSession): void;
+  connect(session: UpdateSession): void;
+  disconnect(session: UpdateSession): void;
 }
 
 export type Boundary = Boundary.SharedContextBoundary | Boundary.ErrorBoundary;
@@ -62,7 +62,7 @@ export interface Component<TProps, TResult = unknown>
 export interface Coroutine {
   readonly scope: Scope | null;
   pendingLanes: Lanes;
-  resume(context: UpdateContext): void;
+  resume(session: UpdateSession): void;
 }
 
 export type CustomHookFunction<T> = (context: RenderContext) => T;
@@ -386,10 +386,10 @@ export interface Slot<T> extends ReversibleEffect {
   readonly type: DirectiveType<UnwrapBindable<T>>;
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
-  reconcile(value: T, context: UpdateContext): boolean;
-  hydrate(target: HydrationTree, context: UpdateContext): void;
-  connect(context: UpdateContext): void;
-  disconnect(context: UpdateContext): void;
+  reconcile(value: T, session: UpdateSession): boolean;
+  hydrate(target: HydrationTree, session: UpdateSession): void;
+  connect(session: UpdateSession): void;
+  disconnect(session: UpdateSession): void;
 }
 
 export interface SlotType {
@@ -402,13 +402,13 @@ export interface Template<TBinds extends readonly unknown[]>
   render(
     binds: TBinds,
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult;
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult;
 }
 
@@ -430,16 +430,16 @@ export interface TemplateResult {
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
 
-export interface UpdateContext {
-  frame: RenderFrame;
-  scope: Scope;
-  runtime: SessionContext;
-}
-
 export interface UpdateHandle {
   lanes: Lanes;
   scheduled: Promise<void>;
   finished: Promise<void>;
+}
+
+export interface UpdateSession {
+  frame: RenderFrame;
+  scope: Scope;
+  context: SessionContext;
 }
 
 export interface UpdateTask {
@@ -480,12 +480,12 @@ export function createScope(parent: Scope | null = null): Scope {
 /**
  * @internal
  */
-export function createUpdateContext(
+export function createUpdateSession(
   frame: RenderFrame,
   scope: Scope,
-  runtime: SessionContext,
-): UpdateContext {
-  return { frame, scope, runtime };
+  context: SessionContext,
+): UpdateSession {
+  return { frame, scope, context };
 }
 
 /**

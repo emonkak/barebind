@@ -182,8 +182,8 @@ describe('ElementDirective', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
-      const binding = ElementDirective.resolveBinding(props, part, context);
+      const runtime = createRuntime();
+      const binding = ElementDirective.resolveBinding(props, part, runtime);
 
       expect(binding.type).toBe(ElementDirective);
       expect(binding.value).toBe(props);
@@ -198,10 +198,10 @@ describe('ElementDirective', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
       expect(() =>
-        ElementDirective.resolveBinding(props, part, context),
+        ElementDirective.resolveBinding(props, part, runtime),
       ).toThrow('ElementDirective must be used in an element part,');
     });
   });

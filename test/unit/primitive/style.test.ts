@@ -58,8 +58,8 @@ describe('StylePrimitive', () => {
           node: document.createElement('div'),
           name: attributeName,
         };
-        const context = createRuntime();
-        const binding = StylePrimitive.resolveBinding(style, part, context);
+        const runtime = createRuntime();
+        const binding = StylePrimitive.resolveBinding(style, part, runtime);
 
         expect(binding.type).toBe(StylePrimitive);
         expect(binding.value).toBe(style);
@@ -74,9 +74,9 @@ describe('StylePrimitive', () => {
         node: document.createElement('div'),
         name: 'style',
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
-      expect(() => StylePrimitive.resolveBinding(style, part, context)).toThrow(
+      expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
         'StylePrimitive must be used in a ":style" attribute part,',
       );
     });

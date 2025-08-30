@@ -10,7 +10,7 @@ import {
   PartType,
   type Primitive,
   type Slot,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 
 export type SpreadProperties = { [key: string]: unknown };
@@ -28,7 +28,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   resolveBinding(
     props: SpreadProperties,
     part: Part,
-    _context: DirectiveContext,
+    _session: DirectiveContext,
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new Error(
@@ -62,14 +62,14 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     return this._memoizedSlots === null || value !== this.value;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, session: UpdateSession): void {
     if (this._memoizedSlots !== null || this._pendingSlots.size > 0) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
       );
     }
 
-    const { runtime } = context;
+    const { context } = session;
     const slots = new Map();
 
     for (const key of Object.keys(this.value)) {
@@ -78,8 +78,8 @@ export class SpreadBinding implements Binding<SpreadProperties> {
         continue;
       }
       const part = resolveNamedPart(key, this.part.node);
-      const slot = runtime.resolveSlot(value, part);
-      slot.hydrate(target, context);
+      const slot = context.resolveSlot(value, part);
+      slot.hydrate(target, session);
       slots.set(key, slot);
     }
 
@@ -87,14 +87,14 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     this._memoizedSlots = slots;
   }
 
-  connect(context: UpdateContext): void {
-    const { runtime } = context;
+  connect(session: UpdateSession): void {
+    const { context } = session;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
 
     for (const [key, slot] of oldSlots.entries()) {
       if (!Object.hasOwn(this.value, key) || this.value[key] === undefined) {
-        slot.disconnect(context);
+        slot.disconnect(session);
       }
     }
 
@@ -105,11 +105,11 @@ export class SpreadBinding implements Binding<SpreadProperties> {
       }
       let slot = oldSlots.get(key);
       if (slot !== undefined) {
-        slot.reconcile(value, context);
+        slot.reconcile(value, session);
       } else {
         const part = resolveNamedPart(key, this.part.node);
-        slot = runtime.resolveSlot(value, part);
-        slot.connect(context);
+        slot = context.resolveSlot(value, part);
+        slot.connect(session);
       }
       newSlots.set(key, slot);
     }
@@ -117,10 +117,10 @@ export class SpreadBinding implements Binding<SpreadProperties> {
     this._pendingSlots = newSlots;
   }
 
-  disconnect(context: UpdateContext): void {
+  disconnect(session: UpdateSession): void {
     if (this._memoizedSlots !== null) {
       for (const slot of this._memoizedSlots.values()) {
-        slot.disconnect(context);
+        slot.disconnect(session);
       }
     }
   }

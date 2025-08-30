@@ -9,14 +9,14 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  type RenderContext,
   HydrationError,
   type HydrationTree,
   Lanes,
   type Part,
+  type RenderContext,
   type Scope,
   type Slot,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 
 export type Subscriber = () => void;
@@ -35,9 +35,9 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
   resolveBinding<T>(
     signal: Signal<T>,
     part: Part,
-    context: DirectiveContext,
+    session: DirectiveContext,
   ): SignalBinding<T> {
-    const slot = context.resolveSlot(signal.value, part);
+    const slot = session.resolveSlot(signal.value, part);
     return new SignalBinding(signal, slot);
   },
 };
@@ -89,42 +89,42 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._subscription === null || value !== this._value;
   }
 
-  resume(context: UpdateContext): void {
-    if (this._slot.reconcile(this._value.value, context)) {
-      context.frame.mutationEffects.push(this._slot);
+  resume(session: UpdateSession): void {
+    if (this._slot.reconcile(this._value.value, session)) {
+      session.frame.mutationEffects.push(this._slot);
     }
     this._memoizedVersion = this._value.version;
     this.pendingLanes = Lanes.NoLanes;
   }
 
-  hydrate(target: HydrationTree, context: UpdateContext): void {
+  hydrate(target: HydrationTree, session: UpdateSession): void {
     if (this._subscription !== null) {
       throw new HydrationError(
         'Hydration is failed because the binding has already been initialized.',
       );
     }
 
-    this._slot.hydrate(target, context);
-    this._subscription = this._subscribeSignal(context);
+    this._slot.hydrate(target, session);
+    this._subscription = this._subscribeSignal(session);
   }
 
-  connect(context: UpdateContext): void {
+  connect(session: UpdateSession): void {
     const currentVersion = this._value.version;
 
     if (this._memoizedVersion < currentVersion) {
-      this._slot.reconcile(this._value.value, context);
+      this._slot.reconcile(this._value.value, session);
       this._memoizedVersion = currentVersion;
     } else {
-      this._slot.connect(context);
+      this._slot.connect(session);
     }
 
-    this._subscription ??= this._subscribeSignal(context);
-    this.scope = context.scope;
+    this._subscription ??= this._subscribeSignal(session);
+    this.scope = session.scope;
   }
 
-  disconnect(context: UpdateContext): void {
+  disconnect(session: UpdateSession): void {
     this._subscription?.();
-    this._slot.disconnect(context);
+    this._slot.disconnect(session);
     this._subscription = null;
   }
 
@@ -136,10 +136,10 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._slot.rollback();
   }
 
-  private _subscribeSignal(context: UpdateContext): Subscription {
-    const { runtime } = context;
+  private _subscribeSignal(session: UpdateSession): Subscription {
+    const { context } = session;
     return this._value.subscribe(() => {
-      runtime.scheduleUpdate(this);
+      context.scheduleUpdate(this);
     });
   }
 }
@@ -151,20 +151,20 @@ export abstract class Signal<T>
 
   abstract get version(): number;
 
-  [$customHook](context: RenderContext): T {
+  [$customHook](session: RenderContext): T {
     const value = this.value;
-    const snapshot = context.useRef(value);
+    const snapshot = session.useRef(value);
 
-    context.useLayoutEffect(() => {
+    session.useLayoutEffect(() => {
       snapshot.current = value;
     }, [value]);
 
-    context.useEffect(() => {
+    session.useEffect(() => {
       // The guard for batch updates with microtasks.
       let guard = true;
       const checkForChanges = () => {
         if (!Object.is(this.value, snapshot.current)) {
-          context.forceUpdate();
+          session.forceUpdate();
         }
         guard = false;
       };

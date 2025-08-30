@@ -5,7 +5,7 @@ import {
   type Part,
   type Template,
   type TemplateResult,
-  type UpdateContext,
+  type UpdateSession,
 } from '../internal.js';
 import { AbstractTemplate } from './template.js';
 
@@ -35,7 +35,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     binds: readonly unknown[],
     part: Part.ChildNodePart,
     target: HydrationTree,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
     const childNodes = [];
     const slots = [];
@@ -47,7 +47,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
         binds.slice(bindIndex, bindIndex + template.arity),
         part,
         target,
-        context,
+        session,
       );
       childNodes.push(...result.childNodes);
       slots.push(...result.slots);
@@ -60,7 +60,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   render(
     binds: readonly unknown[],
     part: Part.ChildNodePart,
-    context: UpdateContext,
+    session: UpdateSession,
   ): TemplateResult {
     const childNodes = [];
     const slots = [];
@@ -71,7 +71,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
       const result = template.render(
         binds.slice(bindIndex, bindIndex + template.arity),
         part,
-        context,
+        session,
       );
       childNodes.push(...result.childNodes);
       slots.push(...result.slots);

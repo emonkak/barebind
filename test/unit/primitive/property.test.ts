@@ -20,8 +20,8 @@ describe('PropertyPrimitive', () => {
         name: 'innerHTML',
         defaultValue: '',
       };
-      const context = createRuntime();
-      const binding = PropertyPrimitive.resolveBinding(value, part, context);
+      const runtime = createRuntime();
+      const binding = PropertyPrimitive.resolveBinding(value, part, runtime);
 
       expect(binding.type).toBe(PropertyPrimitive);
       expect(binding.value).toBe(value);
@@ -34,10 +34,10 @@ describe('PropertyPrimitive', () => {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const context = createRuntime();
+      const runtime = createRuntime();
 
       expect(() =>
-        PropertyPrimitive.resolveBinding(value, part, context),
+        PropertyPrimitive.resolveBinding(value, part, runtime),
       ).toThrow('PropertyPrimitive must be used in a property part,');
     });
   });
