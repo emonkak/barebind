@@ -142,6 +142,7 @@ export class Runtime implements SessionContext {
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const scope = createScope();
+      const session = createUpdateSession(frame, scope, this);
 
       try {
         if (!this._observers.isEmpty()) {
@@ -159,8 +160,6 @@ export class Runtime implements SessionContext {
               id,
             });
           }
-
-          const session = createUpdateSession(frame, scope, this);
 
           while (true) {
             const coroutines = consumeCoroutines(frame);
@@ -258,6 +257,7 @@ export class Runtime implements SessionContext {
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
       const scope = createScope();
+      const session = createUpdateSession(frame, scope, this);
 
       try {
         if (!this._observers.isEmpty()) {
@@ -275,8 +275,6 @@ export class Runtime implements SessionContext {
               id,
             });
           }
-
-          const session = createUpdateSession(frame, scope, this);
 
           while (true) {
             const coroutines = consumeCoroutines(frame);
