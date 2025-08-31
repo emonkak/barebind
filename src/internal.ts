@@ -73,9 +73,9 @@ export interface CustomHookObject<T> {
 }
 
 export interface Directive<T> {
-  readonly type: DirectiveType<T>;
-  readonly value: T;
-  readonly slotType?: SlotType;
+  type: DirectiveType<T>;
+  value: T;
+  slotType?: SlotType;
 }
 
 export interface DirectiveContext {
@@ -421,8 +421,8 @@ export interface TemplateFactory {
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
-  readonly childNodes: readonly ChildNode[];
-  readonly slots: Slot<unknown>[];
+  childNodes: readonly ChildNode[];
+  slots: Slot<unknown>[];
 }
 
 export type UnwrapBindable<T> = T extends Bindable<infer Value> ? Value : T;
