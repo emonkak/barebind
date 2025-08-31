@@ -349,19 +349,6 @@ export class TaggedTemplate<
   }
 }
 
-function assertNumberOfHoles(
-  expectedLength: number,
-  actualLength: number,
-  strings: readonly string[],
-): void {
-  if (expectedLength !== actualLength) {
-    throw new Error(
-      `The number of holes must be ${expectedLength}, but got ${actualLength}. There may be multiple holes indicating the same attribute:\n` +
-        strings.join('${...}').trim(),
-    );
-  }
-}
-
 function createMarker(placeholder: string): string {
   // Marker Requirements:
   // - A marker starts with "?" to detect when it is used as a tag name. In that
@@ -383,7 +370,7 @@ function createTreeWalker(node: Node): TreeWalker {
   );
 }
 
-function extractRawAttributeName(s: string): string {
+function extractCaseSensitiveAttributeName(s: string): string {
   /* v8 ignore next @preserve */
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0] ?? s;
 }
@@ -412,12 +399,14 @@ function parseAttribtues(
         index,
       };
     } else if (value === marker) {
-      const rawName = extractRawAttributeName(strings[holes.length]!);
+      const caseSensitiveName = extractCaseSensitiveAttributeName(
+        strings[holes.length]!,
+      );
 
       DEBUG: {
-        if (rawName.toLowerCase() !== name) {
+        if (caseSensitiveName.toLowerCase() !== name) {
           throw new Error(
-            `The attribute name must be "${name}", but got "${rawName}". There may be a unclosed tag or a duplicate attribute:\n` +
+            `The attribute name must be "${name}", but got "${caseSensitiveName}". There may be a unclosed tag or a duplicate attribute:\n` +
               formatPart(
                 { type: PartType.Attribute, name, node: element },
                 ERROR_MAKER,
@@ -426,33 +415,33 @@ function parseAttribtues(
         }
       }
 
-      switch (rawName[0]) {
+      switch (caseSensitiveName[0]) {
         case '@':
           hole = {
             type: PartType.Event,
             index,
-            name: rawName.slice(1),
+            name: caseSensitiveName.slice(1),
           };
           break;
         case '$':
           hole = {
             type: PartType.Live,
             index,
-            name: rawName.slice(1),
+            name: caseSensitiveName.slice(1),
           };
           break;
         case '.':
           hole = {
             type: PartType.Property,
             index,
-            name: rawName.slice(1),
+            name: caseSensitiveName.slice(1),
           };
           break;
         default:
           hole = {
             type: PartType.Attribute,
             index,
-            name: rawName,
+            name: caseSensitiveName,
           };
           break;
       }
@@ -597,7 +586,12 @@ function parseChildren(
     index++;
   }
 
-  assertNumberOfHoles(binds.length, holes.length, strings);
+  if (binds.length !== holes.length) {
+    throw new Error(
+      `The number of holes must be ${binds.length}, but got ${holes.length}. There may be multiple holes indicating the same attribute:\n` +
+        strings.join('${...}').trim(),
+    );
+  }
 
   return holes;
 }
