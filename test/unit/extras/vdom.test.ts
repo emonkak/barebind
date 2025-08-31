@@ -11,7 +11,7 @@ import {
   VFragment,
   VStaticFragment,
 } from '@/extras/vdom.js';
-import { $toDirective, PartType } from '@/internal.js';
+import { $toDirective, createHydrationTarget, PartType } from '@/internal.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
@@ -209,7 +209,7 @@ describe('ElementDirective', () => {
 });
 
 describe('ElementBinding', () => {
-  describe('shouldBind', () => {
+  describe('shouldBind()', () => {
     it('returns true if the committed value does not exist', () => {
       const props = { className: 'foo' };
       const part = {
@@ -243,14 +243,31 @@ describe('ElementBinding', () => {
     });
   });
 
-  describe('commit()', () => {
-    it('ignores reserved properties', () => {
-      const value = { key: 'foo', children: [] };
+  describe('hydrate()', () => {
+    it('should do nothing', () => {
+      const props = {};
       const part = {
         type: PartType.Element,
         node: document.createElement('div'),
       };
-      const binding = new ElementBinding(value, part);
+      const target = createHydrationTarget(document.createElement('div'));
+      const binding = new ElementBinding(props, part);
+      const helper = new UpdateHelper();
+
+      helper.startSession((context) => {
+        binding.hydrate(target, context);
+      });
+    });
+  });
+
+  describe('commit()', () => {
+    it('ignores reserved properties', () => {
+      const props = { key: 'foo', children: [] };
+      const part = {
+        type: PartType.Element,
+        node: document.createElement('div'),
+      };
+      const binding = new ElementBinding(props, part);
       const helper = new UpdateHelper();
 
       SESSION1: {
