@@ -103,8 +103,8 @@ describe('RefBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -127,8 +127,8 @@ describe('RefBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -137,9 +137,9 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = ref2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -148,9 +148,9 @@ describe('RefBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = null;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -173,8 +173,8 @@ describe('RefBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -186,8 +186,8 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -198,9 +198,9 @@ describe('RefBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = ref2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -212,9 +212,9 @@ describe('RefBinding', () => {
       }
 
       SESSION4: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = null;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -238,8 +238,8 @@ describe('RefBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -258,8 +258,8 @@ describe('RefBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -267,8 +267,8 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -288,8 +288,8 @@ describe('RefBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -299,8 +299,8 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

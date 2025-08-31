@@ -93,8 +93,8 @@ describe('TemplateBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -124,8 +124,8 @@ describe('TemplateBinding', () => {
         slots: [],
       });
 
-      helper.startSession((context) => {
-        binding.hydrate(target, context);
+      helper.startUpdate((session) => {
+        binding.hydrate(target, session);
         binding.commit();
       });
 
@@ -154,14 +154,14 @@ describe('TemplateBinding', () => {
       const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        binding.connect(context);
+      helper.startUpdate((session) => {
+        binding.connect(session);
         binding.commit();
       });
 
       expect(() => {
-        helper.startSession((context) => {
-          binding.hydrate(target, context);
+        helper.startUpdate((session) => {
+          binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
     });
@@ -192,7 +192,7 @@ describe('TemplateBinding', () => {
 
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((binds, _part, context) => {
+        .mockImplementation((binds, _part, session) => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, binds[0], {
@@ -219,14 +219,14 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(context);
+            slot.connect(session);
           }
           return { childNodes: [fragment], slots };
         });
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -264,9 +264,9 @@ describe('TemplateBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = binds2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -299,8 +299,8 @@ describe('TemplateBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -353,7 +353,7 @@ describe('TemplateBinding', () => {
 
       const renderSpy = vi
         .spyOn(template, 'render')
-        .mockImplementation((binds, _part, context) => {
+        .mockImplementation((binds, _part, session) => {
           const slots = [
             new MockSlot(
               new MockBinding(MockPrimitive, binds[0], {
@@ -380,7 +380,7 @@ describe('TemplateBinding', () => {
             ),
           ];
           for (const slot of slots) {
-            slot.connect(context);
+            slot.connect(session);
           }
           return {
             childNodes: fragment,
@@ -389,8 +389,8 @@ describe('TemplateBinding', () => {
         });
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -428,9 +428,9 @@ describe('TemplateBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = binds2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -463,8 +463,8 @@ describe('TemplateBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

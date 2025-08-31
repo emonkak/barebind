@@ -12,6 +12,7 @@ import {
   HydrationError,
   Lanes,
   PartType,
+  type RenderContext,
 } from '@/internal.js';
 import {
   createElement,
@@ -78,8 +79,8 @@ describe('SiganlBinding', () => {
         helper.runtime,
       );
 
-      helper.startSession((context) => {
-        binding.connect(context);
+      helper.startUpdate((session) => {
+        binding.connect(session);
         binding.commit();
       });
 
@@ -107,8 +108,8 @@ describe('SiganlBinding', () => {
       const target = createHydrationTarget(container);
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.hydrate(target, context);
+        helper.startUpdate((session) => {
+          binding.hydrate(target, session);
           binding.commit();
         });
 
@@ -146,15 +147,15 @@ describe('SiganlBinding', () => {
       const target = createHydrationTarget(container);
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
       }
 
       expect(() => {
-        helper.startSession((context) => {
-          binding.hydrate(target, context);
+        helper.startUpdate((session) => {
+          binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
     });
@@ -177,8 +178,8 @@ describe('SiganlBinding', () => {
       ) as SignalBinding<string>;
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -215,8 +216,8 @@ describe('SiganlBinding', () => {
       ) as SignalBinding<string>;
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -224,9 +225,9 @@ describe('SiganlBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = signal2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -260,8 +261,8 @@ describe('SiganlBinding', () => {
       ) as SignalBinding<string>;
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -269,8 +270,8 @@ describe('SiganlBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -292,10 +293,10 @@ describe('Signal', () => {
     it('request an update if the signal value has been changed', async () => {
       const signal = new Atom('foo');
       const helper = new RenderHelper();
-      const callback = vi.fn((context) => {
-        const value = context.use(signal);
+      const callback = vi.fn((session: RenderContext) => {
+        const value = session.use(signal);
 
-        context.useEffect(() => {
+        session.useEffect(() => {
           signal.value = 'bar';
           signal.value = 'baz';
         }, []);
@@ -304,7 +305,7 @@ describe('Signal', () => {
       });
 
       SESSION1: {
-        helper.startSession(callback);
+        helper.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveLastReturnedWith('foo');

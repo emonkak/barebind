@@ -39,8 +39,8 @@ describe('TextTemplate', () => {
       const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.hydrate(binds, part, target, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.hydrate(binds, part, target, session);
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -73,8 +73,8 @@ describe('TextTemplate', () => {
       const helper = new UpdateHelper();
 
       expect(() => {
-        helper.startSession((context) => {
-          template.hydrate(binds, part, target, context);
+        helper.startUpdate((session) => {
+          template.hydrate(binds, part, target, session);
         });
       }).toThrow(HydrationError);
     });
@@ -92,8 +92,8 @@ describe('TextTemplate', () => {
       };
       const helper = new UpdateHelper();
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.render(binds, part, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.render(binds, part, session);
       });
 
       expect(childNodes).toStrictEqual([expect.any(Text)]);

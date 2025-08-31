@@ -58,8 +58,8 @@ describe('ElementTemplate', () => {
       const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.hydrate(binds, part, target, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.hydrate(binds, part, target, session);
       });
 
       expect(childNodes).toStrictEqual([container.firstChild]);
@@ -100,8 +100,8 @@ describe('ElementTemplate', () => {
       };
       const helper = new UpdateHelper();
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.render(binds, part, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.render(binds, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -145,8 +145,8 @@ describe('ElementTemplate', () => {
       };
       const helper = new UpdateHelper();
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.render(binds, part, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.render(binds, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([

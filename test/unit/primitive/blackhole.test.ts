@@ -55,8 +55,8 @@ describe('BlackholeBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
       }
@@ -74,8 +74,8 @@ describe('BlackholeBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
       }

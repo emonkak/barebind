@@ -58,8 +58,8 @@ describe('StrictSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        helper.startSession((context) => {
-          slot.connect(context);
+        helper.startUpdate((session) => {
+          slot.connect(session);
           slot.commit();
         });
 
@@ -73,8 +73,8 @@ describe('StrictSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startSession((context) => {
-          const dirty = slot.reconcile(value2, context);
+        const dirty = helper.startUpdate((session) => {
+          const dirty = slot.reconcile(value2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -92,8 +92,8 @@ describe('StrictSlot', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          slot.disconnect(context);
+        helper.startUpdate((session) => {
+          slot.disconnect(session);
           slot.rollback();
           slot.rollback(); // ignore the second rollback
         });
@@ -130,8 +130,8 @@ describe('StrictSlot', () => {
       SESSION1: {
         const target = createHydrationTarget(document.createElement('div'));
 
-        helper.startSession((context) => {
-          slot.hydrate(target, context);
+        helper.startUpdate((session) => {
+          slot.hydrate(target, session);
           slot.commit();
         });
 
@@ -144,8 +144,8 @@ describe('StrictSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startSession((context) => {
-          const dirty = slot.reconcile(value, context);
+        const dirty = helper.startUpdate((session) => {
+          const dirty = slot.reconcile(value, session);
           slot.commit();
           return dirty;
         });
@@ -173,14 +173,14 @@ describe('StrictSlot', () => {
       const slot = new StrictSlot(binding);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        slot.connect(context);
+      helper.startUpdate((session) => {
+        slot.connect(session);
         slot.commit();
       });
 
       expect(() => {
-        helper.startSession((context) => {
-          slot.reconcile(value2, context);
+        helper.startUpdate((session) => {
+          slot.reconcile(value2, session);
         });
       }).toThrow(
         'The directive must be MockPrimitive in this slot, but got MockDirective.',

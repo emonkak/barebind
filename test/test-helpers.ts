@@ -36,19 +36,19 @@ export class RenderHelper {
     this.hooks = [];
   }
 
-  startSession<T>(
-    callback: (context: RenderSession) => T,
+  startRender<T>(
+    callback: (session: RenderSession) => T,
     options: ScheduleOptions = {},
   ): T {
-    const coroutine = new MockCoroutine((context) => {
+    const coroutine = new MockCoroutine(({ frame, scope }) => {
       const session = new RenderSession(
         this.hooks,
         coroutine,
-        context.frame,
-        context.scope,
+        frame,
+        scope,
         this.runtime,
       );
-      addErrorHandler(context.scope, (error) => {
+      addErrorHandler(scope, (error) => {
         thrownError = error;
       });
       returnValue = callback(session);
@@ -82,15 +82,15 @@ export class UpdateHelper {
     this.runtime = runtime;
   }
 
-  startSession<T>(
-    callback: (this: Coroutine, session: UpdateSession) => T,
+  startUpdate<T>(
+    callback: (session: UpdateSession, coroutine: Coroutine) => T,
     options: ScheduleOptions = {},
   ): T {
-    const coroutine = new MockCoroutine(function (context) {
-      addErrorHandler(context.scope, (error) => {
+    const coroutine = new MockCoroutine((session) => {
+      addErrorHandler(session.scope, (error) => {
         thrownError = error;
       });
-      returnValue = callback.call(this, context);
+      returnValue = callback(session, coroutine);
     });
     let returnValue: T;
     let thrownError: unknown;

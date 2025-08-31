@@ -109,8 +109,8 @@ describe('StyleBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -142,8 +142,8 @@ describe('StyleBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -153,9 +153,9 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = style2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -176,8 +176,8 @@ describe('StyleBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -201,8 +201,8 @@ describe('StyleBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -210,9 +210,9 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = style2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -238,8 +238,8 @@ describe('StyleBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -249,8 +249,8 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

@@ -58,8 +58,8 @@ describe('FlexibleSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        helper.startSession((context) => {
-          slot.connect(context);
+        helper.startUpdate((session) => {
+          slot.connect(session);
           slot.commit();
         });
 
@@ -73,8 +73,8 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startSession((context) => {
-          const dirty = slot.reconcile(value2, context);
+        const dirty = helper.startUpdate((session) => {
+          const dirty = slot.reconcile(value2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
           return dirty;
@@ -92,8 +92,8 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          slot.disconnect(context);
+        helper.startUpdate((session) => {
+          slot.disconnect(session);
           slot.rollback();
           slot.rollback(); // ignore the second rollback
         });
@@ -129,22 +129,22 @@ describe('FlexibleSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        helper.startSession((context) => {
-          slot.connect(context);
+        helper.startUpdate((session) => {
+          slot.connect(session);
           slot.commit();
         });
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          slot.reconcile(value2, context);
+        helper.startUpdate((session) => {
+          slot.reconcile(value2, session);
           slot.commit();
         });
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          slot.reconcile(value1, context);
+        helper.startUpdate((session) => {
+          slot.reconcile(value1, session);
           slot.commit();
         });
 
@@ -185,8 +185,8 @@ describe('FlexibleSlot', () => {
       SESSION1: {
         const target = createHydrationTarget(document.createElement('div'));
 
-        helper.startSession((context) => {
-          slot.hydrate(target, context);
+        helper.startUpdate((session) => {
+          slot.hydrate(target, session);
           slot.commit();
         });
 
@@ -199,8 +199,8 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startSession((context) => {
-          const dirty = slot.reconcile(value, context);
+        const dirty = helper.startUpdate((session) => {
+          const dirty = slot.reconcile(value, session);
           slot.commit();
           return dirty;
         });

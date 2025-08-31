@@ -91,8 +91,8 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.hydrate(binds, part, target, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.hydrate(binds, part, target, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([
@@ -171,8 +171,8 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = helper.startSession((context) => {
-        return template.render(binds, part, context);
+      const { childNodes, slots } = helper.startUpdate((session) => {
+        return template.render(binds, part, session);
       });
 
       expect(childNodes.map(serializeNode)).toStrictEqual([

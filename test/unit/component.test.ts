@@ -47,8 +47,8 @@ describe('createComponent()', () => {
       const props = {};
       const helper = new RenderHelper();
 
-      helper.startSession((context) => {
-        component.render(props, context);
+      helper.startRender((session) => {
+        component.render(props, session);
       });
 
       expect(render).toHaveBeenCalledOnce();
@@ -128,9 +128,9 @@ describe('ComponentBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
-          context.frame.pendingCoroutines.push(binding);
+        helper.startUpdate((session) => {
+          binding.connect(session);
+          session.frame.pendingCoroutines.push(binding);
         });
 
         expect(binding.shouldBind(props1)).toBe(false);
@@ -158,10 +158,10 @@ describe('ComponentBinding', () => {
       binding.pendingLanes = Lanes.NoLanes;
 
       SESSION1: {
-        helper.startSession(
-          (context) => {
-            context.frame.pendingCoroutines.push(binding);
-            context.frame.mutationEffects.push(binding);
+        helper.startUpdate(
+          (session) => {
+            session.frame.pendingCoroutines.push(binding);
+            session.frame.mutationEffects.push(binding);
           },
           { priority: 'user-blocking' },
         );
@@ -176,9 +176,9 @@ describe('ComponentBinding', () => {
       await Promise.resolve();
 
       SESSION2: {
-        helper.startSession((context) => {
-          context.frame.pendingCoroutines.push(binding);
-          context.frame.mutationEffects.push(binding);
+        helper.startUpdate((session) => {
+          session.frame.pendingCoroutines.push(binding);
+          session.frame.mutationEffects.push(binding);
         });
 
         expect(commitSpy).toHaveBeenCalledTimes(2);
@@ -206,10 +206,10 @@ describe('ComponentBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.hydrate(target, context);
-          context.frame.pendingCoroutines.push(binding);
-          context.frame.mutationEffects.push(binding);
+        helper.startUpdate((session) => {
+          binding.hydrate(target, session);
+          session.frame.pendingCoroutines.push(binding);
+          session.frame.mutationEffects.push(binding);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -224,8 +224,8 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -255,16 +255,16 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(Greet, props, part);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        context.frame.pendingCoroutines.push(binding);
-        context.frame.mutationEffects.push(binding);
+      helper.startUpdate((session) => {
+        session.frame.pendingCoroutines.push(binding);
+        session.frame.mutationEffects.push(binding);
       });
 
       expect(() => {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           const container = document.createElement('div');
           const target = createHydrationTarget(container);
-          binding.hydrate(target, context);
+          binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
     });
@@ -290,9 +290,9 @@ describe('ComponentBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
-          context.frame.pendingCoroutines.push(binding);
+        helper.startUpdate((session) => {
+          binding.connect(session);
+          session.frame.pendingCoroutines.push(binding);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -307,10 +307,10 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
-          context.frame.mutationEffects.push(binding);
+          binding.connect(session);
+          session.frame.mutationEffects.push(binding);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -342,9 +342,9 @@ describe('ComponentBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
-          context.frame.mutationEffects.push(binding);
+        helper.startUpdate((session) => {
+          binding.connect(session);
+          session.frame.mutationEffects.push(binding);
         });
 
         expect(binding['_slot']).toBeInstanceOf(MockSlot);
@@ -359,8 +359,8 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

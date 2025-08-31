@@ -9,7 +9,7 @@ import {
   SyncEnternalStore,
 } from '@/extras/hooks.js';
 import { Atom, type Signal } from '@/extras/signal.js';
-import type { RenderContext } from '@/internal.js';
+import type { RenderSession } from '@/render-session.js';
 import { RenderHelper } from '../../test-helpers.js';
 
 describe('DeferredValue()', () => {
@@ -17,22 +17,22 @@ describe('DeferredValue()', () => {
     const helper = new RenderHelper();
 
     SESSION1: {
-      const callback = vi.fn((context) => {
-        return context.use(DeferredValue('foo'));
+      const callback = vi.fn((session: RenderSession) => {
+        return session.use(DeferredValue('foo'));
       });
 
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('foo');
     }
 
     SESSION2: {
-      const callback = vi.fn((context) => {
-        return context.use(DeferredValue('bar'));
+      const callback = vi.fn((session: RenderSession) => {
+        return session.use(DeferredValue('bar'));
       });
 
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('foo');
@@ -41,11 +41,11 @@ describe('DeferredValue()', () => {
     await Promise.resolve();
 
     SESSION2: {
-      const callback = vi.fn((context) => {
-        return context.use(DeferredValue('bar'));
+      const callback = vi.fn((session: RenderSession) => {
+        return session.use(DeferredValue('bar'));
       });
 
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('bar');
@@ -54,12 +54,12 @@ describe('DeferredValue()', () => {
 
   it('returns the initial value if it is given', async () => {
     const helper = new RenderHelper();
-    const callback = vi.fn((context) => {
-      return context.use(DeferredValue('foo', 'bar'));
+    const callback = vi.fn((session: RenderSession) => {
+      return session.use(DeferredValue('foo', 'bar'));
     });
 
     SESSION1: {
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveReturnedWith('bar');
@@ -68,7 +68,7 @@ describe('DeferredValue()', () => {
     await Promise.resolve();
 
     SESSION2: {
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveReturnedWith('foo');
@@ -78,10 +78,10 @@ describe('DeferredValue()', () => {
 
 describe('LocalAtom()', () => {
   it('returns a custom hook that creates an atom signal with no subscription', async () => {
-    const callback = (context: RenderContext) => {
-      const signal = context.use(LocalAtom(100));
+    const callback = (session: RenderSession) => {
+      const signal = session.use(LocalAtom(100));
 
-      context.useEffect(() => {
+      session.useEffect(() => {
         signal.value++;
       });
 
@@ -92,13 +92,13 @@ describe('LocalAtom()', () => {
     let stableSignal: Signal<number>;
 
     SESSION1: {
-      stableSignal = helper.startSession(callback);
+      stableSignal = helper.startRender(callback);
 
       expect(stableSignal.value).toBe(101);
     }
 
     SESSION2: {
-      const signal = helper.startSession(callback);
+      const signal = helper.startRender(callback);
 
       expect(signal).toBe(stableSignal);
       expect(signal.value).toBe(102);
@@ -111,12 +111,12 @@ describe('LocalComputed()', () => {
     const foo = new Atom(1);
     const bar = new Atom(2);
     const baz = new Atom(3);
-    const callback = (context: RenderContext) => {
-      const signal = context.use(
+    const callback = (session: RenderSession) => {
+      const signal = session.use(
         LocalComputed((foo, bar, baz) => foo + bar + baz, [foo, bar, baz]),
       );
 
-      context.useEffect(() => {
+      session.useEffect(() => {
         foo.value++;
       });
 
@@ -127,13 +127,13 @@ describe('LocalComputed()', () => {
     let stableSignal: Signal<number>;
 
     SESSION1: {
-      stableSignal = helper.startSession(callback);
+      stableSignal = helper.startRender(callback);
 
       expect(stableSignal.value).toBe(7);
     }
 
     SESSION2: {
-      const signal = helper.startSession(callback);
+      const signal = helper.startRender(callback);
 
       expect(signal).toBe(stableSignal);
       expect(signal.value).toBe(8);
@@ -150,10 +150,10 @@ describe('useEventCallback()', () => {
     let stableCallback: () => void;
 
     SESSION1: {
-      stableCallback = helper.startSession((context) => {
-        const callback = context.use(EventCallback(callback1));
+      stableCallback = helper.startRender((session) => {
+        const callback = session.use(EventCallback(callback1));
 
-        context.useEffect(() => {
+        session.useEffect(() => {
           callback();
         });
 
@@ -165,10 +165,10 @@ describe('useEventCallback()', () => {
     }
 
     SESSION1: {
-      const callback = helper.startSession((context) => {
-        const callback = context.use(EventCallback(callback2));
+      const callback = helper.startRender((session) => {
+        const callback = session.use(EventCallback(callback2));
 
-        context.useEffect(() => {
+        session.useEffect(() => {
           callback();
         });
 
@@ -187,10 +187,10 @@ describe('useSyncExternalStore()', () => {
     const helper = new RenderHelper();
     let count = 0;
 
-    const callback = vi.fn((context: RenderContext) => {
-      const snapshot = context.use(SyncEnternalStore(subscribe, getSnapshot));
+    const callback = vi.fn((session: RenderSession) => {
+      const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
 
-      context.useInsertionEffect(() => {
+      session.useInsertionEffect(() => {
         count++;
       }, []);
 
@@ -201,7 +201,7 @@ describe('useSyncExternalStore()', () => {
     const getSnapshot = () => count;
 
     SESSION1: {
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveLastReturnedWith(0);
@@ -217,7 +217,7 @@ describe('useSyncExternalStore()', () => {
     expect(unsubscribe).not.toHaveBeenCalled();
 
     SESSION2: {
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveLastReturnedWith(1);
@@ -236,10 +236,10 @@ describe('useSyncExternalStore()', () => {
     const subscribers = new LinkedList<() => void>();
     let count = 0;
 
-    const callback = vi.fn((context: RenderContext) => {
-      const snapshot = context.use(SyncEnternalStore(subscribe, getSnapshot));
+    const callback = vi.fn((session: RenderSession) => {
+      const snapshot = session.use(SyncEnternalStore(subscribe, getSnapshot));
 
-      context.useEffect(notifySubscribers, []);
+      session.useEffect(notifySubscribers, []);
 
       return snapshot;
     });
@@ -258,7 +258,7 @@ describe('useSyncExternalStore()', () => {
     };
 
     SESSION1: {
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveLastReturnedWith(0);
@@ -272,7 +272,7 @@ describe('useSyncExternalStore()', () => {
     expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
 
     SESSION2: {
-      helper.startSession(callback);
+      helper.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveLastReturnedWith(1);
@@ -296,8 +296,8 @@ describe('useSyncExternalStore()', () => {
     const getSnapshot2 = () => 'bar';
 
     SESSION1: {
-      const snapshot = helper.startSession((context) => {
-        return context.use(SyncEnternalStore(subscribe1, getSnapshot1));
+      const snapshot = helper.startRender((session) => {
+        return session.use(SyncEnternalStore(subscribe1, getSnapshot1));
       });
 
       expect(snapshot).toBe('foo');
@@ -308,8 +308,8 @@ describe('useSyncExternalStore()', () => {
     }
 
     SESSION2: {
-      const snapshot = helper.startSession((context) => {
-        return context.use(SyncEnternalStore(subscribe2, getSnapshot1));
+      const snapshot = helper.startRender((session) => {
+        return session.use(SyncEnternalStore(subscribe2, getSnapshot1));
       });
 
       expect(snapshot).toBe('foo');
@@ -320,8 +320,8 @@ describe('useSyncExternalStore()', () => {
     }
 
     SESSION3: {
-      const snapshot = helper.startSession((context) => {
-        return context.use(SyncEnternalStore(subscribe2, getSnapshot2));
+      const snapshot = helper.startRender((session) => {
+        return session.use(SyncEnternalStore(subscribe2, getSnapshot2));
       });
 
       expect(snapshot).toBe('bar');

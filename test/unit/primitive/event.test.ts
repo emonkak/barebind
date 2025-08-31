@@ -103,8 +103,8 @@ describe('EventBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -131,8 +131,8 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -148,9 +148,9 @@ describe('EventBinding', () => {
       expect(handler2).not.toHaveBeenCalled();
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = handler2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -182,8 +182,8 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -203,9 +203,9 @@ describe('EventBinding', () => {
       expect(handler2.handleEvent).not.toHaveBeenCalled();
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = handler2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -249,8 +249,8 @@ describe('EventBinding', () => {
         );
 
         SESSION1: {
-          helper.startSession((context) => {
-            binding.connect(context);
+          helper.startUpdate((session) => {
+            binding.connect(session);
             binding.commit();
           });
 
@@ -264,9 +264,9 @@ describe('EventBinding', () => {
         }
 
         SESSION2: {
-          helper.startSession((context) => {
+          helper.startUpdate((session) => {
             binding.value = handler2;
-            binding.connect(context);
+            binding.connect(session);
             binding.commit();
           });
 
@@ -297,8 +297,8 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -321,8 +321,8 @@ describe('EventBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -332,8 +332,8 @@ describe('EventBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

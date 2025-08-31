@@ -102,8 +102,8 @@ describe('SpreadBinding', () => {
       const binding = new SpreadBinding(props1, part);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        binding.connect(context);
+      helper.startUpdate((session) => {
+        binding.connect(session);
         binding.commit();
       });
 
@@ -131,8 +131,8 @@ describe('SpreadBinding', () => {
       const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        binding.hydrate(target, context);
+      helper.startUpdate((session) => {
+        binding.hydrate(target, session);
       });
 
       const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
@@ -218,14 +218,14 @@ describe('SpreadBinding', () => {
       const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        binding.connect(context);
+      helper.startUpdate((session) => {
+        binding.connect(session);
         binding.commit();
       });
 
       expect(() => {
-        helper.startSession((context) => {
-          binding.hydrate(target, context);
+        helper.startUpdate((session) => {
+          binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
     });
@@ -253,8 +253,8 @@ describe('SpreadBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -326,9 +326,9 @@ describe('SpreadBinding', () => {
       SESSION2: {
         const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -396,8 +396,8 @@ describe('SpreadBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -421,8 +421,8 @@ describe('SpreadBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -492,8 +492,8 @@ describe('SpreadBinding', () => {
       SESSION2: {
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

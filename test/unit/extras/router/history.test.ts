@@ -8,8 +8,8 @@ describe('CurrentHistory', () => {
     const helper = new RenderHelper();
 
     expect(() => {
-      helper.startSession((context) => {
-        context.use(CurrentHistory);
+      helper.startRender((session) => {
+        session.use(CurrentHistory);
       });
     }).toThrow('A context value for the current location does not exist,');
   });

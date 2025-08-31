@@ -71,8 +71,8 @@ describe('TextBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -96,8 +96,8 @@ describe('TextBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -105,9 +105,9 @@ describe('TextBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = value2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -128,8 +128,8 @@ describe('TextBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -137,9 +137,9 @@ describe('TextBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = value2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -161,8 +161,8 @@ describe('TextBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -170,8 +170,8 @@ describe('TextBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -193,8 +193,8 @@ describe('TextBinding', () => {
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

@@ -70,9 +70,9 @@ describe('Runtime', () => {
       const removeObserver = runtime.addObserver(observer);
 
       SESSION1: {
-        const coroutine = new MockCoroutine((context) => {
-          context.frame.mutationEffects.push(mutationEffect);
-          context.frame.layoutEffects.push(layoutEffect);
+        const coroutine = new MockCoroutine((session) => {
+          session.frame.mutationEffects.push(mutationEffect);
+          session.frame.layoutEffects.push(layoutEffect);
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
@@ -156,12 +156,12 @@ describe('Runtime', () => {
       }
 
       SESSION2: {
-        const coroutine = new MockCoroutine((context) => {
-          context.frame.pendingCoroutines.push(subcoroutine);
+        const coroutine = new MockCoroutine((session) => {
+          session.frame.pendingCoroutines.push(subcoroutine);
         });
-        const subcoroutine = new MockCoroutine((context) => {
-          context.frame.layoutEffects.push(layoutEffect);
-          context.frame.passiveEffects.push(passiveEffect);
+        const subcoroutine = new MockCoroutine((session) => {
+          session.frame.layoutEffects.push(layoutEffect);
+          session.frame.passiveEffects.push(passiveEffect);
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
@@ -298,10 +298,10 @@ describe('Runtime', () => {
       const removeObserver = runtime.addObserver(observer);
 
       SESSION1: {
-        const coroutine = new MockCoroutine((context) => {
-          context.frame.mutationEffects.push(mutationEffect);
-          context.frame.layoutEffects.push(layoutEffect);
-          context.frame.passiveEffects.push(passiveEffect);
+        const coroutine = new MockCoroutine((session) => {
+          session.frame.mutationEffects.push(mutationEffect);
+          session.frame.layoutEffects.push(layoutEffect);
+          session.frame.passiveEffects.push(passiveEffect);
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
@@ -395,12 +395,12 @@ describe('Runtime', () => {
       }
 
       SESSION2: {
-        const coroutine = new MockCoroutine((context) => {
-          context.frame.pendingCoroutines.push(subcoroutine);
+        const coroutine = new MockCoroutine((session) => {
+          session.frame.pendingCoroutines.push(subcoroutine);
         });
-        const subcoroutine = new MockCoroutine((context) => {
-          context.frame.mutationEffects.push(mutationEffect);
-          context.frame.layoutEffects.push(layoutEffect);
+        const subcoroutine = new MockCoroutine((session) => {
+          session.frame.mutationEffects.push(mutationEffect);
+          session.frame.layoutEffects.push(layoutEffect);
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
@@ -520,7 +520,7 @@ describe('Runtime', () => {
   });
 
   describe('renderComponent()', () => {
-    it('renders a component with the new render context', () => {
+    it('renders a component with the new render session', () => {
       const component = createComponent(() => null);
       const props = {};
       const hooks: Hook[] = [];

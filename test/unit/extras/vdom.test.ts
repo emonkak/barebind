@@ -232,8 +232,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -254,8 +254,8 @@ describe('ElementBinding', () => {
       const binding = new ElementBinding(props, part);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        binding.hydrate(target, context);
+      helper.startUpdate((session) => {
+        binding.hydrate(target, session);
       });
     });
   });
@@ -271,8 +271,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -280,8 +280,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -300,8 +300,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -311,9 +311,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -321,8 +321,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -341,8 +341,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -350,9 +350,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -360,8 +360,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -380,17 +380,17 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
         expect(part.node.outerHTML).toBe('<div class="foo"></div>');
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -398,8 +398,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -418,8 +418,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -427,9 +427,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -437,8 +437,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -457,8 +457,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -468,9 +468,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -478,8 +478,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -498,8 +498,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -508,9 +508,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -519,8 +519,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -542,8 +542,8 @@ describe('ElementBinding', () => {
         const helper = new UpdateHelper();
 
         SESSION1: {
-          helper.startSession((context) => {
-            binding.connect(context);
+          helper.startUpdate((session) => {
+            binding.connect(session);
             binding.commit();
           });
 
@@ -552,9 +552,9 @@ describe('ElementBinding', () => {
         }
 
         SESSION2: {
-          helper.startSession((context) => {
+          helper.startUpdate((session) => {
             binding.value = props2;
-            binding.connect(context);
+            binding.connect(session);
             binding.commit();
           });
 
@@ -563,8 +563,8 @@ describe('ElementBinding', () => {
         }
 
         SESSION3: {
-          helper.startSession((context) => {
-            binding.disconnect(context);
+          helper.startUpdate((session) => {
+            binding.disconnect(session);
             binding.rollback();
           });
 
@@ -589,8 +589,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -598,9 +598,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -608,8 +608,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -628,8 +628,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -637,9 +637,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -647,8 +647,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -669,8 +669,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -681,8 +681,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -693,9 +693,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -706,8 +706,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION4: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -729,8 +729,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -739,9 +739,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -750,8 +750,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -772,8 +772,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -783,9 +783,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -795,9 +795,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props3;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -805,8 +805,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION4: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -824,8 +824,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       expect(() => {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
       }).toThrow('The "style" property expects a object, not a string.');
@@ -847,8 +847,8 @@ describe('ElementBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -858,9 +858,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -875,8 +875,8 @@ describe('ElementBinding', () => {
       expect(props2.onClick).toHaveBeenCalledWith(event1);
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -907,8 +907,8 @@ describe('ElementBinding', () => {
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -923,9 +923,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -952,8 +952,8 @@ describe('ElementBinding', () => {
       expect(props2.onClick.handleEvent).toHaveBeenCalledWith(event1);
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -995,8 +995,8 @@ describe('ElementBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -1006,9 +1006,9 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -1016,8 +1016,8 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 

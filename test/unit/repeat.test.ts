@@ -109,8 +109,8 @@ describe('RepeatBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -149,8 +149,8 @@ describe('RepeatBinding', () => {
       const target = createHydrationTarget(container);
       const helper = new UpdateHelper();
 
-      helper.startSession((context) => {
-        binding.hydrate(target, context);
+      helper.startUpdate((session) => {
+        binding.hydrate(target, session);
         binding.commit();
       });
 
@@ -189,15 +189,15 @@ describe('RepeatBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
       }
 
       expect(() => {
-        helper.startSession((context) => {
-          binding.hydrate(target, context);
+        helper.startUpdate((session) => {
+          binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
     });
@@ -235,8 +235,8 @@ describe('RepeatBinding', () => {
           const helper = new UpdateHelper();
 
           SESSION1: {
-            helper.startSession((context) => {
-              binding.connect(context);
+            helper.startUpdate((session) => {
+              binding.connect(session);
               binding.commit();
             });
 
@@ -248,9 +248,9 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            helper.startSession((context) => {
+            helper.startUpdate((session) => {
               binding.value = props2;
-              binding.connect(context);
+              binding.connect(session);
               binding.commit();
             });
 
@@ -301,8 +301,8 @@ describe('RepeatBinding', () => {
           const helper = new UpdateHelper();
 
           SESSION1: {
-            helper.startSession((context) => {
-              binding.connect(context);
+            helper.startUpdate((session) => {
+              binding.connect(session);
               binding.commit();
             });
 
@@ -314,9 +314,9 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            helper.startSession((context) => {
+            helper.startUpdate((session) => {
               binding.value = props2;
-              binding.connect(context);
+              binding.connect(session);
               binding.commit();
             });
 
@@ -328,9 +328,9 @@ describe('RepeatBinding', () => {
           }
 
           SESSION3: {
-            helper.startSession((context) => {
+            helper.startUpdate((session) => {
               binding.value = props1;
-              binding.connect(context);
+              binding.connect(session);
               binding.commit();
             });
 
@@ -379,8 +379,8 @@ describe('RepeatBinding', () => {
           const helper = new UpdateHelper();
 
           SESSION1: {
-            helper.startSession((context) => {
-              binding.connect(context);
+            helper.startUpdate((session) => {
+              binding.connect(session);
               binding.commit();
             });
 
@@ -392,9 +392,9 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            helper.startSession((context) => {
+            helper.startUpdate((session) => {
               binding.value = props2;
-              binding.connect(context);
+              binding.connect(session);
               binding.commit();
             });
 
@@ -406,9 +406,9 @@ describe('RepeatBinding', () => {
           }
 
           SESSION3: {
-            helper.startSession((context) => {
+            helper.startUpdate((session) => {
               binding.value = props1;
-              binding.connect(context);
+              binding.connect(session);
               binding.commit();
             });
 
@@ -450,8 +450,8 @@ describe('RepeatBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -462,9 +462,9 @@ describe('RepeatBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -475,9 +475,9 @@ describe('RepeatBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = props1;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -506,8 +506,8 @@ describe('RepeatBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -517,8 +517,8 @@ describe('RepeatBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
@@ -526,8 +526,8 @@ describe('RepeatBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 

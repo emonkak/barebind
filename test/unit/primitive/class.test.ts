@@ -111,8 +111,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -139,8 +139,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -180,8 +180,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -189,9 +189,9 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = classes2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -199,9 +199,9 @@ describe('ClassBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = classes1;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -221,8 +221,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -230,9 +230,9 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = classes2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -240,9 +240,9 @@ describe('ClassBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = classes1;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -262,8 +262,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -271,9 +271,9 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = classes2;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -281,9 +281,9 @@ describe('ClassBinding', () => {
       }
 
       SESSION3: {
-        helper.startSession((context) => {
+        helper.startUpdate((session) => {
           binding.value = classes1;
-          binding.connect(context);
+          binding.connect(session);
           binding.commit();
         });
 
@@ -302,8 +302,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -324,8 +324,8 @@ describe('ClassBinding', () => {
       const helper = new UpdateHelper();
 
       SESSION1: {
-        helper.startSession((context) => {
-          binding.connect(context);
+        helper.startUpdate((session) => {
+          binding.connect(session);
           binding.commit();
         });
 
@@ -333,8 +333,8 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startSession((context) => {
-          binding.disconnect(context);
+        helper.startUpdate((session) => {
+          binding.disconnect(session);
           binding.rollback();
         });
 
