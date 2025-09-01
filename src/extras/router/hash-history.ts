@@ -11,10 +11,6 @@ import {
 } from './history.js';
 import { RelativeURL } from './relative-url.js';
 
-const DEFAULT_OPTIONS: ScheduleOptions = {
-  immediate: true,
-};
-
 export function HashHistory(
   options?: ScheduleOptions,
 ): CustomHookFunction<readonly [HistoryLocation, HistoryNavigator]> {
@@ -37,7 +33,7 @@ export function HashHistory(
               state,
               navigationType: replace ? 'replace' : 'push',
             },
-            { ...DEFAULT_OPTIONS, ...options },
+            { immediate: true, ...options },
           );
 
           if (replace) {
@@ -69,7 +65,7 @@ export function HashHistory(
                 state: event.destination.getState(),
                 navigationType: event.navigationType,
               },
-              { ...DEFAULT_OPTIONS, ...options },
+              { immediate: true, ...options },
             );
           }
         };
@@ -94,7 +90,7 @@ export function HashHistory(
               state: history.state,
               navigationType: 'traverse',
             },
-            { ...DEFAULT_OPTIONS, ...options },
+            { immediate: true, ...options },
           );
         };
 
