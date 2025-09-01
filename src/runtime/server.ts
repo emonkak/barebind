@@ -8,7 +8,8 @@ import {
   type Primitive,
   type RequestCallbackOptions,
   type SlotType,
-  type TemplateFactory,
+  type Template,
+  type TemplateMode,
 } from '../internal.js';
 import { AttributePrimitive } from '../primitive/attribute.js';
 import { BlackholePrimitive } from '../primitive/blackhole.js';
@@ -22,13 +23,13 @@ import { TextPrimitive } from '../primitive/text.js';
 import type { Runtime, RuntimeBackend } from '../runtime.js';
 import { LooseSlot } from '../slot/loose.js';
 import { StrictSlot } from '../slot/strict.js';
-import { OptimizedTemplateFactory } from '../template-factory.js';
+import { TaggedTemplate } from '../template/tagged.js';
 
 export class ServerBackend implements RuntimeBackend {
-  private readonly _templateFactory: OptimizedTemplateFactory;
+  private readonly _document: Document;
 
   constructor(document: Document) {
-    this._templateFactory = new OptimizedTemplateFactory(document);
+    this._document = document;
   }
 
   commitEffects(effects: Effect[], phase: CommitPhase): void {
@@ -47,8 +48,19 @@ export class ServerBackend implements RuntimeBackend {
     return 'user-blocking';
   }
 
-  getTemplateFactory(): TemplateFactory {
-    return this._templateFactory;
+  parseTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    placeholder: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]> {
+    return TaggedTemplate.parse(
+      strings,
+      binds,
+      placeholder,
+      mode,
+      this._document,
+    );
   }
 
   requestCallback(

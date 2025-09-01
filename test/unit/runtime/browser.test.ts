@@ -16,8 +16,9 @@ import { BrowserBackend } from '@/runtime/browser.js';
 import { Runtime } from '@/runtime.js';
 import { LooseSlot } from '@/slot/loose.js';
 import { StrictSlot } from '@/slot/strict.js';
+import { TaggedTemplate } from '@/template/tagged.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { OptimizedTemplateFactory } from '@/template-factory.js';
+import { templateLiteral } from '../../test-helpers.js';
 
 const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'drag',
@@ -38,6 +39,8 @@ const CONTINUOUS_EVENT_TYPES: (keyof DocumentEventMap)[] = [
   'touchmove',
   'wheel',
 ];
+
+const TEMPLATE_PLACEHOLDER = '__test__';
 
 describe('BrowserBackend', () => {
   describe('getTaskPriority()', () => {
@@ -99,19 +102,42 @@ describe('BrowserBackend', () => {
     });
   });
 
-  describe('getTemplateFactory()', () => {
-    it('returns a OptimizedTemplateFactory', () => {
+  describe('parseTemplate()', () => {
+    it('creates a TaggedTemplate', () => {
+      const { strings, values } =
+        templateLiteral`<div>${'Hello'}, ${'World'}!</div>`;
       const backend = new BrowserBackend();
-
-      expect(backend.getTemplateFactory()).toBeInstanceOf(
-        OptimizedTemplateFactory,
+      const template = backend.parseTemplate(
+        strings,
+        values,
+        TEMPLATE_PLACEHOLDER,
+        'html',
       );
+
+      expect(template).toBeInstanceOf(TaggedTemplate);
+      expect((template as TaggedTemplate)['template'].innerHTML).toBe(
+        '<div></div>',
+      );
+      expect((template as TaggedTemplate)['holes']).toStrictEqual([
+        {
+          type: PartType.Text,
+          index: 1,
+          precedingText: '',
+          followingText: '',
+        },
+        {
+          type: PartType.Text,
+          index: 2,
+          precedingText: ', ',
+          followingText: '!',
+        },
+      ]);
     });
   });
 
   describe('flushUpdate()', () => {
     it('flush updates asynchronously', async () => {
-      const backend = new BrowserBackend(document);
+      const backend = new BrowserBackend();
       const runtime = new Runtime(backend);
 
       const flushAsyncSpy = vi.spyOn(runtime, 'flushAsync');

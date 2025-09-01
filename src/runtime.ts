@@ -24,7 +24,6 @@ import {
   type Slot,
   type SlotType,
   type Template,
-  type TemplateFactory,
   type TemplateMode,
   type UnwrapBindable,
   type UpdateHandle,
@@ -39,9 +38,14 @@ import {
 
 export interface RuntimeBackend {
   commitEffects(effects: Effect[], phase: CommitPhase): void;
-  getTaskPriority(): TaskPriority;
-  getTemplateFactory(): TemplateFactory;
   flushUpdate(runtime: Runtime): void;
+  getTaskPriority(): TaskPriority;
+  parseTemplate(
+    strings: readonly string[],
+    binds: readonly unknown[],
+    placeholder: string,
+    mode: TemplateMode,
+  ): Template<readonly unknown[]>;
   requestCallback(
     callback: () => Promise<void> | void,
     options?: RequestCallbackOptions,
@@ -410,9 +414,12 @@ export class Runtime implements SessionContext {
     let template = this._cachedTemplates.get(strings);
 
     if (template === undefined) {
-      template = this._backend
-        .getTemplateFactory()
-        .parseTemplate(strings, binds, this._templatePlaceholder, mode);
+      template = this._backend.parseTemplate(
+        strings,
+        binds,
+        this._templatePlaceholder,
+        mode,
+      );
       this._cachedTemplates.set(strings, template);
     }
 

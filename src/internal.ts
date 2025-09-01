@@ -406,15 +406,6 @@ export interface Template<TBinds extends readonly unknown[]>
   ): TemplateResult;
 }
 
-export interface TemplateFactory {
-  parseTemplate(
-    strings: readonly string[],
-    binds: readonly unknown[],
-    placeholder: string,
-    mode: TemplateMode,
-  ): Template<readonly unknown[]>;
-}
-
 export type TemplateMode = 'html' | 'math' | 'svg' | 'textarea';
 
 export interface TemplateResult {
