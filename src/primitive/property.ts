@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -19,9 +17,11 @@ export const PropertyPrimitive: Primitive<any> = {
     _context: DirectiveContext,
   ): PropertyBinding<T> {
     if (part.type !== PartType.Property) {
-      throw new Error(
-        'PropertyPrimitive must be used in a property part, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
+      throw new DirectiveError(
+        PropertyPrimitive,
+        value,
+        part,
+        'PropertyPrimitive must be used in a property part.',
       );
     }
     return new PropertyBinding(value, part);

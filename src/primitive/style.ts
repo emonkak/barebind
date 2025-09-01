@@ -1,7 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { formatPart } from '../debug/part.js';
-import { formatValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -31,14 +29,16 @@ export const StylePrimitive: Primitive<StyleProperties> = {
   name: 'StylePrimitive',
   ensureValue(value: unknown, part: Part): asserts value is StyleProperties {
     if (!(typeof value === 'object' && value !== null)) {
-      throw new Error(
-        `The value of StylePrimitive must be an object, but got ${formatValue(value)}.\n` +
-          formatPart(part, markUsedValue(value)),
+      throw new DirectiveError(
+        StylePrimitive,
+        value,
+        part,
+        'The value of StylePrimitive must be an object.',
       );
     }
   },
   resolveBinding(
-    props: StyleProperties,
+    value: StyleProperties,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
@@ -46,12 +46,14 @@ export const StylePrimitive: Primitive<StyleProperties> = {
       part.type !== PartType.Attribute ||
       part.name.toLowerCase() !== ':style'
     ) {
-      throw new Error(
-        'StylePrimitive must be used in a ":style" attribute part, but it is used here in:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+      throw new DirectiveError(
+        StylePrimitive,
+        value,
+        part,
+        'StylePrimitive must be used in a ":style" attribute part.',
       );
     }
-    return new StyleBinding(props, part);
+    return new StyleBinding(value, part);
   },
 };
 

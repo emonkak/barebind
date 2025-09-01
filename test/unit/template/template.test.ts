@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,
@@ -57,7 +57,7 @@ describe('AbstractTemplate', () => {
       const runtime = createRuntime();
 
       expect(() => template.resolveBinding(binds, part, runtime)).toThrow(
-        'MockTemplate must be used in a child node part,',
+        'MockTemplate must be used in a child node part.',
       );
     });
   });

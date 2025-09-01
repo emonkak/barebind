@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -17,9 +15,11 @@ export const AttributePrimitive: Primitive<any> = {
     _context: DirectiveContext,
   ): AttributeBinding<T> {
     if (part.type !== PartType.Attribute) {
-      throw new Error(
-        'AttributePrimitive must be used in an attribute part, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
+      throw new DirectiveError(
+        AttributePrimitive,
+        value,
+        part,
+        'AttributePrimitive must be used in an attribute part.',
       );
     }
     return new AttributeBinding(value, part);

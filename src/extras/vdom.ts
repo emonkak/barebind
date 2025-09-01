@@ -1,7 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError, DirectiveSpecifier } from '../directive.js';
 import {
   $toDirective,
   type Bindable,
@@ -83,9 +81,11 @@ export const ElementDirective: DirectiveType<ElementProps> = {
     _context: DirectiveContext,
   ): ElementBinding {
     if (part.type !== PartType.Element) {
-      throw new Error(
-        'ElementDirective must be used in an element part, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+      throw new DirectiveError(
+        this,
+        props,
+        part,
+        'ElementDirective must be used in an element part.',
       );
     }
     return new ElementBinding(props, part);

@@ -1,4 +1,5 @@
-import { $debug, type Debuggable } from './debug/value.js';
+import { formatPart } from './debug/part.js';
+import { $debug, type Debuggable, formatValue } from './debug/value.js';
 import {
   $toDirective,
   type Bindable,
@@ -9,6 +10,27 @@ import {
   type SlotType,
   type UnwrapBindable,
 } from './internal.js';
+
+export class DirectiveError<T> extends Error {
+  readonly type: DirectiveType<T>;
+
+  readonly value: T;
+
+  readonly part: Part;
+
+  constructor(type: DirectiveType<T>, value: T, part: Part, message: string) {
+    DEBUG: {
+      const marker = `[[${type.name}(${formatValue(value)}) IS USED IN HERE!]]`;
+      message += '\n' + formatPart(part, marker);
+    }
+
+    super(message);
+
+    this.type = type;
+    this.value = value;
+    this.part = part;
+  }
+}
 
 export class DirectiveSpecifier<T>
   implements Bindable<T>, Debuggable, Directive<T>

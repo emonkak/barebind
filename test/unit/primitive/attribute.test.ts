@@ -37,7 +37,7 @@ describe('AttributePrimitive', () => {
 
       expect(() =>
         AttributePrimitive.resolveBinding(value, part, runtime),
-      ).toThrow('AttributePrimitive must be used in an attribute part,');
+      ).toThrow('AttributePrimitive must be used in an attribute part.');
     });
   });
 });

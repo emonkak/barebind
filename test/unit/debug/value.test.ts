@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  $debug,
-  type Debuggable,
-  formatValue,
-  markUsedValue,
-} from '@/debug/value.js';
+import { $debug, type Debuggable, formatValue } from '@/debug/value.js';
 
 describe('formatValue()', () => {
   const x = {};
@@ -56,10 +51,4 @@ describe('formatValue()', () => {
       expect(formatValue(value)).toBe(expectedString);
     },
   );
-});
-
-describe('markUsedValue()', () => {
-  it('returns a marker of the value', () => {
-    expect(markUsedValue('foo')).toBe('[["foo" IS USED IN HERE!]]');
-  });
 });

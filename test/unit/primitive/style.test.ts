@@ -43,7 +43,7 @@ describe('StylePrimitive', () => {
 
         expect(() => {
           ensureValue.call(StylePrimitive, value, part);
-        }).toThrow('The value of StylePrimitive must be an object,');
+        }).toThrow('The value of StylePrimitive must be an object.');
       },
     );
   });
@@ -77,7 +77,7 @@ describe('StylePrimitive', () => {
       const runtime = createRuntime();
 
       expect(() => StylePrimitive.resolveBinding(style, part, runtime)).toThrow(
-        'StylePrimitive must be used in a ":style" attribute part,',
+        'StylePrimitive must be used in a ":style" attribute part.',
       );
     });
   });

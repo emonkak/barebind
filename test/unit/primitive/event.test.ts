@@ -41,7 +41,7 @@ describe('EventPrimitive', () => {
       expect(() => {
         ensureValue.call(EventPrimitive, {}, part);
       }).toThrow(
-        'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined,',
+        'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined.',
       );
     });
   });
@@ -72,7 +72,7 @@ describe('EventPrimitive', () => {
 
       expect(() =>
         EventPrimitive.resolveBinding(handler, part, runtime),
-      ).toThrow('EventPrimitive must be used in an event part,');
+      ).toThrow('EventPrimitive must be used in an event part.');
     });
   });
 });

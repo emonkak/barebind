@@ -2,10 +2,9 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
 import {
   CommitPhase,
-  createHydrationTarget,
-  HydrationError,
   Lanes,
   PartType,
   type RenderContext,

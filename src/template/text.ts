@@ -1,8 +1,8 @@
+import { splitText } from '../hydration.js';
 import {
   type HydrationTarget,
   type Part,
   PartType,
-  splitText,
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';

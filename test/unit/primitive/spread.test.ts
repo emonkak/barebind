@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { SpreadBinding, SpreadPrimitive } from '@/primitive/spread.js';
 import { MockSlot } from '../../mocks.js';
 import {
@@ -42,7 +42,7 @@ describe('SpreadPrimitive', () => {
 
         expect(() => {
           ensureValue.call(SpreadPrimitive, value, part);
-        }).toThrow('The value of SpreadPrimitive must be an object,');
+        }).toThrow('The value of SpreadPrimitive must be an object.');
       },
     );
   });
@@ -74,7 +74,7 @@ describe('SpreadPrimitive', () => {
 
       expect(() =>
         SpreadPrimitive.resolveBinding(props, part, runtime),
-      ).toThrow('SpreadPrimitive must be used in an element part,');
+      ).toThrow('SpreadPrimitive must be used in an element part.');
     });
   });
 });

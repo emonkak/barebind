@@ -1,12 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
-import {
-  createHydrationTarget,
-  HydrationError,
-  type Part,
-  PartType,
-} from '@/internal.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { type Part, PartType } from '@/internal.js';
 import {
   moveChildNodes,
   Repeat,
@@ -76,7 +72,7 @@ describe('RepeatDirective', () => {
 
       expect(() =>
         RepeatDirective.resolveBinding(props, part, runtime),
-      ).toThrow('RepeatDirective must be used in a child part,');
+      ).toThrow('RepeatDirective must be used in a child part.');
     });
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-
-import { createHydrationTarget, PartType } from '@/internal.js';
+import { createHydrationTarget } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import {

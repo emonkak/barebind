@@ -1,6 +1,5 @@
 /// <reference path="../typings/scheduler.d.ts" />
 
-import { formatNode } from './debug/node.js';
 import type { Literal, TemplateLiteral } from './template-literal.js';
 
 export const $customHook: unique symbol = Symbol('$customHook');
@@ -152,8 +151,6 @@ export const HookType = {
 } as const;
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
-
-export class HydrationError extends Error {}
 
 export type HydrationTarget = TreeWalker;
 
@@ -447,12 +444,6 @@ export interface UpdateTask {
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
-interface NodeTypeMap {
-  [Node.COMMENT_NODE]: Comment;
-  [Node.ELEMENT_NODE]: Element;
-  [Node.TEXT_NODE]: Text;
-}
-
 /**
  * @internal
  */
@@ -468,16 +459,6 @@ export function areDirectiveTypesEqual(
   y: DirectiveType<unknown>,
 ): boolean {
   return x.equals?.(y) ?? x === y;
-}
-
-/**
- * @internal
- */
-export function createHydrationTarget(container: Element): HydrationTarget {
-  return container.ownerDocument.createTreeWalker(
-    container,
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-  );
 }
 
 /**
@@ -613,19 +594,6 @@ export function isBindable(value: unknown): value is Bindable {
 /**
  * @internal
  */
-export function replaceMarkerNode(
-  target: HydrationTarget,
-  markerNode: Comment,
-): void {
-  treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
-    markerNode,
-  );
-  target.currentNode = markerNode;
-}
-
-/**
- * @internal
- */
 export function setSharedContext(
   scope: Scope,
   key: unknown,
@@ -637,60 +605,4 @@ export function setSharedContext(
     key,
     value,
   };
-}
-
-/**
- * @internal
- */
-export function splitText(target: HydrationTarget): Text {
-  const previousNode = target.currentNode;
-  const currentNode = target.nextNode();
-
-  if (
-    previousNode instanceof Text &&
-    (currentNode === null || currentNode.previousSibling === previousNode)
-  ) {
-    const splittedText = previousNode.ownerDocument.createTextNode('');
-    previousNode.after(splittedText);
-    target.currentNode = splittedText;
-    return splittedText;
-  } else {
-    return treatNodeType(Node.TEXT_NODE, currentNode, target);
-  }
-}
-
-/**
- * @internal
- */
-export function treatNodeName(
-  expectedName: string,
-  node: Node | null,
-  target: HydrationTarget,
-): Node {
-  if (node === null || node.nodeName !== expectedName) {
-    throw new HydrationError(
-      `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}:\n` +
-        formatNode(target.currentNode, '[[MISMATCH IN HERE!]]'),
-    );
-  }
-
-  return node;
-}
-
-/**
- * @internal
- */
-export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
-  expectedType: TExpectedType,
-  node: Node | null,
-  target: HydrationTarget,
-): NodeTypeMap[TExpectedType] {
-  if (node === null || node.nodeType !== expectedType) {
-    throw new HydrationError(
-      `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}:\n` +
-        formatNode(target.currentNode, '[[MISMATCH IN HERE!]]'),
-    );
-  }
-
-  return node as NodeTypeMap[TExpectedType];
 }

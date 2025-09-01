@@ -1,10 +1,8 @@
-import { formatPart } from '../debug/part.js';
-import { formatValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
+import { HydrationError } from '../hydration.js';
 import {
   type Binding,
   type DirectiveContext,
-  HydrationError,
   type HydrationTarget,
   type Part,
   PartType,
@@ -19,24 +17,28 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   name: 'SpreadPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
     if (!isSpreadProps(value)) {
-      throw new Error(
-        `The value of SpreadPrimitive must be an object, but got ${formatValue(value)}.\n` +
-          formatPart(part, markUsedValue(value)),
+      throw new DirectiveError(
+        SpreadPrimitive,
+        value,
+        part,
+        'The value of SpreadPrimitive must be an object.',
       );
     }
   },
   resolveBinding(
-    props: SpreadProperties,
+    value: SpreadProperties,
     part: Part,
     _session: DirectiveContext,
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
-      throw new Error(
-        'SpreadPrimitive must be used in an element part, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+      throw new DirectiveError(
+        SpreadPrimitive,
+        value,
+        part,
+        'SpreadPrimitive must be used in an element part.',
       );
     }
-    return new SpreadBinding(props, part);
+    return new SpreadBinding(value, part);
   },
 };
 
@@ -65,6 +67,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
   hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._memoizedSlots !== null || this._pendingSlots.size > 0) {
       throw new HydrationError(
+        target,
         'Hydration is failed because the binding has already been initialized.',
       );
     }

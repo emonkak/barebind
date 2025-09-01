@@ -46,7 +46,7 @@ describe('ClassPrimitive', () => {
 
         expect(() => {
           ensureValue.call(ClassPrimitive, value, part);
-        }).toThrow('The value of ClassPrimitive must be an object,');
+        }).toThrow('The value of ClassPrimitive must be an object.');
       },
     );
   });
@@ -81,7 +81,7 @@ describe('ClassPrimitive', () => {
 
       expect(() =>
         ClassPrimitive.resolveBinding(classes, part, runtime),
-      ).toThrow('ClassPrimitive must be used in a ":class" attribute part,');
+      ).toThrow('ClassPrimitive must be used in a ":class" attribute part.');
     });
   });
 });

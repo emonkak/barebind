@@ -1,9 +1,9 @@
+import { replaceMarkerNode } from '../hydration.js';
 import {
   type DirectiveType,
   type HydrationTarget,
   type Part,
   PartType,
-  replaceMarkerNode,
   type TemplateResult,
   type UpdateSession,
 } from '../internal.js';

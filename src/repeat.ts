@@ -1,18 +1,15 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
-import { formatPart } from './debug/part.js';
-import { markUsedValue } from './debug/value.js';
-import { DirectiveSpecifier } from './directive.js';
+import { DirectiveError, DirectiveSpecifier } from './directive.js';
+import { HydrationError, replaceMarkerNode } from './hydration.js';
 import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
   getStartNode,
-  HydrationError,
   type HydrationTarget,
   type Part,
   PartType,
-  replaceMarkerNode,
   type Slot,
   type UpdateSession,
 } from './internal.js';
@@ -79,17 +76,19 @@ export function Repeat<TSource, TKey, TValue>(
 export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   name: 'RepeatDirective',
   resolveBinding<TSource, TKey, TValue>(
-    props: RepeatProps<TSource, TKey, TValue>,
+    value: RepeatProps<TSource, TKey, TValue>,
     part: Part,
     _session: DirectiveContext,
   ): RepeatBinding<TSource, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'RepeatDirective must be used in a child part, but it is used here in:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, props))),
+      throw new DirectiveError(
+        RepeatDirective,
+        value,
+        part,
+        'RepeatDirective must be used in a child part.',
       );
     }
-    return new RepeatBinding(props, part);
+    return new RepeatBinding(value, part);
   },
 };
 
@@ -130,6 +129,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._memoizedItems !== null || this._pendingItems.length > 0) {
       throw new HydrationError(
+        target,
         'Hydration is failed because the binding has already been initialized.',
       );
     }

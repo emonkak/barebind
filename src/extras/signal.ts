@@ -1,4 +1,5 @@
 import { LinkedList } from '../collections/linked-list.js';
+import { HydrationError } from '../hydration.js';
 import {
   $customHook,
   $toDirective,
@@ -9,7 +10,6 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  HydrationError,
   type HydrationTarget,
   Lanes,
   type Part,
@@ -100,6 +100,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._subscription !== null) {
       throw new HydrationError(
+        target,
         'Hydration is failed because the binding has already been initialized.',
       );
     }

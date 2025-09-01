@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -17,9 +15,11 @@ export const TextPrimitive: Primitive<any> = {
     _context: DirectiveContext,
   ): TextBinding<T> {
     if (part.type !== PartType.Text) {
-      throw new Error(
-        'TextPrimitive must be used in a text part, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
+      throw new DirectiveError(
+        TextPrimitive,
+        value,
+        part,
+        'TextPrimitive must be used in a text part.',
       );
     }
     return new TextBinding(value, part);

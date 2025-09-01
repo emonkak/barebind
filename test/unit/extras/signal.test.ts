@@ -6,10 +6,9 @@ import {
   type SignalBinding,
   SignalDirective,
 } from '@/extras/signal.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
 import {
   $toDirective,
-  createHydrationTarget,
-  HydrationError,
   Lanes,
   PartType,
   type RenderContext,

@@ -1,12 +1,10 @@
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
+import { HydrationError } from '../hydration.js';
 import {
   type Binding,
   type DirectiveContext,
   type Effect,
   getStartNode,
-  HydrationError,
   type HydrationTarget,
   type Part,
   PartType,
@@ -45,18 +43,20 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   ): TemplateResult;
 
   resolveBinding(
-    binds: TBinds,
+    value: TBinds,
     part: Part,
     _session: DirectiveContext,
   ): Binding<TBinds> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        `${this.constructor.name} must be used in a child node part, but it is used here in:\n` +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, binds))),
+      throw new DirectiveError(
+        this,
+        value,
+        part,
+        `${this.constructor.name} must be used in a child node part.`,
       );
     }
 
-    return new TemplateBinding(this, binds, part);
+    return new TemplateBinding(this, value, part);
   }
 }
 
@@ -92,6 +92,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
   hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._pendingResult !== null) {
       throw new HydrationError(
+        target,
         'Hydration is failed because the binding has already been initialized.',
       );
     }

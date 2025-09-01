@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
 import { createElement, UpdateHelper } from '../../test-helpers.js';

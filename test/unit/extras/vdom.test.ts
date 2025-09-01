@@ -11,7 +11,8 @@ import {
   VFragment,
   VStaticFragment,
 } from '@/extras/vdom.js';
-import { $toDirective, createHydrationTarget, PartType } from '@/internal.js';
+import { createHydrationTarget } from '@/hydration.js';
+import { $toDirective, PartType } from '@/internal.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
@@ -203,7 +204,7 @@ describe('ElementDirective', () => {
 
       expect(() =>
         ElementDirective.resolveBinding(props, part, runtime),
-      ).toThrow('ElementDirective must be used in an element part,');
+      ).toThrow('ElementDirective must be used in an element part.');
     });
   });
 });

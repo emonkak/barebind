@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { formatValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -25,27 +23,28 @@ export const EventPrimitive: Primitive<EventHandler> = {
   name: 'EventPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is EventHandler {
     if (!isEventHandler(value)) {
-      throw new Error(
-        `The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined, but got ${formatValue(value)}.\n` +
-          formatPart(part, markUsedValue(value)),
+      throw new DirectiveError(
+        EventPrimitive,
+        value,
+        part,
+        'The value of EventPrimitive must be an EventListener, EventListenerObject, null or undefined.',
       );
     }
   },
   resolveBinding(
-    handler: EventHandler,
+    value: EventHandler,
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
     if (part.type !== PartType.Event) {
-      throw new Error(
-        'EventPrimitive must be used in an event part, but it is used here:\n' +
-          formatPart(
-            part,
-            markUsedValue(new DirectiveSpecifier(this, handler)),
-          ),
+      throw new DirectiveError(
+        EventPrimitive,
+        value,
+        part,
+        'EventPrimitive must be used in an event part.',
       );
     }
-    return new EventBinding(handler, part);
+    return new EventBinding(value, part);
   },
 };
 

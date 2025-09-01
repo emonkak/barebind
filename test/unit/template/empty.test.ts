@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { createHydrationTarget, PartType } from '@/internal.js';
+import { createHydrationTarget } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockTemplate } from '../../mocks.js';

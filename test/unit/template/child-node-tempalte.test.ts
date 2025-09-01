@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-
-import { createHydrationTarget, HydrationError, PartType } from '@/internal.js';
+import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot, MockTemplate } from '../../mocks.js';

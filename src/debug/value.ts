@@ -96,10 +96,6 @@ export function formatValue(
   }
 }
 
-export function markUsedValue(value: unknown): string {
-  return `[[${formatValue(value)} IS USED IN HERE!]]`;
-}
-
 function isDebuggable(value: {}): value is Debuggable {
   return $debug in value;
 }

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTarget, PartType } from '@/internal.js';
+import { createHydrationTarget } from '@/hydration.js';
+import { PartType } from '@/internal.js';
 import { Strict, StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';

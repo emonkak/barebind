@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -17,9 +15,11 @@ export const CommentPrimitive: Primitive<any> = {
     _context: DirectiveContext,
   ): CommentBinding<T> {
     if (part.type !== PartType.ChildNode) {
-      throw new Error(
-        'CommentPrimitive must be used in a child node, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
+      throw new DirectiveError(
+        CommentPrimitive,
+        value,
+        part,
+        'CommentPrimitive must be used in a child node.',
       );
     }
     return new CommentBinding(value, part);

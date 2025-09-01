@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -17,9 +15,11 @@ export const LivePrimitive: Primitive<any> = {
     _context: DirectiveContext,
   ): LiveBinding<T> {
     if (part.type !== PartType.Live) {
-      throw new Error(
-        'LivePrimitive must be used in a live part, but it is used here:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, value))),
+      throw new DirectiveError(
+        LivePrimitive,
+        value,
+        part,
+        'LivePrimitive must be used in a live part.',
       );
     }
     return new LiveBinding(value, part);

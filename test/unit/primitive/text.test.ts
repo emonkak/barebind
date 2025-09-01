@@ -37,7 +37,7 @@ describe('TextPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() => TextPrimitive.resolveBinding(value, part, runtime)).toThrow(
-        'TextPrimitive must be used in a text part,',
+        'TextPrimitive must be used in a text part.',
       );
     });
   });

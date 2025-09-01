@@ -1,12 +1,11 @@
 import { DirectiveSpecifier } from '../directive.js';
+import { replaceMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
   type HydrationTarget,
   type Part,
   PartType,
-  replaceMarkerNode,
   type TemplateResult,
-  treatNodeName,
   type UpdateSession,
 } from '../internal.js';
 import {

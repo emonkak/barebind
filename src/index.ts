@@ -1,12 +1,13 @@
 export { sequentialEqual, shallowEqual } from './compare.js';
 export { type ComponentOptions, createComponent } from './component.js';
+export { DirectiveError } from './directive.js';
+export { HydrationError } from './hydration.js';
 export {
   $customHook,
   type Bindable,
   type Component,
   type CustomHookFunction,
   type CustomHookObject,
-  HydrationError,
   type RefCallback,
   type RefObject,
   type RenderContext,

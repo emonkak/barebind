@@ -1,4 +1,5 @@
 import { DirectiveSpecifier } from './directive.js';
+import { HydrationError } from './hydration.js';
 import {
   type Bindable,
   type Binding,
@@ -10,7 +11,6 @@ import {
   type Effect,
   type Hook,
   HookType,
-  HydrationError,
   type HydrationTarget,
   Lanes,
   type Part,
@@ -120,6 +120,7 @@ export class ComponentBinding<TProps, TResult>
   hydrate(target: HydrationTarget, session: UpdateSession): void {
     if (this._slot !== null) {
       throw new HydrationError(
+        target,
         'Hydration is failed because the binding has already been initialized.',
       );
     }

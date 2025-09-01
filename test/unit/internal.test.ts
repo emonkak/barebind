@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
-
+import {
+  createHydrationTarget,
+  treatNodeName,
+  treatNodeType,
+} from '@/hydration.js';
 import {
   areDirectiveTypesEqual,
-  createHydrationTarget,
   createScope,
   getLanesFromOptions,
   getPriorityFromLanes,
@@ -13,8 +16,6 @@ import {
   PartType,
   type ScheduleOptions,
   setSharedContext,
-  treatNodeName,
-  treatNodeType,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';

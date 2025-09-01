@@ -1,7 +1,5 @@
 import { shallowEqual } from '../compare.js';
-import { formatPart } from '../debug/part.js';
-import { formatValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type DirectiveContext,
   type Part,
@@ -26,14 +24,16 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
   name: 'ClassPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
     if (!(typeof value === 'object' && value !== null)) {
-      throw new Error(
-        `The value of ClassPrimitive must be an object, but got ${formatValue(value)}.\n` +
-          formatPart(part, markUsedValue(value)),
+      throw new DirectiveError(
+        ClassPrimitive,
+        value,
+        part,
+        `The value of ClassPrimitive must be an object.`,
       );
     }
   },
   resolveBinding(
-    classMap: ClassSpecifier,
+    value: ClassSpecifier,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
@@ -41,15 +41,14 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
       part.type !== PartType.Attribute ||
       part.name.toLowerCase() !== ':class'
     ) {
-      throw new Error(
-        'ClassPrimitive must be used in a ":class" attribute part, but it is used here:\n' +
-          formatPart(
-            part,
-            markUsedValue(new DirectiveSpecifier(this, classMap)),
-          ),
+      throw new DirectiveError(
+        ClassPrimitive,
+        value,
+        part,
+        'ClassPrimitive must be used in a ":class" attribute part.',
       );
     }
-    return new ClassBinding(classMap, part);
+    return new ClassBinding(value, part);
   },
 };
 

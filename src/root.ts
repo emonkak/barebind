@@ -1,10 +1,9 @@
+import { createHydrationTarget, replaceMarkerNode } from './hydration.js';
 import {
   type Coroutine,
-  createHydrationTarget,
   type Effect,
   Lanes,
   PartType,
-  replaceMarkerNode,
   type ScheduleOptions,
   type SessionContext,
   type Slot,

@@ -41,7 +41,7 @@ describe('RefPrimitive', () => {
       expect(() => {
         ensureValue({}, part);
       }).toThrow(
-        'The value of RefPrimitive must be a function, object, null or undefined,',
+        'The value of RefPrimitive must be a function, object, null or undefined.',
       );
     });
   });
@@ -74,7 +74,7 @@ describe('RefPrimitive', () => {
       const runtime = createRuntime();
 
       expect(() => RefPrimitive.resolveBinding(ref, part, runtime)).toThrow(
-        'RefPrimitive must be used in ":ref" attribute part,',
+        'RefPrimitive must be used in ":ref" attribute part.',
       );
     });
   });

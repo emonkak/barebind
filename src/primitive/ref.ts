@@ -1,6 +1,4 @@
-import { formatPart } from '../debug/part.js';
-import { formatValue, markUsedValue } from '../debug/value.js';
-import { DirectiveSpecifier } from '../directive.js';
+import { DirectiveError } from '../directive.js';
 import {
   type Cleanup,
   type DirectiveContext,
@@ -23,14 +21,16 @@ export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
     part: Part,
   ): asserts value is Nullable<ElementRef> {
     if (value != null && !isElementRef(value)) {
-      throw new Error(
-        `The value of RefPrimitive must be a function, object, null or undefined, but got ${formatValue(value)}.\n` +
-          formatPart(part, markUsedValue(value)),
+      throw new DirectiveError(
+        RefPrimitive,
+        value,
+        part,
+        'The value of RefPrimitive must be a function, object, null or undefined.',
       );
     }
   },
   resolveBinding(
-    ref: Nullable<ElementRef>,
+    value: Nullable<ElementRef>,
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
@@ -38,12 +38,14 @@ export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
       part.type !== PartType.Attribute ||
       part.name.toLowerCase() !== ':ref'
     ) {
-      throw new Error(
-        'RefPrimitive must be used in ":ref" attribute part, but it is used here in:\n' +
-          formatPart(part, markUsedValue(new DirectiveSpecifier(this, ref))),
+      throw new DirectiveError(
+        RefPrimitive,
+        value,
+        part,
+        'RefPrimitive must be used in ":ref" attribute part.',
       );
     }
-    return new RefBinding(ref, part);
+    return new RefBinding(value, part);
   },
 };
 
