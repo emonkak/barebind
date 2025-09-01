@@ -28,16 +28,17 @@ export function minifyTemplates(
     name: 'minify-templates',
     setup(build) {
       build.onLoad({ filter: FILTER_PATTERN }, async (args) => {
-        const contents = await fs.readFile(args.path, 'utf8');
+        const input = await fs.readFile(args.path, 'utf8');
         const extension = path.extname(args.path);
         const loader = getLoader(extension);
 
         try {
-          const result = await esbuild.transform(contents, {
+          // Strip types from the code.
+          const result = await esbuild.transform(input, {
             loader,
-            format: 'esm',
           });
 
+          // Remove whitespaces in templates.
           const transformedCode = transformTemplates(result.code, tagNames);
 
           return {

@@ -22,27 +22,28 @@ export const temporaryDirectoryTest = test.extend<TemporaryDirectoryFixture>({
   },
 });
 
-temporaryDirectoryTest.for(['function-call.js', 'method-call.js'])(
-  'minify template literals in %s',
-  async (filename, { outdir }) => {
-    const inputPath = path.join(__dirname, '../fixtures/', filename);
-    const outputPath = path.join(outdir, filename);
-    const expectedPath = path.join(
-      __dirname,
-      '../fixtures',
-      path.basename(filename, '.js') + '.expected.js',
-    );
+temporaryDirectoryTest.for([
+  'function-call.js',
+  'method-call.js',
+  'nested-templates.js',
+])('minify template literals in %s', async (filename, { outdir }) => {
+  const inputPath = path.join(__dirname, '../fixtures/', filename);
+  const outputPath = path.join(outdir, filename);
+  const expectedPath = path.join(
+    __dirname,
+    '../fixtures',
+    path.basename(filename, '.js') + '.expected.js',
+  );
 
-    await esbuild.build({
-      bundle: true,
-      entryPoints: [inputPath],
-      format: 'esm',
-      outdir,
-      plugins: [minifyTemplates()],
-    });
+  await esbuild.build({
+    bundle: true,
+    entryPoints: [inputPath],
+    format: 'esm',
+    outdir,
+    plugins: [minifyTemplates()],
+  });
 
-    expect(await fs.readFile(outputPath, 'utf8')).toBe(
-      await fs.readFile(expectedPath, 'utf8'),
-    );
-  },
-);
+  expect(await fs.readFile(outputPath, 'utf8')).toBe(
+    await fs.readFile(expectedPath, 'utf8'),
+  );
+});
