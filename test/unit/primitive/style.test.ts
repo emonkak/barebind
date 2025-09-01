@@ -50,7 +50,7 @@ describe('StylePrimitive', () => {
 
   describe('resolveBinding()', () => {
     it.for([':STYLE', ':style'])(
-      'constructs a new StyleBinding',
+      'constructs a new StyleBinding in "%s" attribute',
       (attributeName) => {
         const style = { color: 'red' };
         const part = {

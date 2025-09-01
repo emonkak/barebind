@@ -46,7 +46,7 @@ describe('BrowserBackend', () => {
     });
 
     it.for(CONTINUOUS_EVENT_TYPES)(
-      'returns "user-visible" if the current event is continuous',
+      'returns "user-visible" if the current event is "%s"',
       (eventType) => {
         const backend = new BrowserBackend();
         const getEventSpy = vi

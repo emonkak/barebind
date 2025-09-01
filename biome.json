@@ -1,6 +1,12 @@
 {
   "files": {
-    "includes": ["**", "!coverage", "!examples/*/lib", "!lib"]
+    "includes": [
+      "**",
+      "!coverage",
+      "!examples/*/lib",
+      "!lib",
+      "!tools/*/test/fixtures/*.js"
+    ]
   },
   "javascript": {
     "formatter": {
@@ -17,6 +23,7 @@
         "useLiteralKeys": "off"
       },
       "correctness": {
+        "noEmptyPattern": "off",
         "noUnusedLabels": "off"
       },
       "style": {

@@ -1,0 +1,32 @@
+{
+  "name": "esbuild-plugin-minify-templates",
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
+  "publishConfig": {
+    "exports": {
+      ".": {
+        "import": "./lib/index.js",
+        "types": "./lib/index.d.ts"
+      }
+    }
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc --build",
+    "watch": "tsc --build --watch --preserveWatchOutput",
+    "clean": "rm -fr lib"
+  },
+  "dependencies": {
+    "@types/node": "^24.3.0",
+    "acorn": "^8.15.0",
+    "acorn-walk": "^8.3.4",
+    "esbuild": "^0.25.9"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}

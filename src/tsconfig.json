@@ -3,6 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "outDir": "../lib"
+    "outDir": "../lib",
+    "typeRoots": ["../typings"]
   }
 }

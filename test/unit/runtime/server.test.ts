@@ -96,7 +96,7 @@ describe('ServerBackend', () => {
     });
 
     it.for(['user-blocking', 'user-visible', 'background'] as const)(
-      'schedules a callback with an arbitrary priority using setTimeout()',
+      'schedules a callback with "%s" priority using setTimeout()',
       async (priority) => {
         const backend = new ServerBackend(document);
         const callback = vi.fn();

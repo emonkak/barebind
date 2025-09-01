@@ -47,20 +47,23 @@ describe('RefPrimitive', () => {
   });
 
   describe('resolveBinding()', () => {
-    it.for([':REF', ':ref'])('constructs a new RefBinding', (attributeName) => {
-      const ref = { current: null };
-      const part = {
-        type: PartType.Attribute,
-        node: document.createElement('div'),
-        name: attributeName,
-      };
-      const runtime = createRuntime();
-      const binding = RefPrimitive.resolveBinding(ref, part, runtime);
+    it.for([':REF', ':ref'])(
+      'constructs a new RefBinding with "%s" attribute',
+      (attributeName) => {
+        const ref = { current: null };
+        const part = {
+          type: PartType.Attribute,
+          node: document.createElement('div'),
+          name: attributeName,
+        };
+        const runtime = createRuntime();
+        const binding = RefPrimitive.resolveBinding(ref, part, runtime);
 
-      expect(binding.type).toBe(RefPrimitive);
-      expect(binding.value).toBe(ref);
-      expect(binding.part).toBe(part);
-    });
+        expect(binding.type).toBe(RefPrimitive);
+        expect(binding.value).toBe(ref);
+        expect(binding.part).toBe(part);
+      },
+    );
 
     it('should throw the error if the part is not a ":ref" attribute part', () => {
       const ref = { current: null };

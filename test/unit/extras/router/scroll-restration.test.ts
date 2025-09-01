@@ -23,7 +23,7 @@ describe('ScrollRestration()', () => {
   });
 
   it.for(['push', 'replace'] as NavigationType[])(
-    'scrolls to the top',
+    'scrolls to the top when the navigation type is "%s"',
     (navigationType) => {
       const location: HistoryLocation = {
         url: new RelativeURL('/'),
@@ -45,7 +45,7 @@ describe('ScrollRestration()', () => {
   );
 
   it.for(['reload', 'traverse', null] as (NavigationType | null)[])(
-    'should not reset scroll if the navigation type is not "push" or "replace"',
+    'should not reset scroll if the navigation type is "%s"',
     (navigationType) => {
       const location: HistoryLocation = {
         url: new RelativeURL('/'),

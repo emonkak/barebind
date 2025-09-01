@@ -1,27 +1,19 @@
-import path from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  resolve: {
-    alias: {
-      '@': path.join(__dirname, '/src'),
-    },
-  },
   test: {
-    setupFiles: ['test/setup.ts'],
-    browser: {
-      provider: 'playwright',
-      enabled: true,
-      headless: true,
-      instances: [{ browser: 'chromium' }],
-      screenshotFailures: false,
-    },
+    projects: [
+      'vitest.project.ts',
+      'examples/*/vitest.project.ts',
+      'tools/*/vitest.project.ts',
+    ],
     coverage: {
       include: ['src/**'],
-      exclude: ['src/extras/router.ts', 'src/index.ts'],
-    },
-    typecheck: {
-      enabled: true,
+      exclude: [
+        'src/extras/jsx-dev-runtime.ts',
+        'src/extras/router.ts',
+        'src/index.ts',
+      ],
     },
   },
 });

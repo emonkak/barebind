@@ -18,7 +18,6 @@
     "strict": true,
     "stripInternal": true,
     "target": "esnext",
-    "typeRoots": ["./typings"],
     "verbatimModuleSyntax": true
   }
 }

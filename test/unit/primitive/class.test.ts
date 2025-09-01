@@ -53,7 +53,7 @@ describe('ClassPrimitive', () => {
 
   describe('resolveBinding()', () => {
     it.for([':CLASS', ':class'])(
-      'constructs a new AttributeBinding',
+      'constructs a new AttributeBinding with "%s" attribute',
       (attributeName) => {
         const classes = { foo: true, bar: true, baz: false };
         const part = {
