@@ -4,7 +4,6 @@
     "erasableSyntaxOnly": true,
     "exactOptionalPropertyTypes": true,
     "isolatedModules": true,
-    "lib": ["dom", "dom.iterable", "esnext"],
     "module": "nodenext",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
