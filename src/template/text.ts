@@ -37,13 +37,14 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
+    const { context } = session;
     const textPart = {
       type: PartType.Text,
       node: splitText(target),
       precedingText: this.precedingText,
       followingText: this.followingText,
     };
-    const textSlot = session.context.resolveSlot(binds[0], textPart);
+    const textSlot = context.resolveSlot(binds[0], textPart);
 
     textSlot.hydrate(target, session);
 
@@ -55,6 +56,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
+    const { context } = session;
     const document = part.node.ownerDocument;
     const textPart = {
       type: PartType.Text,
@@ -62,7 +64,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
       precedingText: this.precedingText,
       followingText: this.followingText,
     };
-    const textSlot = session.context.resolveSlot(binds[0], textPart);
+    const textSlot = context.resolveSlot(binds[0], textPart);
 
     textSlot.connect(session);
 

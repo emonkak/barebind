@@ -305,10 +305,8 @@ export class MockSlot<T> implements Slot<T> {
   }
 
   reconcile(value: T, session: UpdateSession): boolean {
-    const directive = session.context.resolveDirective(
-      value,
-      this.binding.part,
-    );
+    const { context } = session;
+    const directive = context.resolveDirective(value, this.binding.part);
 
     if (!areDirectiveTypesEqual(this.binding.type, directive.type)) {
       throw new Error(

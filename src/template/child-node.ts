@@ -24,6 +24,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     target: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
+    const { context } = session;
     const document = part.node.ownerDocument;
     const childNodePart = {
       type: PartType.ChildNode,
@@ -31,7 +32,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = session.context.resolveSlot(binds[0], childNodePart);
+    const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.hydrate(target, session);
 
@@ -45,6 +46,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
     part: Part.ChildNodePart,
     session: UpdateSession,
   ): TemplateResult {
+    const { context } = session;
     const document = part.node.ownerDocument;
     const childNodePart = {
       type: PartType.ChildNode,
@@ -52,7 +54,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
       anchorNode: null,
       namespaceURI: part.namespaceURI,
     };
-    const childNodeSlot = session.context.resolveSlot(binds[0], childNodePart);
+    const childNodeSlot = context.resolveSlot(binds[0], childNodePart);
 
     childNodeSlot.connect(session);
 
