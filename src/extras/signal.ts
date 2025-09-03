@@ -35,9 +35,9 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
   resolveBinding<T>(
     signal: Signal<T>,
     part: Part,
-    session: DirectiveContext,
+    context: DirectiveContext,
   ): SignalBinding<T> {
-    const slot = session.resolveSlot(signal.value, part);
+    const slot = context.resolveSlot(signal.value, part);
     return new SignalBinding(signal, slot);
   },
 };

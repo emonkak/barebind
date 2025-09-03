@@ -78,7 +78,7 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   resolveBinding<TSource, TKey, TValue>(
     value: RepeatProps<TSource, TKey, TValue>,
     part: Part,
-    _session: DirectiveContext,
+    _context: DirectiveContext,
   ): RepeatBinding<TSource, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(

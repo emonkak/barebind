@@ -45,7 +45,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   resolveBinding(
     value: TBinds,
     part: Part,
-    _session: DirectiveContext,
+    _context: DirectiveContext,
   ): Binding<TBinds> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(

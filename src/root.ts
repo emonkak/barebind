@@ -46,14 +46,14 @@ export class Root<T> {
     const coroutine: Coroutine = {
       scope: null,
       pendingLanes: Lanes.DefaultLane,
-      resume: (context) => {
+      resume: (session) => {
         const target = createHydrationTarget(this._container);
-        this._slot.hydrate(target, context);
+        this._slot.hydrate(target, session);
         replaceMarkerNode(target, this._slot.part.node as Comment);
-        context.frame.mutationEffects.push(
+        session.frame.mutationEffects.push(
           new MountSlot(this._slot, this._container),
         );
-        coroutine.pendingLanes &= ~context.frame.lanes;
+        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {
@@ -66,12 +66,12 @@ export class Root<T> {
     const coroutine: Coroutine = {
       scope: null,
       pendingLanes: Lanes.DefaultLane,
-      resume: (context) => {
-        this._slot.connect(context);
-        context.frame.mutationEffects.push(
+      resume: (session) => {
+        this._slot.connect(session);
+        session.frame.mutationEffects.push(
           new MountSlot(this._slot, this._container),
         );
-        coroutine.pendingLanes &= ~context.frame.lanes;
+        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {
@@ -84,10 +84,10 @@ export class Root<T> {
     const coroutine: Coroutine = {
       scope: null,
       pendingLanes: Lanes.DefaultLane,
-      resume: (context) => {
-        this._slot.reconcile(value, context);
-        context.frame.mutationEffects.push(this._slot);
-        coroutine.pendingLanes &= ~context.frame.lanes;
+      resume: (session) => {
+        this._slot.reconcile(value, session);
+        session.frame.mutationEffects.push(this._slot);
+        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {
@@ -100,12 +100,12 @@ export class Root<T> {
     const coroutine: Coroutine = {
       scope: null,
       pendingLanes: Lanes.DefaultLane,
-      resume: (context) => {
-        this._slot.disconnect(context);
-        context.frame.mutationEffects.push(
+      resume: (session) => {
+        this._slot.disconnect(session);
+        session.frame.mutationEffects.push(
           new UnmountSlot(this._slot, this._container),
         );
-        coroutine.pendingLanes &= ~context.frame.lanes;
+        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {

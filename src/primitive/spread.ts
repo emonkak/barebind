@@ -28,7 +28,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   resolveBinding(
     value: SpreadProperties,
     part: Part,
-    _session: DirectiveContext,
+    _context: DirectiveContext,
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new DirectiveError(
