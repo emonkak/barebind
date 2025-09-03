@@ -145,7 +145,7 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const scope = createScope();
+      const scope = coroutine.scope ?? createScope();
       const session = createUpdateSession(frame, scope, this);
 
       try {
@@ -260,7 +260,7 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const scope = createScope();
+      const scope = coroutine.scope ?? createScope();
       const session = createUpdateSession(frame, scope, this);
 
       try {
