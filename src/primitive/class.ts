@@ -33,7 +33,7 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
     }
   },
   resolveBinding(
-    value: ClassSpecifier,
+    clesses: ClassSpecifier,
     part: Part,
     _context: DirectiveContext,
   ): ClassBinding {
@@ -43,12 +43,12 @@ export const ClassPrimitive: Primitive<ClassSpecifier> = {
     ) {
       throw new DirectiveError(
         ClassPrimitive,
-        value,
+        clesses,
         part,
         'ClassPrimitive must be used in a ":class" attribute part.',
       );
     }
-    return new ClassBinding(value, part);
+    return new ClassBinding(clesses, part);
   },
 };
 
@@ -62,8 +62,8 @@ export class ClassBinding extends PrimitiveBinding<
     return ClassPrimitive;
   }
 
-  shouldBind(classMap: ClassSpecifier): boolean {
-    return !shallowEqual(classMap, this._memoizedValue);
+  shouldBind(classes: ClassSpecifier): boolean {
+    return !shallowEqual(classes, this._memoizedValue);
   }
 
   commit(): void {

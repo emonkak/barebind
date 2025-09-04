@@ -32,19 +32,19 @@ export const EventPrimitive: Primitive<EventHandler> = {
     }
   },
   resolveBinding(
-    value: EventHandler,
+    handler: EventHandler,
     part: Part,
     _context: DirectiveContext,
   ): EventBinding {
     if (part.type !== PartType.Event) {
       throw new DirectiveError(
         EventPrimitive,
-        value,
+        handler,
         part,
         'EventPrimitive must be used in an event part.',
       );
     }
-    return new EventBinding(value, part);
+    return new EventBinding(handler, part);
   },
 };
 

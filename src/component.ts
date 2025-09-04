@@ -51,15 +51,15 @@ export function createComponent<TProps, TResult = unknown>(
 export class ComponentBinding<TProps, TResult>
   implements Binding<TProps>, Coroutine
 {
-  readonly type: Component<TProps, TResult>;
+  private readonly _type: Component<TProps, TResult>;
 
-  value: TProps;
+  private _value: TProps;
 
-  readonly part: Part;
+  private readonly _part: Part;
 
-  scope: Scope | null = null;
+  private _scope: Scope | null = null;
 
-  pendingLanes: Lanes = Lanes.NoLanes;
+  private _pendingLanes: Lanes = Lanes.NoLanes;
 
   private _memoizedValue: TProps | null = null;
 
@@ -72,18 +72,42 @@ export class ComponentBinding<TProps, TResult>
     props: TProps,
     part: Part,
   ) {
-    this.type = component;
-    this.value = props;
-    this.part = part;
+    this._type = component;
+    this._value = props;
+    this._part = part;
+  }
+
+  get type(): Component<TProps, TResult> {
+    return this._type;
+  }
+
+  get value(): TProps {
+    return this._value;
+  }
+
+  get part(): Part {
+    return this._part;
+  }
+
+  get scope(): Scope | null {
+    return this._scope;
+  }
+
+  get pendingLanes(): Lanes {
+    return this._pendingLanes;
+  }
+
+  set pendingLanes(value: Lanes) {
+    this._pendingLanes = value;
   }
 
   resume(session: UpdateSession): void {
     const { frame, rootScope, context } = session;
-    const subscope = createScope(this.scope);
+    const subscope = createScope(this._scope);
     const subsession = createUpdateSession(frame, rootScope, subscope, context);
     const result = context.renderComponent(
-      this.type,
-      this.value,
+      this._type,
+      this._value,
       this._hooks,
       this,
       frame,
@@ -96,7 +120,7 @@ export class ComponentBinding<TProps, TResult>
         shouldCommit = false;
       }
     } else {
-      this._slot = context.resolveSlot(result, this.part);
+      this._slot = context.resolveSlot(result, this._part);
       this._slot.connect(subsession);
     }
 
@@ -104,26 +128,26 @@ export class ComponentBinding<TProps, TResult>
       frame.mutationEffects.push(this._slot);
     }
 
-    this.pendingLanes &= ~frame.lanes;
-    this._memoizedValue = this.value;
+    this._pendingLanes &= ~frame.lanes;
+    this._memoizedValue = this._value;
   }
 
-  shouldBind(value: TProps): boolean {
+  shouldBind(props: TProps): boolean {
     return (
       this._memoizedValue === null ||
-      !this.type.shouldSkipUpdate(value, this._memoizedValue)
+      !this._type.shouldSkipUpdate(props, this._memoizedValue)
     );
   }
 
   bind(props: TProps, session: UpdateSession): void {
     session.frame.pendingCoroutines.push(this);
-    this.value = props;
-    this.scope = session.scope;
+    this._value = props;
+    this._scope = session.scope;
   }
 
   connect(session: UpdateSession): void {
     session.frame.pendingCoroutines.push(this);
-    this.scope = session.scope;
+    this._scope = session.scope;
   }
 
   disconnect(session: UpdateSession): void {
@@ -147,7 +171,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.disconnect(session);
 
-    this.pendingLanes = Lanes.NoLanes;
+    this._pendingLanes = Lanes.NoLanes;
     this._hooks = [];
   }
 

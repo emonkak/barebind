@@ -115,10 +115,10 @@ describe('BrowserBackend', () => {
       );
 
       expect(template).toBeInstanceOf(TaggedTemplate);
-      expect((template as TaggedTemplate)['template'].innerHTML).toBe(
+      expect((template as TaggedTemplate)['_template'].innerHTML).toBe(
         '<div></div>',
       );
-      expect((template as TaggedTemplate)['holes']).toStrictEqual([
+      expect((template as TaggedTemplate)['_holes']).toStrictEqual([
         {
           type: PartType.Text,
           index: 1,

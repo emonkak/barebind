@@ -3,13 +3,21 @@ import type { Binding, Part, Primitive, UpdateSession } from '../internal.js';
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>
 {
-  value: TValue;
+  protected _value: TValue;
 
-  readonly part: TPart;
+  protected readonly _part: TPart;
 
   constructor(value: TValue, part: TPart) {
-    this.value = value;
-    this.part = part;
+    this._value = value;
+    this._part = part;
+  }
+
+  get value(): TValue {
+    return this._value;
+  }
+
+  get part(): TPart {
+    return this._part;
   }
 
   abstract get type(): Primitive<TValue>;
@@ -17,7 +25,7 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
   abstract shouldBind(value: TValue): boolean;
 
   bind(value: TValue, _session: UpdateSession): void {
-    this.value = value;
+    this._value = value;
   }
 
   connect(_session: UpdateSession): void {}

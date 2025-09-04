@@ -223,9 +223,9 @@ export class VStaticFragment implements Bindable<unknown> {
  * @internal
  */
 export class ElementBinding implements Binding<ElementProps> {
-  value: ElementProps;
+  private _props: ElementProps;
 
-  readonly part: Part.ElementPart;
+  private readonly _part: Part.ElementPart;
 
   private _memoizedValue: ElementProps | null = null;
 
@@ -233,12 +233,20 @@ export class ElementBinding implements Binding<ElementProps> {
     new Map();
 
   constructor(props: ElementProps, part: Part.ElementPart) {
-    this.value = props;
-    this.part = part;
+    this._props = props;
+    this._part = part;
+  }
+
+  get value(): ElementProps {
+    return this._props;
   }
 
   get type(): DirectiveType<ElementProps> {
     return ElementDirective as DirectiveType<ElementProps>;
+  }
+
+  get part(): Part.ElementPart {
+    return this._part;
   }
 
   shouldBind(value: ElementProps): boolean {
@@ -248,7 +256,7 @@ export class ElementBinding implements Binding<ElementProps> {
   }
 
   bind(props: ElementProps, _session: UpdateSession): void {
-    this.value = props;
+    this._props = props;
   }
 
   connect(_session: UpdateSession): void {}
@@ -256,9 +264,9 @@ export class ElementBinding implements Binding<ElementProps> {
   disconnect(_session: UpdateSession): void {}
 
   commit(): void {
-    const newProps = this.value;
+    const newProps = this._props;
     const oldProps = this._memoizedValue ?? ({} as ElementProps);
-    const element = this.part.node;
+    const element = this._part.node;
 
     for (const key of Object.keys(oldProps)) {
       if (!Object.hasOwn(newProps, key)) {
@@ -284,7 +292,7 @@ export class ElementBinding implements Binding<ElementProps> {
 
   rollback(): void {
     const props = this._memoizedValue;
-    const element = this.part.node;
+    const element = this._part.node;
 
     if (props !== null) {
       for (const key of Object.keys(props)) {
@@ -310,9 +318,9 @@ export class ElementBinding implements Binding<ElementProps> {
     listener: EventListenerWithOptions,
   ): void {
     if (typeof listener === 'function') {
-      this.part.node.addEventListener(type, this);
+      this._part.node.addEventListener(type, this);
     } else {
-      this.part.node.addEventListener(type, this, listener);
+      this._part.node.addEventListener(type, this, listener);
     }
   }
 
@@ -385,9 +393,9 @@ export class ElementBinding implements Binding<ElementProps> {
     listener: EventListenerWithOptions,
   ): void {
     if (typeof listener === 'function') {
-      this.part.node.removeEventListener(type, this);
+      this._part.node.removeEventListener(type, this);
     } else {
-      this.part.node.removeEventListener(type, this, listener);
+      this._part.node.removeEventListener(type, this, listener);
     }
   }
 

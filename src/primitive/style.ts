@@ -38,7 +38,7 @@ export const StylePrimitive: Primitive<StyleProps> = {
     }
   },
   resolveBinding(
-    value: StyleProps,
+    props: StyleProps,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
@@ -48,12 +48,12 @@ export const StylePrimitive: Primitive<StyleProps> = {
     ) {
       throw new DirectiveError(
         StylePrimitive,
-        value,
+        props,
         part,
         'StylePrimitive must be used in a ":style" attribute part.',
       );
     }
-    return new StyleBinding(value, part);
+    return new StyleBinding(props, part);
   },
 };
 
@@ -67,8 +67,8 @@ export class StyleBinding extends PrimitiveBinding<
     return StylePrimitive;
   }
 
-  shouldBind(value: StyleProps): boolean {
-    return !shallowEqual(value, this._memoizedValue);
+  shouldBind(props: StyleProps): boolean {
+    return !shallowEqual(props, this._memoizedValue);
   }
 
   commit(): void {

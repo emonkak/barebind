@@ -95,9 +95,9 @@ export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
 export class RepeatBinding<TSource, TKey, TValue>
   implements Binding<RepeatProps<TSource, TKey, TValue>>
 {
-  value: RepeatProps<TSource, TKey, TValue>;
+  private _props: RepeatProps<TSource, TKey, TValue>;
 
-  readonly part: Part.ChildNodePart;
+  private readonly _part: Part.ChildNodePart;
 
   private _pendingItems: Item<TKey, Slot<TValue>>[] = [];
 
@@ -109,27 +109,35 @@ export class RepeatBinding<TSource, TKey, TValue>
     props: RepeatProps<TSource, TKey, TValue>,
     part: Part.ChildNodePart,
   ) {
-    this.value = props;
-    this.part = part;
+    this._props = props;
+    this._part = part;
   }
 
   get type(): DirectiveType<RepeatProps<TSource, TKey, TValue>> {
     return RepeatDirective;
   }
 
-  shouldBind(value: RepeatProps<TSource, TKey, TValue>): boolean {
+  get value(): RepeatProps<TSource, TKey, TValue> {
+    return this._props;
+  }
+
+  get part(): Part.ChildNodePart {
+    return this._part;
+  }
+
+  shouldBind(props: RepeatProps<TSource, TKey, TValue>): boolean {
     return (
       this._memoizedItems === null ||
-      value.source !== this.value.source ||
-      value.keySelector !== this.value.keySelector ||
-      value.valueSelector !== this.value.valueSelector
+      props.source !== this._props.source ||
+      props.keySelector !== this._props.keySelector ||
+      props.valueSelector !== this._props.valueSelector
     );
   }
 
   connect(session: UpdateSession): void {
     const { context, rootScope } = session;
-    const document = this.part.node.ownerDocument;
-    const sourceItems = generateItems(this.value);
+    const document = this._part.node.ownerDocument;
+    const sourceItems = generateItems(this._props);
     const targetItems: Item<TKey, Slot<TValue>>[] = new Array(
       sourceItems.length,
     );
@@ -141,7 +149,7 @@ export class RepeatBinding<TSource, TKey, TValue>
         type: PartType.ChildNode,
         node: document.createComment(''),
         anchorNode: null,
-        namespaceURI: this.part.namespaceURI,
+        namespaceURI: this._part.namespaceURI,
       };
       const slot = context.resolveSlot(value, part);
       const item = {
@@ -167,7 +175,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     this._pendingItems = targetItems;
 
     if (hydrationTarget !== null) {
-      this.part.anchorNode = getAnchorNode(targetItems);
+      this._part.anchorNode = getAnchorNode(targetItems);
       this._memoizedItems = targetItems;
     }
   }
@@ -177,7 +185,7 @@ export class RepeatBinding<TSource, TKey, TValue>
     session: UpdateSession,
   ): void {
     const { context } = session;
-    const document = this.part.node.ownerDocument;
+    const document = this._part.node.ownerDocument;
     const sourceItems = generateItems(props);
     const oldTargetItems = this._pendingItems;
     const newTargetItems = reconcileItems(oldTargetItems, sourceItems, {
@@ -186,7 +194,7 @@ export class RepeatBinding<TSource, TKey, TValue>
           type: PartType.ChildNode,
           node: document.createComment(''),
           anchorNode: null,
-          namespaceURI: this.part.namespaceURI,
+          namespaceURI: this._part.namespaceURI,
         };
         const slot = context.resolveSlot(value, part);
         const item = {
@@ -235,7 +243,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       },
     });
 
-    this.value = props;
+    this._props = props;
     this._pendingItems = newTargetItems;
   }
 
@@ -252,18 +260,18 @@ export class RepeatBinding<TSource, TKey, TValue>
       switch (operation.type) {
         case OPERATION_INSERT: {
           const { item, referenceItem } = operation;
-          insertItem(item, referenceItem, this.part);
+          insertItem(item, referenceItem, this._part);
           item.value.commit();
           break;
         }
         case OPERATION_MOVE: {
           const { item, referenceItem } = operation;
-          moveItem(item, referenceItem, this.part);
+          moveItem(item, referenceItem, this._part);
           break;
         }
         case OPERATION_MOVE_AND_UPDATE: {
           const { item, referenceItem } = operation;
-          moveItem(item, referenceItem, this.part);
+          moveItem(item, referenceItem, this._part);
           item.value.commit();
           break;
         }
@@ -281,7 +289,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       }
     }
 
-    this.part.anchorNode = getAnchorNode(this._pendingItems);
+    this._part.anchorNode = getAnchorNode(this._pendingItems);
     this._memoizedItems = this._pendingItems;
     this._pendingOperations = [];
   }
@@ -295,7 +303,7 @@ export class RepeatBinding<TSource, TKey, TValue>
       }
     }
 
-    this.part.anchorNode = null;
+    this._part.anchorNode = null;
     this._pendingItems = [];
     this._memoizedItems = null;
     this._pendingOperations = [];

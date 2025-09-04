@@ -9,14 +9,14 @@ import {
 import { AbstractTemplate } from './template.js';
 
 export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
-  readonly precedingText: string;
+  private readonly _precedingText: string;
 
-  readonly followingText: string;
+  private readonly _followingText: string;
 
   constructor(precedingText: string = '', followingText: string = '') {
     super();
-    this.precedingText = precedingText;
-    this.followingText = followingText;
+    this._precedingText = precedingText;
+    this._followingText = followingText;
   }
 
   get arity(): 1 {
@@ -26,8 +26,8 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
   equals(other: unknown): boolean {
     return (
       other instanceof TextTemplate &&
-      other.precedingText === this.precedingText &&
-      other.followingText === this.followingText
+      other._precedingText === this._precedingText &&
+      other._followingText === this._followingText
     );
   }
 
@@ -41,8 +41,8 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     const textPart = {
       type: PartType.Text,
       node: splitText(target),
-      precedingText: this.precedingText,
-      followingText: this.followingText,
+      precedingText: this._precedingText,
+      followingText: this._followingText,
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
@@ -61,8 +61,8 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     const textPart = {
       type: PartType.Text,
       node: document.createTextNode(''),
-      precedingText: this.precedingText,
-      followingText: this.followingText,
+      precedingText: this._precedingText,
+      followingText: this._followingText,
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 

@@ -44,19 +44,23 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
  * @internal
  */
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
-  value: Signal<T>;
+  private _signal: Signal<T>;
 
-  scope: Scope | null = null;
+  private _scope: Scope | null = null;
 
-  pendingLanes: Lanes = Lanes.NoLanes;
+  private _pendingLanes: Lanes = Lanes.NoLanes;
 
   private readonly _slot: Slot<T>;
 
   private _subscription: Subscription | null = null;
 
-  constructor(value: Signal<T>, slot: Slot<T>) {
-    this.value = value;
+  constructor(signal: Signal<T>, slot: Slot<T>) {
+    this._signal = signal;
     this._slot = slot;
+  }
+
+  get value(): Signal<T> {
+    return this._signal;
   }
 
   get type(): DirectiveType<Signal<T>> {
@@ -67,20 +71,33 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._slot.part;
   }
 
-  resume(session: UpdateSession): void {
-    if (this._slot.reconcile(this.value.value, session)) {
-      session.frame.mutationEffects.push(this._slot);
-    }
-    this.pendingLanes = Lanes.NoLanes;
+  get scope(): Scope | null {
+    return this._scope;
   }
 
-  shouldBind(value: Signal<T>): boolean {
-    return this._subscription === null || value !== this.value;
+  get pendingLanes(): Lanes {
+    return this._pendingLanes;
+  }
+
+  set pendingLanes(value: Lanes) {
+    this._pendingLanes = value;
+  }
+
+  resume(session: UpdateSession): void {
+    if (this._slot.reconcile(this._signal.value, session)) {
+      session.frame.mutationEffects.push(this._slot);
+    }
+    this._pendingLanes = Lanes.NoLanes;
+  }
+
+  shouldBind(signal: Signal<T>): boolean {
+    return this._subscription === null || signal !== this._signal;
   }
 
   connect(session: UpdateSession): void {
     this._slot.connect(session);
-    this.scope = session.scope;
+
+    this._scope = session.scope;
     this._subscription = this._subscribeSignal(session);
   }
 
@@ -88,8 +105,8 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription?.();
     this._slot.reconcile(signal.value, session);
 
-    this.value = signal;
-    this.scope = session.scope;
+    this._signal = signal;
+    this._scope = session.scope;
     this._subscription = this._subscribeSignal(session);
   }
 
@@ -97,7 +114,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription?.();
     this._slot.disconnect(session);
 
-    this.scope = null;
+    this._scope = null;
     this._subscription = null;
   }
 
@@ -111,7 +128,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscribeSignal(session: UpdateSession): Subscription {
     const { context } = session;
-    return this.value.subscribe(() => {
+    return this._signal.subscribe(() => {
       context.scheduleUpdate(this);
     });
   }

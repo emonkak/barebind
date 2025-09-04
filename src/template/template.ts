@@ -43,33 +43,31 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   ): TemplateResult;
 
   resolveBinding(
-    value: TBinds,
+    binds: TBinds,
     part: Part,
     _context: DirectiveContext,
   ): Binding<TBinds> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(
         this,
-        value,
+        binds,
         part,
         `${this.constructor.name} must be used in a child node part.`,
       );
     }
 
-    return new TemplateBinding(this, value, part);
+    return new TemplateBinding(this, binds, part);
   }
 }
 
 export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect
 {
-  readonly type: Template<TBinds>;
+  private readonly _type: Template<TBinds>;
 
-  value: TBinds;
+  private _binds: TBinds;
 
-  readonly part: Part.ChildNodePart;
-
-  private _memoizedValue: TBinds | null = null;
+  private readonly _part: Part.ChildNodePart;
 
   private _pendingResult: TemplateResult | null = null;
 
@@ -80,13 +78,25 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     binds: TBinds,
     part: Part.ChildNodePart,
   ) {
-    this.type = template;
-    this.value = binds;
-    this.part = part;
+    this._type = template;
+    this._binds = binds;
+    this._part = part;
   }
 
-  shouldBind(value: TBinds): boolean {
-    return this._memoizedValue === null || value !== this._memoizedValue;
+  get type(): Template<TBinds> {
+    return this._type;
+  }
+
+  get value(): TBinds {
+    return this._binds;
+  }
+
+  get part(): Part.ChildNodePart {
+    return this._part;
+  }
+
+  shouldBind(binds: TBinds): boolean {
+    return this._memoizedResult === null || binds !== this._binds;
   }
 
   bind(binds: TBinds, session: UpdateSession): void {
@@ -98,24 +108,23 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
     }
 
-    this.value = binds;
+    this._binds = binds;
   }
 
   connect(session: UpdateSession): void {
     const hydrationTarget = getHydrationTarget(session.rootScope);
 
     if (hydrationTarget !== null) {
-      this._pendingResult = this.type.hydrate(
-        this.value,
-        this.part,
+      this._pendingResult = this._type.hydrate(
+        this._binds,
+        this._part,
         hydrationTarget,
         session,
       );
-      this.part.anchorNode = getAnchorNode(this._pendingResult);
-      this._memoizedValue = this.value;
+      this._part.anchorNode = getAnchorNode(this._pendingResult);
       this._memoizedResult = this._pendingResult;
     } else {
-      this._pendingResult = this.type.render(this.value, this.part, session);
+      this._pendingResult = this._type.render(this._binds, this._part, session);
     }
   }
 
@@ -134,17 +143,16 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       const { childNodes, slots } = this._pendingResult;
 
       if (this._memoizedResult === null) {
-        this.part.node.before(...childNodes);
+        this._part.node.before(...childNodes);
       }
 
       for (let i = 0, l = slots.length; i < l; i++) {
         slots[i]!.commit();
       }
 
-      this.part.anchorNode = getAnchorNode(this._pendingResult);
+      this._part.anchorNode = getAnchorNode(this._pendingResult);
     }
 
-    this._memoizedValue = this.value;
     this._memoizedResult = this._pendingResult;
   }
 
@@ -170,7 +178,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       }
     }
 
-    this.part.anchorNode = null;
+    this._part.anchorNode = null;
     this._memoizedResult = null;
   }
 }

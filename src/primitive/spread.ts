@@ -41,37 +41,45 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
 };
 
 export class SpreadBinding implements Binding<SpreadProps> {
-  value: SpreadProps;
+  private _props: SpreadProps;
 
-  readonly part: Part.ElementPart;
+  private readonly _part: Part.ElementPart;
 
   private _pendingSlots: Map<string, Slot<unknown>> = new Map();
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
-  constructor(value: SpreadProps, part: Part.ElementPart) {
-    this.value = value;
-    this.part = part;
+  constructor(props: SpreadProps, part: Part.ElementPart) {
+    this._props = props;
+    this._part = part;
   }
 
   get type(): Primitive<SpreadProps> {
     return SpreadPrimitive;
   }
 
-  shouldBind(value: SpreadProps): boolean {
-    return this._memoizedSlots === null || value !== this.value;
+  get value(): SpreadProps {
+    return this._props;
+  }
+
+  get part(): Part.ElementPart {
+    return this._part;
+  }
+
+  shouldBind(props: SpreadProps): boolean {
+    return this._memoizedSlots === null || props !== this._props;
   }
 
   connect(session: UpdateSession): void {
     const { context } = session;
     const slots = new Map();
 
-    for (const key of Object.keys(this.value)) {
-      const value = this.value[key];
+    for (const key of Object.keys(this._props)) {
+      const value = this._props[key];
       if (value === undefined) {
         continue;
       }
-      const part = resolveNamedPart(key, this.part.node);
+      const part = resolveNamedPart(key, this._part.node);
       const slot = context.resolveSlot(value, part);
       slot.connect(session);
       slots.set(key, slot);
@@ -101,14 +109,14 @@ export class SpreadBinding implements Binding<SpreadProps> {
       if (slot !== undefined) {
         slot.reconcile(prop, session);
       } else {
-        const part = resolveNamedPart(key, this.part.node);
+        const part = resolveNamedPart(key, this._part.node);
         slot = context.resolveSlot(prop, part);
         slot.connect(session);
       }
       newSlots.set(key, slot);
     }
 
-    this.value = props;
+    this._props = props;
     this._pendingSlots = newSlots;
   }
 

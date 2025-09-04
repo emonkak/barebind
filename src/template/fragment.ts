@@ -10,15 +10,15 @@ import {
 import { AbstractTemplate } from './template.js';
 
 export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
-  readonly templates: readonly Template<readonly unknown[]>[];
+  private readonly _templates: readonly Template<readonly unknown[]>[];
 
   constructor(templates: readonly Template<readonly unknown[]>[]) {
     super();
-    this.templates = templates;
+    this._templates = templates;
   }
 
   get arity(): number {
-    return this.templates.reduce(
+    return this._templates.reduce(
       (arity, template) => arity + template.arity,
       0,
     );
@@ -27,7 +27,7 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
   equals(other: unknown): boolean {
     return (
       other instanceof FragmentTemplate &&
-      sequentialEqual(this.templates, other.templates, areDirectiveTypesEqual)
+      sequentialEqual(this._templates, other._templates, areDirectiveTypesEqual)
     );
   }
 
@@ -41,8 +41,8 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     const slots = [];
     let bindIndex = 0;
 
-    for (let i = 0, l = this.templates.length; i < l; i++) {
-      const template = this.templates[i]!;
+    for (let i = 0, l = this._templates.length; i < l; i++) {
+      const template = this._templates[i]!;
       const result = template.hydrate(
         binds.slice(bindIndex, bindIndex + template.arity),
         part,
@@ -66,8 +66,8 @@ export class FragmentTemplate extends AbstractTemplate<readonly unknown[]> {
     const slots = [];
     let bindIndex = 0;
 
-    for (let i = 0, l = this.templates.length; i < l; i++) {
-      const template = this.templates[i]!;
+    for (let i = 0, l = this._templates.length; i < l; i++) {
+      const template = this._templates[i]!;
       const result = template.render(
         binds.slice(bindIndex, bindIndex + template.arity),
         part,

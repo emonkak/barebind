@@ -25,7 +25,7 @@ export const RefPrimitive: Primitive<ElementRef> = {
     }
   },
   resolveBinding(
-    value: ElementRef,
+    ref: ElementRef,
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
@@ -35,12 +35,12 @@ export const RefPrimitive: Primitive<ElementRef> = {
     ) {
       throw new DirectiveError(
         RefPrimitive,
-        value,
+        ref,
         part,
         'RefPrimitive must be used in ":ref" attribute part.',
       );
     }
-    return new RefBinding(value, part);
+    return new RefBinding(ref, part);
   },
 };
 
@@ -56,8 +56,8 @@ export class RefBinding extends PrimitiveBinding<
     return RefPrimitive;
   }
 
-  shouldBind(value: ElementRef): boolean {
-    return value !== this._memoizedValue;
+  shouldBind(ref: ElementRef): boolean {
+    return ref !== this._memoizedValue;
   }
 
   commit(): void {
