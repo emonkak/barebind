@@ -92,9 +92,9 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._pendingLanes = value;
   }
 
-  resume(session: UpdateSession): void {
-    if (this._slot.reconcile(this._signal.value, session)) {
-      session.frame.mutationEffects.push(this._slot);
+  resume(context: UpdateSession): void {
+    if (this._slot.reconcile(this._signal.value, context)) {
+      context.frame.mutationEffects.push(this._slot);
     }
     this._pendingLanes = Lanes.NoLanes;
   }
@@ -150,20 +150,20 @@ export abstract class Signal<T>
 
   abstract get version(): number;
 
-  [$customHook](session: RenderContext): T {
+  [$customHook](context: RenderContext): T {
     const value = this.value;
-    const snapshot = session.useRef(value);
+    const snapshot = context.useRef(value);
 
-    session.useLayoutEffect(() => {
+    context.useLayoutEffect(() => {
       snapshot.current = value;
     }, [value]);
 
-    session.useEffect(() => {
+    context.useEffect(() => {
       // The guard for batch updates with microtasks.
       let guard = true;
       const checkForChanges = () => {
         if (!Object.is(this.value, snapshot.current)) {
-          session.forceUpdate();
+          context.forceUpdate();
         }
         guard = false;
       };

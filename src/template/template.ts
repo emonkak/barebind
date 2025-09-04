@@ -61,7 +61,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
 export class TemplateBinding<TBinds extends readonly unknown[]>
   implements Binding<TBinds>, Effect
 {
-  private readonly _type: Template<TBinds>;
+  private readonly _template: Template<TBinds>;
 
   private _binds: TBinds;
 
@@ -76,13 +76,13 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     binds: TBinds,
     part: Part.ChildNodePart,
   ) {
-    this._type = template;
+    this._template = template;
     this._binds = binds;
     this._part = part;
   }
 
   get type(): Template<TBinds> {
-    return this._type;
+    return this._template;
   }
 
   get value(): TBinds {
@@ -112,7 +112,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       const targetTree = session.rootScope.getHydrationTarget();
 
       if (targetTree !== null) {
-        this._pendingResult = this._type.hydrate(
+        this._pendingResult = this._template.hydrate(
           this._binds,
           this._part,
           targetTree,
@@ -121,7 +121,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         this._part.anchorNode = getAnchorNode(this._pendingResult);
         this._memoizedResult = this._pendingResult;
       } else {
-        this._pendingResult = this._type.render(
+        this._pendingResult = this._template.render(
           this._binds,
           this._part,
           session,

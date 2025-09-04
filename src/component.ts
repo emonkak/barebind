@@ -50,7 +50,7 @@ export function createComponent<TProps, TResult = unknown>(
 export class ComponentBinding<TProps, TResult>
   implements Binding<TProps>, Coroutine
 {
-  private readonly _type: Component<TProps, TResult>;
+  private readonly _component: Component<TProps, TResult>;
 
   private _props: TProps;
 
@@ -71,13 +71,13 @@ export class ComponentBinding<TProps, TResult>
     props: TProps,
     part: Part,
   ) {
-    this._type = component;
+    this._component = component;
     this._props = props;
     this._part = part;
   }
 
   get type(): Component<TProps, TResult> {
-    return this._type;
+    return this._component;
   }
 
   get value(): TProps {
@@ -109,7 +109,7 @@ export class ComponentBinding<TProps, TResult>
     const subscope = new Scope(this._scope);
     const subsession = createUpdateSession(frame, rootScope, subscope, context);
     const result = context.renderComponent(
-      this._type,
+      this._component,
       this._props,
       this._hooks,
       this,
@@ -138,7 +138,7 @@ export class ComponentBinding<TProps, TResult>
   shouldBind(props: TProps): boolean {
     return (
       this._memoizedValue === null ||
-      !this._type.shouldSkipUpdate(props, this._memoizedValue)
+      !this._component.shouldSkipUpdate(props, this._memoizedValue)
     );
   }
 

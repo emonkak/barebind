@@ -50,9 +50,10 @@ export class Root<T> {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        const { frame } = session;
         this._slot.connect(session);
-        frame.mutationEffects.push(new HydrateSlot(this._slot, targetTree));
+        session.frame.mutationEffects.push(
+          new HydrateSlot(this._slot, targetTree),
+        );
       },
     };
     scope.setHydrationTarget(targetTree);
