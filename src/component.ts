@@ -6,6 +6,7 @@ import {
   type Coroutine,
   createScope,
   createUpdateSession,
+  DETACHED_SCOPE,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -57,7 +58,7 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _part: Part;
 
-  private _scope: Scope | null = null;
+  private _scope: Scope = DETACHED_SCOPE;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -89,7 +90,7 @@ export class ComponentBinding<TProps, TResult>
     return this._part;
   }
 
-  get scope(): Scope | null {
+  get scope(): Scope {
     return this._scope;
   }
 
@@ -171,6 +172,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.disconnect(session);
 
+    this._scope = DETACHED_SCOPE;
     this._pendingLanes = Lanes.NoLanes;
     this._hooks = [];
   }

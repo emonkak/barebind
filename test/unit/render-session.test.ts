@@ -20,14 +20,14 @@ describe('RenderSession', () => {
       const updater = new TestUpdater();
 
       SESSION: {
-        updater.startUpdate(({ frame, scope }, coroutine) => {
+        updater.startUpdate(({ frame, scope, context }, coroutine) => {
           const hooks: Hook[] = [];
           const session = new RenderSession(
             hooks,
             coroutine,
             frame,
             scope,
-            updater.runtime,
+            context,
           );
 
           session.catchError(handler);
@@ -39,7 +39,7 @@ describe('RenderSession', () => {
           frame.pendingCoroutines.push(
             new MockCoroutine(() => {
               throw error;
-            }),
+            }, scope),
           );
         });
 
@@ -54,7 +54,7 @@ describe('RenderSession', () => {
       expect(() => {
         const session = renderer.startRender((session) => session);
         session.catchError(() => {});
-      }).toThrow('Error handlers can only be added during rendering.');
+      }).toThrow(TypeError);
     });
   });
 
@@ -159,13 +159,17 @@ describe('RenderSession', () => {
       }
     });
 
-    it('throws an error when trying to get a shared context outside of rendering', () => {
+    it('always returns undefined when trying to get a shared context outside of rendering', () => {
       const renderer = new TestRenderer();
 
-      expect(() => {
-        const session = renderer.startRender((session) => session);
-        session.getSharedContext('foo');
-      }).toThrow('Shared contexts are only available during rendering.');
+      SESSION: {
+        const session = renderer.startRender((session) => {
+          session.setSharedContext('foo', 123);
+          return session;
+        });
+
+        expect(session.getSharedContext('foo')).toBe(undefined);
+      }
     });
 
     it('throws an error when trying to set a shared context outside of rendering', () => {
@@ -174,7 +178,7 @@ describe('RenderSession', () => {
       expect(() => {
         const session = renderer.startRender((session) => session);
         session.setSharedContext('foo', 123);
-      }).toThrow('Shared contexts can only be set during rendering.');
+      }).toThrow(TypeError);
     });
   });
 

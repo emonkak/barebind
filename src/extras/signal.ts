@@ -6,6 +6,7 @@ import {
   type Binding,
   type Coroutine,
   type CustomHookObject,
+  DETACHED_SCOPE,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -46,7 +47,7 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   private _signal: Signal<T>;
 
-  private _scope: Scope | null = null;
+  private _scope: Scope = DETACHED_SCOPE;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -71,7 +72,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return this._slot.part;
   }
 
-  get scope(): Scope | null {
+  get scope(): Scope {
     return this._scope;
   }
 
@@ -114,7 +115,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription?.();
     this._slot.disconnect(session);
 
-    this._scope = null;
+    this._scope = DETACHED_SCOPE;
     this._subscription = null;
   }
 

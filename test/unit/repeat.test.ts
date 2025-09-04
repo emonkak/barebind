@@ -153,9 +153,12 @@ describe('RepeatBinding', () => {
 
       setHydrationTarget(scope, hydrationTarget);
 
-      updater.startUpdate((session) => {
-        binding.connect(session);
-      }, scope);
+      updater.startUpdate(
+        (session) => {
+          binding.connect(session);
+        },
+        { scope },
+      );
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(

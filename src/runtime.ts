@@ -4,7 +4,6 @@ import {
   CommitPhase,
   type Component,
   type Coroutine,
-  createScope,
   createUpdateSession,
   type Directive,
   type Effect,
@@ -145,7 +144,7 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const rootScope = coroutine.scope ?? createScope();
+      const rootScope = coroutine.scope;
       const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
@@ -173,7 +172,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope ?? rootScope, error);
+                handleError(coroutine.scope, error);
               }
             }
 
@@ -260,7 +259,7 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const rootScope = coroutine.scope ?? createScope();
+      const rootScope = coroutine.scope;
       const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
@@ -288,7 +287,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope ?? rootScope, error);
+                handleError(coroutine.scope, error);
               }
             }
 

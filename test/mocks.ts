@@ -7,6 +7,7 @@ import {
   type Binding,
   type CommitPhase,
   type Coroutine,
+  createScope,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -212,13 +213,13 @@ export class MockBinding<T> implements Binding<T> {
 export class MockCoroutine implements Coroutine {
   callback: (this: Coroutine, session: UpdateSession) => void;
 
-  scope: Scope | null = null;
+  scope: Scope;
 
   pendingLanes: Lanes = Lanes.AllLanes;
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
-    scope: Scope | null = null,
+    scope: Scope = createScope(),
   ) {
     this.callback = callback;
     this.scope = scope;

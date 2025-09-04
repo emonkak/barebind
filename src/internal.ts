@@ -6,6 +6,11 @@ export const $customHook: unique symbol = Symbol('$customHook');
 
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
+/**
+ * @internal
+ */
+export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
+
 export interface Bindable<T = unknown> {
   [$toDirective](part: Part, context: DirectiveContext): Directive<T>;
 }
@@ -70,7 +75,7 @@ export interface Component<TProps, TResult = unknown>
 }
 
 export interface Coroutine {
-  readonly scope: Scope | null;
+  readonly scope: Scope;
   pendingLanes: Lanes;
   resume(session: UpdateSession): void;
 }

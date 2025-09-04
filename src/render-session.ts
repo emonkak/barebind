@@ -5,6 +5,7 @@ import {
   addErrorHandler,
   type Cleanup,
   type Coroutine,
+  DETACHED_SCOPE,
   type Effect,
   type ErrorHandler,
   getSharedContext,
@@ -32,7 +33,7 @@ export class RenderSession implements RenderContext {
 
   private readonly _frame: RenderFrame;
 
-  private _scope: Scope | null;
+  private _scope: Scope;
 
   private readonly _context: SessionContext;
 
@@ -53,10 +54,6 @@ export class RenderSession implements RenderContext {
   }
 
   catchError(handler: ErrorHandler): void {
-    if (this._scope === null) {
-      throw new Error('Error handlers can only be added during rendering.');
-    }
-
     addErrorHandler(this._scope, handler);
   }
 
@@ -93,7 +90,7 @@ export class RenderSession implements RenderContext {
       Object.freeze(this._hooks);
     }
 
-    this._scope = null;
+    this._scope = DETACHED_SCOPE;
     this._hookIndex++;
   }
 
@@ -117,10 +114,6 @@ export class RenderSession implements RenderContext {
   }
 
   getSharedContext(key: unknown): unknown {
-    if (this._scope === null) {
-      throw new Error('Shared contexts are only available during rendering.');
-    }
-
     return getSharedContext(this._scope, key);
   }
 
@@ -152,10 +145,6 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext(key: unknown, value: unknown): void {
-    if (this._scope === null) {
-      throw new Error('Shared contexts can only be set during rendering.');
-    }
-
     setSharedContext(this._scope, key, value);
   }
 

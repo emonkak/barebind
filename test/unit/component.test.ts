@@ -156,7 +156,6 @@ describe('ComponentBinding', () => {
             session.frame.pendingCoroutines.push(binding);
             session.frame.mutationEffects.push(binding);
           },
-          null,
           { priority: 'user-blocking' },
         );
 

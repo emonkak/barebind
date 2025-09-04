@@ -452,10 +452,13 @@ describe('TemplateBinding', () => {
 
       setHydrationTarget(scope, hydrationTarget);
 
-      updater.startUpdate((session) => {
-        binding.connect(session);
-        binding.commit();
-      }, scope);
+      updater.startUpdate(
+        (session) => {
+          binding.connect(session);
+          binding.commit();
+        },
+        { scope },
+      );
 
       expect(hydrateSpy).toHaveBeenCalledOnce();
       expect(hydrateSpy).toHaveBeenCalledWith(

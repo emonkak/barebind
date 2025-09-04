@@ -13,6 +13,10 @@ import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
 
+type WithScopeOption<T> = T & {
+  scope?: Scope;
+};
+
 export class TestRenderer {
   readonly runtime: Runtime;
 
@@ -39,22 +43,25 @@ export class TestRenderer {
 
   startRender<T>(
     callback: (session: RenderSession) => T,
-    options: ScheduleOptions = {},
+    options: WithScopeOption<ScheduleOptions> = {},
   ): T {
-    const coroutine = new MockCoroutine(({ frame, scope }) => {
-      const session = new RenderSession(
-        this.hooks,
-        coroutine,
-        frame,
-        scope,
-        this.runtime,
-      );
-      addErrorHandler(scope, (error) => {
-        thrownError = error;
-      });
-      returnValue = callback(session);
-      session.finalize();
-    });
+    const coroutine = new MockCoroutine(
+      ({ frame, rootScope, scope, context }) => {
+        const session = new RenderSession(
+          this.hooks,
+          coroutine,
+          frame,
+          scope,
+          context,
+        );
+        addErrorHandler(rootScope, (error) => {
+          thrownError = error;
+        });
+        returnValue = callback(session);
+        session.finalize();
+      },
+      options.scope,
+    );
     let returnValue: T;
     let thrownError: unknown;
 
@@ -85,15 +92,14 @@ export class TestUpdater {
 
   startUpdate<T>(
     callback: (session: UpdateSession, coroutine: Coroutine) => T,
-    scope: Scope | null = null,
-    options: ScheduleOptions = {},
+    options: WithScopeOption<ScheduleOptions> = {},
   ): T {
     const coroutine = new MockCoroutine((session) => {
-      addErrorHandler(session.scope, (error) => {
+      addErrorHandler(session.rootScope, (error) => {
         thrownError = error;
       });
       returnValue = callback(session, coroutine);
-    }, scope);
+    }, options.scope);
     let returnValue: T;
     let thrownError: unknown;
 
