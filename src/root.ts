@@ -1,8 +1,7 @@
-import { createHydrationTarget, mountMarkerNode } from './hydration.js';
+import { createTreeWalker, mountMarkerNode } from './hydration.js';
 import {
   type Coroutine,
   type Effect,
-  type HydrationTarget,
   Lanes,
   PartType,
   type ScheduleOptions,
@@ -46,7 +45,7 @@ export class Root<T> {
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
     const scope = new Scope();
-    const targetTree = createHydrationTarget(this._container);
+    const targetTree = createTreeWalker(this._container);
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
@@ -119,9 +118,9 @@ export class Root<T> {
 class HydrateSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
-  private readonly _targetTree: HydrationTarget;
+  private readonly _targetTree: TreeWalker;
 
-  constructor(slot: Slot<T>, targetTree: HydrationTarget) {
+  constructor(slot: Slot<T>, targetTree: TreeWalker) {
     this._slot = slot;
     this._targetTree = targetTree;
   }

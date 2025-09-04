@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createHydrationTarget } from '@/hydration.js';
+import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { FragmentTemplate } from '@/template/fragment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -69,7 +69,7 @@ describe('FragmentTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = document.createElement('div');
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const hydrationSpys = innerTemplates.map((template) =>

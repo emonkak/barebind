@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
@@ -36,7 +36,7 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
@@ -69,7 +69,7 @@ describe('TextTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {

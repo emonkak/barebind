@@ -34,7 +34,7 @@ export namespace Boundary {
   export interface HydrationBoundary {
     type: typeof BoundaryType.Hydration;
     next: Boundary | null;
-    targetTree: HydrationTarget;
+    targetTree: TreeWalker;
   }
 
   export interface SharedContextBoundary {
@@ -160,8 +160,6 @@ export const HookType = {
 } as const;
 
 export type HookType = (typeof HookType)[keyof typeof HookType];
-
-export type HydrationTarget = TreeWalker;
 
 export type InitialState<T> = [T] extends [Function] ? () => T : (() => T) | T;
 
@@ -404,7 +402,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: HydrationTarget,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 }
@@ -458,7 +456,7 @@ export class Scope {
     };
   }
 
-  getHydrationTarget(): HydrationTarget | null {
+  getHydrationTarget(): TreeWalker | null {
     for (
       let boundary = this._boundary;
       boundary !== null;
@@ -518,7 +516,7 @@ export class Scope {
     handle(error);
   }
 
-  setHydrationTarget(targetTree: HydrationTarget): void {
+  setHydrationTarget(targetTree: TreeWalker): void {
     this._boundary = {
       type: BoundaryType.Hydration,
       next: this._boundary,

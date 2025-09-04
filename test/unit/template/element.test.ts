@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTarget } from '@/hydration.js';
+import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { Element, ElementTemplate } from '@/template/element.js';
 import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
@@ -55,7 +55,7 @@ describe('ElementTemplate', () => {
         {},
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {

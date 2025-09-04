@@ -1,13 +1,13 @@
 import { formatNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
+  createTreeWalker,
   mountMarkerNode,
   splitText,
   treatNodeName,
   treatNodeType,
 } from '../hydration.js';
 import {
-  type HydrationTarget,
   type Part,
   PartType,
   type Slot,
@@ -144,7 +144,7 @@ export class TaggedTemplate<
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: HydrationTarget,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
@@ -361,13 +361,6 @@ function createMarker(placeholder: string): string {
   return '??' + placeholder + '??';
 }
 
-function createTreeWalker(node: Node): TreeWalker {
-  return node.ownerDocument!.createTreeWalker(
-    node,
-    NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
-  );
-}
-
 function extractCaseSensitiveAttributeName(s: string): string {
   /* v8 ignore next @preserve */
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0] ?? s;
@@ -485,10 +478,10 @@ function parseChildren(
   strings: readonly string[],
   binds: readonly unknown[],
   marker: string,
-  rootNode: Node,
+  fragment: DocumentFragment,
 ): Hole[] {
-  const document = rootNode.ownerDocument!;
-  const sourceTree = createTreeWalker(rootNode);
+  const document = fragment.ownerDocument!;
+  const sourceTree = createTreeWalker(fragment);
   const holes: Hole[] = [];
   let nextNode = sourceTree.nextNode() as ChildNode | null;
   let index = 0;

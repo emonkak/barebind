@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  createHydrationTarget,
-  treatNodeName,
-  treatNodeType,
-} from '@/hydration.js';
+import { createTreeWalker, treatNodeName, treatNodeType } from '@/hydration.js';
 
 describe('treatNodeName()', () => {
   it.each([
@@ -14,7 +10,7 @@ describe('treatNodeName()', () => {
   ] as const)(
     'asserts that the node is the expected name',
     (expectedName, node) => {
-      const targetTree = createHydrationTarget(document.createElement('div'));
+      const targetTree = createTreeWalker(document.createElement('div'));
       expect(treatNodeName(expectedName, node, targetTree)).toBe(node);
     },
   );
@@ -29,7 +25,7 @@ describe('treatNodeName()', () => {
   ] as const)(
     'throws an error if the node is not the expected name',
     (expectedName, node) => {
-      const targetTree = createHydrationTarget(document.createElement('div'));
+      const targetTree = createTreeWalker(document.createElement('div'));
       expect(() => {
         treatNodeName(expectedName, node, targetTree);
       }).toThrow('Hydration is failed because the node type is mismatched.');
@@ -45,7 +41,7 @@ describe('treatNodeType()', () => {
   ] as const)(
     'asserts that the node is the expected type',
     (expectedType, node) => {
-      const targetTree = createHydrationTarget(document.createElement('div'));
+      const targetTree = createTreeWalker(document.createElement('div'));
       expect(treatNodeType(expectedType, node, targetTree)).toBe(node);
     },
   );
@@ -60,7 +56,7 @@ describe('treatNodeType()', () => {
   ] as const)(
     'throws an error if the node is not the expected type',
     (expectedType, node) => {
-      const targetTree = createHydrationTarget(document.createElement('div'));
+      const targetTree = createTreeWalker(document.createElement('div'));
       expect(() => {
         treatNodeType(expectedType, node, targetTree);
       }).toThrow('Hydration is failed because the node type is mismatched.');

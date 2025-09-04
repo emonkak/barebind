@@ -2,7 +2,6 @@ import { DirectiveSpecifier } from '../directive.js';
 import { mountMarkerNode, treatNodeName } from '../hydration.js';
 import {
   type DirectiveType,
-  type HydrationTarget,
   type Part,
   PartType,
   type TemplateResult,
@@ -43,7 +42,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    targetTree: HydrationTarget,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;

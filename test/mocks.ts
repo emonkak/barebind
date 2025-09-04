@@ -11,7 +11,6 @@ import {
   type DirectiveContext,
   type DirectiveType,
   type Effect,
-  type HydrationTarget,
   Lanes,
   type Part,
   PartType,
@@ -376,7 +375,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
-    _targetTree: HydrationTarget,
+    _targetTree: TreeWalker,
     _session: UpdateSession,
   ): TemplateResult {
     return {

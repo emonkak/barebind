@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTarget, HydrationError } from '@/hydration.js';
+import { createTreeWalker, HydrationError } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { TaggedTemplate } from '@/template/tagged.js';
 import {
@@ -494,7 +494,7 @@ describe('TaggedTemplate', () => {
         ),
         document.createComment('corge'),
       );
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
@@ -616,7 +616,7 @@ describe('TaggedTemplate', () => {
         {},
         createElement('div', {}, 'foo'),
       );
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
@@ -642,7 +642,7 @@ describe('TaggedTemplate', () => {
         '(foo, bar, baz)',
         createElement('div', {}, '[qux, quux]'),
       );
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
@@ -730,7 +730,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
@@ -759,7 +759,7 @@ describe('TaggedTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, 'foo');
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       expect(() => {
@@ -792,7 +792,7 @@ describe('TaggedTemplate', () => {
           anchorNode: null,
           namespaceURI: HTML_NAMESPACE_URI,
         };
-        const targetTree = createHydrationTarget(container);
+        const targetTree = createTreeWalker(container);
         const updater = new TestUpdater();
 
         expect(() => {

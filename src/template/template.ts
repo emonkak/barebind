@@ -4,7 +4,6 @@ import {
   type DirectiveContext,
   type Effect,
   getStartNode,
-  type HydrationTarget,
   type Part,
   PartType,
   type Template,
@@ -37,7 +36,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    targetTree: HydrationTarget,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult;
 

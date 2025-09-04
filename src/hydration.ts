@@ -1,10 +1,9 @@
 import { formatNode } from './debug/node.js';
-import type { HydrationTarget } from './internal.js';
 
 export class HydrationError extends Error {
-  readonly targetTree: HydrationTarget;
+  readonly targetTree: TreeWalker;
 
-  constructor(targetTree: HydrationTarget, message: string) {
+  constructor(targetTree: TreeWalker, message: string) {
     DEBUG: {
       message +=
         '\n' + formatNode(targetTree.currentNode, '[[ERROR IN HERE!]]');
@@ -22,21 +21,17 @@ interface NodeTypeMap {
   [Node.TEXT_NODE]: Text;
 }
 
-/**
- * @internal
- */
-export function createHydrationTarget(container: Element): HydrationTarget {
+export function createTreeWalker(
+  container: DocumentFragment | Element,
+): TreeWalker {
   return container.ownerDocument.createTreeWalker(
     container,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT | NodeFilter.SHOW_COMMENT,
   );
 }
 
-/**
- * @internal
- */
 export function mountMarkerNode(
-  targetTree: HydrationTarget,
+  targetTree: TreeWalker,
   markerNode: Comment,
 ): void {
   treatNodeType(
@@ -47,10 +42,7 @@ export function mountMarkerNode(
   targetTree.currentNode = markerNode;
 }
 
-/**
- * @internal
- */
-export function splitText(targetTree: HydrationTarget): Text {
+export function splitText(targetTree: TreeWalker): Text {
   const previousNode = targetTree.currentNode;
   const currentNode = targetTree.nextNode();
 
@@ -67,13 +59,10 @@ export function splitText(targetTree: HydrationTarget): Text {
   }
 }
 
-/**
- * @internal
- */
 export function treatNodeName(
   expectedName: string,
   node: Node | null,
-  targetTree: HydrationTarget,
+  targetTree: TreeWalker,
 ): Node {
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
@@ -85,13 +74,10 @@ export function treatNodeName(
   return node;
 }
 
-/**
- * @internal
- */
 export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
   expectedType: TExpectedType,
   node: Node | null,
-  targetTree: HydrationTarget,
+  targetTree: TreeWalker,
 ): NodeTypeMap[TExpectedType] {
   if (node === null || node.nodeType !== expectedType) {
     throw new HydrationError(

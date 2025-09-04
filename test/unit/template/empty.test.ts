@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createHydrationTarget } from '@/hydration.js';
+import { createTreeWalker } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -34,7 +34,7 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const targetTree = createHydrationTarget(document.createElement('div'));
+      const targetTree = createTreeWalker(document.createElement('div'));
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {

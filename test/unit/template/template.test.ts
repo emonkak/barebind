@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createHydrationTarget } from '@/hydration.js';
+import { createTreeWalker } from '@/hydration.js';
 import { PartType, Scope } from '@/internal.js';
 import {
   getNamespaceURIByTagName,
@@ -444,7 +444,7 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
       const scope = new Scope();
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({

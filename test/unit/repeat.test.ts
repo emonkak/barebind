@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTarget } from '@/hydration.js';
+import { createTreeWalker } from '@/hydration.js';
 import { type Part, PartType, Scope } from '@/internal.js';
 import {
   moveChildNodes,
@@ -283,7 +283,7 @@ describe('RepeatBinding', () => {
         document.createComment(''),
       );
       const scope = new Scope();
-      const targetTree = createHydrationTarget(container);
+      const targetTree = createTreeWalker(container);
       const updater = new TestUpdater();
 
       scope.setHydrationTarget(targetTree);

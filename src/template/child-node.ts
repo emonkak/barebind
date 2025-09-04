@@ -1,7 +1,6 @@
 import { mountMarkerNode } from '../hydration.js';
 import {
   type DirectiveType,
-  type HydrationTarget,
   type Part,
   PartType,
   type TemplateResult,
@@ -21,7 +20,7 @@ export class ChildNodeTemplate<T> extends AbstractTemplate<[T]> {
   hydrate(
     binds: readonly [unknown],
     part: Part.ChildNodePart,
-    targetTree: HydrationTarget,
+    targetTree: TreeWalker,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
