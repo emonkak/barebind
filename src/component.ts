@@ -60,8 +60,6 @@ export class ComponentBinding<TProps, TResult>
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
-  private _memoizedValue: TProps | null = null;
-
   private _slot: Slot<TResult> | null = null;
 
   private _hooks: Hook[] = [];
@@ -132,13 +130,12 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._pendingLanes &= ~frame.lanes;
-    this._memoizedValue = this._props;
   }
 
   shouldBind(props: TProps): boolean {
     return (
-      this._memoizedValue === null ||
-      !this._component.shouldSkipUpdate(props, this._memoizedValue)
+      this._hooks.length === 0 ||
+      !this._component.shouldSkipUpdate(props, this._props)
     );
   }
 
