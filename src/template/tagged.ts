@@ -157,7 +157,7 @@ export class TaggedTemplate<
     const slots: Slot<unknown>[] = new Array(totalHoles);
     let nodeIndex = 0;
     let holeIndex = 0;
-    let lastPartIndex = -1;
+    let lastHoleIndex = -1;
 
     for (
       let sourceNode: Node | null;
@@ -172,7 +172,7 @@ export class TaggedTemplate<
           break;
         }
 
-        const continuous = hole.index === lastPartIndex;
+        const continuous = hole.index === lastHoleIndex;
 
         switch (hole.type) {
           case PartType.Attribute:
@@ -233,26 +233,18 @@ export class TaggedTemplate<
         const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
         slot.connect(session);
 
-        slots[holeIndex] = slot;
-        lastPartIndex = hole.index;
-      }
-
-      let targetNode: Node;
-
-      if (currentPart !== null) {
-        if (currentPart.type === PartType.ChildNode) {
-          mountMarkerNode(target, currentPart.node);
-          targetNode = currentPart.node;
-        } else {
-          targetNode = target.currentNode;
+        if (currentPart!.type === PartType.ChildNode) {
+          mountMarkerNode(target, currentPart!.node);
         }
-      } else {
-        targetNode = treatNodeName(
-          sourceNode.nodeName,
-          target.nextNode(),
-          target,
-        );
+
+        slots[holeIndex] = slot;
+        lastHoleIndex = hole.index;
       }
+
+      const targetNode =
+        currentPart !== null
+          ? target.currentNode
+          : treatNodeName(sourceNode.nodeName, target.nextNode(), target);
 
       if (sourceNode.parentNode === fragment) {
         childNodes.push(targetNode as ChildNode);
