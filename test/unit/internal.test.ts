@@ -1,24 +1,48 @@
 import { describe, expect, it } from 'vitest';
-import {
-  createHydrationTarget,
-  treatNodeName,
-  treatNodeType,
-} from '@/hydration.js';
+
 import {
   areDirectiveTypesEqual,
-  createScope,
   getLanesFromOptions,
   getPriorityFromLanes,
-  getSharedContext,
   getStartNode,
   isBindable,
   Lanes,
   PartType,
   type ScheduleOptions,
-  setSharedContext,
+  Scope,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
+
+describe('Scope', () => {
+  describe('getSharedContext()', () => {
+    it('returns the own entry value', () => {
+      const scope = new Scope();
+
+      scope.setSharedContext('foo', 1);
+
+      expect(scope.getSharedContext('foo')).toBe(1);
+      expect(scope.getSharedContext('bar')).toBe(undefined);
+    });
+
+    it('returns the inherited entry value', () => {
+      const parentScope = new Scope();
+      const childScope = new Scope(parentScope);
+
+      parentScope.setSharedContext('foo', 1);
+      parentScope.setSharedContext('bar', 2);
+      childScope.setSharedContext('foo', 3);
+
+      expect(parentScope.getSharedContext('foo')).toBe(1);
+      expect(parentScope.getSharedContext('bar')).toBe(2);
+      expect(parentScope.getSharedContext('baz')).toBe(undefined);
+
+      expect(childScope.getSharedContext('foo')).toBe(3);
+      expect(childScope.getSharedContext('bar')).toBe(2);
+      expect(childScope.getSharedContext('baz')).toBe(undefined);
+    });
+  });
+});
 
 describe('areDirectiveTypesEqual()', () => {
   it('returns the result from Directive.equals() if it is definied', () => {
@@ -29,34 +53,6 @@ describe('areDirectiveTypesEqual()', () => {
     expect(areDirectiveTypesEqual(type1, type2)).toBe(false);
     expect(areDirectiveTypesEqual(type2, type1)).toBe(false);
     expect(areDirectiveTypesEqual(type2, type2)).toBe(true);
-  });
-});
-
-describe('getSharedContext()', () => {
-  it('returns the own entry value', () => {
-    const scope = createScope();
-
-    setSharedContext(scope, 'foo', 1);
-
-    expect(getSharedContext(scope, 'foo')).toBe(1);
-    expect(getSharedContext(scope, 'bar')).toBe(undefined);
-  });
-
-  it('returns the inherited entry value', () => {
-    const parentScope = createScope();
-    const childScope = createScope(parentScope);
-
-    setSharedContext(parentScope, 'foo', 1);
-    setSharedContext(parentScope, 'bar', 2);
-    setSharedContext(childScope, 'foo', 3);
-
-    expect(getSharedContext(parentScope, 'foo')).toBe(1);
-    expect(getSharedContext(parentScope, 'bar')).toBe(2);
-    expect(getSharedContext(parentScope, 'baz')).toBe(undefined);
-
-    expect(getSharedContext(childScope, 'foo')).toBe(3);
-    expect(getSharedContext(childScope, 'bar')).toBe(2);
-    expect(getSharedContext(childScope, 'baz')).toBe(undefined);
   });
 });
 
@@ -165,66 +161,4 @@ describe('isBindable()', () => {
     ).toBe(true);
     expect(isBindable('foo')).toBe(false);
   });
-});
-
-describe('treatNodeName()', () => {
-  it.each([
-    ['#comment', document.createComment('')],
-    ['#text', document.createTextNode('')],
-    ['DIV', document.createElement('div')],
-  ] as const)(
-    'asserts that the node is the expected name',
-    (expectedName, node) => {
-      const target = createHydrationTarget(document.createElement('div'));
-      expect(treatNodeName(expectedName, node, target)).toBe(node);
-    },
-  );
-
-  it.each([
-    ['#comment', document.createElement('div')],
-    ['#comment', document.createTextNode('')],
-    ['#text', document.createComment('')],
-    ['#text', document.createElement('div')],
-    ['DIV', document.createComment('')],
-    ['DIV', document.createTextNode('')],
-  ] as const)(
-    'throws an error if the node is not the expected name',
-    (expectedName, node) => {
-      const target = createHydrationTarget(document.createElement('div'));
-      expect(() => {
-        treatNodeName(expectedName, node, target);
-      }).toThrow('Hydration is failed because the node type is mismatched.');
-    },
-  );
-});
-
-describe('treatNodeType()', () => {
-  it.each([
-    [Node.COMMENT_NODE, document.createComment('')],
-    [Node.ELEMENT_NODE, document.createElement('div')],
-    [Node.TEXT_NODE, document.createTextNode('')],
-  ] as const)(
-    'asserts that the node is the expected type',
-    (expectedType, node) => {
-      const target = createHydrationTarget(document.createElement('div'));
-      expect(treatNodeType(expectedType, node, target)).toBe(node);
-    },
-  );
-
-  it.each([
-    [Node.COMMENT_NODE, document.createElement('div')],
-    [Node.COMMENT_NODE, document.createTextNode('')],
-    [Node.ELEMENT_NODE, document.createComment('')],
-    [Node.ELEMENT_NODE, document.createTextNode('')],
-    [Node.TEXT_NODE, document.createComment('')],
-    [Node.TEXT_NODE, document.createElement('div')],
-  ] as const)(
-    'throws an error if the node is not the expected type',
-    (expectedType, node) => {
-      const target = createHydrationTarget(document.createElement('div'));
-      expect(() => {
-        treatNodeType(expectedType, node, target);
-      }).toThrow('Hydration is failed because the node type is mismatched.');
-    },
-  );
 });

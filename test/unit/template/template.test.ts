@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHydrationTarget } from '@/hydration.js';
-import { createScope, PartType, setHydrationTarget } from '@/internal.js';
+import { PartType, Scope } from '@/internal.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,
@@ -443,8 +443,8 @@ describe('TemplateBinding', () => {
       };
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
-      const scope = createScope();
-      const hydrationTarget = createHydrationTarget(container);
+      const scope = new Scope();
+      const targetTree = createHydrationTarget(container);
       const updater = new TestUpdater();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
@@ -452,7 +452,7 @@ describe('TemplateBinding', () => {
         slots: [],
       });
 
-      setHydrationTarget(scope, hydrationTarget);
+      scope.setHydrationTarget(targetTree);
 
       updater.startUpdate(
         (session) => {
@@ -466,7 +466,7 @@ describe('TemplateBinding', () => {
       expect(hydrateSpy).toHaveBeenCalledWith(
         binds,
         part,
-        hydrationTarget,
+        targetTree,
         expect.any(Object),
       );
       expect(part.anchorNode).toBe(container.firstChild);

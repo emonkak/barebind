@@ -1,5 +1,4 @@
 import {
-  addErrorHandler,
   type Coroutine,
   type Hook,
   HookType,
@@ -54,7 +53,7 @@ export class TestRenderer {
           scope,
           context,
         );
-        addErrorHandler(rootScope, (error) => {
+        rootScope.addErrorHandler((error) => {
           thrownError = error;
         });
         returnValue = callback(session);
@@ -95,7 +94,7 @@ export class TestUpdater {
     options: WithScopeOption<ScheduleOptions> = {},
   ): T {
     const coroutine = new MockCoroutine((session) => {
-      addErrorHandler(session.rootScope, (error) => {
+      session.rootScope.addErrorHandler((error) => {
         thrownError = error;
       });
       returnValue = callback(session, coroutine);

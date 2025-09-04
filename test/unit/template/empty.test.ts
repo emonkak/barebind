@@ -34,11 +34,11 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const target = createHydrationTarget(document.createElement('div'));
+      const targetTree = createHydrationTarget(document.createElement('div'));
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, target, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(childNodes).toStrictEqual([]);

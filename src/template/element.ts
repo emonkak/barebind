@@ -43,7 +43,7 @@ export class ElementTemplate<
   hydrate(
     binds: readonly [TProps, TChildren],
     part: Part.ChildNodePart,
-    target: HydrationTarget,
+    targetTree: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult {
     const { context } = session;
@@ -54,8 +54,8 @@ export class ElementTemplate<
       type: PartType.Element,
       node: treatNodeName(
         this._tagName.toUpperCase(),
-        target.nextNode(),
-        target,
+        targetTree.nextNode(),
+        targetTree,
       ) as Element,
     };
     const childrenPart = {
@@ -70,7 +70,7 @@ export class ElementTemplate<
     elementSlot.connect(session);
     childrenSlot.connect(session);
 
-    mountMarkerNode(target, childrenPart.node);
+    mountMarkerNode(targetTree, childrenPart.node);
 
     return {
       childNodes: [elementPart.node],

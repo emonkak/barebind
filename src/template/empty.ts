@@ -19,7 +19,7 @@ export class EmptyTemplate extends AbstractTemplate<readonly []> {
   hydrate(
     _binds: readonly [],
     _part: Part.ChildNodePart,
-    _target: HydrationTarget,
+    _targetTree: HydrationTarget,
     _session: UpdateSession,
   ): TemplateResult {
     return { childNodes: [], slots: [] };

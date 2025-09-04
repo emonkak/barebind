@@ -4,9 +4,7 @@ import {
   type Binding,
   type Component,
   type Coroutine,
-  createScope,
   createUpdateSession,
-  DETACHED_SCOPE,
   type DirectiveContext,
   type Effect,
   type Hook,
@@ -14,7 +12,7 @@ import {
   Lanes,
   type Part,
   type RenderContext,
-  type Scope,
+  Scope,
   type Slot,
   type UpdateSession,
 } from './internal.js';
@@ -58,7 +56,7 @@ export class ComponentBinding<TProps, TResult>
 
   private readonly _part: Part;
 
-  private _scope: Scope = DETACHED_SCOPE;
+  private _scope: Scope = Scope.DETACHED;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -108,7 +106,7 @@ export class ComponentBinding<TProps, TResult>
 
   resume(session: UpdateSession): void {
     const { frame, rootScope, context } = session;
-    const subscope = createScope(this._scope);
+    const subscope = new Scope(this._scope);
     const subsession = createUpdateSession(frame, rootScope, subscope, context);
     const result = context.renderComponent(
       this._type,
@@ -170,7 +168,7 @@ export class ComponentBinding<TProps, TResult>
 
     this._slot?.disconnect(session);
 
-    this._scope = DETACHED_SCOPE;
+    this._scope = Scope.DETACHED;
     this._pendingLanes = Lanes.NoLanes;
     this._hooks = [];
   }

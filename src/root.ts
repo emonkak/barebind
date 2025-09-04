@@ -1,15 +1,14 @@
 import { createHydrationTarget, mountMarkerNode } from './hydration.js';
 import {
   type Coroutine,
-  createScope,
   type Effect,
   type HydrationTarget,
   Lanes,
   PartType,
   type ScheduleOptions,
+  Scope,
   type SessionContext,
   type Slot,
-  setHydrationTarget,
   type UpdateHandle,
 } from './internal.js';
 
@@ -46,20 +45,18 @@ export class Root<T> {
   }
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
-    const scope = createScope();
-    const hydrationTarget = createHydrationTarget(this._container);
+    const scope = new Scope();
+    const targetTree = createHydrationTarget(this._container);
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
         const { frame } = session;
         this._slot.connect(session);
-        frame.mutationEffects.push(
-          new HydrateSlot(this._slot, hydrationTarget),
-        );
+        frame.mutationEffects.push(new HydrateSlot(this._slot, targetTree));
       },
     };
-    setHydrationTarget(scope, hydrationTarget);
+    scope.setHydrationTarget(targetTree);
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
@@ -67,7 +64,7 @@ export class Root<T> {
   }
 
   mount(options?: ScheduleOptions): UpdateHandle {
-    const scope = createScope();
+    const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
@@ -85,7 +82,7 @@ export class Root<T> {
   }
 
   update(value: T, options?: ScheduleOptions): UpdateHandle {
-    const scope = createScope();
+    const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
@@ -101,7 +98,7 @@ export class Root<T> {
   }
 
   unmount(options?: ScheduleOptions): UpdateHandle {
-    const scope = createScope();
+    const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
@@ -122,16 +119,16 @@ export class Root<T> {
 class HydrateSlot<T> implements Effect {
   private readonly _slot: Slot<T>;
 
-  private readonly _target: HydrationTarget;
+  private readonly _targetTree: HydrationTarget;
 
-  constructor(slot: Slot<T>, target: HydrationTarget) {
+  constructor(slot: Slot<T>, targetTree: HydrationTarget) {
     this._slot = slot;
-    this._target = target;
+    this._targetTree = targetTree;
   }
 
   commit(): void {
-    mountMarkerNode(this._target, this._slot.part.node as Comment);
-    this._target.root.appendChild(this._slot.part.node);
+    mountMarkerNode(this._targetTree, this._slot.part.node as Comment);
+    this._targetTree.root.appendChild(this._slot.part.node);
     this._slot.commit();
   }
 }

@@ -6,7 +6,6 @@ import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
-  getHydrationTarget,
   getStartNode,
   type Part,
   PartType,
@@ -146,7 +145,7 @@ export class RepeatBinding<TSource, TKey, TValue>
   connect(session: UpdateSession): void {
     const { context, rootScope } = session;
     const document = this._part.node.ownerDocument;
-    const targetTree = getHydrationTarget(rootScope);
+    const targetTree = rootScope.getHydrationTarget();
 
     const oldTargets = this._pendingItems;
     const newSources = generateItems(this._props);

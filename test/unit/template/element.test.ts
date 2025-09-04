@@ -55,11 +55,11 @@ describe('ElementTemplate', () => {
         {},
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
-      const target = createHydrationTarget(container);
+      const targetTree = createHydrationTarget(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, target, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(childNodes).toStrictEqual([container.firstChild]);

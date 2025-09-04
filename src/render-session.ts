@@ -2,13 +2,10 @@ import { sequentialEqual } from './compare.js';
 import { DirectiveSpecifier } from './directive.js';
 import {
   $customHook,
-  addErrorHandler,
   type Cleanup,
   type Coroutine,
-  DETACHED_SCOPE,
   type Effect,
   type ErrorHandler,
-  getSharedContext,
   type Hook,
   HookType,
   type InitialState,
@@ -18,9 +15,8 @@ import {
   type RenderContext,
   type RenderFrame,
   type ScheduleOptions,
-  type Scope,
+  Scope,
   type SessionContext,
-  setSharedContext,
   type TemplateMode,
   type UpdateHandle,
   type Usable,
@@ -54,7 +50,7 @@ export class RenderSession implements RenderContext {
   }
 
   catchError(handler: ErrorHandler): void {
-    addErrorHandler(this._scope, handler);
+    this._scope.addErrorHandler(handler);
   }
 
   dynamicHTML(
@@ -90,7 +86,7 @@ export class RenderSession implements RenderContext {
       Object.freeze(this._hooks);
     }
 
-    this._scope = DETACHED_SCOPE;
+    this._scope = Scope.DETACHED;
     this._hookIndex++;
   }
 
@@ -114,7 +110,7 @@ export class RenderSession implements RenderContext {
   }
 
   getSharedContext(key: unknown): unknown {
-    return getSharedContext(this._scope, key);
+    return this._scope.getSharedContext(key);
   }
 
   html(
@@ -145,7 +141,7 @@ export class RenderSession implements RenderContext {
   }
 
   setSharedContext(key: unknown, value: unknown): void {
-    setSharedContext(this._scope, key, value);
+    this._scope.setSharedContext(key, value);
   }
 
   svg(

@@ -2,16 +2,17 @@ import { formatNode } from './debug/node.js';
 import type { HydrationTarget } from './internal.js';
 
 export class HydrationError extends Error {
-  readonly target: HydrationTarget;
+  readonly targetTree: HydrationTarget;
 
-  constructor(target: HydrationTarget, message: string) {
+  constructor(targetTree: HydrationTarget, message: string) {
     DEBUG: {
-      message += '\n' + formatNode(target.currentNode, '[[ERROR IN HERE!]]');
+      message +=
+        '\n' + formatNode(targetTree.currentNode, '[[ERROR IN HERE!]]');
     }
 
     super(message);
 
-    this.target = target;
+    this.targetTree = targetTree;
   }
 }
 
@@ -35,21 +36,23 @@ export function createHydrationTarget(container: Element): HydrationTarget {
  * @internal
  */
 export function mountMarkerNode(
-  target: HydrationTarget,
+  targetTree: HydrationTarget,
   markerNode: Comment,
 ): void {
-  treatNodeType(Node.COMMENT_NODE, target.nextNode(), target).replaceWith(
-    markerNode,
-  );
-  target.currentNode = markerNode;
+  treatNodeType(
+    Node.COMMENT_NODE,
+    targetTree.nextNode(),
+    targetTree,
+  ).replaceWith(markerNode);
+  targetTree.currentNode = markerNode;
 }
 
 /**
  * @internal
  */
-export function splitText(target: HydrationTarget): Text {
-  const previousNode = target.currentNode;
-  const currentNode = target.nextNode();
+export function splitText(targetTree: HydrationTarget): Text {
+  const previousNode = targetTree.currentNode;
+  const currentNode = targetTree.nextNode();
 
   if (
     previousNode instanceof Text &&
@@ -57,10 +60,10 @@ export function splitText(target: HydrationTarget): Text {
   ) {
     const splittedText = previousNode.ownerDocument.createTextNode('');
     previousNode.after(splittedText);
-    target.currentNode = splittedText;
+    targetTree.currentNode = splittedText;
     return splittedText;
   } else {
-    return treatNodeType(Node.TEXT_NODE, currentNode, target);
+    return treatNodeType(Node.TEXT_NODE, currentNode, targetTree);
   }
 }
 
@@ -70,11 +73,11 @@ export function splitText(target: HydrationTarget): Text {
 export function treatNodeName(
   expectedName: string,
   node: Node | null,
-  target: HydrationTarget,
+  targetTree: HydrationTarget,
 ): Node {
   if (node === null || node.nodeName !== expectedName) {
     throw new HydrationError(
-      target,
+      targetTree,
       `Hydration is failed because the node type is mismatched. ${expectedName} is expected here, but got ${node?.nodeName}.`,
     );
   }
@@ -88,11 +91,11 @@ export function treatNodeName(
 export function treatNodeType<TExpectedType extends keyof NodeTypeMap>(
   expectedType: TExpectedType,
   node: Node | null,
-  target: HydrationTarget,
+  targetTree: HydrationTarget,
 ): NodeTypeMap[TExpectedType] {
   if (node === null || node.nodeType !== expectedType) {
     throw new HydrationError(
-      target,
+      targetTree,
       `Hydration is failed because the node type is mismatched. ${expectedType} is expected here, but got ${node?.nodeType}.`,
     );
   }

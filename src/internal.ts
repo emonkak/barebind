@@ -6,11 +6,6 @@ export const $customHook: unique symbol = Symbol('$customHook');
 
 export const $toDirective: unique symbol = Symbol('$toDirective');
 
-/**
- * @internal
- */
-export const DETACHED_SCOPE: Scope = Object.freeze(createScope());
-
 export interface Bindable<T = unknown> {
   [$toDirective](part: Part, context: DirectiveContext): Directive<T>;
 }
@@ -39,7 +34,7 @@ export namespace Boundary {
   export interface HydrationBoundary {
     type: typeof BoundaryType.Hydration;
     next: Boundary | null;
-    target: HydrationTarget;
+    targetTree: HydrationTarget;
   }
 
   export interface SharedContextBoundary {
@@ -362,11 +357,6 @@ export interface ScheduleOptions {
   viewTransition?: boolean;
 }
 
-export interface Scope {
-  parent: Scope | null;
-  boundary: Boundary | null;
-}
-
 export interface SessionContext extends DirectiveContext {
   getPendingTasks(): UpdateTask[];
   expandLiterals<T>(
@@ -414,7 +404,7 @@ export interface Template<TBinds extends readonly unknown[]>
   hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    target: HydrationTarget,
+    targetTree: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult;
 }
@@ -449,11 +439,101 @@ export interface UpdateTask {
 
 export type Usable<T> = CustomHookFunction<T> | CustomHookObject<T>;
 
-/**
- * @internal
- */
-export function addErrorHandler(scope: Scope, handler: ErrorHandler): void {
-  scope.boundary = { type: BoundaryType.Error, next: scope.boundary, handler };
+export class Scope {
+  static readonly DETACHED: Scope = Object.freeze(new Scope()) as Scope;
+
+  private readonly _parent: Scope | null;
+
+  private _boundary: Boundary | null = null;
+
+  constructor(parent: Scope | null = null) {
+    this._parent = parent;
+  }
+
+  addErrorHandler(handler: ErrorHandler): void {
+    this._boundary = {
+      type: BoundaryType.Error,
+      next: this._boundary,
+      handler,
+    };
+  }
+
+  getHydrationTarget(): HydrationTarget | null {
+    for (
+      let boundary = this._boundary;
+      boundary !== null;
+      boundary = boundary.next
+    ) {
+      if (boundary.type === BoundaryType.Hydration) {
+        return boundary.targetTree;
+      }
+    }
+    return null;
+  }
+
+  getSharedContext(key: unknown): unknown {
+    let currentScope: Scope | null = this;
+    do {
+      for (
+        let boundary = currentScope._boundary;
+        boundary !== null;
+        boundary = boundary.next
+      ) {
+        if (
+          boundary.type === BoundaryType.SharedContext &&
+          Object.is(boundary.key, key)
+        ) {
+          return boundary.value;
+        }
+      }
+      currentScope = currentScope._parent;
+    } while (currentScope !== null);
+    return undefined;
+  }
+
+  handleError(error: unknown): void {
+    let currentScope: Scope = this;
+    let currentBoundary = this._boundary;
+
+    const handle = (error: unknown) => {
+      while (true) {
+        while (currentBoundary !== null) {
+          const boundary = currentBoundary;
+          currentBoundary = currentBoundary.next;
+          if (boundary.type === BoundaryType.Error) {
+            const { handler } = boundary;
+            handler(error, handle);
+            return;
+          }
+        }
+        const parentScope = currentScope._parent;
+        if (parentScope === null) {
+          throw error;
+        }
+        currentScope = parentScope;
+        currentBoundary = parentScope._boundary;
+      }
+    };
+
+    handle(error);
+  }
+
+  setHydrationTarget(targetTree: HydrationTarget): void {
+    this._boundary = {
+      type: BoundaryType.Hydration,
+      next: this._boundary,
+      targetTree,
+    };
+  }
+
+  setSharedContext(key: unknown, value: unknown): void {
+    this._boundary = {
+      type: BoundaryType.SharedContext,
+      next: this._boundary,
+      key,
+      value,
+    };
+  }
 }
 
 /**
@@ -469,16 +549,6 @@ export function areDirectiveTypesEqual(
 /**
  * @internal
  */
-export function createScope(parent: Scope | null = null): Scope {
-  return {
-    parent,
-    boundary: null,
-  };
-}
-
-/**
- * @internal
- */
 export function createUpdateSession(
   frame: RenderFrame,
   rootScope: Scope,
@@ -486,22 +556,6 @@ export function createUpdateSession(
   context: SessionContext,
 ): UpdateSession {
   return { frame, rootScope, scope, context };
-}
-
-/**
- * @internal
- */
-export function getHydrationTarget(scope: Scope): HydrationTarget | null {
-  for (
-    let boundary = scope.boundary;
-    boundary !== null;
-    boundary = boundary.next
-  ) {
-    if (boundary.type === BoundaryType.Hydration) {
-      return boundary.target;
-    }
-  }
-  return null;
 }
 
 /**
@@ -547,29 +601,6 @@ export function getPriorityFromLanes(lanes: Lanes): TaskPriority | null {
 /**
  * @internal
  */
-export function getSharedContext(scope: Scope, key: unknown): unknown {
-  let currentScope: Scope | null = scope;
-  do {
-    for (
-      let boundary = currentScope.boundary;
-      boundary !== null;
-      boundary = boundary.next
-    ) {
-      if (
-        boundary.type === BoundaryType.SharedContext &&
-        Object.is(boundary.key, key)
-      ) {
-        return boundary.value;
-      }
-    }
-    currentScope = currentScope.parent;
-  } while (currentScope !== null);
-  return undefined;
-}
-
-/**
- * @internal
- */
 export function getStartNode(part: Part): ChildNode {
   return part.type === PartType.ChildNode
     ? (part.anchorNode ?? part.node)
@@ -579,66 +610,6 @@ export function getStartNode(part: Part): ChildNode {
 /**
  * @internal
  */
-export function handleError(scope: Scope, error: unknown): void {
-  let currentScope = scope;
-  let currentBoundary = scope.boundary;
-
-  const handle = (error: unknown) => {
-    while (true) {
-      while (currentBoundary !== null) {
-        const boundary = currentBoundary;
-        currentBoundary = currentBoundary.next;
-        if (boundary.type === BoundaryType.Error) {
-          const { handler } = boundary;
-          handler(error, handle);
-          return;
-        }
-      }
-      const { parent } = currentScope;
-      if (parent === null) {
-        throw error;
-      }
-      currentScope = parent;
-      currentBoundary = parent.boundary;
-    }
-  };
-
-  handle(error);
-}
-
-/**
- * @internal
- */
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
-}
-
-/**
- * @internal
- */
-export function setHydrationTarget(
-  scope: Scope,
-  target: HydrationTarget,
-): void {
-  scope.boundary = {
-    type: BoundaryType.Hydration,
-    next: scope.boundary,
-    target,
-  };
-}
-
-/**
- * @internal
- */
-export function setSharedContext(
-  scope: Scope,
-  key: unknown,
-  value: unknown,
-): void {
-  scope.boundary = {
-    type: BoundaryType.SharedContext,
-    next: scope.boundary,
-    key,
-    value,
-  };
 }

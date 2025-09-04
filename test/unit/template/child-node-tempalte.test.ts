@@ -35,11 +35,11 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {}, document.createComment(''));
-      const target = createHydrationTarget(container);
+      const targetTree = createHydrationTarget(container);
       const updater = new TestUpdater();
 
       const { childNodes, slots } = updater.startUpdate((session) => {
-        return template.hydrate(binds, part, target, session);
+        return template.hydrate(binds, part, targetTree, session);
       });
 
       expect(childNodes).toStrictEqual([expect.exact(container.firstChild)]);
@@ -69,12 +69,12 @@ describe('ChildNodeTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const container = createElement('div', {});
-      const target = createHydrationTarget(container);
+      const targetTree = createHydrationTarget(container);
       const updater = new TestUpdater();
 
       expect(() => {
         updater.startUpdate((session) => {
-          template.hydrate(binds, part, target, session);
+          template.hydrate(binds, part, targetTree, session);
         });
       }).toThrow(HydrationError);
     });

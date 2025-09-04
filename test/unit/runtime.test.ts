@@ -4,10 +4,10 @@ import { createComponent } from '@/component.js';
 import {
   $toDirective,
   CommitPhase,
-  createScope,
   type Hook,
   Lanes,
   PartType,
+  Scope,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -526,7 +526,7 @@ describe('Runtime', () => {
       const hooks: Hook[] = [];
       const coroutine = new MockCoroutine();
       const frame = createRenderFrame(1, Lanes.AllLanes);
-      const scope = createScope();
+      const scope = new Scope();
       const observer = new MockObserver();
       const runtime = createRuntime();
 

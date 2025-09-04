@@ -7,7 +7,6 @@ import {
   type Binding,
   type CommitPhase,
   type Coroutine,
-  createScope,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
@@ -18,7 +17,7 @@ import {
   PartType,
   type Primitive,
   type RequestCallbackOptions,
-  type Scope,
+  Scope,
   type Slot,
   type SlotType,
   type Template,
@@ -214,7 +213,7 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
-    scope: Scope = createScope(),
+    scope: Scope = new Scope(),
   ) {
     this.callback = callback;
     this.scope = scope;
@@ -377,7 +376,7 @@ export class MockTemplate extends AbstractTemplate<readonly unknown[]> {
   hydrate(
     _binds: readonly unknown[],
     _part: Part.ChildNodePart,
-    _target: HydrationTarget,
+    _targetTree: HydrationTarget,
     _session: UpdateSession,
   ): TemplateResult {
     return {

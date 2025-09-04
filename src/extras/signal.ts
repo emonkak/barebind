@@ -6,14 +6,13 @@ import {
   type Binding,
   type Coroutine,
   type CustomHookObject,
-  DETACHED_SCOPE,
   type Directive,
   type DirectiveContext,
   type DirectiveType,
   Lanes,
   type Part,
   type RenderContext,
-  type Scope,
+  Scope,
   type SessionContext,
   type Slot,
   type UpdateSession,
@@ -52,7 +51,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private readonly _slot: Slot<T>;
 
-  private _scope: Scope = DETACHED_SCOPE;
+  private _scope: Scope = Scope.DETACHED;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
 
@@ -125,7 +124,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._subscription?.();
     this._slot.disconnect(session);
 
-    this._scope = DETACHED_SCOPE;
+    this._scope = Scope.DETACHED;
     this._subscription = null;
   }
 

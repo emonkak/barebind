@@ -9,7 +9,6 @@ import {
   type Effect,
   getLanesFromOptions,
   type Hook,
-  handleError,
   isBindable,
   Lanes,
   type Part,
@@ -172,7 +171,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, error);
+                coroutine.scope.handleError(error);
               }
             }
 
@@ -287,7 +286,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope, error);
+                coroutine.scope.handleError(error);
               }
             }
 

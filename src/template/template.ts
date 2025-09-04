@@ -3,7 +3,6 @@ import {
   type Binding,
   type DirectiveContext,
   type Effect,
-  getHydrationTarget,
   getStartNode,
   type HydrationTarget,
   type Part,
@@ -38,7 +37,7 @@ export abstract class AbstractTemplate<TBinds extends readonly unknown[]>
   abstract hydrate(
     binds: TBinds,
     part: Part.ChildNodePart,
-    target: HydrationTarget,
+    targetTree: HydrationTarget,
     session: UpdateSession,
   ): TemplateResult;
 
@@ -111,13 +110,13 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
         slots[i]!.reconcile(this._binds[i]!, session);
       }
     } else {
-      const hydrationTarget = getHydrationTarget(session.rootScope);
+      const targetTree = session.rootScope.getHydrationTarget();
 
-      if (hydrationTarget !== null) {
+      if (targetTree !== null) {
         this._pendingResult = this._type.hydrate(
           this._binds,
           this._part,
-          hydrationTarget,
+          targetTree,
           session,
         );
         this._part.anchorNode = getAnchorNode(this._pendingResult);
