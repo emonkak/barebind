@@ -104,28 +104,27 @@ export class ComponentBinding<TProps, TResult>
 
   resume(session: UpdateSession): void {
     const { frame, rootScope, context } = session;
-    const subscope = new Scope(this._scope);
-    const subsession = createUpdateSession(frame, rootScope, subscope, context);
+    const subScope = new Scope(this._scope);
+    const subSession = createUpdateSession(frame, rootScope, subScope, context);
     const result = context.renderComponent(
       this._component,
       this._props,
       this._hooks,
       this,
       frame,
-      subscope,
+      subScope,
     );
-    let shouldCommit = frame.mutationEffects.length === 0;
+    let dirty: boolean;
 
     if (this._slot !== null) {
-      if (!this._slot.reconcile(result, subsession)) {
-        shouldCommit = false;
-      }
+      dirty = this._slot.reconcile(result, subSession);
     } else {
       this._slot = context.resolveSlot(result, this._part);
-      this._slot.connect(subsession);
+      this._slot.connect(subSession);
+      dirty = true;
     }
 
-    if (shouldCommit) {
+    if (dirty && frame.mutationEffects.length === 0) {
       frame.mutationEffects.push(this._slot);
     }
 
