@@ -154,8 +154,7 @@ describe('StyleBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = style2;
-          binding.connect(session);
+          binding.bind(style2, session);
           binding.commit();
         });
 
@@ -211,8 +210,7 @@ describe('StyleBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = style2;
-          binding.connect(session);
+          binding.bind(style2, session);
           binding.commit();
         });
 

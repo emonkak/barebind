@@ -4,7 +4,6 @@ import {
   areDirectiveTypesEqual,
   type Binding,
   type DirectiveType,
-  type HydrationTarget,
   type Part,
   type Slot,
   type UnwrapBindable,
@@ -47,8 +46,7 @@ export class LooseSlot<T> implements Slot<T> {
 
     if (areDirectiveTypesEqual(this._pendingBinding.type, directive.type)) {
       if (this._dirty || this._pendingBinding.shouldBind(directive.value)) {
-        this._pendingBinding.value = directive.value;
-        this._pendingBinding.connect(session);
+        this._pendingBinding.bind(directive.value, session);
         this._dirty = true;
       }
     } else {
@@ -63,11 +61,6 @@ export class LooseSlot<T> implements Slot<T> {
     }
 
     return this._dirty;
-  }
-
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    this._pendingBinding.hydrate(target, session);
-    this._dirty = true;
   }
 
   connect(session: UpdateSession): void {

@@ -8,7 +8,6 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  type HydrationTarget,
   isBindable,
   type Part,
   PartType,
@@ -76,7 +75,7 @@ interface TemplateDirective<TBinds extends readonly unknown[]>
 export const ElementDirective: DirectiveType<ElementProps> = {
   name: 'ElementDirective',
   resolveBinding(
-    props: {},
+    props: ElementProps,
     part: Part,
     _context: DirectiveContext,
   ): ElementBinding {
@@ -248,7 +247,9 @@ export class ElementBinding implements Binding<ElementProps> {
     );
   }
 
-  hydrate(_target: HydrationTarget, _session: UpdateSession): void {}
+  bind(props: ElementProps, _session: UpdateSession): void {
+    this.value = props;
+  }
 
   connect(_session: UpdateSession): void {}
 

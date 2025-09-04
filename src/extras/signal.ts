@@ -1,5 +1,4 @@
 import { LinkedList } from '../collections/linked-list.js';
-import { HydrationError } from '../hydration.js';
 import {
   $customHook,
   $toDirective,
@@ -10,7 +9,6 @@ import {
   type Directive,
   type DirectiveContext,
   type DirectiveType,
-  type HydrationTarget,
   Lanes,
   type Part,
   type RenderContext,
@@ -46,21 +44,18 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
  * @internal
  */
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
+  value: Signal<T>;
+
   scope: Scope | null = null;
 
   pendingLanes: Lanes = Lanes.NoLanes;
-
-  private _value: Signal<T>;
-
-  private _memoizedVersion: number;
 
   private readonly _slot: Slot<T>;
 
   private _subscription: Subscription | null = null;
 
   constructor(value: Signal<T>, slot: Slot<T>) {
-    this._value = value;
-    this._memoizedVersion = value.version;
+    this.value = value;
     this._slot = slot;
   }
 
@@ -68,64 +63,41 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     return SignalDirective;
   }
 
-  get value(): Signal<T> {
-    return this._value;
-  }
-
-  set value(value: Signal<T>) {
-    if (this._subscription !== null) {
-      this._subscription();
-      this._subscription = null;
-    }
-    this._value = value;
-    this._memoizedVersion = -1;
-  }
-
   get part(): Part {
     return this._slot.part;
   }
 
-  shouldBind(value: Signal<T>): boolean {
-    return this._subscription === null || value !== this._value;
-  }
-
   resume(session: UpdateSession): void {
-    if (this._slot.reconcile(this._value.value, session)) {
+    if (this._slot.reconcile(this.value.value, session)) {
       session.frame.mutationEffects.push(this._slot);
     }
-    this._memoizedVersion = this._value.version;
     this.pendingLanes = Lanes.NoLanes;
   }
 
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    if (this._subscription !== null) {
-      throw new HydrationError(
-        target,
-        'Hydration is failed because the binding has already been initialized.',
-      );
-    }
-
-    this._slot.hydrate(target, session);
-    this._subscription = this._subscribeSignal(session);
+  shouldBind(value: Signal<T>): boolean {
+    return this._subscription === null || value !== this.value;
   }
 
   connect(session: UpdateSession): void {
-    const currentVersion = this._value.version;
-
-    if (this._memoizedVersion < currentVersion) {
-      this._slot.reconcile(this._value.value, session);
-      this._memoizedVersion = currentVersion;
-    } else {
-      this._slot.connect(session);
-    }
-
-    this._subscription ??= this._subscribeSignal(session);
+    this._slot.connect(session);
     this.scope = session.scope;
+    this._subscription = this._subscribeSignal(session);
+  }
+
+  bind(signal: Signal<T>, session: UpdateSession): void {
+    this._subscription?.();
+    this._slot.reconcile(signal.value, session);
+
+    this.value = signal;
+    this.scope = session.scope;
+    this._subscription = this._subscribeSignal(session);
   }
 
   disconnect(session: UpdateSession): void {
     this._subscription?.();
     this._slot.disconnect(session);
+
+    this.scope = null;
     this._subscription = null;
   }
 
@@ -139,7 +111,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
 
   private _subscribeSignal(session: UpdateSession): Subscription {
     const { context } = session;
-    return this._value.subscribe(() => {
+    return this.value.subscribe(() => {
       context.scheduleUpdate(this);
     });
   }

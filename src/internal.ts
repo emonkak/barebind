@@ -12,34 +12,44 @@ export interface Bindable<T = unknown> {
 
 export interface Binding<T> extends ReversibleEffect {
   readonly type: DirectiveType<T>;
-  value: T;
+  readonly value: T;
   readonly part: Part;
   shouldBind(value: T): boolean;
-  hydrate(target: HydrationTarget, session: UpdateSession): void;
+  bind(value: T, session: UpdateSession): void;
   connect(session: UpdateSession): void;
   disconnect(session: UpdateSession): void;
 }
 
-export type Boundary = Boundary.SharedContextBoundary | Boundary.ErrorBoundary;
+export type Boundary =
+  | Boundary.ErrorBoundary
+  | Boundary.HydrationBoundary
+  | Boundary.SharedContextBoundary;
 
 export namespace Boundary {
+  export interface ErrorBoundary {
+    type: typeof BoundaryType.Error;
+    next: Boundary | null;
+    handler: ErrorHandler;
+  }
+
+  export interface HydrationBoundary {
+    type: typeof BoundaryType.Hydration;
+    next: Boundary | null;
+    target: HydrationTarget;
+  }
+
   export interface SharedContextBoundary {
     type: typeof BoundaryType.SharedContext;
     next: Boundary | null;
     key: unknown;
     value: unknown;
   }
-
-  export interface ErrorBoundary {
-    type: typeof BoundaryType.Error;
-    next: Boundary | null;
-    handler: ErrorHandler;
-  }
 }
 
 export const BoundaryType = {
-  SharedContext: 0,
-  Error: 1,
+  Error: 0,
+  Hydration: 1,
+  SharedContext: 2,
 } as const;
 
 export type Cleanup = () => void;
@@ -381,7 +391,6 @@ export interface Slot<T> extends ReversibleEffect {
   readonly value: UnwrapBindable<T>;
   readonly part: Part;
   reconcile(value: T, session: UpdateSession): boolean;
-  hydrate(target: HydrationTarget, session: UpdateSession): void;
   connect(session: UpdateSession): void;
   disconnect(session: UpdateSession): void;
 }
@@ -423,6 +432,7 @@ export interface UpdateHandle {
 
 export interface UpdateSession {
   frame: RenderFrame;
+  rootScope: Scope;
   scope: Scope;
   context: SessionContext;
 }
@@ -467,10 +477,27 @@ export function createScope(parent: Scope | null = null): Scope {
  */
 export function createUpdateSession(
   frame: RenderFrame,
+  rootScope: Scope,
   scope: Scope,
   context: SessionContext,
 ): UpdateSession {
-  return { frame, scope, context };
+  return { frame, rootScope, scope, context };
+}
+
+/**
+ * @internal
+ */
+export function getHydrationTarget(scope: Scope): HydrationTarget | null {
+  for (
+    let boundary = scope.boundary;
+    boundary !== null;
+    boundary = boundary.next
+  ) {
+    if (boundary.type === BoundaryType.Hydration) {
+      return boundary.target;
+    }
+  }
+  return null;
 }
 
 /**
@@ -580,6 +607,20 @@ export function handleError(scope: Scope, error: unknown): void {
  */
 export function isBindable(value: unknown): value is Bindable {
   return typeof (value as Bindable<unknown>)?.[$toDirective] === 'function';
+}
+
+/**
+ * @internal
+ */
+export function setHydrationTarget(
+  scope: Scope,
+  target: HydrationTarget,
+): void {
+  scope.boundary = {
+    type: BoundaryType.Hydration,
+    next: scope.boundary,
+    target,
+  };
 }
 
 /**

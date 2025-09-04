@@ -6,6 +6,7 @@ import {
   type Lanes,
   type RenderFrame,
   type ScheduleOptions,
+  type Scope,
   type UpdateSession,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
@@ -84,6 +85,7 @@ export class TestUpdater {
 
   startUpdate<T>(
     callback: (session: UpdateSession, coroutine: Coroutine) => T,
+    scope: Scope | null = null,
     options: ScheduleOptions = {},
   ): T {
     const coroutine = new MockCoroutine((session) => {
@@ -91,7 +93,7 @@ export class TestUpdater {
         thrownError = error;
       });
       returnValue = callback(session, coroutine);
-    });
+    }, scope);
     let returnValue: T;
     let thrownError: unknown;
 

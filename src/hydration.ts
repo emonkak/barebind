@@ -34,7 +34,7 @@ export function createHydrationTarget(container: Element): HydrationTarget {
 /**
  * @internal
  */
-export function replaceMarkerNode(
+export function mountMarkerNode(
   target: HydrationTarget,
   markerNode: Comment,
 ): void {

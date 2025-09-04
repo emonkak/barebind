@@ -1,12 +1,15 @@
-import { createHydrationTarget, replaceMarkerNode } from './hydration.js';
+import { createHydrationTarget, mountMarkerNode } from './hydration.js';
 import {
   type Coroutine,
+  createScope,
   type Effect,
+  type HydrationTarget,
   Lanes,
   PartType,
   type ScheduleOptions,
   type SessionContext,
   type Slot,
+  setHydrationTarget,
   type UpdateHandle,
 } from './internal.js';
 
@@ -43,19 +46,20 @@ export class Root<T> {
   }
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
+    const scope = createScope();
+    const hydrationTarget = createHydrationTarget(this._container);
     const coroutine: Coroutine = {
-      scope: null,
+      scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
-        const target = createHydrationTarget(this._container);
-        this._slot.hydrate(target, session);
-        replaceMarkerNode(target, this._slot.part.node as Comment);
-        session.frame.mutationEffects.push(
-          new MountSlot(this._slot, this._container),
+        const { frame } = session;
+        this._slot.connect(session);
+        frame.mutationEffects.push(
+          new HydrateSlot(this._slot, hydrationTarget),
         );
-        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
+    setHydrationTarget(scope, hydrationTarget);
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
@@ -63,15 +67,15 @@ export class Root<T> {
   }
 
   mount(options?: ScheduleOptions): UpdateHandle {
+    const scope = createScope();
     const coroutine: Coroutine = {
-      scope: null,
+      scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
         this._slot.connect(session);
         session.frame.mutationEffects.push(
           new MountSlot(this._slot, this._container),
         );
-        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {
@@ -81,13 +85,13 @@ export class Root<T> {
   }
 
   update(value: T, options?: ScheduleOptions): UpdateHandle {
+    const scope = createScope();
     const coroutine: Coroutine = {
-      scope: null,
+      scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
         this._slot.reconcile(value, session);
         session.frame.mutationEffects.push(this._slot);
-        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {
@@ -97,21 +101,38 @@ export class Root<T> {
   }
 
   unmount(options?: ScheduleOptions): UpdateHandle {
+    const scope = createScope();
     const coroutine: Coroutine = {
-      scope: null,
+      scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
         this._slot.disconnect(session);
         session.frame.mutationEffects.push(
           new UnmountSlot(this._slot, this._container),
         );
-        coroutine.pendingLanes &= ~session.frame.lanes;
       },
     };
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
     });
+  }
+}
+
+class HydrateSlot<T> implements Effect {
+  private readonly _slot: Slot<T>;
+
+  private readonly _target: HydrationTarget;
+
+  constructor(slot: Slot<T>, target: HydrationTarget) {
+    this._slot = slot;
+    this._target = target;
+  }
+
+  commit(): void {
+    mountMarkerNode(this._target, this._slot.part.node as Comment);
+    this._target.root.appendChild(this._slot.part.node);
+    this._slot.commit();
   }
 }
 

@@ -190,8 +190,7 @@ describe('ClassBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = classes2;
-          binding.connect(session);
+          binding.bind(classes2, session);
           binding.commit();
         });
 
@@ -200,8 +199,7 @@ describe('ClassBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.value = classes1;
-          binding.connect(session);
+          binding.bind(classes1, session);
           binding.commit();
         });
 
@@ -231,8 +229,7 @@ describe('ClassBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = classes2;
-          binding.connect(session);
+          binding.bind(classes2, session);
           binding.commit();
         });
 
@@ -241,8 +238,7 @@ describe('ClassBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.value = classes1;
-          binding.connect(session);
+          binding.bind(classes1, session);
           binding.commit();
         });
 
@@ -272,8 +268,7 @@ describe('ClassBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = classes2;
-          binding.connect(session);
+          binding.bind(classes2, session);
           binding.commit();
         });
 
@@ -282,8 +277,7 @@ describe('ClassBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.value = classes1;
-          binding.connect(session);
+          binding.bind(classes1, session);
           binding.commit();
         });
 

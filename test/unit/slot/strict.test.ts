@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTarget } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { Strict, StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
@@ -52,7 +51,7 @@ describe('StrictSlot', () => {
       const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const setValueSpy = vi.spyOn(binding, 'value', 'set');
+      const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -65,7 +64,7 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
-        expect(setValueSpy).toHaveBeenCalledTimes(0);
+        expect(bindSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
@@ -82,9 +81,9 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(setValueSpy).toHaveBeenCalledTimes(1);
-        expect(setValueSpy).toHaveBeenCalledWith(value2);
-        expect(connectSpy).toHaveBeenCalledTimes(2);
+        expect(bindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledWith(value2, expect.any(Object));
+        expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
@@ -100,9 +99,9 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(setValueSpy).toHaveBeenCalledTimes(1);
-        expect(setValueSpy).toHaveBeenCalledWith(value2);
-        expect(connectSpy).toHaveBeenCalledTimes(2);
+        expect(bindSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledWith(value2, expect.any(Object));
+        expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
@@ -123,23 +122,19 @@ describe('StrictSlot', () => {
       const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const setValueSpy = vi.spyOn(binding, 'value', 'set');
+      const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
-      const hydrateSpy = vi.spyOn(binding, 'hydrate');
       const commitSpy = vi.spyOn(binding, 'commit');
 
       SESSION1: {
-        const target = createHydrationTarget(document.createElement('div'));
-
         updater.startUpdate((session) => {
-          slot.hydrate(target, session);
+          slot.connect(session);
           slot.commit();
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
-        expect(setValueSpy).toHaveBeenCalledTimes(0);
-        expect(connectSpy).toHaveBeenCalledTimes(0);
-        expect(hydrateSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
@@ -152,9 +147,8 @@ describe('StrictSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(setValueSpy).toHaveBeenCalledTimes(0);
-        expect(connectSpy).toHaveBeenCalledTimes(0);
-        expect(hydrateSpy).toHaveBeenCalledTimes(1);
+        expect(bindSpy).toHaveBeenCalledTimes(0);
+        expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
         expect(dirty).toBe(false);

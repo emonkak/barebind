@@ -6,7 +6,6 @@ import {
   type SignalBinding,
   SignalDirective,
 } from '@/extras/signal.js';
-import { createHydrationTarget, HydrationError } from '@/hydration.js';
 import {
   $toDirective,
   Lanes,
@@ -14,7 +13,6 @@ import {
   type RenderContext,
 } from '@/internal.js';
 import {
-  createElement,
   createRuntime,
   TestRenderer,
   TestUpdater,
@@ -88,78 +86,6 @@ describe('SiganlBinding', () => {
     });
   });
 
-  describe('hydrate()', () => {
-    it('hydrates the tree by the signal value', async () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const updater = new TestUpdater();
-      const binding = SignalDirective.resolveBinding(
-        signal,
-        part,
-        updater.runtime,
-      ) as SignalBinding<string>;
-      const container = createElement('div', {}, part.node);
-      const target = createHydrationTarget(container);
-
-      SESSION: {
-        updater.startUpdate((session) => {
-          binding.hydrate(target, session);
-          binding.commit();
-        });
-
-        expect(container.innerHTML).toBe('foo');
-      }
-
-      signal.value = 'bar';
-
-      expect(binding.pendingLanes).toBe(
-        Lanes.DefaultLane | Lanes.UserBlockingLane,
-      );
-
-      await Promise.resolve(); // wait dirty checking
-      await Promise.resolve(); // wait scheduling
-
-      expect(binding.pendingLanes).toBe(Lanes.NoLanes);
-      expect(container.innerHTML).toBe('bar');
-    });
-
-    it('should throw the error if the binding has already been initialized', async () => {
-      const signal = new Atom('foo');
-      const part = {
-        type: PartType.Text,
-        node: document.createTextNode(''),
-        precedingText: '',
-        followingText: '',
-      };
-      const updater = new TestUpdater();
-      const binding = SignalDirective.resolveBinding(
-        signal,
-        part,
-        updater.runtime,
-      );
-      const container = createElement('div', {}, part.node);
-      const target = createHydrationTarget(container);
-
-      SESSION: {
-        updater.startUpdate((session) => {
-          binding.connect(session);
-          binding.commit();
-        });
-      }
-
-      expect(() => {
-        updater.startUpdate((session) => {
-          binding.hydrate(target, session);
-        });
-      }).toThrow(HydrationError);
-    });
-  });
-
   describe('connect()', () => {
     it('schedule an update when the signal value has been changed', async () => {
       const signal = new Atom('foo');
@@ -225,8 +151,7 @@ describe('SiganlBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = signal2;
-          binding.connect(session);
+          binding.bind(signal2, session);
           binding.commit();
         });
 

@@ -11,7 +11,6 @@ import {
   VFragment,
   VStaticFragment,
 } from '@/extras/vdom.js';
-import { createHydrationTarget } from '@/hydration.js';
 import { $toDirective, PartType } from '@/internal.js';
 import { BlackholePrimitive } from '@/primitive/blackhole.js';
 import { RepeatDirective } from '@/repeat.js';
@@ -244,23 +243,6 @@ describe('ElementBinding', () => {
     });
   });
 
-  describe('hydrate()', () => {
-    it('should do nothing', () => {
-      const props = {};
-      const part = {
-        type: PartType.Element,
-        node: document.createElement('div'),
-      };
-      const target = createHydrationTarget(document.createElement('div'));
-      const binding = new ElementBinding(props, part);
-      const updater = new TestUpdater();
-
-      updater.startUpdate((session) => {
-        binding.hydrate(target, session);
-      });
-    });
-  });
-
   describe('commit()', () => {
     it('ignores reserved properties', () => {
       const props = { key: 'foo', children: [] };
@@ -313,8 +295,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -352,8 +333,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -390,8 +370,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -429,8 +408,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -470,8 +448,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -510,8 +487,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -554,8 +530,7 @@ describe('ElementBinding', () => {
 
         SESSION2: {
           updater.startUpdate((session) => {
-            binding.value = props2;
-            binding.connect(session);
+            binding.bind(props2, session);
             binding.commit();
           });
 
@@ -600,8 +575,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -639,8 +613,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -695,8 +668,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -741,8 +713,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -785,8 +756,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -797,8 +767,7 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.value = props3;
-          binding.connect(session);
+          binding.bind(props3, session);
           binding.commit();
         });
 
@@ -860,8 +829,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -925,8 +893,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -1008,8 +975,7 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 

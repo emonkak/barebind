@@ -1,13 +1,13 @@
 /// <reference path="../typings/moveBefore.d.ts" />
 
 import { DirectiveError, DirectiveSpecifier } from './directive.js';
-import { HydrationError, replaceMarkerNode } from './hydration.js';
+import { mountMarkerNode } from './hydration.js';
 import {
   type Binding,
   type DirectiveContext,
   type DirectiveType,
+  getHydrationTarget,
   getStartNode,
-  type HydrationTarget,
   type Part,
   PartType,
   type Slot,
@@ -76,19 +76,19 @@ export function Repeat<TSource, TKey, TValue>(
 export const RepeatDirective: DirectiveType<RepeatProps<any, any, any>> = {
   name: 'RepeatDirective',
   resolveBinding<TSource, TKey, TValue>(
-    value: RepeatProps<TSource, TKey, TValue>,
+    props: RepeatProps<TSource, TKey, TValue>,
     part: Part,
     _context: DirectiveContext,
   ): RepeatBinding<TSource, TKey, TValue> {
     if (part.type !== PartType.ChildNode) {
       throw new DirectiveError(
         RepeatDirective,
-        value,
+        props,
         part,
         'RepeatDirective must be used in a child part.',
       );
     }
-    return new RepeatBinding(value, part);
+    return new RepeatBinding(props, part);
   },
 };
 
@@ -106,10 +106,10 @@ export class RepeatBinding<TSource, TKey, TValue>
   private _pendingOperations: Operation<TKey, Slot<TValue>>[] = [];
 
   constructor(
-    value: RepeatProps<TSource, TKey, TValue>,
+    props: RepeatProps<TSource, TKey, TValue>,
     part: Part.ChildNodePart,
   ) {
-    this.value = value;
+    this.value = props;
     this.part = part;
   }
 
@@ -126,20 +126,14 @@ export class RepeatBinding<TSource, TKey, TValue>
     );
   }
 
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    if (this._memoizedItems !== null || this._pendingItems.length > 0) {
-      throw new HydrationError(
-        target,
-        'Hydration is failed because the binding has already been initialized.',
-      );
-    }
-
-    const { context } = session;
+  connect(session: UpdateSession): void {
+    const { context, rootScope } = session;
     const document = this.part.node.ownerDocument;
     const sourceItems = generateItems(this.value);
     const targetItems: Item<TKey, Slot<TValue>>[] = new Array(
       sourceItems.length,
     );
+    const hydrationTarget = getHydrationTarget(rootScope);
 
     for (let i = 0, l = sourceItems.length; i < l; i++) {
       const { key, value } = sourceItems[i]!;
@@ -150,29 +144,43 @@ export class RepeatBinding<TSource, TKey, TValue>
         namespaceURI: this.part.namespaceURI,
       };
       const slot = context.resolveSlot(value, part);
-
-      slot.hydrate(target, session);
-
-      replaceMarkerNode(target, part.node);
-
-      targetItems[i] = {
+      const item = {
         key,
         value: slot,
       };
+
+      slot.connect(session);
+
+      if (hydrationTarget !== null) {
+        mountMarkerNode(hydrationTarget, part.node);
+      } else {
+        this._pendingOperations.push({
+          type: OPERATION_INSERT,
+          item,
+          referenceItem: undefined,
+        });
+      }
+
+      targetItems[i] = item;
     }
 
-    this.part.anchorNode = getAnchorNode(targetItems);
     this._pendingItems = targetItems;
-    this._memoizedItems = targetItems;
+
+    if (hydrationTarget !== null) {
+      this.part.anchorNode = getAnchorNode(targetItems);
+      this._memoizedItems = targetItems;
+    }
   }
 
-  connect(session: UpdateSession): void {
+  bind(
+    props: RepeatProps<TSource, TKey, TValue>,
+    session: UpdateSession,
+  ): void {
     const { context } = session;
     const document = this.part.node.ownerDocument;
-    const targetItems = this._pendingItems;
-    const sourceItems = generateItems(this.value);
-
-    this._pendingItems = reconcileItems(targetItems, sourceItems, {
+    const sourceItems = generateItems(props);
+    const oldTargetItems = this._pendingItems;
+    const newTargetItems = reconcileItems(oldTargetItems, sourceItems, {
       insert: ({ key, value }, referenceItem) => {
         const part = {
           type: PartType.ChildNode,
@@ -226,6 +234,9 @@ export class RepeatBinding<TSource, TKey, TValue>
         });
       },
     });
+
+    this.value = props;
+    this._pendingItems = newTargetItems;
   }
 
   disconnect(session: UpdateSession): void {

@@ -145,8 +145,8 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const scope = coroutine.scope ?? createScope();
-      const session = createUpdateSession(frame, scope, this);
+      const rootScope = coroutine.scope ?? createScope();
+      const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
         if (!this._observers.isEmpty()) {
@@ -173,7 +173,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope ?? scope, error);
+                handleError(coroutine.scope ?? rootScope, error);
               }
             }
 
@@ -260,8 +260,8 @@ export class Runtime implements SessionContext {
 
       const id = (this._updateCount = incrementCount(this._updateCount));
       const frame = createRenderFrame(id, lanes, coroutine);
-      const scope = coroutine.scope ?? createScope();
-      const session = createUpdateSession(frame, scope, this);
+      const rootScope = coroutine.scope ?? createScope();
+      const session = createUpdateSession(frame, rootScope, rootScope, this);
 
       try {
         if (!this._observers.isEmpty()) {
@@ -288,7 +288,7 @@ export class Runtime implements SessionContext {
               try {
                 coroutine.resume(session);
               } catch (error) {
-                handleError(coroutine.scope ?? scope, error);
+                handleError(coroutine.scope ?? rootScope, error);
               }
             }
 

@@ -1,9 +1,7 @@
 import { DirectiveError } from '../directive.js';
-import { HydrationError } from '../hydration.js';
 import {
   type Binding,
   type DirectiveContext,
-  type HydrationTarget,
   type Part,
   PartType,
   type Primitive,
@@ -26,19 +24,19 @@ export const SpreadPrimitive: Primitive<SpreadProps> = {
     }
   },
   resolveBinding(
-    value: SpreadProps,
+    props: SpreadProps,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
     if (part.type !== PartType.Element) {
       throw new DirectiveError(
         SpreadPrimitive,
-        value,
+        props,
         part,
         'SpreadPrimitive must be used in an element part.',
       );
     }
-    return new SpreadBinding(value, part);
+    return new SpreadBinding(props, part);
   },
 };
 
@@ -64,14 +62,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
     return this._memoizedSlots === null || value !== this.value;
   }
 
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    if (this._memoizedSlots !== null || this._pendingSlots.size > 0) {
-      throw new HydrationError(
-        target,
-        'Hydration is failed because the binding has already been initialized.',
-      );
-    }
-
+  connect(session: UpdateSession): void {
     const { context } = session;
     const slots = new Map();
 
@@ -82,7 +73,7 @@ export class SpreadBinding implements Binding<SpreadProps> {
       }
       const part = resolveNamedPart(key, this.part.node);
       const slot = context.resolveSlot(value, part);
-      slot.hydrate(target, session);
+      slot.connect(session);
       slots.set(key, slot);
     }
 
@@ -90,33 +81,34 @@ export class SpreadBinding implements Binding<SpreadProps> {
     this._memoizedSlots = slots;
   }
 
-  connect(session: UpdateSession): void {
+  bind(props: SpreadProps, session: UpdateSession): void {
     const { context } = session;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
 
     for (const [key, slot] of oldSlots.entries()) {
-      if (!Object.hasOwn(this.value, key) || this.value[key] === undefined) {
+      if (!Object.hasOwn(props, key) || props[key] === undefined) {
         slot.disconnect(session);
       }
     }
 
-    for (const key of Object.keys(this.value)) {
-      const value = this.value[key];
-      if (value === undefined) {
+    for (const key of Object.keys(props)) {
+      const prop = props[key];
+      if (prop === undefined) {
         continue;
       }
       let slot = oldSlots.get(key);
       if (slot !== undefined) {
-        slot.reconcile(value, session);
+        slot.reconcile(prop, session);
       } else {
         const part = resolveNamedPart(key, this.part.node);
-        slot = context.resolveSlot(value, part);
+        slot = context.resolveSlot(prop, part);
         slot.connect(session);
       }
       newSlots.set(key, slot);
     }
 
+    this.value = props;
     this._pendingSlots = newSlots;
   }
 

@@ -1,10 +1,4 @@
-import type {
-  Binding,
-  HydrationTarget,
-  Part,
-  Primitive,
-  UpdateSession,
-} from '../internal.js';
+import type { Binding, Part, Primitive, UpdateSession } from '../internal.js';
 
 export abstract class PrimitiveBinding<TValue, TPart extends Part>
   implements Binding<TValue>
@@ -22,7 +16,9 @@ export abstract class PrimitiveBinding<TValue, TPart extends Part>
 
   abstract shouldBind(value: TValue): boolean;
 
-  hydrate(_target: HydrationTarget, _session: UpdateSession): void {}
+  bind(value: TValue, _session: UpdateSession): void {
+    this.value = value;
+  }
 
   connect(_session: UpdateSession): void {}
 

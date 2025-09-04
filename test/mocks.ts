@@ -97,7 +97,7 @@ export class MockBindable<T> implements Bindable<T> {
 export class MockBinding<T> implements Binding<T> {
   readonly type: DirectiveType<T>;
 
-  pendingValue: T;
+  value: T;
 
   memoizedValue: T | null = null;
 
@@ -109,23 +109,16 @@ export class MockBinding<T> implements Binding<T> {
 
   constructor(type: DirectiveType<T>, value: T, part: Part) {
     this.type = type;
-    this.pendingValue = value;
+    this.value = value;
     this.part = part;
-  }
-
-  get value(): T {
-    return this.pendingValue;
-  }
-
-  set value(value: T) {
-    this.pendingValue = value;
   }
 
   shouldBind(value: T): boolean {
     return !Object.is(value, this.memoizedValue);
   }
 
-  hydrate(_target: HydrationTarget, _session: UpdateSession): void {
+  bind(value: T, _session: UpdateSession): void {
+    this.value = value;
     this.isConnected = true;
   }
 
@@ -225,8 +218,10 @@ export class MockCoroutine implements Coroutine {
 
   constructor(
     callback: (this: Coroutine, session: UpdateSession) => void = () => {},
+    scope: Scope | null = null,
   ) {
     this.callback = callback;
+    this.scope = scope;
   }
 
   resume(session: UpdateSession): void {
@@ -317,17 +312,11 @@ export class MockSlot<T> implements Slot<T> {
     const dirty = this.binding.shouldBind(directive.value);
 
     if (dirty) {
-      this.binding.value = directive.value;
-      this.binding.connect(session);
+      this.binding.bind(directive.value, session);
       this.isConnected = true;
     }
 
     return dirty;
-  }
-
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    this.binding.hydrate(target, session);
-    this.isConnected = true;
   }
 
   connect(session: UpdateSession): void {

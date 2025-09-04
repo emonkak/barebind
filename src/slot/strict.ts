@@ -4,7 +4,6 @@ import {
   areDirectiveTypesEqual,
   type Binding,
   type DirectiveType,
-  type HydrationTarget,
   type Part,
   type Slot,
   type UnwrapBindable,
@@ -50,17 +49,11 @@ export class StrictSlot<T> implements Slot<T> {
     }
 
     if (this._dirty || this._binding.shouldBind(directive.value)) {
-      this._binding.value = directive.value;
-      this._binding.connect(session);
+      this._binding.bind(directive.value, session);
       this._dirty = true;
     }
 
     return this._dirty;
-  }
-
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    this._binding.hydrate(target, session);
-    this._dirty = true;
   }
 
   connect(session: UpdateSession): void {

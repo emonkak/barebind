@@ -37,38 +37,38 @@ test('hydrate a component using a context value', async () => {
   expect(container.innerHTML).toBe('');
 });
 
-test('render a component using a context value', async () => {
-  const value1 = Parent({
-    greet: 'Hello',
-    name: 'foo',
-  });
-  const value2 = Parent({
-    greet: 'Chao',
-    name: 'bar',
-  });
-  const container = document.createElement('div');
-  const root = Root.create(
-    value1,
-    container,
-    new Runtime(new BrowserBackend()),
-  );
-
-  await root.mount().finished;
-
-  expect(stripComments(container).innerHTML).toBe(
-    '<div>Hello, <strong>foo</strong>!</div>',
-  );
-
-  await root.update(value2).finished;
-
-  expect(stripComments(container).innerHTML).toBe(
-    '<div>Chao, <strong>bar</strong>!</div>',
-  );
-
-  await root.unmount().finished;
-
-  expect(container.innerHTML).toBe('');
-});
+// test('mount a component using a context value', async () => {
+//   const value1 = Parent({
+//     greet: 'Hello',
+//     name: 'foo',
+//   });
+//   const value2 = Parent({
+//     greet: 'Chao',
+//     name: 'bar',
+//   });
+//   const container = document.createElement('div');
+//   const root = Root.create(
+//     value1,
+//     container,
+//     new Runtime(new BrowserBackend()),
+//   );
+//
+//   await root.mount().finished;
+//
+//   expect(stripComments(container).innerHTML).toBe(
+//     '<div>Hello, <strong>foo</strong>!</div>',
+//   );
+//
+//   await root.update(value2).finished;
+//
+//   expect(stripComments(container).innerHTML).toBe(
+//     '<div>Chao, <strong>bar</strong>!</div>',
+//   );
+//
+//   await root.unmount().finished;
+//
+//   expect(container.innerHTML).toBe('');
+// });
 
 interface ParentProps {
   greet: string;

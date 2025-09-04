@@ -1,5 +1,4 @@
 import { DirectiveSpecifier } from './directive.js';
-import { HydrationError } from './hydration.js';
 import {
   type Bindable,
   type Binding,
@@ -11,7 +10,6 @@ import {
   type Effect,
   type Hook,
   HookType,
-  type HydrationTarget,
   Lanes,
   type Part,
   type RenderContext,
@@ -57,7 +55,7 @@ export class ComponentBinding<TProps, TResult>
 
   value: TProps;
 
-  part: Part;
+  readonly part: Part;
 
   scope: Scope | null = null;
 
@@ -79,17 +77,10 @@ export class ComponentBinding<TProps, TResult>
     this.part = part;
   }
 
-  shouldBind(value: TProps): boolean {
-    return (
-      this._memoizedValue === null ||
-      !this.type.shouldSkipUpdate(value, this._memoizedValue)
-    );
-  }
-
   resume(session: UpdateSession): void {
-    const { frame, context } = session;
+    const { frame, rootScope, context } = session;
     const subscope = createScope(this.scope);
-    const subsession = createUpdateSession(frame, subscope, context);
+    const subsession = createUpdateSession(frame, rootScope, subscope, context);
     const result = context.renderComponent(
       this.type,
       this.value,
@@ -117,31 +108,17 @@ export class ComponentBinding<TProps, TResult>
     this._memoizedValue = this.value;
   }
 
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    if (this._slot !== null) {
-      throw new HydrationError(
-        target,
-        'Hydration is failed because the binding has already been initialized.',
-      );
-    }
-
-    const { frame, scope, context } = session;
-    const subscope = createScope(scope);
-    const subsession = createUpdateSession(frame, subscope, context);
-    const result = context.renderComponent(
-      this.type,
-      this.value,
-      this._hooks,
-      this,
-      frame,
-      subscope,
+  shouldBind(value: TProps): boolean {
+    return (
+      this._memoizedValue === null ||
+      !this.type.shouldSkipUpdate(value, this._memoizedValue)
     );
+  }
 
-    this._slot = context.resolveSlot(result, this.part);
-    this._slot.hydrate(target, subsession);
-
-    this.scope = scope;
-    this._memoizedValue = this.value;
+  bind(props: TProps, session: UpdateSession): void {
+    session.frame.pendingCoroutines.push(this);
+    this.value = props;
+    this.scope = session.scope;
   }
 
   connect(session: UpdateSession): void {

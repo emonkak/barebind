@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTarget, HydrationError } from '@/hydration.js';
-import { type Part, PartType } from '@/internal.js';
+import { createHydrationTarget } from '@/hydration.js';
+import {
+  createScope,
+  type Part,
+  PartType,
+  setHydrationTarget,
+} from '@/internal.js';
 import {
   moveChildNodes,
   Repeat,
@@ -142,60 +147,29 @@ describe('RepeatBinding', () => {
         document.createComment(''),
         document.createComment(''),
       );
-      const target = createHydrationTarget(container);
+      const scope = createScope();
+      const hydrationTarget = createHydrationTarget(container);
       const updater = new TestUpdater();
 
+      setHydrationTarget(scope, hydrationTarget);
+
       updater.startUpdate((session) => {
-        binding.hydrate(target, session);
-        binding.commit();
-      });
+        binding.connect(session);
+      }, scope);
 
       expect(part.anchorNode).toBe(container.firstChild);
       expect(container.innerHTML).toBe(
         source.map((element) => element + EMPTY_COMMENT).join('') +
           EMPTY_COMMENT,
       );
-    });
 
-    it('should throw the error if the binding has already been initialized', () => {
-      const source = ['foo', 'bar', 'baz'];
-      const props: RepeatProps<string> = {
-        source,
-        valueSelector: textTemplate,
-      };
-      const part: Part.ChildNodePart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new RepeatBinding(props, part);
-      const container = createElement(
-        'div',
-        {},
-        'foo',
-        document.createComment(''),
-        'bar',
-        document.createComment(''),
-        'baz',
-        document.createComment(''),
-        document.createComment(''),
+      binding.commit();
+
+      expect(part.anchorNode).toBe(container.firstChild);
+      expect(container.innerHTML).toBe(
+        source.map((element) => element + EMPTY_COMMENT).join('') +
+          EMPTY_COMMENT,
       );
-      const target = createHydrationTarget(container);
-      const updater = new TestUpdater();
-
-      SESSION: {
-        updater.startUpdate((session) => {
-          binding.connect(session);
-          binding.commit();
-        });
-      }
-
-      expect(() => {
-        updater.startUpdate((session) => {
-          binding.hydrate(target, session);
-        });
-      }).toThrow(HydrationError);
     });
   });
 
@@ -245,8 +219,7 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             updater.startUpdate((session) => {
-              binding.value = props2;
-              binding.connect(session);
+              binding.bind(props2, session);
               binding.commit();
             });
 
@@ -311,8 +284,7 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             updater.startUpdate((session) => {
-              binding.value = props2;
-              binding.connect(session);
+              binding.bind(props2, session);
               binding.commit();
             });
 
@@ -325,8 +297,7 @@ describe('RepeatBinding', () => {
 
           SESSION3: {
             updater.startUpdate((session) => {
-              binding.value = props1;
-              binding.connect(session);
+              binding.bind(props1, session);
               binding.commit();
             });
 
@@ -389,8 +360,7 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             updater.startUpdate((session) => {
-              binding.value = props2;
-              binding.connect(session);
+              binding.bind(props2, session);
               binding.commit();
             });
 
@@ -403,8 +373,7 @@ describe('RepeatBinding', () => {
 
           SESSION3: {
             updater.startUpdate((session) => {
-              binding.value = props1;
-              binding.connect(session);
+              binding.bind(props1, session);
               binding.commit();
             });
 
@@ -459,8 +428,7 @@ describe('RepeatBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           binding.commit();
         });
 
@@ -472,8 +440,7 @@ describe('RepeatBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.value = props1;
-          binding.connect(session);
+          binding.bind(props1, session);
           binding.commit();
         });
 

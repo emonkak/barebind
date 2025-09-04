@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ComponentBinding, createComponent } from '@/component.js';
 import { DirectiveSpecifier } from '@/directive.js';
-import { createHydrationTarget, HydrationError } from '@/hydration.js';
 import {
   CommitPhase,
   Lanes,
@@ -12,12 +11,7 @@ import {
 import { RenderSession } from '@/render-session.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot } from '../mocks.js';
-import {
-  createElement,
-  createRuntime,
-  TestRenderer,
-  TestUpdater,
-} from '../test-helpers.js';
+import { createRuntime, TestRenderer, TestUpdater } from '../test-helpers.js';
 
 describe('createComponent()', () => {
   it('returns a directive with props', () => {
@@ -162,6 +156,7 @@ describe('ComponentBinding', () => {
             session.frame.pendingCoroutines.push(binding);
             session.frame.mutationEffects.push(binding);
           },
+          null,
           { priority: 'user-blocking' },
         );
 
@@ -184,88 +179,6 @@ describe('ComponentBinding', () => {
         expect(binding.pendingLanes).toBe(Lanes.NoLanes);
         expect(part.node.nodeValue).toBe('101');
       }
-    });
-  });
-
-  describe('hydrate()', () => {
-    it('hydrates the tree by the component result', () => {
-      const props = {
-        name: 'foo',
-        greet: 'Hello',
-      };
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment('Hello, foo!'),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new ComponentBinding(Greet, props, part);
-      const container = createElement('div', {}, part.node);
-      const target = createHydrationTarget(container);
-      const updater = new TestUpdater();
-
-      SESSION1: {
-        updater.startUpdate((session) => {
-          binding.hydrate(target, session);
-          session.frame.pendingCoroutines.push(binding);
-          session.frame.mutationEffects.push(binding);
-        });
-
-        expect(binding['_slot']).toBeInstanceOf(MockSlot);
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            isConnected: true,
-            isCommitted: true,
-          }),
-        );
-        expect(binding['_slot']?.part).toBe(part);
-        expect(container.innerHTML).toBe('<!--Hello, foo!-->');
-      }
-
-      SESSION2: {
-        updater.startUpdate((session) => {
-          binding.disconnect(session);
-          binding.rollback();
-        });
-
-        expect(binding['_slot']).toBeInstanceOf(MockSlot);
-        expect(binding['_slot']).toStrictEqual(
-          expect.objectContaining({
-            isConnected: false,
-            isCommitted: false,
-          }),
-        );
-        expect(binding['_slot']?.part).toBe(part);
-        expect(container.innerHTML).toBe('<!---->');
-      }
-    });
-
-    it('should throw the error if the component has already been rendered', () => {
-      const props = {
-        name: 'foo',
-        greet: 'Hello',
-      };
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new ComponentBinding(Greet, props, part);
-      const updater = new TestUpdater();
-
-      updater.startUpdate((session) => {
-        session.frame.pendingCoroutines.push(binding);
-        session.frame.mutationEffects.push(binding);
-      });
-
-      expect(() => {
-        updater.startUpdate((session) => {
-          const container = document.createElement('div');
-          const target = createHydrationTarget(container);
-          binding.hydrate(target, session);
-        });
-      }).toThrow(HydrationError);
     });
   });
 
@@ -307,8 +220,7 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = props2;
-          binding.connect(session);
+          binding.bind(props2, session);
           session.frame.mutationEffects.push(binding);
         });
 

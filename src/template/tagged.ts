@@ -1,7 +1,7 @@
 import { formatNode } from '../debug/node.js';
 import { formatPart } from '../debug/part.js';
 import {
-  replaceMarkerNode,
+  mountMarkerNode,
   splitText,
   treatNodeName,
   treatNodeType,
@@ -231,7 +231,7 @@ export class TaggedTemplate<
         }
 
         const slot = context.resolveSlot(binds[holeIndex]!, currentPart!);
-        slot.hydrate(target, session);
+        slot.connect(session);
 
         slots[holeIndex] = slot;
         lastPartIndex = hole.index;
@@ -241,7 +241,7 @@ export class TaggedTemplate<
 
       if (currentPart !== null) {
         if (currentPart.type === PartType.ChildNode) {
-          replaceMarkerNode(target, currentPart.node);
+          mountMarkerNode(target, currentPart.node);
           targetNode = currentPart.node;
         } else {
           targetNode = target.currentNode;

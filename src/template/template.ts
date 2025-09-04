@@ -1,9 +1,9 @@
 import { DirectiveError } from '../directive.js';
-import { HydrationError } from '../hydration.js';
 import {
   type Binding,
   type DirectiveContext,
   type Effect,
+  getHydrationTarget,
   getStartNode,
   type HydrationTarget,
   type Part,
@@ -89,34 +89,34 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._memoizedValue === null || value !== this._memoizedValue;
   }
 
-  hydrate(target: HydrationTarget, session: UpdateSession): void {
-    if (this._pendingResult !== null) {
-      throw new HydrationError(
-        target,
-        'Hydration is failed because the binding has already been initialized.',
-      );
-    }
-
-    const result = this.type.hydrate(this.value, this.part, target, session);
-
-    this.part.anchorNode = getAnchorNode(result);
-    this._memoizedValue = this.value;
-    this._pendingResult = result;
-    this._memoizedResult = result;
-  }
-
-  connect(session: UpdateSession): void {
+  bind(binds: TBinds, session: UpdateSession): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(this.value[i]!, session);
+        slots[i]!.reconcile(binds[i]!, session);
       }
+    }
+
+    this.value = binds;
+  }
+
+  connect(session: UpdateSession): void {
+    const hydrationTarget = getHydrationTarget(session.rootScope);
+
+    if (hydrationTarget !== null) {
+      this._pendingResult = this.type.hydrate(
+        this.value,
+        this.part,
+        hydrationTarget,
+        session,
+      );
+      this.part.anchorNode = getAnchorNode(this._pendingResult);
+      this._memoizedValue = this.value;
+      this._memoizedResult = this._pendingResult;
     } else {
       this._pendingResult = this.type.render(this.value, this.part, session);
     }
-
-    this._memoizedValue = this.value;
   }
 
   disconnect(session: UpdateSession): void {
@@ -144,6 +144,7 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
       this.part.anchorNode = getAnchorNode(this._pendingResult);
     }
 
+    this._memoizedValue = this.value;
     this._memoizedResult = this._pendingResult;
   }
 

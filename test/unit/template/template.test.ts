@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createHydrationTarget, HydrationError } from '@/hydration.js';
-import { PartType } from '@/internal.js';
+import { createHydrationTarget } from '@/hydration.js';
+import { createScope, PartType, setHydrationTarget } from '@/internal.js';
 import {
   getNamespaceURIByTagName,
   HTML_NAMESPACE_URI,
@@ -104,69 +104,6 @@ describe('TemplateBinding', () => {
     });
   });
 
-  describe('hydrate()', () => {
-    it('hydrates the template', () => {
-      const template = new MockTemplate();
-      const binds = [] as const;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new TemplateBinding(template, binds, part);
-      const container = createElement('div', {}, 'foo', part.node);
-      const target = createHydrationTarget(container);
-      const updater = new TestUpdater();
-
-      const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
-        childNodes: [container.firstChild!],
-        slots: [],
-      });
-
-      updater.startUpdate((session) => {
-        binding.hydrate(target, session);
-        binding.commit();
-      });
-
-      expect(hydrateSpy).toHaveBeenCalledOnce();
-      expect(hydrateSpy).toHaveBeenCalledWith(
-        binds,
-        part,
-        target,
-        expect.any(Object),
-      );
-      expect(part.anchorNode).toBe(container.firstChild);
-      expect(container.innerHTML).toBe('foo<!---->');
-    });
-
-    it('should throw the error if the template has already been rendered', () => {
-      const template = new MockTemplate();
-      const binds = [] as const;
-      const part = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new TemplateBinding(template, binds, part);
-      const container = document.createElement('div');
-      const target = createHydrationTarget(container);
-      const updater = new TestUpdater();
-
-      updater.startUpdate((session) => {
-        binding.connect(session);
-        binding.commit();
-      });
-
-      expect(() => {
-        updater.startUpdate((session) => {
-          binding.hydrate(target, session);
-        });
-      }).toThrow(HydrationError);
-    });
-  });
-
   describe('connect()', () => {
     it('renders a template with the element as root', () => {
       const template = new MockTemplate();
@@ -265,8 +202,7 @@ describe('TemplateBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = binds2;
-          binding.connect(session);
+          binding.bind(binds2, session);
           binding.commit();
         });
 
@@ -429,8 +365,7 @@ describe('TemplateBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.value = binds2;
-          binding.connect(session);
+          binding.bind(binds2, session);
           binding.commit();
         });
 
@@ -493,6 +428,44 @@ describe('TemplateBinding', () => {
         });
         expect(binding['_memoizedResult']).toBe(null);
       }
+    });
+
+    it('hydrates a template', () => {
+      const template = new MockTemplate();
+      const binds = [] as const;
+      const part = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new TemplateBinding(template, binds, part);
+      const container = createElement('div', {}, 'foo', part.node);
+      const scope = createScope();
+      const hydrationTarget = createHydrationTarget(container);
+      const updater = new TestUpdater();
+
+      const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
+        childNodes: [container.firstChild!],
+        slots: [],
+      });
+
+      setHydrationTarget(scope, hydrationTarget);
+
+      updater.startUpdate((session) => {
+        binding.connect(session);
+        binding.commit();
+      }, scope);
+
+      expect(hydrateSpy).toHaveBeenCalledOnce();
+      expect(hydrateSpy).toHaveBeenCalledWith(
+        binds,
+        part,
+        hydrationTarget,
+        expect.any(Object),
+      );
+      expect(part.anchorNode).toBe(container.firstChild);
+      expect(container.innerHTML).toBe('foo<!---->');
     });
   });
 });

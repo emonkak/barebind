@@ -46,7 +46,7 @@ export class TextTemplate<T = unknown> extends AbstractTemplate<readonly [T]> {
     };
     const textSlot = context.resolveSlot(binds[0], textPart);
 
-    textSlot.hydrate(target, session);
+    textSlot.connect(session);
 
     return { childNodes: [textPart.node], slots: [textSlot] };
   }
