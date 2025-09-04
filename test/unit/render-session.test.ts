@@ -10,24 +10,24 @@ import {
 import { RenderSession } from '@/render-session.js';
 import { Literal } from '@/template-literal.js';
 import { MockCoroutine, MockTemplate } from '../mocks.js';
-import { RenderHelper, UpdateHelper } from '../test-helpers.js';
+import { TestRenderer, TestUpdater } from '../test-helpers.js';
 
 describe('RenderSession', () => {
   describe('catchError()', () => {
     it('adds an error handler', () => {
       const handler = vi.fn();
       const error = {};
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate(({ frame, scope }, coroutine) => {
+        updater.startUpdate(({ frame, scope }, coroutine) => {
           const hooks: Hook[] = [];
           const session = new RenderSession(
             hooks,
             coroutine,
             frame,
             scope,
-            helper.runtime,
+            updater.runtime,
           );
 
           session.catchError(handler);
@@ -49,10 +49,10 @@ describe('RenderSession', () => {
     });
 
     it('throws an error when trying to add an error handler outside of rendering', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       expect(() => {
-        const session = helper.startRender((session) => session);
+        const session = renderer.startRender((session) => session);
         session.catchError(() => {});
       }).toThrow('Error handlers can only be added during rendering.');
     });
@@ -60,8 +60,8 @@ describe('RenderSession', () => {
 
   describe('dynamicHTML()', () => {
     it('returns a bindable with the dynamic HTML template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) =>
           session.dynamicHTML`<${new Literal('div')}>Hello, ${'World'}!</${new Literal('div')}>`,
       );
@@ -80,8 +80,8 @@ describe('RenderSession', () => {
 
   describe('dynamicMath()', () => {
     it('returns a bindable with the dynamic MathML template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) =>
           session.dynamicMath`<${new Literal('mi')}>${'x'}</${new Literal('mi')}>`,
       );
@@ -100,8 +100,8 @@ describe('RenderSession', () => {
 
   describe('dynamicSVG()', () => {
     it('returns a bindable with the dynamic SVG template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) =>
           session.dynamicSVG`<${new Literal('text')}>Hello, ${'World'}!</${new Literal('text')}>`,
       );
@@ -120,24 +120,24 @@ describe('RenderSession', () => {
 
   describe('getSessionContext()', () => {
     it('returns the runtime as a SessionContext', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       SESSION: {
-        const session = helper.startRender((session) => {
+        const session = renderer.startRender((session) => {
           return session.getSessionContext();
         });
 
-        expect(session).toBe(helper.runtime);
+        expect(session).toBe(renderer.runtime);
       }
     });
   });
 
   describe('getSharedContext()', () => {
     it('returns the shared context corresponding to the key', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       SESSION: {
-        const value = helper.startRender((session) => {
+        const value = renderer.startRender((session) => {
           session.setSharedContext('foo', 123);
 
           return session.getSharedContext('foo');
@@ -148,10 +148,10 @@ describe('RenderSession', () => {
     });
 
     it('returns undefined if the shared context is not definied', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       SESSION: {
-        const value = helper.startRender((session) => {
+        const value = renderer.startRender((session) => {
           return session.getSharedContext('foo');
         });
 
@@ -160,19 +160,19 @@ describe('RenderSession', () => {
     });
 
     it('throws an error when trying to get a shared context outside of rendering', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       expect(() => {
-        const session = helper.startRender((session) => session);
+        const session = renderer.startRender((session) => session);
         session.getSharedContext('foo');
       }).toThrow('Shared contexts are only available during rendering.');
     });
 
     it('throws an error when trying to set a shared context outside of rendering', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       expect(() => {
-        const session = helper.startRender((session) => session);
+        const session = renderer.startRender((session) => session);
         session.setSharedContext('foo', 123);
       }).toThrow('Shared contexts can only be set during rendering.');
     });
@@ -180,21 +180,21 @@ describe('RenderSession', () => {
 
   describe('finalize()', () => {
     it('denies using a hook after finalize', () => {
-      const helper = new RenderHelper();
-      const session = helper.startRender((session) => session);
+      const renderer = new TestRenderer();
+      const session = renderer.startRender((session) => session);
 
       expect(() => session.useState(0)).toThrow();
     });
 
     it('throws an error if a different type of hook is given', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      helper.startRender((session) => {
+      renderer.startRender((session) => {
         session.useEffect(() => {});
       });
 
       expect(() => {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session.finalize();
         });
       }).toThrow('Unexpected hook type.');
@@ -203,11 +203,11 @@ describe('RenderSession', () => {
 
   describe('forceUpdate()', () => {
     it('schedules an update with the current coroutine', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+      const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
-      helper.startRender((session) => {
+      renderer.startRender((session) => {
         session.useEffect(() => {
           session.forceUpdate({ priority: 'background' });
         }, []);
@@ -224,11 +224,11 @@ describe('RenderSession', () => {
     });
 
     it('renders the session again if rendering is running', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      const scheduleUpdateSpy = vi.spyOn(helper.runtime, 'scheduleUpdate');
+      const scheduleUpdateSpy = vi.spyOn(renderer.runtime, 'scheduleUpdate');
 
-      const count = helper.startRender((session) => {
+      const count = renderer.startRender((session) => {
         const [count, setCount] = session.useState(0);
 
         if (count === 0) {
@@ -245,8 +245,8 @@ describe('RenderSession', () => {
 
   describe('html()', () => {
     it('returns a bindable with the HTML template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) => session.html`<div>Hello, ${'World'}!</div>`,
       );
 
@@ -264,8 +264,8 @@ describe('RenderSession', () => {
 
   describe('math()', () => {
     it('returns a bindable with the MathML template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) => session.math`<mi>${'x'}</mi>`,
       );
 
@@ -283,8 +283,8 @@ describe('RenderSession', () => {
 
   describe('svg()', () => {
     it('returns a bindable with the SVG template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) => session.svg`<text>Hello, ${'World'}!</text>`,
       );
 
@@ -302,8 +302,8 @@ describe('RenderSession', () => {
 
   describe('text()', () => {
     it('returns a bindable with the text template', () => {
-      const helper = new RenderHelper();
-      const directive = helper.startRender(
+      const renderer = new TestRenderer();
+      const directive = renderer.startRender(
         (session) => session.text`<div>Hello, ${'World'}!</div>`,
       );
 
@@ -321,10 +321,10 @@ describe('RenderSession', () => {
 
   describe('use()', () => {
     it('performs a custom hook function', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const hook = vi.fn().mockReturnValue('foo');
 
-      const result = helper.startRender((session) => session.use(hook));
+      const result = renderer.startRender((session) => session.use(hook));
 
       expect(result).toBe('foo');
       expect(hook).toHaveBeenCalledOnce();
@@ -332,12 +332,12 @@ describe('RenderSession', () => {
     });
 
     it('performs a custom hook object', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const hook = {
         [$customHook]: vi.fn().mockReturnValue('foo'),
       };
 
-      const result = helper.startRender((session) => session.use(hook));
+      const result = renderer.startRender((session) => session.use(hook));
 
       expect(result).toBe('foo');
       expect(hook[$customHook]).toHaveBeenCalledOnce();
@@ -347,12 +347,12 @@ describe('RenderSession', () => {
 
   describe('useCallback()', () => {
     it('returns the memoized callback if dependencies are the same as the previous value', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const callback1 = () => {};
       const callback2 = () => {};
 
       SESSION1: {
-        const callback = helper.startRender((session) => {
+        const callback = renderer.startRender((session) => {
           return session.useCallback(callback1, ['foo']);
         });
 
@@ -360,7 +360,7 @@ describe('RenderSession', () => {
       }
 
       SESSION2: {
-        const callback = helper.startRender((session) => {
+        const callback = renderer.startRender((session) => {
           return session.useCallback(callback2, ['foo']);
         });
 
@@ -368,7 +368,7 @@ describe('RenderSession', () => {
       }
 
       SESSION3: {
-        const callback = helper.startRender((session) => {
+        const callback = renderer.startRender((session) => {
           return session.useCallback(callback2, ['bar']);
         });
 
@@ -383,17 +383,17 @@ describe('RenderSession', () => {
     ['useInsertionEffect', CommitPhase.Mutation],
   ] as const)('useEffect()', (hookName, phase) => {
     it('cleans up the previous effect', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       const cleanup = vi.fn();
       const callback = vi.fn().mockReturnValue(cleanup);
       const commitEffectsSpy = vi.spyOn(
-        helper.runtime['_backend'],
+        renderer.runtime['_backend'],
         'commitEffects',
       );
 
       SESSION1: {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session[hookName](callback);
         });
 
@@ -407,7 +407,7 @@ describe('RenderSession', () => {
       }
 
       SESSION2: {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session[hookName](callback);
         });
 
@@ -422,16 +422,16 @@ describe('RenderSession', () => {
     });
 
     it('does not perform the callback function if dependencies are not changed', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       const callback = vi.fn();
       const commitEffectsSpy = vi.spyOn(
-        helper.runtime['_backend'],
+        renderer.runtime['_backend'],
         'commitEffects',
       );
 
       SESSION1: {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session[hookName](callback, ['foo']);
         });
 
@@ -444,7 +444,7 @@ describe('RenderSession', () => {
       }
 
       SESSION2: {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session[hookName](callback, ['foo']);
         });
 
@@ -453,7 +453,7 @@ describe('RenderSession', () => {
       }
 
       SESSION3: {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session[hookName](callback, ['bar']);
         });
 
@@ -467,12 +467,12 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      helper.startRender(() => {});
+      renderer.startRender(() => {});
 
       expect(() => {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session[hookName](() => {});
         });
       }).toThrow('Unexpected hook type.');
@@ -481,13 +481,13 @@ describe('RenderSession', () => {
 
   describe('useId()', () => {
     it('returns a unique identifier', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       let stableId1: string;
       let stableId2: string;
 
       SESSION1: {
-        [stableId1, stableId2] = helper.startRender((session) => {
+        [stableId1, stableId2] = renderer.startRender((session) => {
           return [session.useId(), session.useId()];
         });
 
@@ -496,7 +496,7 @@ describe('RenderSession', () => {
       }
 
       SESSION2: {
-        const [id1, id2] = helper.startRender((session) => {
+        const [id1, id2] = renderer.startRender((session) => {
           return [session.useId(), session.useId()];
         });
 
@@ -506,12 +506,12 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      helper.startRender(() => {});
+      renderer.startRender(() => {});
 
       expect(() => {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session.useId();
         });
       }).toThrow('Unexpected hook type.');
@@ -520,10 +520,10 @@ describe('RenderSession', () => {
 
   describe('useMemo()', () => {
     it('returns the memoized value if dependencies are the same as the previous value', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       SESSION1: {
-        const value = helper.startRender((session) =>
+        const value = renderer.startRender((session) =>
           session.useMemo(() => 'foo', ['foo']),
         );
 
@@ -531,7 +531,7 @@ describe('RenderSession', () => {
       }
 
       SESSION2: {
-        const value = helper.startRender((session) =>
+        const value = renderer.startRender((session) =>
           session.useMemo(() => 'bar', ['foo']),
         );
 
@@ -539,7 +539,7 @@ describe('RenderSession', () => {
       }
 
       SESSION3: {
-        const value = helper.startRender((session) =>
+        const value = renderer.startRender((session) =>
           session.useMemo(() => 'bar', ['bar']),
         );
 
@@ -548,12 +548,12 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      helper.startRender(() => {});
+      renderer.startRender(() => {});
 
       expect(() => {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session.useMemo(() => null, []);
         });
       }).toThrow('Unexpected hook type.');
@@ -562,7 +562,7 @@ describe('RenderSession', () => {
 
   describe('useReducer()', () => {
     it('schedules the update when the state is changed', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const reducer = (count: number, n: number) => count + n;
       const callback = vi.fn((session: RenderContext) => {
         const [count, increment] = session.useReducer(reducer, 0);
@@ -575,7 +575,7 @@ describe('RenderSession', () => {
       });
 
       SESSION: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveLastReturnedWith(0);
@@ -588,7 +588,7 @@ describe('RenderSession', () => {
     });
 
     it('should skip the update if the state does not changed', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const reducer = (count: number, n: number) => count + n;
       const callback = vi.fn((session: RenderContext) => {
         const [count, increment] = session.useReducer(reducer, 0);
@@ -601,7 +601,7 @@ describe('RenderSession', () => {
       });
 
       SESSION: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveLastReturnedWith(0);
@@ -613,11 +613,11 @@ describe('RenderSession', () => {
     });
 
     it('returns an initial state by the function', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const reducer = (count: number, n: number) => count + n;
 
       SESSION: {
-        const count = helper.startRender((session) => {
+        const count = renderer.startRender((session) => {
           const [count] = session.useReducer(reducer, () => 0);
           return count;
         });
@@ -627,12 +627,12 @@ describe('RenderSession', () => {
     });
 
     it('throws an error if given a different type of hook', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      helper.startRender(() => {});
+      renderer.startRender(() => {});
 
       expect(() => {
-        helper.startRender((session) => {
+        renderer.startRender((session) => {
           session.useReducer<number, number>((count, n) => count + n, 0);
         });
       }).toThrow('Unexpected hook type.');
@@ -641,18 +641,18 @@ describe('RenderSession', () => {
 
   describe('useRef()', () => {
     it('returns a memoized ref object', () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
       let stableRef: RefObject<string>;
 
       SESSION1: {
-        stableRef = helper.startRender((session) => session.useRef('foo'));
+        stableRef = renderer.startRender((session) => session.useRef('foo'));
 
         expect(stableRef).toStrictEqual({ current: 'foo' });
       }
 
       SESSION2: {
-        const ref = helper.startRender((session) => session.useRef('bar'));
+        const ref = renderer.startRender((session) => session.useRef('bar'));
 
         expect(ref).toStrictEqual(stableRef);
       }
@@ -661,7 +661,7 @@ describe('RenderSession', () => {
 
   describe('useState()', () => {
     it('schedules the update when the state is changed', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const callback = vi.fn((session: RenderContext) => {
         const [count, setCount] = session.useState(0);
 
@@ -673,7 +673,7 @@ describe('RenderSession', () => {
       });
 
       SESSION1: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveLastReturnedWith(0);
@@ -686,7 +686,7 @@ describe('RenderSession', () => {
     });
 
     it('calculates a new state from the previous state', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const callback = vi.fn((session: RenderContext) => {
         const [count, setCount] = session.useState(() => 0);
 
@@ -700,7 +700,7 @@ describe('RenderSession', () => {
       });
 
       SESSION: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveLastReturnedWith(0);
@@ -713,7 +713,7 @@ describe('RenderSession', () => {
     });
 
     it('should not return the pending state', async () => {
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const callback = vi.fn((session: RenderContext) => {
         const [count, setCount, isPending] = session.useState(() => 0);
 
@@ -725,14 +725,14 @@ describe('RenderSession', () => {
       });
 
       SESSION1: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveNthReturnedWith(1, [0, false]);
       }
 
       SESSION2: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(2);
         expect(callback).toHaveNthReturnedWith(2, [0, true]);

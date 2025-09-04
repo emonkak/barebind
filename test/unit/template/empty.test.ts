@@ -4,7 +4,7 @@ import { PartType } from '@/internal.js';
 import { EmptyTemplate } from '@/template/empty.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockTemplate } from '../../mocks.js';
-import { UpdateHelper } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-helpers.js';
 
 describe('EmptyTemplate', () => {
   describe('arity', () => {
@@ -35,9 +35,9 @@ describe('EmptyTemplate', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const target = createHydrationTarget(document.createElement('div'));
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -56,9 +56,9 @@ describe('EmptyTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 

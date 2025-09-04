@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { RefBinding, RefPrimitive } from '@/primitive/ref.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('RefPrimitive', () => {
   describe('name', () => {
@@ -101,10 +101,10 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -125,10 +125,10 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -138,7 +138,7 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = ref2;
           binding.connect(session);
           binding.commit();
@@ -160,10 +160,10 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -176,7 +176,7 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -188,7 +188,7 @@ describe('RefBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = ref2;
           binding.connect(session);
           binding.commit();
@@ -212,10 +212,10 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -232,10 +232,10 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -244,7 +244,7 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -262,10 +262,10 @@ describe('RefBinding', () => {
         name: ':ref',
       };
       const binding = new RefBinding(ref, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -276,7 +276,7 @@ describe('RefBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

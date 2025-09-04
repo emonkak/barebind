@@ -5,7 +5,7 @@ import { StyleBinding, StylePrimitive } from '@/primitive/style.js';
 import {
   createElement,
   createRuntime,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('StylePrimitive', () => {
@@ -106,10 +106,10 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -139,10 +139,10 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -153,7 +153,7 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = style2;
           binding.connect(session);
           binding.commit();
@@ -173,10 +173,10 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -198,10 +198,10 @@ describe('StyleBinding', () => {
         name: ':style',
       };
       const binding = new StyleBinding(style1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -210,7 +210,7 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = style2;
           binding.connect(session);
           binding.commit();
@@ -235,10 +235,10 @@ describe('StyleBinding', () => {
         name: ':class',
       };
       const binding = new StyleBinding(style, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -249,7 +249,7 @@ describe('StyleBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

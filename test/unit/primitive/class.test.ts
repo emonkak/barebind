@@ -5,7 +5,7 @@ import { ClassBinding, ClassPrimitive } from '@/primitive/class.js';
 import {
   createElement,
   createRuntime,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('ClassPrimitive', () => {
@@ -108,10 +108,10 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -136,10 +136,10 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -177,10 +177,10 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -189,7 +189,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = classes2;
           binding.connect(session);
           binding.commit();
@@ -199,7 +199,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = classes1;
           binding.connect(session);
           binding.commit();
@@ -218,10 +218,10 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -230,7 +230,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = classes2;
           binding.connect(session);
           binding.commit();
@@ -240,7 +240,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = classes1;
           binding.connect(session);
           binding.commit();
@@ -259,10 +259,10 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -271,7 +271,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = classes2;
           binding.connect(session);
           binding.commit();
@@ -281,7 +281,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = classes1;
           binding.connect(session);
           binding.commit();
@@ -299,10 +299,10 @@ describe('ClassBinding', () => {
         name: 'class',
       };
       const binding = new ClassBinding(classes, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -321,10 +321,10 @@ describe('ClassBinding', () => {
         name: ':class',
       };
       const binding = new ClassBinding(classes, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -333,7 +333,7 @@ describe('ClassBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

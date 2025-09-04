@@ -6,7 +6,7 @@ import { PartType } from '@/internal.js';
 import { Flexible, FlexibleSlot } from '@/slot/flexible.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { UpdateHelper } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-helpers.js';
 
 describe('Flexible()', () => {
   it('creates a SlotElement with FlexibleSlot', () => {
@@ -49,7 +49,7 @@ describe('FlexibleSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new FlexibleSlot(binding);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const setValueSpy = vi.spyOn(binding, 'value', 'set');
@@ -59,7 +59,7 @@ describe('FlexibleSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.connect(session);
           slot.commit();
         });
@@ -74,7 +74,7 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startUpdate((session) => {
+        const dirty = updater.startUpdate((session) => {
           const dirty = slot.reconcile(value2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
@@ -93,7 +93,7 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.disconnect(session);
           slot.rollback();
           slot.rollback(); // ignore the second rollback
@@ -121,7 +121,7 @@ describe('FlexibleSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new FlexibleSlot(binding);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const setValueSpy = vi.spyOn(binding, 'value', 'set');
       const connectSpy = vi.spyOn(binding, 'connect');
@@ -130,21 +130,21 @@ describe('FlexibleSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.connect(session);
           slot.commit();
         });
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.reconcile(value2, session);
           slot.commit();
         });
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.reconcile(value1, session);
           slot.commit();
         });
@@ -175,7 +175,7 @@ describe('FlexibleSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new FlexibleSlot(binding);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const setValueSpy = vi.spyOn(binding, 'value', 'set');
@@ -186,7 +186,7 @@ describe('FlexibleSlot', () => {
       SESSION1: {
         const target = createHydrationTarget(document.createElement('div'));
 
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.hydrate(target, session);
           slot.commit();
         });
@@ -200,7 +200,7 @@ describe('FlexibleSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startUpdate((session) => {
+        const dirty = updater.startUpdate((session) => {
           const dirty = slot.reconcile(value, session);
           slot.commit();
           return dirty;

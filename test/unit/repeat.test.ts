@@ -17,7 +17,7 @@ import {
   createElement,
   createRuntime,
   permutations,
-  UpdateHelper,
+  TestUpdater,
 } from '../test-helpers.js';
 
 const TEXT_TEMPLATE = new TextTemplate<string>();
@@ -102,10 +102,10 @@ describe('RepeatBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new RepeatBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -143,9 +143,9 @@ describe('RepeatBinding', () => {
         document.createComment(''),
       );
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.hydrate(target, session);
         binding.commit();
       });
@@ -182,17 +182,17 @@ describe('RepeatBinding', () => {
         document.createComment(''),
       );
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
       }
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
@@ -228,10 +228,10 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const helper = new UpdateHelper();
+          const updater = new TestUpdater();
 
           SESSION1: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.connect(session);
               binding.commit();
             });
@@ -244,7 +244,7 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.value = props2;
               binding.connect(session);
               binding.commit();
@@ -294,10 +294,10 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const helper = new UpdateHelper();
+          const updater = new TestUpdater();
 
           SESSION1: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.connect(session);
               binding.commit();
             });
@@ -310,7 +310,7 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.value = props2;
               binding.connect(session);
               binding.commit();
@@ -324,7 +324,7 @@ describe('RepeatBinding', () => {
           }
 
           SESSION3: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.value = props1;
               binding.connect(session);
               binding.commit();
@@ -372,10 +372,10 @@ describe('RepeatBinding', () => {
           };
           const container = createElement('div', {}, part.node);
           const binding = new RepeatBinding(props1, part);
-          const helper = new UpdateHelper();
+          const updater = new TestUpdater();
 
           SESSION1: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.connect(session);
               binding.commit();
             });
@@ -388,7 +388,7 @@ describe('RepeatBinding', () => {
           }
 
           SESSION2: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.value = props2;
               binding.connect(session);
               binding.commit();
@@ -402,7 +402,7 @@ describe('RepeatBinding', () => {
           }
 
           SESSION3: {
-            helper.startUpdate((session) => {
+            updater.startUpdate((session) => {
               binding.value = props1;
               binding.connect(session);
               binding.commit();
@@ -443,10 +443,10 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -458,7 +458,7 @@ describe('RepeatBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -471,7 +471,7 @@ describe('RepeatBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props1;
           binding.connect(session);
           binding.commit();
@@ -499,10 +499,10 @@ describe('RepeatBinding', () => {
       };
       const container = createElement('div', {}, part.node);
       const binding = new RepeatBinding(props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -513,7 +513,7 @@ describe('RepeatBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -522,7 +522,7 @@ describe('RepeatBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });

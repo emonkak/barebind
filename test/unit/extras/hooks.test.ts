@@ -10,18 +10,18 @@ import {
 } from '@/extras/hooks.js';
 import { Atom, type Signal } from '@/extras/signal.js';
 import type { RenderSession } from '@/render-session.js';
-import { RenderHelper } from '../../test-helpers.js';
+import { TestRenderer } from '../../test-helpers.js';
 
 describe('DeferredValue()', () => {
   it('returns the value deferred until next rendering', async () => {
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
 
     SESSION1: {
       const callback = vi.fn((session: RenderSession) => {
         return session.use(DeferredValue('foo'));
       });
 
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('foo');
@@ -32,7 +32,7 @@ describe('DeferredValue()', () => {
         return session.use(DeferredValue('bar'));
       });
 
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('foo');
@@ -45,7 +45,7 @@ describe('DeferredValue()', () => {
         return session.use(DeferredValue('bar'));
       });
 
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledOnce();
       expect(callback).toHaveReturnedWith('bar');
@@ -53,13 +53,13 @@ describe('DeferredValue()', () => {
   });
 
   it('returns the initial value if it is given', async () => {
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
     const callback = vi.fn((session: RenderSession) => {
       return session.use(DeferredValue('foo', 'bar'));
     });
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveReturnedWith('bar');
@@ -68,7 +68,7 @@ describe('DeferredValue()', () => {
     await Promise.resolve();
 
     SESSION2: {
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveReturnedWith('foo');
@@ -87,18 +87,18 @@ describe('LocalAtom()', () => {
 
       return signal;
     };
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
 
     let stableSignal: Signal<number>;
 
     SESSION1: {
-      stableSignal = helper.startRender(callback);
+      stableSignal = renderer.startRender(callback);
 
       expect(stableSignal.value).toBe(101);
     }
 
     SESSION2: {
-      const signal = helper.startRender(callback);
+      const signal = renderer.startRender(callback);
 
       expect(signal).toBe(stableSignal);
       expect(signal.value).toBe(102);
@@ -122,18 +122,18 @@ describe('LocalComputed()', () => {
 
       return signal;
     };
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
 
     let stableSignal: Signal<number>;
 
     SESSION1: {
-      stableSignal = helper.startRender(callback);
+      stableSignal = renderer.startRender(callback);
 
       expect(stableSignal.value).toBe(7);
     }
 
     SESSION2: {
-      const signal = helper.startRender(callback);
+      const signal = renderer.startRender(callback);
 
       expect(signal).toBe(stableSignal);
       expect(signal.value).toBe(8);
@@ -143,14 +143,14 @@ describe('LocalComputed()', () => {
 
 describe('useEventCallback()', () => {
   it('returns a stable callback', () => {
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
 
     const callback1 = vi.fn();
     const callback2 = vi.fn();
     let stableCallback: () => void;
 
     SESSION1: {
-      stableCallback = helper.startRender((session) => {
+      stableCallback = renderer.startRender((session) => {
         const callback = session.use(EventCallback(callback1));
 
         session.useEffect(() => {
@@ -165,7 +165,7 @@ describe('useEventCallback()', () => {
     }
 
     SESSION1: {
-      const callback = helper.startRender((session) => {
+      const callback = renderer.startRender((session) => {
         const callback = session.use(EventCallback(callback2));
 
         session.useEffect(() => {
@@ -184,7 +184,7 @@ describe('useEventCallback()', () => {
 
 describe('useSyncExternalStore()', () => {
   it('forces the update if the snapshot has been changed when updating the snapshot', async () => {
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
     let count = 0;
 
     const callback = vi.fn((session: RenderSession) => {
@@ -201,7 +201,7 @@ describe('useSyncExternalStore()', () => {
     const getSnapshot = () => count;
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveLastReturnedWith(0);
@@ -217,7 +217,7 @@ describe('useSyncExternalStore()', () => {
     expect(unsubscribe).not.toHaveBeenCalled();
 
     SESSION2: {
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveLastReturnedWith(1);
@@ -225,14 +225,14 @@ describe('useSyncExternalStore()', () => {
       expect(unsubscribe).not.toHaveBeenCalled();
     }
 
-    helper.finalizeHooks();
+    renderer.finalizeHooks();
 
     expect(subscribe).toHaveBeenCalledOnce();
     expect(unsubscribe).toHaveBeenCalledOnce();
   });
 
   it('forces the update if the snapshot has been changed when subscribing the store', async () => {
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
     const subscribers = new LinkedList<() => void>();
     let count = 0;
 
@@ -258,7 +258,7 @@ describe('useSyncExternalStore()', () => {
     };
 
     SESSION1: {
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(1);
       expect(callback).toHaveLastReturnedWith(0);
@@ -272,21 +272,21 @@ describe('useSyncExternalStore()', () => {
     expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
 
     SESSION2: {
-      helper.startRender(callback);
+      renderer.startRender(callback);
 
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveLastReturnedWith(1);
       expect(Array.from(subscribers)).toStrictEqual([expect.any(Function)]);
     }
 
-    helper.finalizeHooks();
+    renderer.finalizeHooks();
 
     expect(callback).toHaveBeenCalledTimes(3);
     expect(Array.from(subscribers)).toStrictEqual([]);
   });
 
   it('should resubscribe the store if the subscribe function is changed', async () => {
-    const helper = new RenderHelper();
+    const renderer = new TestRenderer();
 
     const unsubscribe1 = vi.fn();
     const unsubscribe2 = vi.fn();
@@ -296,7 +296,7 @@ describe('useSyncExternalStore()', () => {
     const getSnapshot2 = () => 'bar';
 
     SESSION1: {
-      const snapshot = helper.startRender((session) => {
+      const snapshot = renderer.startRender((session) => {
         return session.use(SyncEnternalStore(subscribe1, getSnapshot1));
       });
 
@@ -308,7 +308,7 @@ describe('useSyncExternalStore()', () => {
     }
 
     SESSION2: {
-      const snapshot = helper.startRender((session) => {
+      const snapshot = renderer.startRender((session) => {
         return session.use(SyncEnternalStore(subscribe2, getSnapshot1));
       });
 
@@ -320,7 +320,7 @@ describe('useSyncExternalStore()', () => {
     }
 
     SESSION3: {
-      const snapshot = helper.startRender((session) => {
+      const snapshot = renderer.startRender((session) => {
         return session.use(SyncEnternalStore(subscribe2, getSnapshot2));
       });
 
@@ -331,7 +331,7 @@ describe('useSyncExternalStore()', () => {
       expect(unsubscribe2).toHaveBeenCalledTimes(0);
     }
 
-    helper.finalizeHooks();
+    renderer.finalizeHooks();
 
     expect(subscribe1).toHaveBeenCalledTimes(1);
     expect(subscribe2).toHaveBeenCalledTimes(1);

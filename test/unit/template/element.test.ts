@@ -6,7 +6,7 @@ import { HTML_NAMESPACE_URI, SVG_NAMESPACE_URI } from '@/template/template.js';
 import {
   createElement,
   serializeNode,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('Element()', () => {
@@ -56,9 +56,9 @@ describe('ElementTemplate', () => {
         createElement('div', { class: 'foo' }, document.createComment('bar')),
       );
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -98,9 +98,9 @@ describe('ElementTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
@@ -143,9 +143,9 @@ describe('ElementTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 

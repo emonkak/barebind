@@ -25,7 +25,7 @@ import { MockBindable, MockPrimitive } from '../../mocks.js';
 import {
   createElement as createDOMElement,
   createRuntime,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('createElement()', () => {
@@ -230,10 +230,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -253,9 +253,9 @@ describe('ElementBinding', () => {
       };
       const target = createHydrationTarget(document.createElement('div'));
       const binding = new ElementBinding(props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.hydrate(target, session);
       });
     });
@@ -269,10 +269,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -281,7 +281,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -298,10 +298,10 @@ describe('ElementBinding', () => {
         node: document.createElement('button'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -312,7 +312,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -322,7 +322,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -339,10 +339,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -351,7 +351,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -361,7 +361,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -378,10 +378,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -389,7 +389,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -399,7 +399,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -416,10 +416,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -428,7 +428,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -438,7 +438,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -455,10 +455,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -469,7 +469,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -479,7 +479,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -496,10 +496,10 @@ describe('ElementBinding', () => {
         node: document.createElement('input'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -509,7 +509,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -520,7 +520,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -540,10 +540,10 @@ describe('ElementBinding', () => {
           node: document.createElement(name),
         };
         const binding = new ElementBinding(props1, part);
-        const helper = new UpdateHelper();
+        const updater = new TestUpdater();
 
         SESSION1: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.connect(session);
             binding.commit();
           });
@@ -553,7 +553,7 @@ describe('ElementBinding', () => {
         }
 
         SESSION2: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.value = props2;
             binding.connect(session);
             binding.commit();
@@ -564,7 +564,7 @@ describe('ElementBinding', () => {
         }
 
         SESSION3: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.disconnect(session);
             binding.rollback();
           });
@@ -587,10 +587,10 @@ describe('ElementBinding', () => {
         ),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -599,7 +599,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -609,7 +609,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -626,10 +626,10 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -638,7 +638,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -648,7 +648,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -667,10 +667,10 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -682,7 +682,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -694,7 +694,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -707,7 +707,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION4: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -727,10 +727,10 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -740,7 +740,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -751,7 +751,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -770,10 +770,10 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -784,7 +784,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -796,7 +796,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props3;
           binding.connect(session);
           binding.commit();
@@ -806,7 +806,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION4: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -822,10 +822,10 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -842,13 +842,13 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -859,7 +859,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -876,7 +876,7 @@ describe('ElementBinding', () => {
       expect(props2.onClick).toHaveBeenCalledWith(event1);
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -902,13 +902,13 @@ describe('ElementBinding', () => {
         node: document.createElement('label'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -924,7 +924,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -953,7 +953,7 @@ describe('ElementBinding', () => {
       expect(props2.onClick.handleEvent).toHaveBeenCalledWith(event1);
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -993,10 +993,10 @@ describe('ElementBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new ElementBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -1007,7 +1007,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -1017,7 +1017,7 @@ describe('ElementBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

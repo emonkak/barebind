@@ -15,8 +15,8 @@ import { MockSlot } from '../mocks.js';
 import {
   createElement,
   createRuntime,
-  RenderHelper,
-  UpdateHelper,
+  TestRenderer,
+  TestUpdater,
 } from '../test-helpers.js';
 
 describe('createComponent()', () => {
@@ -44,9 +44,9 @@ describe('createComponent()', () => {
       const render = vi.fn(() => null);
       const component = createComponent(render);
       const props = {};
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
 
-      helper.startRender((session) => {
+      renderer.startRender((session) => {
         component.render(props, session);
       });
 
@@ -124,10 +124,10 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           session.frame.pendingCoroutines.push(binding);
         });
@@ -150,14 +150,14 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Increment, props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const commitSpy = vi.spyOn(binding, 'commit');
 
       binding.pendingLanes = Lanes.NoLanes;
 
       SESSION1: {
-        helper.startUpdate(
+        updater.startUpdate(
           (session) => {
             session.frame.pendingCoroutines.push(binding);
             session.frame.mutationEffects.push(binding);
@@ -175,7 +175,7 @@ describe('ComponentBinding', () => {
       await Promise.resolve();
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           session.frame.pendingCoroutines.push(binding);
           session.frame.mutationEffects.push(binding);
         });
@@ -202,10 +202,10 @@ describe('ComponentBinding', () => {
       const binding = new ComponentBinding(Greet, props, part);
       const container = createElement('div', {}, part.node);
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.hydrate(target, session);
           session.frame.pendingCoroutines.push(binding);
           session.frame.mutationEffects.push(binding);
@@ -223,7 +223,7 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -252,15 +252,15 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         session.frame.pendingCoroutines.push(binding);
         session.frame.mutationEffects.push(binding);
       });
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           const container = document.createElement('div');
           const target = createHydrationTarget(container);
           binding.hydrate(target, session);
@@ -286,10 +286,10 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(Greet, props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           session.frame.pendingCoroutines.push(binding);
         });
@@ -306,7 +306,7 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           session.frame.mutationEffects.push(binding);
@@ -338,10 +338,10 @@ describe('ComponentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new ComponentBinding(EnqueueEffect, props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           session.frame.mutationEffects.push(binding);
         });
@@ -358,7 +358,7 @@ describe('ComponentBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

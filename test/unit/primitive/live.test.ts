@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { LiveBinding, LivePrimitive } from '@/primitive/live.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('LivePrimitive', () => {
   describe('name', () => {
@@ -69,12 +69,12 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const setValueSpy = vi.spyOn(part.node, 'value', 'set');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -84,7 +84,7 @@ describe('LiveBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -105,10 +105,10 @@ describe('LiveBinding', () => {
         defaultValue: '',
       };
       const binding = new LiveBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -117,7 +117,7 @@ describe('LiveBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

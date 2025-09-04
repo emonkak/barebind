@@ -9,7 +9,7 @@ import {
   MockSlot,
   MockTemplate,
 } from '../../mocks.js';
-import { serializeNode, UpdateHelper } from '../../test-helpers.js';
+import { serializeNode, TestUpdater } from '../../test-helpers.js';
 
 describe('FragmentTemplate', () => {
   describe('arity', () => {
@@ -70,7 +70,7 @@ describe('FragmentTemplate', () => {
       };
       const container = document.createElement('div');
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const hydrationSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'hydrate').mockImplementation(() => {
@@ -91,7 +91,7 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -150,7 +150,7 @@ describe('FragmentTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const renderSpys = innerTemplates.map((template) =>
         vi.spyOn(template, 'render').mockImplementation(() => {
@@ -171,7 +171,7 @@ describe('FragmentTemplate', () => {
         }),
       );
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 

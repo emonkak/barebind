@@ -6,7 +6,7 @@ import { MockSlot } from '../../mocks.js';
 import {
   createElement,
   createRuntime,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('SpreadPrimitive', () => {
@@ -100,9 +100,9 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.connect(session);
         binding.commit();
       });
@@ -129,9 +129,9 @@ describe('SpreadBinding', () => {
       const binding = new SpreadBinding(props, part);
       const container = createElement('div', {}, part.node);
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.hydrate(target, session);
       });
 
@@ -216,15 +216,15 @@ describe('SpreadBinding', () => {
       const binding = new SpreadBinding(props, part);
       const container = createElement('div', {}, part.node);
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.connect(session);
         binding.commit();
       });
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
@@ -250,10 +250,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -326,7 +326,7 @@ describe('SpreadBinding', () => {
       SESSION2: {
         const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = props2;
           binding.connect(session);
           binding.commit();
@@ -393,10 +393,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new SpreadBinding(props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -418,10 +418,10 @@ describe('SpreadBinding', () => {
         node: document.createElement('dialog'),
       };
       const binding = new SpreadBinding(props, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -492,7 +492,7 @@ describe('SpreadBinding', () => {
       SESSION2: {
         const slots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

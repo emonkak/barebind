@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { PropertyBinding, PropertyPrimitive } from '@/primitive/property.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('PropertyPrimitive', () => {
   describe('name', () => {
@@ -68,10 +68,10 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -93,10 +93,10 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -105,7 +105,7 @@ describe('PropertyBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = value2;
           binding.connect(session);
           binding.commit();
@@ -126,10 +126,10 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -138,7 +138,7 @@ describe('PropertyBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -156,12 +156,12 @@ describe('PropertyBinding', () => {
         defaultValue: '',
       };
       const binding = new PropertyBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const setInnerHTMLSpy = vi.spyOn(part.node, 'innerHTML', 'set');
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

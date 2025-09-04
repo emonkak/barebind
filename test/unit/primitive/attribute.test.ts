@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { AttributeBinding, AttributePrimitive } from '@/primitive/attribute.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('AttributePrimitive', () => {
   describe('name', () => {
@@ -65,10 +65,10 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -90,10 +90,10 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding<unknown>(value, part);
-        const helper = new UpdateHelper();
+        const updater = new TestUpdater();
 
         SESSION1: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.connect(session);
             binding.commit();
           });
@@ -102,7 +102,7 @@ describe('AttributeBinding', () => {
         }
 
         SESSION2: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.value = value2;
             binding.connect(session);
             binding.commit();
@@ -133,10 +133,10 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const helper = new UpdateHelper();
+        const updater = new TestUpdater();
 
         SESSION: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.connect(session);
             binding.commit();
           });
@@ -158,10 +158,10 @@ describe('AttributeBinding', () => {
           name: 'class',
         };
         const binding = new AttributeBinding(value, part);
-        const helper = new UpdateHelper();
+        const updater = new TestUpdater();
 
         SESSION: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.connect(session);
             binding.commit();
           });
@@ -181,10 +181,10 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -193,7 +193,7 @@ describe('AttributeBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -210,12 +210,12 @@ describe('AttributeBinding', () => {
         name: 'class',
       };
       const binding = new AttributeBinding<unknown>(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const removeAttributeSpy = vi.spyOn(part.node, 'removeAttribute');
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

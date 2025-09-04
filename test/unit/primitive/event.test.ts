@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { EventBinding, EventPrimitive } from '@/primitive/event.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('EventPrimitive', () => {
   describe('name', () => {
@@ -100,10 +100,10 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -124,14 +124,14 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -148,7 +148,7 @@ describe('EventBinding', () => {
       expect(handler2).not.toHaveBeenCalled();
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = handler2;
           binding.connect(session);
           binding.commit();
@@ -175,14 +175,14 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const event = new MouseEvent('click');
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -203,7 +203,7 @@ describe('EventBinding', () => {
       expect(handler2.handleEvent).not.toHaveBeenCalled();
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = handler2;
           binding.connect(session);
           binding.commit();
@@ -240,7 +240,7 @@ describe('EventBinding', () => {
           name: 'click',
         };
         const binding = new EventBinding(handler1, part);
-        const helper = new UpdateHelper();
+        const updater = new TestUpdater();
 
         const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
         const removeEventListenerSpy = vi.spyOn(
@@ -249,7 +249,7 @@ describe('EventBinding', () => {
         );
 
         SESSION1: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.connect(session);
             binding.commit();
           });
@@ -264,7 +264,7 @@ describe('EventBinding', () => {
         }
 
         SESSION2: {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             binding.value = handler2;
             binding.connect(session);
             binding.commit();
@@ -291,13 +291,13 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -315,13 +315,13 @@ describe('EventBinding', () => {
         name: 'click',
       };
       const binding = new EventBinding(handler, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const addEventListenerSpy = vi.spyOn(part.node, 'addEventListener');
       const removeEventListenerSpy = vi.spyOn(part.node, 'removeEventListener');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -332,7 +332,7 @@ describe('EventBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

@@ -3,7 +3,7 @@ import { createHydrationTarget, HydrationError } from '@/hydration.js';
 import { PartType } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { TextTemplate } from '@/template/text.js';
-import { createElement, UpdateHelper } from '../../test-helpers.js';
+import { createElement, TestUpdater } from '../../test-helpers.js';
 
 describe('TextTemplate', () => {
   describe('arity', () => {
@@ -37,9 +37,9 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {}, 'foo');
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -70,10 +70,10 @@ describe('TextTemplate', () => {
       };
       const container = createElement('div', {});
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           template.hydrate(binds, part, target, session);
         });
       }).toThrow(HydrationError);
@@ -90,9 +90,9 @@ describe('TextTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 

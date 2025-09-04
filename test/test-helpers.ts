@@ -12,7 +12,7 @@ import { RenderSession } from '@/render-session.js';
 import { Runtime, type RuntimeOptions } from '@/runtime.js';
 import { MockBackend, MockCoroutine } from './mocks.js';
 
-export class RenderHelper {
+export class TestRenderer {
   readonly runtime: Runtime;
 
   hooks: Hook[] = [];
@@ -75,7 +75,7 @@ export class RenderHelper {
   }
 }
 
-export class UpdateHelper {
+export class TestUpdater {
   readonly runtime;
 
   constructor(runtime: Runtime = createRuntime()) {

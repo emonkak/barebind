@@ -11,7 +11,7 @@ import { MockSlot } from '../../mocks.js';
 import {
   createElement,
   serializeNode,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 const TEMPLATE_PLACEHOLDER = '__test__';
@@ -491,9 +491,9 @@ describe('TaggedTemplate', () => {
         document.createComment('corge'),
       );
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -613,9 +613,9 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, 'foo'),
       );
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -639,9 +639,9 @@ describe('TaggedTemplate', () => {
         createElement('div', {}, '[qux, quux]'),
       );
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -727,9 +727,9 @@ describe('TaggedTemplate', () => {
       };
       const container = createElement('div', {});
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -756,10 +756,10 @@ describe('TaggedTemplate', () => {
       };
       const container = createElement('div', {}, 'foo');
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           return template.hydrate(['foo'], part, target, session);
         });
       }).toThrow('There is no node that the hole indicates.');
@@ -789,10 +789,10 @@ describe('TaggedTemplate', () => {
           namespaceURI: HTML_NAMESPACE_URI,
         };
         const target = createHydrationTarget(container);
-        const helper = new UpdateHelper();
+        const updater = new TestUpdater();
 
         expect(() => {
-          helper.startUpdate((session) => {
+          updater.startUpdate((session) => {
             return template.hydrate([], part, target, session);
           });
         }).toThrow(HydrationError);
@@ -816,9 +816,9 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
@@ -932,9 +932,9 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
@@ -951,9 +951,9 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
@@ -1038,9 +1038,9 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
@@ -1095,9 +1095,9 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 
@@ -1122,10 +1122,10 @@ describe('TaggedTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           return template.render(['foo'], part, session);
         });
       }).toThrow('There is no node that the hole indicates.');

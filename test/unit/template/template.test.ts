@@ -17,7 +17,7 @@ import {
 import {
   createElement,
   createRuntime,
-  UpdateHelper,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('AbstractTemplate', () => {
@@ -90,10 +90,10 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -117,14 +117,14 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = createElement('div', {}, 'foo', part.node);
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const hydrateSpy = vi.spyOn(template, 'hydrate').mockReturnValue({
         childNodes: [container.firstChild!],
         slots: [],
       });
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.hydrate(target, session);
         binding.commit();
       });
@@ -152,15 +152,15 @@ describe('TemplateBinding', () => {
       const binding = new TemplateBinding(template, binds, part);
       const container = document.createElement('div');
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.connect(session);
         binding.commit();
       });
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
@@ -179,7 +179,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const container = createElement('div', {}, part.node);
       const fragment = createElement(
@@ -225,7 +225,7 @@ describe('TemplateBinding', () => {
         });
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -264,7 +264,7 @@ describe('TemplateBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = binds2;
           binding.connect(session);
           binding.commit();
@@ -299,7 +299,7 @@ describe('TemplateBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -342,7 +342,7 @@ describe('TemplateBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new TemplateBinding(template, binds1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const container = createElement('div', {}, part.node);
       const fragment = [
@@ -389,7 +389,7 @@ describe('TemplateBinding', () => {
         });
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -428,7 +428,7 @@ describe('TemplateBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = binds2;
           binding.connect(session);
           binding.commit();
@@ -463,7 +463,7 @@ describe('TemplateBinding', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

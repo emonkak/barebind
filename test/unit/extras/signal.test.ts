@@ -16,8 +16,8 @@ import {
 import {
   createElement,
   createRuntime,
-  RenderHelper,
-  UpdateHelper,
+  TestRenderer,
+  TestUpdater,
 } from '../../test-helpers.js';
 
 describe('SignalDirective', () => {
@@ -71,14 +71,14 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal1,
         part,
-        helper.runtime,
+        updater.runtime,
       );
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         binding.connect(session);
         binding.commit();
       });
@@ -97,17 +97,17 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        helper.runtime,
+        updater.runtime,
       ) as SignalBinding<string>;
       const container = createElement('div', {}, part.node);
       const target = createHydrationTarget(container);
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.hydrate(target, session);
           binding.commit();
         });
@@ -136,24 +136,24 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        helper.runtime,
+        updater.runtime,
       );
       const container = createElement('div', {}, part.node);
       const target = createHydrationTarget(container);
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
       }
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.hydrate(target, session);
         });
       }).toThrow(HydrationError);
@@ -169,15 +169,15 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        helper.runtime,
+        updater.runtime,
       ) as SignalBinding<string>;
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -207,15 +207,15 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal1,
         part,
-        helper.runtime,
+        updater.runtime,
       ) as SignalBinding<string>;
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -224,7 +224,7 @@ describe('SiganlBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = signal2;
           binding.connect(session);
           binding.commit();
@@ -252,15 +252,15 @@ describe('SiganlBinding', () => {
         precedingText: '',
         followingText: '',
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
       const binding = SignalDirective.resolveBinding(
         signal,
         part,
-        helper.runtime,
+        updater.runtime,
       ) as SignalBinding<string>;
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -269,7 +269,7 @@ describe('SiganlBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -291,7 +291,7 @@ describe('Signal', () => {
   describe('[$customHook]()', async () => {
     it('request an update if the signal value has been changed', async () => {
       const signal = new Atom('foo');
-      const helper = new RenderHelper();
+      const renderer = new TestRenderer();
       const callback = vi.fn((session: RenderContext) => {
         const value = session.use(signal);
 
@@ -304,7 +304,7 @@ describe('Signal', () => {
       });
 
       SESSION1: {
-        helper.startRender(callback);
+        renderer.startRender(callback);
 
         expect(callback).toHaveBeenCalledTimes(1);
         expect(callback).toHaveLastReturnedWith('foo');
@@ -324,7 +324,7 @@ describe('Signal', () => {
       expect(callback).toHaveBeenCalledTimes(3);
       expect(callback).toHaveLastReturnedWith('qux');
 
-      helper.finalizeHooks();
+      renderer.finalizeHooks();
 
       signal.value = 'quux';
 

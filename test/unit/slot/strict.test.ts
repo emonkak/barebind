@@ -6,7 +6,7 @@ import { PartType } from '@/internal.js';
 import { Strict, StrictSlot } from '@/slot/strict.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBinding, MockDirective, MockPrimitive } from '../../mocks.js';
-import { UpdateHelper } from '../../test-helpers.js';
+import { TestUpdater } from '../../test-helpers.js';
 
 describe('Strcit()', () => {
   it('creates a SlotElement with StrictSlot', () => {
@@ -49,7 +49,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const setValueSpy = vi.spyOn(binding, 'value', 'set');
@@ -59,7 +59,7 @@ describe('StrictSlot', () => {
       const rollbackSpy = vi.spyOn(binding, 'rollback');
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.connect(session);
           slot.commit();
         });
@@ -74,7 +74,7 @@ describe('StrictSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startUpdate((session) => {
+        const dirty = updater.startUpdate((session) => {
           const dirty = slot.reconcile(value2, session);
           slot.commit();
           slot.commit(); // ignore the second commit
@@ -93,7 +93,7 @@ describe('StrictSlot', () => {
       }
 
       SESSION3: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.disconnect(session);
           slot.rollback();
           slot.rollback(); // ignore the second rollback
@@ -120,7 +120,7 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value, part);
       const slot = new StrictSlot(binding);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
       const setValueSpy = vi.spyOn(binding, 'value', 'set');
@@ -131,7 +131,7 @@ describe('StrictSlot', () => {
       SESSION1: {
         const target = createHydrationTarget(document.createElement('div'));
 
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.hydrate(target, session);
           slot.commit();
         });
@@ -145,7 +145,7 @@ describe('StrictSlot', () => {
       }
 
       SESSION2: {
-        const dirty = helper.startUpdate((session) => {
+        const dirty = updater.startUpdate((session) => {
           const dirty = slot.reconcile(value, session);
           slot.commit();
           return dirty;
@@ -172,15 +172,15 @@ describe('StrictSlot', () => {
       };
       const binding = new MockBinding(MockPrimitive, value1, part);
       const slot = new StrictSlot(binding);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      helper.startUpdate((session) => {
+      updater.startUpdate((session) => {
         slot.connect(session);
         slot.commit();
       });
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           slot.reconcile(value2, session);
         });
       }).toThrow(

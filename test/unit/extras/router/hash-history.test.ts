@@ -11,15 +11,15 @@ import {
 import { RelativeURL } from '@/extras/router/relative-url.js';
 import type { RenderSession } from '@/render-session.js';
 import { MockCoroutine } from '../../../mocks.js';
-import { createElement, RenderHelper } from '../../../test-helpers.js';
+import { createElement, TestRenderer } from '../../../test-helpers.js';
 
 describe('HashHistory()', () => {
   const originalURL = location.href;
   const originalState = history.state;
-  let helper!: RenderHelper;
+  let helper!: TestRenderer;
 
   beforeEach(() => {
-    helper = new RenderHelper();
+    helper = new TestRenderer();
   });
 
   afterEach(() => {

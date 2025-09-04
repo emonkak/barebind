@@ -7,13 +7,13 @@ import {
 } from '@/extras/router/history.js';
 import { RelativeURL } from '@/extras/router/relative-url.js';
 import { ScrollRestration } from '@/extras/router/scroll-restration.js';
-import { createElement, RenderHelper } from '../../../test-helpers.js';
+import { createElement, TestRenderer } from '../../../test-helpers.js';
 
 describe('ScrollRestration()', () => {
-  let helper!: RenderHelper;
+  let helper!: TestRenderer;
 
   beforeEach(() => {
-    helper = new RenderHelper();
+    helper = new TestRenderer();
   });
 
   afterEach(() => {

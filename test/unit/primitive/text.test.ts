@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { TextBinding, TextPrimitive } from '@/primitive/text.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('TextPrimitive', () => {
   describe('name', () => {
@@ -68,10 +68,10 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -93,10 +93,10 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<string | null>(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -105,7 +105,7 @@ describe('TextBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = value2;
           binding.connect(session);
           binding.commit();
@@ -125,10 +125,10 @@ describe('TextBinding', () => {
         followingText: ')',
       };
       const binding = new TextBinding<number | null>(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -137,7 +137,7 @@ describe('TextBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = value2;
           binding.connect(session);
           binding.commit();
@@ -158,10 +158,10 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -170,7 +170,7 @@ describe('TextBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -188,12 +188,12 @@ describe('TextBinding', () => {
         followingText: '',
       };
       const binding = new TextBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

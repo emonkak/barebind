@@ -4,7 +4,7 @@ import { PartType } from '@/internal.js';
 import { ChildNodeTemplate } from '@/template/child-node.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockSlot, MockTemplate } from '../../mocks.js';
-import { createElement, UpdateHelper } from '../../test-helpers.js';
+import { createElement, TestUpdater } from '../../test-helpers.js';
 
 describe('ChildNodeTemplate', () => {
   describe('arity', () => {
@@ -36,9 +36,9 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {}, document.createComment(''));
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.hydrate(binds, part, target, session);
       });
 
@@ -70,10 +70,10 @@ describe('ChildNodeTemplate', () => {
       };
       const container = createElement('div', {});
       const target = createHydrationTarget(container);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       expect(() => {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           template.hydrate(binds, part, target, session);
         });
       }).toThrow(HydrationError);
@@ -90,9 +90,9 @@ describe('ChildNodeTemplate', () => {
         anchorNode: null,
         namespaceURI: HTML_NAMESPACE_URI,
       };
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
-      const { childNodes, slots } = helper.startUpdate((session) => {
+      const { childNodes, slots } = updater.startUpdate((session) => {
         return template.render(binds, part, session);
       });
 

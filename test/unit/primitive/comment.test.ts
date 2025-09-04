@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { PartType } from '@/internal.js';
 import { CommentBinding, CommentPrimitive } from '@/primitive/comment.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('CommentPrimitive', () => {
   describe('name', () => {
@@ -69,10 +69,10 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -94,10 +94,10 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding<string | null>(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -106,7 +106,7 @@ describe('CommentBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = value2;
           binding.connect(session);
           binding.commit();
@@ -126,10 +126,10 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding<number | null>(value1, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -138,7 +138,7 @@ describe('CommentBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.value = value2;
           binding.connect(session);
           binding.commit();
@@ -159,10 +159,10 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION1: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -171,7 +171,7 @@ describe('CommentBinding', () => {
       }
 
       SESSION2: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
@@ -189,12 +189,12 @@ describe('CommentBinding', () => {
         namespaceURI: HTML_NAMESPACE_URI,
       };
       const binding = new CommentBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       const setNodeValueSpy = vi.spyOn(part.node, 'nodeValue', 'set');
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });

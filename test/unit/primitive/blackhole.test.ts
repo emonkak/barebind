@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { PartType } from '@/internal.js';
 import { BlackholeBinding, BlackholePrimitive } from '@/primitive/blackhole.js';
-import { createRuntime, UpdateHelper } from '../../test-helpers.js';
+import { createRuntime, TestUpdater } from '../../test-helpers.js';
 
 describe('BlackholePrimitive', () => {
   describe('name', () => {
@@ -52,10 +52,10 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.connect(session);
           binding.commit();
         });
@@ -71,10 +71,10 @@ describe('BlackholeBinding', () => {
         node: document.createElement('div'),
       };
       const binding = new BlackholeBinding(value, part);
-      const helper = new UpdateHelper();
+      const updater = new TestUpdater();
 
       SESSION: {
-        helper.startUpdate((session) => {
+        updater.startUpdate((session) => {
           binding.disconnect(session);
           binding.rollback();
         });
