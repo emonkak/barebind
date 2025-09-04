@@ -24,8 +24,6 @@ describe('RefPrimitive', () => {
       expect(() => {
         ensureValue.call(RefPrimitive, () => {}, part);
         ensureValue.call(RefPrimitive, { current: null }, part);
-        ensureValue.call(RefPrimitive, null, part);
-        ensureValue.call(RefPrimitive, undefined, part);
       }).not.toThrow();
     });
 
@@ -149,17 +147,6 @@ describe('RefBinding', () => {
         expect(ref1.current).toBe(null);
         expect(ref2.current).toBe(part.node);
       }
-
-      SESSION3: {
-        helper.startUpdate((session) => {
-          binding.value = null;
-          binding.connect(session);
-          binding.commit();
-        });
-
-        expect(ref1.current).toBe(null);
-        expect(ref2.current).toBe(null);
-      }
     });
 
     it('invokes the callback with the element as an argument', () => {
@@ -212,19 +199,6 @@ describe('RefBinding', () => {
         expect(ref1).toHaveBeenCalledOnce();
         expect(ref2).toHaveBeenCalledOnce();
         expect(ref2).toHaveBeenCalledWith(part.node);
-      }
-
-      SESSION4: {
-        helper.startUpdate((session) => {
-          binding.value = null;
-          binding.connect(session);
-          binding.commit();
-        });
-
-        expect(cleanup1).toHaveBeenCalledOnce();
-        expect(cleanup2).toHaveBeenCalledOnce();
-        expect(ref1).toHaveBeenCalledOnce();
-        expect(ref2).toHaveBeenCalledOnce();
       }
     });
   });

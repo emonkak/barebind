@@ -12,15 +12,10 @@ import { PrimitiveBinding } from './primitive.js';
 
 export type ElementRef = RefCallback<Element> | RefObject<Element | null>;
 
-type Nullable<T> = T | null | undefined;
-
-export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
+export const RefPrimitive: Primitive<ElementRef> = {
   name: 'RefPrimitive',
-  ensureValue(
-    value: unknown,
-    part: Part,
-  ): asserts value is Nullable<ElementRef> {
-    if (value != null && !isElementRef(value)) {
+  ensureValue(value: unknown, part: Part): asserts value is ElementRef {
+    if (!isElementRef(value)) {
       throw new DirectiveError(
         RefPrimitive,
         value,
@@ -30,7 +25,7 @@ export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
     }
   },
   resolveBinding(
-    value: Nullable<ElementRef>,
+    value: ElementRef,
     part: Part,
     _context: DirectiveContext,
   ): RefBinding {
@@ -50,18 +45,18 @@ export const RefPrimitive: Primitive<Nullable<ElementRef>> = {
 };
 
 export class RefBinding extends PrimitiveBinding<
-  Nullable<ElementRef>,
+  ElementRef,
   Part.AttributePart
 > {
-  private _memoizedValue: Nullable<ElementRef> = null;
+  private _memoizedValue: ElementRef | null = null;
 
   private _memoizedCleanup: Cleanup | void = undefined;
 
-  get type(): Primitive<Nullable<ElementRef>> {
+  get type(): Primitive<ElementRef> {
     return RefPrimitive;
   }
 
-  shouldBind(value: Nullable<ElementRef>): boolean {
+  shouldBind(value: ElementRef): boolean {
     return value !== this._memoizedValue;
   }
 
@@ -79,12 +74,10 @@ export class RefBinding extends PrimitiveBinding<
         }
       }
 
-      if (newRef != null) {
-        if (typeof newRef === 'function') {
-          this._memoizedCleanup = newRef(this.part.node);
-        } else {
-          newRef.current = this.part.node;
-        }
+      if (typeof newRef === 'function') {
+        this._memoizedCleanup = newRef(this.part.node);
+      } else {
+        newRef.current = this.part.node;
       }
     }
 
@@ -107,10 +100,11 @@ export class RefBinding extends PrimitiveBinding<
   }
 }
 
-function isElementRef(value: {}): value is ElementRef {
+function isElementRef(value: unknown): value is ElementRef {
   return (
     typeof value === 'function' ||
     (typeof value === 'object' &&
+      value !== null &&
       (value as RefObject<unknown>).current !== undefined)
   );
 }
