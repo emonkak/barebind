@@ -11,11 +11,11 @@ import {
   type UpdateSession,
 } from '../internal.js';
 
-export type SpreadProperties = { [key: string]: unknown };
+export type SpreadProps = { [key: string]: unknown };
 
-export const SpreadPrimitive: Primitive<SpreadProperties> = {
+export const SpreadPrimitive: Primitive<SpreadProps> = {
   name: 'SpreadPrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is SpreadProperties {
+  ensureValue(value: unknown, part: Part): asserts value is SpreadProps {
     if (!isSpreadProps(value)) {
       throw new DirectiveError(
         SpreadPrimitive,
@@ -26,7 +26,7 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
     }
   },
   resolveBinding(
-    value: SpreadProperties,
+    value: SpreadProps,
     part: Part,
     _context: DirectiveContext,
   ): SpreadBinding {
@@ -42,8 +42,8 @@ export const SpreadPrimitive: Primitive<SpreadProperties> = {
   },
 };
 
-export class SpreadBinding implements Binding<SpreadProperties> {
-  value: SpreadProperties;
+export class SpreadBinding implements Binding<SpreadProps> {
+  value: SpreadProps;
 
   readonly part: Part.ElementPart;
 
@@ -51,16 +51,16 @@ export class SpreadBinding implements Binding<SpreadProperties> {
 
   private _memoizedSlots: Map<string, Slot<unknown>> | null = null;
 
-  constructor(value: SpreadProperties, part: Part.ElementPart) {
+  constructor(value: SpreadProps, part: Part.ElementPart) {
     this.value = value;
     this.part = part;
   }
 
-  get type(): Primitive<SpreadProperties> {
+  get type(): Primitive<SpreadProps> {
     return SpreadPrimitive;
   }
 
-  shouldBind(value: SpreadProperties): boolean {
+  shouldBind(value: SpreadProps): boolean {
     return this._memoizedSlots === null || value !== this.value;
   }
 
@@ -155,7 +155,7 @@ export class SpreadBinding implements Binding<SpreadProperties> {
   }
 }
 
-function isSpreadProps(value: unknown): value is SpreadProperties {
+function isSpreadProps(value: unknown): value is SpreadProps {
   return value !== null && typeof value === 'object';
 }
 
