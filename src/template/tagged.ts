@@ -362,7 +362,7 @@ function createMarker(placeholder: string): string {
 }
 
 function extractCaseSensitiveAttributeName(s: string): string {
-  /* v8 ignore next @preserve */
+  /* v8 ignore next */
   return s.match(ATTRIBUTE_NAME_PATTERN)?.[0] ?? s;
 }
 
