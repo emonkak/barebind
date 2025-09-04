@@ -16,7 +16,7 @@ export {
 export type { ClassSpecifier } from './primitive/class.js';
 export type { EventHandler } from './primitive/event.js';
 export type { ElementRef } from './primitive/ref.js';
-export type { StyleProperties } from './primitive/style.js';
+export type { StyleProps } from './primitive/style.js';
 export {
   Repeat,
   type RepeatProps,

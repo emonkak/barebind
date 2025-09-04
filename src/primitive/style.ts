@@ -8,7 +8,7 @@ import {
 } from '../internal.js';
 import { PrimitiveBinding } from './primitive.js';
 
-export type StyleProperties = CSSStyleProperties & UnknownStyleProperties;
+export type StyleProps = CSSStyleProperties & UnknownStyleProperties;
 
 type CSSStyleProperties = {
   [K in StringKeys<CSSStyleDeclaration>]?: string | null | undefined;
@@ -25,9 +25,9 @@ type StringKeys<T> = {
 const VENDOR_PREFIX_PATTERN = /^(webkit|moz|ms|o)(?=[A-Z])/;
 const UPPERCASE_LETTER_PATTERN = /[A-Z]/g;
 
-export const StylePrimitive: Primitive<StyleProperties> = {
+export const StylePrimitive: Primitive<StyleProps> = {
   name: 'StylePrimitive',
-  ensureValue(value: unknown, part: Part): asserts value is StyleProperties {
+  ensureValue(value: unknown, part: Part): asserts value is StyleProps {
     if (!(typeof value === 'object' && value !== null)) {
       throw new DirectiveError(
         StylePrimitive,
@@ -38,7 +38,7 @@ export const StylePrimitive: Primitive<StyleProperties> = {
     }
   },
   resolveBinding(
-    value: StyleProperties,
+    value: StyleProps,
     part: Part,
     _context: DirectiveContext,
   ): StyleBinding {
@@ -58,16 +58,16 @@ export const StylePrimitive: Primitive<StyleProperties> = {
 };
 
 export class StyleBinding extends PrimitiveBinding<
-  StyleProperties,
+  StyleProps,
   Part.AttributePart
 > {
-  private _memoizedValue: StyleProperties = {};
+  private _memoizedValue: StyleProps = {};
 
-  get type(): Primitive<StyleProperties> {
+  get type(): Primitive<StyleProps> {
     return StylePrimitive;
   }
 
-  shouldBind(value: StyleProperties): boolean {
+  shouldBind(value: StyleProps): boolean {
     return !shallowEqual(value, this._memoizedValue);
   }
 
@@ -99,8 +99,8 @@ export class StyleBinding extends PrimitiveBinding<
 
 export function updateStyles(
   style: CSSStyleDeclaration,
-  newProps: StyleProperties,
-  oldProps: StyleProperties,
+  newProps: StyleProps,
+  oldProps: StyleProps,
 ): void {
   for (const key of Object.keys(oldProps)) {
     if (
