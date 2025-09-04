@@ -122,60 +122,6 @@ describe('RepeatBinding', () => {
     });
   });
 
-  describe('hydrate()', () => {
-    it('hydrates the tree by items', () => {
-      const source = ['foo', 'bar', 'baz'];
-      const props: RepeatProps<string> = {
-        source,
-        valueSelector: textTemplate,
-      };
-      const part: Part.ChildNodePart = {
-        type: PartType.ChildNode,
-        node: document.createComment(''),
-        anchorNode: null,
-        namespaceURI: HTML_NAMESPACE_URI,
-      };
-      const binding = new RepeatBinding(props, part);
-      const container = createElement(
-        'div',
-        {},
-        'foo',
-        document.createComment(''),
-        'bar',
-        document.createComment(''),
-        'baz',
-        document.createComment(''),
-        document.createComment(''),
-      );
-      const scope = createScope();
-      const hydrationTarget = createHydrationTarget(container);
-      const updater = new TestUpdater();
-
-      setHydrationTarget(scope, hydrationTarget);
-
-      updater.startUpdate(
-        (session) => {
-          binding.connect(session);
-        },
-        { scope },
-      );
-
-      expect(part.anchorNode).toBe(container.firstChild);
-      expect(container.innerHTML).toBe(
-        source.map((element) => element + EMPTY_COMMENT).join('') +
-          EMPTY_COMMENT,
-      );
-
-      binding.commit();
-
-      expect(part.anchorNode).toBe(container.firstChild);
-      expect(container.innerHTML).toBe(
-        source.map((element) => element + EMPTY_COMMENT).join('') +
-          EMPTY_COMMENT,
-      );
-    });
-  });
-
   describe('connect()', () => {
     it('updates items according to keys', () => {
       const source: KeyValuePair[] = [
@@ -222,7 +168,8 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             updater.startUpdate((session) => {
-              binding.bind(props2, session);
+              binding.value = props2;
+              binding.connect(session);
               binding.commit();
             });
 
@@ -287,7 +234,8 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             updater.startUpdate((session) => {
-              binding.bind(props2, session);
+              binding.value = props2;
+              binding.connect(session);
               binding.commit();
             });
 
@@ -300,7 +248,8 @@ describe('RepeatBinding', () => {
 
           SESSION3: {
             updater.startUpdate((session) => {
-              binding.bind(props1, session);
+              binding.value = props1;
+              binding.connect(session);
               binding.commit();
             });
 
@@ -312,6 +261,58 @@ describe('RepeatBinding', () => {
           }
         }
       }
+    });
+
+    it('hydrates the tree by items', () => {
+      const source = ['foo', 'bar', 'baz'];
+      const props: RepeatProps<string> = {
+        source,
+        valueSelector: textTemplate,
+      };
+      const part: Part.ChildNodePart = {
+        type: PartType.ChildNode,
+        node: document.createComment(''),
+        anchorNode: null,
+        namespaceURI: HTML_NAMESPACE_URI,
+      };
+      const binding = new RepeatBinding(props, part);
+      const container = createElement(
+        'div',
+        {},
+        'foo',
+        document.createComment(''),
+        'bar',
+        document.createComment(''),
+        'baz',
+        document.createComment(''),
+        document.createComment(''),
+      );
+      const scope = createScope();
+      const hydrationTarget = createHydrationTarget(container);
+      const updater = new TestUpdater();
+
+      setHydrationTarget(scope, hydrationTarget);
+
+      updater.startUpdate(
+        (session) => {
+          binding.connect(session);
+        },
+        { scope },
+      );
+
+      expect(part.anchorNode).toBe(container.firstChild);
+      expect(container.innerHTML).toBe(
+        source.map((element) => element + EMPTY_COMMENT).join('') +
+          EMPTY_COMMENT,
+      );
+
+      binding.commit();
+
+      expect(part.anchorNode).toBe(container.firstChild);
+      expect(container.innerHTML).toBe(
+        source.map((element) => element + EMPTY_COMMENT).join('') +
+          EMPTY_COMMENT,
+      );
     });
 
     it('swaps items according to keys', () => {
@@ -363,7 +364,8 @@ describe('RepeatBinding', () => {
 
           SESSION2: {
             updater.startUpdate((session) => {
-              binding.bind(props2, session);
+              binding.value = props2;
+              binding.connect(session);
               binding.commit();
             });
 
@@ -376,7 +378,8 @@ describe('RepeatBinding', () => {
 
           SESSION3: {
             updater.startUpdate((session) => {
-              binding.bind(props1, session);
+              binding.value = props1;
+              binding.connect(session);
               binding.commit();
             });
 
@@ -431,7 +434,8 @@ describe('RepeatBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -443,7 +447,8 @@ describe('RepeatBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.bind(props1, session);
+          binding.value = props1;
+          binding.connect(session);
           binding.commit();
         });
 

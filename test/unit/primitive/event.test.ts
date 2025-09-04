@@ -149,7 +149,8 @@ describe('EventBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(handler2, session);
+          binding.value = handler2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -203,7 +204,8 @@ describe('EventBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(handler2, session);
+          binding.value = handler2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -263,7 +265,8 @@ describe('EventBinding', () => {
 
         SESSION2: {
           updater.startUpdate((session) => {
-            binding.bind(handler2, session);
+            binding.value = handler2;
+            binding.connect(session);
             binding.commit();
           });
 

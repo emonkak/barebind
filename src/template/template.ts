@@ -91,6 +91,10 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._binds;
   }
 
+  set value(binds: TBinds) {
+    this._binds = binds;
+  }
+
   get part(): Part.ChildNodePart {
     return this._part;
   }
@@ -99,32 +103,32 @@ export class TemplateBinding<TBinds extends readonly unknown[]>
     return this._memoizedResult === null || binds !== this._binds;
   }
 
-  bind(binds: TBinds, session: UpdateSession): void {
+  connect(session: UpdateSession): void {
     if (this._pendingResult !== null) {
       const { slots } = this._pendingResult;
 
       for (let i = 0, l = slots.length; i < l; i++) {
-        slots[i]!.reconcile(binds[i]!, session);
+        slots[i]!.reconcile(this._binds[i]!, session);
       }
-    }
-
-    this._binds = binds;
-  }
-
-  connect(session: UpdateSession): void {
-    const hydrationTarget = getHydrationTarget(session.rootScope);
-
-    if (hydrationTarget !== null) {
-      this._pendingResult = this._type.hydrate(
-        this._binds,
-        this._part,
-        hydrationTarget,
-        session,
-      );
-      this._part.anchorNode = getAnchorNode(this._pendingResult);
-      this._memoizedResult = this._pendingResult;
     } else {
-      this._pendingResult = this._type.render(this._binds, this._part, session);
+      const hydrationTarget = getHydrationTarget(session.rootScope);
+
+      if (hydrationTarget !== null) {
+        this._pendingResult = this._type.hydrate(
+          this._binds,
+          this._part,
+          hydrationTarget,
+          session,
+        );
+        this._part.anchorNode = getAnchorNode(this._pendingResult);
+        this._memoizedResult = this._pendingResult;
+      } else {
+        this._pendingResult = this._type.render(
+          this._binds,
+          this._part,
+          session,
+        );
+      }
     }
   }
 

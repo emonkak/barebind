@@ -106,7 +106,8 @@ describe('TextBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(value2, session);
+          binding.value = value2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -137,7 +138,8 @@ describe('TextBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(value2, session);
+          binding.value = value2;
+          binding.connect(session);
           binding.commit();
         });
 

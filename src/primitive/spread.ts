@@ -62,6 +62,10 @@ export class SpreadBinding implements Binding<SpreadProps> {
     return this._props;
   }
 
+  set value(props: SpreadProps) {
+    this._props = props;
+  }
+
   get part(): Part.ElementPart {
     return this._part;
   }
@@ -72,36 +76,17 @@ export class SpreadBinding implements Binding<SpreadProps> {
 
   connect(session: UpdateSession): void {
     const { context } = session;
-    const slots = new Map();
-
-    for (const key of Object.keys(this._props)) {
-      const value = this._props[key];
-      if (value === undefined) {
-        continue;
-      }
-      const part = resolveNamedPart(key, this._part.node);
-      const slot = context.resolveSlot(value, part);
-      slot.connect(session);
-      slots.set(key, slot);
-    }
-
-    this._pendingSlots = slots;
-    this._memoizedSlots = slots;
-  }
-
-  bind(props: SpreadProps, session: UpdateSession): void {
-    const { context } = session;
     const oldSlots = this._pendingSlots;
     const newSlots = new Map();
 
     for (const [key, slot] of oldSlots.entries()) {
-      if (!Object.hasOwn(props, key) || props[key] === undefined) {
+      if (!Object.hasOwn(this._props, key) || this._props[key] === undefined) {
         slot.disconnect(session);
       }
     }
 
-    for (const key of Object.keys(props)) {
-      const prop = props[key];
+    for (const key of Object.keys(this._props)) {
+      const prop = this._props[key];
       if (prop === undefined) {
         continue;
       }
@@ -116,7 +101,6 @@ export class SpreadBinding implements Binding<SpreadProps> {
       newSlots.set(key, slot);
     }
 
-    this._props = props;
     this._pendingSlots = newSlots;
   }
 

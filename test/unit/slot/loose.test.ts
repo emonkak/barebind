@@ -51,7 +51,6 @@ describe('LooseSlot', () => {
       const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -64,7 +63,6 @@ describe('LooseSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
-        expect(bindSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(1);
@@ -81,9 +79,7 @@ describe('LooseSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledWith(value2, expect.any(Object));
-        expect(connectSpy).toHaveBeenCalledTimes(1);
+        expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(0);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(0);
@@ -99,9 +95,7 @@ describe('LooseSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledWith(value2, expect.any(Object));
-        expect(connectSpy).toHaveBeenCalledTimes(1);
+        expect(connectSpy).toHaveBeenCalledTimes(2);
         expect(disconnectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(2);
         expect(rollbackSpy).toHaveBeenCalledTimes(1);
@@ -123,7 +117,6 @@ describe('LooseSlot', () => {
       const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const disconnectSpy = vi.spyOn(binding, 'disconnect');
       const commitSpy = vi.spyOn(binding, 'commit');
@@ -144,7 +137,6 @@ describe('LooseSlot', () => {
         });
 
         expect(shouldBindSpy).not.toHaveBeenCalled();
-        expect(bindSpy).not.toHaveBeenCalled();
         expect(connectSpy).toHaveBeenCalledOnce();
         expect(disconnectSpy).toHaveBeenCalledOnce();
         expect(commitSpy).toHaveBeenCalledOnce();
@@ -175,7 +167,6 @@ describe('LooseSlot', () => {
       const updater = new TestUpdater();
 
       const shouldBindSpy = vi.spyOn(binding, 'shouldBind');
-      const bindSpy = vi.spyOn(binding, 'bind');
       const connectSpy = vi.spyOn(binding, 'connect');
       const commitSpy = vi.spyOn(binding, 'commit');
 
@@ -186,25 +177,20 @@ describe('LooseSlot', () => {
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(0);
-        expect(bindSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
       }
 
       SESSION2: {
-        const dirty = updater.startUpdate((session) => {
-          const dirty = slot.reconcile(value, session);
-          slot.commit();
-          return dirty;
+        updater.startUpdate((session) => {
+          slot.reconcile(value, session) && slot.commit();
         });
 
         expect(shouldBindSpy).toHaveBeenCalledTimes(1);
-        expect(bindSpy).toHaveBeenCalledTimes(0);
         expect(connectSpy).toHaveBeenCalledTimes(1);
         expect(commitSpy).toHaveBeenCalledTimes(1);
         expect(part.node.data).toBe('/MockPrimitive("foo")');
-        expect(dirty).toBe(false);
       }
     });
   });

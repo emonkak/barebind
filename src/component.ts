@@ -54,7 +54,7 @@ export class ComponentBinding<TProps, TResult>
 {
   private readonly _type: Component<TProps, TResult>;
 
-  private _value: TProps;
+  private _props: TProps;
 
   private readonly _part: Part;
 
@@ -74,7 +74,7 @@ export class ComponentBinding<TProps, TResult>
     part: Part,
   ) {
     this._type = component;
-    this._value = props;
+    this._props = props;
     this._part = part;
   }
 
@@ -83,7 +83,11 @@ export class ComponentBinding<TProps, TResult>
   }
 
   get value(): TProps {
-    return this._value;
+    return this._props;
+  }
+
+  set value(props: TProps) {
+    this._props = props;
   }
 
   get part(): Part {
@@ -108,7 +112,7 @@ export class ComponentBinding<TProps, TResult>
     const subsession = createUpdateSession(frame, rootScope, subscope, context);
     const result = context.renderComponent(
       this._type,
-      this._value,
+      this._props,
       this._hooks,
       this,
       frame,
@@ -130,7 +134,7 @@ export class ComponentBinding<TProps, TResult>
     }
 
     this._pendingLanes &= ~frame.lanes;
-    this._memoizedValue = this._value;
+    this._memoizedValue = this._props;
   }
 
   shouldBind(props: TProps): boolean {
@@ -138,12 +142,6 @@ export class ComponentBinding<TProps, TResult>
       this._memoizedValue === null ||
       !this._type.shouldSkipUpdate(props, this._memoizedValue)
     );
-  }
-
-  bind(props: TProps, session: UpdateSession): void {
-    session.frame.pendingCoroutines.push(this);
-    this._value = props;
-    this._scope = session.scope;
   }
 
   connect(session: UpdateSession): void {

@@ -219,7 +219,8 @@ describe('ComponentBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           session.frame.mutationEffects.push(binding);
         });
 

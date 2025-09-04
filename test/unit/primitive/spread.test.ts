@@ -182,7 +182,8 @@ describe('SpreadBinding', () => {
         const oldSlots = Object.fromEntries(binding['_memoizedSlots'] ?? []);
 
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -252,7 +253,7 @@ describe('SpreadBinding', () => {
     });
   });
 
-  describe('rollback()', () => {
+  describe('disconnect()', () => {
     it('should do nothing if the committed properties does not exist', () => {
       const props = {};
       const part = {

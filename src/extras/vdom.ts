@@ -241,6 +241,10 @@ export class ElementBinding implements Binding<ElementProps> {
     return this._props;
   }
 
+  set value(props: ElementProps) {
+    this._props = props;
+  }
+
   get type(): DirectiveType<ElementProps> {
     return ElementDirective as DirectiveType<ElementProps>;
   }
@@ -253,10 +257,6 @@ export class ElementBinding implements Binding<ElementProps> {
     return (
       this._memoizedValue === null || !shallowEqual(this._memoizedValue, value)
     );
-  }
-
-  bind(props: ElementProps, _session: UpdateSession): void {
-    this._props = props;
   }
 
   connect(_session: UpdateSession): void {}

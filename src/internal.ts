@@ -17,10 +17,9 @@ export interface Bindable<T = unknown> {
 
 export interface Binding<T> extends ReversibleEffect {
   readonly type: DirectiveType<T>;
-  readonly value: T;
+  value: T;
   readonly part: Part;
   shouldBind(value: T): boolean;
-  bind(value: T, session: UpdateSession): void;
   connect(session: UpdateSession): void;
   disconnect(session: UpdateSession): void;
 }

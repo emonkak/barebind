@@ -202,7 +202,8 @@ describe('TemplateBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(binds2, session);
+          binding.value = binds2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -365,7 +366,8 @@ describe('TemplateBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(binds2, session);
+          binding.value = binds2;
+          binding.connect(session);
           binding.commit();
         });
 

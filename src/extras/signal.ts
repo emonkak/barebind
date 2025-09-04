@@ -14,6 +14,7 @@ import {
   type Part,
   type RenderContext,
   type Scope,
+  type SessionContext,
   type Slot,
   type UpdateSession,
 } from '../internal.js';
@@ -47,21 +48,29 @@ export const SignalDirective: DirectiveType<Signal<any>> = {
 export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   private _signal: Signal<T>;
 
+  private _version: number;
+
+  private readonly _slot: Slot<T>;
+
   private _scope: Scope = DETACHED_SCOPE;
 
   private _pendingLanes: Lanes = Lanes.NoLanes;
-
-  private readonly _slot: Slot<T>;
 
   private _subscription: Subscription | null = null;
 
   constructor(signal: Signal<T>, slot: Slot<T>) {
     this._signal = signal;
+    this._version = signal.version;
     this._slot = slot;
   }
 
   get value(): Signal<T> {
     return this._signal;
+  }
+
+  set value(signal: Signal<T>) {
+    this._signal = signal;
+    this._version = -1;
   }
 
   get type(): DirectiveType<Signal<T>> {
@@ -96,19 +105,20 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
   }
 
   connect(session: UpdateSession): void {
-    this._slot.connect(session);
+    const { scope, context } = session;
+    const { version } = this._signal;
 
-    this._scope = session.scope;
-    this._subscription = this._subscribeSignal(session);
-  }
-
-  bind(signal: Signal<T>, session: UpdateSession): void {
     this._subscription?.();
-    this._slot.reconcile(signal.value, session);
 
-    this._signal = signal;
-    this._scope = session.scope;
-    this._subscription = this._subscribeSignal(session);
+    if (this._version < version) {
+      this._slot.reconcile(this._signal.value, session);
+      this._version = version;
+    } else {
+      this._slot.connect(session);
+    }
+
+    this._scope = scope;
+    this._subscription = this._subscribeSignal(context);
   }
 
   disconnect(session: UpdateSession): void {
@@ -127,8 +137,7 @@ export class SignalBinding<T> implements Binding<Signal<T>>, Coroutine {
     this._slot.rollback();
   }
 
-  private _subscribeSignal(session: UpdateSession): Subscription {
-    const { context } = session;
+  private _subscribeSignal(context: SessionContext): Subscription {
     return this._signal.subscribe(() => {
       context.scheduleUpdate(this);
     });

@@ -151,7 +151,8 @@ describe('SiganlBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(signal2, session);
+          binding.value = signal2;
+          binding.connect(session);
           binding.commit();
         });
 

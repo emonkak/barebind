@@ -100,9 +100,9 @@ export class MockBinding<T> implements Binding<T> {
 
   value: T;
 
-  memoizedValue: T | null = null;
-
   readonly part: Part;
+
+  memoizedValue: T | null = null;
 
   isConnected: boolean = false;
 
@@ -116,11 +116,6 @@ export class MockBinding<T> implements Binding<T> {
 
   shouldBind(value: T): boolean {
     return !Object.is(value, this.memoizedValue);
-  }
-
-  bind(value: T, _session: UpdateSession): void {
-    this.value = value;
-    this.isConnected = true;
   }
 
   connect(_session: UpdateSession): void {
@@ -300,6 +295,11 @@ export class MockSlot<T> implements Slot<T> {
     return this.binding.part;
   }
 
+  connect(session: UpdateSession): void {
+    this.binding.connect(session);
+    this.isConnected = true;
+  }
+
   reconcile(value: T, session: UpdateSession): boolean {
     const { context } = session;
     const directive = context.resolveDirective(value, this.binding.part);
@@ -313,16 +313,12 @@ export class MockSlot<T> implements Slot<T> {
     const dirty = this.binding.shouldBind(directive.value);
 
     if (dirty) {
-      this.binding.bind(directive.value, session);
+      this.binding.value = directive.value;
+      this.binding.connect(session);
       this.isConnected = true;
     }
 
     return dirty;
-  }
-
-  connect(session: UpdateSession): void {
-    this.binding.connect(session);
-    this.isConnected = true;
   }
 
   disconnect(session: UpdateSession): void {

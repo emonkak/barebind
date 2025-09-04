@@ -295,7 +295,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -333,7 +334,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -370,7 +372,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -408,7 +411,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -448,7 +452,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -487,7 +492,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -530,7 +536,8 @@ describe('ElementBinding', () => {
 
         SESSION2: {
           updater.startUpdate((session) => {
-            binding.bind(props2, session);
+            binding.value = props2;
+            binding.connect(session);
             binding.commit();
           });
 
@@ -575,7 +582,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -613,7 +621,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -668,7 +677,8 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -713,7 +723,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -756,7 +767,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -767,7 +779,8 @@ describe('ElementBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.bind(props3, session);
+          binding.value = props3;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -829,7 +842,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -893,7 +907,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -975,7 +990,8 @@ describe('ElementBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(props2, session);
+          binding.value = props2;
+          binding.connect(session);
           binding.commit();
         });
 

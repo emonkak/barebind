@@ -139,7 +139,8 @@ describe('RefBinding', () => {
 
       SESSION2: {
         updater.startUpdate((session) => {
-          binding.bind(ref2, session);
+          binding.value = ref2;
+          binding.connect(session);
           binding.commit();
         });
 
@@ -188,7 +189,8 @@ describe('RefBinding', () => {
 
       SESSION3: {
         updater.startUpdate((session) => {
-          binding.bind(ref2, session);
+          binding.value = ref2;
+          binding.connect(session);
           binding.commit();
         });
 
