@@ -4,7 +4,6 @@ export { DirectiveError } from './directive.js';
 export { HydrationError } from './hydration.js';
 export {
   $customHook,
-  type Bindable,
   type Component,
   type CustomHookFunction,
   type CustomHookObject,
