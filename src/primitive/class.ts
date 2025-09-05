@@ -23,12 +23,12 @@ const CLASS_SEPARATOR_PATTERN = /\s+/;
 export const ClassPrimitive: Primitive<ClassSpecifier> = {
   name: 'ClassPrimitive',
   ensureValue(value: unknown, part: Part): asserts value is ClassSpecifier {
-    if (!(typeof value === 'object' && value !== null)) {
+    if (!isObject(value)) {
       throw new DirectiveError(
         ClassPrimitive,
         value,
         part,
-        `The value of ClassPrimitive must be an object.`,
+        'The value of ClassPrimitive must be an object.',
       );
     }
   },
@@ -87,24 +87,28 @@ export class ClassBinding extends PrimitiveBinding<
   }
 }
 
+function isObject(value: unknown): value is object {
+  return typeof value === 'object' && value !== null;
+}
+
 function toggleClass(
   classList: DOMTokenList,
   key: string,
   value: ClassValue,
   enabled: boolean,
 ): void {
-  let classInput: string;
+  let classDeclaration: string;
 
   if (typeof value === 'string') {
-    classInput = value.trim();
+    classDeclaration = value.trim();
   } else if (value) {
-    classInput = key.trim();
+    classDeclaration = key.trim();
   } else {
     return;
   }
 
-  if (classInput !== '') {
-    const classNames = classInput.split(CLASS_SEPARATOR_PATTERN);
+  if (classDeclaration !== '') {
+    const classNames = classDeclaration.split(CLASS_SEPARATOR_PATTERN);
 
     for (let i = 0, l = classNames.length; i < l; i++) {
       classList.toggle(classNames[i]!, enabled);
@@ -127,12 +131,12 @@ function updateClasses(
 
   for (const key of Object.keys(newClasses)) {
     const newValue = newClasses[key];
-    const oldValue = Object.hasOwn(oldClasses, key)
-      ? oldClasses[key]
-      : undefined;
 
-    if (newValue !== oldValue) {
-      toggleClass(classList, key, oldValue, false);
+    if (Object.hasOwn(oldClasses, key)) {
+      const oldValue = oldClasses[key];
+      if (newValue !== oldValue) {
+        toggleClass(classList, key, oldValue, false);
+      }
     }
 
     toggleClass(classList, key, newValue, true);
