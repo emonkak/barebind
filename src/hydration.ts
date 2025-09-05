@@ -1,5 +1,11 @@
 import { formatNode } from './debug/node.js';
 
+interface NodeTypeMap {
+  [Node.COMMENT_NODE]: Comment;
+  [Node.ELEMENT_NODE]: Element;
+  [Node.TEXT_NODE]: Text;
+}
+
 export class HydrationError extends Error {
   readonly targetTree: TreeWalker;
 
@@ -13,12 +19,6 @@ export class HydrationError extends Error {
 
     this.targetTree = targetTree;
   }
-}
-
-interface NodeTypeMap {
-  [Node.COMMENT_NODE]: Comment;
-  [Node.ELEMENT_NODE]: Element;
-  [Node.TEXT_NODE]: Text;
 }
 
 export function createTreeWalker(
