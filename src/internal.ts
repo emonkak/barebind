@@ -416,9 +416,9 @@ export interface UpdateHandle {
 }
 
 export interface UpdateOptions {
+  flush?: boolean;
   immediate?: boolean;
   priority?: TaskPriority;
-  silent?: boolean;
   viewTransition?: boolean;
 }
 

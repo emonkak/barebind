@@ -429,9 +429,9 @@ export class Runtime implements SessionContext {
     options: UpdateOptions = {},
   ): UpdateHandle {
     options = {
+      flush: options.flush ?? true,
       immediate: options.immediate ?? false,
       priority: options.priority ?? this._backend.getTaskPriority(),
-      silent: options.silent ?? false,
       viewTransition: options.viewTransition ?? false,
     } satisfies Required<UpdateOptions>;
 
@@ -448,7 +448,7 @@ export class Runtime implements SessionContext {
     let scheduled: Promise<void>;
 
     if (options.immediate) {
-      const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
+      const shouldFlush = options.flush && this._pendingTasks.isEmpty();
 
       this._pendingTasks.pushBack(pendingTask);
 
@@ -461,7 +461,7 @@ export class Runtime implements SessionContext {
       }
     } else {
       scheduled = this._backend.requestCallback(() => {
-        const shouldFlush = !options.silent && this._pendingTasks.isEmpty();
+        const shouldFlush = options.flush && this._pendingTasks.isEmpty();
 
         this._pendingTasks.pushBack(pendingTask);
 
