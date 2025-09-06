@@ -8,8 +8,8 @@ import {
   isBindable,
   Lanes,
   PartType,
-  type ScheduleOptions,
   Scope,
+  type UpdateOptions,
 } from '@/internal.js';
 import { HTML_NAMESPACE_URI } from '@/template/template.js';
 import { MockBindable, MockDirective, MockPrimitive } from '../mocks.js';
@@ -75,7 +75,7 @@ describe('getLanesFromOptions()', () => {
       { priority: 'background', viewTransition: true },
       Lanes.DefaultLane | Lanes.BackgroundLane | Lanes.ViewTransitionLane,
     ],
-  ] as [ScheduleOptions, Lanes][])(
+  ] as [UpdateOptions, Lanes][])(
     'returns lanes for schedule',
     (options, lanes) => {
       expect(getLanesFromOptions(options)).toBe(lanes);

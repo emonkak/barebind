@@ -272,7 +272,7 @@ export interface RenderContext {
     strings: TemplateStringsArray,
     ...binds: readonly unknown[]
   ): Bindable<readonly unknown[]>;
-  forceUpdate(options?: ScheduleOptions): UpdateHandle;
+  forceUpdate(options?: UpdateOptions): UpdateHandle;
   getSessionContext(): SessionContext;
   getSharedContext(key: unknown): unknown;
   html(
@@ -317,7 +317,7 @@ export interface RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: ScheduleOptions) => void,
+    dispatch: (action: TAction, options?: UpdateOptions) => void,
     isPending: boolean,
   ];
   useRef<T>(initialValue: T): RefObject<T>;
@@ -325,7 +325,7 @@ export interface RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    setState: (newState: NewState<TState>, options?: ScheduleOptions) => void,
+    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
     isPending: boolean,
   ];
   waitForUpdate(): Promise<number>;
@@ -348,13 +348,6 @@ export interface ReversibleEffect extends Effect {
   rollback(): void;
 }
 
-export interface ScheduleOptions {
-  immediate?: boolean;
-  priority?: TaskPriority;
-  silent?: boolean;
-  viewTransition?: boolean;
-}
-
 export interface SessionContext extends DirectiveContext {
   getPendingTasks(): UpdateTask[];
   expandLiterals<T>(
@@ -375,7 +368,7 @@ export interface SessionContext extends DirectiveContext {
     binds: readonly unknown[],
     mode: TemplateMode,
   ): Template<readonly unknown[]>;
-  scheduleUpdate(coroutine: Coroutine, options?: ScheduleOptions): UpdateHandle;
+  scheduleUpdate(coroutine: Coroutine, options?: UpdateOptions): UpdateHandle;
 }
 
 export interface Slot<T> extends ReversibleEffect {
@@ -420,6 +413,13 @@ export interface UpdateHandle {
   lanes: Lanes;
   scheduled: Promise<void>;
   finished: Promise<void>;
+}
+
+export interface UpdateOptions {
+  immediate?: boolean;
+  priority?: TaskPriority;
+  silent?: boolean;
+  viewTransition?: boolean;
 }
 
 export interface UpdateSession {
@@ -559,7 +559,7 @@ export function createUpdateSession(
 /**
  * @internal
  */
-export function getLanesFromOptions(options: ScheduleOptions): Lanes {
+export function getLanesFromOptions(options: UpdateOptions): Lanes {
   let lanes = Lanes.DefaultLane;
 
   switch (options.priority) {

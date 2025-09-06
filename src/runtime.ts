@@ -16,7 +16,6 @@ import {
   type RenderContext,
   type RenderFrame,
   type RequestCallbackOptions,
-  type ScheduleOptions,
   type Scope,
   type SessionContext,
   type Slot,
@@ -25,6 +24,7 @@ import {
   type TemplateMode,
   type UnwrapBindable,
   type UpdateHandle,
+  type UpdateOptions,
   type UpdateTask,
 } from './internal.js';
 import { RenderSession } from './render-session.js';
@@ -426,14 +426,14 @@ export class Runtime implements SessionContext {
 
   scheduleUpdate(
     coroutine: Coroutine,
-    options: ScheduleOptions = {},
+    options: UpdateOptions = {},
   ): UpdateHandle {
     options = {
       immediate: options.immediate ?? false,
       priority: options.priority ?? this._backend.getTaskPriority(),
       silent: options.silent ?? false,
       viewTransition: options.viewTransition ?? false,
-    } satisfies Required<ScheduleOptions>;
+    } satisfies Required<UpdateOptions>;
 
     const lanes = getLanesFromOptions(options);
     const continuation = Promise.withResolvers<void>();

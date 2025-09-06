@@ -14,11 +14,11 @@ import {
   type RefObject,
   type RenderContext,
   type RenderFrame,
-  type ScheduleOptions,
   Scope,
   type SessionContext,
   type TemplateMode,
   type UpdateHandle,
+  type UpdateOptions,
   type Usable,
 } from './internal.js';
 
@@ -90,7 +90,7 @@ export class RenderSession implements RenderContext {
     this._hookIndex++;
   }
 
-  forceUpdate(options?: ScheduleOptions): UpdateHandle {
+  forceUpdate(options?: UpdateOptions): UpdateHandle {
     if (this._frame.lanes !== Lanes.NoLanes) {
       const runningTask = this._context.getPendingTasks().at(-1);
       if (runningTask !== undefined) {
@@ -241,7 +241,7 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    dispatch: (action: TAction, options?: ScheduleOptions) => void,
+    dispatch: (action: TAction, options?: UpdateOptions) => void,
     isPending: boolean,
   ] {
     let currentHook = this._hooks[this._hookIndex];
@@ -265,7 +265,7 @@ export class RenderSession implements RenderContext {
       const hook: Hook.ReducerHook<TState, TAction> = {
         type: HookType.Reducer,
         reducer,
-        dispatch: (action: TAction, options?: ScheduleOptions) => {
+        dispatch: (action: TAction, options?: UpdateOptions) => {
           const prevState = hook.memoizedState;
           const nextState = hook.reducer(prevState, action);
 
@@ -300,7 +300,7 @@ export class RenderSession implements RenderContext {
     initialState: InitialState<TState>,
   ): [
     state: TState,
-    setState: (newState: NewState<TState>, options?: ScheduleOptions) => void,
+    setState: (newState: NewState<TState>, options?: UpdateOptions) => void,
     isPending: boolean,
   ] {
     return this.useReducer(

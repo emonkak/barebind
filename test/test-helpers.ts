@@ -4,8 +4,8 @@ import {
   HookType,
   type Lanes,
   type RenderFrame,
-  type ScheduleOptions,
   type Scope,
+  type UpdateOptions,
   type UpdateSession,
 } from '@/internal.js';
 import { RenderSession } from '@/render-session.js';
@@ -42,7 +42,7 @@ export class TestRenderer {
 
   startRender<T>(
     callback: (session: RenderSession) => T,
-    options: WithScopeOption<ScheduleOptions> = {},
+    options: WithScopeOption<UpdateOptions> = {},
   ): T {
     const coroutine = new MockCoroutine(
       ({ frame, rootScope, scope, context }) => {
@@ -91,7 +91,7 @@ export class TestUpdater {
 
   startUpdate<T>(
     callback: (session: UpdateSession, coroutine: Coroutine) => T,
-    options: WithScopeOption<ScheduleOptions> = {},
+    options: WithScopeOption<UpdateOptions> = {},
   ): T {
     const coroutine = new MockCoroutine((session) => {
       session.rootScope.addErrorHandler((error) => {
