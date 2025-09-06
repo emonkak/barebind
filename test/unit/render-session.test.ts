@@ -187,7 +187,7 @@ describe('RenderSession', () => {
       const renderer = new TestRenderer();
       const session = renderer.startRender((session) => session);
 
-      expect(() => session.useState(0)).toThrow();
+      expect(() => session.useState(0)).toThrow(TypeError);
     });
 
     it('throws an error if a different type of hook is given', () => {
