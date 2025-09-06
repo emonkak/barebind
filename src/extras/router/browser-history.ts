@@ -1,6 +1,6 @@
 /// <reference types="navigation-api-types" />
 
-import type { CustomHookFunction, ScheduleOptions } from '../../internal.js';
+import type { CustomHookFunction, UpdateOptions } from '../../internal.js';
 import {
   anyModifiersArePressed,
   CurrentHistory,
@@ -11,7 +11,7 @@ import {
 import { RelativeURL } from './relative-url.js';
 
 export function BrowserHistory(
-  options?: ScheduleOptions,
+  options?: UpdateOptions,
 ): CustomHookFunction<readonly [HistoryLocation, HistoryNavigator]> {
   return (context) => {
     const [location, setLocation] = context.useState<HistoryLocation>(() => ({

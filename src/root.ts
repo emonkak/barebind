@@ -4,11 +4,11 @@ import {
   type Effect,
   Lanes,
   PartType,
-  type ScheduleOptions,
   Scope,
   type SessionContext,
   type Slot,
   type UpdateHandle,
+  type UpdateOptions,
 } from './internal.js';
 
 export class Root<T> {
@@ -43,7 +43,7 @@ export class Root<T> {
     this._context = context;
   }
 
-  hydrate(options?: ScheduleOptions): UpdateHandle {
+  hydrate(options?: UpdateOptions): UpdateHandle {
     const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
@@ -63,7 +63,7 @@ export class Root<T> {
     });
   }
 
-  mount(options?: ScheduleOptions): UpdateHandle {
+  mount(options?: UpdateOptions): UpdateHandle {
     const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
@@ -81,7 +81,7 @@ export class Root<T> {
     });
   }
 
-  update(value: T, options?: ScheduleOptions): UpdateHandle {
+  update(value: T, options?: UpdateOptions): UpdateHandle {
     const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
@@ -97,7 +97,7 @@ export class Root<T> {
     });
   }
 
-  unmount(options?: ScheduleOptions): UpdateHandle {
+  unmount(options?: UpdateOptions): UpdateHandle {
     const scope = new Scope();
     const coroutine: Coroutine = {
       scope,
