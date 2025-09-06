@@ -45,18 +45,18 @@ export class Root<T> {
 
   hydrate(options?: ScheduleOptions): UpdateHandle {
     const scope = new Scope();
-    const targetTree = createTreeWalker(this._container);
     const coroutine: Coroutine = {
       scope,
       pendingLanes: Lanes.DefaultLane,
       resume: (session) => {
+        const targetTree = createTreeWalker(this._container);
+        scope.setHydrationTarget(targetTree);
         this._slot.connect(session);
         session.frame.mutationEffects.push(
           new HydrateSlot(this._slot, targetTree),
         );
       },
     };
-    scope.setHydrationTarget(targetTree);
     return this._context.scheduleUpdate(coroutine, {
       immediate: true,
       ...options,
