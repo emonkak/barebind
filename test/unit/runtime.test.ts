@@ -76,13 +76,13 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
+          flush: false,
           priority: 'user-blocking',
-          silent: true,
         });
 
         runtime.scheduleUpdate(coroutine, {
+          flush: false,
           priority: 'user-blocking',
-          silent: true,
         });
 
         await handle.scheduled;
@@ -165,9 +165,9 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
+          flush: false,
           priority: 'user-visible',
           viewTransition: true,
-          silent: true,
         });
 
         await handle.scheduled;
@@ -269,7 +269,7 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
-          silent: true,
+          flush: false,
         });
 
         await handle.scheduled;
@@ -305,13 +305,13 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
+          flush: false,
           priority: 'user-blocking',
-          silent: true,
         });
 
         runtime.scheduleUpdate(coroutine, {
+          flush: false,
           priority: 'user-blocking',
-          silent: true,
         });
 
         await handle.scheduled;
@@ -404,9 +404,9 @@ describe('Runtime', () => {
         });
 
         const handle = runtime.scheduleUpdate(coroutine, {
+          flush: false,
           priority: 'user-visible',
           viewTransition: true,
-          silent: true,
         });
 
         await handle.scheduled;

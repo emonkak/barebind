@@ -66,8 +66,8 @@ export class TestRenderer {
 
     this.runtime
       .scheduleUpdate(coroutine, {
+        flush: false,
         immediate: true,
-        silent: true,
         ...options,
       })
       .finished.catch(() => {});
@@ -103,7 +103,7 @@ export class TestUpdater {
     let thrownError: unknown;
 
     this.runtime
-      .scheduleUpdate(coroutine, { immediate: true, silent: true, ...options })
+      .scheduleUpdate(coroutine, { flush: false, immediate: true, ...options })
       .finished.catch(() => {});
 
     this.runtime.flushSync();
